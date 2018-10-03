@@ -1,0 +1,5 @@
+	specs/exe/
+	specs/obj/
+	specs/src/.cproject
+	specs/src/.project
+	specs/src/.settings/
