@@ -347,6 +347,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 		pVec->insert(pVec->end(), Token(TokenListType__GROUPSTART, NULL, "", argidx, "("));
 		parseInputRangesTokens(pVec, arg, argidx);
 		pVec->insert(pVec->end(), Token(TokenListType__GROUPEND, NULL, "", argidx, ")"));
+		NEXT_TOKEN;
 	}
 
 	/* Add as literal */

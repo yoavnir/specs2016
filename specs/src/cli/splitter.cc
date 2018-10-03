@@ -26,7 +26,7 @@ std::vector<Token> parseTokensSplit(char* arg)
 	std::vector<Token> ret;
 	splitterState st = SpSt__WhiteSpace;
 
-	unsigned int argindex = 0;
+	unsigned int argindex = 1;
 
 	char* ptr = arg;
 	std::string sarg;
@@ -83,10 +83,11 @@ std::vector<Token> parseTokensSplit(char* arg)
 									NULL, sarg.substr(1)+delimiter,
 									argindex++, sarg));
 				}
+				sarg.clear();
 				st = SpSt__WhiteSpace;
 			} else if (*ptr=='\\') {
 				st = SpSt__Escape;
-			} else if (is_whitespace(*ptr)) {
+			} else if (!delimiter && is_whitespace(*ptr)) {
 				st = SpSt__WhiteSpace;
 				continue; // avoid incrementing ptr just yet
 			} else {
