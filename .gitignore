@@ -1,5 +1,8 @@
-	specs/exe/
-	specs/obj/
-	specs/src/.cproject
-	specs/src/.project
-	specs/src/.settings/
+# OBJ and EXE directories
+specs/exe/
+specs/obj/
+
+# Eclipse files, assuming the eclipse root is in the src directory
+specs/src/.cproject
+specs/src/.project
+specs/src/.settings/
