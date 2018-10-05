@@ -6,6 +6,15 @@
 #include <assert.h>
 
 #define TOKEN_TYPE_LIST   \
+	/* The MainOptions */    \
+	X(STOP,           false, false) \
+	X(ALLEOF,         false, false) \
+	X(ANYEOF,         false, false) \
+	X(COUNTERS,       false, false) \
+	X(PRINTONLY,      false, false) \
+	X(EOF,            false, false) \
+	X(KEEP,           false, false) \
+	/* The input ranges */  \
 	X(RANGE,          true,  false) \
 	X(WORDRANGE,      true,  false) \
 	X(FIELDSEPARATOR, false, true)  \

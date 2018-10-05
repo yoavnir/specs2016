@@ -313,6 +313,13 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKENV(wordseparator,WORDSEPARATOR,7); // down to wordsep
 	SIMPLETOKEN(ws,WORDSEPARATOR);
 	SIMPLETOKEN(of,OF);
+	SIMPLETOKEN(stop, STOP);
+	SIMPLETOKEN(alleof, ALLEOF);
+	SIMPLETOKEN(anyeof, ANYEOF);
+	SIMPLETOKEN(counters, COUNTERS);
+	SIMPLETOKEN(printonly, PRINTONLY);
+	SIMPLETOKEN(eof, EOF);
+	SIMPLETOKEN(keep, KEEP);
 
 	/* Try as a range */
 	if ((pRange = parseAsAnySimpleRangeSpec(arg))) {
