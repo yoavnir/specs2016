@@ -7,7 +7,7 @@ LINK = g++ -g
 
 .DUMMY: directories
 
-all: directories $(EXE_DIR)/test
+all: directories $(EXE_DIR)/tokenTest
 
 directories: $(EXE_DIR) $(OBJ_DIR)
 
@@ -17,7 +17,7 @@ $(EXE_DIR):
 $(OBJ_DIR):
 	$(MKDIR_C) $@
 
-$(EXE_DIR)/test: $(OBJ_DIR)/test.o $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
+$(EXE_DIR)/tokenTest: $(OBJ_DIR)/test.o $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
 	$(COMP) -o $@ ../obj/test.o ../obj/tokens.o $(OBJ_DIR)/splitter.o
 
 $(OBJ_DIR)/tokens.o: cli/tokens.cc cli/tokens.h
