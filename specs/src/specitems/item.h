@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "../cli/tokens.h"
+#include "../processing/conversions.h"
 
 class Item {
 public:
@@ -24,6 +25,8 @@ private:
 	Token *m_inputRange;
 	size_t m_outStart;  /* zero is a special value meaning no output */
 	size_t m_maxLength; /* zero is a special value meaning no limit  */
+	bool   m_strip;
+	StringConversions m_conversion;
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include <string.h>
 #include <regex>
 #include "tokens.h"
+#include "../processing/conversions.h"
 
 Token dummyToken(TokenListType__DUMMY, NULL, "", 0, std::string("dummyToken"));
 
@@ -40,31 +41,6 @@ class TokenFieldRangeSimple : public TokenFieldRange {
 	private:
 		int m_first, m_last, m_idx;
 		bool bIsSingleNumber;
-};
-
-class TokenFieldRangeNC : public TokenFieldRange {
-	public:
-		TokenFieldRangeNC() {m_idx = 0;}
-		virtual void Reset() {m_idx = 0;}
-		virtual bool Done()  {return m_idx >= m_Vec.size();}
-		virtual int  Next() {
-			if (Done()) {
-				return LAST_POS_END;
-			}
-			return m_Vec[m_idx++];
-		}
-		void Add(int i) {m_Vec.insert(m_Vec.end(), i);}
-		virtual std::string Debug() {
-			std::string ret = "S: ";
-			for (int i=0; i<m_Vec.size(); i++) {
-				if (i>0) ret+=";";
-				ret+=std::to_string(m_Vec[i]);
-			}
-			return ret;
-		}
-	private:
-		std::vector<int> m_Vec;
-		int m_idx;
 };
 
 class TokenFieldRangeComplex : public TokenFieldRange {
@@ -199,19 +175,29 @@ static TokenFieldRange *parseAsSingleNumber(std::string s)
 static TokenFieldRange *parseAsFromToRange(std::string s)
 {
 	size_t posOfHyphen;
+	bool   bSemicolonRatherThanHyphen = false;
 	long int _from, _to;
 	try {
 		_from = std::stol(s, &posOfHyphen);
 	} catch(std::invalid_argument) {
 		return NULL;
 	}
-	if (_from==0 || s.substr(0,posOfHyphen)!=std::to_string(_from) || s[posOfHyphen]!='-') {
+	if (_from==0 || s.substr(0,posOfHyphen)!=std::to_string(_from)
+		|| (s[posOfHyphen]!='-' && s[posOfHyphen]!=';')) {
 		return NULL;
 	}
+
+	bSemicolonRatherThanHyphen = (s[posOfHyphen]==';');
+
 	try {
 		_to = std::stol(s.substr(posOfHyphen+1));
-		if (_to==0 || s.substr(posOfHyphen+1)!=std::to_string(_to) || _to < _from) {
+		if (_to==0 || s.substr(posOfHyphen+1)!=std::to_string(_to)) {
 			return NULL;
+		}
+		if (!bSemicolonRatherThanHyphen) {
+			if (_to < _from || _from < 1) {
+				return NULL;
+			}
 		}
 	} catch (std::invalid_argument) {
 		if (s.substr(posOfHyphen+1)=="*") {
@@ -253,23 +239,6 @@ static TokenFieldRange *parseAsFromLenRange(std::string s)
 	return new TokenFieldRangeSimple(_from, _to);
 }
 
-static TokenFieldRange *parseAsNonContiguousRange(std::string s)
-{
-	static std::regex exp("-?[1-9][0-9]*(;-?[1-9][0-9]*)+");
-	int posOfSemicolon;
-	if (!std::regex_match(s,exp)) {
-		return NULL;
-	}
-	TokenFieldRangeNC *pRet = new TokenFieldRangeNC();
-	char* localCopy = strdup(s.c_str());
-	char* ptr = strtok(localCopy, ";");
-	while (ptr) {
-		pRet->Add(std::stoi(std::string(ptr)));
-		ptr = strtok(NULL, ";");
-	}
-	return pRet;
-}
-
 static TokenFieldRange *parseAsAnySimpleRangeSpec(std::string s)
 {
 	TokenFieldRange *ret = NULL;
@@ -278,8 +247,6 @@ static TokenFieldRange *parseAsAnySimpleRangeSpec(std::string s)
 		ret = parseAsFromToRange(s);
 	if (!ret)
 		ret = parseAsFromLenRange(s);
-	if (!ret)
-		ret = parseAsNonContiguousRange(s);
 	return ret;
 }
 
@@ -318,7 +285,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 
 	/* Some simple tokens */
 	SIMPLETOKEN(nw,NEXTWORD);
-	SIMPLETOKEN(nextword,NEXTWORD);
+	SIMPLETOKENV(nextword,NEXTWORD,5);
 	SIMPLETOKENV(substring,SUBSTRING,6);  // can be shortened down to substr
 	SIMPLETOKEN(word,WORDRANGE);
 	SIMPLETOKEN(field,FIELDRANGE);
@@ -352,6 +319,13 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 		NEXT_TOKEN;
 	}
 
+	/* conversions */
+	if (StringConversion__NONE!=getConversionByName(arg)) {
+		pVec->insert(pVec->end(),
+				Token(TokenListType__CONVERSION,
+						NULL, arg, argidx, arg));
+		NEXT_TOKEN;
+	}
 
 	/* Try as a range */
 	if ((pRange = parseAsAnySimpleRangeSpec(arg))) {

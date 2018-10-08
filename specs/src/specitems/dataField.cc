@@ -1,5 +1,4 @@
 #include "item.h"
-#include <iostream>
 
 #define GET_NEXT_TOKEN {token = tokenVec[index]; tokenType = token.Type(); index++; }
 
@@ -9,6 +8,8 @@ DataField::DataField()
 	m_label = '\0';
 	m_outStart = LAST_POS_END;
 	m_maxLength = LAST_POS_END;
+	m_strip = false;
+	m_conversion = StringConversion__identity;
 }
 
 DataField::~DataField() {
@@ -42,6 +43,18 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	/* insert code here to deal with strip and conversion */
 	GET_NEXT_TOKEN;
 
+	if (tokenType==TokenListType__STRIP) {
+		m_strip = true;
+		GET_NEXT_TOKEN;
+	}
+
+	if (tokenType==TokenListType__CONVERSION) {
+		m_conversion = getConversionByName(token.Literal());
+		assert(m_conversion!=StringConversion__identity);
+		assert(m_conversion!=StringConversion__NONE);
+		GET_NEXT_TOKEN;
+	}
+
 	/* output placement */
 	switch (tokenType) {
 	case TokenListType__RANGE:
@@ -71,14 +84,16 @@ std::string DataField::Debug() {
 	/* conversion and stripping go here */
 	ret += ";Dest=";
 	if (m_outStart==LAST_POS_END) {
-		ret += "None}";
+		ret += "None";
 	} else {
 		ret += std::to_string(m_outStart);
 		if (m_maxLength!=LAST_POS_END) {
-			ret += '-' + std::to_string(m_outStart+m_maxLength-1) + '}';
-		} else {
-			ret += '}';
+			ret += '-' + std::to_string(m_outStart+m_maxLength-1);
 		}
 	}
+
+	if (m_strip) ret += " STRIP";
+	if (m_conversion!=StringConversion__identity) ret += " " + StringConversion__2str(m_conversion);
+	ret += '}';
 	return ret;
 }

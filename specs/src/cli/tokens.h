@@ -29,6 +29,7 @@
 	X(GROUPEND,       false, false) \
 	X(STRIP,          false, false) \
 	X(LITERAL,        false, true) \
+	X(CONVERSION,     false, true) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,
