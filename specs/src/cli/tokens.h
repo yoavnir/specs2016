@@ -15,6 +15,8 @@
 	X(EOF,            false, false) \
 	X(KEEP,           false, false) \
 	/* The input ranges */  \
+	X(RANGELABEL,     false, true)  \
+	X(PERIOD,         false, false) \
 	X(RANGE,          true,  false) \
 	X(WORDRANGE,      true,  false) \
 	X(FIELDSEPARATOR, false, true)  \
@@ -25,7 +27,9 @@
 	X(OF,             false, false) \
 	X(GROUPSTART,     false, false) \
 	X(GROUPEND,       false, false) \
-	X(LITERAL,        false, true)
+	X(STRIP,          false, false) \
+	X(LITERAL,        false, true) \
+	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,
 enum TokenListTypes {
@@ -55,6 +59,9 @@ class TokenFieldRange {
 		virtual std::string Debug() {return "generic range";}
 		virtual bool isSingleNumber() {return false;}
 		virtual int  getSingleNumber() {return 0;}
+		virtual bool isSimpleRange() {return false;}
+		virtual int  getSimpleFirst() {return 0;}
+		virtual int  getSimpleLast()  {return 0;}
 	protected:
 		bool bDone;
 };
@@ -77,6 +84,8 @@ private:
 	int             m_argc;
 	std::string     m_orig;
 };
+
+extern Token dummyToken;
 
 std::vector<Token> parseTokens(int argc, char** argv);
 void normalizeTokenList(std::vector<Token> *tokList);

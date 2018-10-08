@@ -2,6 +2,8 @@
 #include <regex>
 #include "tokens.h"
 
+Token dummyToken(TokenListType__DUMMY, NULL, "", 0, std::string("dummyToken"));
+
 std::vector<Token> parseTokensSplit(char* arg);
 
 class TokenFieldRangeSimple : public TokenFieldRange {
@@ -32,6 +34,9 @@ class TokenFieldRangeSimple : public TokenFieldRange {
 		void setSingleNumber() {bIsSingleNumber = true;}
 		virtual bool isSingleNumber() {return bIsSingleNumber;}
 		virtual int  getSingleNumber() {return m_first;}
+		virtual bool isSimpleRange() {return true;}
+		virtual int  getSimpleFirst() {return m_first;}
+		virtual int  getSimpleLast() {return m_last;}
 	private:
 		int m_first, m_last, m_idx;
 		bool bIsSingleNumber;
@@ -320,6 +325,24 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(printonly, PRINTONLY);
 	SIMPLETOKEN(eof, EOF);
 	SIMPLETOKEN(keep, KEEP);
+	SIMPLETOKEN(strip, STRIP);
+
+	/* range label */
+	if (arg.length()==2 && arg[1]==':' && arg[0]>='a' && arg[0]<='z') {
+		pVec->insert(pVec->end(),
+				Token(TokenListType__RANGELABEL,
+						NULL, arg.substr(1), argidx, arg));
+		NEXT_TOKEN;
+	}
+
+	/* period */
+	if (arg.length()==1 && arg[0]=='.') {
+		pVec->insert(pVec->end(),
+				Token(TokenListType__PERIOD,
+						NULL, "", argidx, arg));
+		NEXT_TOKEN;
+	}
+
 
 	/* Try as a range */
 	if ((pRange = parseAsAnySimpleRangeSpec(arg))) {
