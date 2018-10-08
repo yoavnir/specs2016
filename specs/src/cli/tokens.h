@@ -77,6 +77,7 @@ public:
 	void            setLiteral(std::string l) {assert(m_literal.empty()); m_literal = l;}
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
+	std::string&    HelpIdentify();
 private:
 	TokenListTypes  m_type;
 	TokenFieldRange *m_pRange;

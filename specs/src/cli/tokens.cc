@@ -160,7 +160,9 @@ Token::Token(TokenListTypes _type, TokenFieldRange *pRange, std::string literal,
 std::string Token::Debug(int digits)
 {
 	std::string ret = TokenListType__2str(m_type);
-	ret.resize(16-digits,' ');
+	if (digits) {
+		ret.resize(16-digits,' ');
+	}
 	switch (m_type) {
 		TOKEN_TYPE_LIST
 		case TokenListType__COUNT_ITEMS:
@@ -169,6 +171,13 @@ std::string Token::Debug(int digits)
 	return ret;
 }
 #undef X
+
+std::string& Token::HelpIdentify()
+{
+	static std::string ret = "Token " + TokenListType__2str(m_type) + " at index " +
+			std::to_string(m_argc) + " with content <" + m_orig + ">";
+	return ret;
+}
 
 /* Helper functions */
 static TokenFieldRange *parseAsSingleNumber(std::string s)
@@ -331,7 +340,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	if (arg.length()==2 && arg[1]==':' && arg[0]>='a' && arg[0]<='z') {
 		pVec->insert(pVec->end(),
 				Token(TokenListType__RANGELABEL,
-						NULL, arg.substr(1), argidx, arg));
+						NULL, arg.substr(0,1), argidx, arg));
 		NEXT_TOKEN;
 	}
 

@@ -9,7 +9,7 @@ class itemGroup {
 public:
 	itemGroup();
 	void parse(std::vector<Token> &tokenVec, unsigned int& index);
-	void Debug();
+	std::string Debug();
 private:
 	void addItem(PItem pItem);
 	std::vector<PItem> m_items;

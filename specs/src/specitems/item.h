@@ -21,7 +21,7 @@ public:
 	virtual std::string Debug();
 private:
 	char m_label;
-	Token* m_inputRange;
+	Token *m_inputRange;
 	size_t m_outStart;  /* zero is a special value meaning no output */
 	size_t m_maxLength; /* zero is a special value meaning no limit  */
 };

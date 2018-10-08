@@ -6,11 +6,14 @@ int main(int argc, char** argv)
 {
 	std::vector<Token> vec = parseTokens(argc-1, argv+1); // skipping the program name
 	normalizeTokenList(&vec);
+	itemGroup ig;
 
-	for (int i=0; i<vec.size(); i++) {
-		int digits = (std::to_string(i)).length();
-		std::cout << i << ". " << vec[i].Debug(digits) << "\n";
-	}
+	unsigned int index = 0;
+	ig.parse(vec, index);
+
+	std::cout << "After parsing, index = " << index << "/" << vec.size() << "\n";
+
+	std::cout << ig.Debug();
 
 	return 0;
 }
