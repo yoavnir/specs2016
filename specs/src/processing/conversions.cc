@@ -6,10 +6,11 @@ static std::string conv_identity(std::string& s) {
 
 static std::string conv_C2B(std::string& s) {
 	std::string ret;
+	ret.resize(s.length()*8);
 	for (int i=0; i<s.length(); i++) {
 		unsigned char c = (unsigned char)s[i];
 		for (int j=0; j<8; j++) {
-			ret += (c>=128) ? '1' : '0';
+			ret[i*8+j] = (c>=128) ? '1' : '0';
 			c <<= 1;
 		}
 	}
@@ -20,10 +21,11 @@ static std::string conv_C2B(std::string& s) {
 static std::string conv_C2X(std::string& s) {
 	static char hexchars[]="0123456789abcdef";
 	std::string ret;
+	ret.resize(s.length()*2);
 	for (int i=0; i<s.length(); i++) {
 		unsigned char c = (unsigned char)s[i];
-		ret += hexchars[c>>4];
-		ret += hexchars[c%16];
+		ret[i*2] = hexchars[c>>4];
+		ret[i*2+1] = hexchars[c%16];
 	}
 
 	return ret;
