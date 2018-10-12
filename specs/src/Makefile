@@ -7,7 +7,7 @@ LINK = g++ -g
 
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
 SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o
-PR_OBJ = $(OBJ_DIR)/conversions.o
+PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o
 
 .DUMMY: directories
 
@@ -47,6 +47,10 @@ $(OBJ_DIR)/test.o: test/test.cc cli/tokens.h
 
 $(OBJ_DIR)/itemTest.o: test/itemTest.cc cli/tokens.h specitems/specItems.h
 	$(COMP) -o $@ -c test/itemTest.cc
+	
+	
+$(OBJ_DIR)/Reader.o: processing/Reader.cc processing/Reader.h
+	$(COMP) -o $@ -c processing/Reader.cc
 
 clean:
 	/bin/rm -rf $(EXE_DIR) $(OBJ_DIR)
