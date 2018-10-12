@@ -11,7 +11,7 @@ PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o
 
 .DUMMY: directories
 
-all: directories $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest
+all: directories $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest $(EXE_DIR)/readWriteTest
 
 directories: $(EXE_DIR) $(OBJ_DIR)
 
@@ -27,6 +27,9 @@ $(EXE_DIR)/tokenTest: $(OBJ_DIR)/test.o $(CLI_OBJ) $(PR_OBJ)
 $(EXE_DIR)/itemTest: $(OBJ_DIR)/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ)
 	$(COMP) -o $@ ../obj/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ)
 
+$(EXE_DIR)/readWriteTest: $(OBJ_DIR)/readWriteTest.o $(PR_OBJ)
+	$(COMP) -o $@ ../obj/readWriteTest.o $(PR_OBJ)
+	
 $(OBJ_DIR)/tokens.o: cli/tokens.cc cli/tokens.h
 	$(COMP) -o $@ -c cli/tokens.cc
 	
@@ -48,6 +51,8 @@ $(OBJ_DIR)/test.o: test/test.cc cli/tokens.h
 $(OBJ_DIR)/itemTest.o: test/itemTest.cc cli/tokens.h specitems/specItems.h
 	$(COMP) -o $@ -c test/itemTest.cc
 	
+$(OBJ_DIR)/readWriteTest.o: test/readWriteTest.cc processing/Reader.h processing/Writer.h
+	$(COMP) -o $@ -c test/readWriteTest.cc
 	
 $(OBJ_DIR)/Reader.o: processing/Reader.cc processing/Reader.h
 	$(COMP) -o $@ -c processing/Reader.cc
