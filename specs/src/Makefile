@@ -2,7 +2,7 @@ MKDIR_C = mkdir -p
 EXE_DIR = ../exe
 OBJ_DIR = ../obj
 INC = -I cli
-COMP = g++ -g $(INC)
+COMP = g++ -g -DDEBUG --std=c++11 $(INC)
 LINK = g++ -g
 
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
@@ -54,9 +54,9 @@ $(OBJ_DIR)/itemTest.o: test/itemTest.cc cli/tokens.h specitems/specItems.h
 $(OBJ_DIR)/readWriteTest.o: test/readWriteTest.cc processing/Reader.h processing/Writer.h
 	$(COMP) -o $@ -c test/readWriteTest.cc
 	
-$(OBJ_DIR)/Reader.o: processing/Reader.cc processing/Reader.h
+$(OBJ_DIR)/Reader.o: processing/Reader.cc processing/Reader.h processing/StringQueue.h
 	$(COMP) -o $@ -c processing/Reader.cc
-$(OBJ_DIR)/Writer.o: processing/Writer.cc processing/Writer.h
+$(OBJ_DIR)/Writer.o: processing/Writer.cc processing/Writer.h processing/StringQueue.h
 	$(COMP) -o $@ -c processing/Writer.cc
 
 clean:

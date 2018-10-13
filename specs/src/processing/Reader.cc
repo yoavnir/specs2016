@@ -1,17 +1,39 @@
 #include "assert.h"
 #include "Reader.h"
 
-//class StandardReader : public Reader {
-//public:
-//	StandardReader();	      /* simple constructor - stdin becomes the source */
-//	StandardReader(FILE* f);
-//	StandardReader(std::string& fn);
-//	virtual ~StandardReader();
-//	virtual bool eof();
-//	virtual std::string getNextRecord();
-//private:
-//	FILE* m_File;
-//};
+void ReadAllRecordsIntoReaderQueue(Reader* r)
+{
+	while (!r->endOfSource()) {
+		r->readIntoQueue();
+	}
+}
+
+Reader::~Reader()
+{
+	if (mp_thread) {
+		mp_thread->join();
+	}
+}
+
+std::string *Reader::get()
+{
+	if (eof()) return NULL;
+	pstr ret;
+	m_queue.wait_and_pop(ret);
+	return ret;
+}
+
+void Reader::readIntoQueue()
+{
+	if (!endOfSource()) {
+		m_queue.push(getNextRecord());
+	}
+}
+
+void Reader::begin() {
+	mp_thread = new std::thread(ReadAllRecordsIntoReaderQueue, this);
+}
+
 
 StandardReader::StandardReader() {
 	m_File = stdin;
@@ -48,7 +70,7 @@ StandardReader::~StandardReader() {
 	}
 }
 
-bool StandardReader::eof() {
+bool StandardReader::endOfSource() {
 	return m_EOF;
 }
 

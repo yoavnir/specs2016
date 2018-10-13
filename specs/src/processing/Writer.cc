@@ -1,13 +1,51 @@
-#include <stdio.h>
+#include <iostream>
 #include "Writer.h"
 
-void SimpleWriter::Write(std::string& str)
+void WriteAllRecords(Writer *pw)
 {
-	printf("%s\n", str.c_str());
+	while (!pw->Done()) {
+		pw->WriteOut();
+	}
 }
 
-void SimpleWriter::Write(std::string* pstr)
+Writer::Writer()
 {
-	printf("%s\n", pstr->c_str());
-	delete pstr;
+	mp_thread = NULL;
+	m_ended = false;
+}
+
+Writer::~Writer()
+{
+}
+
+void Writer::Write(pstr ps)
+{
+	m_queue.push(ps);
+}
+
+void Writer::Begin()
+{
+	mp_thread = new std::thread(WriteAllRecords, this);
+}
+
+void Writer::End()
+{
+	m_ended = true;
+	m_queue.Done();
+	if (mp_thread) {
+		mp_thread->join();
+	}
+}
+
+bool Writer::Done()
+{
+	return m_ended && m_queue.empty();
+}
+
+void SimpleWriter::WriteOut()
+{
+	pstr ps;
+	m_queue.wait_and_pop(ps);
+	std::cout << *ps << std::endl;
+	delete ps;
 }
