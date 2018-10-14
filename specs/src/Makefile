@@ -7,7 +7,7 @@ LINK = g++ -g
 
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
 SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o
-PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o
+PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o $(OBJ_DIR)/ProcessingState.o $(OBJ_DIR)/StringBuilder.o
 
 .DUMMY: directories
 
@@ -54,8 +54,15 @@ $(OBJ_DIR)/itemTest.o: test/itemTest.cc cli/tokens.h specitems/specItems.h
 $(OBJ_DIR)/readWriteTest.o: test/readWriteTest.cc processing/Reader.h processing/Writer.h
 	$(COMP) -o $@ -c test/readWriteTest.cc
 	
+$(OBJ_DIR)/ProcessingState.o: processing/ProcessingState.cc processing/ProcessingState.h 
+	$(COMP) -o $@ -c processing/ProcessingState.cc
+	
+$(OBJ_DIR)/StringBuilder.o: processing/StringBuilder.cc processing/StringBuilder.h 
+	$(COMP) -o $@ -c processing/StringBuilder.cc
+	
 $(OBJ_DIR)/Reader.o: processing/Reader.cc processing/Reader.h processing/StringQueue.h
 	$(COMP) -o $@ -c processing/Reader.cc
+	
 $(OBJ_DIR)/Writer.o: processing/Writer.cc processing/Writer.h processing/StringQueue.h
 	$(COMP) -o $@ -c processing/Writer.cc
 

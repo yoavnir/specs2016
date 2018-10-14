@@ -1,8 +1,10 @@
 #include "../processing/Reader.h"
 #include "../processing/Writer.h"
+#include "../processing/StringBuilder.h"
 
 int main(int argc, char** argv)
 {
+	StringBuilder sb;
 	Reader* pRead = new StandardReader();
 	Writer* pWrite = new SimpleWriter();
 
@@ -10,7 +12,10 @@ int main(int argc, char** argv)
 	pWrite->Begin();
 
 	while (!pRead->eof()) {
-		pWrite->Write(pRead->get());
+		std::string* p = pRead->get();
+		sb.insert(p,1);
+		delete p;
+		pWrite->Write(sb.GetString());
 	}
 
 	pWrite->End();
