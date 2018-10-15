@@ -97,3 +97,8 @@ std::string DataField::Debug() {
 	ret += '}';
 	return ret;
 }
+
+void DataField::apply(std::string* ps, StringBuilder* pSB)
+{
+
+}
