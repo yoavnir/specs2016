@@ -21,6 +21,7 @@ public:
 	int     getWordEnd(int idx);
 	int     getFieldStart(int idx);
 	int     getFieldEnd(int idx);
+	std::string* getFromTo(int from, int to);
 	char    m_pad;
 	char    m_wordSeparator;
 	char    m_fieldSeparator;
