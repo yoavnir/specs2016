@@ -11,7 +11,7 @@ PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o $(OBJ_
 
 .DUMMY: directories
 
-all: directories $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest $(EXE_DIR)/readWriteTest
+all: directories $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest $(EXE_DIR)/readWriteTest $(EXE_DIR)/ProcessingTest
 
 directories: $(EXE_DIR) $(OBJ_DIR)
 
@@ -29,6 +29,9 @@ $(EXE_DIR)/itemTest: $(OBJ_DIR)/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ)
 
 $(EXE_DIR)/readWriteTest: $(OBJ_DIR)/readWriteTest.o $(PR_OBJ)
 	$(COMP) -o $@ ../obj/readWriteTest.o $(PR_OBJ)
+	
+$(EXE_DIR)/ProcessingTest: $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ)
+	$(COMP) -o $@ ../obj/ProcessingTest.o $(PR_OBJ)
 	
 $(OBJ_DIR)/tokens.o: cli/tokens.cc cli/tokens.h
 	$(COMP) -o $@ -c cli/tokens.cc
@@ -53,6 +56,9 @@ $(OBJ_DIR)/itemTest.o: test/itemTest.cc cli/tokens.h specitems/specItems.h
 	
 $(OBJ_DIR)/readWriteTest.o: test/readWriteTest.cc processing/Reader.h processing/Writer.h
 	$(COMP) -o $@ -c test/readWriteTest.cc
+
+$(OBJ_DIR)/ProcessingTest.o: test/ProcessingTest.cc processing/ProcessingState.h
+	$(COMP) -o $@ -c test/ProcessingTest.cc
 	
 $(OBJ_DIR)/ProcessingState.o: processing/ProcessingState.cc processing/ProcessingState.h 
 	$(COMP) -o $@ -c processing/ProcessingState.cc
