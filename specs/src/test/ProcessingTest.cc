@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "../processing/ProcessingState.h"
+#include "../processing/StringBuilder.h"
 
 #define VERIFYSTRING(s) {     \
 	std::cout << "Expecting: <" << s << "> Got: <" << *pRet << "> ... ";  \
@@ -10,6 +11,8 @@
 		std::cout << "ERROR\n";  \
 		errorCount++;            \
 	} }
+
+#define GET_WORD_RANGE(f,t) ps.getFromTo((ps.getWordStart(f)),(ps.getWordEnd(t)))
 
 int main(int argc, char** argv)
 {
@@ -32,6 +35,31 @@ int main(int argc, char** argv)
 	int _to = ps.getWordEnd(5);
 	pRet = ps.getFromTo(_from, _to);
 	VERIFYSTRING("brown fox jumped");
+
+	// Some StringBuilder tests
+	StringBuilder sb;
+
+	// w1 1 w3 nw w6 n ==> "The brownover"
+	pRet = GET_WORD_RANGE(1,1);
+	sb.insert(pRet, 1);
+	pRet = GET_WORD_RANGE(3,3);
+	sb.insertNextWord(pRet);
+	pRet = GET_WORD_RANGE(6,6);
+	sb.insertNext(pRet);
+	pRet = sb.GetString();
+	VERIFYSTRING("The brownover");
+
+	// w1 2 w3 4 w7-8 12 ==> " Thbrown    the   lazy"
+	pRet = GET_WORD_RANGE(1,1);
+	sb.insert(pRet, 2);
+	pRet = GET_WORD_RANGE(3,3);
+	sb.insert(pRet, 4);
+	pRet = GET_WORD_RANGE(7,8);
+	sb.insert(pRet, 12);
+	pRet = sb.GetString();
+	VERIFYSTRING(" Thbrown   the   lazy");
+
+
 
 
 	return (errorCount==0) ? 0 : 4;

@@ -37,13 +37,13 @@ void StringBuilder::insert(std::string* s, size_t offset)
 
 void StringBuilder::insertNext(std::string* s)
 {
-	insert(s, mp_str->length());
+	insert(s, mp_str->length() + 1);
 }
 
 void StringBuilder::insertNextWord(std::string* s)
 {
 	size_t len = mp_str->length();
 	mp_str->resize(len + s->length() + 1, m_ps.m_pad);
-	insert(s, len+1);
+	insert(s, len+2);
 }
 
