@@ -4,7 +4,7 @@
 
 StringBuilder::StringBuilder()
 {
-	mp_str = new std::string;
+	mp_str = NULL;
 }
 
 StringBuilder::~StringBuilder()
@@ -17,13 +17,16 @@ StringBuilder::~StringBuilder()
 std::string* StringBuilder::GetString()
 {
 	std::string* pRet = mp_str;
-	mp_str = new std::string;
+	mp_str = NULL;
 	return pRet;
 }
 
 void StringBuilder::insert(std::string* s, size_t offset)
 {
 	assert(offset>0);
+	if (!mp_str) {
+		mp_str = new std::string;
+	}
 	offset--;  // translate it to C-style offsets
 	size_t endPos = offset + s->length();
 	if (mp_str->length() < endPos) {
