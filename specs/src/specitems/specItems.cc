@@ -35,3 +35,26 @@ std::string itemGroup::Debug()
 
 	return ret;
 }
+
+void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr)
+{
+	std::string *ps;
+	while ((ps=rd.get())) {
+		int i;
+		pState.setString(ps);
+		for (i=0; i<m_items.size(); i++) {
+			PItem pit = m_items[i];
+			ApplyRet aRet = pit->apply(pState, &sb);
+			switch (aRet) {
+			case ApplyRet__Continue:
+				break;
+			case ApplyRet__Write:
+				wr.Write(sb.GetString());
+				break;
+			default:
+				assert(2==1);
+			}
+		}
+		wr.Write(sb.GetString());   // TODO: don't if nothing was done since the last write?
+	}
+}

@@ -36,8 +36,8 @@ void ProcessingState::setString(std::string* ps)
 
 void ProcessingState::identifyWords()
 {
-	m_wordStart.empty();
-	m_wordEnd.empty();
+	m_wordStart.clear();
+	m_wordEnd.clear();
 	m_wordCount = 0;
 	const char* pc = m_ps->c_str();
 	int i = 0;

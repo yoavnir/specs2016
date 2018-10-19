@@ -20,6 +20,17 @@ protected:
 	std::thread *mp_thread;
 };
 
+class TestReader : public Reader {
+public:
+	TestReader(std::string* arr, size_t count) {mp_arr = arr; m_count = count; m_idx = 0;}
+	virtual bool endOfSource() {return m_idx >= m_count;}
+	virtual std::string *getNextRecord() {return new std::string(mp_arr[m_idx++]);}
+private:
+	std::string* mp_arr;
+	size_t       m_count;
+	size_t       m_idx;
+};
+
 class StandardReader : public Reader {
 public:
 	StandardReader();	      /* simple constructor - stdin becomes the source */

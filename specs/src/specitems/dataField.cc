@@ -98,7 +98,41 @@ std::string DataField::Debug() {
 	return ret;
 }
 
-void DataField::apply(std::string* ps, StringBuilder* pSB)
+ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
+	int _from, _to;
+	std::string* pInput;
+	switch (m_inputRange->Type()) {
+	case TokenListType__RANGE:
+		_from = m_inputRange->Range()->getSimpleFirst();
+		_to = m_inputRange->Range()->getSimpleLast();
+		pInput = pState.getFromTo(_from, _to);
+		break;
+	case TokenListType__WORDRANGE:
+		_from = pState.getWordStart(m_inputRange->Range()->getSimpleFirst());
+		_to = pState.getWordEnd(m_inputRange->Range()->getSimpleLast());
+		pInput = pState.getFromTo(_from, _to);
+		break;
+	case TokenListType__FIELDRANGE:
+		_from = pState.getWordStart(m_inputRange->Range()->getSimpleFirst());
+		_to = pState.getWordEnd(m_inputRange->Range()->getSimpleLast());
+		pInput = pState.getFromTo(_from, _to);
+		break;
+	case TokenListType__LITERAL:
+		pInput = new std::string(m_inputRange->Literal());
+		break;
+	default:
+		assert(2==1);
+	}
 
+	if (!pInput) pInput = new std::string;
+
+	// truncate or expand if necessary
+	if (m_maxLength>0 && pInput->length()!=m_maxLength) {
+		pInput->resize(m_maxLength);  // TODO: Add placement
+	}
+
+	pSB->insert(pInput, m_outStart);
+	delete pInput;
+	return ApplyRet__Continue;
 }

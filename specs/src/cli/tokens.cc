@@ -424,6 +424,8 @@ std::vector<Token> parseTokens(int argc, char** argv)
 
 void normalizeTokenList(std::vector<Token> *tokList)
 {
+	if (tokList->size()==0) return;
+
 	for (int i=0; i<tokList->size()-1; i++) {
 		Token& tok = tokList->at(i);
 		Token& nextTok = tokList->at(i+1);

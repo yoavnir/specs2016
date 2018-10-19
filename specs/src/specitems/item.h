@@ -6,12 +6,19 @@
 #include "../cli/tokens.h"
 #include "../processing/conversions.h"
 #include "../processing/StringBuilder.h"
+#include "../processing/ProcessingState.h"
+
+enum ApplyRet {
+	ApplyRet__Continue,
+	ApplyRet__Write,
+	ApplyRet__Last
+};
 
 class Item {
 public:
 	virtual ~Item() {}
 	virtual std::string Debug() = 0;
-	virtual void apply(std::string* ps, StringBuilder* pSB) = 0;
+	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
 };
 
 typedef Item* PItem;
@@ -22,7 +29,7 @@ public:
 	virtual ~DataField();
 	void parse(std::vector<Token> &tokenVec, unsigned int& index);
 	virtual std::string Debug();
-	virtual void apply(std::string* ps, StringBuilder* pSB);
+	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 private:
 	char m_label;
 	Token *m_inputRange;

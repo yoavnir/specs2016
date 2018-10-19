@@ -7,7 +7,7 @@ LINK = g++ -g
 
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
 SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o
-PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o $(OBJ_DIR)/ProcessingState.o $(OBJ_DIR)/StringBuilder.o
+PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o $(OBJ_DIR)/ProcessingState.o $(OBJ_DIR)/StringBuilder.o $(OBJ_DIR)/Config.o
 
 .DUMMY: directories
 
@@ -71,6 +71,9 @@ $(OBJ_DIR)/Reader.o: processing/Reader.cc processing/Reader.h processing/StringQ
 	
 $(OBJ_DIR)/Writer.o: processing/Writer.cc processing/Writer.h processing/StringQueue.h
 	$(COMP) -o $@ -c processing/Writer.cc
+	
+$(OBJ_DIR)/Config.o: processing/Config.cc
+	$(COMP) -o $@ -c processing/Config.cc
 
 clean:
 	/bin/rm -rf $(EXE_DIR) $(OBJ_DIR)
