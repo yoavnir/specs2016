@@ -1,3 +1,4 @@
+#include "../cli/tokens.h"
 #include "conversions.h"
 
 static std::string conv_identity(std::string& s) {
@@ -62,6 +63,6 @@ std::string stringConvert(std::string& source, StringConversions conv)
 	switch (conv) {
 	STRING_CONVERSIONS_LIST
 	default:
-		throw std::invalid_argument("Bad conversion "+StringConversion__2str(conv));
+		MYTHROW("Bad conversion "+StringConversion__2str(conv));
 	}
 }

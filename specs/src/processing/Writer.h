@@ -22,7 +22,6 @@ protected:
 
 class SimpleWriter : public Writer {
 public:
-	virtual ~SimpleWriter() {}
 	virtual void WriteOut();
 };
 

@@ -64,7 +64,7 @@ std::vector<Token> parseTokensSplit(char* arg)
 			break;
 		case SpSt__Escape:
 			if (!*ptr) {
-				throw std::invalid_argument("Bad escape character at end of argument.");
+				MYTHROW("Bad escape character at end of argument");
 			}
 			sarg+=*ptr++;
 			st = SpSt__GettingChars;
@@ -104,11 +104,11 @@ std::vector<Token> parseTokensSplit(char* arg)
 	}
 
 	if (SpSt__GettingChars==st && delimiter!='\0') {
-		throw std::invalid_argument("Missing delimiter at end of input");
+		MYTHROW("Missing delimiter at end of input");
 	}
 
 	if (!sarg.empty()) {
-		throw std::logic_error("whaaa?");
+		MYTHROW("whaaa?");
 	}
 
 

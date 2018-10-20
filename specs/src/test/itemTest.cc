@@ -69,6 +69,7 @@ int main(int argc, char** argv)
 	ig.process(sb, ps, *pRd, *pWr);
 
 	delete pRd;
+	pWr->End();
 	delete pWr;
 	vec.clear();
 

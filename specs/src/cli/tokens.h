@@ -22,6 +22,7 @@
 	X(FIELDSEPARATOR, false, true)  \
 	X(WORDSEPARATOR,  false, true)  \
 	X(NEXTWORD,       false, false) \
+	X(NEXT,           false, false) \
 	X(FIELDRANGE,     true,  false) \
 	X(SUBSTRING,      false, false) \
 	X(OF,             false, false) \
@@ -91,5 +92,10 @@ extern Token dummyToken;
 
 std::vector<Token> parseTokens(int argc, char** argv);
 void normalizeTokenList(std::vector<Token> *tokList);
+
+#define MYTHROW(s) {  \
+	std::string excpMsg = std::string("SPECS Exception at ") + __FILE__ + ":" + \
+	std::to_string(__LINE__) + " - " + (s);  \
+	throw std::invalid_argument(excpMsg); }
 
 #endif

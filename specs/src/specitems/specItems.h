@@ -12,6 +12,7 @@
 class itemGroup {
 public:
 	itemGroup();
+	~itemGroup()  {}
 	void parse(std::vector<Token> &tokenVec, unsigned int& index);
 	void process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr);
 	std::string Debug();

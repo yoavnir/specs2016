@@ -14,6 +14,10 @@ enum ApplyRet {
 	ApplyRet__Last
 };
 
+#define POS_SPECIAL_VALUE_NEXTWORD 0xffffffff
+#define POS_SPECIAL_VALUE_NEXT     0xfffffffe
+#define MAX_OUTPUT_POSITION        65536
+
 class Item {
 public:
 	virtual ~Item() {}

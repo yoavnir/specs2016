@@ -10,7 +10,7 @@ public:
 	~StringBuilder();
 	std::string*   GetString();
 	size_t         Length() { return mp_str->length(); }
-	void           insert(std::string* str, size_t offset);
+	void           insert(std::string* str, size_t offset, bool bOnlyPhysical=false);
 	void           insertNext(std::string* str);
 	void           insertNextWord(std::string* str);
 private:

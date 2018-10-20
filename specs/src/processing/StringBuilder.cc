@@ -102,7 +102,7 @@ std::string* StringBuilder::GetString()
 	return pRet;
 }
 
-void StringBuilder::insert(std::string* s, size_t offset)
+void StringBuilder::insert(std::string* s, size_t offset, bool bOnlyPhysical)
 {
 	assert(offset>0);
 	if (!mp_str) {
@@ -110,7 +110,7 @@ void StringBuilder::insert(std::string* s, size_t offset)
 	}
 	offset--;  // translate it to C-style offsets
 
-	if (g_bSupportUTF8) {
+	if (g_bSupportUTF8 && !bOnlyPhysical) {
 		size_t physOffset = char2physOffset(mp_str, offset);
 		if (!physOffset)  {  // offset is beyond where the string is
 			offset = (offset-utf8Len(mp_str)) + mp_str->length();
@@ -128,13 +128,13 @@ void StringBuilder::insert(std::string* s, size_t offset)
 
 void StringBuilder::insertNext(std::string* s)
 {
-	insert(s, mp_str->length() + 1);
+	insert(s, mp_str->length() + 1, true);
 }
 
 void StringBuilder::insertNextWord(std::string* s)
 {
 	size_t len = mp_str->length();
 	mp_str->resize(len + s->length() + 1, m_ps.m_pad);
-	insert(s, len+2);
+	insert(s, len+2, true);
 }
 

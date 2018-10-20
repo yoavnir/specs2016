@@ -142,7 +142,7 @@ std::string Token::Debug(int digits)
 	switch (m_type) {
 		TOKEN_TYPE_LIST
 		case TokenListType__COUNT_ITEMS:
-			throw std::out_of_range("Bad m_type in Token");
+			MYTHROW("Bad m_type in Token");
 	}
 	return ret;
 }
@@ -285,7 +285,10 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 
 	/* Some simple tokens */
 	SIMPLETOKEN(nw,NEXTWORD);
+	SIMPLETOKEN(nword,NEXTWORD);
 	SIMPLETOKENV(nextword,NEXTWORD,5);
+	SIMPLETOKEN(n,NEXT);
+	SIMPLETOKEN(next,NEXT);
 	SIMPLETOKENV(substring,SUBSTRING,6);  // can be shortened down to substr
 	SIMPLETOKEN(word,WORDRANGE);
 	SIMPLETOKEN(field,FIELDRANGE);
@@ -395,7 +398,7 @@ static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int 
 	}
 	if (idx==MAX_INPUT_RANGES_IN_GROUP) {
 		std::string err = "Too many items in ranges group at index " + std::to_string(argidx);
-		throw std::invalid_argument(err);
+		MYTHROW(err);
 	}
 	for (int i=0; i<idx; i++) {
 		parseSingleToken(pVec, std::string(itemPtrs[i]), argidx);
@@ -435,7 +438,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 			if (tok.Range()==NULL) {
 				if (nextTok.Type()!=TokenListType__RANGE) {
 					std::string err = "Bad word/field range <"+nextTok.Orig()+"> at index "+ std::to_string(nextTok.argIndex())+".";
-					throw std::invalid_argument(err);
+					MYTHROW(err);
 				}
 				tok.setRange(nextTok.Range());
 				tokList->erase(tokList->begin()+(i+1));
@@ -447,7 +450,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				if (nextTok.Type()==TokenListType__LITERAL) {
 					if (nextTok.Literal().length()!=1) {
 						std::string err = "Bad field separator <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
-						throw std::invalid_argument(err);
+						MYTHROW(err);
 					}
 					tok.setLiteral(nextTok.Literal());
 					tokList->erase(tokList->begin()+(i+1));
@@ -455,12 +458,12 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					TokenFieldRange *pRange = nextTok.Range();
 					if (!pRange->isSingleNumber()) {
 						std::string err = "Bad field separator <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
-						throw std::invalid_argument(err);
+						MYTHROW(err);
 					}
 					int num = pRange->getSingleNumber();
 					if (num<0 || num>=10) {
 						std::string err = "Bad field separator <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
-						throw std::invalid_argument(err);
+						MYTHROW(err);
 					}
 					tok.setLiteral(std::to_string(num));
 					tokList->erase(tokList->begin()+(i+1));

@@ -13,7 +13,7 @@ DataField::DataField()
 }
 
 DataField::~DataField() {
-
+	fprintf(stderr, "~DataField\n");
 }
 
 void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
@@ -37,7 +37,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		m_inputRange = new Token(token);
 		break;
 	default:
-		throw std::invalid_argument("Bad inputRange " + token.HelpIdentify());
+		MYTHROW("Bad inputRange " + token.HelpIdentify());
 	}
 
 	/* insert code here to deal with strip and conversion */
@@ -56,14 +56,14 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	}
 
 	/* output placement */
+	m_maxLength = LAST_POS_END;
 	switch (tokenType) {
 	case TokenListType__RANGE:
 		if (!token.Range()->isSimpleRange()) {
-			throw std::invalid_argument("Bad output placement " + token.HelpIdentify());
+			MYTHROW("Bad output placement " + token.HelpIdentify());
 		}
 		if (token.Range()->isSingleNumber()) {
 			m_outStart = token.Range()->getSingleNumber();
-			m_maxLength = LAST_POS_END;
 		} else {
 			m_outStart = token.Range()->getSimpleFirst();
 			m_maxLength = token.Range()->getSimpleLast() - m_outStart + 1;
@@ -72,8 +72,14 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	case TokenListType__PERIOD:
 		m_outStart = LAST_POS_END;
 		break;
+	case TokenListType__NEXTWORD:
+		m_outStart = POS_SPECIAL_VALUE_NEXTWORD;
+		break;
+	case TokenListType__NEXT:
+		m_outStart = POS_SPECIAL_VALUE_NEXT;
+		break;
 	default:
-		throw std::invalid_argument("Bad output placement " + token.HelpIdentify());
+		MYTHROW("Bad output placement " + token.HelpIdentify());
 	}
 }
 
@@ -132,7 +138,16 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		pInput->resize(m_maxLength);  // TODO: Add placement
 	}
 
-	pSB->insert(pInput, m_outStart);
+	if (m_outStart==POS_SPECIAL_VALUE_NEXT) {
+		pSB->insertNext(pInput);
+	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTWORD) {
+		pSB->insertNextWord(pInput);
+	} else if (m_outStart <= MAX_OUTPUT_POSITION) {
+		pSB->insert(pInput, m_outStart);
+	} else {
+		std::string err = std::string("Output position too great: ") + std::to_string(m_outStart);
+		MYTHROW(err);
+	}
 	delete pInput;
 	return ApplyRet__Continue;
 }

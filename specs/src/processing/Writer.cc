@@ -16,6 +16,9 @@ Writer::Writer()
 
 Writer::~Writer()
 {
+	if (mp_thread && mp_thread->joinable()) {
+		mp_thread->join();
+	}
 }
 
 void Writer::Write(pstr ps)
@@ -45,7 +48,8 @@ bool Writer::Done()
 void SimpleWriter::WriteOut()
 {
 	pstr ps;
-	m_queue.wait_and_pop(ps);
-	std::cout << *ps << std::endl;
-	delete ps;
+	if (m_queue.wait_and_pop(ps)) {
+		std::cout << *ps << std::endl;
+		delete ps;
+	}
 }
