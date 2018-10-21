@@ -5,7 +5,7 @@
 #include "../processing/Reader.h"
 #include "../processing/Writer.h"
 
-std::string Jabberwocky[] = {
+std::string Jabberwocky_utf8[] = {
 	    std::string("’Twas brillig, and the slithy toves "),
 	    std::string("      Did gyre and gimble in the wabe: "),
 	    std::string("All mimsy were the borogoves, "),
@@ -37,6 +37,44 @@ std::string Jabberwocky[] = {
 	    std::string("      He chortled in his joy. "),
 	    std::string(""),
 	    std::string("’Twas brillig, and the slithy toves "),
+	    std::string("      Did gyre and gimble in the wabe: "),
+	    std::string("All mimsy were the borogoves, "),
+	    std::string("      And the mome raths outgrabe."),
+	    std::string("")
+};
+
+std::string Jabberwocky[] = {
+	    std::string("'Twas brillig, and the slithy toves "),
+	    std::string("      Did gyre and gimble in the wabe: "),
+	    std::string("All mimsy were the borogoves, "),
+	    std::string("      And the mome raths outgrabe. "),
+	    std::string(""),
+	    std::string("\"Beware the Jabberwock, my son! "),
+	    std::string("      The jaws that bite, the claws that catch! "),
+	    std::string("Beware the Jubjub bird, and shun "),
+	    std::string("      The frumious Bandersnatch!\" "),
+	    std::string(""),
+	    std::string("He took his vorpal sword in hand; "),
+	    std::string("      Long time the manxome foe he sought— "),
+	    std::string("So rested he by the Tumtum tree "),
+	    std::string("      And stood awhile in thought. "),
+	    std::string(""),
+	    std::string("And, as in uffish thought he stood, "),
+	    std::string("      The Jabberwock, with eyes of flame, "),
+	    std::string("Came whiffling through the tulgey wood, "),
+	    std::string("      And burbled as it came! "),
+	    std::string(""),
+	    std::string("One, two! One, two! And through and through "),
+	    std::string("      The vorpal blade went snicker-snack! "),
+	    std::string("He left it dead, and with its head "),
+	    std::string("      He went galumphing back. "),
+	    std::string(""),
+	    std::string("\"And hast thou slain the Jabberwock? "),
+	    std::string("      Come to my arms, my beamish boy! "),
+	    std::string("O frabjous day! Callooh! Callay!\" "),
+	    std::string("      He chortled in his joy. "),
+	    std::string(""),
+	    std::string("'Twas brillig, and the slithy toves "),
 	    std::string("      Did gyre and gimble in the wabe: "),
 	    std::string("All mimsy were the borogoves, "),
 	    std::string("      And the mome raths outgrabe."),

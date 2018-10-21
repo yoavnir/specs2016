@@ -1,3 +1,4 @@
+#include "../utils/ErrorReporting.h"
 #include "item.h"
 
 #define GET_NEXT_TOKEN {token = tokenVec[index]; tokenType = token.Type(); index++; }
@@ -37,7 +38,8 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		m_inputRange = new Token(token);
 		break;
 	default:
-		MYTHROW("Bad inputRange " + token.HelpIdentify());
+		std::string err = "Bad inputRange " + token.HelpIdentify();
+		MYTHROW(err);
 	}
 
 	/* insert code here to deal with strip and conversion */
@@ -60,7 +62,8 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	switch (tokenType) {
 	case TokenListType__RANGE:
 		if (!token.Range()->isSimpleRange()) {
-			MYTHROW("Bad output placement " + token.HelpIdentify());
+			std::string err = "Bad output placement " + token.HelpIdentify();
+			MYTHROW(err);
 		}
 		if (token.Range()->isSingleNumber()) {
 			m_outStart = token.Range()->getSingleNumber();
@@ -79,7 +82,8 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		m_outStart = POS_SPECIAL_VALUE_NEXT;
 		break;
 	default:
-		MYTHROW("Bad output placement " + token.HelpIdentify());
+		std::string err = "Bad output placement " + token.HelpIdentify();
+		MYTHROW(err);
 	}
 }
 

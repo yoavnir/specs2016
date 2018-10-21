@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "../cli/tokens.h"
+#include "../utils/ErrorReporting.h"
 #include "Reader.h"
 
 void ReadAllRecordsIntoReaderQueue(Reader* r)
@@ -57,7 +57,8 @@ StandardReader::StandardReader(FILE* f) {
 StandardReader::StandardReader(std::string& fn) {
 	m_File = fopen(fn.c_str(), "r");  // In future, allow binary.
 	if (!m_File) {
-		MYTHROW("File not found " + fn);
+		std::string err = "File not found: " + fn;
+		MYTHROW(err);
 	}
 	m_NeedToClose = true;
 	m_EOF = false;

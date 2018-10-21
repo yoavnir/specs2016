@@ -39,6 +39,7 @@ std::string itemGroup::Debug()
 void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr)
 {
 	std::string *ps;
+	bool bSomethingWasDone = false;
 	while ((ps=rd.get())) {
 		int i;
 		pState.setString(ps);
@@ -47,14 +48,20 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 			ApplyRet aRet = pit->apply(pState, &sb);
 			switch (aRet) {
 			case ApplyRet__Continue:
+				bSomethingWasDone = true;
 				break;
 			case ApplyRet__Write:
-				wr.Write(sb.GetString());
+				if (bSomethingWasDone) {
+					wr.Write(sb.GetString());
+				} else {
+					wr.Write(new std::string);
+				}
+				bSomethingWasDone = false;
 				break;
 			default:
 				assert(2==1);
 			}
 		}
-		wr.Write(sb.GetString());   // TODO: don't if nothing was done since the last write?
+		if (bSomethingWasDone) wr.Write(sb.GetString());
 	}
 }

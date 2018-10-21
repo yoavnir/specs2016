@@ -49,6 +49,7 @@ void SimpleWriter::WriteOut()
 {
 	pstr ps;
 	if (m_queue.wait_and_pop(ps)) {
+		fprintf(stderr, "ps=%p\n", ps);
 		std::cout << *ps << std::endl;
 		delete ps;
 	}

@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include "../utils/ErrorReporting.h"
 #include "tokens.h"
 
 void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx);

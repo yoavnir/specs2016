@@ -8,6 +8,7 @@ LINK = g++ -g
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
 SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o
 PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o $(OBJ_DIR)/ProcessingState.o $(OBJ_DIR)/StringBuilder.o $(OBJ_DIR)/Config.o
+UT_OBJ = $(OBJ_DIR)/SpecString.o $(OBJ_DIR)/ErrorReporting.o
 
 .DUMMY: directories
 
@@ -21,17 +22,17 @@ $(EXE_DIR):
 $(OBJ_DIR):
 	$(MKDIR_C) $@
 
-$(EXE_DIR)/tokenTest: $(OBJ_DIR)/test.o $(CLI_OBJ) $(PR_OBJ)
-	$(COMP) -o $@ ../obj/test.o $(CLI_OBJ) $(PR_OBJ)
+$(EXE_DIR)/tokenTest: $(OBJ_DIR)/test.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ ../obj/test.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
 
-$(EXE_DIR)/itemTest: $(OBJ_DIR)/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ)
-	$(COMP) -o $@ ../obj/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ)
+$(EXE_DIR)/itemTest: $(OBJ_DIR)/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ ../obj/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ) $(UT_OBJ)
 
-$(EXE_DIR)/readWriteTest: $(OBJ_DIR)/readWriteTest.o $(PR_OBJ)
-	$(COMP) -o $@ ../obj/readWriteTest.o $(PR_OBJ)
+$(EXE_DIR)/readWriteTest: $(OBJ_DIR)/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ ../obj/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
 	
-$(EXE_DIR)/ProcessingTest: $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ)
-	$(COMP) -o $@ ../obj/ProcessingTest.o $(PR_OBJ)
+$(EXE_DIR)/ProcessingTest: $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ ../obj/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
 	
 $(OBJ_DIR)/tokens.o: cli/tokens.cc cli/tokens.h
 	$(COMP) -o $@ -c cli/tokens.cc
@@ -74,6 +75,12 @@ $(OBJ_DIR)/Writer.o: processing/Writer.cc processing/Writer.h processing/StringQ
 	
 $(OBJ_DIR)/Config.o: processing/Config.cc
 	$(COMP) -o $@ -c processing/Config.cc
+	
+$(OBJ_DIR)/SpecString.o: utils/SpecString.cc utils/SpecString.h
+	$(COMP) -o $@ -c utils/SpecString.cc
+
+$(OBJ_DIR)/ErrorReporting.o: utils/ErrorReporting.cc utils/ErrorReporting.h
+	$(COMP) -o $@ -c utils/ErrorReporting.cc
 
 clean:
 	/bin/rm -rf $(EXE_DIR) $(OBJ_DIR)

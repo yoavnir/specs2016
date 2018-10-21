@@ -40,6 +40,7 @@ public:
     StringQueue() {m_Done = false;}
     void push(pstr const& data)
     {
+    	assert(data!=NULL);
         scopedLock lock(&m_Mutex);
         while (m_Queue.size()>=QUEUE_HIGH_WM) {
         	cv_QueueFull.wait(lock.ulock());
