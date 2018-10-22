@@ -4,3 +4,5 @@
  */
 
 bool g_bSupportUTF8 = false;
+
+bool g_bOutputTranslatedAscii = true;

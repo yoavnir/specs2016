@@ -3,4 +3,6 @@
 
 extern bool g_bSupportUTF8;
 
+extern bool g_bOutputTranslatedAscii;
+
 #endif
