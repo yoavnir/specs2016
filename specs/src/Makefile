@@ -67,10 +67,10 @@ $(OBJ_DIR)/ProcessingState.o: processing/ProcessingState.cc processing/Processin
 $(OBJ_DIR)/StringBuilder.o: processing/StringBuilder.cc processing/StringBuilder.h 
 	$(COMP) -o $@ -c processing/StringBuilder.cc
 	
-$(OBJ_DIR)/Reader.o: processing/Reader.cc processing/Reader.h processing/StringQueue.h
+$(OBJ_DIR)/Reader.o: processing/Reader.cc processing/Reader.h utils/StringQueue.h
 	$(COMP) -o $@ -c processing/Reader.cc
 	
-$(OBJ_DIR)/Writer.o: processing/Writer.cc processing/Writer.h processing/StringQueue.h
+$(OBJ_DIR)/Writer.o: processing/Writer.cc processing/Writer.h utils/StringQueue.h
 	$(COMP) -o $@ -c processing/Writer.cc
 	
 $(OBJ_DIR)/Config.o: processing/Config.cc

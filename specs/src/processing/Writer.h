@@ -3,7 +3,7 @@
 
 #include <string>
 #include <thread>
-#include "StringQueue.h"
+#include "../utils/StringQueue.h"
 
 class Writer {
 public:

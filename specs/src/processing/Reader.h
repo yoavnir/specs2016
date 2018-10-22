@@ -3,7 +3,7 @@
 
 #include <string>
 #include <stdio.h>  // for FILE
-#include "StringQueue.h"
+#include "../utils/StringQueue.h"
 
 class Reader {
 public:
