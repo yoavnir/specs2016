@@ -39,6 +39,9 @@ void ProcessingState::identifyWords()
 	m_wordStart.clear();
 	m_wordEnd.clear();
 	m_wordCount = 0;
+	if (g_bSupportUTF8) {
+		MYTHROW("UTF-8 is not yet supported");
+	}
 	const char* pc = m_ps->data();
 	int i = 0;
 	/* skip over initial whitespace */
@@ -58,6 +61,9 @@ void ProcessingState::identifyFields()
 	m_fieldStart.empty();
 	m_fieldEnd.empty();
 	m_fieldCount = 0;
+	if (g_bSupportUTF8) {
+		MYTHROW("UTF-8 is not yet supported");
+	}
 	const char* pc = m_ps->data();
 	int i = 0;
 
