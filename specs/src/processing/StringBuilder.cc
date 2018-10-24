@@ -1,13 +1,14 @@
 #include <assert.h>
 #include <string.h> // for memcpy
 #include "Config.h"
+#include "../utils/ErrorReporting.h"
 #include "StringBuilder.h"
 
 // Some UTF-8 routines
-size_t utf8Len(std::string* s)
+size_t utf8Len(PSpecString s)
 {
 	size_t physLen = s->length();
-	const char* pcs = s->c_str();
+	const char* pcs = s->data();
 
 	size_t ret = 0;
 	size_t i = 0;
@@ -55,10 +56,10 @@ size_t phys2charOffset(std::string* s, size_t physOffset)
 	return ret;
 }
 
-size_t char2physOffset(std::string* s, size_t charOffset)
+size_t char2physOffset(PSpecString s, size_t charOffset)
 {
 	size_t physLen = s->length();
-	const char* pcs = s->c_str();
+	const char* pcs = s->data();
 
 	size_t ret = 0;
 	size_t i = 0;
@@ -95,18 +96,18 @@ StringBuilder::~StringBuilder()
 	}
 }
 
-std::string* StringBuilder::GetString()
+PSpecString StringBuilder::GetString()
 {
-	std::string* pRet = mp_str;
+	PSpecString pRet = mp_str;
 	mp_str = NULL;
 	return pRet;
 }
 
-void StringBuilder::insert(std::string* s, size_t offset, bool bOnlyPhysical)
+void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 {
 	assert(offset>0);
 	if (!mp_str) {
-		mp_str = new std::string;
+		mp_str = SpecString::newString();
 	}
 	offset--;  // translate it to C-style offsets
 
@@ -119,22 +120,32 @@ void StringBuilder::insert(std::string* s, size_t offset, bool bOnlyPhysical)
 		}
 	}
 
-	size_t endPos = offset + s->length();
-	if (mp_str->length() < endPos) {
-		mp_str->resize(endPos, m_ps.m_pad);
+	if (g_bSupportUTF8) {
+		MYTHROW("UTF-8 is not yet supported");
 	}
-	memcpy((void*)(mp_str->c_str()+offset), (void*)(s->c_str()), s->length());
+	StdSpecString *psss = dynamic_cast<StdSpecString*>(s);
+	assert(psss!=NULL);
+
+	size_t endPos = offset + psss->length();
+	if (mp_str->length() < endPos) {
+		mp_str->Resize(endPos, &m_ps.m_pad);
+	}
+	memcpy((void*)(mp_str->data()+offset), (void*)(s->data()), s->length());
 }
 
-void StringBuilder::insertNext(std::string* s)
+void StringBuilder::insertNext(PSpecString s)
 {
 	insert(s, mp_str->length() + 1, true);
 }
 
-void StringBuilder::insertNextWord(std::string* s)
+void StringBuilder::insertNextWord(PSpecString s)
 {
 	size_t len = mp_str->length();
-	mp_str->resize(len + s->length() + 1, m_ps.m_pad);
+	mp_str->Resize(len + s->length() + 1, &m_ps.m_pad);
 	insert(s, len+2, true);
 }
 
+void* StringBuilder::getPad()
+{
+	return (void*)(&m_ps.m_pad);
+}

@@ -21,7 +21,7 @@ Writer::~Writer()
 	}
 }
 
-void Writer::Write(pstr ps)
+void Writer::Write(PSpecString ps)
 {
 	m_queue.push(ps);
 }
@@ -47,9 +47,8 @@ bool Writer::Done()
 
 void SimpleWriter::WriteOut()
 {
-	pstr ps;
+	PSpecString ps;
 	if (m_queue.wait_and_pop(ps)) {
-		fprintf(stderr, "ps=%p\n", ps);
 		std::cout << *ps << std::endl;
 		delete ps;
 	}

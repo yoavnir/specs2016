@@ -20,12 +20,17 @@ public:
 	static PSpecString newString();
 	static PSpecString newString(const char* pstrz);
 	static PSpecString newString(const char* pstrz, size_t len);
+	static PSpecString newString(PSpecString pss, size_t start, size_t len);
+	static PSpecString newString(std::string& st);
 	virtual ~SpecString() {}
 	virtual void _serialize(std::ostream& os) const = 0;
 	virtual const char* data() = 0;
 	virtual size_t length() = 0;
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar) = 0;
 	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar) = 0;
+	virtual void Resize(size_t newSize, void* pPadChar) = 0;
+	virtual int  Compare(const char* pstrz) = 0;
+	virtual int  Compare(std::string& str) = 0;
 };
 
 class StdSpecString : public SpecString {
@@ -39,17 +44,22 @@ public:
 	virtual size_t length() {return m_str.length();}
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar);
 	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar);
+	virtual void Resize(size_t newSize, void* pPadChar);
 	virtual void _serialize(std::ostream& os) const;
 	const std::string* getStdString() const {return &m_str;}
+	virtual int  Compare(const char* pstrz) {return m_str.compare(pstrz);}
+	virtual int  Compare(std::string& str) {return m_str.compare(str);}
 private:
 	std::string m_str;
 };
 
-std::ostream& operator << (std::ostream& os, const SpecString &str)
+static std::ostream& operator << (std::ostream& os, const SpecString &str)
 {
     str._serialize(os);
 
     return os;
 }
+
+PSpecString SpecStringCopy(PSpecString pss);
 
 #endif

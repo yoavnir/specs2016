@@ -5,7 +5,7 @@
 
 #define VERIFYSTRING(s) {     \
 	std::cout << "Expecting: <" << s << "> Got: <" << *pRet << "> ... ";  \
-	if (pRet->compare(s)==0) {  \
+	if (pRet->Compare(s)==0) {  \
 		std::cout << "OK\n";     \
 	} else {                     \
 		std::cout << "ERROR\n";  \
@@ -19,11 +19,11 @@ int main(int argc, char** argv)
 	ProcessingState ps;
 	int errorCount = 0;
 
-	std::string example1("The quick brown fox jumped over the   lazy dog");
+	StdSpecString example1("The quick brown fox jumped over the   lazy dog");
 	ps.setString(&example1);
 
 	// Let's check the subset from 7 to 17. Should be "ick brown f"
-	std::string *pRet = ps.getFromTo(7, 17);
+	PSpecString pRet = ps.getFromTo(7, 17);
 	VERIFYSTRING("ick brown f");
 
 	// Now let's try from the second to the penultimate char --> "he quick brown fox jumped over the lazy do"

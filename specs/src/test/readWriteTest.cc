@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 	pWrite->Begin();
 
 	while (!pRead->eof()) {
-		std::string* p = pRead->get();
+		PSpecString p = pRead->get();
 		sb.insert(p,1);
 		delete p;
 		pWrite->Write(sb.GetString());

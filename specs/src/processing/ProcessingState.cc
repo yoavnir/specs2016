@@ -24,7 +24,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_ps = NULL;
 }
 
-void ProcessingState::setString(std::string* ps)
+void ProcessingState::setString(PSpecString ps)
 {
 	if (m_ps && ps!=m_ps) {
 		delete m_ps;
@@ -39,7 +39,7 @@ void ProcessingState::identifyWords()
 	m_wordStart.clear();
 	m_wordEnd.clear();
 	m_wordCount = 0;
-	const char* pc = m_ps->c_str();
+	const char* pc = m_ps->data();
 	int i = 0;
 	/* skip over initial whitespace */
 	while (pc[i]==m_wordSeparator) i++;
@@ -58,7 +58,7 @@ void ProcessingState::identifyFields()
 	m_fieldStart.empty();
 	m_fieldEnd.empty();
 	m_fieldCount = 0;
-	const char* pc = m_ps->c_str();
+	const char* pc = m_ps->data();
 	int i = 0;
 
 	while (pc[i]!=0) {
@@ -125,7 +125,7 @@ int ProcessingState::getWordEnd(int idx) {
 // Convention: returns NULL for an empty string
 // Convention: from=0 means from the start (same as 1)
 // Convention: to=0 means to the end
-std::string* ProcessingState::getFromTo(int from, int to)
+PSpecString ProcessingState::getFromTo(int from, int to)
 {
 	int slen = (int)(m_ps->length());
 
@@ -150,5 +150,5 @@ std::string* ProcessingState::getFromTo(int from, int to)
 	// to < from ==> empty string
 	if (to<from) return NULL;
 
-	return new std::string(*m_ps, from-1, to-from+1);
+	return SpecString::newString(m_ps, from-1, to-from+1);
 }

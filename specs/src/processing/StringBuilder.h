@@ -1,21 +1,22 @@
 #ifndef SPECS2016__PROCESSING__STRINGBUILDER__H
 #define SPECS2016__PROCESSING__STRINGBUILDER__H
 
-#include <string>
+#include "../utils/SpecString.h"
 #include "ProcessingState.h"
 
 class StringBuilder {
 public:
 	StringBuilder();
 	~StringBuilder();
-	std::string*   GetString();
+	PSpecString    GetString();
 	size_t         Length() { return mp_str->length(); }
-	void           insert(std::string* str, size_t offset, bool bOnlyPhysical=false);
-	void           insertNext(std::string* str);
-	void           insertNextWord(std::string* str);
+	void           insert(PSpecString str, size_t offset, bool bOnlyPhysical=false);
+	void           insertNext(PSpecString str);
+	void           insertNextWord(PSpecString str);
+	void*          getPad();
 private:
 	ProcessingState m_ps;
-	std::string     *mp_str;
+	PSpecString     mp_str;
 };
 
 #endif

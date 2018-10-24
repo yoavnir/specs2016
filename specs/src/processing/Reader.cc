@@ -16,10 +16,10 @@ Reader::~Reader()
 	}
 }
 
-std::string *Reader::get()
+PSpecString Reader::get()
 {
 	if (eof()) return NULL;
-	pstr ret;
+	PSpecString ret;
 	m_queue.wait_and_pop(ret);
 	return ret;
 }
@@ -87,13 +87,25 @@ void StandardReader::ReadOneRecord() {
 		if (line[len-1]=='\n') {
 			len--;
 		}
-		mp_NextRecord = new std::string(line,len);
+		mp_NextRecord = SpecString::newString(line,len);
 	}
 }
 
-std::string* StandardReader::getNextRecord() {
-	std::string* ret = mp_NextRecord;
+PSpecString StandardReader::getNextRecord() {
+	PSpecString ret = mp_NextRecord;
 	mp_NextRecord = NULL;
 	ReadOneRecord();
 	return ret;
+}
+
+TestReader::TestReader(void* arr, size_t count, size_t szEntry)
+{
+	int i;
+	mp_arr = (SpecString**)malloc(sizeof(PSpecString) * count);
+	for (i=0; i<count; i++) {
+		mp_arr[i] = (PSpecString)arr;
+		arr = (void*)(((char*)arr) + szEntry);
+	}
+	m_count = count;
+	m_idx = 0;
 }

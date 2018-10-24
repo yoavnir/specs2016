@@ -2,12 +2,11 @@
 #define SPECS2016__PROCESSING__STRINGQUEUE__H
 
 #include <mutex>
-#include <string>
+//#include <string>
+#include "SpecString.h"
 #include <thread>
 #include <queue>
 #include <condition_variable>
-
-typedef std::string* pstr;
 
 #ifdef DEBUG
 #define QUEUE_HIGH_WM 5
@@ -31,14 +30,14 @@ private:
 class StringQueue
 {
 private:
-    std::queue<pstr> m_Queue;
+    std::queue<PSpecString> m_Queue;
     mutable std::mutex m_Mutex;
     std::condition_variable cv_QueueEmpty;
     std::condition_variable cv_QueueFull;
     bool m_Done;
 public:
     StringQueue() {m_Done = false;}
-    void push(pstr const& data)
+    void push(PSpecString const& data)
     {
     	assert(data!=NULL);
         scopedLock lock(&m_Mutex);
@@ -56,7 +55,7 @@ public:
         return m_Queue.empty();
     }
 
-    bool wait_and_pop(pstr& popped_value)
+    bool wait_and_pop(PSpecString& popped_value)
     {
         scopedLock lock(&m_Mutex);
         while(m_Queue.empty() && false==m_Done)

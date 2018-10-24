@@ -9,7 +9,7 @@ class Writer {
 public:
 	Writer();
 	virtual ~Writer();
-	virtual void Write(pstr ps);
+	virtual void Write(PSpecString ps);
 	virtual void Begin();
 	virtual void WriteOut() = 0;
 	void         End();

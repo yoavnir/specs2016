@@ -38,7 +38,7 @@ std::string itemGroup::Debug()
 
 void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr)
 {
-	std::string *ps;
+	PSpecString ps;
 	bool bSomethingWasDone = false;
 	while ((ps=rd.get())) {
 		int i;
@@ -54,7 +54,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 				if (bSomethingWasDone) {
 					wr.Write(sb.GetString());
 				} else {
-					wr.Write(new std::string);
+					wr.Write(SpecString::newString());
 				}
 				bSomethingWasDone = false;
 				break;
