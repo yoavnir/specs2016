@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "../utils/ErrorReporting.h"
+#include "utils/ErrorReporting.h"
 #include "Reader.h"
 
 void ReadAllRecordsIntoReaderQueue(Reader* r)

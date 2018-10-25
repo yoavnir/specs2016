@@ -1,7 +1,7 @@
 MKDIR_C = mkdir -p
 EXE_DIR = ../exe
 OBJ_DIR = ../obj
-INC = -I cli
+INC = -I .
 COMP = g++ -g -DDEBUG --std=c++11 $(INC)
 LINK = g++ -g
 
@@ -23,16 +23,16 @@ $(OBJ_DIR):
 	$(MKDIR_C) $@
 
 $(EXE_DIR)/tokenTest: $(OBJ_DIR)/test.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
-	$(COMP) -o $@ ../obj/test.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/test.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
 
 $(EXE_DIR)/itemTest: $(OBJ_DIR)/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ) $(UT_OBJ)
-	$(COMP) -o $@ ../obj/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ) $(UT_OBJ)
 
 $(EXE_DIR)/readWriteTest: $(OBJ_DIR)/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
-	$(COMP) -o $@ ../obj/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
 	
 $(EXE_DIR)/ProcessingTest: $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
-	$(COMP) -o $@ ../obj/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
 	
 $(OBJ_DIR)/tokens.o: cli/tokens.cc cli/tokens.h
 	$(COMP) -o $@ -c cli/tokens.cc

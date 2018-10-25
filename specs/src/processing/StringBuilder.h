@@ -1,7 +1,7 @@
 #ifndef SPECS2016__PROCESSING__STRINGBUILDER__H
 #define SPECS2016__PROCESSING__STRINGBUILDER__H
 
-#include "../utils/SpecString.h"
+#include "utils/SpecString.h"
 #include "ProcessingState.h"
 
 class StringBuilder {

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <string.h>  // for memcpy
-#include "../processing/Config.h"
-#include "../utils/ErrorReporting.h"
+#include "processing/Config.h"
+#include "ErrorReporting.h"
 #include "SpecString.h"
 
 void StdSpecString::Overlay(PSpecString pss, size_t offset, void* pPadChar)

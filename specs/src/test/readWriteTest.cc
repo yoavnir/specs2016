@@ -1,6 +1,6 @@
-#include "../processing/Reader.h"
-#include "../processing/Writer.h"
-#include "../processing/StringBuilder.h"
+#include "processing/Reader.h"
+#include "processing/Writer.h"
+#include "processing/StringBuilder.h"
 
 int main(int argc, char** argv)
 {

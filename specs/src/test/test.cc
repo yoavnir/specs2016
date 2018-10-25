@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../cli/tokens.h"
+#include "cli/tokens.h"
 
 int main(int argc, char** argv)
 {

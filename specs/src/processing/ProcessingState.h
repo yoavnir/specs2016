@@ -2,7 +2,7 @@
 #define SPECS2016__PROCESSING__PROCESSINGSTATE__H
 
 #include <vector>
-#include "../utils/SpecString.h"
+#include "utils/SpecString.h"
 
 #define DEFAULT_PAD_CHAR ' '
 #define DEFAULT_WORDSEPARATOR ' '

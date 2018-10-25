@@ -1,4 +1,4 @@
-#include "../utils/ErrorReporting.h"
+#include "utils/ErrorReporting.h"
 #include "item.h"
 
 #define GET_NEXT_TOKEN {token = tokenVec[index]; tokenType = token.Type(); index++; }

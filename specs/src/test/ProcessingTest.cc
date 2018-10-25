@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
-#include "../processing/ProcessingState.h"
-#include "../processing/StringBuilder.h"
+#include "processing/ProcessingState.h"
+#include "processing/StringBuilder.h"
 
 #define VERIFYSTRING(s) {     \
 	std::cout << "Expecting: <" << s << "> Got: <" << *pRet << "> ... ";  \

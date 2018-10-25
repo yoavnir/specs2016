@@ -3,11 +3,11 @@
 
 #include <vector>
 #include "item.h"
-#include "../cli/tokens.h"
-#include "../processing/StringBuilder.h"
-#include "../processing/Reader.h"
-#include "../processing/Writer.h"
-#include "../processing/ProcessingState.h"
+#include "cli/tokens.h"
+#include "processing/StringBuilder.h"
+#include "processing/Reader.h"
+#include "processing/Writer.h"
+#include "processing/ProcessingState.h"
 
 class itemGroup {
 public:

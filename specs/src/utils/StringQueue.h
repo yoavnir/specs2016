@@ -2,7 +2,6 @@
 #define SPECS2016__PROCESSING__STRINGQUEUE__H
 
 #include <mutex>
-//#include <string>
 #include "SpecString.h"
 #include <thread>
 #include <queue>

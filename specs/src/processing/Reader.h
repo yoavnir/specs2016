@@ -2,7 +2,7 @@
 #define SPECS2016__PROCESSING__READER__H
 
 #include <stdio.h>  // for FILE
-#include "../utils/StringQueue.h"
+#include "utils/StringQueue.h"
 
 class Reader {
 public:

@@ -3,10 +3,10 @@
 
 #include <vector>
 #include <string>
-#include "../cli/tokens.h"
-#include "../processing/conversions.h"
-#include "../processing/StringBuilder.h"
-#include "../processing/ProcessingState.h"
+#include "cli/tokens.h"
+#include "processing/conversions.h"
+#include "processing/StringBuilder.h"
+#include "processing/ProcessingState.h"
 
 enum ApplyRet {
 	ApplyRet__Continue,

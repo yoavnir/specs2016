@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <string.h> // for memcpy
 #include "Config.h"
-#include "../utils/ErrorReporting.h"
+#include "utils/ErrorReporting.h"
 #include "ProcessingState.h"
 #include "StringBuilder.h"
 

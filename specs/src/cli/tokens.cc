@@ -1,8 +1,8 @@
 #include <string.h>
 #include <regex>
 #include "tokens.h"
-#include "../utils/ErrorReporting.h"
-#include "../processing/conversions.h"
+#include "utils/ErrorReporting.h"
+#include "processing/conversions.h"
 
 Token dummyToken(TokenListType__DUMMY, NULL, "", 0, std::string("dummyToken"));
 

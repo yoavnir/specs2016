@@ -1,5 +1,5 @@
 #include "Config.h"
-#include "../utils/ErrorReporting.h"
+#include "utils/ErrorReporting.h"
 #include "ProcessingState.h"
 
 ProcessingState::ProcessingState()

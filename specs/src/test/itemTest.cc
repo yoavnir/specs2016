@@ -1,9 +1,9 @@
 #include <iostream>
-#include "../cli/tokens.h"
-#include "../specitems/specItems.h"
-#include "../processing/StringBuilder.h"
-#include "../processing/Reader.h"
-#include "../processing/Writer.h"
+#include "cli/tokens.h"
+#include "specitems/specItems.h"
+#include "processing/StringBuilder.h"
+#include "processing/Reader.h"
+#include "processing/Writer.h"
 
 std::string Jabberwocky_utf8[] = {
 	    std::string("’Twas brillig, and the slithy toves "),
