@@ -2,6 +2,7 @@
 #include <string.h> // for memcpy
 #include "Config.h"
 #include "../utils/ErrorReporting.h"
+#include "ProcessingState.h"
 #include "StringBuilder.h"
 
 // Some UTF-8 routines
@@ -141,7 +142,7 @@ void StringBuilder::insertNext(PSpecString s)
 void StringBuilder::insertNextWord(PSpecString s)
 {
 	size_t len = mp_str->length();
-	mp_str->Resize(len + s->length() + 1, &m_ps.m_pad);
+	mp_str->Resize(len + s->length() + 1, DEFAULT_WORDSEPARATOR);
 	insert(s, len+2, true);
 }
 

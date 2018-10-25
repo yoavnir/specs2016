@@ -29,6 +29,11 @@ void StdSpecString::Resize(size_t newSize, void* pPadChar)
 	m_str.resize(newSize, padChar);
 }
 
+void StdSpecString::Resize(size_t newSize, char padChar)
+{
+	m_str.resize(newSize, padChar);
+}
+
 void StdSpecString::_serialize(std::ostream& os) const
 {
 	static char asciiXlate[] = "................................ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~................................................................................................................................";

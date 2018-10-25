@@ -29,6 +29,7 @@ public:
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar) = 0;
 	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar) = 0;
 	virtual void Resize(size_t newSize, void* pPadChar) = 0;
+	virtual void Resize(size_t newSize, char padChar) = 0;
 	virtual int  Compare(const char* pstrz) = 0;
 	virtual int  Compare(std::string& str) = 0;
 };
@@ -45,6 +46,7 @@ public:
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar);
 	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar);
 	virtual void Resize(size_t newSize, void* pPadChar);
+	virtual void Resize(size_t newSize, char padChar);
 	virtual void _serialize(std::ostream& os) const;
 	const std::string* getStdString() const {return &m_str;}
 	virtual int  Compare(const char* pstrz) {return m_str.compare(pstrz);}
