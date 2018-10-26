@@ -288,6 +288,9 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(nw,NEXTWORD);
 	SIMPLETOKEN(nword,NEXTWORD);
 	SIMPLETOKENV(nextword,NEXTWORD,5);
+	SIMPLETOKEN(nf,NEXTFIELD);
+	SIMPLETOKEN(nfield,NEXTFIELD);
+	SIMPLETOKENV(nextfield,NEXTFIELD,5);
 	SIMPLETOKEN(n,NEXT);
 	SIMPLETOKEN(next,NEXT);
 	SIMPLETOKENV(substring,SUBSTRING,6);  // can be shortened down to substr

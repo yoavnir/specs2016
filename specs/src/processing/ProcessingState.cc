@@ -6,7 +6,7 @@ ProcessingState::ProcessingState()
 {
 	m_pad = DEFAULT_PAD_CHAR;
 	m_wordSeparator = DEFAULT_WORDSEPARATOR;
-	m_fieldSeparator = DEFAULT_FIELDSEPARATPR;
+	m_fieldSeparator = DEFAULT_FIELDSEPARATOR;
 	m_ps = NULL;
 }
 

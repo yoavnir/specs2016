@@ -78,6 +78,9 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	case TokenListType__NEXTWORD:
 		m_outStart = POS_SPECIAL_VALUE_NEXTWORD;
 		break;
+	case TokenListType__NEXTFIELD:
+		m_outStart = POS_SPECIAL_VALUE_NEXTFIELD;
+		break;
 	case TokenListType__NEXT:
 		m_outStart = POS_SPECIAL_VALUE_NEXT;
 		break;
@@ -146,6 +149,8 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		pSB->insertNext(pInput);
 	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTWORD) {
 		pSB->insertNextWord(pInput);
+	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTFIELD) {
+		pSB->insertNextField(pInput);
 	} else if (m_outStart <= MAX_OUTPUT_POSITION) {
 		pSB->insert(pInput, m_outStart);
 	} else {

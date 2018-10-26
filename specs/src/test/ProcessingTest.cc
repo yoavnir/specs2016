@@ -4,20 +4,26 @@
 #include "processing/StringBuilder.h"
 
 #define VERIFYSTRING(s) {     \
-	std::cout << "Expecting: <" << s << "> Got: <" << *pRet << "> ... ";  \
-	if (pRet->Compare(s)==0) {  \
-		std::cout << "OK\n";     \
-	} else {                     \
-		std::cout << "ERROR\n";  \
-		errorCount++;            \
-	} }
+	testCount++;     \
+	if (theOnlyTest==0 || theOnlyTest==testCount) { \
+		std::cout << testCount << ". Expecting: <" << s << "> Got: <" << *pRet << "> ... ";  \
+		if (pRet->Compare(s)==0) {  \
+			std::cout << "OK\n";     \
+		} else {                     \
+			std::cout << "ERROR\n";  \
+			errorCount++;            \
+		} } }
 
 #define GET_WORD_RANGE(f,t) ps.getFromTo((ps.getWordStart(f)),(ps.getWordEnd(t)))
 
 int main(int argc, char** argv)
 {
+	int theOnlyTest = 0;
 	ProcessingState ps;
 	int errorCount = 0;
+	int testCount  = 0;
+
+	if (argc>1) { theOnlyTest = atoi(argv[1]); }
 
 	StdSpecString example1("The quick brown fox jumped over the   lazy dog");
 	ps.setString(&example1);
@@ -59,8 +65,13 @@ int main(int argc, char** argv)
 	pRet = sb.GetString();
 	VERIFYSTRING(" Thbrown   the   lazy");
 
-
-
+	// w1 1 w3 nf ==? "The\tbrown"
+	pRet = GET_WORD_RANGE(1,1);
+	sb.insert(pRet,1);
+	pRet = GET_WORD_RANGE(3,3);
+	sb.insertNextField(pRet);
+	pRet = sb.GetString();
+	VERIFYSTRING("The\tbrown");
 
 	return (errorCount==0) ? 0 : 4;
 }

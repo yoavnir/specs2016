@@ -6,7 +6,7 @@
 
 #define DEFAULT_PAD_CHAR ' '
 #define DEFAULT_WORDSEPARATOR ' '
-#define DEFAULT_FIELDSEPARATPR '\t'
+#define DEFAULT_FIELDSEPARATOR '\t'
 
 class ProcessingState {
 public:

@@ -13,6 +13,7 @@ public:
 	void           insert(PSpecString str, size_t offset, bool bOnlyPhysical=false);
 	void           insertNext(PSpecString str);
 	void           insertNextWord(PSpecString str);
+	void           insertNextField(PSpecString str);
 	void*          getPad();
 private:
 	ProcessingState m_ps;

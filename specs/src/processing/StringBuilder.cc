@@ -146,6 +146,13 @@ void StringBuilder::insertNextWord(PSpecString s)
 	insert(s, len+2, true);
 }
 
+void StringBuilder::insertNextField(PSpecString s)
+{
+	size_t len = mp_str->length();
+	mp_str->Resize(len + s->length() + 1, DEFAULT_FIELDSEPARATOR);
+	insert(s, len+2, true);
+}
+
 void* StringBuilder::getPad()
 {
 	return (void*)(&m_ps.m_pad);
