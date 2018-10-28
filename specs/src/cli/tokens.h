@@ -21,8 +21,8 @@
 	X(WORDRANGE,      true,  false) \
 	X(FIELDSEPARATOR, false, true)  \
 	X(WORDSEPARATOR,  false, true)  \
-	X(NEXTWORD,       false, false) \
-	X(NEXTFIELD,      false, false) \
+	X(NEXTWORD,       true,  false) \
+	X(NEXTFIELD,      true,  false) \
 	X(NEXT,           false, false) \
 	X(FIELDRANGE,     true,  false) \
 	X(SUBSTRING,      false, false) \

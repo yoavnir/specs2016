@@ -77,12 +77,21 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		break;
 	case TokenListType__NEXTWORD:
 		m_outStart = POS_SPECIAL_VALUE_NEXTWORD;
+		if (token.Range()) {
+			m_maxLength = (size_t)(token.Range()->getSimpleLast());
+		}
 		break;
 	case TokenListType__NEXTFIELD:
 		m_outStart = POS_SPECIAL_VALUE_NEXTFIELD;
+		if (token.Range()) {
+			m_maxLength = (size_t)(token.Range()->getSimpleLast());
+		}
 		break;
 	case TokenListType__NEXT:
 		m_outStart = POS_SPECIAL_VALUE_NEXT;
+		if (token.Range()) {
+			m_maxLength = (size_t)(token.Range()->getSimpleLast());
+		}
 		break;
 	default:
 		std::string err = "Bad output placement " + token.HelpIdentify();
@@ -99,9 +108,17 @@ std::string DataField::Debug() {
 	if (m_outStart==LAST_POS_END) {
 		ret += "None";
 	} else {
-		ret += std::to_string(m_outStart);
+		if (m_outStart==POS_SPECIAL_VALUE_NEXT) {
+			ret += "Next";
+		} else if (m_outStart==POS_SPECIAL_VALUE_NEXTWORD) {
+			ret += "NextWord";
+		} else if (m_outStart==POS_SPECIAL_VALUE_NEXTFIELD) {
+			ret += "NextField";
+		} else {
+			ret += std::to_string(m_outStart);
+		}
 		if (m_maxLength!=LAST_POS_END) {
-			ret += '-' + std::to_string(m_outStart+m_maxLength-1);
+			ret += '.' + std::to_string(m_maxLength);
 		}
 	}
 

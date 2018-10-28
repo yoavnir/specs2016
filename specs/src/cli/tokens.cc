@@ -131,7 +131,7 @@ Token::Token(TokenListTypes _type, TokenFieldRange *pRange, std::string literal,
 }
 
 #define X(t,r,l) case TokenListType__##t: \
-					if (r) ret += "; " + (m_pRange ? m_pRange->Debug() : "NULL!!!"); \
+					if (r && m_pRange) ret += "; " + m_pRange->Debug(); \
 					if (l) ret +=  (m_literal.empty()) ? ("; EMPTY!!!") : ("; /" + m_literal + "/");  \
 					break;
 std::string Token::Debug(int digits)
@@ -285,14 +285,6 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	/* various ifs, buts and maybes */
 
 	/* Some simple tokens */
-	SIMPLETOKEN(nw,NEXTWORD);
-	SIMPLETOKEN(nword,NEXTWORD);
-	SIMPLETOKENV(nextword,NEXTWORD,5);
-	SIMPLETOKEN(nf,NEXTFIELD);
-	SIMPLETOKEN(nfield,NEXTFIELD);
-	SIMPLETOKENV(nextfield,NEXTFIELD,5);
-	SIMPLETOKEN(n,NEXT);
-	SIMPLETOKEN(next,NEXT);
 	SIMPLETOKENV(substring,SUBSTRING,6);  // can be shortened down to substr
 	SIMPLETOKEN(word,WORDRANGE);
 	SIMPLETOKEN(field,FIELDRANGE);
@@ -362,6 +354,42 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 		}
 	}
 
+	/* Next Word and Next Field */
+	size_t lastdot = arg.find_last_of('.');
+	size_t firstdot = arg.find_first_of('.');
+	if (lastdot==firstdot) { // either they're both NULL or there's exactly one dot
+		TokenFieldRangeSimple *pSimpleRange = NULL;
+		std::string nwnf = arg;
+		if (firstdot!=std::string::npos) {
+			nwnf = arg.substr(0,firstdot);
+			std::string fieldLength = arg.substr(firstdot+1);
+			int lFieldLength = std::stoi(fieldLength);
+			if (lFieldLength > 0 && std::to_string(lFieldLength)==fieldLength) {
+				pSimpleRange = new TokenFieldRangeSimple(1,lFieldLength);
+			} else {
+				goto CONT1;
+			}
+		}
+
+		if (CASEEQ(nwnf,"nw") || CASEEQ(nwnf,"nword") || compareStringWithMinLength(nwnf,"nextword",5)) {
+			pVec->insert(pVec->end(), Token(TokenListType__NEXTWORD, pSimpleRange, "", argidx, arg));
+			NEXT_TOKEN;
+		}
+
+		if (CASEEQ(nwnf,"nf") || CASEEQ(nwnf,"nfield") || compareStringWithMinLength(nwnf,"nextfield",5)) {
+			pVec->insert(pVec->end(), Token(TokenListType__NEXTFIELD, pSimpleRange, "", argidx, arg));
+			NEXT_TOKEN;
+		}
+
+		if (compareStringWithMinLength(nwnf, "next", 1)) {
+			pVec->insert(pVec->end(), Token(TokenListType__NEXT, pSimpleRange, "", argidx, arg));
+			NEXT_TOKEN;
+		}
+
+		delete pSimpleRange;
+	}
+
+CONT1:
 	/* input ranges */
 	if (arg[0]=='(' && arg.back()==')') {
 		pVec->insert(pVec->end(), Token(TokenListType__GROUPSTART, NULL, "", argidx, "("));
