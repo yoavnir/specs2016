@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 	SimpleWriter *pWr;
 
 	unsigned int index = 0;
-	ig.parse(vec, index);
+	ig.Compile(vec, index);
 
 	std::cout << "After parsing, index = " << index << "/" << vec.size() << "\n";
 
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 	pRd = new TestReader(Jabberwocky, sizeof(Jabberwocky)/sizeof(StdSpecString), sizeof(StdSpecString));
 	pWr = new SimpleWriter;
 
-	pRd->begin();
+	pRd->Begin();
 	pWr->Begin();
 
 	ig.process(sb, ps, *pRd, *pWr);

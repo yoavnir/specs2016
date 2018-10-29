@@ -12,7 +12,7 @@ public:
 	virtual PSpecString getNextRecord() = 0;
 	virtual PSpecString get();
 	virtual void        readIntoQueue();
-	virtual void        begin();
+	virtual void        Begin();
 	virtual bool        eof() { return endOfSource() && m_queue.empty(); }
 protected:
 	StringQueue m_queue;

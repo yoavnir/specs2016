@@ -11,7 +11,7 @@ void itemGroup::addItem(Item *pItem)
 	m_items.insert(m_items.end(), pItem);
 }
 
-void itemGroup::parse(std::vector<Token> &tokenVec, unsigned int& index)
+void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	while (index < tokenVec.size()) {
 		/* check here for other types of items, whether plainItem, ifGroup, whileGroup */

@@ -12,7 +12,7 @@ UT_OBJ = $(OBJ_DIR)/SpecString.o $(OBJ_DIR)/ErrorReporting.o
 
 .DUMMY: directories
 
-all: directories $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest $(EXE_DIR)/readWriteTest $(EXE_DIR)/ProcessingTest
+all: directories $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest $(EXE_DIR)/readWriteTest $(EXE_DIR)/ProcessingTest $(EXE_DIR)/specs
 
 directories: $(EXE_DIR) $(OBJ_DIR)
 
@@ -33,6 +33,9 @@ $(EXE_DIR)/readWriteTest: $(OBJ_DIR)/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
 	
 $(EXE_DIR)/ProcessingTest: $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
 	$(COMP) -o $@ $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
+	
+$(EXE_DIR)/specs: $(OBJ_DIR)/Main.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/Main.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ) 
 	
 $(OBJ_DIR)/tokens.o: cli/tokens.cc cli/tokens.h
 	$(COMP) -o $@ -c cli/tokens.cc
@@ -81,6 +84,9 @@ $(OBJ_DIR)/SpecString.o: utils/SpecString.cc utils/SpecString.h
 
 $(OBJ_DIR)/ErrorReporting.o: utils/ErrorReporting.cc utils/ErrorReporting.h
 	$(COMP) -o $@ -c utils/ErrorReporting.cc
+	
+$(OBJ_DIR)/Main.o: processing/Main.cc 
+	$(COMP) -o $@ -c processing/Main.cc
 
 clean:
 	/bin/rm -rf $(EXE_DIR) $(OBJ_DIR)

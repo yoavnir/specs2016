@@ -8,7 +8,7 @@ int main(int argc, char** argv)
 	Reader* pRead = new StandardReader();
 	Writer* pWrite = new SimpleWriter();
 
-	pRead->begin();
+	pRead->Begin();
 	pWrite->Begin();
 
 	while (!pRead->eof()) {

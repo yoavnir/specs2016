@@ -31,7 +31,7 @@ void Reader::readIntoQueue()
 	}
 }
 
-void Reader::begin() {
+void Reader::Begin() {
 	mp_thread = new std::thread(ReadAllRecordsIntoReaderQueue, this);
 }
 
