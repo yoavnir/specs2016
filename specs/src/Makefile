@@ -22,8 +22,8 @@ $(EXE_DIR):
 $(OBJ_DIR):
 	$(MKDIR_C) $@
 
-$(EXE_DIR)/tokenTest: $(OBJ_DIR)/test.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
-	$(COMP) -o $@ $(OBJ_DIR)/test.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
+$(EXE_DIR)/tokenTest: $(OBJ_DIR)/TokenTest.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/TokenTest.o $(CLI_OBJ) $(PR_OBJ) $(UT_OBJ)
 
 $(EXE_DIR)/itemTest: $(OBJ_DIR)/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ) $(UT_OBJ)
 	$(COMP) -o $@ $(OBJ_DIR)/itemTest.o $(CLI_OBJ) $(SI_OBJ) $(PR_OBJ) $(UT_OBJ)
@@ -52,8 +52,8 @@ $(OBJ_DIR)/dataField.o: specitems/dataField.cc specitems/item.h processing/conve
 $(OBJ_DIR)/conversions.o: processing/conversions.cc processing/conversions.h
 	$(COMP) -o $@ -c processing/conversions.cc
 	
-$(OBJ_DIR)/test.o: test/test.cc cli/tokens.h
-	$(COMP) -o $@ -c test/test.cc
+$(OBJ_DIR)/TokenTest.o: test/TokenTest.cc cli/tokens.h
+	$(COMP) -o $@ -c test/TokenTest.cc
 
 $(OBJ_DIR)/itemTest.o: test/itemTest.cc cli/tokens.h specitems/specItems.h
 	$(COMP) -o $@ -c test/itemTest.cc
