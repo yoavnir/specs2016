@@ -68,6 +68,8 @@ int main(int argc, char** argv)
 	TESTNS("w1 1","WORDRANGE; S:1|RANGE; S:1");
 	TESTNS("1 2 1-3 4;-2 -2;-1 *-7 *;-2 1-*", "RANGE; S:1|RANGE; S:2|RANGE; S:1-3|RANGE; S:4--2|RANGE; S:-2--1|LITERAL; /*-7/|LITERAL; /*;-2/|RANGE; S:1-end");
 	TESTNS("w1 word 2 word 2-3 word 2;-4 word3 wor 5", "WORDRANGE; S:1|WORDRANGE; S:2|WORDRANGE; S:2-3|WORDRANGE; S:2--4|LITERAL; /word3/|LITERAL; /wor/|RANGE; S:5");
+	TESTNS("nextword  nw nextw nextwo", "NEXTWORD|NEXTWORD|NEXTWORD|NEXTWORD");
+	TESTNS("nextfield nf nextf nextfie", "NEXTFIELD|NEXTFIELD|NEXTFIELD|NEXTFIELD");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";
