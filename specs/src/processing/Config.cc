@@ -5,4 +5,4 @@
 
 bool g_bSupportUTF8 = false;
 
-bool g_bOutputTranslatedAscii = true;
+bool g_bOutputTranslatedAscii = false;
