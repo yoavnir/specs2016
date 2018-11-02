@@ -16,6 +16,6 @@ protected:
 	unsigned int ln;
 };
 
-#define MYTHROW(s) SpecsException(__FILE__, __LINE__, s)
+#define MYTHROW(s) throw SpecsException(__FILE__, __LINE__, s);
 
 #endif

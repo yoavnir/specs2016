@@ -1,7 +1,16 @@
 #include "utils/ErrorReporting.h"
 #include "item.h"
 
-#define GET_NEXT_TOKEN {token = tokenVec[index]; tokenType = token.Type(); index++; }
+#define GET_NEXT_TOKEN {                      \
+		if (index>=tokenVec.size()) {         \
+			token = dummyToken;               \
+			tokenType = TokenListType__DUMMY; \
+		} else {                              \
+			token = tokenVec[index];          \
+			tokenType = token.Type();         \
+			index++;                          \
+		}                                     \
+	}
 
 DataField::DataField()
 {
@@ -19,7 +28,7 @@ DataField::~DataField() {
 
 void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 {
-	Token& token = dummyToken;
+	Token token = dummyToken;
 	TokenListTypes tokenType;
 
 	GET_NEXT_TOKEN;
@@ -60,6 +69,10 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	/* output placement */
 	m_maxLength = LAST_POS_END;
 	switch (tokenType) {
+	case TokenListType__DUMMY:
+		/* Run out of tokens?  Can't do that. We need an output placement */
+		MYTHROW("Missing output placement at end of args");
+		break;
 	case TokenListType__RANGE:
 		if (!token.Range()->isSimpleRange()) {
 			std::string err = "Bad output placement " + token.HelpIdentify();
