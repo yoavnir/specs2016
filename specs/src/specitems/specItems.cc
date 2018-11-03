@@ -1,4 +1,5 @@
 #include <assert.h>
+#include "utils/ErrorReporting.h"
 #include "specItems.h"
 
 itemGroup::itemGroup()
@@ -14,11 +15,27 @@ void itemGroup::addItem(Item *pItem)
 void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	while (index < tokenVec.size()) {
-		/* check here for other types of items, whether plainItem, ifGroup, whileGroup */
+		switch (tokenVec[index].Type()) {
+		case TokenListType__FIELDSEPARATOR:
+		{
+			TokenItem *pItem = new TokenItem(tokenVec[index++]);
+			addItem(pItem);
+			break;
+		}
+			/* check here for other types of items, whether plainItem, ifGroup, whileGroup */
+		case TokenListType__RANGE:
+		case TokenListType__WORDRANGE:
+		case TokenListType__FIELDRANGE:
+		case TokenListType__LITERAL:
 		{
 			DataField *pItem = new DataField;
 			pItem->parse(tokenVec, index);
 			addItem(pItem);
+			break;
+		}
+		default:
+			std::string err = std::string("Unhandled token type ") + TokenListType__2str(tokenVec[index].Type());
+			MYTHROW(err);
 		}
 	}
 }
@@ -63,5 +80,35 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 			}
 		}
 		if (bSomethingWasDone) wr.Write(sb.GetString());
+	}
+}
+
+TokenItem::TokenItem(Token& t)
+{
+	mp_Token = new Token(t);
+}
+
+TokenItem::~TokenItem()
+{
+	if (mp_Token) {
+		delete mp_Token;
+		mp_Token = NULL;
+	}
+}
+
+std::string TokenItem::Debug()
+{
+	return mp_Token->Debug();
+}
+
+ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
+{
+	switch (mp_Token->Type()) {
+	case TokenListType__FIELDSEPARATOR:
+		pState.setFSChar(mp_Token->Literal()[0]);
+		return ApplyRet__Continue;
+	default:
+		std::string err = "Unhandled TokenItem type " + TokenListType__2str(mp_Token->Type());
+		MYTHROW(err);
 	}
 }

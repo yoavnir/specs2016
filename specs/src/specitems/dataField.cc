@@ -157,8 +157,8 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		pInput = (_from) ? pState.getFromTo(_from, _to) : SpecString::newString();
 		break;
 	case TokenListType__FIELDRANGE:
-		_from = pState.getWordStart(m_inputRange->Range()->getSimpleFirst());
-		_to = pState.getWordEnd(m_inputRange->Range()->getSimpleLast());
+		_from = pState.getFieldStart(m_inputRange->Range()->getSimpleFirst());
+		_to = pState.getFieldEnd(m_inputRange->Range()->getSimpleLast());
 		pInput = (_from) ? pState.getFromTo(_from, _to) : SpecString::newString();
 		break;
 	case TokenListType__LITERAL:

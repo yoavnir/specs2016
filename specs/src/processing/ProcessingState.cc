@@ -60,8 +60,8 @@ void ProcessingState::identifyWords()
 
 void ProcessingState::identifyFields()
 {
-	m_fieldStart.empty();
-	m_fieldEnd.empty();
+	m_fieldStart.clear();
+	m_fieldEnd.clear();
 	m_fieldCount = 0;
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 is not yet supported");

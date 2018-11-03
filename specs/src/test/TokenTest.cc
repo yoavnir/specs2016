@@ -70,6 +70,7 @@ int main(int argc, char** argv)
 	TESTNS("w1 word 2 word 2-3 word 2;-4 word3 wor 5", "WORDRANGE; S:1|WORDRANGE; S:2|WORDRANGE; S:2-3|WORDRANGE; S:2--4|LITERAL; /word3/|LITERAL; /wor/|RANGE; S:5");
 	TESTNS("nextword  nw nextw nextwo", "NEXTWORD|NEXTWORD|NEXTWORD|NEXTWORD");
 	TESTNS("nextfield nf nextf nextfie", "NEXTFIELD|NEXTFIELD|NEXTFIELD|NEXTFIELD");
+	TESTNS("fieldseparator , fs , fieldsepa , fieldsep , fieldse","FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|LITERAL; /fieldse/");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";
