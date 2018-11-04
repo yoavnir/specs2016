@@ -14,7 +14,7 @@
 
 DataField::DataField()
 {
-	m_inputRange = NULL;
+	m_InputPart = NULL;
 	m_label = '\0';
 	m_outStart = LAST_POS_END;
 	m_maxLength = LAST_POS_END;
@@ -41,11 +41,18 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 
 	switch (tokenType) {
 	case TokenListType__RANGE:
-	case TokenListType__WORDRANGE:
-	case TokenListType__FIELDRANGE:
-	case TokenListType__LITERAL:
-		m_inputRange = new Token(token);
+		m_InputPart = new RegularRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
 		break;
+	case TokenListType__WORDRANGE:
+		m_InputPart = new WordRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
+		break;
+	case TokenListType__FIELDRANGE:
+		m_InputPart = new FieldRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
+		break;
+	case TokenListType__LITERAL:
+		m_InputPart = new LiteralPart(token.Literal());
+		break;
+	case TokenListType__SUBSTRING:
 	default:
 		std::string err = "Bad inputRange " + token.HelpIdentify();
 		MYTHROW(err);
@@ -115,7 +122,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 std::string DataField::Debug() {
 	std::string ret = "{Source=";
 	if (m_label) ret = ret + m_label + ':';
-	ret += m_inputRange->Debug();
+	ret += m_InputPart->Debug();
 	/* conversion and stripping go here */
 	ret += ";Dest=";
 	if (m_outStart==LAST_POS_END) {
@@ -144,29 +151,7 @@ std::string DataField::Debug() {
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	int _from, _to;
-	PSpecString pInput;
-	switch (m_inputRange->Type()) {
-	case TokenListType__RANGE:
-		_from = m_inputRange->Range()->getSimpleFirst();
-		_to = m_inputRange->Range()->getSimpleLast();
-		pInput = (_from) ? pState.getFromTo(_from, _to) : SpecString::newString();
-		break;
-	case TokenListType__WORDRANGE:
-		_from = pState.getWordStart(m_inputRange->Range()->getSimpleFirst());
-		_to = pState.getWordEnd(m_inputRange->Range()->getSimpleLast());
-		pInput = (_from) ? pState.getFromTo(_from, _to) : SpecString::newString();
-		break;
-	case TokenListType__FIELDRANGE:
-		_from = pState.getFieldStart(m_inputRange->Range()->getSimpleFirst());
-		_to = pState.getFieldEnd(m_inputRange->Range()->getSimpleLast());
-		pInput = (_from) ? pState.getFromTo(_from, _to) : SpecString::newString();
-		break;
-	case TokenListType__LITERAL:
-		pInput = SpecString::newString(m_inputRange->Literal());
-		break;
-	default:
-		assert(2==1);
-	}
+	PSpecString pInput = m_InputPart->getStr(pState);
 
 	if (!pInput) pInput = SpecString::newString();
 

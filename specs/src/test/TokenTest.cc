@@ -71,6 +71,7 @@ int main(int argc, char** argv)
 	TESTNS("nextword  nw nextw nextwo", "NEXTWORD|NEXTWORD|NEXTWORD|NEXTWORD");
 	TESTNS("nextfield nf nextf nextfie", "NEXTFIELD|NEXTFIELD|NEXTFIELD|NEXTFIELD");
 	TESTNS("fieldseparator , fs , fieldsepa , fieldsep , fieldse","FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|LITERAL; /fieldse/");
+	TESTNS("substring substri substr subst of","SUBSTRING|SUBSTRING|SUBSTRING|LITERAL; /subst/|OF");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";

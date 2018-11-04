@@ -8,6 +8,62 @@
 #include "processing/StringBuilder.h"
 #include "processing/ProcessingState.h"
 
+class InputPart {
+public:
+	virtual ~InputPart() {}
+	virtual std::string Debug() = 0;
+	virtual PSpecString getStr(ProcessingState& pState) = 0;
+};
+
+class LiteralPart : public InputPart {
+public:
+	LiteralPart(std::string& s) {m_Str = s;}
+	virtual ~LiteralPart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+private:
+	std::string m_Str;
+};
+
+class RangePart : public InputPart {
+public:
+	RangePart(int _first, int _last) {_from=_first; _to=_last;}
+	virtual ~RangePart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState) = 0;
+protected:
+	int _from;
+	int _to;
+};
+
+class RegularRangePart : public RangePart {
+public:
+	RegularRangePart(int _first, int _last) : RangePart(_first,_last) {}
+	virtual ~RegularRangePart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+};
+
+class WordRangePart : public RangePart {
+public:
+	WordRangePart(int _first, int _last, char sep=0) : RangePart(_first,_last) {m_WordSep = sep;}
+	virtual ~WordRangePart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+private:
+	char m_WordSep;
+};
+
+class FieldRangePart : public RangePart {
+public:
+	FieldRangePart(int _first, int _last, char sep=0) : RangePart(_first,_last) {m_FieldSep = sep;}
+	virtual ~FieldRangePart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+private:
+	char m_FieldSep;
+};
+
 enum ApplyRet {
 	ApplyRet__Continue,
 	ApplyRet__Write,
@@ -37,7 +93,7 @@ public:
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 private:
 	char m_label;
-	Token *m_inputRange;
+	InputPart *m_InputPart;
 	size_t m_outStart;  /* zero is a special value meaning no output */
 	size_t m_maxLength; /* zero is a special value meaning no limit  */
 	bool   m_strip;

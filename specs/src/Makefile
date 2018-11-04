@@ -6,7 +6,7 @@ COMP = g++ -g -DDEBUG --std=c++11 $(INC)
 LINK = g++ -g
 
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
-SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o
+SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o $(OBJ_DIR)/InputPart.o
 PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o $(OBJ_DIR)/ProcessingState.o $(OBJ_DIR)/StringBuilder.o $(OBJ_DIR)/Config.o
 UT_OBJ = $(OBJ_DIR)/SpecString.o $(OBJ_DIR)/ErrorReporting.o
 
@@ -48,6 +48,9 @@ $(OBJ_DIR)/specItems.o: specitems/specItems.cc specitems/specItems.h specitems/i
 
 $(OBJ_DIR)/dataField.o: specitems/dataField.cc specitems/item.h processing/conversions.h
 	$(COMP) -o $@ -c specitems/dataField.cc
+	
+$(OBJ_DIR)/InputPart.o: specitems/InputPart.cc specitems/item.h 
+	$(COMP) -o $@ -c specitems/InputPart.cc
 	
 $(OBJ_DIR)/conversions.o: processing/conversions.cc processing/conversions.h
 	$(COMP) -o $@ -c processing/conversions.cc
