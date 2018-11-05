@@ -1,7 +1,7 @@
 #include "utils/ErrorReporting.h"
 #include "item.h"
 
-#define GET_NEXT_TOKEN {                      \
+#define GET_NEXT_TOKEN_NO_ADVANCE {           \
 		if (index>=tokenVec.size()) {         \
 			token = dummyToken;               \
 			tokenType = TokenListType__DUMMY; \
@@ -11,6 +11,12 @@
 			index++;                          \
 		}                                     \
 	}
+
+#define GET_NEXT_TOKEN {                      \
+	GET_NEXT_TOKEN_NO_ADVANCE;                \
+	if (tokenType!=TokenListType__DUMMY) {    \
+		index++;                              \
+	}}
 
 DataField::DataField()
 {
@@ -26,34 +32,74 @@ DataField::~DataField() {
 	fprintf(stderr, "~DataField\n");
 }
 
-void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
+/*
+ * Method: getInputPart
+ *
+ * Description: attempts to retrieve an input part description from the stream of
+ *              tokens.
+ *
+ * Parameters:
+ *   - tokenVec - a vector of tokens
+ *   - index - a running index of tokens within the vector
+ *
+ * Returns:
+ *   - a pointer to a newly-allocated InputPart.
+ *   - NULL if the tokens do not represent an input part.
+ *   - if returns NULL, index is NOT incremented
+ *
+ * Notes:
+ *   - index is incremented as necessary past the tokens representing the input part.
+ *   - index is not safe -- must verify it's not beyond the vector
+ *   - Caller must determine if a NULL return is acceptable
+ */
+InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index)
 {
+	unsigned int index = _index;
+	InputPart* ret;
 	Token token = dummyToken;
 	TokenListTypes tokenType;
 
 	GET_NEXT_TOKEN;
 
-	/* handle letter prefix for an input range */
-	if (tokenType==TokenListType__RANGELABEL) {
-		m_label = token.Literal()[0];
-		GET_NEXT_TOKEN;
-	}
-
 	switch (tokenType) {
 	case TokenListType__RANGE:
-		m_InputPart = new RegularRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
+		ret = new RegularRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
 		break;
 	case TokenListType__WORDRANGE:
-		m_InputPart = new WordRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
+		ret = new WordRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
 		break;
 	case TokenListType__FIELDRANGE:
-		m_InputPart = new FieldRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
+		ret = new FieldRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
 		break;
 	case TokenListType__LITERAL:
-		m_InputPart = new LiteralPart(token.Literal());
+		ret = new LiteralPart(token.Literal());
 		break;
 	case TokenListType__SUBSTRING:
 	default:
+		return NULL;
+	}
+
+	_index = index;
+	return ret;
+}
+
+void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
+{
+	Token token = dummyToken;
+	TokenListTypes tokenType;
+
+	GET_NEXT_TOKEN_NO_ADVANCE;
+
+	/* handle letter prefix for an input range */
+	if (tokenType==TokenListType__RANGELABEL) {
+		m_label = token.Literal()[0];
+		index++;
+		GET_NEXT_TOKEN_NO_ADVANCE;
+	}
+
+	m_InputPart = getInputPart(tokenVec, index);
+
+	if (!m_InputPart) {
 		std::string err = "Bad inputRange " + token.HelpIdentify();
 		MYTHROW(err);
 	}

@@ -92,6 +92,7 @@ public:
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 private:
+	InputPart* getInputPart(std::vector<Token> &tokenVec, unsigned int& index);
 	char m_label;
 	InputPart *m_InputPart;
 	size_t m_outStart;  /* zero is a special value meaning no output */
