@@ -8,7 +8,6 @@
 		} else {                              \
 			token = tokenVec[index];          \
 			tokenType = token.Type();         \
-			index++;                          \
 		}                                     \
 	}
 
@@ -33,6 +32,80 @@ DataField::~DataField() {
 }
 
 /*
+ * Method: getSubstringPart
+ *
+ * Description: attempts to retrieve a substring part description from the stream of
+ *              tokens.
+ *
+ * Parameters:
+ *   - tokenVec - a vector of tokens
+ *   - index - a running index of tokens within the vector
+ *
+ * Returns:
+ *   - a pointer to a newly-allocated SubstringPart.
+ *   - throws an exception if not valid
+ *
+ * Notes:
+ *   - index is incremented as necessary past the tokens representing the input part.
+ *   - index is not safe -- must verify it's not beyond the vector
+ *   - Caller must determine if a NULL return is acceptable
+ */
+
+SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index)
+{
+	Token token = dummyToken;
+	TokenListTypes tokenType;
+	InputPart* _pSub;
+	RangePart* pSub;
+	InputPart* pBig;
+	char       subPartWordSeparator = 0;
+	char       subPartFieldSeparator = 0;
+
+	GET_NEXT_TOKEN_NO_ADVANCE;
+
+	switch (tokenType) {
+	case TokenListType__WORDSEPARATOR:
+		subPartWordSeparator = token.Literal()[0];
+		index++;
+		break;
+	case TokenListType__FIELDSEPARATOR:
+		subPartFieldSeparator = token.Literal()[0];
+		index++;
+		break;
+	default:
+		;
+	}
+
+	_pSub = getInputPart(tokenVec, index, subPartWordSeparator, subPartFieldSeparator);
+	if (!_pSub) {
+		std::string err = "Invalid input part following SUBSTRING token " + token.HelpIdentify();
+		MYTHROW(err);
+	}
+
+	// sub must be of type RangePart
+	pSub = dynamic_cast<RangePart*>(_pSub);
+	if (!pSub) {
+		std::string err = "Invalid range part following SUBSTRING token " + token.HelpIdentify();
+		MYTHROW(err);
+	}
+
+	GET_NEXT_TOKEN; // next token MUST be OF
+
+	if (tokenType!=TokenListType__OF) {
+		std::string err = "Missing OF following SUBSTRING " + token.HelpIdentify();
+		MYTHROW(err);
+	}
+
+	pBig = getInputPart(tokenVec, index);
+	if (!pBig) {
+		std::string err = "Invalid big part following SUBSTRING-OF " + token.HelpIdentify();
+		MYTHROW(err);
+	}
+
+	return new SubstringPart(pSub, pBig);
+}
+
+/*
  * Method: getInputPart
  *
  * Description: attempts to retrieve an input part description from the stream of
@@ -52,7 +125,7 @@ DataField::~DataField() {
  *   - index is not safe -- must verify it's not beyond the vector
  *   - Caller must determine if a NULL return is acceptable
  */
-InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index)
+InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index, char _wordSep, char _fieldSep)
 {
 	unsigned int index = _index;
 	InputPart* ret;
@@ -66,15 +139,17 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 		ret = new RegularRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
 		break;
 	case TokenListType__WORDRANGE:
-		ret = new WordRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
+		ret = new WordRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _wordSep);
 		break;
 	case TokenListType__FIELDRANGE:
-		ret = new FieldRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
+		ret = new FieldRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _fieldSep);
 		break;
 	case TokenListType__LITERAL:
 		ret = new LiteralPart(token.Literal());
 		break;
 	case TokenListType__SUBSTRING:
+		ret = getSubstringPart(tokenVec, index);
+		break;
 	default:
 		return NULL;
 	}

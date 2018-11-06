@@ -27,6 +27,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__WORDRANGE:
 		case TokenListType__FIELDRANGE:
 		case TokenListType__LITERAL:
+		case TokenListType__SUBSTRING:
 		{
 			DataField *pItem = new DataField;
 			pItem->parse(tokenVec, index);
@@ -53,33 +54,42 @@ std::string itemGroup::Debug()
 	return ret;
 }
 
+bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, Writer* pWr)
+{
+	bool bSomethingWasDone = false;
+	int i;
+	for (i=0; i<m_items.size(); i++) {
+		PItem pit = m_items[i];
+		ApplyRet aRet = pit->apply(pState, &sb);
+		switch (aRet) {
+		case ApplyRet__Continue:
+			bSomethingWasDone = true;
+			break;
+		case ApplyRet__Write:
+			if (bSomethingWasDone) {
+				pWr->Write(sb.GetString());
+			} else {
+				pWr->Write(SpecString::newString());
+			}
+			bSomethingWasDone = false;
+			break;
+		default:
+			assert(2==1);
+		}
+	}
+	return bSomethingWasDone;
+}
+
 void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr)
 {
 	PSpecString ps;
-	bool bSomethingWasDone = false;
+
 	while ((ps=rd.get())) {
-		int i;
 		pState.setString(ps);
-		for (i=0; i<m_items.size(); i++) {
-			PItem pit = m_items[i];
-			ApplyRet aRet = pit->apply(pState, &sb);
-			switch (aRet) {
-			case ApplyRet__Continue:
-				bSomethingWasDone = true;
-				break;
-			case ApplyRet__Write:
-				if (bSomethingWasDone) {
-					wr.Write(sb.GetString());
-				} else {
-					wr.Write(SpecString::newString());
-				}
-				bSomethingWasDone = false;
-				break;
-			default:
-				assert(2==1);
-			}
+
+		if (processDo(sb,pState, &rd, &wr)) {
+			wr.Write(sb.GetString());
 		}
-		if (bSomethingWasDone) wr.Write(sb.GetString());
 	}
 }
 

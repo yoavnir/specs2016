@@ -32,7 +32,7 @@ $(EXE_DIR)/readWriteTest: $(OBJ_DIR)/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
 	$(COMP) -o $@ $(OBJ_DIR)/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
 	
 $(EXE_DIR)/ProcessingTest: $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
-	$(COMP) -o $@ $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ) $(CLI_OBJ) $(SI_OBJ)
 	
 $(EXE_DIR)/specs: $(OBJ_DIR)/Main.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ)
 	$(COMP) -o $@ $(OBJ_DIR)/Main.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ) 

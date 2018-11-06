@@ -64,6 +64,17 @@ private:
 	char m_FieldSep;
 };
 
+class SubstringPart : public InputPart {
+public:
+	SubstringPart(RangePart* _sub, InputPart* _big) {mp_SubPart = _sub; mp_BigPart = _big;}
+	virtual ~SubstringPart();
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+private:
+	RangePart* mp_SubPart;
+	InputPart* mp_BigPart;
+};
+
 enum ApplyRet {
 	ApplyRet__Continue,
 	ApplyRet__Write,
@@ -92,7 +103,8 @@ public:
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 private:
-	InputPart* getInputPart(std::vector<Token> &tokenVec, unsigned int& index);
+	InputPart* getInputPart(std::vector<Token> &tokenVec, unsigned int& index, char _wordSep=0, char _fieldSep=0);
+	SubstringPart* getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
 	char m_label;
 	InputPart *m_InputPart;
 	size_t m_outStart;  /* zero is a special value meaning no output */

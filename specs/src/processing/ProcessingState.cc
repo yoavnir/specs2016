@@ -121,8 +121,10 @@ int ProcessingState::getWordEnd(int idx) {
 	if (m_wordCount==-1) {
 		identifyWords();
 	}
-	assert(idx!=0);
-	if (idx < 0) {
+
+	if (idx==0) {
+		idx = m_wordCount;
+	} else if (idx < 0) {
 		if ((-idx) > m_wordCount) return 0;
 		idx += m_wordCount + 1;
 	}

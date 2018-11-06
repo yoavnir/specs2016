@@ -1,77 +1,79 @@
 #include <iostream>
 #include <string>
+#include "cli/tokens.h"
+#include "specitems/specItems.h"
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
 
-#define VERIFYSTRING(s) {     \
-	testCount++;     \
-	if (theOnlyTest==0 || theOnlyTest==testCount) { \
-		std::cout << testCount << ". Expecting: <" << s << "> Got: <" << *pRet << "> ... ";  \
-		if (pRet->Compare(s)==0) {  \
-			std::cout << "OK\n";     \
-		} else {                     \
-			std::cout << "ERROR\n";  \
-			errorCount++;            \
-		} } }
+#define VERIFY(sp,ex) {          \
+		PSpecString ps = runTestOnExample(sp);  \
+		testCount++;                            \
+		std::cout << "Test #" << testCount << " ";     \
+		if (!ps) {                              \
+			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
+			errorCount++;                       \
+		} else {                                \
+			if (ps->Compare(ex)) {              \
+				std::cout << "*** NOT OK ***:\n\tGot <" << ps->data() << ">\n\tExp <" << ex << ">\n"; \
+				errorCount++;                   \
+			} else {                            \
+				std::cout << "***** OK *****: <" << ex << ">\n"; \
+			}                                   \
+		}                                       \
+}
 
-#define GET_WORD_RANGE(f,t) ps.getFromTo((ps.getWordStart(f)),(ps.getWordEnd(t)))
+PSpecString runTestOnExample(const char* _specList)
+{
+	ProcessingState ps;
+	StdSpecString example1("The quick brown fox jumped over the   lazy dog");
+	ps.setString(&example1);
+	char* specList = (char*)_specList;
+
+	std::vector<Token> vec = parseTokens(1, &specList);
+	normalizeTokenList(&vec);
+	itemGroup ig;
+
+	unsigned int index = 0;
+	ig.Compile(vec,index);
+
+	StringBuilder sb;
+
+	PSpecString result = NULL;
+	if (ig.processDo(sb, ps, NULL, NULL)) {
+		result = sb.GetString();
+	}
+
+	return result;
+}
 
 int main(int argc, char** argv)
 {
-	int theOnlyTest = 0;
 	ProcessingState ps;
 	int errorCount = 0;
 	int testCount  = 0;
 
-	if (argc>1) { theOnlyTest = atoi(argv[1]); }
+	VERIFY("w1 1", "The"); // Test #1
+	VERIFY("7-17 1", "ick brown f"); // Test #2
+	VERIFY("2;-2 1", "he quick brown fox jumped over the   lazy do"); // Test #3
+	VERIFY("20-* 1", " jumped over the   lazy dog"); // Test #4
+	VERIFY("w3-5 1", "brown fox jumped"); // Test #5
+	VERIFY("word 3-5 1", "brown fox jumped"); // Test #6
+	VERIFY("word 8-9 1", "lazy dog"); // Test #7
+	VERIFY("word 8-* 1", "lazy dog"); // Test #8
+	VERIFY("w1 1 w3 nw w6 n", "The brownover"); // Test #8
+	VERIFY("w1 2 w3 4 w7-8 12", " Thbrown   the   lazy"); // Test #10
+	VERIFY("w1 1 w3 nf", "The\tbrown"); // Test #11
+	VERIFY("substring 2-4 of word 3 1", "row"); // Test #12
+	VERIFY("substring word 3;-2 of 1-* 1", "brown fox jumped over the   lazy"); // Test #13
+	VERIFY("substring wordsep e w3 of 1-* 1", "d ov"); // Test #14
+	VERIFY("substring fieldsep e w3 of 1-* 1", "brown"); // Test #15
+	VERIFY("substring fieldsep / / field 4 of w7-* 1", "lazy"); // Test #16
 
-	StdSpecString example1("The quick brown fox jumped over the   lazy dog");
-	ps.setString(&example1);
-
-	// Let's check the subset from 7 to 17. Should be "ick brown f"
-	PSpecString pRet = ps.getFromTo(7, 17);
-	VERIFYSTRING("ick brown f");
-
-	// Now let's try from the second to the penultimate char --> "he quick brown fox jumped over the lazy do"
-	pRet = ps.getFromTo(2,-2);
-	VERIFYSTRING("he quick brown fox jumped over the   lazy do");
-
-	// third to 5th words --> "brown fox jumped"
-	int _from = ps.getWordStart(3);
-	int _to = ps.getWordEnd(5);
-	pRet = ps.getFromTo(_from, _to);
-	VERIFYSTRING("brown fox jumped");
-
-	// Some StringBuilder tests
-	StringBuilder sb;
-
-	// w1 1 w3 nw w6 n ==> "The brownover"
-	pRet = GET_WORD_RANGE(1,1);
-	sb.insert(pRet, 1);
-	pRet = GET_WORD_RANGE(3,3);
-	sb.insertNextWord(pRet);
-	pRet = GET_WORD_RANGE(6,6);
-	sb.insertNext(pRet);
-	pRet = sb.GetString();
-	VERIFYSTRING("The brownover");
-
-	// w1 2 w3 4 w7-8 12 ==> " Thbrown    the   lazy"
-	pRet = GET_WORD_RANGE(1,1);
-	sb.insert(pRet, 2);
-	pRet = GET_WORD_RANGE(3,3);
-	sb.insert(pRet, 4);
-	pRet = GET_WORD_RANGE(7,8);
-	sb.insert(pRet, 12);
-	pRet = sb.GetString();
-	VERIFYSTRING(" Thbrown   the   lazy");
-
-	// w1 1 w3 nf ==? "The\tbrown"
-	pRet = GET_WORD_RANGE(1,1);
-	sb.insert(pRet,1);
-	pRet = GET_WORD_RANGE(3,3);
-	sb.insertNextField(pRet);
-	pRet = sb.GetString();
-	VERIFYSTRING("The\tbrown");
+	if (errorCount) {
+		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
+	} else {
+		std::cout << "\nAll tests passed.\n";
+	}
 
 	return (errorCount==0) ? 0 : 4;
 }

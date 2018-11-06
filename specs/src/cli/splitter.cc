@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <iostream>
 #include "utils/ErrorReporting.h"
 #include "tokens.h"
 
@@ -81,7 +82,7 @@ std::vector<Token> parseTokensSplit(char* arg)
 				} else {
 					ret.insert(ret.end(),
 							Token(TokenListType__LITERAL,
-									NULL, sarg.substr(1)+delimiter,
+									NULL, sarg.substr(1),
 									argindex++, sarg));
 				}
 				sarg.clear();

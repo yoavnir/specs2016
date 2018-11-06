@@ -84,3 +84,33 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 	return ret;
 }
 
+SubstringPart::~SubstringPart()
+{
+	if (mp_BigPart) {
+		delete mp_BigPart;
+	}
+
+	if (mp_SubPart) {
+		delete mp_SubPart;
+	}
+}
+
+std::string SubstringPart::Debug()
+{
+	return "Substring ("+mp_SubPart->Debug()+") of "+mp_BigPart->Debug();
+}
+
+PSpecString SubstringPart::getStr(ProcessingState& pState)
+{
+	PSpecString bigPart = mp_BigPart->getStr(pState);
+
+	if (!bigPart) return NULL;
+
+	// Create the special pState for the substring.
+	ProcessingState subState;
+	subState.setString(bigPart);
+
+	PSpecString ret = mp_SubPart->getStr(subState);
+	delete bigPart;
+	return ret;
+}
