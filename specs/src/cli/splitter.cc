@@ -17,10 +17,8 @@ static bool is_whitespace(char c) {
 	return (c==' ' || c=='\t');
 }
 
-static bool is_delimiter(char c) {
-	return (c=='/' || c=='@' || c=='\'' || c=='"' || c=='#'
-			|| c=='!' || c=='$' || c=='%' || c=='^' || c=='&' || c=='~'
-			|| c=='*' || c=='+' || c=='-' || c=='_' || c=='=' || c=='.' || c==',');
+static bool isPossibleDelimiter(char c) {
+	return (c=='/');
 }
 
 std::vector<Token> parseTokensSplit(char* arg)
@@ -54,7 +52,7 @@ std::vector<Token> parseTokensSplit(char* arg)
 				st = SpSt__GettingChars;
 				delimiter = ')';
 				sarg+=*ptr;
-			} else if (is_delimiter(*ptr)) {
+			} else if (isPossibleDelimiter(*ptr)) {
 				st = SpSt__GettingChars;
 				delimiter = *ptr;
 				sarg+=*ptr;

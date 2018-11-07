@@ -8,7 +8,7 @@ public:
 	explicit SpecsException(const char* _fn, unsigned int _ln, const char* _msg):
 		fn(_fn), ln(_ln), msg(_msg) {}
 	explicit SpecsException(const char* _fn, unsigned int _ln, std::string& _msg):
-		fn(_fn), ln(_ln), msg(_msg) {}
+		fn(_fn), ln(_ln) { msg = "\nSPECS Exception: " + _msg;}
 	virtual const char* what() const throw ();
 protected:
 	const char*  fn;

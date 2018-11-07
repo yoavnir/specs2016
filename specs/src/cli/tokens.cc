@@ -457,6 +457,29 @@ std::vector<Token> parseTokens(int argc, char** argv)
 	return ret;
 }
 
+static bool mayBeLiteral(Token& tok)
+{
+	switch (tok.Type()) {
+	case TokenListType__LITERAL:
+	case TokenListType__PERIOD:
+		/* TODO: expand this list */
+		return true;
+	default:
+		return false;
+	}
+}
+
+std::string getLiteral(Token& tok)
+{
+	if (TokenListType__LITERAL==tok.Type()) {
+		return tok.Literal();
+	}
+	if (mayBeLiteral(tok)) {
+		return tok.Orig();
+	}
+	return std::string("");
+}
+
 void normalizeTokenList(std::vector<Token> *tokList)
 {
 	if (tokList->size()==0) return;
@@ -479,9 +502,11 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
 			if (tok.Literal()=="") {
-				if (nextTok.Type()==TokenListType__LITERAL) {
-					if (nextTok.Literal().length()!=1) {
-						std::string err = "Bad field separator <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
+				if (mayBeLiteral(nextTok)) {
+					if (getLiteral(nextTok).length()!=1) {
+						std::string err = "Bad field separator <"+nextTok.Orig() +
+								">  with length " + std::to_string(getLiteral(nextTok).length()) +
+								" at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 						MYTHROW(err);
 					}
 					tok.setLiteral(nextTok.Literal());
