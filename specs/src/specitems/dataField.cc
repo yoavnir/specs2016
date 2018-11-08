@@ -98,6 +98,7 @@ SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 
 	pBig = getInputPart(tokenVec, index);
 	if (!pBig) {
+		GET_NEXT_TOKEN_NO_ADVANCE;
 		std::string err = "Invalid big part following SUBSTRING-OF " + token.HelpIdentify();
 		MYTHROW(err);
 	}
