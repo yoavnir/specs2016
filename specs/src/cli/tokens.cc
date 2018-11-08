@@ -286,8 +286,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 
 	/* Some simple tokens */
 	SIMPLETOKENV(substring,SUBSTRING,6);  // can be shortened down to substr
-	SIMPLETOKEN(word,WORDRANGE);
-	SIMPLETOKEN(field,FIELDRANGE);
+	SIMPLETOKENV(word,WORDRANGE,1);
+	SIMPLETOKENV(field,FIELDRANGE,1);
 	SIMPLETOKENV(fieldseparator,FIELDSEPARATOR,8); // down to fieldsep
 	SIMPLETOKEN(fs,FIELDSEPARATOR);
 	SIMPLETOKENV(wordseparator,WORDSEPARATOR,7); // down to wordsep
@@ -509,7 +509,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 								" at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 						MYTHROW(err);
 					}
-					tok.setLiteral(nextTok.Literal());
+					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
 				} else if (nextTok.Type()==TokenListType__RANGE) {
 					TokenFieldRange *pRange = nextTok.Range();

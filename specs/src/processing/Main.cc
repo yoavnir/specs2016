@@ -35,9 +35,11 @@ int main (int argc, char** argv)
 	unsigned int index = 0;
 	ig.Compile(vec, index);
 
+#ifdef DEBUG
 	std::cerr << "After parsing, index = " << index << "/" << vec.size() << "\n";
 
 	std::cerr << ig.Debug();
+#endif
 
 	pRd = new StandardReader();
 	pWr = new SimpleWriter;

@@ -19,7 +19,11 @@ PSpecString LiteralPart::getStr(ProcessingState& pState)
 
 std::string RangePart::Debug()
 {
-	return "["+std::to_string(_from)+":"+std::to_string(_to)+"]";
+	if (_from!=_to) {
+		return "["+std::to_string(_from)+":"+std::to_string(_to)+"]";
+	} else {
+		return "["+std::to_string(_from)+"]";
+	}
 }
 
 std::string RegularRangePart::Debug()

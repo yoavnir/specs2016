@@ -61,6 +61,7 @@ SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 	char       subPartWordSeparator = 0;
 	char       subPartFieldSeparator = 0;
 
+	// Check for fs or ws at the start of sub part
 	GET_NEXT_TOKEN_NO_ADVANCE;
 
 	switch (tokenType) {
@@ -96,7 +97,23 @@ SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 		MYTHROW(err);
 	}
 
-	pBig = getInputPart(tokenVec, index);
+	// Check for fs or ws at the start of big part
+	GET_NEXT_TOKEN_NO_ADVANCE;
+
+	switch (tokenType) {
+	case TokenListType__WORDSEPARATOR:
+		subPartWordSeparator = token.Literal()[0];
+		index++;
+		break;
+	case TokenListType__FIELDSEPARATOR:
+		subPartFieldSeparator = token.Literal()[0];
+		index++;
+		break;
+	default:
+		;
+	}
+
+	pBig = getInputPart(tokenVec, index, subPartWordSeparator, subPartFieldSeparator);
 	if (!pBig) {
 		GET_NEXT_TOKEN_NO_ADVANCE;
 		std::string err = "Invalid big part following SUBSTRING-OF " + token.HelpIdentify();
