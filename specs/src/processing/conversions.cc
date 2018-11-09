@@ -36,8 +36,38 @@ static std::string conv_B2C(std::string& s) {
 	return s;
 }
 
-static std::string conv_X2C(std::string& s) {
-	return s;
+std::string conv_X2C(std::string& s) {
+	std::string ret;
+	if (1==s.length() % 2) {
+		CONVERSION_EXCEPTION(s, "Hex", "Char");
+	}
+
+	const char* pc = s.c_str();
+	for (int i=0; i < s.length(); i+=2) {
+		char c;
+		if (*pc>='0' && *pc<='9') {
+			c = *pc-'0';
+		} else if (*pc>='A' && *pc<='F') {
+			c = *pc - 'A' + 10;
+		} else if (*pc>='a' && *pc<='f') {
+			c = *pc - 'a' + 10;
+		} else {
+			CONVERSION_EXCEPTION(s, "Hex", "Char");
+		}
+		c <<= 4; pc++;
+		if (*pc>='0' && *pc<='9') {
+			c += (*pc-'0');
+		} else if (*pc>='A' && *pc<='F') {
+			c += (*pc - 'A' + 10);
+		} else if (*pc>='a' && *pc<='f') {
+			c += (*pc - 'a' + 10);
+		} else {
+			CONVERSION_EXCEPTION(s, "Hex", "Char");
+		}
+
+		ret += c;  pc++;
+	}
+	return ret;
 }
 
 static std::string conv_d2x(std::string& s) {

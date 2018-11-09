@@ -55,7 +55,7 @@ bool checkParsing(const char* _str, const char* _expected, bool bSingle)
 		std::cout << ": *** OK ***  in=<" << _str << ">  out=" << parsed << "\n";
 		return true;
 	} else {
-		std::cout << ": * NOT-OK *  in=<" << _str << ">  out=" << parsed << " expected=" << _expected << "\n";
+		std::cout << ": * NOT-OK *\n\tin=<" << _str << ">\n\tout=" << parsed << "\n\texp=" << _expected << "\n";
 		return false;
 	}
 }

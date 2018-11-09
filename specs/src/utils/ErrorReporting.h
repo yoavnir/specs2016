@@ -18,4 +18,13 @@ protected:
 
 #define MYTHROW(s) throw SpecsException(__FILE__, __LINE__, s);
 
+class ConversionException : public SpecsException {
+public:
+	explicit ConversionException(const char* _fn, unsigned int _ln,
+			const char* _srcf, const char* _dstf, std::string& _src) : SpecsException(_fn, _ln, "") {
+		msg = "Cannot convert <" + _src + "> from format <" + _srcf + "> to format <" + _dstf + ">";
+	}
+};
+
+#define CONVERSION_EXCEPTION(s,sf,df) throw ConversionException(__FILE__, __LINE__, sf, df, s);
 #endif

@@ -4,6 +4,8 @@
 #include "utils/ErrorReporting.h"
 #include "processing/conversions.h"
 
+extern std::string conv_X2C(std::string& s);
+
 Token dummyToken(TokenListType__DUMMY, NULL, "", 0, std::string("dummyToken"));
 
 std::vector<Token> parseTokensSplit(char* arg);
@@ -398,6 +400,20 @@ CONT1:
 		NEXT_TOKEN;
 	}
 
+	/* Check for hex literal */
+	if ((arg[0]=='x') && (arg.length() > 1) && (1==arg.length() % 2)) {
+		try {
+			std::string hexLiteral = arg.substr(1);
+			std::string literal = conv_X2C(hexLiteral);
+			pVec->insert(pVec->end(),
+				Token(TokenListType__LITERAL,
+						new TokenFieldRangeSimple(1, literal.length()),
+						literal, argidx, arg));
+			NEXT_TOKEN;
+		} catch(ConversionException) {
+			;  // Do nothing. It just wasn't a hex string
+		}
+	}
 	/* Add as literal */
 	{
 		std::string literal;
@@ -409,7 +425,7 @@ CONT1:
 
 		pVec->insert(pVec->end(),
 			Token(TokenListType__LITERAL,
-				new TokenFieldRangeSimple(1,arg.length()),
+				new TokenFieldRangeSimple(1,literal.length()),
 				literal, argidx, arg));
 		NEXT_TOKEN;
 	}
