@@ -72,6 +72,7 @@ int main(int argc, char** argv)
 	TESTNS("nextfield nf nextf nextfie", "NEXTFIELD|NEXTFIELD|NEXTFIELD|NEXTFIELD");
 	TESTNS("fieldseparator , fs , fieldsepa , fieldsep , fieldse","FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|LITERAL; /fieldse/");
 	TESTNS("substring substri substr subst of","SUBSTRING|SUBSTRING|SUBSTRING|LITERAL; /subst/|OF");
+	TESTNS("x x2 x2c x2cf x2c4e x2c4e X2cfe x2p4e","LITERAL; /x/|LITERAL; /x2/|LITERAL; /,/|LITERAL; /x2cf/|LITERAL; /,N/|LITERAL; /,N/|LITERAL; /X2cfe/|LITERAL; /x2p4e/");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";
