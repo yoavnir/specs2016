@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 	VERIFY("word 3-5 1", "brown fox jumped"); // Test #6
 	VERIFY("word 8-9 1", "lazy dog"); // Test #7
 	VERIFY("word 8-* 1", "lazy dog"); // Test #8
-	VERIFY("w1 1 w3 nw w6 n", "The brownover"); // Test #8
+	VERIFY("w1 1 w3 nw w6 n", "The brownover"); // Test #9
 	VERIFY("w1 2 w3 4 w7-8 12", " Thbrown   the   lazy"); // Test #10
 	VERIFY("w1 1 w3 nf", "The\tbrown"); // Test #11
 	VERIFY("substring 2-4 of word 3 1", "row"); // Test #12
@@ -68,6 +68,7 @@ int main(int argc, char** argv)
 	VERIFY("substring wordsep e w3 of 1-* 1", "d ov"); // Test #14
 	VERIFY("substring fieldsep e w3 of 1-* 1", "brown"); // Test #15
 	VERIFY("substring fieldsep / / field 4 of w7-* 1", "lazy"); // Test #16
+	VERIFY("w1 1.5 w2 n.5 w3 n.4 w4 n","The  quickbrowfox"); // Test #17
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

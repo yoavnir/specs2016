@@ -23,7 +23,7 @@
 	X(WORDSEPARATOR,  false, true)  \
 	X(NEXTWORD,       true,  false) \
 	X(NEXTFIELD,      true,  false) \
-	X(NEXT,           false, false) \
+	X(NEXT,           true,  false) \
 	X(FIELDRANGE,     true,  false) \
 	X(SUBSTRING,      false, false) \
 	X(OF,             false, false) \
