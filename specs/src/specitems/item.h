@@ -111,6 +111,7 @@ private:
 	size_t m_maxLength; /* zero is a special value meaning no limit  */
 	bool   m_strip;
 	StringConversions m_conversion;
+	outputAlignment m_alignment;
 };
 
 class TokenItem : public Item {

@@ -32,6 +32,9 @@
 	X(STRIP,          false, false) \
 	X(LITERAL,        false, true) \
 	X(CONVERSION,     false, true) \
+	X(LEFT,           false, false) \
+	X(CENTER,         false, false) \
+	X(RIGHT,          false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

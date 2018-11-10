@@ -129,7 +129,7 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 
 	size_t endPos = offset + psss->length();
 	if (mp_str->length() < endPos) {
-		mp_str->Resize(endPos, &m_ps.m_pad);
+		mp_str->Resize(endPos, &m_ps.m_pad, outputAlignmentLeft);
 	}
 	memcpy((void*)(mp_str->data()+offset), (void*)(s->data()), s->length());
 }
@@ -142,14 +142,14 @@ void StringBuilder::insertNext(PSpecString s)
 void StringBuilder::insertNextWord(PSpecString s)
 {
 	size_t len = mp_str->length();
-	mp_str->Resize(len + s->length() + 1, DEFAULT_WORDSEPARATOR);
+	mp_str->Resize(len + s->length() + 1, DEFAULT_WORDSEPARATOR, outputAlignmentLeft);
 	insert(s, len+2, true);
 }
 
 void StringBuilder::insertNextField(PSpecString s)
 {
 	size_t len = mp_str->length();
-	mp_str->Resize(len + s->length() + 1, DEFAULT_FIELDSEPARATOR);
+	mp_str->Resize(len + s->length() + 1, DEFAULT_FIELDSEPARATOR, outputAlignmentLeft);
 	insert(s, len+2, true);
 }
 

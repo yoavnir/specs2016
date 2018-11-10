@@ -69,6 +69,7 @@ int main(int argc, char** argv)
 	VERIFY("substring fieldsep e w3 of 1-* 1", "brown"); // Test #15
 	VERIFY("substring fieldsep / / field 4 of w7-* 1", "lazy"); // Test #16
 	VERIFY("w1 1.5 w2 n.5 w3 n.4 w4 n","The  quickbrowfox"); // Test #17
+	VERIFY("w1 1.8 right w2 n.8 center w3 n left", "     The quick  brown"); // Test #18
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

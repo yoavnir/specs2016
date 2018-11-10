@@ -25,6 +25,7 @@ DataField::DataField()
 	m_maxLength = LAST_POS_END;
 	m_strip = false;
 	m_conversion = StringConversion__identity;
+	m_alignment = outputAlignmentLeft;
 }
 
 DataField::~DataField() {
@@ -256,6 +257,23 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		std::string err = "Bad output placement " + token.HelpIdentify();
 		MYTHROW(err);
 	}
+
+	GET_NEXT_TOKEN_NO_ADVANCE;
+	switch (tokenType) {
+	case TokenListType__LEFT:
+		index++;
+		break;
+	case TokenListType__RIGHT:
+		m_alignment = outputAlignmentRight;
+		index++;
+		break;
+	case TokenListType__CENTER:
+		m_alignment = outputAlignmentCenter;
+		index++;
+		break;
+	default:
+		;
+	}
 }
 
 std::string DataField::Debug() {
@@ -281,6 +299,12 @@ std::string DataField::Debug() {
 		}
 	}
 
+	switch (m_alignment) {
+	case outputAlignmentCenter: ret += " (centered)"; break;
+	case outputAlignmentRight:  ret += " (right)"; break;
+	default: ;
+	}
+
 	if (m_strip) ret += " STRIP";
 	if (m_conversion!=StringConversion__identity) ret += " " + StringConversion__2str(m_conversion);
 	ret += '}';
@@ -296,7 +320,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	// truncate or expand if necessary
 	if (m_maxLength>0 && pInput->length()!=m_maxLength) {
-		pInput->Resize(m_maxLength, pSB->getPad());  // TODO: Add placement
+		pInput->Resize(m_maxLength, pSB->getPad(), m_alignment);
 	}
 
 	if (m_outStart==POS_SPECIAL_VALUE_NEXT) {

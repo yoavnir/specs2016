@@ -23,14 +23,38 @@ void StdSpecString::Overlay(SpecString& ss, size_t offset, void* pPadChar)
 	Overlay(&ss, offset, pPadChar);
 }
 
-void StdSpecString::Resize(size_t newSize, void* pPadChar)
+void StdSpecString::Resize(size_t newSize, void* pPadChar, outputAlignment oa)
 {
 	char padChar = *((char*)pPadChar);
-	m_str.resize(newSize, padChar);
+	Resize(newSize, padChar, oa);
 }
 
-void StdSpecString::Resize(size_t newSize, char padChar)
+void StdSpecString::Resize(size_t newSize, char padChar, outputAlignment oa)
 {
+	if (oa!=outputAlignmentLeft) {
+		int diffSize = ((int)newSize - (int)m_str.size());
+		if (diffSize == 0) return;
+		if (diffSize < 0) {
+			if (oa==outputAlignmentRight) {
+				// Cut off enough bytes from the start
+				m_str = m_str.substr(size_t(-diffSize));
+				return;
+			} else { // oa==outputAlignmentCenter
+				// Cut off just a half
+				m_str = m_str.substr(size_t(-diffSize/2));
+			}
+		} else { // diffSize > 0
+			if (oa==outputAlignmentRight) {
+				// Pad to the right
+				m_str = std::string(size_t(diffSize), padChar) + m_str;
+				return;
+			} else { // oa==outputAlignmentCenter
+				// Pad just half the amount and don't return
+				m_str = std::string(size_t(diffSize/2), padChar) + m_str;
+			}
+		}
+	}
+
 	m_str.resize(newSize, padChar);
 }
 

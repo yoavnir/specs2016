@@ -12,7 +12,13 @@ UT_OBJ = $(OBJ_DIR)/SpecString.o $(OBJ_DIR)/ErrorReporting.o
 
 .DUMMY: directories
 
-all: directories $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest $(EXE_DIR)/readWriteTest $(EXE_DIR)/ProcessingTest $(EXE_DIR)/specs
+all: directories tests run_tests $(EXE_DIR)/specs
+
+run_tests: tests
+	$(EXE_DIR)/tokenTest
+	$(EXE_DIR)/ProcessingTest
+
+tests: $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest $(EXE_DIR)/readWriteTest $(EXE_DIR)/ProcessingTest
 
 directories: $(EXE_DIR) $(OBJ_DIR)
 
