@@ -311,12 +311,41 @@ std::string DataField::Debug() {
 	return ret;
 }
 
+#define IS_BLANK(c) (c==0x20 || c==0x09 || c==0x0a || c==0x0d)
+void DataField::stripString(PSpecString &pOrig)
+{
+	PSpecString old = pOrig;
+	const char* s = pOrig->data();
+	size_t len = pOrig->length();
+	while (IS_BLANK(*s) && len>0) {
+		s++; len--;
+	}
+
+	if (!len) {
+		delete old;
+		pOrig = SpecString::newString();
+	}
+
+	const char* sEnd = s + len - 1;
+	while (IS_BLANK(*sEnd)) {
+		sEnd--;
+		len--;
+	}
+
+	pOrig = SpecString::newString(s, len);
+	delete old;
+}
+
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	int _from, _to;
 	PSpecString pInput = m_InputPart->getStr(pState);
 
 	if (!pInput) pInput = SpecString::newString();
+
+	if (m_strip) {
+		stripString(pInput);
+	}
 
 	// truncate or expand if necessary
 	if (m_maxLength>0 && pInput->length()!=m_maxLength) {

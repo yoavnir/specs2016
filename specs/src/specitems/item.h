@@ -105,6 +105,7 @@ public:
 private:
 	InputPart* getInputPart(std::vector<Token> &tokenVec, unsigned int& index, char _wordSep=0, char _fieldSep=0);
 	SubstringPart* getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
+	void stripString(PSpecString &pOrig);
 	char m_label;
 	InputPart *m_InputPart;
 	size_t m_outStart;  /* zero is a special value meaning no output */
