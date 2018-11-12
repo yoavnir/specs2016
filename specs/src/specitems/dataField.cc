@@ -347,6 +347,13 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		stripString(pInput);
 	}
 
+	if (m_conversion) {
+		std::string currentString(pInput->data(), pInput->length());
+		std::string convertedString = stringConvert(currentString, m_conversion);
+		delete pInput;
+		pInput = SpecString::newString(convertedString);
+	}
+
 	// truncate or expand if necessary
 	if (m_maxLength>0 && pInput->length()!=m_maxLength) {
 		pInput->Resize(m_maxLength, pSB->getPad(), m_alignment);
