@@ -17,6 +17,8 @@ public:
 	void    setWSChar(char c) {m_wordSeparator = c; m_wordCount=-1;}
 	void    setFSChar(char c) {m_fieldSeparator = c; m_fieldCount=-1;}
 	void    setString(PSpecString ps);
+	unsigned int getWordCount();
+	unsigned int getFieldCount();
 	int     getWordStart(int idx);
 	int     getWordEnd(int idx);
 	int     getFieldStart(int idx);

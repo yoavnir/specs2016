@@ -2,6 +2,8 @@
 #include "utils/ErrorReporting.h"
 #include "ProcessingState.h"
 
+#define EMPTY_FIELD_MARKER  999999999
+
 ProcessingState::ProcessingState()
 {
 	m_pad = DEFAULT_PAD_CHAR;
@@ -73,7 +75,7 @@ void ProcessingState::identifyFields()
 		m_fieldCount++;
 		m_fieldStart.insert(m_fieldStart.end(), i+1);
 		while (pc[i]!=m_fieldSeparator && pc[i]!=0) i++;
-		m_fieldEnd.insert(m_fieldEnd.end(), i);
+		m_fieldEnd.insert(m_fieldEnd.end(), (i==0) ? EMPTY_FIELD_MARKER : i);
 		if (pc[i]==m_fieldSeparator) i++;
 	}
 }
@@ -89,6 +91,24 @@ int ProcessingState::getFieldStart(int idx) {
 	}
 	if (idx > m_fieldCount) return 0;
 	return m_fieldStart[idx-1];
+}
+
+unsigned int ProcessingState::getWordCount()
+{
+	if (m_wordCount==-1) {
+		identifyWords();
+	}
+
+	return m_wordCount;
+}
+
+unsigned int ProcessingState::getFieldCount()
+{
+	if (m_fieldCount==-1) {
+		identifyFields();
+	}
+
+	return m_fieldCount;
 }
 
 int ProcessingState::getWordStart(int idx) {
@@ -138,6 +158,8 @@ int ProcessingState::getWordEnd(int idx) {
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
 	int slen = (int)(m_ps->length());
+
+	if (from==1 && to==EMPTY_FIELD_MARKER) return SpecString::newString();
 
 	// conventions
 	if (from==0) from=1;

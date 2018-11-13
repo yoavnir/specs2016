@@ -53,7 +53,12 @@ PSpecString WordRangePart::getStr(ProcessingState& pState)
 		pState.setWSChar(m_WordSep);  // as a side-effect, invalidates the current word list
 	}
 
-	PSpecString ret = pState.getFromTo(pState.getWordStart(_from), pState.getWordEnd(_to));
+	PSpecString ret;
+	if (_from > pState.getWordCount()) {
+		ret = SpecString::newString();
+	} else {
+		ret = pState.getFromTo(pState.getWordStart(_from), pState.getWordEnd(_to));
+	}
 
 	if (m_WordSep) {
 		pState.setWSChar(keepSeparator);
@@ -79,10 +84,15 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 		pState.setFSChar(m_FieldSep);  // as a side-effect, invalidates the current field list
 	}
 
-	PSpecString ret = pState.getFromTo(pState.getFieldStart(_from), pState.getFieldEnd(_to));
+	PSpecString ret;
+	if (_from > pState.getFieldCount()) {
+		ret = SpecString::newString();
+	} else {
+		ret = pState.getFromTo(pState.getFieldStart(_from), pState.getFieldEnd(_to));
+	}
 
 	if (m_FieldSep) {
-		pState.setWSChar(keepSeparator);
+		pState.setFSChar(keepSeparator);
 	}
 
 	return ret;

@@ -6,7 +6,7 @@
 #include "processing/StringBuilder.h"
 
 #define VERIFY(sp,ex) {          \
-		PSpecString ps = runTestOnExample(sp);  \
+		PSpecString ps = runTestOnExample(sp, "The quick brown fox jumped over the   lazy dog");  \
 		testCount++;                            \
 		std::cout << "Test #" << testCount << " ";     \
 		if (!ps) {                              \
@@ -22,10 +22,27 @@
 		}                                       \
 }
 
-PSpecString runTestOnExample(const char* _specList)
+#define VERIFY2(sp,ln,ex) {          \
+		PSpecString ps = runTestOnExample(sp, ln);  \
+		testCount++;                            \
+		std::cout << "Test #" << testCount << " ";     \
+		if (!ps) {                              \
+			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
+			errorCount++;                       \
+		} else {                                \
+			if (ps->Compare(ex)) {              \
+				std::cout << "*** NOT OK ***:\n\tGot <" << ps->data() << ">\n\tExp <" << ex << ">\n"; \
+				errorCount++;                   \
+			} else {                            \
+				std::cout << "***** OK *****: <" << ex << ">\n"; \
+			}                                   \
+		}                                       \
+}
+
+PSpecString runTestOnExample(const char* _specList, const char* example)
 {
 	ProcessingState ps;
-	StdSpecString example1("The quick brown fox jumped over the   lazy dog");
+	StdSpecString example1(example);
 	ps.setString(&example1);
 	char* specList = (char*)_specList;
 
@@ -72,6 +89,9 @@ int main(int argc, char** argv)
 	VERIFY("w1 1.8 right w2 n.8 center w3 n left", "     The quick  brown"); // Test #18
 	VERIFY("33.6 strip 1.6 right", "   the"); // Test #19
 	VERIFY("w1 C2X 1 w7 C2B nw /30313233/ X2C nw","546865 011101000110100001100101 0123"); // Test #20
+	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "a=b", "a    b         "); // Test #21
+	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "=a", "     a         ");  // Test #22
+	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "==a=b", "          a    b"); // Test #23
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
