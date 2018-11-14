@@ -54,7 +54,8 @@ PSpecString WordRangePart::getStr(ProcessingState& pState)
 	}
 
 	PSpecString ret;
-	if (_from > pState.getWordCount()) {
+	int wordCount = int(pState.getWordCount());
+	if (_from > wordCount) {
 		ret = SpecString::newString();
 	} else {
 		ret = pState.getFromTo(pState.getWordStart(_from), pState.getWordEnd(_to));
@@ -85,7 +86,8 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 	}
 
 	PSpecString ret;
-	if (_from > pState.getFieldCount()) {
+	int fieldCount = int(pState.getFieldCount());
+	if (_from > fieldCount) {
 		ret = SpecString::newString();
 	} else {
 		ret = pState.getFromTo(pState.getFieldStart(_from), pState.getFieldEnd(_to));
