@@ -10,7 +10,7 @@ bool parseSwitches(int& argc, char**& argv)
 	/* Skip the program name */
 	argc--; argv++; argumentCount++;
 
-	while (argv[0][0]=='-') {
+	while (argv[0][0]=='-' && (argv[0][1]<'1' || argv[0][1]>'9')) {
 		fprintf(stderr, "Invalid switch at position %d: %s\n", argumentCount, argv[0]);
 		return false;
 	}
