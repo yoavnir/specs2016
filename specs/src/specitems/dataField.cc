@@ -169,6 +169,9 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 	case TokenListType__SUBSTRING:
 		ret = getSubstringPart(tokenVec, index);
 		break;
+	case TokenListType__NUMBER:
+		ret = new NumberPart();
+		break;
 	default:
 		return NULL;
 	}

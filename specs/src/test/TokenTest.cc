@@ -76,6 +76,7 @@ int main(int argc, char** argv)
 	TESTNS("1.8 n.8 nw.8 nf.8 nextword.8","RANGE; S:1-8|NEXT; S:1-8|NEXTWORD; S:1-8|NEXTFIELD; S:1-8|NEXTWORD; S:1-8");
 	TESTNS("left center centre right lefta lef cent centrer", "LEFT|CENTER|CENTER|RIGHT|LITERAL; /lefta/|LITERAL; /lef/|LITERAL; /cent/|LITERAL; /centrer/");
 	TESTNS("C2B B2C X2C C2X", "CONVERSION; /C2B/|CONVERSION; /B2C/|CONVERSION; /X2C/|CONVERSION; /C2X/");
+	TESTNS("numBER NUMbe numBERa", "NUMBER|LITERAL; /NUMbe/|LITERAL; /numBERa/");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";

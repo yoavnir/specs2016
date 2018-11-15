@@ -28,6 +28,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__FIELDRANGE:
 		case TokenListType__LITERAL:
 		case TokenListType__SUBSTRING:
+		case TokenListType__NUMBER:
 		{
 			DataField *pItem = new DataField;
 			pItem->parse(tokenVec, index);

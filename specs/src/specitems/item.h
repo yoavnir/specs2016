@@ -75,6 +75,18 @@ private:
 	InputPart* mp_BigPart;
 };
 
+#define NUMBER_PART_FIELD_LEN  10
+class NumberPart : public InputPart {
+public:
+	NumberPart() {m_Num = 0;}
+	virtual ~NumberPart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+private:
+	unsigned long m_Num;
+};
+
+
 enum ApplyRet {
 	ApplyRet__Continue,
 	ApplyRet__Write,

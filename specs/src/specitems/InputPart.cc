@@ -130,3 +130,15 @@ PSpecString SubstringPart::getStr(ProcessingState& pState)
 	delete bigPart;
 	return ret;
 }
+
+std::string NumberPart::Debug()
+{
+	return "Number";
+}
+
+PSpecString NumberPart::getStr(ProcessingState& pState)
+{
+	std::string s = std::to_string(++m_Num);
+	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), ' ') + s;
+	return SpecString::newString(s);
+}

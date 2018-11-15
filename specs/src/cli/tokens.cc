@@ -307,6 +307,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(right, RIGHT);
 	SIMPLETOKEN(center, CENTER);
 	SIMPLETOKEN(centre, CENTER);
+	SIMPLETOKEN(number, NUMBER);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' && arg[0]>='a' && arg[0]<='z') {
