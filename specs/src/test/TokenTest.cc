@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include "assert.h"
 #include "string.h"
 #include "cli/tokens.h"
@@ -49,7 +50,7 @@ bool checkParsing(const char* _str, const char* _expected, bool bSingle)
 		parsed = callParseTokens(_str);
 	}
 
-	std::cout << "Test " << ++ctr;
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++ctr;
 	if (bSingle) std::cout << "(s)";
 	if (parsed==_expected) {
 		std::cout << ": *** OK ***  in=<" << _str << ">  out=" << parsed << "\n";

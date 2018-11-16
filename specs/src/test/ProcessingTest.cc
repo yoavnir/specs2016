@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <iomanip>
 #include "cli/tokens.h"
 #include "specitems/specItems.h"
 #include "processing/ProcessingState.h"
@@ -8,7 +9,7 @@
 #define VERIFY(sp,ex) {          \
 		PSpecString ps = runTestOnExample(sp, "The quick brown fox jumped over the   lazy dog");  \
 		testCount++;                            \
-		std::cout << "Test #" << testCount << " ";     \
+		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
 			errorCount++;                       \
@@ -25,7 +26,7 @@
 #define VERIFY2(sp,ln,ex) {          \
 		PSpecString ps = runTestOnExample(sp, ln);  \
 		testCount++;                            \
-		std::cout << "Test #" << testCount << " ";     \
+		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
 			errorCount++;                       \
