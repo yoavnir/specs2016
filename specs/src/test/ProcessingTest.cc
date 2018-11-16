@@ -98,6 +98,7 @@ int main(int argc, char** argv)
 	VERIFY2("substring fieldsep . field 1 of substr word 1 of fs = f 1   1", "  a = 17", "a"); // Test #27
 	VERIFY2("substring fieldsep . field 1 of substr word 1 of fs = f 1   1", "x.18= 23", "x"); // Test #28
 	VERIFY("number 1 w2 nw number strip nw", "         1 quick 1"); // Test #29
+	VERIFY2("wordseparator e w2 1 w4 nw", "Hope is the thing with feathers", " is th ath"); // Test #30
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

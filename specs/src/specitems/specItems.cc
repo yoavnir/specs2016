@@ -17,6 +17,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 	while (index < tokenVec.size()) {
 		switch (tokenVec[index].Type()) {
 		case TokenListType__FIELDSEPARATOR:
+		case TokenListType__WORDSEPARATOR:
 		{
 			TokenItem *pItem = new TokenItem(tokenVec[index++]);
 			addItem(pItem);
@@ -117,6 +118,9 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	switch (mp_Token->Type()) {
 	case TokenListType__FIELDSEPARATOR:
 		pState.setFSChar(mp_Token->Literal()[0]);
+		return ApplyRet__Continue;
+	case TokenListType__WORDSEPARATOR:
+		pState.setWSChar(mp_Token->Literal()[0]);
 		return ApplyRet__Continue;
 	default:
 		std::string err = "Unhandled TokenItem type " + TokenListType__2str(mp_Token->Type());
