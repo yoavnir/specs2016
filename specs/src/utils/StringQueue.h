@@ -59,7 +59,7 @@ public:
         scopedLock lock(&m_Mutex);
         while(m_Queue.empty() && false==m_Done)
         {
-            cv_QueueEmpty.wait(lock.ulock());
+            cv_QueueEmpty.wait_for(lock.ulock(), std::chrono::milliseconds(20));
         }
 
         if (m_Done && m_Queue.empty()) return false;

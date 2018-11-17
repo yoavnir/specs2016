@@ -11,17 +11,26 @@ void ReadAllRecordsIntoReaderQueue(Reader* r)
 
 Reader::~Reader()
 {
+	End();
+}
+
+void Reader::End()
+{
 	if (mp_thread) {
 		mp_thread->join();
 	}
+	mp_thread = NULL;
 }
 
 PSpecString Reader::get()
 {
 	if (eof()) return NULL;
 	PSpecString ret;
-	m_queue.wait_and_pop(ret);
-	return ret;
+	if (m_queue.wait_and_pop(ret)) {
+		return ret;
+	} else {
+		return NULL;
+	}
 }
 
 void Reader::readIntoQueue()
@@ -98,14 +107,25 @@ PSpecString StandardReader::getNextRecord() {
 	return ret;
 }
 
-TestReader::TestReader(void* arr, size_t count, size_t szEntry)
+TestReader::TestReader(size_t maxLineCount)
 {
-	int i;
-	mp_arr = (SpecString**)malloc(sizeof(PSpecString) * count);
-	for (i=0; i<count; i++) {
-		mp_arr[i] = (PSpecString)arr;
-		arr = (void*)(((char*)arr) + szEntry);
+	mp_arr = (SpecString**)malloc(sizeof(PSpecString) * maxLineCount);
+	m_count = m_idx = 0;
+	m_MaxCount = maxLineCount;
+}
+
+void TestReader::InsertString(const char* s)
+{
+	if (m_count >= m_MaxCount) {
+		MYTHROW("Attempting to insert too many lines into TestReader");
 	}
-	m_count = count;
-	m_idx = 0;
+	mp_arr[m_count++] = SpecString::newString(s);
+}
+
+void TestReader::InsertString(PSpecString ps)
+{
+	if (m_count >= m_MaxCount) {
+		MYTHROW("Attempting to insert too many lines into TestReader");
+	}
+	mp_arr[m_count++] = ps;
 }

@@ -6,7 +6,7 @@
 
 class Reader {
 public:
-	Reader() {}
+	Reader() {mp_thread = NULL;}
 	virtual ~Reader();
 	virtual bool        endOfSource() = 0;
 	virtual PSpecString getNextRecord() = 0;
@@ -14,6 +14,7 @@ public:
 	virtual void        readIntoQueue();
 	virtual void        Begin();
 	virtual bool        eof() { return endOfSource() && m_queue.empty(); }
+	void                End();
 protected:
 	StringQueue m_queue;
 	std::thread *mp_thread;
@@ -21,13 +22,17 @@ protected:
 
 class TestReader : public Reader {
 public:
-	TestReader(void* arr, size_t count, size_t szEntry);
+	TestReader(size_t maxLineCount);
+	void    InsertString(const char* s);
+	void    InsertString(PSpecString ps);
 	virtual bool endOfSource() {return m_idx >= m_count;}
 	virtual PSpecString getNextRecord() {return SpecStringCopy(mp_arr[m_idx++]);}
+	virtual PSpecString get() {return getNextRecord();}
 private:
 	PSpecString  *mp_arr;
 	size_t       m_count;
 	size_t       m_idx;
+	size_t       m_MaxCount;
 };
 
 class StandardReader : public Reader {

@@ -90,6 +90,8 @@ private:
 enum ApplyRet {
 	ApplyRet__Continue,
 	ApplyRet__Write,
+	ApplyRet__Read,
+	ApplyRet__ReadStop,
 	ApplyRet__Last
 };
 

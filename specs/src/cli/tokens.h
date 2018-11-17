@@ -14,6 +14,9 @@
 	X(PRINTONLY,      false, false) \
 	X(EOF,            false, false) \
 	X(KEEP,           false, false) \
+	X(READ,           false, false) \
+	X(READSTOP,       false, false) \
+	X(WRITE,          false, false) \
 	/* The input ranges */  \
 	X(RANGELABEL,     false, true)  \
 	X(PERIOD,         false, false) \

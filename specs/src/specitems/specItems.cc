@@ -18,6 +18,9 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		switch (tokenVec[index].Type()) {
 		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
+		case TokenListType__READ:
+		case TokenListType__READSTOP:
+		case TokenListType__WRITE:
 		{
 			TokenItem *pItem = new TokenItem(tokenVec[index++]);
 			addItem(pItem);
@@ -37,7 +40,9 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			break;
 		}
 		default:
-			std::string err = std::string("Unhandled token type ") + TokenListType__2str(tokenVec[index].Type());
+			std::string err = std::string("Unhandled token type ")
+				+ TokenListType__2str(tokenVec[index].Type())
+				+ " at argument " + std::to_string(tokenVec[index].argIndex());
 			MYTHROW(err);
 		}
 	}
@@ -60,7 +65,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 {
 	bool bSomethingWasDone = false;
 	int i;
-	for (i=0; i<m_items.size(); i++) {
+	PSpecString ps; // Used for processing READ and READSTOP tokens
+	bool processingContinue = true;
+	for (i=0; processingContinue && i<m_items.size(); i++) {
 		PItem pit = m_items[i];
 		ApplyRet aRet = pit->apply(pState, &sb);
 		switch (aRet) {
@@ -75,8 +82,22 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			}
 			bSomethingWasDone = false;
 			break;
+		case ApplyRet__Read:
+		case ApplyRet__ReadStop:
+			ps = pRd->get();
+			if (!ps) {
+				if (aRet==ApplyRet__Read) {
+					ps = SpecString::newString();
+				} else {
+					processingContinue = false; // Stop processing if no extra record is available
+				}
+			}
+			pState.setString(ps);
+			break;
 		default:
-			assert(2==1);
+			std::string err = "Unexpected return code from TokenItem::apply: ";
+			err += std::to_string(aRet);
+			MYTHROW(err);
 		}
 	}
 	return bSomethingWasDone;
@@ -122,6 +143,12 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	case TokenListType__WORDSEPARATOR:
 		pState.setWSChar(mp_Token->Literal()[0]);
 		return ApplyRet__Continue;
+	case TokenListType__READ:
+		return ApplyRet__Read;
+	case TokenListType__READSTOP:
+		return ApplyRet__ReadStop;
+	case TokenListType__WRITE:
+		return ApplyRet__Write;
 	default:
 		std::string err = "Unhandled TokenItem type " + TokenListType__2str(mp_Token->Type());
 		MYTHROW(err);

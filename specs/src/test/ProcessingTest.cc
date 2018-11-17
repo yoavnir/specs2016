@@ -40,11 +40,20 @@
 		}                                       \
 }
 
-PSpecString runTestOnExample(const char* _specList, const char* example)
+PSpecString runTestOnExample(const char* _specList, const char* _example)
 {
 	ProcessingState ps;
-	StdSpecString example1(example);
-	ps.setString(&example1);
+
+	TestReader tRead(5);
+	char* example = strdup(_example);
+	char* ln = strtok(example, "\n");
+	while (ln) {
+		tRead.InsertString(ln);
+		ln = strtok(NULL, "\n");
+	}
+
+	PSpecString pFirstLine = tRead.getNextRecord();
+	ps.setString(pFirstLine);
 	char* specList = (char*)_specList;
 
 	std::vector<Token> vec = parseTokens(1, &specList);
@@ -57,9 +66,11 @@ PSpecString runTestOnExample(const char* _specList, const char* example)
 	StringBuilder sb;
 
 	PSpecString result = NULL;
-	if (ig.processDo(sb, ps, NULL, NULL)) {
+	if (ig.processDo(sb, ps, &tRead, NULL)) {
 		result = sb.GetString();
 	}
+
+	free(example);
 
 	return result;
 }
@@ -100,6 +111,7 @@ int main(int argc, char** argv)
 	VERIFY2("substring fieldsep . field 1 of substr word 1 of fs = f 1   1", "x.18= 23", "x"); // Test #28
 	VERIFY("number 1 w2 nw number strip nw", "         1 quick 1"); // Test #29
 	VERIFY2("wordseparator e w2 1 w4 nw", "Hope is the thing with feathers", " is th ath"); // Test #30
+	VERIFY2("w1 1 read w1 10", "Once there were green fields\nKissed by the sun","Once     Kissed");
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

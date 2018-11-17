@@ -49,6 +49,7 @@ int main (int argc, char** argv)
 
 	ig.process(sb, ps, *pRd, *pWr);
 
+	pRd->End();
 	delete pRd;
 	pWr->End();
 	delete pWr;

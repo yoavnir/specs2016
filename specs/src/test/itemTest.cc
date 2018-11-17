@@ -98,7 +98,11 @@ int main(int argc, char** argv)
 
 	std::cout << ig.Debug();
 
-	pRd = new TestReader(Jabberwocky, sizeof(Jabberwocky)/sizeof(StdSpecString), sizeof(StdSpecString));
+	pRd = new TestReader(100);
+	for (int i=0; i<sizeof(Jabberwocky)/sizeof(StdSpecString); i++) {
+		pRd->InsertString(&Jabberwocky[i]);
+	}
+
 	pWr = new SimpleWriter;
 
 	pRd->Begin();
