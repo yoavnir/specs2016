@@ -8,7 +8,7 @@ LINK = g++ -g
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
 SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o $(OBJ_DIR)/InputPart.o
 PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o $(OBJ_DIR)/ProcessingState.o $(OBJ_DIR)/StringBuilder.o $(OBJ_DIR)/Config.o
-UT_OBJ = $(OBJ_DIR)/SpecString.o $(OBJ_DIR)/ErrorReporting.o
+UT_OBJ = $(OBJ_DIR)/SpecString.o $(OBJ_DIR)/ErrorReporting.o $(OBJ_DIR)/TimeUtils.o
 
 .DUMMY: directories
 
@@ -93,6 +93,9 @@ $(OBJ_DIR)/SpecString.o: utils/SpecString.cc utils/SpecString.h
 
 $(OBJ_DIR)/ErrorReporting.o: utils/ErrorReporting.cc utils/ErrorReporting.h
 	$(COMP) -o $@ -c utils/ErrorReporting.cc
+	
+$(OBJ_DIR)/TimeUtils.o: utils/TimeUtils.cc utils/TimeUtils.h
+	$(COMP) -o $@ -c utils/TimeUtils.cc
 	
 $(OBJ_DIR)/Main.o: processing/Main.cc 
 	$(COMP) -o $@ -c processing/Main.cc

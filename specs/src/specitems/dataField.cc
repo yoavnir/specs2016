@@ -172,6 +172,12 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 	case TokenListType__NUMBER:
 		ret = new NumberPart();
 		break;
+	case TokenListType__TODCLOCK:
+		ret = new ClockPart(ClockType__Static);
+		break;
+	case TokenListType__DTODCLOCK:
+		ret = new ClockPart(ClockType__Dynamic);
+		break;
 	default:
 		return NULL;
 	}

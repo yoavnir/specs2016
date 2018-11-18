@@ -39,6 +39,8 @@
 	X(CENTER,         false, false) \
 	X(RIGHT,          false, false) \
 	X(NUMBER,         false, false) \
+	X(TODCLOCK,       false, false) \
+	X(DTODCLOCK,      false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

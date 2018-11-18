@@ -33,6 +33,8 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__LITERAL:
 		case TokenListType__SUBSTRING:
 		case TokenListType__NUMBER:
+		case TokenListType__TODCLOCK:
+		case TokenListType__DTODCLOCK:
 		{
 			DataField *pItem = new DataField;
 			pItem->parse(tokenVec, index);

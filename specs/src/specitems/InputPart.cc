@@ -1,4 +1,6 @@
+#include <arpa/inet.h>
 #include "processing/Config.h"
+#include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
 #include "item.h"
 
@@ -141,4 +143,35 @@ PSpecString NumberPart::getStr(ProcessingState& pState)
 	std::string s = std::to_string(++m_Num);
 	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), ' ') + s;
 	return SpecString::newString(s);
+}
+
+ClockPart::ClockPart(clockType _type)
+{
+	m_Type = _type;
+	if (m_Type==ClockType__Static) {
+		m_StaticClock = getCurrentTODClock();
+	}
+}
+
+std::string ClockPart::Debug()
+{
+	switch (m_Type) {
+	case ClockType__Static:
+		return "TODclock";
+	case ClockType__Dynamic:
+		return "TODclock(dynamic)";
+	}
+}
+
+PSpecString ClockPart::getStr(ProcessingState& pState)
+{
+	uint64_t timeStamp;
+	switch (m_Type) {
+	case ClockType__Static:
+		timeStamp = htonll(m_StaticClock);
+		break;
+	case ClockType__Dynamic:
+		timeStamp = htonll(getCurrentTODClock());
+	}
+	return SpecString::newString(((char*)&timeStamp), 8);
 }

@@ -86,6 +86,22 @@ private:
 	unsigned long m_Num;
 };
 
+enum clockType {
+	ClockType__Static,
+	ClockType__Dynamic
+};
+
+class ClockPart : public InputPart {
+public:
+	ClockPart(clockType _type);
+	virtual ~ClockPart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+private:
+	clockType  m_Type;
+	uint64_t   m_StaticClock;
+};
+
 
 enum ApplyRet {
 	ApplyRet__Continue,
