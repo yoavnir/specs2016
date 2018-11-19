@@ -3,6 +3,7 @@
 #include "processing/StringBuilder.h"
 #include "processing/Reader.h"
 #include "processing/Writer.h"
+#include "utils/ErrorReporting.h"
 
 bool parseSwitches(int& argc, char**& argv)
 {
@@ -33,7 +34,18 @@ int main (int argc, char** argv)
 	SimpleWriter *pWr;
 
 	unsigned int index = 0;
-	ig.Compile(vec, index);
+	try {
+		ig.Compile(vec, index);
+	}  catch (const SpecsException& e) {
+		std::cerr << "Error while parsing command-line arguments:\n"
+				<< e.what() << "\n\nProcessing stopped at index " << index
+				<< '/' << vec.size() << ":\n";
+		for (int i=0; i<vec.size(); i++) {
+			std::cerr << i << ". " << vec[i].Debug() << "\n";
+		}
+		std::cerr << "\n" << ig.Debug();
+		exit (0);
+	}
 
 #ifdef DEBUG
 	std::cerr << "After parsing, index = " << index << "/" << vec.size() << "\n";
