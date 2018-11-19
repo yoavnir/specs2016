@@ -14,9 +14,7 @@ public:
 	void           insertNext(PSpecString str);
 	void           insertNextWord(PSpecString str);
 	void           insertNextField(PSpecString str);
-	void*          getPad();
 private:
-	ProcessingState m_ps;
 	PSpecString     mp_str;
 };
 

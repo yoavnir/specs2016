@@ -294,6 +294,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(fs,FIELDSEPARATOR);
 	SIMPLETOKENV(wordseparator,WORDSEPARATOR,7); // down to wordsep
 	SIMPLETOKEN(ws,WORDSEPARATOR);
+	SIMPLETOKEN(pad, PAD);
 	SIMPLETOKEN(of,OF);
 	SIMPLETOKEN(stop, STOP);
 	SIMPLETOKEN(alleof, ALLEOF);
@@ -527,10 +528,11 @@ void normalizeTokenList(std::vector<Token> *tokList)
 			break;
 		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
+		case TokenListType__PAD:
 			if (tok.Literal()=="") {
 				if (mayBeLiteral(nextTok)) {
 					if (getLiteral(nextTok).length()!=1) {
-						std::string err = "Bad field separator <"+nextTok.Orig() +
+						std::string err = "Bad separator or pad character <"+nextTok.Orig() +
 								">  with length " + std::to_string(getLiteral(nextTok).length()) +
 								" at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 						MYTHROW(err);

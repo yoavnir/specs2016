@@ -18,6 +18,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		switch (tokenVec[index].Type()) {
 		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
+		case TokenListType__PAD:
 		case TokenListType__READ:
 		case TokenListType__READSTOP:
 		case TokenListType__WRITE:
@@ -144,6 +145,9 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__Continue;
 	case TokenListType__WORDSEPARATOR:
 		pState.setWSChar(mp_Token->Literal()[0]);
+		return ApplyRet__Continue;
+	case TokenListType__PAD:
+		pState.setPadChar(mp_Token->Literal()[0]);
 		return ApplyRet__Continue;
 	case TokenListType__READ:
 		return ApplyRet__Read;

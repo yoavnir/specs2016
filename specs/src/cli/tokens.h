@@ -24,6 +24,7 @@
 	X(WORDRANGE,      true,  false) \
 	X(FIELDSEPARATOR, false, true)  \
 	X(WORDSEPARATOR,  false, true)  \
+	X(PAD,            false, true)  \
 	X(NEXTWORD,       true,  false) \
 	X(NEXTFIELD,      true,  false) \
 	X(NEXT,           true,  false) \
