@@ -317,7 +317,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKENV(dtodclock, DTODCLOCK, 4);
 
 	/* range label */
-	if (arg.length()==2 && arg[1]==':' && arg[0]>='a' && arg[0]<='z') {
+	if (arg.length()==2 && arg[1]==':' &&
+			((arg[0]>='a' && arg[0]<='z') || (arg[0]>='A' && arg[0]<='Z'))) {
 		pVec->insert(pVec->end(),
 				Token(TokenListType__RANGELABEL,
 						NULL, arg.substr(0,1), argidx, arg));

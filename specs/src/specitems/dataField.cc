@@ -368,6 +368,11 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		pInput->Resize(m_maxLength, pState.m_pad, m_alignment);
 	}
 
+	if (m_outStart==0 && m_maxLength==0) {
+		// This is the no output option
+		goto FINISH;
+	}
+
 	if (m_outStart==POS_SPECIAL_VALUE_NEXT) {
 		pSB->insertNext(pInput);
 	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTWORD) {
@@ -380,6 +385,8 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		std::string err = std::string("Output position too great: ") + std::to_string(m_outStart);
 		MYTHROW(err);
 	}
+
+FINISH:
 	delete pInput;
 	return ApplyRet__Continue;
 }
