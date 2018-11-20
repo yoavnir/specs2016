@@ -174,3 +174,4 @@ Differences from CMS Pipelines **specs**
 * **ReDo** does not exist in CMS pipelines.
 * **TODclock** - The mainframe version uses the ESA/390 architecture TOD clock, where the high-order 32 bits represent the time since the 1/1/1900 epoch in units of 1.048576 seconds and the other 32-bit represent fractions of this unit. We use the Unis epoch (based at 1/1/1970) with a 64-bit field of nanoseconds.
 * **DTODclock** does not exist in CMS pipelines.
+* No support for multiple input and output streams.
