@@ -28,6 +28,11 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_ps = NULL;
 }
 
+ProcessingState::~ProcessingState()
+{
+	fieldIdentifierClear();
+}
+
 void ProcessingState::setString(PSpecString ps)
 {
 	if (m_ps && ps!=m_ps) {
@@ -36,6 +41,7 @@ void ProcessingState::setString(PSpecString ps)
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
+	fieldIdentifierClear();
 }
 
 void ProcessingState::identifyWords()
@@ -183,4 +189,31 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	if (to<from) return NULL;
 
 	return SpecString::newString(m_ps, from-1, to-from+1);
+}
+
+void ProcessingState::fieldIdentifierClear()
+{
+	for (const auto &pair : m_fieldIdentifiers) {
+		delete pair.second;
+	}
+	m_fieldIdentifiers.clear();
+}
+
+void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
+{
+	if (m_fieldIdentifiers[id]!=NULL) {
+		std::string err = std::string("Field Identifier <") + id + "> redefined.";
+		MYTHROW(err);
+	}
+	m_fieldIdentifiers[id] = SpecStringCopy(ps);
+}
+
+PSpecString ProcessingState::fieldIdentifierGet(char id)
+{
+	PSpecString ret = m_fieldIdentifiers[id];
+	if (!ret) {
+		std::string err = std::string("Field Identifier <") + id + "> not defined yet.";
+		MYTHROW(err);
+	}
+	return ret;
 }

@@ -352,6 +352,10 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (!pInput) pInput = SpecString::newString();
 
+	if (m_label) {
+		pState.fieldIdentifierSet(m_label, pInput);
+	}
+
 	if (m_strip) {
 		stripString(pInput);
 	}

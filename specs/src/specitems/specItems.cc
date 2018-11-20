@@ -28,6 +28,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			break;
 		}
 			/* check here for other types of items, whether plainItem, ifGroup, whileGroup */
+		case TokenListType__RANGELABEL:
 		case TokenListType__RANGE:
 		case TokenListType__WORDRANGE:
 		case TokenListType__FIELDRANGE:
