@@ -177,8 +177,9 @@ static TokenFieldRange *parseAsSingleNumber(std::string s)
 
 static TokenFieldRange *parseAsFromToRange(std::string s)
 {
+	static std::string hyphens("-;:"); // all can separate the two numbers
 	size_t posOfHyphen;
-	bool   bSemicolonRatherThanHyphen = false;
+	bool   bRealHyphen; // rather than semicolon or colon
 	long int _from, _to;
 	try {
 		_from = std::stol(s, &posOfHyphen);
@@ -186,18 +187,18 @@ static TokenFieldRange *parseAsFromToRange(std::string s)
 		return NULL;
 	}
 	if (_from==0 || s.substr(0,posOfHyphen)!=std::to_string(_from)
-		|| (s[posOfHyphen]!='-' && s[posOfHyphen]!=';')) {
+		|| (std::string::npos==hyphens.find(s[posOfHyphen]))) {
 		return NULL;
 	}
 
-	bSemicolonRatherThanHyphen = (s[posOfHyphen]==';');
+	bRealHyphen = (s[posOfHyphen]=='-');
 
 	try {
 		_to = std::stol(s.substr(posOfHyphen+1));
 		if (_to==0 || s.substr(posOfHyphen+1)!=std::to_string(_to)) {
 			return NULL;
 		}
-		if (!bSemicolonRatherThanHyphen) {
+		if (bRealHyphen) {
 			if (_to < _from || _from < 1) {
 				return NULL;
 			}
