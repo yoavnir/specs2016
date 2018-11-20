@@ -36,7 +36,12 @@ PSpecString Reader::get()
 void Reader::readIntoQueue()
 {
 	if (!endOfSource()) {
-		m_queue.push(getNextRecord());
+		PSpecString nextRecord = getNextRecord();
+		if (nextRecord) {
+			m_queue.push(nextRecord);
+		} else {
+			m_queue.Done();
+		}
 	}
 }
 
@@ -49,8 +54,6 @@ StandardReader::StandardReader() {
 	m_File = stdin;
 	m_NeedToClose = false;
 	m_EOF = false;
-	mp_NextRecord = NULL;
-	ReadOneRecord();
 }
 
 StandardReader::StandardReader(FILE* f) {
@@ -59,8 +62,6 @@ StandardReader::StandardReader(FILE* f) {
 	m_File = f;
 	m_NeedToClose = false;
 	m_EOF = false;
-	mp_NextRecord = NULL;
-	ReadOneRecord();
 }
 
 StandardReader::StandardReader(std::string& fn) {
@@ -71,8 +72,6 @@ StandardReader::StandardReader(std::string& fn) {
 	}
 	m_NeedToClose = true;
 	m_EOF = false;
-	mp_NextRecord = NULL;
-	ReadOneRecord();
 }
 
 StandardReader::~StandardReader() {
@@ -85,26 +84,19 @@ bool StandardReader::endOfSource() {
 	return m_EOF;
 }
 
-void StandardReader::ReadOneRecord() {
-	assert(mp_NextRecord==NULL);
+PSpecString StandardReader::getNextRecord() {
 	size_t len;
 	char* line = fgetln(m_File, &len);
 	if (!line) {
 		m_EOF = true;
+		return NULL;
 	} else {
 		// strip trailing newline if any
 		if (line[len-1]=='\n') {
 			len--;
 		}
-		mp_NextRecord = SpecString::newString(line,len);
+		return SpecString::newString(line,len);
 	}
-}
-
-PSpecString StandardReader::getNextRecord() {
-	PSpecString ret = mp_NextRecord;
-	mp_NextRecord = NULL;
-	ReadOneRecord();
-	return ret;
 }
 
 TestReader::TestReader(size_t maxLineCount)

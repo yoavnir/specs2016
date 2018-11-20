@@ -44,12 +44,10 @@ public:
 	virtual bool endOfSource();
 	virtual PSpecString getNextRecord();
 protected:
-	void ReadOneRecord();  // after this either mp_NextRecord is set, or m_EOF is set
 private:
 	FILE* m_File;
 	bool  m_EOF;
 	bool  m_NeedToClose;
-	PSpecString mp_NextRecord;
 };
 
 #endif
