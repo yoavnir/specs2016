@@ -19,6 +19,7 @@
 	X(WRITE,          false, false) \
 	/* The input ranges */  \
 	X(RANGELABEL,     false, true)  \
+	X(ID,             false, true)  \
 	X(PERIOD,         false, false) \
 	X(RANGE,          true,  false) \
 	X(WORDRANGE,      true,  false) \

@@ -175,3 +175,13 @@ PSpecString ClockPart::getStr(ProcessingState& pState)
 	}
 	return SpecString::newString(((char*)&timeStamp), 8);
 }
+
+std::string IDPart::Debug()
+{
+	return "ID:" + m_fieldIdentifier;
+}
+
+PSpecString IDPart::getStr(ProcessingState& pState)
+{
+	return SpecStringCopy(pState.fieldIdentifierGet(m_fieldIdentifier[0]));
+}

@@ -114,6 +114,7 @@ int main(int argc, char** argv)
 	VERIFY2("w1 1 read w1 10", "Once there were green fields\nKissed by the sun","Once     Kissed"); // Test #31
 	VERIFY("pad /q/ w1 1.10 left pad /w/ w2 11.10 center pad /e/ w3 21.10 right","Theqqqqqqqwwquickwwweeeeebrown"); // Test #32
 	VERIFY("2:3 1 -7:-5 nw -2:* nw", "he azy og"); // Test #33
+	VERIFY("k: w2 . ID k 1", "quick"); // Test #34
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

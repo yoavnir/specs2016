@@ -79,6 +79,7 @@ int main(int argc, char** argv)
 	TESTNS("C2B B2C X2C C2X", "CONVERSION; /C2B/|CONVERSION; /B2C/|CONVERSION; /X2C/|CONVERSION; /C2X/");
 	TESTNS("numBER NUMbe numBERa", "NUMBER|LITERAL; /NUMbe/|LITERAL; /numBERa/");
 	TESTNS("reAd wrIte ReadStop", "READ|WRITE|READSTOP");
+	TESTNS("a: w1 . ID a 1", "RANGELABEL; /a/|WORDRANGE; S:1|PERIOD|ID; /a/|RANGE; S:1");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";

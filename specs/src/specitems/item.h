@@ -102,6 +102,15 @@ private:
 	uint64_t   m_StaticClock;
 };
 
+class IDPart : public InputPart {
+public:
+	IDPart(std::string _fieldIdentifier) {m_fieldIdentifier = _fieldIdentifier;}
+	virtual ~IDPart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+private:
+	std::string m_fieldIdentifier;
+};
 
 enum ApplyRet {
 	ApplyRet__Continue,

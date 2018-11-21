@@ -313,6 +313,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(read, READ);
 	SIMPLETOKEN(readstop, READSTOP);
 	SIMPLETOKEN(write, WRITE);
+	SIMPLETOKEN(id, ID);
 	SIMPLETOKENV(todclock, TODCLOCK, 3);
 	SIMPLETOKENV(dtodclock, DTODCLOCK, 4);
 
@@ -498,6 +499,12 @@ static bool mayBeLiteral(Token& tok)
 	}
 }
 
+static bool mayBeFieldIdentifier(Token& tok)
+{
+	// doesn't matter how we parsed it.  As long as it's one character
+	return (tok.Orig().length()==1);
+}
+
 std::string getLiteral(Token& tok)
 {
 	if (TokenListType__LITERAL==tok.Type()) {
@@ -556,9 +563,22 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					tokList->erase(tokList->begin()+(i+1));
 				} else {
 					std::string err = "Bad word/field separator <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
+					MYTHROW(err);
 				}
 				break;
 			}
+		case TokenListType__ID:
+		{
+			if (tok.Literal()=="") {
+				if (mayBeFieldIdentifier(nextTok)) {
+					tok.setLiteral(nextTok.Orig());
+					tokList->erase(tokList->begin()+(i+1));
+				} else {
+					std::string err = "Bad field identifier <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex());
+					MYTHROW(err);
+				}
+			}
+		}
 		default:
 			break;
 		}
