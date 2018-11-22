@@ -10,27 +10,47 @@
 	X(B2C)  \
 	X(X2C)  \
 	X(d2x)    /* convert decimal number to hex: "314159265" --> "12b9b0a1" */ \
-	X(x2d)
+	X(x2d)  \
+
+#define PARAMETRIZED_CONVERSIONS_LIST \
+	Y(ti2f)   /* internal time representation (microseconds since epoch) to format */
 
 #define X(c) StringConversion__##c,
+#define Y(c) StringConversion__##c,
 enum StringConversions {
 	STRING_CONVERSIONS_LIST
+	PARAMETRIZED_CONVERSIONS_LIST
 	StringConversion__COUNT_ITEMS,
 	StringConversion__NONE
 };
 #undef X
+#undef Y
 
 #define X(c) #c,
+#define Y(c) #c,
 static std::string StringConversionStrArr[StringConversion__COUNT_ITEMS] = {\
 	STRING_CONVERSIONS_LIST
+	PARAMETRIZED_CONVERSIONS_LIST
 };
 #undef X
+#undef Y
 
 static inline std::string& StringConversion__2str(StringConversions tok) {
 	return StringConversionStrArr[tok];
 }
 
-std::string stringConvert(std::string& source, StringConversions conv);
+#define Y(c) case StringConversion__##c: return true;
+static bool isParametrizedConversion(StringConversions conv)
+{
+	switch(conv) {
+	PARAMETRIZED_CONVERSIONS_LIST
+	default:
+		return false;
+	}
+}
+#undef Y
+
+std::string stringConvert(std::string& source, StringConversions conv, std::string& param);
 StringConversions getConversionByName(std::string& s);
 
 #endif

@@ -26,6 +26,7 @@ DataField::DataField()
 	m_strip = false;
 	m_conversion = StringConversion__identity;
 	m_alignment = outputAlignmentLeft;
+	m_conversionParam = "";
 }
 
 DataField::~DataField() {
@@ -223,6 +224,14 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		assert(m_conversion!=StringConversion__identity);
 		assert(m_conversion!=StringConversion__NONE);
 		GET_NEXT_TOKEN;
+		if (isParametrizedConversion(m_conversion)) {
+			if (tokenType!=TokenListType__LITERAL) {
+				std::string err = "Bad time format " + token.HelpIdentify();
+				MYTHROW(err);
+			}
+			m_conversionParam = token.Literal();
+			GET_NEXT_TOKEN;
+		}
 	}
 
 	/* output placement */
@@ -365,7 +374,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (m_conversion) {
 		std::string currentString(pInput->data(), pInput->length());
-		std::string convertedString = stringConvert(currentString, m_conversion);
+		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
 		delete pInput;
 		pInput = SpecString::newString(convertedString);
 	}

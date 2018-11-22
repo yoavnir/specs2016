@@ -379,10 +379,14 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 		if (firstdot!=std::string::npos) {
 			nwnf = arg.substr(0,firstdot);
 			std::string fieldLength = arg.substr(firstdot+1);
-			int lFieldLength = std::stoi(fieldLength);
-			if (lFieldLength > 0 && std::to_string(lFieldLength)==fieldLength) {
-				pSimpleRange = new TokenFieldRangeSimple(1,lFieldLength);
-			} else {
+			try {
+				int lFieldLength = std::stoi(fieldLength);
+				if (lFieldLength > 0 && std::to_string(lFieldLength)==fieldLength) {
+					pSimpleRange = new TokenFieldRangeSimple(1,lFieldLength);
+				} else {
+					goto CONT1;
+				}
+			} catch (std::invalid_argument& e) {
 				goto CONT1;
 			}
 		}

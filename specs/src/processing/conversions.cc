@@ -1,5 +1,7 @@
 #include "utils/ErrorReporting.h"
 #include "conversions.h"
+#include "utils/SpecString.h"
+#include "utils/TimeUtils.h"
 
 static std::string conv_identity(std::string& s) {
 	return s;
@@ -78,20 +80,35 @@ static std::string conv_x2d(std::string& s) {
 	return s;
 }
 
+static std::string conv_ti2f(std::string& s, std::string& parm)
+{
+	if (s.length()!=8) return std::string();
+	uint64_t internal = *((uint64_t*)(s.c_str()));
+	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
+	std::string ret = std::string(pRet->data());
+	delete pRet;
+	return ret;
+}
+
 #define X(c) if (s==#c) return StringConversion__##c;
+#define Y(c) if (s==#c) return StringConversion__##c;
 StringConversions getConversionByName(std::string& s)
 {
 	if (s=="identity") return StringConversion__NONE;
 	STRING_CONVERSIONS_LIST
+	PARAMETRIZED_CONVERSIONS_LIST
 	return StringConversion__NONE;
 }
 #undef X
+#undef Y
 
 #define X(c) case StringConversion__##c: return conv_##c(source);
-std::string stringConvert(std::string& source, StringConversions conv)
+#define Y(c) case StringConversion__##c: return conv_##c(source, param);
+std::string stringConvert(std::string& source, StringConversions conv, std::string& param)
 {
 	switch (conv) {
 	STRING_CONVERSIONS_LIST
+	PARAMETRIZED_CONVERSIONS_LIST
 	default:
 		std::string err = "Bad conversion: " + StringConversion__2str(conv);
 		MYTHROW(err);

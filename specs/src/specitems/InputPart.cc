@@ -149,7 +149,7 @@ ClockPart::ClockPart(clockType _type)
 {
 	m_Type = _type;
 	if (m_Type==ClockType__Static) {
-		m_StaticClock = getCurrentTODClock();
+		m_StaticClock = specTimeGetTOD();
 	}
 }
 
@@ -170,10 +170,10 @@ PSpecString ClockPart::getStr(ProcessingState& pState)
 	uint64_t timeStamp;
 	switch (m_Type) {
 	case ClockType__Static:
-		timeStamp = htonll(m_StaticClock);
+		timeStamp = m_StaticClock;
 		break;
 	case ClockType__Dynamic:
-		timeStamp = htonll(getCurrentTODClock());
+		timeStamp = specTimeGetTOD();
 	}
 	return SpecString::newString(((char*)&timeStamp), 8);
 }

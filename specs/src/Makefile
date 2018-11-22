@@ -18,7 +18,9 @@ run_tests: tests
 	$(EXE_DIR)/tokenTest
 	$(EXE_DIR)/ProcessingTest
 
-tests: $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest $(EXE_DIR)/readWriteTest $(EXE_DIR)/ProcessingTest
+tests: $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest \
+  $(EXE_DIR)/readWriteTest $(EXE_DIR)/ProcessingTest \
+  $(EXE_DIR)/timeTest
 
 directories: $(EXE_DIR) $(OBJ_DIR)
 
@@ -39,6 +41,9 @@ $(EXE_DIR)/readWriteTest: $(OBJ_DIR)/readWriteTest.o $(PR_OBJ) $(UT_OBJ)
 	
 $(EXE_DIR)/ProcessingTest: $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
 	$(COMP) -o $@ $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ) $(CLI_OBJ) $(SI_OBJ)
+	
+$(EXE_DIR)/timeTest: $(OBJ_DIR)/timeTest.o $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/timeTest.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ)
 	
 $(EXE_DIR)/specs: $(OBJ_DIR)/Main.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ)
 	$(COMP) -o $@ $(OBJ_DIR)/Main.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ) 
@@ -72,6 +77,9 @@ $(OBJ_DIR)/readWriteTest.o: test/readWriteTest.cc processing/Reader.h processing
 
 $(OBJ_DIR)/ProcessingTest.o: test/ProcessingTest.cc processing/ProcessingState.h
 	$(COMP) -o $@ -c test/ProcessingTest.cc
+
+$(OBJ_DIR)/timeTest.o: test/timeTest.cc utils/TimeUtils.h
+	$(COMP) -o $@ -c test/timeTest.cc
 	
 $(OBJ_DIR)/ProcessingState.o: processing/ProcessingState.cc processing/ProcessingState.h 
 	$(COMP) -o $@ -c processing/ProcessingState.cc
