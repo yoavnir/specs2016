@@ -9,6 +9,8 @@ ProcessingState::ProcessingState()
 	m_pad = DEFAULT_PAD_CHAR;
 	m_wordSeparator = DEFAULT_WORDSEPARATOR;
 	m_fieldSeparator = DEFAULT_FIELDSEPARATOR;
+	m_fieldCount = 0;
+	m_wordCount = 0;
 	m_ps = NULL;
 }
 
@@ -17,6 +19,8 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_pad = ps.m_pad;
 	m_wordSeparator = ps.m_wordSeparator;
 	m_fieldSeparator = ps.m_fieldSeparator;
+	m_fieldCount = 0;
+	m_wordCount = 0;
 	m_ps = NULL;
 }
 
@@ -25,6 +29,8 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_pad = pPS->m_pad;
 	m_wordSeparator = pPS->m_wordSeparator;
 	m_fieldSeparator = pPS->m_fieldSeparator;
+	m_fieldCount = 0;
+	m_wordCount = 0;
 	m_ps = NULL;
 }
 

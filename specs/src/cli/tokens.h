@@ -66,6 +66,7 @@ static inline std::string& TokenListType__2str(TokenListTypes tok) {
 
 class TokenFieldRange {
 	public:
+		virtual ~TokenFieldRange() {}
 		virtual void Reset() = 0;
 		virtual bool Done() = 0;
 		virtual int  Next() = 0;

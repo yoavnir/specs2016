@@ -160,6 +160,8 @@ std::string ClockPart::Debug()
 		return "TODclock";
 	case ClockType__Dynamic:
 		return "TODclock(dynamic)";
+	default:
+		MYTHROW("Invalid clock type");
 	}
 }
 

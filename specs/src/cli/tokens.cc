@@ -164,7 +164,7 @@ static TokenFieldRange *parseAsSingleNumber(std::string s)
 	long int l;
 	try {
 		l = std::stol(s);
-	} catch(std::invalid_argument) {
+	} catch(std::invalid_argument& e) {
 		return NULL;
 	}
 	if (l==0 || s!=std::to_string(l)) {
@@ -183,7 +183,7 @@ static TokenFieldRange *parseAsFromToRange(std::string s)
 	long int _from, _to;
 	try {
 		_from = std::stol(s, &posOfHyphen);
-	} catch(std::invalid_argument) {
+	} catch(std::invalid_argument& e) {
 		return NULL;
 	}
 	if (_from==0 || s.substr(0,posOfHyphen)!=std::to_string(_from)
@@ -203,7 +203,7 @@ static TokenFieldRange *parseAsFromToRange(std::string s)
 				return NULL;
 			}
 		}
-	} catch (std::invalid_argument) {
+	} catch (std::invalid_argument& e) {
 		if (s.substr(posOfHyphen+1)=="*") {
 			_to = LAST_POS_END;
 		} else {
@@ -220,7 +220,7 @@ static TokenFieldRange *parseAsFromLenRange(std::string s)
 	long int _from, _to, _len;
 	try {
 		_from = std::stol(s, &posOfDot);
-	} catch(std::invalid_argument) {
+	} catch(std::invalid_argument& e) {
 		return NULL;
 	}
 	if (_from==0 || s.substr(0,posOfDot)!=std::to_string(_from) || s[posOfDot]!='.') {
@@ -228,7 +228,7 @@ static TokenFieldRange *parseAsFromLenRange(std::string s)
 	}
 	try {
 		_len = std::stol(s.substr(posOfDot+1));
-	} catch (std::invalid_argument) {
+	} catch (std::invalid_argument& e) {
 		return NULL;
 	}
 	if (_len<=0 || s.substr(posOfDot+1)!=std::to_string(_len)) {
@@ -424,7 +424,7 @@ CONT1:
 						new TokenFieldRangeSimple(1, literal.length()),
 						literal, argidx, arg));
 			NEXT_TOKEN;
-		} catch(ConversionException) {
+		} catch(ConversionException& e) {
 			;  // Do nothing. It just wasn't a hex string
 		}
 	}
@@ -565,8 +565,8 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					std::string err = "Bad word/field separator <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 					MYTHROW(err);
 				}
-				break;
 			}
+			break;
 		case TokenListType__ID:
 		{
 			if (tok.Literal()=="") {
@@ -578,6 +578,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					MYTHROW(err);
 				}
 			}
+			break;
 		}
 		default:
 			break;

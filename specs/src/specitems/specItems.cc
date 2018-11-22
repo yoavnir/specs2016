@@ -58,8 +58,9 @@ std::string itemGroup::Debug()
 	std::string ret = "itemGroup has " + std::to_string(m_items.size()) + " items:\n";
 	int idx = 1;
 	for (std::vector<PItem>::iterator it = m_items.begin(); it != m_items.end(); it++, idx++) {
+		PItem pIt = *it;
 		ret += std::to_string(idx) + ". ";
-		ret += (*it)->Debug();
+		ret += pIt->Debug();
 		ret += "\n";
 	}
 
