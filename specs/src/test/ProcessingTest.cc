@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 	VERIFY("w1 1.5 w2 n.5 w3 n.4 w4 n","The  quickbrowfox"); // Test #17
 	VERIFY("w1 1.8 right w2 n.8 center w3 n left", "     The quick  brown"); // Test #18
 	VERIFY("33.6 strip 1.6 right", "   the"); // Test #19
-	VERIFY("w1 C2X 1 w7 C2B nw /30313233/ X2C nw","546865 011101000110100001100101 0123"); // Test #20
+	VERIFY("w1 C2X 1 w7 C2B nw /30313233/ X2CH nw","546865 011101000110100001100101 0123"); // Test #20
 	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "a=b", "a    b         "); // Test #21
 	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "=a", "     a         ");  // Test #22
 	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "==a=b", "          a    b"); // Test #23

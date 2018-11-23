@@ -8,9 +8,10 @@
 	X(C2B)    /* bytes to binary string:  "AB" --> "0010000100100010" */  \
 	X(C2X)    /* bytes to hex: "AB" --> "4142" */  \
 	X(B2C)  \
-	X(X2C)  \
+	X(X2CH) \
 	X(d2x)    /* convert decimal number to hex: "314159265" --> "12b9b0a1" */ \
 	X(x2d)  \
+	X(BSWAP) \
 
 #define PARAMETRIZED_CONVERSIONS_LIST \
 	Y(ti2f)   /* internal time representation (microseconds since epoch) to format */ \

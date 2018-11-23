@@ -38,7 +38,7 @@ static std::string conv_B2C(std::string& s) {
 	return s;
 }
 
-std::string conv_X2C(std::string& s) {
+std::string conv_X2CH(std::string& s) {
 	std::string ret;
 	if (1==s.length() % 2) {
 		CONVERSION_EXCEPTION(s, "Hex", "Char");
@@ -80,6 +80,17 @@ static std::string conv_x2d(std::string& s) {
 	return s;
 }
 
+static std::string conv_BSWAP(std::string& s) {
+	std::string ret(s.size(), 0);
+	const char* sStart = s.c_str();
+	char* retPtr = (char*)(ret.c_str());
+	char* sIt = (char*)(sStart + s.size());
+	while (sIt >= sStart) {
+		*retPtr++ = *(--sIt);
+	}
+	return ret;
+}
+
 static std::string conv_ti2f(std::string& s, std::string& parm)
 {
 	if (s.length()!=8) return std::string();
@@ -96,8 +107,8 @@ static std::string conv_tf2i(std::string& s, std::string& parm)
 	return std::string(((char*)(&ret)), sizeof(uint64_t));
 }
 
-#define X(c) if (s==#c) return StringConversion__##c;
-#define Y(c) if (s==#c) return StringConversion__##c;
+#define X(c) if (0==strcasecmp(s.c_str(),#c)) return StringConversion__##c;
+#define Y(c) if (0==strcasecmp(s.c_str(),#c)) return StringConversion__##c;
 StringConversions getConversionByName(std::string& s)
 {
 	if (s=="identity") return StringConversion__NONE;
