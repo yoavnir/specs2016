@@ -9,4 +9,6 @@ uint64_t specTimeGetTOD();
 
 PSpecString specTimeConvertToPrintable(uint64_t sinceEpoch, std::string format);
 
+uint64_t specTimeConvertFromPrintable(std::string printable, std::string format);
+
 #endif

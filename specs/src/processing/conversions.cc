@@ -90,6 +90,12 @@ static std::string conv_ti2f(std::string& s, std::string& parm)
 	return ret;
 }
 
+static std::string conv_tf2i(std::string& s, std::string& parm)
+{
+	uint64_t ret = specTimeConvertFromPrintable(s,parm);
+	return std::string(((char*)(&ret)), sizeof(uint64_t));
+}
+
 #define X(c) if (s==#c) return StringConversion__##c;
 #define Y(c) if (s==#c) return StringConversion__##c;
 StringConversions getConversionByName(std::string& s)
