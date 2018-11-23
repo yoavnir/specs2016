@@ -2,7 +2,7 @@ MKDIR_C = mkdir -p
 EXE_DIR = ../exe
 OBJ_DIR = ../obj
 INC = -I .
-COMP = g++ -g -DDEBUG --std=c++11 $(INC)
+COMP = g++ -Werror -g -DDEBUG --std=c++11 $(INC)
 LINK = g++ -g
 
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o

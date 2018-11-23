@@ -53,7 +53,9 @@ PSpecString specTimeConvertToPrintable(uint64_t sinceEpoch, std::string format)
 
 uint64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 {
-	std::tm t;
+	// initialize t in case of missing fields
+	std::time_t now = std::time(nullptr);
+	std::tm t = *(std::localtime(&now));
 
 	unsigned int fractionalSeconds = 0;
 	unsigned char fractionalSecondLength = 0;

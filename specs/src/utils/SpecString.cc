@@ -116,7 +116,7 @@ PSpecString SpecString::newString(std::string& st)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return new StdSpecString(st.c_str());
+		return new StdSpecString(st.c_str(), st.length());
 	}
 }
 

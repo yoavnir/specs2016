@@ -20,7 +20,7 @@
 DataField::DataField()
 {
 	m_InputPart = NULL;
-	m_label = '\0';
+	m_label = m_tailLabel = '\0';
 	m_outStart = LAST_POS_END;
 	m_maxLength = LAST_POS_END;
 	m_strip = false;
@@ -256,6 +256,10 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	case TokenListType__PERIOD:
 		m_outStart = LAST_POS_END;
 		break;
+	case TokenListType__RANGELABEL:
+		m_outStart = LAST_POS_END;
+		m_tailLabel = token.Literal()[0];
+		break;
 	case TokenListType__NEXTWORD:
 		m_outStart = POS_SPECIAL_VALUE_NEXTWORD;
 		if (token.Range()) {
@@ -304,7 +308,11 @@ std::string DataField::Debug() {
 	/* conversion and stripping go here */
 	ret += ";Dest=";
 	if (m_outStart==LAST_POS_END) {
-		ret += "None";
+		if (m_tailLabel) {
+			ret = ret + m_tailLabel + ":";
+		} else {
+			ret += "None";
+		}
 	} else {
 		if (m_outStart==POS_SPECIAL_VALUE_NEXT) {
 			ret += "Next";
@@ -386,6 +394,9 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (m_outStart==0 && m_maxLength==0) {
 		// This is the no output option
+		if (m_tailLabel) {
+			pState.fieldIdentifierSet(m_tailLabel, pInput);
+		}
 		goto FINISH;
 	}
 

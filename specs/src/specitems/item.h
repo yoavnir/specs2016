@@ -146,6 +146,7 @@ private:
 	SubstringPart* getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
 	void stripString(PSpecString &pOrig);
 	char m_label;
+	char m_tailLabel;
 	InputPart *m_InputPart;
 	size_t m_outStart;  /* zero is a special value meaning no output */
 	size_t m_maxLength; /* zero is a special value meaning no limit  */
