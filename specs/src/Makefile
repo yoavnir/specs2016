@@ -8,7 +8,7 @@ LINK = g++ -g
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
 SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o $(OBJ_DIR)/InputPart.o
 PR_OBJ = $(OBJ_DIR)/conversions.o $(OBJ_DIR)/Reader.o $(OBJ_DIR)/Writer.o $(OBJ_DIR)/ProcessingState.o $(OBJ_DIR)/StringBuilder.o $(OBJ_DIR)/Config.o
-UT_OBJ = $(OBJ_DIR)/SpecString.o $(OBJ_DIR)/ErrorReporting.o $(OBJ_DIR)/TimeUtils.o
+UT_OBJ = $(OBJ_DIR)/SpecString.o $(OBJ_DIR)/ErrorReporting.o $(OBJ_DIR)/TimeUtils.o $(OBJ_DIR)/alu.o
 
 .DUMMY: directories
 
@@ -17,10 +17,11 @@ all: directories tests run_tests $(EXE_DIR)/specs
 run_tests: tests
 	$(EXE_DIR)/tokenTest
 	$(EXE_DIR)/ProcessingTest
+	$(EXE_DIR)/ALUUnitTest
 
 tests: $(EXE_DIR)/tokenTest $(EXE_DIR)/itemTest \
   $(EXE_DIR)/readWriteTest $(EXE_DIR)/ProcessingTest \
-  $(EXE_DIR)/timeTest
+  $(EXE_DIR)/timeTest $(EXE_DIR)/ALUUnitTest
 
 directories: $(EXE_DIR) $(OBJ_DIR)
 
@@ -44,6 +45,9 @@ $(EXE_DIR)/ProcessingTest: $(OBJ_DIR)/ProcessingTest.o $(PR_OBJ) $(UT_OBJ)
 	
 $(EXE_DIR)/timeTest: $(OBJ_DIR)/timeTest.o $(UT_OBJ)
 	$(COMP) -o $@ $(OBJ_DIR)/timeTest.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ)
+	
+$(EXE_DIR)/ALUUnitTest: $(OBJ_DIR)/ALUUnitTest.o $(UT_OBJ)
+	$(COMP) -o $@ $(OBJ_DIR)/ALUUnitTest.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ)
 	
 $(EXE_DIR)/specs: $(OBJ_DIR)/Main.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ)
 	$(COMP) -o $@ $(OBJ_DIR)/Main.o $(CLI_OBJ) $(PR_OBJ) $(SI_OBJ) $(UT_OBJ) 
@@ -81,6 +85,9 @@ $(OBJ_DIR)/ProcessingTest.o: test/ProcessingTest.cc processing/ProcessingState.h
 $(OBJ_DIR)/timeTest.o: test/timeTest.cc utils/TimeUtils.h
 	$(COMP) -o $@ -c test/timeTest.cc
 	
+$(OBJ_DIR)/ALUUnitTest.o: test/ALUUnitTest.cc utils/alu.h
+	$(COMP) -o $@ -c test/ALUUnitTest.cc
+	
 $(OBJ_DIR)/ProcessingState.o: processing/ProcessingState.cc processing/ProcessingState.h 
 	$(COMP) -o $@ -c processing/ProcessingState.cc
 	
@@ -104,6 +111,9 @@ $(OBJ_DIR)/ErrorReporting.o: utils/ErrorReporting.cc utils/ErrorReporting.h
 	
 $(OBJ_DIR)/TimeUtils.o: utils/TimeUtils.cc utils/TimeUtils.h
 	$(COMP) -o $@ -c utils/TimeUtils.cc
+	
+$(OBJ_DIR)/alu.o: utils/alu.cc utils/alu.h
+	$(COMP) -o $@ -c utils/alu.cc
 	
 $(OBJ_DIR)/Main.o: processing/Main.cc 
 	$(COMP) -o $@ -c processing/Main.cc
