@@ -26,6 +26,21 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		countFailures++; \
 	}
 
+#define VERIFY_WHOLE(i,b) \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+		": #" << i << (b ? " is whole: ":" isn't whole: "); \
+	if (counters.isWholeNumber(i)==b) {  \
+		std::cout << "OK (";    \
+	} else {     \
+		std::cout << "*** NOT OK *** (";  \
+		countFailures++; \
+	}                                     \
+	if (counters.isWholeNumber(i)) {      \
+		std::cout << counters.getFloat(i) << ")\n"; \
+	} else {  \
+		std::cout << counters.getInt(i) << " != " << counters.getFloat(i) << ")\n"; \
+	}
+
 #define VERIFY_HEX(i,val) \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
 		": #" << i << "==" << val << ": "; \
@@ -89,6 +104,11 @@ int main (int argc, char** argv)
 	VERIFY_STR(5,"1234567890123456789");
 	VERIFY_FLOAT(5,1234567890123456789.0L);
 	VERIFY_INT(5, bigInt);
+
+	// is PI whole?
+	VERIFY_WHOLE(3,false);
+	counters.set(2, 948.0L);
+	VERIFY_WHOLE(2, true);
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";

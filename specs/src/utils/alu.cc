@@ -10,55 +10,50 @@
 #include <sstream>
 #include "alu.h"
 
-void ALUCounters::set(unsigned int i, std::string& s)
+void ALUCounter::set(std::string& s)
 {
-	m_counters[i] = s;
-	m_types[i] = counterType__Str;
+	m_value = s;
+	m_type = counterType__Str;
 }
 
-void ALUCounters::set(unsigned int i, const char* st)
+void ALUCounter::set(const char* st)
 {
 	std::string s(st);
-	set(i,s);
+	set(s);
 }
 
-void ALUCounters::set(unsigned int i, ALUInt l)
+void ALUCounter::set(ALUInt l)
 {
-	m_counters[i] = std::to_string(l);
-	m_types[i] = counterType__Int;
+	m_value = std::to_string(l);
+	m_type = counterType__Int;
 }
 
-void ALUCounters::set(unsigned int i, ALUFloat f)
+void ALUCounter::set(ALUFloat f)
 {
     std::ostringstream ost;
     ost.precision(ALUFloatPrecision);
     ost << f;
-	m_counters[i] = ost.str();
-	m_types[i] = counterType__Float;
+	m_value = ost.str();
+	m_type = counterType__Float;
 }
 
-ALUCounterType ALUCounters::type(unsigned int i)
+ALUInt ALUCounter::getInt()
 {
-	return m_types[i];
+	return (counterType__None==m_type) ? 0 : std::stoll(m_value);
 }
 
-std::string ALUCounters::getStr(unsigned int i)
+ALUInt ALUCounter::getHex()
 {
-	return (counterType__None==m_types[i]) ? "" : m_counters[i];
+	return (counterType__None==m_type) ? 0 : std::stoll(m_value, NULL, 16);
 }
 
-ALUInt ALUCounters::getInt(unsigned int i)
+ALUFloat ALUCounter::getFloat()
 {
-	return (counterType__None==m_types[i]) ? 0 : std::stoll(m_counters[i]);
+	return (counterType__None==m_type) ? 0.0 : std::stold(m_value);
 }
 
-ALUInt ALUCounters::getHex(unsigned int i)
+bool ALUCounter::isWholeNumber()
 {
-	return (counterType__None==m_types[i]) ? 0 : std::stoll(m_counters[i], NULL, 16);
-}
-
-ALUFloat ALUCounters::getFloat(unsigned int i)
-{
-	return (counterType__None==m_types[i]) ? 0.0 : std::stold(m_counters[i]);
+	return (ALUFloat(getInt())==getFloat());
 }
 
