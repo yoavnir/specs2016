@@ -115,6 +115,7 @@ class AluUnit {
 public:
 	AluUnit()			{}
 	virtual ~AluUnit()	{}
+	virtual unsigned int    countOperands()		{return 0;}
 	virtual void   			_serialize(std::ostream& os) const = 0;
 	virtual std::string     _identify() = 0;
 	virtual AluUnitType		type()	{return UT_Invalid;}
@@ -147,6 +148,48 @@ private:
 	ALUCounters* m_ctrs;
 	unsigned int m_ctrNumber;
 };
+
+class fieldIdentifierGetter {
+public:
+	virtual ~fieldIdentifierGetter() {}
+	virtual std::string Get(char id) = 0;
+};
+
+void setFieldIdentifierGetter(fieldIdentifierGetter* getter);
+
+class AluUnitFieldIdentifier : public AluUnit {
+public:
+	AluUnitFieldIdentifier(char _fId):m_id(_fId) {};
+	~AluUnitFieldIdentifier()			{}
+	virtual void				_serialize(std::ostream& os) const;
+	virtual std::string			_identify();
+	virtual AluUnitType			type()			{return UT_FieldIdentifier;}
+	virtual ALUCounter*			compute();
+private:
+	char         m_id;
+};
+
+#define X(nm,str) UnaryOp__##nm,
+enum ALU_UnaryOperator {
+	ALU_UOP_LIST
+};
+#undef X
+
+#define X(nm,str) ALUCounter* compute##nm(ALUCounter* operand);
+class AluUnitUnaryOperator : public AluUnit {
+public:
+	AluUnitUnaryOperator(std::string& s);
+	virtual ~AluUnitUnaryOperator()			{}
+	virtual unsigned int	countOperands()		{return 1;}
+	virtual void			_serialize(std::ostream& os) const;
+	virtual std::string		_identify();
+	virtual AluUnitType		type()			{return UT_UnaryOp;}
+	virtual ALUCounter*		compute(ALUCounter* operand);
+private:
+	ALU_UOP_LIST
+	ALU_UnaryOperator  m_op;
+};
+#undef X
 
 static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
 {

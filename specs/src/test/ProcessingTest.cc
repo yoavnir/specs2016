@@ -81,6 +81,10 @@ int main(int argc, char** argv)
 	int errorCount = 0;
 	int testCount  = 0;
 
+	// Connect the ALU to the processing state
+	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
+	setFieldIdentifierGetter(&fiGetter);
+
 	VERIFY("w1 1", "The"); // Test #1
 	VERIFY("7-17 1", "ick brown f"); // Test #2
 	VERIFY("2;-2 1", "he quick brown fox jumped over the   lazy do"); // Test #3

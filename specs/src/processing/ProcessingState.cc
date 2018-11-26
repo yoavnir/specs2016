@@ -223,3 +223,10 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 	}
 	return ret;
 }
+
+// Helper class for the ALU
+std::string ProcessingStateFieldIdentifierGetter::Get(char id)
+{
+	PSpecString ret = m_ps->fieldIdentifierGet(id);
+	return std::string(ret->data(), ret->length());
+}

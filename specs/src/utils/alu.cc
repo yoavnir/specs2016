@@ -55,7 +55,7 @@ ALUFloat ALUCounter::getFloat() const
 
 bool ALUCounter::getBool() const
 {
-	return (m_value=="1");
+	return (m_value!="0" && m_value!="0.0");
 }
 
 bool ALUCounter::isWholeNumber() const
@@ -132,4 +132,118 @@ std::string AluUnitCounter::_identify()
 ALUCounter* AluUnitCounter::compute()
 {
 	return new ALUCounter(*(m_ctrs->getPointer(m_ctrNumber)));
+}
+
+static fieldIdentifierGetter* g_fieldIdentifierGetter = NULL;
+
+void setFieldIdentifierGetter(fieldIdentifierGetter* getter)
+{
+	g_fieldIdentifierGetter = getter;
+}
+
+void AluUnitFieldIdentifier::_serialize(std::ostream& os) const
+{
+	os << m_id;
+}
+
+std::string AluUnitFieldIdentifier::_identify()
+{
+	return std::string("fieldIdentifier(") + std::to_string(m_id) + ")";
+}
+
+ALUCounter* AluUnitFieldIdentifier::compute()
+{
+	if (!g_fieldIdentifierGetter) {
+		MYTHROW("Field Identifier Getter is not set")
+	}
+	std::string content = g_fieldIdentifierGetter->Get(m_id);
+	return new ALUCounter(content);
+}
+
+#define X(nm,st)	if (s==st) {m_op = UnaryOp__##nm; return;}
+AluUnitUnaryOperator::AluUnitUnaryOperator(std::string& s)
+{
+	ALU_UOP_LIST
+	std::string err = "Invalid unary operand: <"+s+">";
+	MYTHROW(err);
+}
+#undef X
+
+#define X(nm,st)	case UnaryOp__##nm: os << st; break;
+void AluUnitUnaryOperator::_serialize(std::ostream& os) const
+{
+	switch(m_op) {
+	ALU_UOP_LIST
+	default:
+		MYTHROW("Invalid unary operand");
+	};
+}
+#undef X
+
+#define X(nm,st)	case UnaryOp__##nm: return ret + st; break;
+std::string AluUnitUnaryOperator::_identify()
+{
+	std::string ret = std::string("Unary Operator ");
+	switch (m_op) {
+	ALU_UOP_LIST
+	default:
+		MYTHROW("Invalid unary operand");
+		return ""; // prevent warning
+	}
+}
+#undef X
+
+#define X(nm,st)	case UnaryOp__##nm: return compute##nm(operand);
+ALUCounter*		AluUnitUnaryOperator::compute(ALUCounter* operand)
+{
+	switch (m_op) {
+	ALU_UOP_LIST
+	default:
+		MYTHROW("Invalid unary operand");
+	}
+}
+#undef X
+
+ALUCounter* 	AluUnitUnaryOperator::computeNot(ALUCounter* operand)
+{
+	if (true==operand->getBool()) {
+		return new ALUCounter(ALUInt(0));
+	} else {
+		return new ALUCounter(ALUInt(1));
+	}
+}
+
+ALUCounter* 	AluUnitUnaryOperator::computePlus(ALUCounter* operand)
+{
+	switch (operand->getType()) {
+	case counterType__Float:
+	case counterType__Int:
+		return new ALUCounter(*operand);
+	case counterType__Str:
+		if (operand->isWholeNumber()) {
+			return new ALUCounter(operand->getInt());
+		} else {
+			return new ALUCounter(operand->getFloat());
+		}
+	default:
+		MYTHROW("Invalid operand type");
+	}
+}
+
+ALUCounter* 	AluUnitUnaryOperator::computeMinus(ALUCounter* operand)
+{
+	switch (operand->getType()) {
+	case counterType__Float:
+		return new ALUCounter(-operand->getFloat());
+	case counterType__Int:
+		return new ALUCounter(-operand->getInt());
+	case counterType__Str:
+		if (operand->isWholeNumber()) {
+			return new ALUCounter(-operand->getInt());
+		} else {
+			return new ALUCounter(-operand->getFloat());
+		}
+	default:
+		MYTHROW("Invalid operand type");
+	}
 }
