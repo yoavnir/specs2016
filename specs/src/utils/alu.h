@@ -67,7 +67,7 @@ private:
 	X(Mult,"*")		\
 	X(Div,"/")  	\
 	X(IntDiv,"%")	\
-	X(RemDev,"//")	\
+	X(RemDiv,"//")	\
 	X(Appnd,"||")	\
 
 #define ALU_ASSOP_LIST \
@@ -188,6 +188,27 @@ public:
 private:
 	ALU_UOP_LIST
 	ALU_UnaryOperator  m_op;
+};
+#undef X
+
+#define X(nm,str) BinaryOp__##nm,
+enum ALU_BinaryOperator {
+	ALU_BOP_LIST
+};
+#undef X
+
+#define X(nm,str) ALUCounter* compute##nm(ALUCounter* op1, ALUCounter* op2);
+class AluBinaryOperator : public AluUnit {
+	AluBinaryOperator(std::string& s);
+	virtual ~AluBinaryOperator()			{}
+	virtual unsigned int	countOperands()		{return 2;}
+	virtual void			_serialize(std::ostream& os) const;
+	virtual std::string		_identify();
+	virtual AluUnitType		type()			{return UT_BinaryOp;}
+	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2);
+private:
+	ALU_BOP_LIST
+	ALU_BinaryOperator  m_op;
 };
 #undef X
 

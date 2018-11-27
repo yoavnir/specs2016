@@ -63,26 +63,14 @@ bool ALUCounter::isWholeNumber() const
 	return (ALUFloat(getInt())==getFloat());
 }
 
-unsigned int getCountOperands(AluUnitType t)
-{
-	switch (t) {
-	case UT_LiteralNumber:
-	case UT_Counter:
-	case UT_FieldIdentifier:
-		return 0;
-	case UT_UnaryOp:
-	case UT_AssignmentOp:
-		return 1;
-	case UT_BinaryOp:
-	case UT_RelOp:
-		return 2;
-	default:
-	{
-		std::string err = "Invalid unit type: " + std::to_string(t);
-		MYTHROW(err);
-	}
-	}
-}
+class AluCounterDeleter {
+public:
+	AluCounterDeleter(ALUCounter* p) 	{p_ctr = p;}
+	~AluCounterDeleter()				{delete p_ctr;}
+private:
+	ALUCounter* p_ctr;
+};
+
 
 ALUCounter* AluUnit::compute()
 {
@@ -196,6 +184,10 @@ std::string AluUnitUnaryOperator::_identify()
 #define X(nm,st)	case UnaryOp__##nm: return compute##nm(operand);
 ALUCounter*		AluUnitUnaryOperator::compute(ALUCounter* operand)
 {
+	AluCounterDeleter _op(operand);
+	if (counterType__None==operand->getType()) {
+		return new ALUCounter();
+	}
 	switch (m_op) {
 	ALU_UOP_LIST
 	default:
@@ -247,3 +239,146 @@ ALUCounter* 	AluUnitUnaryOperator::computeMinus(ALUCounter* operand)
 		MYTHROW("Invalid operand type");
 	}
 }
+
+
+
+#define X(nm,st)	if (s==st) {m_op = BinaryOp__##nm; return;}
+AluBinaryOperator::AluBinaryOperator(std::string& s)
+{
+	ALU_BOP_LIST
+	std::string err = "Invalid binary operand: <"+s+">";
+	MYTHROW(err);
+}
+#undef X
+
+#define X(nm,st)	case BinaryOp__##nm: os << st; break;
+void AluBinaryOperator::_serialize(std::ostream& os) const
+{
+	switch(m_op) {
+	ALU_BOP_LIST
+	default:
+		MYTHROW("Invalid binary operand");
+	};
+}
+#undef X
+
+#define X(nm,st)	case BinaryOp__##nm: return ret + st; break;
+std::string AluBinaryOperator::_identify()
+{
+	std::string ret = std::string("Binary Operator ");
+	switch (m_op) {
+	ALU_BOP_LIST
+	default:
+		MYTHROW("Invalid binary operand");
+		return ""; // prevent warning
+	}
+}
+#undef X
+
+#define X(nm,st)	case BinaryOp__##nm: return compute##nm(op1, op2);
+ALUCounter*		AluBinaryOperator::compute(ALUCounter* op1, ALUCounter* op2)
+{
+	AluCounterDeleter _op1(op1);
+	AluCounterDeleter _op2(op2);
+	if (counterType__None==op1->getType() || counterType__None==op2->getType()) {
+		return new ALUCounter();
+	}
+
+	switch (m_op) {
+	ALU_BOP_LIST
+	default:
+		MYTHROW("Invalid unary operand");
+	}
+}
+#undef X
+
+ALUCounter*		AluBinaryOperator::computeAdd(ALUCounter* op1, ALUCounter* op2)
+{
+	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
+		return new ALUCounter(op1->getFloat() + op2->getFloat());
+	}
+	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+		return new ALUCounter(op1->getInt() + op2->getInt());
+	}
+	if (op1->isWholeNumber() && op2->isWholeNumber()) {
+		return new ALUCounter(op1->getInt() + op2->getInt());
+	}
+	return new ALUCounter(op1->getFloat() + op2->getFloat());
+}
+
+ALUCounter*		AluBinaryOperator::computeSub(ALUCounter* op1, ALUCounter* op2)
+{
+	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
+		return new ALUCounter(op1->getFloat() - op2->getFloat());
+	}
+	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+		return new ALUCounter(op1->getInt() - op2->getInt());
+	}
+	if (op1->isWholeNumber() && op2->isWholeNumber()) {
+		return new ALUCounter(op1->getInt() - op2->getInt());
+	}
+	return new ALUCounter(op1->getFloat() - op2->getFloat());
+}
+
+ALUCounter*		AluBinaryOperator::computeMult(ALUCounter* op1, ALUCounter* op2)
+{
+	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
+		return new ALUCounter(op1->getFloat() * op2->getFloat());
+	}
+	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+		return new ALUCounter(op1->getInt() * op2->getInt());
+	}
+	if (op1->isWholeNumber() && op2->isWholeNumber()) {
+		return new ALUCounter(op1->getInt() * op2->getInt());
+	}
+	return new ALUCounter(op1->getFloat() * op2->getFloat());
+}
+
+ALUCounter*		AluBinaryOperator::computeDiv(ALUCounter* op1, ALUCounter* op2)
+{
+	// guard against divide-by-zero: return NaN
+	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
+		return new ALUCounter();
+	}
+	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
+		return new ALUCounter(op1->getFloat() / op2->getFloat());
+	}
+	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+		if (0==(op1->getInt() % op2->getInt())) {
+			return new ALUCounter(op1->getInt() / op2->getInt());
+		} else {
+			return new ALUCounter(op1->getFloat() / op2->getFloat());
+		}
+	}
+	if (op1->isWholeNumber() && op2->isWholeNumber() && (0==(op1->getInt() % op2->getInt()))) {
+		return new ALUCounter(op1->getInt() / op2->getInt());
+	}
+	return new ALUCounter(op1->getFloat() / op2->getFloat());
+}
+
+ALUCounter*		AluBinaryOperator::computeAppnd(ALUCounter* op1, ALUCounter* op2)
+{
+	std::string ret = op1->getStr() + op2->getStr();
+	return new ALUCounter(ret);
+}
+
+ALUCounter*		AluBinaryOperator::computeIntDiv(ALUCounter* op1, ALUCounter* op2)
+{
+	// guard against divide-by-zero: return NaN
+	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
+		return new ALUCounter();
+	}
+
+	return new ALUCounter(op1->getInt() / op2->getInt());
+}
+
+ALUCounter*		AluBinaryOperator::computeRemDiv(ALUCounter* op1, ALUCounter* op2)
+{
+	// guard against divide-by-zero: return NaN
+	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
+		return new ALUCounter();
+	}
+
+	return new ALUCounter(op1->getInt() % op2->getInt());
+}
+
