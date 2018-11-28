@@ -23,6 +23,7 @@ public:
 	ALUCounter(ALUInt i)       {set(i);}
 	ALUCounter(ALUFloat f)     {set(f);}
 	ALUCounterType getType()   {return m_type;}
+	ALUCounterType getDivinedType();
 	std::string    getStr()    {return m_value;}
 	ALUInt         getInt() const;
 	ALUInt         getHex() const;
@@ -33,6 +34,7 @@ public:
 	void           set(ALUInt i);
 	void           set(ALUFloat f);
 	bool           isWholeNumber() const;
+	bool           isNumeric() const;
 private:
 	std::string    m_value;
 	ALUCounterType m_type;
@@ -69,18 +71,6 @@ private:
 	X(IntDiv,"%")	\
 	X(RemDiv,"//")	\
 	X(Appnd,"||")	\
-
-#define ALU_ASSOP_LIST \
-	X(Let,":=")		\
-	X(Add,"+=")		\
-	X(Sub,"-=")		\
-	X(Mult,"*=")	\
-	X(Div,"/=")		\
-	X(IntDiv,"%=")	\
-	X(RemDiv,"//=")	\
-	X(Appnd,"||=")	\
-
-#define ALU_RELOP_LIST	\
 	X(LT,"<")		\
 	X(LE,"<=")		\
 	X(GT,">")		\
@@ -96,6 +86,17 @@ private:
 	X(AND,"&")		\
 	X(OR,"|")		\
 
+#define ALU_ASSOP_LIST \
+	X(Let,":=")		\
+	X(Add,"+=")		\
+	X(Sub,"-=")		\
+	X(Mult,"*=")	\
+	X(Div,"/=")		\
+	X(IntDiv,"%=")	\
+	X(RemDiv,"//=")	\
+	X(Appnd,"||=")	\
+
+
 enum AluUnitType {
 	UT_Invalid,
 	UT_LiteralNumber,
@@ -103,7 +104,6 @@ enum AluUnitType {
 	UT_FieldIdentifier,
 	UT_UnaryOp,
 	UT_BinaryOp,
-	UT_RelOp,
 	UT_AssignmentOp,
 };
 
