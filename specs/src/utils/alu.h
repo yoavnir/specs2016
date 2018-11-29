@@ -33,6 +33,7 @@ public:
 	void           set(const char* st);
 	void           set(ALUInt i);
 	void           set(ALUFloat f);
+	void           set();
 	bool           isWholeNumber() const;
 	bool           isNumeric() const;
 private:
@@ -40,22 +41,25 @@ private:
 	ALUCounterType m_type;
 };
 
+typedef unsigned int ALUCounterKey;
+
 class ALUCounters {
 public:
-	std::string    getStr(unsigned int i)		{return m_map[i].getStr();}
-	ALUInt         getInt(unsigned int i)		{return m_map[i].getInt();}
-	ALUInt         getHex(unsigned int i)		{return m_map[i].getHex();}
-	ALUFloat       getFloat(unsigned int i)		{return m_map[i].getFloat();}
-	bool           getBool(unsigned int i)		{return m_map[i].getBool();}
-	ALUCounter*    getPointer(unsigned int i)	{return &m_map[i];}
-	void           set(unsigned int i, std::string& s)  {m_map[i].set(s);}
-	void           set(unsigned int i, const char* st)  {m_map[i].set(st);}
-	void           set(unsigned int i, ALUInt l)        {m_map[i].set(l);}
-	void           set(unsigned int i, ALUFloat f)      {m_map[i].set(f);}
-	ALUCounterType type(unsigned int i)     {return m_map[i].getType();}
-	bool           isWholeNumber(unsigned int i) {return m_map[i].isWholeNumber();}
+	std::string		getStr(ALUCounterKey i)		{return m_map[i].getStr();}
+	ALUInt			getInt(ALUCounterKey i)		{return m_map[i].getInt();}
+	ALUInt			getHex(ALUCounterKey i)		{return m_map[i].getHex();}
+	ALUFloat		getFloat(ALUCounterKey i)		{return m_map[i].getFloat();}
+	bool			getBool(ALUCounterKey i)		{return m_map[i].getBool();}
+	ALUCounter*		getPointer(ALUCounterKey i)	{return &m_map[i];}
+	void			set(ALUCounterKey i, std::string& s)  {m_map[i].set(s);}
+	void			set(ALUCounterKey i, const char* st)  {m_map[i].set(st);}
+	void			set(ALUCounterKey i, ALUInt l)        {m_map[i].set(l);}
+	void			set(ALUCounterKey i, ALUFloat f)      {m_map[i].set(f);}
+	void			set(ALUCounterKey i)				  {m_map[i].set();}
+	ALUCounterType type(ALUCounterKey i)     {return m_map[i].getType();}
+	bool           isWholeNumber(ALUCounterKey i) {return m_map[i].isWholeNumber();}
 private:
-	std::map<unsigned int, ALUCounter> m_map;
+	std::map<ALUCounterKey, ALUCounter> m_map;
 };
 
 #define ALU_UOP_LIST	\
@@ -138,15 +142,15 @@ private:
 
 class AluUnitCounter : public AluUnit {
 public:
-	AluUnitCounter(unsigned int ctrNumber, ALUCounters* ctrs):m_ctrs(ctrs),m_ctrNumber(ctrNumber) {};
+	AluUnitCounter(ALUCounterKey ctrNumber, ALUCounters* ctrs):m_ctrs(ctrs),m_ctrNumber(ctrNumber) {};
 	~AluUnitCounter()			{}
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_Counter;}
 	virtual ALUCounter*			compute();
 private:
-	ALUCounters* m_ctrs;
-	unsigned int m_ctrNumber;
+	ALUCounters*  m_ctrs;
+	ALUCounterKey m_ctrNumber;
 };
 
 class fieldIdentifierGetter {
@@ -199,6 +203,7 @@ enum ALU_BinaryOperator {
 
 #define X(nm,str) ALUCounter* compute##nm(ALUCounter* op1, ALUCounter* op2);
 class AluBinaryOperator : public AluUnit {
+public:
 	AluBinaryOperator(std::string& s);
 	virtual ~AluBinaryOperator()			{}
 	virtual unsigned int	countOperands()		{return 2;}
@@ -211,6 +216,29 @@ private:
 	ALU_BinaryOperator  m_op;
 };
 #undef X
+
+#define X(nm,str) AssnOp__##nm,
+enum ALU_AssignmentOperator {
+	ALU_ASSOP_LIST
+};
+#undef X
+
+#define X(nm,str) ALUCounter* compute##nm(ALUCounter* operand, ALUCounter* prevValue);
+class AluAssnOperator : public AluUnit {
+public:
+	AluAssnOperator(std::string& s);
+	virtual ~AluAssnOperator()			{}
+	virtual unsigned int		countOperands()	{return 1;}
+	virtual void				_serialize(std::ostream& os) const;
+	virtual std::string 		_identify();
+	virtual AluUnitType			type()			{return UT_AssignmentOp;}
+	void	perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCounter* operand);
+private:
+	ALU_ASSOP_LIST
+	ALU_AssignmentOperator	m_op;
+};
+#undef X
+
 
 static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
 {

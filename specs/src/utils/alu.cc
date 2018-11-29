@@ -38,6 +38,11 @@ void ALUCounter::set(ALUFloat f)
 	m_type = counterType__Float;
 }
 
+void ALUCounter::set()
+{
+	m_type = counterType__None;
+}
+
 ALUInt ALUCounter::getInt() const
 {
 	return (counterType__None==m_type) ? 0 : std::stoll(m_value);
@@ -100,7 +105,7 @@ ALUCounterType ALUCounter::getDivinedType()
 class AluCounterDeleter {
 public:
 	AluCounterDeleter(ALUCounter* p) 	{p_ctr = p;}
-	~AluCounterDeleter()				{delete p_ctr;}
+	~AluCounterDeleter()				{if (p_ctr) delete p_ctr;}
 private:
 	ALUCounter* p_ctr;
 };
@@ -532,4 +537,180 @@ ALUCounter*		AluBinaryOperator::computeSLTE(ALUCounter* op1, ALUCounter* op2)
 {
 	RETURN_COND(op1->getStr().compare(op2->getStr()) <= 0);
 }
+
+
+
+#define X(nm,st)	if (s==st) {m_op = AssnOp__##nm; return;}
+AluAssnOperator::AluAssnOperator(std::string& s)
+{
+	ALU_ASSOP_LIST
+	std::string err = "Invalid assignment operator: <"+s+">";
+	MYTHROW(err);
+}
+#undef X
+
+#define X(nm,st)	case AssnOp__##nm: os << st; break;
+void AluAssnOperator::_serialize(std::ostream& os) const
+{
+	switch(m_op) {
+	ALU_ASSOP_LIST
+	default:
+		MYTHROW("Invalid assignment operand");
+	};
+}
+#undef X
+
+#define X(nm,st)	case AssnOp__##nm: return ret + st; break;
+std::string AluAssnOperator::_identify()
+{
+	std::string ret = std::string("Assignment Operator ");
+	switch (m_op) {
+	ALU_ASSOP_LIST
+	default:
+		MYTHROW("Invalid assignment operand");
+		return ""; // prevent warning
+	}
+}
+#undef X
+
+#define X(nm,st)	case AssnOp__##nm: result = compute##nm(operand, prevOp);
+void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCounter* operand)
+{
+	ALUCounter* result;
+	AluCounterDeleter _op(operand);
+
+	ALUCounter* prevOp = ctrs->getPointer(ctrNumber);
+
+	// NaN is contagious
+	if (counterType__None==operand->getType()) {
+		ctrs->set(ctrNumber);
+		return;
+	}
+
+	switch (m_op) {
+	ALU_ASSOP_LIST
+	default:
+		MYTHROW("Invalid unary operand");
+	}
+
+	AluCounterDeleter _res((result==operand) ? NULL : result);
+
+	switch (result->getDivinedType()) {
+	case counterType__None:
+		ctrs->set(ctrNumber);
+		break;
+	case counterType__Str:
+	{
+		std::string s = result->getStr();
+		ctrs->set(ctrNumber, s);
+		break;
+	}
+	case counterType__Int:
+		ctrs->set(ctrNumber, result->getInt());
+		break;
+	case counterType__Float:
+		ctrs->set(ctrNumber, result->getFloat());
+		break;
+	default:
+		MYTHROW("Invalid assignment result");
+	}
+}
+#undef X
+
+ALUCounter* AluAssnOperator::computeLet(ALUCounter* operand, ALUCounter* prevOp)
+{
+	// Previous value is ignored
+	return operand;
+}
+
+ALUCounter* AluAssnOperator::computeAdd(ALUCounter* operand, ALUCounter* prevOp)
+{
+	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
+		return new ALUCounter(prevOp->getFloat() + operand->getFloat());
+	}
+	if (counterType__Int==operand->getType() || counterType__Int==prevOp->getType()) {
+		return new ALUCounter(prevOp->getInt() + operand->getInt());
+	}
+	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
+		return new ALUCounter(prevOp->getInt() + operand->getInt());
+	}
+	return new ALUCounter(prevOp->getFloat() + operand->getFloat());
+}
+
+ALUCounter* AluAssnOperator::computeSub(ALUCounter* operand, ALUCounter* prevOp)
+{
+	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
+		return new ALUCounter(prevOp->getFloat() - operand->getFloat());
+	}
+	if (counterType__Int==operand->getType() || counterType__Int==prevOp->getType()) {
+		return new ALUCounter(prevOp->getInt() - operand->getInt());
+	}
+	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
+		return new ALUCounter(prevOp->getInt() - operand->getInt());
+	}
+	return new ALUCounter(prevOp->getFloat() - operand->getFloat());
+}
+
+ALUCounter* AluAssnOperator::computeMult(ALUCounter* operand, ALUCounter* prevOp)
+{
+	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
+		return new ALUCounter(prevOp->getFloat() * operand->getFloat());
+	}
+	if (counterType__Int==operand->getType() || counterType__Int==prevOp->getType()) {
+		return new ALUCounter(prevOp->getInt() * operand->getInt());
+	}
+	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
+		return new ALUCounter(prevOp->getInt() * operand->getInt());
+	}
+	return new ALUCounter(prevOp->getFloat() * operand->getFloat());
+}
+
+ALUCounter* AluAssnOperator::computeDiv(ALUCounter* operand, ALUCounter* prevOp)
+{
+	// guard against divide-by-zero: return NaN
+	if (0.0==operand->getFloat()) {
+		return new ALUCounter();
+	}
+	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
+		return new ALUCounter(prevOp->getFloat() / operand->getFloat());
+	}
+	if (counterType__Int==operand->getType() || counterType__Int==prevOp->getType()) {
+		if (0==(prevOp->getInt() % operand->getInt())) {
+			return new ALUCounter(prevOp->getInt() / operand->getInt());
+		} else {
+			return new ALUCounter(prevOp->getFloat() / operand->getFloat());
+		}
+	}
+	if (operand->isWholeNumber() && prevOp->isWholeNumber() && (0==(prevOp->getInt() % operand->getInt()))) {
+		return new ALUCounter(prevOp->getInt() / operand->getInt());
+	}
+	return new ALUCounter(prevOp->getFloat() / operand->getFloat());
+}
+
+ALUCounter* AluAssnOperator::computeIntDiv(ALUCounter* operand, ALUCounter* prevOp)
+{
+	// guard against divide-by-zero: return NaN
+	if (0.0==operand->getFloat()) {
+		return new ALUCounter();
+	}
+
+	return new ALUCounter(prevOp->getInt() / operand->getInt());
+}
+
+ALUCounter* AluAssnOperator::computeRemDiv(ALUCounter* operand, ALUCounter* prevOp)
+{
+	// guard against divide-by-zero: return NaN
+	if (0.0==operand->getFloat()) {
+		return new ALUCounter();
+	}
+
+	return new ALUCounter(prevOp->getInt() % operand->getInt());
+}
+
+ALUCounter* AluAssnOperator::computeAppnd(ALUCounter* operand, ALUCounter* prevOp)
+{
+	std::string ret = prevOp->getStr() + operand->getStr();
+	return new ALUCounter(ret);
+}
+
 
