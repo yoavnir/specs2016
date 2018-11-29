@@ -8,6 +8,7 @@
  */
 
 #include <sstream>
+#include <cmath>
 #include "ErrorReporting.h"
 #include "alu.h"
 
@@ -45,17 +46,41 @@ void ALUCounter::set()
 
 ALUInt ALUCounter::getInt() const
 {
-	return (counterType__None==m_type) ? 0 : std::stoll(m_value);
+	try {
+		switch (m_type) {
+		case counterType__None:
+			return 0;
+		case counterType__Int:
+			break;
+		case counterType__Float:
+			return ALUInt(std::stold(m_value));
+		default:
+			if (counterType__Float == getDivinedType()) {
+				return ALUInt(std::stold(m_value));
+			}
+		}
+		return std::stoll(m_value);
+	} catch (std::invalid_argument& e) {
+		return 0;
+	}
 }
 
 ALUInt ALUCounter::getHex() const
 {
-	return (counterType__None==m_type) ? 0 : std::stoll(m_value, NULL, 16);
+	try {
+		return (counterType__None==m_type) ? 0 : std::stoll(m_value, NULL, 16);
+	} catch (std::invalid_argument& e) {
+		return 0;
+	}
 }
 
 ALUFloat ALUCounter::getFloat() const
 {
-	return (counterType__None==m_type) ? 0.0 : std::stold(m_value);
+	try {
+		return (counterType__None==m_type) ? 0.0 : std::stold(m_value);
+	} catch (std::invalid_argument& e) {
+		return 0;
+	}
 }
 
 bool ALUCounter::getBool() const
@@ -65,7 +90,14 @@ bool ALUCounter::getBool() const
 
 bool ALUCounter::isWholeNumber() const
 {
-	return (ALUFloat(getInt())==getFloat());
+	if (!isNumeric()) return false;
+	ALUFloat f = getFloat();
+	return (f==std::floor(f));
+}
+
+bool ALUCounter::isFloat() const
+{
+	return isNumeric() && (!isWholeNumber() || m_value.find('.')!=std::string::npos);
 }
 
 bool ALUCounter::isNumeric() const
@@ -76,16 +108,17 @@ bool ALUCounter::isNumeric() const
 	case counterType__Int:
 	case counterType__Float:
 		return true;
-	default: {
+	default: try {
 		std::size_t pos;
 		std::stold(m_value, &pos);
 		return m_value.length() == pos;
-
+	} catch (std::invalid_argument& e) {
+		return false;
 	}
 	}
 }
 
-ALUCounterType ALUCounter::getDivinedType()
+ALUCounterType ALUCounter::getDivinedType() const
 {
 	if (m_type != counterType__Str) {
 		return m_type;
@@ -95,7 +128,7 @@ ALUCounterType ALUCounter::getDivinedType()
 		return counterType__Str;
 	}
 
-	if (isWholeNumber()) {
+	if (isWholeNumber() && (std::string::npos==m_value.find('.'))) {
 		return counterType__Int;
 	}
 
@@ -188,13 +221,24 @@ ALUCounter* AluUnitFieldIdentifier::compute()
 }
 
 #define X(nm,st)	if (s==st) {m_op = UnaryOp__##nm; return;}
-AluUnitUnaryOperator::AluUnitUnaryOperator(std::string& s)
+void AluUnitUnaryOperator::setOpByName(std::string& s)
 {
 	ALU_UOP_LIST
 	std::string err = "Invalid unary operand: <"+s+">";
 	MYTHROW(err);
 }
 #undef X
+
+AluUnitUnaryOperator::AluUnitUnaryOperator(std::string& s)
+{
+	setOpByName(s);
+}
+
+AluUnitUnaryOperator::AluUnitUnaryOperator(const char* str)
+{
+	std::string s(str);
+	setOpByName(s);
+}
 
 #define X(nm,st)	case UnaryOp__##nm: os << st; break;
 void AluUnitUnaryOperator::_serialize(std::ostream& os) const
@@ -252,10 +296,10 @@ ALUCounter* 	AluUnitUnaryOperator::computePlus(ALUCounter* operand)
 	case counterType__Int:
 		return new ALUCounter(*operand);
 	case counterType__Str:
-		if (operand->isWholeNumber()) {
-			return new ALUCounter(operand->getInt());
-		} else {
+		if (operand->isFloat()) {
 			return new ALUCounter(operand->getFloat());
+		} else {
+			return new ALUCounter(operand->getInt());
 		}
 	default:
 		MYTHROW("Invalid operand type");
@@ -270,10 +314,10 @@ ALUCounter* 	AluUnitUnaryOperator::computeMinus(ALUCounter* operand)
 	case counterType__Int:
 		return new ALUCounter(-operand->getInt());
 	case counterType__Str:
-		if (operand->isWholeNumber()) {
-			return new ALUCounter(-operand->getInt());
-		} else {
+		if (operand->isFloat()) {
 			return new ALUCounter(-operand->getFloat());
+		} else {
+			return new ALUCounter(-operand->getInt());
 		}
 	default:
 		MYTHROW("Invalid operand type");

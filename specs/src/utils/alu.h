@@ -16,6 +16,13 @@ enum ALUCounterType {
 	counterType__Float
 };
 
+static std::string ALUCounterType2Str[] = {
+		"NaN",
+		"Str",
+		"Int",
+		"Float"
+};
+
 class ALUCounter {
 public:
 	ALUCounter():m_type(counterType__None), m_value("") {}
@@ -23,7 +30,7 @@ public:
 	ALUCounter(ALUInt i)       {set(i);}
 	ALUCounter(ALUFloat f)     {set(f);}
 	ALUCounterType getType()   {return m_type;}
-	ALUCounterType getDivinedType();
+	ALUCounterType getDivinedType() const;
 	std::string    getStr()    {return m_value;}
 	ALUInt         getInt() const;
 	ALUInt         getHex() const;
@@ -35,6 +42,7 @@ public:
 	void           set(ALUFloat f);
 	void           set();
 	bool           isWholeNumber() const;
+	bool           isFloat() const;
 	bool           isNumeric() const;
 private:
 	std::string    m_value;
@@ -56,8 +64,10 @@ public:
 	void			set(ALUCounterKey i, ALUInt l)        {m_map[i].set(l);}
 	void			set(ALUCounterKey i, ALUFloat f)      {m_map[i].set(f);}
 	void			set(ALUCounterKey i)				  {m_map[i].set();}
-	ALUCounterType type(ALUCounterKey i)     {return m_map[i].getType();}
-	bool           isWholeNumber(ALUCounterKey i) {return m_map[i].isWholeNumber();}
+	ALUCounterType	type(ALUCounterKey i)     {return m_map[i].getType();}
+	ALUCounterType	divinedType(ALUCounterKey i)     {return m_map[i].getDivinedType();}
+	bool         	isWholeNumber(ALUCounterKey i) {return m_map[i].isWholeNumber();}
+	bool          	isNumeric(ALUCounterKey i) {return m_map[i].isNumeric();}
 private:
 	std::map<ALUCounterKey, ALUCounter> m_map;
 };
@@ -183,6 +193,7 @@ enum ALU_UnaryOperator {
 class AluUnitUnaryOperator : public AluUnit {
 public:
 	AluUnitUnaryOperator(std::string& s);
+	AluUnitUnaryOperator(const char* str);
 	virtual ~AluUnitUnaryOperator()			{}
 	virtual unsigned int	countOperands()		{return 1;}
 	virtual void			_serialize(std::ostream& os) const;
@@ -190,6 +201,7 @@ public:
 	virtual AluUnitType		type()			{return UT_UnaryOp;}
 	virtual ALUCounter*		compute(ALUCounter* operand);
 private:
+	void               setOpByName(std::string& s);
 	ALU_UOP_LIST
 	ALU_UnaryOperator  m_op;
 };
