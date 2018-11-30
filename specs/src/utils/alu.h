@@ -217,6 +217,7 @@ enum ALU_BinaryOperator {
 class AluBinaryOperator : public AluUnit {
 public:
 	AluBinaryOperator(std::string& s);
+	AluBinaryOperator(const char* str);
 	virtual ~AluBinaryOperator()			{}
 	virtual unsigned int	countOperands()		{return 2;}
 	virtual void			_serialize(std::ostream& os) const;
@@ -224,6 +225,7 @@ public:
 	virtual AluUnitType		type()			{return UT_BinaryOp;}
 	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2);
 private:
+	void               setOpByName(std::string& s);
 	ALU_BOP_LIST
 	ALU_BinaryOperator  m_op;
 };

@@ -159,6 +159,26 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	delete _res; \
 }
 
+#define VERIFY_BINARY(u,o1,o2,t,s) { \
+	AluUnitCounter ctr1(o1,&counters);	\
+	AluUnitCounter ctr2(o2,&counters);	\
+	ALUCounter* _op1 = ctr1.compute();	\
+	ALUCounter* _op2 = ctr2.compute();	\
+	ALUCounter* _res = u.compute(_op1,_op2);	\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
+	if (counterType__##t!=_res->getType()) { \
+		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[_res->getType()] << ")\n"; \
+		countFailures++; \
+	} else if ((_res->getType()!=counterType__None) && (_res->getStr() != s)) {	\
+		std::cout << "*** NOT OK *** (" << _res->getStr() << ")\n"; \
+		countFailures++; \
+	} else { \
+		std::cout << "OK.\n"; \
+	} \
+	delete _res; \
+}
+
 
 
 
@@ -201,6 +221,7 @@ int main (int argc, char** argv)
 	counters.set(1,"hello");
 	counters.set(11,"-8.0");
 	counters.set(10,"7.5");
+	counters.set(33,ALUInt(3));
 	VERIFY_WHOLE(3,false);
 	counters.set(2, 948.0L);
 	VERIFY_WHOLE(2, true);
@@ -272,6 +293,29 @@ int main (int argc, char** argv)
 	VERIFY_UNARY(uNot,0,None,"0");
 	VERIFY_UNARY(uNot,12,Int,"1");
 	VERIFY_UNARY(uNot,13,Int,"1");
+
+#define X(nm,st) AluBinaryOperator u##nm(st);
+	ALU_BOP_LIST
+#undef X
+	counters.set(4,"123");
+	VERIFY_BINARY(uAdd,8,11,Float,"90.6");  // 98.6 + (-8)
+	VERIFY_BINARY(uAdd,1,3,Float,"3.14159265");  // "hello" + 3.14159265
+	VERIFY_BINARY(uAdd,9,3,Float,"68.14159265"); // 65 + 3.14159265
+	VERIFY_BINARY(uAdd,9,4,Int,"188"); // 65 + 123
+	VERIFY_BINARY(uSub,4,9,Int,"58");  // 123 - 65
+	VERIFY_BINARY(uSub,9,4,Int,"-58"); // 65 - 123
+	VERIFY_BINARY(uSub,9,3,Float,"61.85840735"); // 65 - 3.14159265
+	VERIFY_BINARY(uSub,3,1,Float,"3.14159265"); // 3.14159265 - "hello"
+	VERIFY_BINARY(uMult,8,11,Float,"-788.8");    // 98.6 * (-8)
+	VERIFY_BINARY(uMult,9,4,Int,"7995");    // 65*123
+	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
+	VERIFY_BINARY(uDiv, 4,9,Float,"1.892307692307692");  // 123 / 65
+	VERIFY_BINARY(uDiv,4,33,Int,"41");      // 123 / 3
+	VERIFY_BINARY(uIntDiv,4,9,Int,"1");     // 123 % 65 where % is integer division
+	VERIFY_BINARY(uIntDiv,7,3,Int,"32");     // 98.6 % 3.14
+	VERIFY_BINARY(uRemDiv,4,9,Int,"58");     // 123 // 65 where // is modulo
+	VERIFY_BINARY(uRemDiv,7,3,Int,"2");     // 98.6 // 3.14 ==> 98 // 3
+	VERIFY_BINARY(uAppnd,1,3,Str,"hello3.14159265");
 
 
 	if (countFailures) {

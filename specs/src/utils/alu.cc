@@ -327,13 +327,24 @@ ALUCounter* 	AluUnitUnaryOperator::computeMinus(ALUCounter* operand)
 
 
 #define X(nm,st)	if (s==st) {m_op = BinaryOp__##nm; return;}
-AluBinaryOperator::AluBinaryOperator(std::string& s)
+void AluBinaryOperator::setOpByName(std::string& s)
 {
 	ALU_BOP_LIST
 	std::string err = "Invalid binary operand: <"+s+">";
 	MYTHROW(err);
 }
 #undef X
+
+AluBinaryOperator::AluBinaryOperator(std::string& s)
+{
+	setOpByName(s);
+}
+
+AluBinaryOperator::AluBinaryOperator(const char* str)
+{
+	std::string s(str);
+	setOpByName(s);
+}
 
 #define X(nm,st)	case BinaryOp__##nm: os << st; break;
 void AluBinaryOperator::_serialize(std::ostream& os) const
