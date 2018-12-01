@@ -103,7 +103,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 }
 
 #define VERIFY_UNIT_ST(u,s) { \
-	ALUCounter* ctr = u.compute(); \
+	ALUCounter* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
 	": "<< #u << " is \""<< s <<"\": "; \
 	if (ctr->getStr()==s) { \
@@ -116,7 +116,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 }
 
 #define VERIFY_UNIT_INT(u,i) { \
-	ALUCounter* ctr = u.compute(); \
+	ALUCounter* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
 	": "<< #u << " is "<< i <<": "; \
 	if (ctr->getInt()==i) { \
@@ -129,7 +129,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 }
 
 #define VERIFY_UNIT_F(u,f) { \
-	ALUCounter* ctr = u.compute(); \
+	ALUCounter* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
 	": "<< #u << " is "<< f <<": "; \
 	if (ctr->getFloat()==f) { \
@@ -142,8 +142,8 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 }
 
 #define VERIFY_UNARY(u,o,t,s) { \
-	AluUnitCounter ctr(o,&counters);	\
-	ALUCounter* _op = ctr.compute();	\
+	AluUnitCounter ctr(o);	\
+	ALUCounter* _op = ctr.compute(&counters);	\
 	ALUCounter* _res = u.compute(_op);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
@@ -160,10 +160,10 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 }
 
 #define VERIFY_BINARY(u,o1,o2,t,s) { \
-	AluUnitCounter ctr1(o1,&counters);	\
-	AluUnitCounter ctr2(o2,&counters);	\
-	ALUCounter* _op1 = ctr1.compute();	\
-	ALUCounter* _op2 = ctr2.compute();	\
+	AluUnitCounter ctr1(o1);	\
+	AluUnitCounter ctr2(o2);	\
+	ALUCounter* _op1 = ctr1.compute(&counters);	\
+	ALUCounter* _op2 = ctr2.compute(&counters);	\
 	ALUCounter* _res = u.compute(_op1,_op2);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
@@ -180,8 +180,8 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 }
 
 #define VERIFY_ASSN(u,p,o,t,s) {		\
-	AluUnitCounter 	ctr(o,&counters);	\
-	ALUCounter*		op = ctr.compute();	\
+	AluUnitCounter 	ctr(o);	\
+	ALUCounter*		op = ctr.compute(&counters);	\
 	u.perform(p,&counters,op);			\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
@@ -194,6 +194,19 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	} else { \
 		std::cout << "OK.\n"; \
 	} \
+}
+
+#define VERIFY_EXPR(s,e) {						\
+	std::string _expr(s);						\
+	bool _res = parseAluExpression(_expr,vec);	\
+	std::string _dump = dumpAluVec(vec, true);	\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	": <"<< s << "> ==> \"" << e << "\": "; 	\
+	if (_dump==e) std::cout << "OK\n";			\
+	else {										\
+		std::cout << "*** NOT OK *** - " << _dump << "\n";	\
+		countFailures++;						\
+	}											\
 }
 
 
@@ -279,7 +292,7 @@ int main (int argc, char** argv)
 	AluUnitLiteral uMeaning(s);
 	UNIT_DIVINED_TYPE(uMeaning,Int);
 
-	AluUnitCounter uCtr(8,&counters);
+	AluUnitCounter uCtr(8);
 	VERIFY_UNIT_F(uCtr,98.6L);
 	VERIFY_UNIT_ST(uCtr,"0.986e+2");
 	VERIFY_UNIT_INT(uCtr,98)
@@ -344,6 +357,9 @@ int main (int argc, char** argv)
 
 	// TODO: Many more needed
 
+	AluVec vec;
+	VERIFY_EXPR("23+45", "Number(23);UOP(+);Number(45)");
+	VERIFY_EXPR(" 23 + -8", "Number(23);UOP(+);Number(-8)");
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";

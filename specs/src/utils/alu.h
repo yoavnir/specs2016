@@ -31,6 +31,7 @@ public:
 	ALUCounter(ALUFloat f)     {set(f);}
 	ALUCounterType getType()   {return m_type;}
 	ALUCounterType getDivinedType() const;
+	void           divineType()		{m_type = getDivinedType();}
 	std::string    getStr()    {return m_value;}
 	ALUInt         getInt() const;
 	ALUInt         getHex() const;
@@ -140,7 +141,7 @@ public:
 
 class AluUnitLiteral : public AluUnit {
 public:
-	AluUnitLiteral(std::string& s):m_literal(s)	{}
+	AluUnitLiteral(std::string& s, bool hintNumerical=false):m_literal(s),m_hintNumerical(hintNumerical)	{}
 	virtual ~AluUnitLiteral()					{}
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
@@ -148,18 +149,18 @@ public:
 	virtual ALUCounter*			compute();
 private:
 	ALUCounter	m_literal;
+	bool        m_hintNumerical;
 };
 
 class AluUnitCounter : public AluUnit {
 public:
-	AluUnitCounter(ALUCounterKey ctrNumber, ALUCounters* ctrs):m_ctrs(ctrs),m_ctrNumber(ctrNumber) {};
+	AluUnitCounter(ALUCounterKey ctrNumber):m_ctrNumber(ctrNumber) {};
 	~AluUnitCounter()			{}
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_Counter;}
-	virtual ALUCounter*			compute();
+	virtual ALUCounter*			compute(ALUCounters* pCtrs);
 private:
-	ALUCounters*  m_ctrs;
 	ALUCounterKey m_ctrNumber;
 };
 
@@ -262,5 +263,14 @@ static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
 
     return os;
 }
+
+
+typedef std::vector<AluUnit*> AluVec;
+
+bool parseAluExpression(std::string& s, AluVec& vec);
+
+bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, AluVec& vec);
+
+std::string dumpAluVec(AluVec& vec, bool deleteUnits);
 
 #endif

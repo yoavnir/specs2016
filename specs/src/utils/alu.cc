@@ -170,12 +170,18 @@ void AluUnitLiteral::_serialize(std::ostream& os) const
 
 std::string AluUnitLiteral::_identify()
 {
-	return std::string("A literal (") + m_literal.getStr() + ")";
+	if (m_hintNumerical) {
+		return std::string("Number(") + m_literal.getStr() + ")";
+	} else {
+		return std::string("Literal(") + m_literal.getStr() + ")";
+	}
 }
 
 ALUCounter* AluUnitLiteral::compute()
 {
-	return new ALUCounter(m_literal);
+	ALUCounter* ret = new ALUCounter(m_literal);
+	if (m_hintNumerical) ret->divineType();
+	return ret;
 }
 
 
@@ -186,12 +192,12 @@ void AluUnitCounter::_serialize(std::ostream& os) const
 
 std::string AluUnitCounter::_identify()
 {
-	return std::string("A counter (") + std::to_string(m_ctrNumber) + ")";
+	return std::string("Counter(") + std::to_string(m_ctrNumber) + ")";
 }
 
-ALUCounter* AluUnitCounter::compute()
+ALUCounter* AluUnitCounter::compute(ALUCounters* pCtrs)
 {
-	return new ALUCounter(*(m_ctrs->getPointer(m_ctrNumber)));
+	return new ALUCounter(*(pCtrs->getPointer(m_ctrNumber)));
 }
 
 static fieldIdentifierGetter* g_fieldIdentifierGetter = NULL;
@@ -208,7 +214,7 @@ void AluUnitFieldIdentifier::_serialize(std::ostream& os) const
 
 std::string AluUnitFieldIdentifier::_identify()
 {
-	return std::string("fieldIdentifier(") + std::to_string(m_id) + ")";
+	return std::string("FI(") + std::to_string(m_id) + ")";
 }
 
 ALUCounter* AluUnitFieldIdentifier::compute()
@@ -251,10 +257,10 @@ void AluUnitUnaryOperator::_serialize(std::ostream& os) const
 }
 #undef X
 
-#define X(nm,st)	case UnaryOp__##nm: return ret + st; break;
+#define X(nm,st)	case UnaryOp__##nm: return ret + st + ")"; break;
 std::string AluUnitUnaryOperator::_identify()
 {
-	std::string ret = std::string("Unary Operator ");
+	std::string ret = std::string("UOP(");
 	switch (m_op) {
 	ALU_UOP_LIST
 	default:
@@ -357,10 +363,10 @@ void AluBinaryOperator::_serialize(std::ostream& os) const
 }
 #undef X
 
-#define X(nm,st)	case BinaryOp__##nm: return ret + st; break;
+#define X(nm,st)	case BinaryOp__##nm: return ret + st + ")"; break;
 std::string AluBinaryOperator::_identify()
 {
-	std::string ret = std::string("Binary Operator ");
+	std::string ret = std::string("BOP(");
 	switch (m_op) {
 	ALU_BOP_LIST
 	default:
@@ -626,10 +632,10 @@ void AluAssnOperator::_serialize(std::ostream& os) const
 }
 #undef X
 
-#define X(nm,st)	case AssnOp__##nm: return ret + st; break;
+#define X(nm,st)	case AssnOp__##nm: return ret + st + ")"; break;
 std::string AluAssnOperator::_identify()
 {
-	std::string ret = std::string("Assignment Operator ");
+	std::string ret = std::string("ASS(");
 	switch (m_op) {
 	ALU_ASSOP_LIST
 	default:
@@ -780,3 +786,134 @@ ALUCounter* AluAssnOperator::computeAppnd(ALUCounter* operand, ALUCounter* prevO
 }
 
 
+/*
+ * Code for parsing expressions and assignments
+ */
+
+static bool isDigit(char c) {
+	return (c>='0' && c<='9');
+}
+
+static AluUnit* getOperator(std::string& s)
+{
+#define X(nm,st) if (s==st) return new AluUnitUnaryOperator(s);
+	ALU_UOP_LIST
+#undef X
+#define X(nm,st) if (s==st) return new AluBinaryOperator(s);
+	ALU_BOP_LIST
+#undef X
+	return NULL;
+}
+
+static AluAssnOperator* getAssnOperator(std::string& s)
+{
+#define X(nm,st) if (s==st) return new AluAssnOperator(s);
+	ALU_ASSOP_LIST
+#undef X
+	return NULL;
+}
+
+bool parseAluExpression(std::string& s, AluVec& vec)
+{
+	char* c = (char*)s.c_str();
+	char* cEnd = c + s.length();
+	AluUnit* pUnit;
+
+	if (!vec.empty()){
+		MYTHROW("Entered with non-empty vec.");
+	}
+
+	while (c<cEnd) {
+		// skip over whitespace (if any)
+		while (c<cEnd && *c<=32) c++;
+
+		if (c==cEnd) break;
+
+		// First character a digit, a dot, or a minus sign?
+		if (*c=='.' || (*c=='-' && (c+1 < cEnd) && isDigit(*(c+1))) || isDigit(*c)) {
+			unsigned int countDots = (*c=='.') ? 1 : 0;
+			char* tokEnd = c+1;
+			while (tokEnd < cEnd) {
+				if (*tokEnd=='.' && countDots==0) {
+					countDots++;
+				} else if (*tokEnd>='0' && *tokEnd<='9') {
+					// nothing
+				} else {
+					break;
+				}
+				tokEnd++;
+			}
+			std::string num(c,(tokEnd-c));
+			pUnit = new AluUnitLiteral(num,true);
+			vec.push_back(pUnit);
+			c = tokEnd;
+			continue;
+		}
+
+		// hash-sign followed by a number is a counter
+		if (*c=='#') {
+			c++;
+			char* tokEnd = c;
+			while (tokEnd<cEnd && *tokEnd>='0' && *tokEnd<='9') tokEnd++;
+			std::string num(c,(tokEnd-c));
+			pUnit = new AluUnitCounter(std::stoi(num));
+			vec.push_back(pUnit);
+			c = tokEnd;
+			continue;
+		}
+
+		// single letter is a field identifier
+		if ((*c>='A' && *c<='Z') || (*c>='a' && *c<='z')) {
+			pUnit = new AluUnitFieldIdentifier(*c);
+			vec.push_back(pUnit);
+			c++;
+			continue;
+		}
+
+		// string of operator characters
+		static std::string operatorChars = "=+-*/|!<>%";
+		if (operatorChars.find(*c)!=std::string::npos) {
+			char* tokEnd = c+1;
+			while (tokEnd<cEnd && std::string::npos!=operatorChars.find(*tokEnd)) tokEnd++;
+			std::string operatr(c,(tokEnd-c));
+			pUnit = getOperator(operatr);
+			if (!pUnit) {
+				std::string err = "Operator '"+operatr+"' is invalid.";
+				MYTHROW(err);
+			}
+			vec.push_back(pUnit);
+			c = tokEnd;
+			continue;
+		}
+
+		// Anything else is a string literal
+		if (1) {
+			char* tokEnd = c+1;
+			while (tokEnd < cEnd && *tokEnd!=*c) tokEnd++;
+			std::string sLiteral(c+1, (tokEnd-c-1));
+			pUnit = new AluUnitLiteral(sLiteral);
+			vec.push_back(pUnit);
+			c = tokEnd;
+			continue;
+		}
+	}
+	return true;
+}
+
+std::string dumpAluVec(AluVec& vec, bool deleteUnits)
+{
+	std::string ret;
+	if (deleteUnits) {
+		while (!vec.empty()) {
+			if (!ret.empty()) ret += ";";
+			ret += vec[0]->_identify();
+			vec.erase(vec.begin());
+		}
+	} else {
+		for (int i=0; i<vec.size(); i++) {
+			if (!ret.empty()) ret += ";";
+			ret += vec[i]->_identify();
+		}
+	}
+	return ret;
+}
