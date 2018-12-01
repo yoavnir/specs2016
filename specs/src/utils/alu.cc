@@ -596,13 +596,24 @@ ALUCounter*		AluBinaryOperator::computeSLTE(ALUCounter* op1, ALUCounter* op2)
 
 
 #define X(nm,st)	if (s==st) {m_op = AssnOp__##nm; return;}
-AluAssnOperator::AluAssnOperator(std::string& s)
+void AluAssnOperator::setOpByName(std::string& s)
 {
 	ALU_ASSOP_LIST
 	std::string err = "Invalid assignment operator: <"+s+">";
 	MYTHROW(err);
 }
 #undef X
+
+AluAssnOperator::AluAssnOperator(std::string& s)
+{
+	setOpByName(s);
+}
+
+AluAssnOperator::AluAssnOperator(const char* str)
+{
+	std::string s(str);
+	setOpByName(s);
+}
 
 #define X(nm,st)	case AssnOp__##nm: os << st; break;
 void AluAssnOperator::_serialize(std::ostream& os) const
@@ -628,7 +639,7 @@ std::string AluAssnOperator::_identify()
 }
 #undef X
 
-#define X(nm,st)	case AssnOp__##nm: result = compute##nm(operand, prevOp);
+#define X(nm,st)	case AssnOp__##nm: result = compute##nm(operand, prevOp); break;
 void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCounter* operand)
 {
 	ALUCounter* result;
@@ -645,7 +656,7 @@ void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCo
 	switch (m_op) {
 	ALU_ASSOP_LIST
 	default:
-		MYTHROW("Invalid unary operand");
+		MYTHROW("Invalid assignment operator");
 	}
 
 	AluCounterDeleter _res((result==operand) ? NULL : result);

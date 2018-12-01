@@ -241,6 +241,7 @@ enum ALU_AssignmentOperator {
 class AluAssnOperator : public AluUnit {
 public:
 	AluAssnOperator(std::string& s);
+	AluAssnOperator(const char* str);
 	virtual ~AluAssnOperator()			{}
 	virtual unsigned int		countOperands()	{return 1;}
 	virtual void				_serialize(std::ostream& os) const;
@@ -248,6 +249,7 @@ public:
 	virtual AluUnitType			type()			{return UT_AssignmentOp;}
 	void	perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCounter* operand);
 private:
+	void               setOpByName(std::string& s);
 	ALU_ASSOP_LIST
 	ALU_AssignmentOperator	m_op;
 };

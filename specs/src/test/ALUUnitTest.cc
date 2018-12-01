@@ -179,8 +179,22 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	delete _res; \
 }
 
-
-
+#define VERIFY_ASSN(u,p,o,t,s) {		\
+	AluUnitCounter 	ctr(o,&counters);	\
+	ALUCounter*		op = ctr.compute();	\
+	u.perform(p,&counters,op);			\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
+	if (counterType__##t!=counters.type(p)) { \
+		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[counters.type(p)] << ")\n"; \
+		countFailures++; \
+	} else if ((counters.type(p)!=counterType__None) && (counters.getStr(p) != s)) {	\
+		std::cout << "*** NOT OK *** (" << counters.getStr(p) << ")\n"; \
+		countFailures++; \
+	} else { \
+		std::cout << "OK.\n"; \
+	} \
+}
 
 
 int main (int argc, char** argv)
@@ -316,6 +330,19 @@ int main (int argc, char** argv)
 	VERIFY_BINARY(uRemDiv,4,9,Int,"58");     // 123 // 65 where // is modulo
 	VERIFY_BINARY(uRemDiv,7,3,Int,"2");     // 98.6 // 3.14 ==> 98 // 3
 	VERIFY_BINARY(uAppnd,1,3,Str,"hello3.14159265");
+
+	// TODO: Need a bunch more test for binary operators
+
+#define X(nm,st) AluAssnOperator uAss##nm(st);
+	ALU_ASSOP_LIST
+#undef X
+
+	VERIFY_ASSN(uAssLet,33,3,Float,"3.14159265");
+	VERIFY_ASSN(uAssAdd,33,3,Float,"6.2831853");
+	VERIFY_ASSN(uAssSub,33,3,Float,"3.14159265");
+	VERIFY_ASSN(uAssAppnd,33,3,Str,"3.141592653.14159265");
+
+	// TODO: Many more needed
 
 
 	if (countFailures) {
