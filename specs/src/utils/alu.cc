@@ -135,10 +135,10 @@ ALUCounterType ALUCounter::getDivinedType() const
 	return counterType__Float;
 }
 
-class AluCounterDeleter {
+class ALUCounterDeleter {
 public:
-	AluCounterDeleter(ALUCounter* p) 	{p_ctr = p;}
-	~AluCounterDeleter()				{if (p_ctr) delete p_ctr;}
+	ALUCounterDeleter(ALUCounter* p) 	{p_ctr = p;}
+	~ALUCounterDeleter()				{if (p_ctr) delete p_ctr;}
 private:
 	ALUCounter* p_ctr;
 };
@@ -159,6 +159,18 @@ ALUCounter* AluUnit::compute(ALUCounter* op)
 ALUCounter* AluUnit::compute(ALUCounter* op1, ALUCounter* op2)
 {
 	std::string err = _identify() + " should not be called with two operands";
+	MYTHROW(err);
+}
+
+ALUCounter* AluUnit::compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3)
+{
+	std::string err = _identify() + " should not be called with three operands";
+	MYTHROW(err);
+}
+
+ALUCounter* AluUnit::compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4)
+{
+	std::string err = _identify() + " should not be called with four operands";
 	MYTHROW(err);
 }
 
@@ -273,7 +285,7 @@ std::string AluUnitUnaryOperator::_identify()
 #define X(nm,st)	case UnaryOp__##nm: return compute##nm(operand);
 ALUCounter*		AluUnitUnaryOperator::compute(ALUCounter* operand)
 {
-	AluCounterDeleter _op(operand);
+	ALUCounterDeleter _op(operand);
 	if (counterType__None==operand->getType()) {
 		return new ALUCounter();
 	}
@@ -379,8 +391,8 @@ std::string AluBinaryOperator::_identify()
 #define X(nm,st)	case BinaryOp__##nm: return compute##nm(op1, op2);
 ALUCounter*		AluBinaryOperator::compute(ALUCounter* op1, ALUCounter* op2)
 {
-	AluCounterDeleter _op1(op1);
-	AluCounterDeleter _op2(op2);
+	ALUCounterDeleter _op1(op1);
+	ALUCounterDeleter _op2(op2);
 	if (counterType__None==op1->getType() || counterType__None==op2->getType()) {
 		return new ALUCounter();
 	}
@@ -649,7 +661,7 @@ std::string AluAssnOperator::_identify()
 void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCounter* operand)
 {
 	ALUCounter* result;
-	AluCounterDeleter _op(operand);
+	ALUCounterDeleter _op(operand);
 
 	ALUCounter* prevOp = ctrs->getPointer(ctrNumber);
 
@@ -665,7 +677,7 @@ void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCo
 		MYTHROW("Invalid assignment operator");
 	}
 
-	AluCounterDeleter _res((result==operand) ? NULL : result);
+	ALUCounterDeleter _res((result==operand) ? NULL : result);
 
 	switch (result->getDivinedType()) {
 	case counterType__None:
@@ -786,12 +798,138 @@ ALUCounter* AluAssnOperator::computeAppnd(ALUCounter* operand, ALUCounter* prevO
 }
 
 
+void AluOtherToken::_serialize(std::ostream& os) const
+{
+	switch(m_type) {
+	case UT_OpenParenthesis:
+		os << '(';
+		break;
+	case UT_ClosingParenthesis:
+		os << ')';
+		break;
+	case UT_Comma:
+		os << ',';
+		break;
+	default:
+		MYTHROW("Unexpected token");
+	}
+}
+
+std::string AluOtherToken::_identify()
+{
+	switch(m_type) {
+	case UT_OpenParenthesis:
+		return "(";
+	case UT_ClosingParenthesis:
+		return ")";
+	case UT_Comma:
+		return "COMMA";
+	default:
+		MYTHROW("Unexpected token");
+	}
+}
+
+ALUCounter* AluFunc_abs(ALUCounter* op)
+{
+	if (op->getType()==counterType__Int) {
+		ALUInt i = op->getInt();
+		if (i<0) i = -i;
+		return new ALUCounter(i);
+	} else {
+		ALUFloat f = op->getFloat();
+		if (f<0) f = -f;
+		return new ALUCounter(f);
+	}
+}
+
+ALUCounter* AluFunc_pow(ALUCounter* op1, ALUCounter* op2)
+{
+	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
+		return new ALUCounter(std::pow(op1->getFloat(), op2->getFloat()));
+	}
+	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+		return new ALUCounter(ALUInt(std::pow(op1->getInt(), op2->getInt())));
+	}
+	if (op1->isWholeNumber() && op2->isWholeNumber()) {
+		return new ALUCounter(ALUInt(std::pow(op1->getInt(), op2->getInt())));
+	}
+	return new ALUCounter(std::pow(op1->getFloat(), op2->getFloat()));
+}
+
+ALUCounter* AluFunc_sqrt(ALUCounter* op)
+{
+	return new ALUCounter(std::sqrt(op->getFloat()));
+}
+
+#define ALU_FUNCTION_LIST 		\
+	X(abs,1)					\
+	X(pow,2)					\
+	X(sqrt,1)					\
+
+typedef ALUCounter* (*AluFunc0)();
+typedef ALUCounter* (*AluFunc1)(ALUCounter* op1);
+typedef ALUCounter* (*AluFunc2)(ALUCounter* op1, ALUCounter* op2);
+typedef ALUCounter* (*AluFunc3)(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3);
+typedef ALUCounter* (*AluFunc4)(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4);
+
+
+#define X(nm,cnt)	if (s==#nm) {m_FuncName = s; m_ArgCount = cnt; mp_Func = (void*)AluFunc_##nm; return;}
+AluFunction::AluFunction(std::string& _s)
+{
+	std::string s(_s);
+	std::transform(s.begin(), s.end(),s.begin(), ::tolower);
+	ALU_FUNCTION_LIST
+	std::string err = "Unrecognized function "+_s;
+	MYTHROW(err);
+}
+#undef X
+
+void AluFunction::_serialize(std::ostream& os) const
+{
+	os << m_FuncName;
+}
+
+ALUCounter* AluFunction::compute()
+{
+	if (0 != countOperands()) return AluUnit::compute();
+	return (AluFunc0(mp_Func))();
+}
+
+ALUCounter* AluFunction::compute(ALUCounter* op1)
+{
+	if (1 != countOperands()) return AluUnit::compute(op1);
+	return (AluFunc1(mp_Func))(op1);
+}
+
+ALUCounter* AluFunction::compute(ALUCounter* op1, ALUCounter* op2)
+{
+	if (2 != countOperands()) return AluUnit::compute(op1,op2);
+	return (AluFunc2(mp_Func))(op1,op2);
+}
+
+ALUCounter* AluFunction::compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3)
+{
+	if (3 != countOperands()) return AluUnit::compute(op1,op2,op3);
+	return (AluFunc3(mp_Func))(op1,op2,op3);
+}
+
+ALUCounter* AluFunction::compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4)
+{
+	if (4 != countOperands()) return AluUnit::compute(op1,op2,op3,op4);
+	return (AluFunc4(mp_Func))(op1,op2,op3,op4);
+}
+
+
 /*
  * Code for parsing expressions and assignments
  */
 
 static bool isDigit(char c) {
 	return (c>='0' && c<='9');
+}
+
+static bool isLetter(char c) {
+	return ((c>='a' && c<='z') || (c>='A' && c<='Z'));
 }
 
 #define X(nm,st) if (s==st) return new AluUnitUnaryOperator(s);
@@ -870,9 +1008,41 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			continue;
 		}
 
-		// single letter is a field identifier
-		if ((*c>='A' && *c<='Z') || (*c>='a' && *c<='z')) {
-			pUnit = new AluUnitFieldIdentifier(*c);
+		// string of letters and digits. May be function or field identifier
+		if (isLetter(*c)) {
+			char *tokEnd = c+1;
+			while (tokEnd<cEnd && (isLetter(*tokEnd) || isDigit(*tokEnd))) tokEnd++;
+			if (tokEnd == c+1) {
+				pUnit = new AluUnitFieldIdentifier(*c);
+			} else {
+				std::string identifier(c,(tokEnd-c));
+				pUnit = new AluFunction(identifier);
+			}
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c = tokEnd;
+			continue;
+		}
+
+		// parenthesis
+		if (*c=='(') {
+			pUnit = new AluOtherToken(UT_OpenParenthesis);
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c++;
+			continue;
+		}
+
+		if (*c==')') {
+			pUnit = new AluOtherToken(UT_ClosingParenthesis);
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c++;
+			continue;
+		}
+
+		if (*c==',') {
+			pUnit = new AluOtherToken(UT_Comma);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
@@ -904,6 +1074,10 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		if (1) {
 			char* tokEnd = c+1;
 			while (tokEnd < cEnd && *tokEnd!=*c) tokEnd++;
+			if (*tokEnd!=*c) {
+				std::string err = "Error parsing expression <" + std::string(c) + ">";
+				MYTHROW(err);
+			}
 			std::string sLiteral(c+1, (tokEnd-c-1));
 			pUnit = new AluUnitLiteral(sLiteral);
 			vec.push_back(pUnit);

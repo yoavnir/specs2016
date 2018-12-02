@@ -364,6 +364,11 @@ int main (int argc, char** argv)
 	VERIFY_EXPR("34+b-#2","Number(34);BOP(+);FI(b);BOP(-);Counter(2)");
 	VERIFY_EXPR("34+b- -c","Number(34);BOP(+);FI(b);BOP(-);UOP(-);FI(c)");
 
+	VERIFY_EXPR("2*(2+2)","Number(2);BOP(*);(;Number(2);BOP(+);Number(2);)");
+
+	VERIFY_EXPR("5+sqrt(1)-pow(3,4)","Number(5);BOP(+);FUNC(sqrt);(;Number(1););BOP(-);FUNC(pow);(;Number(3);COMMA;Number(4);)");
+
+
 	// TODO: Yeah, a whole bunch of more expressions
 
 	if (countFailures) {

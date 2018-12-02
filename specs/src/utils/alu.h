@@ -117,6 +117,8 @@ enum AluUnitType {
 	UT_None,
 	UT_OpenParenthesis,
 	UT_ClosingParenthesis,
+	UT_Comma,
+	UT_Identifier,
 	UT_LiteralNumber,
 	UT_Counter,
 	UT_FieldIdentifier,
@@ -140,6 +142,8 @@ public:
 	virtual ALUCounter*		compute();
 	virtual ALUCounter*		compute(ALUCounter* op);
 	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2);
+	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3);
+	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4);
 };
 
 class AluUnitLiteral : public AluUnit {
@@ -258,6 +262,36 @@ private:
 	ALU_AssignmentOperator	m_op;
 };
 #undef X
+
+class AluFunction : public AluUnit {
+public:
+	AluFunction(std::string& s);
+	virtual ~AluFunction()		{}
+	virtual unsigned int		countOperands()		{return m_ArgCount;}
+	virtual void				_serialize(std::ostream& os) const;
+	virtual std::string			_identify()	{return "FUNC("+m_FuncName+")";}
+	virtual AluUnitType			type()		{return UT_Identifier;}
+	virtual ALUCounter*			compute();
+	virtual ALUCounter*			compute(ALUCounter* op);
+	virtual ALUCounter*			compute(ALUCounter* op1, ALUCounter* op2);
+	virtual ALUCounter*			compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3);
+	virtual ALUCounter*			compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4);
+private:
+	std::string		m_FuncName;
+	void*			mp_Func;
+	unsigned int	m_ArgCount;
+};
+
+class AluOtherToken : public AluUnit {
+public:
+	AluOtherToken(AluUnitType _t)		{m_type = _t;}
+	virtual ~AluOtherToken()			{}
+	virtual void				_serialize(std::ostream& os) const;
+	virtual std::string 		_identify();
+	virtual AluUnitType			type()	{return m_type;}
+private:
+	AluUnitType		m_type;
+};
 
 
 static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
