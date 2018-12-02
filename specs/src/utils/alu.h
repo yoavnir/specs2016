@@ -114,6 +114,9 @@ private:
 
 enum AluUnitType {
 	UT_Invalid,
+	UT_None,
+	UT_OpenParenthesis,
+	UT_ClosingParenthesis,
 	UT_LiteralNumber,
 	UT_Counter,
 	UT_FieldIdentifier,

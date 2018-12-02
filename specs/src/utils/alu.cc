@@ -214,7 +214,7 @@ void AluUnitFieldIdentifier::_serialize(std::ostream& os) const
 
 std::string AluUnitFieldIdentifier::_identify()
 {
-	return std::string("FI(") + std::to_string(m_id) + ")";
+	return std::string("FI(") + m_id + ")";
 }
 
 ALUCounter* AluUnitFieldIdentifier::compute()
@@ -794,16 +794,21 @@ static bool isDigit(char c) {
 	return (c>='0' && c<='9');
 }
 
-static AluUnit* getOperator(std::string& s)
-{
 #define X(nm,st) if (s==st) return new AluUnitUnaryOperator(s);
+static AluUnit* getUnaryOperator(std::string& s)
+{
 	ALU_UOP_LIST
-#undef X
-#define X(nm,st) if (s==st) return new AluBinaryOperator(s);
-	ALU_BOP_LIST
-#undef X
 	return NULL;
 }
+#undef X
+
+#define X(nm,st) if (s==st) return new AluBinaryOperator(s);
+static AluUnit* getBinaryOperator(std::string& s)
+{
+	ALU_BOP_LIST
+	return NULL;
+}
+#undef X
 
 static AluAssnOperator* getAssnOperator(std::string& s)
 {
@@ -818,6 +823,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	char* c = (char*)s.c_str();
 	char* cEnd = c + s.length();
 	AluUnit* pUnit;
+	AluUnitType prevUnitType = UT_None;
 
 	if (!vec.empty()){
 		MYTHROW("Entered with non-empty vec.");
@@ -846,6 +852,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			std::string num(c,(tokEnd-c));
 			pUnit = new AluUnitLiteral(num,true);
 			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
 			c = tokEnd;
 			continue;
 		}
@@ -858,6 +865,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			std::string num(c,(tokEnd-c));
 			pUnit = new AluUnitCounter(std::stoi(num));
 			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
 			c = tokEnd;
 			continue;
 		}
@@ -866,6 +874,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		if ((*c>='A' && *c<='Z') || (*c>='a' && *c<='z')) {
 			pUnit = new AluUnitFieldIdentifier(*c);
 			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
 			c++;
 			continue;
 		}
@@ -876,12 +885,17 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			char* tokEnd = c+1;
 			while (tokEnd<cEnd && std::string::npos!=operatorChars.find(*tokEnd)) tokEnd++;
 			std::string operatr(c,(tokEnd-c));
-			pUnit = getOperator(operatr);
+			if (prevUnitType==UT_None || prevUnitType==UT_OpenParenthesis || prevUnitType==UT_BinaryOp) {
+				pUnit = getUnaryOperator(operatr);
+			} else {
+				pUnit = getBinaryOperator(operatr);
+			}
 			if (!pUnit) {
 				std::string err = "Operator '"+operatr+"' is invalid.";
 				MYTHROW(err);
 			}
 			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
 			c = tokEnd;
 			continue;
 		}
@@ -893,6 +907,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			std::string sLiteral(c+1, (tokEnd-c-1));
 			pUnit = new AluUnitLiteral(sLiteral);
 			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
 			c = tokEnd;
 			continue;
 		}

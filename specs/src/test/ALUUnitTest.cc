@@ -358,8 +358,13 @@ int main (int argc, char** argv)
 	// TODO: Many more needed
 
 	AluVec vec;
-	VERIFY_EXPR("23+45", "Number(23);UOP(+);Number(45)");
-	VERIFY_EXPR(" 23 + -8", "Number(23);UOP(+);Number(-8)");
+	VERIFY_EXPR("23+45", "Number(23);BOP(+);Number(45)");
+	VERIFY_EXPR(" 23 + -8", "Number(23);BOP(+);Number(-8)");
+
+	VERIFY_EXPR("34+b-#2","Number(34);BOP(+);FI(b);BOP(-);Counter(2)");
+	VERIFY_EXPR("34+b- -c","Number(34);BOP(+);FI(b);BOP(-);UOP(-);FI(c)");
+
+	// TODO: Yeah, a whole bunch of more expressions
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
