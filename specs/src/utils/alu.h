@@ -83,8 +83,8 @@ private:
 	X(Sub,"-")		\
 	X(Mult,"*")		\
 	X(Div,"/")  	\
-	X(IntDiv,"%")	\
-	X(RemDiv,"//")	\
+	X(IntDiv,"//")	\
+	X(RemDiv,"%")	\
 	X(Appnd,"||")	\
 	X(LT,"<")		\
 	X(LE,"<=")		\

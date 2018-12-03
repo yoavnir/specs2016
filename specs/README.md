@@ -176,4 +176,5 @@ Differences from CMS Pipelines **specs**
 * **DTODclock** does not exist in CMS pipelines.
 * No support for multiple input and output streams.
 * Support tail labels in addition to the head labels from CMS Pipelines
+* Exchanged the integer division and remainder operators to reflect C/Python rather than REXX. So **%** is the remainder operator, whereas **//** is the integer division operator.
 

@@ -325,26 +325,101 @@ int main (int argc, char** argv)
 	ALU_BOP_LIST
 #undef X
 	counters.set(4,"123");
+	counters.set(21,ALUInt(-8));
+	counters.set(22,-4.5L);
+	counters.set(23,"specs");
+	counters.set(24,"-8.0");
 	VERIFY_BINARY(uAdd,8,11,Float,"90.6");  // 98.6 + (-8)
 	VERIFY_BINARY(uAdd,1,3,Float,"3.14159265");  // "hello" + 3.14159265
 	VERIFY_BINARY(uAdd,9,3,Float,"68.14159265"); // 65 + 3.14159265
 	VERIFY_BINARY(uAdd,9,4,Int,"188"); // 65 + 123
+	VERIFY_BINARY(uAdd,9,21,Int,"57"); // 56 + (-8)
 	VERIFY_BINARY(uSub,4,9,Int,"58");  // 123 - 65
 	VERIFY_BINARY(uSub,9,4,Int,"-58"); // 65 - 123
 	VERIFY_BINARY(uSub,9,3,Float,"61.85840735"); // 65 - 3.14159265
 	VERIFY_BINARY(uSub,3,1,Float,"3.14159265"); // 3.14159265 - "hello"
+	VERIFY_BINARY(uSub,3,22,Float,"7.64159265"); // 3.14159265 - (-4.5)
 	VERIFY_BINARY(uMult,8,11,Float,"-788.8");    // 98.6 * (-8)
 	VERIFY_BINARY(uMult,9,4,Int,"7995");    // 65*123
 	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
-	VERIFY_BINARY(uDiv, 4,9,Float,"1.892307692307692");  // 123 / 65
+	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
 	VERIFY_BINARY(uDiv,4,33,Int,"41");      // 123 / 3
 	VERIFY_BINARY(uIntDiv,4,9,Int,"1");     // 123 % 65 where % is integer division
 	VERIFY_BINARY(uIntDiv,7,3,Int,"32");     // 98.6 % 3.14
 	VERIFY_BINARY(uRemDiv,4,9,Int,"58");     // 123 // 65 where // is modulo
 	VERIFY_BINARY(uRemDiv,7,3,Int,"2");     // 98.6 // 3.14 ==> 98 // 3
-	VERIFY_BINARY(uAppnd,1,3,Str,"hello3.14159265");
+	VERIFY_BINARY(uAppnd,1,3,Str,"hello3.14159265"); // "hello" || "3.14159265"
+	VERIFY_BINARY(uAppnd,23,1,Str,"specshello");	 // "specs" || "hello"
+	VERIFY_BINARY(uLT,9,4,Int,"1");	// 65 < 123
+	VERIFY_BINARY(uLT,4,9,Int,"0");   // 123 < 65
+	VERIFY_BINARY(uLT,21,22,Int,"1");	// -8 < -4.5
+	VERIFY_BINARY(uLT,21,21,Int,"0");   // -8 < -8
+	VERIFY_BINARY(uLT,1,23,Int,"1");	// "hello" < "specs"
+	VERIFY_BINARY(uLT,23,1,Int,"0");	// "specs" < "hello"
+	VERIFY_BINARY(uLE,9,4,Int,"1");	// 65 <= 123
+	VERIFY_BINARY(uLE,4,9,Int,"0");   // 123 <= 65
+	VERIFY_BINARY(uLE,21,22,Int,"1");	// -8 <= -4.5
+	VERIFY_BINARY(uLE,21,21,Int,"1");   // -8 <= -8
+	VERIFY_BINARY(uLE,23,23,Int,"1");   // "specs" <= "specs"
+	VERIFY_BINARY(uLE,21,24,Int,"1");	// -8 <= -8.0
+	VERIFY_BINARY(uGT,9,4,Int,"0");	// 65 > 123
+	VERIFY_BINARY(uGT,4,9,Int,"1");   // 123 > 65
+	VERIFY_BINARY(uGT,21,22,Int,"0");	// -8 > -4.5
+	VERIFY_BINARY(uGT,21,21,Int,"0");   // -8 > -8
+	VERIFY_BINARY(uGT,1,23,Int,"0");	// "hello" > "specs"
+	VERIFY_BINARY(uGT,23,1,Int,"1");	// "specs" > "hello"
+	VERIFY_BINARY(uGE,9,4,Int,"0");	// 65 >= 123
+	VERIFY_BINARY(uGE,4,9,Int,"1");   // 123 >= 65
+	VERIFY_BINARY(uGE,21,22,Int,"0");	// -8 >= -4.5
+	VERIFY_BINARY(uGE,21,21,Int,"1");   // -8 >= -8
+	VERIFY_BINARY(uGE,23,23,Int,"1");   // "specs" >= "specs"
+	VERIFY_BINARY(uGE,21,24,Int,"1");	// -8 >= -8.0
+	VERIFY_BINARY(uSLT,21,22,Int,"0");	// -8 << -4.5
+	VERIFY_BINARY(uSLT,22,21,Int,"1");	// -4.5 << -8
+	VERIFY_BINARY(uSGT,21,22,Int,"1");	// -8 >> -4.5
+	VERIFY_BINARY(uSGT,22,21,Int,"0");	// -4.5 >> -8
+	VERIFY_BINARY(uSLTE,21,22,Int,"0");	// -8 <<= -4.5
+	VERIFY_BINARY(uSLTE,22,21,Int,"1");	// -4.5 <<= -8
+	VERIFY_BINARY(uSLTE,21,21,Int,"1"); // -8 <<= -8
+	VERIFY_BINARY(uSLTE,21,24,Int,"1"); // -8 <<= -8.0  - this is the strict part
+	VERIFY_BINARY(uSGTE,21,22,Int,"1");	// -8 >>= -4.5
+	VERIFY_BINARY(uSGTE,22,21,Int,"0");	// -4.5 >>= -8
+	VERIFY_BINARY(uSGTE,21,21,Int,"1"); // -8 >>= -8
+	VERIFY_BINARY(uSGTE,21,24,Int,"0"); // -8 >>= -8.0  - this is the strict part
+	VERIFY_BINARY(uEQ,21,21,Int,"1");   // -8 = -8
+	VERIFY_BINARY(uEQ,21,24,Int,"1");   // -8 = -8.0
+	VERIFY_BINARY(uEQ,23,23,Int,"1");	// "specs" = "specs"
+	VERIFY_BINARY(uEQ,21,22,Int,"0");	// -8 = -4.5
+	VERIFY_BINARY(uSEQ,21,21,Int,"1");   // -8 == -8
+	VERIFY_BINARY(uSEQ,21,24,Int,"0");   // -8 == -8.0
+	VERIFY_BINARY(uSEQ,23,23,Int,"1");	// "specs" == "specs"
+	VERIFY_BINARY(uSEQ,21,22,Int,"0");	// -8 == -4.5
+	VERIFY_BINARY(uNE,21,21,Int,"0");   // -8 = -8
+	VERIFY_BINARY(uNE,21,24,Int,"0");   // -8 = -8.0
+	VERIFY_BINARY(uNE,23,23,Int,"0");	// "specs" = "specs"
+	VERIFY_BINARY(uNE,21,22,Int,"1");	// -8 = -4.5
+	VERIFY_BINARY(uSNE,21,21,Int,"0");   // -8 == -8
+	VERIFY_BINARY(uSNE,21,24,Int,"1");   // -8 == -8.0
+	VERIFY_BINARY(uSNE,23,23,Int,"0");	// "specs" == "specs"
+	VERIFY_BINARY(uSNE,21,22,Int,"1");	// -8 == -4.5
+	counters.set(30,ALUInt(0));
+	counters.set(31,ALUInt(1));
+	counters.set(32,0.0L);
+	VERIFY_BINARY(uAND,30,30,Int,"0");	// 0 and 0
+	VERIFY_BINARY(uAND,30,31,Int,"0");	// 0 and 1
+	VERIFY_BINARY(uAND,31,30,Int,"0");	// 1 and 0
+	VERIFY_BINARY(uAND,31,31,Int,"1");	// 1 and 1
+	VERIFY_BINARY(uAND,31,1,Int,"1");   // 1 and "hello"
+	VERIFY_BINARY(uAND,31,3,Int,"1");   // 1 and 3.14159265
+	VERIFY_BINARY(uAND,31,32,Int,"0");	// 1 and 0.0
+	VERIFY_BINARY(uOR,30,30,Int,"0");	// 0 or 0
+	VERIFY_BINARY(uOR,30,31,Int,"1");	// 0 or 1
+	VERIFY_BINARY(uOR,31,30,Int,"1");	// 1 or 0
+	VERIFY_BINARY(uOR,31,31,Int,"1");	// 1 or 1
+	VERIFY_BINARY(uOR,30,1,Int,"1");    // 0 or "hello"
+	VERIFY_BINARY(uOR,30,3,Int,"1");    // 0 or 3.14159265
+	VERIFY_BINARY(uOR,30,32,Int,"0");	// 0 or 0.0
 
-	// TODO: Need a bunch more test for binary operators
 
 #define X(nm,st) AluAssnOperator uAss##nm(st);
 	ALU_ASSOP_LIST
