@@ -167,6 +167,7 @@ public:
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_Counter;}
 	virtual ALUCounter*			compute(ALUCounters* pCtrs);
+	ALUCounterKey				getKey()		{return m_ctrNumber;}
 private:
 	ALUCounterKey m_ctrNumber;
 };
@@ -248,6 +249,7 @@ enum ALU_AssignmentOperator {
 #define X(nm,str) ALUCounter* compute##nm(ALUCounter* operand, ALUCounter* prevValue);
 class AluAssnOperator : public AluUnit {
 public:
+	AluAssnOperator()				{m_op = AssnOp__Let;}
 	AluAssnOperator(std::string& s);
 	AluAssnOperator(const char* str);
 	virtual ~AluAssnOperator()			{}
@@ -309,5 +311,7 @@ bool parseAluExpression(std::string& s, AluVec& vec);
 bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, AluVec& vec);
 
 std::string dumpAluVec(AluVec& vec, bool deleteUnits);
+
+bool isValidExpression(AluVec& vec);  // To Be Added
 
 #endif

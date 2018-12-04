@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include "utils/ErrorReporting.h"
 #include "utils/alu.h"
 
 ALUCounters counters;
@@ -207,6 +208,33 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		std::cout << "*** NOT OK *** - " << _dump << "\n";	\
 		countFailures++;						\
 	}											\
+}
+
+#define VERIFY_ASSNMENT(s,ex)  {							\
+	std::string _expr(s);									\
+	ALUCounterKey	k;										\
+	AluAssnOperator op;										\
+	std::string	actual;										\
+	bool _res;												\
+	try {													\
+		_res = parseAluStatement(_expr,k,&op,vec);			\
+		if (_res) {											\
+			std::string _dump = dumpAluVec(vec, true);		\
+			_res = (_dump==ex);								\
+			actual = _dump;									\
+		}													\
+	} catch (SpecsException& e) {							\
+		_res =  (e.what(true)==std::string(ex));				\
+		actual = e.what(true);									\
+		dumpAluVec(vec,true);								\
+	}														\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	": <"<< s << "> ==> \"" << ex << "\": "; 				\
+	if (_res) std::cout << "OK\n";							\
+	else {													\
+		std::cout << "*** NOT OK *** - " << actual << "\n";	\
+		countFailures++;									\
+	}														\
 }
 
 
@@ -445,6 +473,12 @@ int main (int argc, char** argv)
 
 
 	// TODO: Yeah, a whole bunch of more expressions
+
+	VERIFY_ASSNMENT("#6 := 2+2","Number(2);BOP(+);Number(2)");
+	VERIFY_ASSNMENT("#6 = 2+2","ALU assignment statements must have an assignment operator as the second element. Got BOP(=) instead.");
+	VERIFY_ASSNMENT("b := 2+2","ALU assignment statements must begin with a counter. Got FI(b) instead.");
+	VERIFY_ASSNMENT("#6 b += 2+2","ALU assignment statements must have an assignment operator as the second element. Got FI(b) instead.");
+	VERIFY_ASSNMENT("2+2 := 4","ALU assignment statements must begin with a counter. Got Number(2) instead.");
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";

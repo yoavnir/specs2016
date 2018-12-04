@@ -1050,7 +1050,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 
 		// string of operator characters
-		static std::string operatorChars = "=+-*/|!<>%";
+		static std::string operatorChars = "=+-*/|!<>:%";
 		if (operatorChars.find(*c)!=std::string::npos) {
 			char* tokEnd = c+1;
 			while (tokEnd<cEnd && std::string::npos!=operatorChars.find(*tokEnd)) tokEnd++;
@@ -1059,6 +1059,9 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				pUnit = getUnaryOperator(operatr);
 			} else {
 				pUnit = getBinaryOperator(operatr);
+			}
+			if (!pUnit) {
+				pUnit = getAssnOperator(operatr);
 			}
 			if (!pUnit) {
 				std::string err = "Operator '"+operatr+"' is invalid.";
@@ -1105,4 +1108,46 @@ std::string dumpAluVec(AluVec& vec, bool deleteUnits)
 		}
 	}
 	return ret;
+}
+
+bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, AluVec& vec)
+{
+	if (false==parseAluExpression(s, vec)) {
+		return false;
+	}
+
+	// First item in the vector must be a counter key, the second is an assignment operator
+	// Need to remove them both.
+
+	if (vec.size() < 3) {
+		std::string err = "Expression <" + s + "> is not a valid ALU assignment";
+		MYTHROW(err);
+	}
+
+	if (UT_Counter!=vec[0]->type()) {
+		std::string err = "ALU assignment statements must begin with a counter. Got " + vec[0]->_identify() + " instead.";
+		MYTHROW(err);
+	}
+
+	if (UT_AssignmentOp!=vec[1]->type()) {
+		std::string err = "ALU assignment statements must have an assignment operator as the second element. Got " + vec[1]->_identify() + " instead.";
+		MYTHROW(err);
+	}
+
+	AluUnitCounter* ctr = dynamic_cast<AluUnitCounter*>(vec[0]);
+	*pAss = *(dynamic_cast<AluAssnOperator*>(vec[1]));
+	k = ctr->getKey();
+
+	vec.erase(vec.begin());
+	vec.erase(vec.begin());
+	delete ctr;
+
+	// Check that we don't have something terrible like an assignment operator in the
+	// expression. Like this is C or something
+	for (AluUnit* pUnit : vec) {
+		if (UT_AssignmentOp==pUnit->type()) {
+			MYTHROW("ALU expression should not contain an assignment operator");
+		}
+	}
+	return true;
 }

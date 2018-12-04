@@ -9,7 +9,7 @@ public:
 		fn(_fn), ln(_ln), msg(_msg) {}
 	explicit SpecsException(const char* _fn, unsigned int _ln, std::string& _msg):
 		fn(_fn), ln(_ln), msg(_msg) {}
-	virtual const char* what() const throw ();
+	virtual const char* what(bool concise = false) const throw ();
 protected:
 	const char*  fn;
 	std::string  msg;
