@@ -237,6 +237,28 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	}														\
 }
 
+#define VERIFY_RPN(s,ex) {									\
+		std::string _expr(s);								\
+		AluVec rpnVec;										\
+		std::string _dump;									\
+		bool _res;											\
+		try {												\
+			_res = parseAluExpression(_expr,vec);			\
+			_res = convertAluVecToPostfix(vec, rpnVec,true);\
+			_dump = dumpAluVec(rpnVec, true);				\
+		} catch (SpecsException& e) {						\
+			_dump = e.what(true);							\
+		}													\
+		_res = (_dump==ex);									\
+		std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+		": <"<< s << "> ==> \"" << ex << "\": ";			\
+		if (_res) std::cout << "OK\n";						\
+		else {												\
+			std::cout << "*** NOT OK *** - " << _dump << "\n";	\
+			countFailures++;								\
+		}													\
+	}
+
 
 int main (int argc, char** argv)
 {
@@ -349,7 +371,7 @@ int main (int argc, char** argv)
 	VERIFY_UNARY(uNot,12,Int,"1");
 	VERIFY_UNARY(uNot,13,Int,"1");
 
-#define X(nm,st) AluBinaryOperator u##nm(st);
+#define X(nm,st,prio) AluBinaryOperator u##nm(st);
 	ALU_BOP_LIST
 #undef X
 	counters.set(4,"123");
@@ -470,6 +492,7 @@ int main (int argc, char** argv)
 	VERIFY_EXPR("2*(2+2)","Number(2);BOP(*);(;Number(2);BOP(+);Number(2);)");
 
 	VERIFY_EXPR("5+sqrt(1)-pow(3,4)","Number(5);BOP(+);FUNC(sqrt);(;Number(1););BOP(-);FUNC(pow);(;Number(3);COMMA;Number(4);)");
+	VERIFY_EXPR("a>b & b>c","FI(a);BOP(>);FI(b);BOP(&);FI(b);BOP(>);FI(c)");
 
 
 	// TODO: Yeah, a whole bunch of more expressions
@@ -479,6 +502,21 @@ int main (int argc, char** argv)
 	VERIFY_ASSNMENT("b := 2+2","ALU assignment statements must begin with a counter. Got FI(b) instead.");
 	VERIFY_ASSNMENT("#6 b += 2+2","ALU assignment statements must have an assignment operator as the second element. Got FI(b) instead.");
 	VERIFY_ASSNMENT("2+2 := 4","ALU assignment statements must begin with a counter. Got Number(2) instead.");
+
+	// TODO: More
+
+	VERIFY_RPN("2+3", "Number(2);Number(3);BOP(+)");
+	VERIFY_RPN("-b","FI(b);UOP(-)");
+	VERIFY_RPN("-2+3","Number(-2);Number(3);BOP(+)");
+	VERIFY_RPN("-(2+3)","Number(2);Number(3);BOP(+);UOP(-)");
+	VERIFY_RPN("a+b-c","FI(a);FI(b);BOP(+);FI(c);BOP(-)");
+	VERIFY_RPN("a-b+c","FI(a);FI(b);BOP(-);FI(c);BOP(+)")
+	VERIFY_RPN("a*b-c","FI(a);FI(b);BOP(*);FI(c);BOP(-)");
+	VERIFY_RPN("a+b*c","FI(a);FI(b);FI(c);BOP(*);BOP(+)");
+	VERIFY_RPN("(a+b)*c","FI(a);FI(b);BOP(+);FI(c);BOP(*)");
+	VERIFY_RPN("2<3","Number(2);Number(3);BOP(<)");
+	VERIFY_RPN("a>b","FI(a);FI(b);BOP(>)");
+	VERIFY_RPN("a>b & b>c","FI(a);FI(b);BOP(>);FI(b);FI(c);BOP(>);BOP(&)");
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";

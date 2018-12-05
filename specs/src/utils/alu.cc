@@ -9,6 +9,7 @@
 
 #include <sstream>
 #include <cmath>
+#include <stack>
 #include "ErrorReporting.h"
 #include "alu.h"
 
@@ -344,7 +345,7 @@ ALUCounter* 	AluUnitUnaryOperator::computeMinus(ALUCounter* operand)
 
 
 
-#define X(nm,st)	if (s==st) {m_op = BinaryOp__##nm; return;}
+#define X(nm,st,prio)	if (s==st) {m_op = BinaryOp__##nm; m_priority = prio; return;}
 void AluBinaryOperator::setOpByName(std::string& s)
 {
 	ALU_BOP_LIST
@@ -364,7 +365,7 @@ AluBinaryOperator::AluBinaryOperator(const char* str)
 	setOpByName(s);
 }
 
-#define X(nm,st)	case BinaryOp__##nm: os << st; break;
+#define X(nm,st,prio)	case BinaryOp__##nm: os << st; break;
 void AluBinaryOperator::_serialize(std::ostream& os) const
 {
 	switch(m_op) {
@@ -375,7 +376,7 @@ void AluBinaryOperator::_serialize(std::ostream& os) const
 }
 #undef X
 
-#define X(nm,st)	case BinaryOp__##nm: return ret + st + ")"; break;
+#define X(nm,st,prio)	case BinaryOp__##nm: return ret + st + ")"; break;
 std::string AluBinaryOperator::_identify()
 {
 	std::string ret = std::string("BOP(");
@@ -388,7 +389,7 @@ std::string AluBinaryOperator::_identify()
 }
 #undef X
 
-#define X(nm,st)	case BinaryOp__##nm: return compute##nm(op1, op2);
+#define X(nm,st,prio)	case BinaryOp__##nm: return compute##nm(op1, op2);
 ALUCounter*		AluBinaryOperator::compute(ALUCounter* op1, ALUCounter* op2)
 {
 	ALUCounterDeleter _op1(op1);
@@ -940,7 +941,7 @@ static AluUnit* getUnaryOperator(std::string& s)
 }
 #undef X
 
-#define X(nm,st) if (s==st) return new AluBinaryOperator(s);
+#define X(nm,st,prio) if (s==st) return new AluBinaryOperator(s);
 static AluUnit* getBinaryOperator(std::string& s)
 {
 	ALU_BOP_LIST
@@ -1050,7 +1051,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 
 		// string of operator characters
-		static std::string operatorChars = "=+-*/|!<>:%";
+		static std::string operatorChars = "=+-*/|!<>:&%";
 		if (operatorChars.find(*c)!=std::string::npos) {
 			char* tokEnd = c+1;
 			while (tokEnd<cEnd && std::string::npos!=operatorChars.find(*tokEnd)) tokEnd++;
@@ -1149,5 +1150,105 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 			MYTHROW("ALU expression should not contain an assignment operator");
 		}
 	}
+	return true;
+}
+
+bool isHigherPrecedenceBinaryOp(AluUnit* op1, AluUnit* op2)
+{
+	AluBinaryOperator *bop1 = dynamic_cast<AluBinaryOperator*>(op1);
+	AluBinaryOperator *bop2 = dynamic_cast<AluBinaryOperator*>(op2);
+
+	if (!bop1 || !bop2) {
+		MYTHROW("Received two units. Not both are binary operators");
+	}
+
+	return bop1->priority() >= bop2->priority();
+}
+
+/*
+ * Function: convertAluVecToPostfix
+ * Implements the Shunting-Yard algorithm to convert an infix expression
+ * to a postfix expression for easier calculation later on.
+ */
+bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
+{
+	std::stack<AluUnit*> operatorStack;
+
+	if (!dest.empty()){
+		MYTHROW("Entered with non-empty vec.");
+	}
+
+	for (AluUnit* pUnit : source) {
+		switch (pUnit->type()) {
+		case UT_Comma:
+			if (clearSource) delete pUnit;
+			break;
+		case UT_AssignmentOp:
+			MYTHROW("Assignment operator used in expression");
+			break;
+		case UT_None:
+		case UT_Invalid:
+			MYTHROW("None or Invalid - internal logic error");
+		case UT_LiteralNumber:
+		case UT_Counter:
+		case UT_FieldIdentifier:
+			dest.push_back(pUnit);
+			break;
+		case UT_Identifier: 	// a function
+			operatorStack.push(pUnit);
+			break;
+		case UT_UnaryOp: { // Unary operator - higher precedence than any binary but not a function
+			AluUnitType topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
+			while (topType==UT_Identifier) {
+				dest.push_back(operatorStack.top());
+				operatorStack.pop();
+				topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
+			}
+			operatorStack.push(pUnit);
+			break;
+		}
+		case UT_BinaryOp: { // Binary operator - lower than unary and an interesting rank among them
+			AluUnitType topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
+			while (topType==UT_Identifier || topType==UT_UnaryOp ||
+					(topType==UT_BinaryOp && isHigherPrecedenceBinaryOp(operatorStack.top(),pUnit))) {
+				dest.push_back(operatorStack.top());
+				operatorStack.pop();
+				topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
+			}
+			operatorStack.push(pUnit);
+			break;
+		}
+		case UT_OpenParenthesis:
+			operatorStack.push(pUnit);
+			break;
+		case UT_ClosingParenthesis:
+			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
+				dest.push_back(operatorStack.top());
+				operatorStack.pop();
+			}
+			if (operatorStack.empty()) {
+				MYTHROW("Mismatched parenthesis -- too many closing");
+			} else {
+				if (clearSource) {
+					delete pUnit;
+					delete operatorStack.top();
+				}
+				operatorStack.pop(); // Pop off the opening parenthesis
+			}
+		}
+	}
+
+	while (!operatorStack.empty()) {
+		if (operatorStack.top()->type()==UT_OpenParenthesis) {
+			MYTHROW("Mismatched parenthesis -- too many opening");
+		}
+		dest.push_back(operatorStack.top());
+		operatorStack.pop();
+	}
+
+	if (clearSource) {
+		source.clear();
+	}
+
 	return true;
 }

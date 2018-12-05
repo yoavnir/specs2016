@@ -79,27 +79,27 @@ private:
 	X(Not,"!")		\
 
 #define ALU_BOP_LIST	\
-	X(Add,"+")		\
-	X(Sub,"-")		\
-	X(Mult,"*")		\
-	X(Div,"/")  	\
-	X(IntDiv,"//")	\
-	X(RemDiv,"%")	\
-	X(Appnd,"||")	\
-	X(LT,"<")		\
-	X(LE,"<=")		\
-	X(GT,">")		\
-	X(GE,">=")		\
-	X(SLT,"<<")		\
-	X(SLTE,"<<=")	\
-	X(SGT,">>")		\
-	X(SGTE,">>=")	\
-	X(EQ,"=")		\
-	X(SEQ,"==")		\
-	X(NE,"!=")		\
-	X(SNE,"!==")	\
-	X(AND,"&")		\
-	X(OR,"|")		\
+	X(Add,    "+",   8)	\
+	X(Sub,    "-",   8)	\
+	X(Mult,   "*",   9)	\
+	X(Div,    "/",   9) \
+	X(IntDiv, "//",  9)	\
+	X(RemDiv, "%",   9)	\
+	X(Appnd,  "||",  7)	\
+	X(LT,     "<",   6)	\
+	X(LE,     "<=",  6)	\
+	X(GT,     ">",   6)	\
+	X(GE,     ">=",  6)	\
+	X(SLT,    "<<",  6)	\
+	X(SLTE,   "<<=", 6)	\
+	X(SGT,    ">>",  6)	\
+	X(SGTE,   ">>=", 6)	\
+	X(EQ,     "=",   5)	\
+	X(SEQ,    "==",  5)	\
+	X(NE,     "!=",  5)	\
+	X(SNE,    "!==", 5)	\
+	X(AND,    "&",   4)	\
+	X(OR,     "|",   3)	\
 
 #define ALU_ASSOP_LIST \
 	X(Let,":=")		\
@@ -216,13 +216,13 @@ private:
 };
 #undef X
 
-#define X(nm,str) BinaryOp__##nm,
+#define X(nm,str,prio) BinaryOp__##nm,
 enum ALU_BinaryOperator {
 	ALU_BOP_LIST
 };
 #undef X
 
-#define X(nm,str) ALUCounter* compute##nm(ALUCounter* op1, ALUCounter* op2);
+#define X(nm,str,prio) ALUCounter* compute##nm(ALUCounter* op1, ALUCounter* op2);
 class AluBinaryOperator : public AluUnit {
 public:
 	AluBinaryOperator(std::string& s);
@@ -233,8 +233,10 @@ public:
 	virtual std::string		_identify();
 	virtual AluUnitType		type()			{return UT_BinaryOp;}
 	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2);
+	unsigned int			priority()	{return m_priority;}
 private:
-	void               setOpByName(std::string& s);
+	void				setOpByName(std::string& s);
+	unsigned int		m_priority;
 	ALU_BOP_LIST
 	ALU_BinaryOperator  m_op;
 };
@@ -313,5 +315,7 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 std::string dumpAluVec(AluVec& vec, bool deleteUnits);
 
 bool isValidExpression(AluVec& vec);  // To Be Added
+
+bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
 
 #endif
