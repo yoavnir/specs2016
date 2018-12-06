@@ -3,6 +3,7 @@
 #include <iomanip>
 #include "cli/tokens.h"
 #include "specitems/specItems.h"
+#include "processing/Config.h"
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
 
@@ -80,6 +81,8 @@ int main(int argc, char** argv)
 	ProcessingState ps;
 	int errorCount = 0;
 	int testCount  = 0;
+
+	readConfigurationFile();
 
 	VERIFY("w1 1", "The"); // Test #1
 	VERIFY("7-17 1", "ick brown f"); // Test #2

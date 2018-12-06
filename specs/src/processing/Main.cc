@@ -1,4 +1,5 @@
 #include "cli/tokens.h"
+#include "processing/Config.h"
 #include "specitems/specItems.h"
 #include "processing/StringBuilder.h"
 #include "processing/Reader.h"
@@ -24,6 +25,8 @@ int main (int argc, char** argv)
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
 	}
+
+	readConfigurationFile();
 
 	std::vector<Token> vec = parseTokens(argc, argv);
 	normalizeTokenList(&vec);

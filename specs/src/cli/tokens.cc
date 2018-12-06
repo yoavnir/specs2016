@@ -1,6 +1,7 @@
 #include <string.h>
 #include <regex>
 #include "tokens.h"
+#include "processing/Config.h"
 #include "utils/ErrorReporting.h"
 #include "processing/conversions.h"
 
@@ -432,6 +433,18 @@ CONT1:
 			;  // Do nothing. It just wasn't a hex string
 		}
 	}
+
+	/* Check for a configuration literal */
+	std::string key = arg.substr(1);
+	if ((arg[0]=='@') && (arg.length() > 1) && (configSpecLiteralExists(key))) {
+		std::string literal = configSpecLiteralGet(key);
+		pVec->insert(pVec->end(),
+				Token(TokenListType__LITERAL,
+						new TokenFieldRangeSimple(1,literal.length()),
+						literal, argidx, arg));
+		NEXT_TOKEN;
+	}
+
 	/* Add as literal */
 	{
 		std::string literal;
