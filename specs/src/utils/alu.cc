@@ -145,7 +145,7 @@ private:
 };
 
 
-ALUCounter* AluUnit::compute()
+ALUCounter* AluUnit::evaluate()
 {
 	std::string err = _identify() + " should not be called with no operands";
 	MYTHROW(err);
@@ -190,7 +190,7 @@ std::string AluUnitLiteral::_identify()
 	}
 }
 
-ALUCounter* AluUnitLiteral::compute()
+ALUCounter* AluUnitLiteral::evaluate()
 {
 	ALUCounter* ret = new ALUCounter(m_literal);
 	if (m_hintNumerical) ret->divineType();
@@ -230,7 +230,7 @@ std::string AluUnitFieldIdentifier::_identify()
 	return std::string("FI(") + m_id + ")";
 }
 
-ALUCounter* AluUnitFieldIdentifier::compute()
+ALUCounter* AluUnitFieldIdentifier::evaluate()
 {
 	if (!g_fieldIdentifierGetter) {
 		MYTHROW("Field Identifier Getter is not set")
@@ -890,9 +890,9 @@ void AluFunction::_serialize(std::ostream& os) const
 	os << m_FuncName;
 }
 
-ALUCounter* AluFunction::compute()
+ALUCounter* AluFunction::evaluate()
 {
-	if (0 != countOperands()) return AluUnit::compute();
+	if (0 != countOperands()) return AluUnit::evaluate();
 	return (AluFunc0(mp_Func))();
 }
 
@@ -1251,4 +1251,100 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	}
 
 	return true;
+}
+
+ALUCounter* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
+{
+	std::stack<ALUCounter*> computeStack;
+	ALUCounter* arg1;
+	ALUCounter* arg2;
+	ALUCounter* arg3;
+	ALUCounter* arg4;
+
+	for (AluUnit* pUnit : expr) {
+		switch (pUnit->type()) {
+		case UT_LiteralNumber:
+		case UT_FieldIdentifier:
+			computeStack.push(pUnit->evaluate());
+			break;
+		case UT_Counter: {
+			AluUnitCounter* pCtr = dynamic_cast<AluUnitCounter*>(pUnit);
+			computeStack.push(pCtr->compute(pctrs));
+			break;
+		}
+		case UT_UnaryOp:
+			MYASSERT(computeStack.size()>=1);
+			arg1 = computeStack.top();
+			computeStack.pop();
+			computeStack.push(pUnit->compute(arg1));
+			break;
+		case UT_BinaryOp:
+			MYASSERT(computeStack.size()>=2);
+			arg2 = computeStack.top();
+			computeStack.pop();
+			arg1 = computeStack.top();
+			computeStack.pop();
+			computeStack.push(pUnit->compute(arg1,arg2));
+			break;
+		case UT_Identifier: {
+			MYASSERT(computeStack.size() >= pUnit->countOperands());
+			MYASSERT(pUnit->countOperands() <= 4);
+
+			switch (pUnit->countOperands()) {
+			case 4:
+				arg4 = computeStack.top();
+				computeStack.pop();
+			case 3:
+				arg3 = computeStack.top();
+				computeStack.pop();
+			case 2:
+				arg2 = computeStack.top();
+				computeStack.pop();
+			case 1:
+				arg1 = computeStack.top();
+				computeStack.pop();
+			default:
+				break;
+			}
+
+			switch (pUnit->countOperands()) {
+			case 0:
+				computeStack.push(pUnit->evaluate());
+				break;
+			case 1:
+				computeStack.push(pUnit->compute(arg1));
+				delete arg1;
+				break;
+			case 2:
+				computeStack.push(pUnit->compute(arg1, arg2));
+				delete arg1;
+				delete arg2;
+				break;
+			case 3:
+				computeStack.push(pUnit->compute(arg1, arg2, arg3));
+				delete arg1;
+				delete arg2;
+				delete arg3;
+				break;
+			case 4:
+				computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4));
+				delete arg1;
+				delete arg2;
+				delete arg3;
+				delete arg4;
+				break;
+			default:
+				break;
+			}
+			break;
+			default:
+				MYTHROW("Logic error, should not have gotten this type of Unit");
+		}
+		}
+	}
+
+	MYASSERT(computeStack.size() == 1);
+	ALUCounter* ret = computeStack.top();
+	computeStack.pop();
+	return ret;
 }

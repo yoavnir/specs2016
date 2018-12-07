@@ -32,7 +32,7 @@ public:
 	ALUCounterType getType()   {return m_type;}
 	ALUCounterType getDivinedType() const;
 	void           divineType()		{m_type = getDivinedType();}
-	std::string    getStr()    {return m_value;}
+	std::string    getStr()  const  {return m_value;}
 	ALUInt         getInt() const;
 	ALUInt         getHex() const;
 	ALUFloat       getFloat() const;
@@ -49,6 +49,13 @@ private:
 	std::string    m_value;
 	ALUCounterType m_type;
 };
+
+static std::ostream& operator<< (std::ostream& os, const ALUCounter &c)
+{
+	os << c.getStr();
+    return os;
+}
+
 
 typedef unsigned int ALUCounterKey;
 
@@ -139,7 +146,7 @@ public:
 	virtual void   			_serialize(std::ostream& os) const = 0;
 	virtual std::string     _identify() = 0;
 	virtual AluUnitType		type()	{return UT_Invalid;}
-	virtual ALUCounter*		compute();
+	virtual ALUCounter*		evaluate();
 	virtual ALUCounter*		compute(ALUCounter* op);
 	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2);
 	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3);
@@ -153,7 +160,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_LiteralNumber;}
-	virtual ALUCounter*			compute();
+	virtual ALUCounter*			evaluate();
 private:
 	ALUCounter	m_literal;
 	bool        m_hintNumerical;
@@ -187,7 +194,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_FieldIdentifier;}
-	virtual ALUCounter*			compute();
+	virtual ALUCounter*			evaluate();
 private:
 	char         m_id;
 };
@@ -275,7 +282,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify()	{return "FUNC("+m_FuncName+")";}
 	virtual AluUnitType			type()		{return UT_Identifier;}
-	virtual ALUCounter*			compute();
+	virtual ALUCounter*			evaluate();
 	virtual ALUCounter*			compute(ALUCounter* op);
 	virtual ALUCounter*			compute(ALUCounter* op1, ALUCounter* op2);
 	virtual ALUCounter*			compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3);
@@ -317,5 +324,7 @@ std::string dumpAluVec(AluVec& vec, bool deleteUnits);
 bool isValidExpression(AluVec& vec);  // To Be Added
 
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
+
+ALUCounter* evaluateExpression(AluVec& expr, ALUCounters* pctrs);
 
 #endif

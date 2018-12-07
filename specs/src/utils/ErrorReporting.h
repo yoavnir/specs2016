@@ -18,6 +18,12 @@ protected:
 
 #define MYTHROW(s) throw SpecsException(__FILE__, __LINE__, s);
 
+#define MYASSERT(cond) { if (!(cond)) { \
+	std::string _assert_err = std::string("Failed assertion: ") + #cond; \
+	MYTHROW(_assert_err); \
+	} \
+	}
+
 class ConversionException : public SpecsException {
 public:
 	explicit ConversionException(const char* _fn, unsigned int _ln,

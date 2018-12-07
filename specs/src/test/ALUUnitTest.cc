@@ -90,7 +90,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	}
 
 #define UNIT_DIVINED_TYPE(u,t) { \
-	ALUCounter* ctr = u.compute(); \
+	ALUCounter* ctr = u.evaluate(); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
 	": "<< #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (ctr->getDivinedType()==counterType__##t) { \
@@ -260,10 +260,44 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	}
 
 
+#define VERIFY_EXPR_RES(s,res) {							\
+		std::string _expr(s);								\
+		AluVec rpnVec;										\
+		bool _res;											\
+		_res = parseAluExpression(_expr,vec);				\
+		if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true);	\
+		ALUCounter* _result = NULL;							\
+		if (_res) _result = evaluateExpression(rpnVec, &counters);	\
+		_res = (_result!=NULL) && (_result->getStr()==res);	\
+		std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+		": "<< s << " ==> " << res << ": ";					\
+		if (_res) std::cout << "OK\n";						\
+		else {												\
+			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
+			countFailures++;								\
+		}													\
+	}
+
+class testGetter : public fieldIdentifierGetter {
+public:
+	virtual ~testGetter() {}
+	virtual std::string Get(char id) 	{return m_map[id];}
+	void set(char id, std::string s)	{m_map[id] = s;}
+private:
+	std::map<char,std::string> m_map;
+};
+
 int main (int argc, char** argv)
 {
 	unsigned int testIndex = 0;
 	unsigned int countFailures = 0;
+
+	testGetter tg;
+	setFieldIdentifierGetter(&tg);
+	tg.set('b', "84");
+	tg.set('c', "specs");
+	tg.set('z', "0.0");
+	tg.set('n', "-9.8");
 
 	// All variables are None before they're set
 	VERIFY_TYPE(0,None);
@@ -517,6 +551,20 @@ int main (int argc, char** argv)
 	VERIFY_RPN("2<3","Number(2);Number(3);BOP(<)");
 	VERIFY_RPN("a>b","FI(a);FI(b);BOP(>)");
 	VERIFY_RPN("a>b & b>c","FI(a);FI(b);BOP(>);FI(b);FI(c);BOP(>);BOP(&)");
+
+	// TODO: More here as well
+
+	VERIFY_EXPR_RES("5", "5");
+	VERIFY_EXPR_RES("b", "84")
+	VERIFY_EXPR_RES("#3", "3.14159265");
+	VERIFY_EXPR_RES("-b", "-84");
+	VERIFY_EXPR_RES("!b", "0");
+	VERIFY_EXPR_RES("2+2", "4");
+	VERIFY_EXPR_RES("!b = 0.0", "1");
+	VERIFY_EXPR_RES("!b == 0.0", "0");
+	VERIFY_EXPR_RES("2+2*2", "6");
+	VERIFY_EXPR_RES("(2+2)*2", "8");
+	VERIFY_EXPR_RES("9+sqrt(4)", "11");
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
