@@ -221,8 +221,8 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 
 	if (tokenType==TokenListType__CONVERSION) {
 		m_conversion = getConversionByName(token.Literal());
-		assert(m_conversion!=StringConversion__identity);
-		assert(m_conversion!=StringConversion__NONE);
+		MYASSERT(m_conversion!=StringConversion__identity);
+		MYASSERT(m_conversion!=StringConversion__NONE);
 		GET_NEXT_TOKEN;
 		if (isParametrizedConversion(m_conversion)) {
 			if (tokenType!=TokenListType__LITERAL) {

@@ -96,7 +96,7 @@ int ProcessingState::getFieldStart(int idx) {
 	if (m_fieldCount==-1) {
 		identifyFields();
 	}
-	assert(idx!=0);
+	MYASSERT(idx!=0);
 	if (idx < 0) {
 		if ((-idx) > m_fieldCount) return 0;
 		idx += m_fieldCount + 1;
@@ -127,7 +127,7 @@ int ProcessingState::getWordStart(int idx) {
 	if (m_wordCount==-1) {
 		identifyWords();
 	}
-	assert(idx!=0);
+	MYASSERT(idx!=0);
 	if (idx < 0) {
 		if ((-idx) > m_wordCount) return 0;
 		idx += m_wordCount + 1;
@@ -140,7 +140,7 @@ int ProcessingState::getFieldEnd(int idx) {
 	if (m_fieldCount==-1) {
 		identifyFields();
 	}
-	assert(idx!=0);
+	MYASSERT(idx!=0);
 	if (idx < 0) {
 		if ((-idx) > m_fieldCount) return 0;
 		idx += m_fieldCount + 1;

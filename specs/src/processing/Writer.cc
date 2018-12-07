@@ -1,4 +1,5 @@
 #include <iostream>
+#include "utils/ErrorReporting.h"
 #include "Writer.h"
 
 void WriteAllRecords(Writer *pw)

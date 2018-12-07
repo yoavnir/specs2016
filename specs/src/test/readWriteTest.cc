@@ -1,3 +1,4 @@
+#include "utils/ErrorReporting.h"
 #include "processing/Reader.h"
 #include "processing/Writer.h"
 #include "processing/StringBuilder.h"

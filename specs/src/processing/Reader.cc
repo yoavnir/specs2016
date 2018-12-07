@@ -1,4 +1,3 @@
-#include "assert.h"
 #include "utils/ErrorReporting.h"
 #include "Reader.h"
 
@@ -57,7 +56,7 @@ StandardReader::StandardReader() {
 }
 
 StandardReader::StandardReader(FILE* f) {
-	assert(f!=NULL);
+	MYASSERT(f!=NULL);
 	feof(f);  // so it crashes if what we've been passed is not a FILE pointer
 	m_File = f;
 	m_NeedToClose = false;

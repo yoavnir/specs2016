@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <string.h> // for memcpy
 #include "Config.h"
 #include "utils/ErrorReporting.h"
@@ -106,7 +105,7 @@ PSpecString StringBuilder::GetString()
 
 void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 {
-	assert(offset>0);
+	MYASSERT(offset>0);
 	if (!mp_str) {
 		mp_str = SpecString::newString();
 	}
@@ -125,7 +124,7 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 		MYTHROW("UTF-8 is not yet supported");
 	}
 	StdSpecString *psss = dynamic_cast<StdSpecString*>(s);
-	assert(psss!=NULL);
+	MYASSERT(psss!=NULL);
 
 	size_t endPos = offset + psss->length();
 	if (mp_str->length() < endPos) {

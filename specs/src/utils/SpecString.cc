@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <string.h>  // for memcpy
 #include "processing/Config.h"
 #include "ErrorReporting.h"
@@ -7,7 +6,7 @@
 void StdSpecString::Overlay(PSpecString pss, size_t offset, void* pPadChar)
 {
 	StdSpecString* pSmallString = dynamic_cast<StdSpecString*>(pss);
-	assert(pSmallString!=NULL);
+	MYASSERT(pSmallString!=NULL);
 
 	size_t endPos = offset + pSmallString->length();
 	if (endPos > m_str.length()) {
@@ -105,7 +104,7 @@ PSpecString SpecString::newString(PSpecString pss, size_t start, size_t len)
 		return NULL; // appease the compiler warning
 	} else {
 		StdSpecString *psss = dynamic_cast<StdSpecString*>(pss);
-		assert(psss!=NULL);
+		MYASSERT(psss!=NULL);
 		return new StdSpecString(psss->data() + start, len);
 	}
 }
@@ -127,7 +126,7 @@ PSpecString SpecStringCopy(PSpecString pss)
 		return NULL; // appease the compiler warning
 	} else {
 		StdSpecString *psss = dynamic_cast<StdSpecString*>(pss);
-		assert(psss!=NULL);
+		MYASSERT(psss!=NULL);
 		return new StdSpecString(*psss);
 	}
 }

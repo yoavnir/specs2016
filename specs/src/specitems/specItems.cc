@@ -1,4 +1,3 @@
-#include <assert.h>
 #include "utils/ErrorReporting.h"
 #include "specItems.h"
 
