@@ -327,4 +327,6 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
 
 ALUCounter* evaluateExpression(AluVec& expr, ALUCounters* pctrs);
 
+void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs);
+
 #endif

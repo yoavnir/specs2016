@@ -278,6 +278,29 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		}													\
 	}
 
+#define VERIFY_ASSN_RES(s,exp) {								\
+		std::string _expr(s);									\
+		ALUCounterKey	k;										\
+		AluAssnOperator op;										\
+		AluVec rpnVec;											\
+		bool _res, _res2 = false;								\
+		_res = parseAluStatement(_expr,k,&op,vec);				\
+		if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
+		if (_res) {												\
+			ALUPerformAssignment(k,&op,rpnVec,&counters);			\
+			_res2 = (counters.getStr(k)==exp);					\
+		}														\
+		std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+		": <"<< s << "> ==> \"" << exp << "\": "; 				\
+		if (_res && _res2) std::cout << "OK\n";					\
+		else {													\
+			std::cout << "*** NOT OK *** - ";					\
+			countFailures++;									\
+			if (_res) std::cout << "Expression did not parse.\n";	\
+			else std::cout << "#" << k << " == " << counters.getStr(k) << "\n";	\
+		}														\
+	}
+
 class testGetter : public fieldIdentifierGetter {
 public:
 	virtual ~testGetter() {}
@@ -298,6 +321,8 @@ int main (int argc, char** argv)
 	tg.set('c', "specs");
 	tg.set('z', "0.0");
 	tg.set('n', "-9.8");
+
+	std::cout << "\nCounter Types and Values\n========================\n\n";
 
 	// All variables are None before they're set
 	VERIFY_TYPE(0,None);
@@ -364,6 +389,8 @@ int main (int argc, char** argv)
 	VERIFY_DIVINED_TYPE(7,Str);
 	VERIFY_DIVINED_TYPE(0,None);
 	VERIFY_DIVINED_TYPE(11,Float);  // -8.0 should be considered float
+
+	std::cout << "\nALU Units\n=========\n\n";
 
 	// Some ALU Units
 	std::string s = "hello";
@@ -516,6 +543,8 @@ int main (int argc, char** argv)
 
 	// TODO: Many more needed
 
+	std::cout << "\nExpressions\n===========\n\n";
+
 	AluVec vec;
 	VERIFY_EXPR("23+45", "Number(23);BOP(+);Number(45)");
 	VERIFY_EXPR(" 23 + -8", "Number(23);BOP(+);Number(-8)");
@@ -531,6 +560,8 @@ int main (int argc, char** argv)
 
 	// TODO: Yeah, a whole bunch of more expressions
 
+	std::cout << "\nAssignment Statements\n=====================\n\n";
+
 	VERIFY_ASSNMENT("#6 := 2+2","Number(2);BOP(+);Number(2)");
 	VERIFY_ASSNMENT("#6 = 2+2","ALU assignment statements must have an assignment operator as the second element. Got BOP(=) instead.");
 	VERIFY_ASSNMENT("b := 2+2","ALU assignment statements must begin with a counter. Got FI(b) instead.");
@@ -538,6 +569,8 @@ int main (int argc, char** argv)
 	VERIFY_ASSNMENT("2+2 := 4","ALU assignment statements must begin with a counter. Got Number(2) instead.");
 
 	// TODO: More
+
+	std::cout << "\nInfix to RPN Conversions - Shunting Yard Algorithm\n==================================================\n\n";
 
 	VERIFY_RPN("2+3", "Number(2);Number(3);BOP(+)");
 	VERIFY_RPN("-b","FI(b);UOP(-)");
@@ -554,6 +587,8 @@ int main (int argc, char** argv)
 
 	// TODO: More here as well
 
+	std::cout << "\nEvaluating Expressions\n======================\n\n";
+
 	VERIFY_EXPR_RES("5", "5");
 	VERIFY_EXPR_RES("b", "84")
 	VERIFY_EXPR_RES("#3", "3.14159265");
@@ -565,6 +600,13 @@ int main (int argc, char** argv)
 	VERIFY_EXPR_RES("2+2*2", "6");
 	VERIFY_EXPR_RES("(2+2)*2", "8");
 	VERIFY_EXPR_RES("9+sqrt(4)", "11");
+	VERIFY_EXPR_RES("#3+1", "4.14159265");
+
+	// TODO: More
+
+	std::cout << "\nEvaluating Assignments\n======================\n\n";
+
+	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";

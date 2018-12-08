@@ -1348,3 +1348,10 @@ ALUCounter* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	computeStack.pop();
 	return ret;
 }
+
+void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs)
+{
+	ALUCounter* exprResult = evaluateExpression(expr, pctrs);
+
+	pAss->perform(k, pctrs, exprResult);
+}
