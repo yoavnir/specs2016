@@ -1,6 +1,7 @@
 #include "utils/ErrorReporting.h"
 #include "specItems.h"
 
+ALUCounters g_counters;
 itemGroup::itemGroup()
 {
 	m_items.clear();
@@ -37,9 +38,17 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__TODCLOCK:
 		case TokenListType__DTODCLOCK:
 		case TokenListType__ID:
+		case TokenListType__PRINT:
 		{
 			DataField *pItem = new DataField;
 			pItem->parse(tokenVec, index);
+			addItem(pItem);
+			break;
+		}
+		case TokenListType__SET:
+		{
+			MYASSERT(index < tokenVec.size());
+			SetItem* pItem = new SetItem(tokenVec[index++].Literal());
 			addItem(pItem);
 			break;
 		}
@@ -162,3 +171,26 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		MYTHROW(err);
 	}
 }
+
+
+SetItem::SetItem(std::string& _statement)
+{
+	m_rawExpression = _statement;
+	AluVec expr;
+	MYASSERT(parseAluStatement(_statement, m_key, &m_oper, expr));
+	MYASSERT(convertAluVecToPostfix(expr, m_RPNExpression, true));
+}
+
+SetItem::~SetItem()
+{
+	for (AluUnit* unit : m_RPNExpression) {
+		delete unit;
+	}
+}
+
+ApplyRet SetItem::apply(ProcessingState& pState, StringBuilder* pSB)
+{
+	ALUPerformAssignment(m_key, &m_oper, m_RPNExpression, &g_counters);
+	return ApplyRet__Continue;
+}
+

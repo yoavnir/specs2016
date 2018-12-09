@@ -125,6 +125,16 @@ SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 	return new SubstringPart(pSub, pBig);
 }
 
+
+static ALUCounterKey getCounterKey(std::string& s)
+{
+	if (s[0] != '#') {
+		MYTHROW("Invalid counter")
+	}
+
+	return std::stoul(s.substr(1));
+}
+
 /*
  * Method: getInputPart
  *
@@ -182,6 +192,11 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 	case TokenListType__ID:
 		ret = new IDPart(token.Literal());
 		break;
+	case TokenListType__PRINT:
+	{
+		ret = new CounterPart(getCounterKey(token.Literal()));
+		break;
+	}
 	default:
 		return NULL;
 	}

@@ -7,6 +7,7 @@
 #include "processing/conversions.h"
 #include "processing/StringBuilder.h"
 #include "processing/ProcessingState.h"
+#include "utils/alu.h"
 
 class InputPart {
 public:
@@ -112,6 +113,16 @@ private:
 	std::string m_fieldIdentifier;
 };
 
+class CounterPart : public InputPart {
+public:
+	CounterPart(ALUCounterKey k) {m_key = k;}
+	virtual ~CounterPart() {}
+	virtual std::string Debug();
+	virtual PSpecString getStr(ProcessingState& pState);
+private:
+	ALUCounterKey m_key;
+};
+
 enum ApplyRet {
 	ApplyRet__Continue,
 	ApplyRet__Write,
@@ -166,5 +177,20 @@ public:
 private:
 	Token* mp_Token;
 };
+
+class SetItem : public Item {
+public:
+	SetItem(std::string& _statement);
+	virtual ~SetItem();
+	virtual std::string Debug()		{return m_rawExpression;}
+	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+private:
+	std::string     m_rawExpression;
+	ALUCounterKey   m_key;
+	AluAssnOperator m_oper;
+	AluVec          m_RPNExpression;
+};
+
+// ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs
 
 #endif
