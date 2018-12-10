@@ -190,12 +190,30 @@ PSpecString IDPart::getStr(ProcessingState& pState)
 	return SpecStringCopy(pState.fieldIdentifierGet(m_fieldIdentifier[0]));
 }
 
-std::string CounterPart::Debug()
+ExpressionPart::ExpressionPart(std::string& _expr)
 {
-	return "Counter:" + std::to_string(m_key);
+	AluVec infixExpression;
+	MYASSERT(parseAluExpression(_expr, infixExpression));
+	MYASSERT(convertAluVecToPostfix(infixExpression, m_RPNExpr, true));
+	m_rawExpression = _expr;
 }
 
-PSpecString CounterPart::getStr(ProcessingState& pState)
+ExpressionPart::~ExpressionPart()
 {
-	return SpecString::newString(g_counters.getStr(m_key).c_str());
+	for (AluUnit* unit : m_RPNExpr) {
+		delete unit;
+	}
+}
+
+std::string ExpressionPart::Debug()
+{
+	return "Expression:" + m_rawExpression;
+}
+
+PSpecString ExpressionPart::getStr(ProcessingState& pState)
+{
+	ALUCounter* res = evaluateExpression(m_RPNExpr, &g_counters);
+	std::string ret = res->getStr();
+	delete res;
+	return SpecString::newString(ret);
 }

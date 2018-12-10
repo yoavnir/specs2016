@@ -113,14 +113,15 @@ private:
 	std::string m_fieldIdentifier;
 };
 
-class CounterPart : public InputPart {
+class ExpressionPart : public InputPart {
 public:
-	CounterPart(ALUCounterKey k) {m_key = k;}
-	virtual ~CounterPart() {}
+	ExpressionPart(std::string& _expr);
+	virtual ~ExpressionPart();
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 private:
-	ALUCounterKey m_key;
+	AluVec m_RPNExpr;
+	std::string m_rawExpression;
 };
 
 enum ApplyRet {
