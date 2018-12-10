@@ -17,6 +17,7 @@ public:
 	bool processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, Writer* pRw);
 	void process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr);
 	std::string Debug();
+	bool readsLines();
 private:
 	void addItem(PItem pItem);
 	std::vector<PItem> m_items;

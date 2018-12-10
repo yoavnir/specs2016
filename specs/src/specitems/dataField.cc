@@ -423,3 +423,8 @@ FINISH:
 	delete pInput;
 	return ApplyRet__Continue;
 }
+
+bool DataField::readsLines()
+{
+	return m_InputPart->readsLines();
+}

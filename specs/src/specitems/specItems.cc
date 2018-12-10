@@ -130,6 +130,17 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	}
 }
 
+bool itemGroup::readsLines()
+{
+	for (PItem pItem : m_items) {
+		if (pItem->readsLines()) return true;
+	}
+	return false;
+}
+
+
+
+
 TokenItem::TokenItem(Token& t)
 {
 	mp_Token = new Token(t);

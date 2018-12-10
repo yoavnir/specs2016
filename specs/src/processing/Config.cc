@@ -7,10 +7,15 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include "Config.h"
 
-bool g_bSupportUTF8 = false;
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
 
-bool g_bOutputTranslatedAscii = false;
+#define X(nm,typ,defval,cliswitch,oval) typ g_##nm = defval;
+CONFIG_PARAMS
+#undef X
+
 
 static std::map<std::string,std::string> ExternalLiterals;
 
@@ -93,6 +98,11 @@ void readConfigurationFile()
 		}
 	} else {
 	}
+
+	// Some built-in stuff
+#ifdef GITTAG
+	ExternalLiterals["version"] = STRINGIFY(GITTAG);
+#endif
 }
 
 bool configSpecLiteralExists(std::string& key)

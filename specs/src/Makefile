@@ -2,7 +2,8 @@ MKDIR_C = mkdir -p
 EXE_DIR = ../exe
 OBJ_DIR = ../obj
 INC = -I .
-COMP = g++ -Werror -g -DDEBUG --std=c++11 $(INC)
+TAG := $(shell git describe --abbrev=0 --tags)
+COMP = g++ -Werror -g -DDEBUG -DGITTAG=$(TAG) --std=c++11 $(INC)
 LINK = g++ -g
 
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o

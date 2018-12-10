@@ -14,6 +14,7 @@ public:
 	virtual ~InputPart() {}
 	virtual std::string Debug() = 0;
 	virtual PSpecString getStr(ProcessingState& pState) = 0;
+	virtual bool        readsLines() {return false;}
 };
 
 class LiteralPart : public InputPart {
@@ -32,6 +33,7 @@ public:
 	virtual ~RangePart() {}
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState) = 0;
+	virtual bool        readsLines() {return true;}
 protected:
 	int _from;
 	int _to;
@@ -71,6 +73,7 @@ public:
 	virtual ~SubstringPart();
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
+	virtual bool        readsLines() {return mp_BigPart->readsLines();}
 private:
 	RangePart* mp_SubPart;
 	InputPart* mp_BigPart;
@@ -142,6 +145,7 @@ public:
 	virtual ~Item() {}
 	virtual std::string Debug() = 0;
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
+	virtual bool readsLines() {return false;}
 };
 
 typedef Item* PItem;
@@ -153,6 +157,7 @@ public:
 	void parse(std::vector<Token> &tokenVec, unsigned int& index);
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool readsLines();
 private:
 	InputPart* getInputPart(std::vector<Token> &tokenVec, unsigned int& index, char _wordSep=0, char _fieldSep=0);
 	SubstringPart* getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);

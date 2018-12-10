@@ -6,15 +6,25 @@
 #include "processing/Writer.h"
 #include "utils/ErrorReporting.h"
 
+#define X(nm,typ,defval,cliswitch,oval) \
+	if (0==strcmp(argv[0], "--"#cliswitch)) {		\
+		g_##nm = oval;								\
+		goto CONTINUE;								\
+	}
+
 bool parseSwitches(int& argc, char**& argv)
 {
 	int argumentCount = 0;
 	/* Skip the program name */
 	argc--; argv++; argumentCount++;
 
-	while (argv[0][0]=='-' && (argv[0][1]<'1' || argv[0][1]>'9')) {
-		fprintf(stderr, "Invalid switch at position %d: %s\n", argumentCount, argv[0]);
-		return false;
+	while (argc>0) {
+		if (argv[0][0]!='-' || argv[0][1]!='-') break;
+
+		CONFIG_PARAMS
+
+CONTINUE:
+		argc--; argv++; argumentCount++;
 	}
 
 	return true;
@@ -22,11 +32,11 @@ bool parseSwitches(int& argc, char**& argv)
 
 int main (int argc, char** argv)
 {
+	readConfigurationFile();
+
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
 	}
-
-	readConfigurationFile();
 
 	std::vector<Token> vec = parseTokens(argc, argv);
 	normalizeTokenList(&vec);
@@ -60,19 +70,25 @@ int main (int argc, char** argv)
 	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
 	setFieldIdentifierGetter(&fiGetter);
 
-	pRd = new StandardReader();
-	pWr = new SimpleWriter;
+	if (ig.readsLines() || g_bForceFileRead) {
+		pRd = new StandardReader();
+		pWr = new SimpleWriter;
 
-	pRd->Begin();
-	pWr->Begin();
+		pRd->Begin();
+		pWr->Begin();
 
-	ig.process(sb, ps, *pRd, *pWr);
+		ig.process(sb, ps, *pRd, *pWr);
 
-	pRd->End();
-	delete pRd;
-	pWr->End();
-	delete pWr;
-	vec.clear();
+		pRd->End();
+		delete pRd;
+		pWr->End();
+		delete pWr;
+		vec.clear();
+	} else {
+		TestReader tRead(5);
+		ig.processDo(sb, ps, &tRead, NULL);
+		std::cout << *sb.GetString() << "\n";
+	}
 
 	return 0;
 }
