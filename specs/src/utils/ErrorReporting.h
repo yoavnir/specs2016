@@ -9,7 +9,7 @@ public:
 		fn(_fn), ln(_ln), msg(_msg) {}
 	explicit SpecsException(const char* _fn, unsigned int _ln, std::string& _msg):
 		fn(_fn), ln(_ln), msg(_msg) {}
-	virtual const char* what() const throw ();
+	virtual const char* what(bool concise = false) const throw ();
 protected:
 	const char*  fn;
 	std::string  msg;
@@ -17,6 +17,12 @@ protected:
 };
 
 #define MYTHROW(s) throw SpecsException(__FILE__, __LINE__, s);
+
+#define MYASSERT(cond) { if (!(cond)) { \
+	std::string _assert_err = std::string("Failed assertion: ") + #cond; \
+	MYTHROW(_assert_err); \
+	} \
+	}
 
 class ConversionException : public SpecsException {
 public:

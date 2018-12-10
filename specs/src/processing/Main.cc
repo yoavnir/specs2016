@@ -56,6 +56,10 @@ int main (int argc, char** argv)
 	std::cerr << ig.Debug();
 #endif
 
+	// Connect the ALU to the processing state
+	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
+	setFieldIdentifierGetter(&fiGetter);
+
 	pRd = new StandardReader();
 	pWr = new SimpleWriter;
 

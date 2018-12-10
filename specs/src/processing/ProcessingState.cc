@@ -96,7 +96,7 @@ int ProcessingState::getFieldStart(int idx) {
 	if (m_fieldCount==-1) {
 		identifyFields();
 	}
-	assert(idx!=0);
+	MYASSERT(idx!=0);
 	if (idx < 0) {
 		if ((-idx) > m_fieldCount) return 0;
 		idx += m_fieldCount + 1;
@@ -127,7 +127,7 @@ int ProcessingState::getWordStart(int idx) {
 	if (m_wordCount==-1) {
 		identifyWords();
 	}
-	assert(idx!=0);
+	MYASSERT(idx!=0);
 	if (idx < 0) {
 		if ((-idx) > m_wordCount) return 0;
 		idx += m_wordCount + 1;
@@ -140,7 +140,7 @@ int ProcessingState::getFieldEnd(int idx) {
 	if (m_fieldCount==-1) {
 		identifyFields();
 	}
-	assert(idx!=0);
+	MYASSERT(idx!=0);
 	if (idx < 0) {
 		if ((-idx) > m_fieldCount) return 0;
 		idx += m_fieldCount + 1;
@@ -222,4 +222,11 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 		MYTHROW(err);
 	}
 	return ret;
+}
+
+// Helper class for the ALU
+std::string ProcessingStateFieldIdentifierGetter::Get(char id)
+{
+	PSpecString ret = m_ps->fieldIdentifierGet(id);
+	return std::string(ret->data(), ret->length());
 }

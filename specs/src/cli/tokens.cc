@@ -317,6 +317,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(id, ID);
 	SIMPLETOKENV(todclock, TODCLOCK, 3);
 	SIMPLETOKENV(dtodclock, DTODCLOCK, 4);
+	SIMPLETOKEN(set, SET);
+	SIMPLETOKEN(print, PRINT);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
@@ -594,6 +596,15 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					std::string err = "Bad field identifier <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
 				}
+			}
+			break;
+		}
+		case TokenListType__SET:
+		case TokenListType__PRINT:
+		{
+			if (tok.Literal()=="") {
+				tok.setLiteral(nextTok.Orig());
+				tokList->erase(tokList->begin()+(i+1));
 			}
 			break;
 		}

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <assert.h>
+#include "utils/ErrorReporting.h"
 
 #define TOKEN_TYPE_LIST   \
 	/* The MainOptions */    \
@@ -43,6 +43,8 @@
 	X(NUMBER,         false, false) \
 	X(TODCLOCK,       false, false) \
 	X(DTODCLOCK,      false, false) \
+	X(SET,            false, false) \
+	X(PRINT,          false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,
@@ -87,9 +89,9 @@ public:
 	std::string     Debug(int digits =  0);
 	TokenListTypes  Type() {return m_type;}
 	TokenFieldRange *Range() {return m_pRange;}
-	void            setRange(TokenFieldRange *prng) {assert(m_pRange==NULL); m_pRange = prng;}
+	void            setRange(TokenFieldRange *prng) {MYASSERT(m_pRange==NULL); m_pRange = prng;}
 	std::string&    Literal() {return m_literal;}
-	void            setLiteral(std::string l) {assert(m_literal.empty()); m_literal = l;}
+	void            setLiteral(std::string l) {MYASSERT(m_literal.empty()); m_literal = l;}
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
 	std::string&    HelpIdentify();

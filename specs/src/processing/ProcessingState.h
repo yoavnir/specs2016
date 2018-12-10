@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include "utils/alu.h"
 #include "utils/SpecString.h"
 
 #define DEFAULT_PAD_CHAR ' '
@@ -43,6 +44,17 @@ private:
 	void identifyWords();
 	void identifyFields();
 	std::map<char,PSpecString> m_fieldIdentifiers;
+};
+
+
+// Helper class for the ALU
+class ProcessingStateFieldIdentifierGetter : public fieldIdentifierGetter {
+public:
+	ProcessingStateFieldIdentifierGetter(ProcessingState* _ps) : m_ps(_ps) {}
+	~ProcessingStateFieldIdentifierGetter()                               {}
+	std::string Get(char id);
+private:
+	ProcessingState*	m_ps;
 };
 
 #endif

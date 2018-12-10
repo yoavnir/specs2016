@@ -4,6 +4,8 @@
 #include "utils/ErrorReporting.h"
 #include "item.h"
 
+extern ALUCounters g_counters;
+
 std::string LiteralPart::Debug()
 {
 	return "/" + m_Str + "/";
@@ -186,4 +188,14 @@ std::string IDPart::Debug()
 PSpecString IDPart::getStr(ProcessingState& pState)
 {
 	return SpecStringCopy(pState.fieldIdentifierGet(m_fieldIdentifier[0]));
+}
+
+std::string CounterPart::Debug()
+{
+	return "Counter:" + std::to_string(m_key);
+}
+
+PSpecString CounterPart::getStr(ProcessingState& pState)
+{
+	return SpecString::newString(g_counters.getStr(m_key).c_str());
 }
