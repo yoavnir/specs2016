@@ -601,6 +601,8 @@ int main (int argc, char** argv)
 	VERIFY_EXPR_RES("(2+2)*2", "8");
 	VERIFY_EXPR_RES("9+sqrt(4)", "11");
 	VERIFY_EXPR_RES("#3+1", "4.14159265");
+	VERIFY_EXPR_RES("1.1*1.1", "1.21");
+	VERIFY_EXPR_RES("pow(1.1,2)", "1.21");
 
 	// TODO: More
 

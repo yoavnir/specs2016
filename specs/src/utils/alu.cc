@@ -412,7 +412,7 @@ ALUCounter*		AluBinaryOperator::computeAdd(ALUCounter* op1, ALUCounter* op2)
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
 		return new ALUCounter(op1->getFloat() + op2->getFloat());
 	}
-	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		return new ALUCounter(op1->getInt() + op2->getInt());
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
@@ -427,7 +427,7 @@ ALUCounter*		AluBinaryOperator::computeSub(ALUCounter* op1, ALUCounter* op2)
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
 		return new ALUCounter(op1->getFloat() - op2->getFloat());
 	}
-	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		return new ALUCounter(op1->getInt() - op2->getInt());
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
@@ -442,7 +442,7 @@ ALUCounter*		AluBinaryOperator::computeMult(ALUCounter* op1, ALUCounter* op2)
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
 		return new ALUCounter(op1->getFloat() * op2->getFloat());
 	}
-	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		return new ALUCounter(op1->getInt() * op2->getInt());
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
@@ -462,7 +462,7 @@ ALUCounter*		AluBinaryOperator::computeDiv(ALUCounter* op1, ALUCounter* op2)
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
 		return new ALUCounter(op1->getFloat() / op2->getFloat());
 	}
-	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		if (0==(op1->getInt() % op2->getInt())) {
 			return new ALUCounter(op1->getInt() / op2->getInt());
 		} else {
@@ -713,7 +713,7 @@ ALUCounter* AluAssnOperator::computeAdd(ALUCounter* operand, ALUCounter* prevOp)
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
 		return new ALUCounter(prevOp->getFloat() + operand->getFloat());
 	}
-	if (counterType__Int==operand->getType() || counterType__Int==prevOp->getType()) {
+	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		return new ALUCounter(prevOp->getInt() + operand->getInt());
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
@@ -727,7 +727,7 @@ ALUCounter* AluAssnOperator::computeSub(ALUCounter* operand, ALUCounter* prevOp)
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
 		return new ALUCounter(prevOp->getFloat() - operand->getFloat());
 	}
-	if (counterType__Int==operand->getType() || counterType__Int==prevOp->getType()) {
+	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		return new ALUCounter(prevOp->getInt() - operand->getInt());
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
@@ -741,7 +741,7 @@ ALUCounter* AluAssnOperator::computeMult(ALUCounter* operand, ALUCounter* prevOp
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
 		return new ALUCounter(prevOp->getFloat() * operand->getFloat());
 	}
-	if (counterType__Int==operand->getType() || counterType__Int==prevOp->getType()) {
+	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		return new ALUCounter(prevOp->getInt() * operand->getInt());
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
@@ -759,7 +759,7 @@ ALUCounter* AluAssnOperator::computeDiv(ALUCounter* operand, ALUCounter* prevOp)
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
 		return new ALUCounter(prevOp->getFloat() / operand->getFloat());
 	}
-	if (counterType__Int==operand->getType() || counterType__Int==prevOp->getType()) {
+	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		if (0==(prevOp->getInt() % operand->getInt())) {
 			return new ALUCounter(prevOp->getInt() / operand->getInt());
 		} else {
@@ -848,7 +848,7 @@ ALUCounter* AluFunc_pow(ALUCounter* op1, ALUCounter* op2)
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
 		return new ALUCounter(std::pow(op1->getFloat(), op2->getFloat()));
 	}
-	if (counterType__Int==op1->getType() || counterType__Int==op2->getType()) {
+	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		return new ALUCounter(ALUInt(std::pow(op1->getInt(), op2->getInt())));
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
