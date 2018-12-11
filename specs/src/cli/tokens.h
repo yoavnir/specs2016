@@ -106,6 +106,9 @@ private:
 extern Token dummyToken;
 
 std::vector<Token> parseTokens(int argc, char** argv);
+
+std::vector<Token> parseTokensFile(std::string& fileName);
+
 void normalizeTokenList(std::vector<Token> *tokList);
 
 #endif

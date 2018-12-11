@@ -9,7 +9,7 @@ extern std::string conv_X2CH(std::string& s);
 
 Token dummyToken(TokenListType__DUMMY, NULL, "", 0, std::string("dummyToken"));
 
-std::vector<Token> parseTokensSplit(char* arg);
+std::vector<Token> parseTokensSplit(const char* arg);
 
 class TokenFieldRangeSimple : public TokenFieldRange {
 	public:
@@ -427,8 +427,7 @@ CONT1:
 			std::string hexLiteral = arg.substr(1);
 			std::string literal = conv_X2CH(hexLiteral);
 			pVec->insert(pVec->end(),
-				Token(TokenListType__LITERAL,
-						new TokenFieldRangeSimple(1, literal.length()),
+				Token(TokenListType__LITERAL, NULL /* range */,
 						literal, argidx, arg));
 			NEXT_TOKEN;
 		} catch(ConversionException& e) {
@@ -441,8 +440,7 @@ CONT1:
 	if ((arg[0]=='@') && (arg.length() > 1) && (configSpecLiteralExists(key))) {
 		std::string literal = configSpecLiteralGet(key);
 		pVec->insert(pVec->end(),
-				Token(TokenListType__LITERAL,
-						new TokenFieldRangeSimple(1,literal.length()),
+				Token(TokenListType__LITERAL, NULL /* range */,
 						literal, argidx, arg));
 		NEXT_TOKEN;
 	}
@@ -457,8 +455,7 @@ CONT1:
 		}
 
 		pVec->insert(pVec->end(),
-			Token(TokenListType__LITERAL,
-				new TokenFieldRangeSimple(1,literal.length()),
+			Token(TokenListType__LITERAL, NULL /* range */,
 				literal, argidx, arg));
 		NEXT_TOKEN;
 	}
@@ -590,7 +587,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		{
 			if (tok.Literal()=="") {
 				if (mayBeFieldIdentifier(nextTok)) {
-					tok.setLiteral(nextTok.Orig());
+					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
 				} else {
 					std::string err = "Bad field identifier <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex());
@@ -603,7 +600,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__PRINT:
 		{
 			if (tok.Literal()=="") {
-				tok.setLiteral(nextTok.Orig());
+				tok.setLiteral(getLiteral(nextTok));
 				tokList->erase(tokList->begin()+(i+1));
 			}
 			break;

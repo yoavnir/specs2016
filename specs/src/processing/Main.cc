@@ -6,6 +6,14 @@
 #include "processing/Writer.h"
 #include "utils/ErrorReporting.h"
 
+std::string getNextArg(int& argc, char**& argv)
+{
+	argc--; argv++;
+	MYASSERT(argc>0);
+	return std::string(argv[0]);
+}
+
+#define NEXTARG getNextArg(argc, argv)
 #define X(nm,typ,defval,cliswitch,oval) \
 	if (0==strcmp(argv[0], "--"#cliswitch)) {		\
 		g_##nm = oval;								\
@@ -14,9 +22,8 @@
 
 bool parseSwitches(int& argc, char**& argv)
 {
-	int argumentCount = 0;
 	/* Skip the program name */
-	argc--; argv++; argumentCount++;
+	argc--; argv++;
 
 	while (argc>0) {
 		if (argv[0][0]!='-' || argv[0][1]!='-') break;
@@ -24,7 +31,7 @@ bool parseSwitches(int& argc, char**& argv)
 		CONFIG_PARAMS
 
 CONTINUE:
-		argc--; argv++; argumentCount++;
+		argc--; argv++;
 	}
 
 	return true;
@@ -38,7 +45,13 @@ int main (int argc, char** argv)
 		return -4;
 	}
 
-	std::vector<Token> vec = parseTokens(argc, argv);
+	std::vector<Token> vec;
+	if (g_specFile != "") {
+		vec = parseTokensFile(g_specFile);
+	} else {
+		vec = parseTokens(argc, argv);
+	}
+
 	normalizeTokenList(&vec);
 	itemGroup ig;
 	StringBuilder sb;

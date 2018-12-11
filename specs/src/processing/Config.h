@@ -7,6 +7,7 @@
 	X(bSupportUTF8,                 bool,         false,  EXP-UTF8,           true)       \
 	X(bOutputTranslatedAscii,       bool,         false,  toASCII,            true)       \
 	X(bForceFileRead,               bool,         false,  force-read-input,   true)       \
+	X(specFile,                     std::string,  "",     specFile,           NEXTARG)    \
 
 #define X(nm,typ,defval,cliswitch,oval) extern typ g_##nm;
 CONFIG_PARAMS

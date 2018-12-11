@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include "utils/ErrorReporting.h"
 #include "tokens.h"
 
@@ -18,17 +19,17 @@ static bool is_whitespace(char c) {
 }
 
 static bool isPossibleDelimiter(char c) {
-	return (c=='/');
+	return (c=='/' || c=='"' || c=='\'');
 }
 
-std::vector<Token> parseTokensSplit(char* arg)
+std::vector<Token> parseTokensSplit(const char* arg)
 {
 	std::vector<Token> ret;
 	splitterState st = SpSt__WhiteSpace;
 
 	unsigned int argindex = 1;
 
-	char* ptr = arg;
+	const char* ptr = arg;
 	std::string sarg;
 	char delimiter;
 
@@ -78,10 +79,11 @@ std::vector<Token> parseTokensSplit(char* arg)
 					sarg+=')';
 					parseSingleToken(&ret, sarg, argindex++);
 				} else {
+					std::string delimitedToken = sarg.substr(1);
+					sarg += delimiter;
 					ret.insert(ret.end(),
-							Token(TokenListType__LITERAL,
-									NULL, sarg.substr(1),
-									argindex++, sarg));
+							Token(TokenListType__LITERAL, NULL /* range */,
+									delimitedToken, argindex++, sarg));
 				}
 				sarg.clear();
 				st = SpSt__WhiteSpace;
@@ -114,4 +116,20 @@ std::vector<Token> parseTokensSplit(char* arg)
 
 	return ret;
 }
-/* parseSingleToken(&ret, arg, argindex); */
+
+std::vector<Token> parseTokensFile(std::string& fileName)
+{
+	std::ifstream specFile(fileName);
+	if (specFile.is_open()) {
+		std::string spec;
+		std::string line;
+		while (getline(specFile,line)) {
+			spec += " ";
+			spec += line;
+		}
+		return parseTokensSplit(spec.c_str());
+	} else {
+		std::string err = "Spec file not found: " + fileName;
+		MYTHROW(err);
+	}
+}
