@@ -98,6 +98,7 @@ StringBuilder::~StringBuilder()
 
 PSpecString StringBuilder::GetString()
 {
+	if (!mp_str) return SpecString::newString();
 	PSpecString pRet = mp_str;
 	mp_str = NULL;
 	return pRet;
