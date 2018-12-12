@@ -24,6 +24,8 @@ protected:
 	} \
 	}
 
+#define MYASSERT_WITH_MSG(cond,s) { if (!(cond)) {MYTHROW(s); } }
+
 class ConversionException : public SpecsException {
 public:
 	explicit ConversionException(const char* _fn, unsigned int _ln,

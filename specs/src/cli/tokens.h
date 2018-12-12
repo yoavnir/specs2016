@@ -44,7 +44,7 @@
 	X(TODCLOCK,       false, false) \
 	X(DTODCLOCK,      false, false) \
 	X(SET,            false, false) \
-	X(PRINT,          false, false) \
+	X(PRINT,          false, true)  \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

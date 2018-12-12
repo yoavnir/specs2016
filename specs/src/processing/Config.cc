@@ -12,7 +12,7 @@
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
 
-#define X(nm,typ,defval,cliswitch,oval) typ g_##nm = defval;
+#define X(nm,typ,defval,ssw,cliswitch,oval) typ g_##nm = defval;
 CONFIG_PARAMS
 #undef X
 

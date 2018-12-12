@@ -3,13 +3,15 @@
 
 #include <string>
 
+// For the ssw parameter, use zero (0) for the short switch if none is needed
 #define CONFIG_PARAMS  \
-	X(bSupportUTF8,                 bool,         false,  EXP-UTF8,           true)       \
-	X(bOutputTranslatedAscii,       bool,         false,  toASCII,            true)       \
-	X(bForceFileRead,               bool,         false,  force-read-input,   true)       \
-	X(specFile,                     std::string,  "",     specFile,           NEXTARG)    \
+	X(bSupportUTF8,                 bool,         false,  0,EXP-UTF8,           true)       \
+	X(bOutputTranslatedAscii,       bool,         false,  0,toASCII,            true)       \
+	X(bForceFileRead,               bool,         false,  0,force-read-input,   true)       \
+	X(specFile,                     std::string,  "",     f,specFile,           NEXTARG)    \
+	X(bVerbose,                     bool,         false,  v,verbose,            true)       \
 
-#define X(nm,typ,defval,cliswitch,oval) extern typ g_##nm;
+#define X(nm,typ,defval,ssw,cliswitch,oval) extern typ g_##nm;
 CONFIG_PARAMS
 #undef X
 

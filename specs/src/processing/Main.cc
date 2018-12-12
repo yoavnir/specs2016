@@ -14,8 +14,9 @@ std::string getNextArg(int& argc, char**& argv)
 }
 
 #define NEXTARG getNextArg(argc, argv)
-#define X(nm,typ,defval,cliswitch,oval) \
-	if (0==strcmp(argv[0], "--"#cliswitch)) {		\
+#define X(nm,typ,defval,ssw,cliswitch,oval) \
+	if (0==strcmp(argv[0], "--"#cliswitch) ||       \
+			0==strcmp(argv[0], "-"#ssw)) {  		\
 		g_##nm = oval;								\
 		goto CONTINUE;								\
 	}
@@ -26,7 +27,7 @@ bool parseSwitches(int& argc, char**& argv)
 	argc--; argv++;
 
 	while (argc>0) {
-		if (argv[0][0]!='-' || argv[0][1]!='-') break;
+		if (argv[0][0]!='-') break;
 
 		CONFIG_PARAMS
 
@@ -63,13 +64,15 @@ int main (int argc, char** argv)
 	try {
 		ig.Compile(vec, index);
 	}  catch (const SpecsException& e) {
-		std::cerr << "Error while parsing command-line arguments:\n"
-				<< e.what() << "\n\nProcessing stopped at index " << index
-				<< '/' << vec.size() << ":\n";
-		for (int i=0; i<vec.size(); i++) {
-			std::cerr << i << ". " << vec[i].Debug() << "\n";
+		std::cerr << "Error while parsing command-line arguments: " << e.what(true) << "\n";
+		if (g_bVerbose) {
+			std::cerr<< "\nProcessing stopped at index " << index
+					<< '/' << vec.size() << ":\n";
+			for (int i=0; i<vec.size(); i++) {
+				std::cerr << i+1 << ". " << vec[i].Debug() << "\n";
+			}
+			std::cerr << "\n" << ig.Debug();
 		}
-		std::cerr << "\n" << ig.Debug();
 		exit (0);
 	}
 

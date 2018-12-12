@@ -155,7 +155,7 @@ std::string Token::Debug(int digits)
 std::string& Token::HelpIdentify()
 {
 	static std::string ret = "Token " + TokenListType__2str(m_type) + " at index " +
-			std::to_string(m_argc) + " with content <" + m_orig + ">";
+			std::to_string(m_argc) + " with content <" + ((m_literal.empty()) ? m_orig : m_literal) + ">";
 	return ret;
 }
 

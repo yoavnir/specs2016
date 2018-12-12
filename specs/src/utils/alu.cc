@@ -1173,6 +1173,7 @@ bool isHigherPrecedenceBinaryOp(AluUnit* op1, AluUnit* op2)
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 {
 	std::stack<AluUnit*> operatorStack;
+	unsigned int availableOperands = 0;
 
 	if (!dest.empty()){
 		MYTHROW("Entered with non-empty vec.");
@@ -1193,6 +1194,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		case UT_Counter:
 		case UT_FieldIdentifier:
 			dest.push_back(pUnit);
+			availableOperands++;
 			break;
 		case UT_Identifier: 	// a function
 			operatorStack.push(pUnit);
@@ -1200,6 +1202,8 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		case UT_UnaryOp: { // Unary operator - higher precedence than any binary but not a function
 			AluUnitType topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
 			while (topType==UT_Identifier) {
+				MYASSERT_WITH_MSG(operatorStack.top()->countOperands() <= availableOperands, "Not enough operands for operator");
+				availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
 				dest.push_back(operatorStack.top());
 				operatorStack.pop();
 				topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
@@ -1211,6 +1215,8 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			AluUnitType topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
 			while (topType==UT_Identifier || topType==UT_UnaryOp ||
 					(topType==UT_BinaryOp && isHigherPrecedenceBinaryOp(operatorStack.top(),pUnit))) {
+				MYASSERT_WITH_MSG(operatorStack.top()->countOperands() <= availableOperands, "Not enough operands for operator");
+				availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
 				dest.push_back(operatorStack.top());
 				operatorStack.pop();
 				topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
@@ -1223,6 +1229,8 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			break;
 		case UT_ClosingParenthesis:
 			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
+				MYASSERT_WITH_MSG(operatorStack.top()->countOperands() <= availableOperands, "Not enough operands for operator");
+				availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
 				dest.push_back(operatorStack.top());
 				operatorStack.pop();
 			}
@@ -1242,8 +1250,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		if (operatorStack.top()->type()==UT_OpenParenthesis) {
 			MYTHROW("Mismatched parenthesis -- too many opening");
 		}
-		dest.push_back(operatorStack.top());
+		AluUnit* pTopUnit = operatorStack.top();
 		operatorStack.pop();
+		MYASSERT_WITH_MSG(pTopUnit->countOperands()<=dest.size(), "Not enough operands for operator");
+		dest.push_back(pTopUnit);
 	}
 
 	if (clearSource) {

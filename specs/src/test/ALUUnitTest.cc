@@ -310,7 +310,7 @@ private:
 	std::map<char,std::string> m_map;
 };
 
-int main (int argc, char** argv)
+int runALUUnitTests()
 {
 	unsigned int testIndex = 0;
 	unsigned int countFailures = 0;
@@ -618,4 +618,9 @@ int main (int argc, char** argv)
 		std::cout << "\n*** All tests passed.\n";
 		return 0;
 	}
+}
+
+int main (int argc, char** argv)
+{
+	return runALUUnitTests();
 }

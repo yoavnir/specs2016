@@ -1,4 +1,5 @@
 #include "utils/ErrorReporting.h"
+#include "processing/Config.h"
 #include "item.h"
 
 #define GET_NEXT_TOKEN_NO_ADVANCE {           \
@@ -185,7 +186,15 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 		break;
 	case TokenListType__PRINT:
 	{
-		ret = new ExpressionPart(token.Literal());
+		try {
+			ret = new ExpressionPart(token.Literal());
+		} catch(const SpecsException& e) {
+			if (g_bVerbose) {
+				std::cerr << "While parsing Expression, got: " << e.what(true) << "\n";
+			}
+			std::string err = "Error in expression in "+ token.HelpIdentify();
+			MYTHROW(err);
+		}
 		break;
 	}
 	default:
@@ -213,7 +222,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	m_InputPart = getInputPart(tokenVec, index);
 
 	if (!m_InputPart) {
-		std::string err = "Bad inputRange " + token.HelpIdentify();
+		std::string err = "Bad input part " + token.HelpIdentify();
 		MYTHROW(err);
 	}
 

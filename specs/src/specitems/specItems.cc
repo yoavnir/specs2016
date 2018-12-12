@@ -1,4 +1,5 @@
 #include "utils/ErrorReporting.h"
+#include "processing/Config.h"
 #include "specItems.h"
 
 ALUCounters g_counters;
@@ -48,8 +49,17 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__SET:
 		{
 			MYASSERT(index < tokenVec.size());
-			SetItem* pItem = new SetItem(tokenVec[index++].Literal());
-			addItem(pItem);
+			try {
+				SetItem* pItem = new SetItem(tokenVec[index].Literal());
+				index++;
+				addItem(pItem);
+			} catch(const SpecsException& e) {
+				if (g_bVerbose) {
+					std::cerr << "While parsing statement, got: " << e.what(true) << "\n";
+				}
+				std::string err = "Error in statement in "+ tokenVec[index].HelpIdentify();
+				MYTHROW(err);
+			}
 			break;
 		}
 		default:

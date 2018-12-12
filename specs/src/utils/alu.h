@@ -32,7 +32,7 @@ public:
 	ALUCounterType getType()   {return m_type;}
 	ALUCounterType getDivinedType() const;
 	void           divineType()		{m_type = getDivinedType();}
-	std::string    getStr()  const  {return m_value;}
+	std::string    getStr()  const  {return (m_type==counterType__None) ? std::string("NaN") : m_value;}
 	ALUInt         getInt() const;
 	ALUInt         getHex() const;
 	ALUFloat       getFloat() const;
