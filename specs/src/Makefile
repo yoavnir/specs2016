@@ -2,9 +2,18 @@ MKDIR_C = mkdir -p
 EXE_DIR = ../exe
 OBJ_DIR = ../obj
 INC = -I .
+
+# FOR DEBUG
+# CONDCOMP = -g -DDEBUG
+# CONDLINK = -g
+
+# FOR RELEASE
+CONDLINK =  -O3
+CONDCOMP =  -O3
+
 TAG := $(shell git describe --abbrev=0 --tags)
-COMP = g++ -Werror -g -DDEBUG -DGITTAG=$(TAG) --std=c++11 $(INC)
-LINK = g++ -g
+COMP = g++ -Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 $(INC)
+LINK = g++ $(CONDLINK)
 
 CLI_OBJ = $(OBJ_DIR)/tokens.o $(OBJ_DIR)/splitter.o
 SI_OBJ = $(OBJ_DIR)/specItems.o $(OBJ_DIR)/dataField.o $(OBJ_DIR)/InputPart.o
