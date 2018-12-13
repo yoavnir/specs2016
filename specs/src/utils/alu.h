@@ -66,7 +66,10 @@ public:
 	ALUInt			getHex(ALUCounterKey i)		{return m_map[i].getHex();}
 	ALUFloat		getFloat(ALUCounterKey i)		{return m_map[i].getFloat();}
 	bool			getBool(ALUCounterKey i)		{return m_map[i].getBool();}
-	ALUCounter*		getPointer(ALUCounterKey i)	{return &m_map[i];}
+	ALUCounter*		getPointer(ALUCounterKey i)	{
+		if (0 == m_map.count(i)) m_map[i].set(ALUInt(0));
+		return &m_map[i];
+	}
 	void			set(ALUCounterKey i, std::string& s)  {m_map[i].set(s);}
 	void			set(ALUCounterKey i, const char* st)  {m_map[i].set(st);}
 	void			set(ALUCounterKey i, ALUInt l)        {m_map[i].set(l);}

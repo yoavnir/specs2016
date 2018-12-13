@@ -667,7 +667,8 @@ void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCo
 	ALUCounter* prevOp = ctrs->getPointer(ctrNumber);
 
 	// NaN is contagious
-	if (counterType__None==operand->getType()) {
+	if (counterType__None==operand->getType() ||
+			(m_op!=AssnOp__Let && counterType__None==prevOp->getType())) {
 		ctrs->set(ctrNumber);
 		return;
 	}

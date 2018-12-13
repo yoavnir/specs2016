@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <vector>
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
 
@@ -7,210 +8,230 @@ ALUCounters counters;
 
 std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
-#define VERIFY_TYPE(i,t) \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+#define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
+
+#define VERIFY_TYPE(i,t) do {\
+	INC_TEST_INDEX;				\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": type[" << i << "]=="#t": "; \
 	if (counters.type(i)==counterType__##t) {  \
 		std::cout << "OK\n"; \
 	} else { \
 		std::cout << "*** NOT OK *** (Got " << counterTypeNames[counters.type(i)] << ")\n"; \
-		countFailures++; \
-	}
+		countFailures++;  failedTests.push_back(testIndex); \
+	} } while(0);
 
-#define VERIFY_INT(i,val) \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+#define VERIFY_INT(i,val) do { \
+	INC_TEST_INDEX;				\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": #" << i << "==" << val << ": "; \
 	if (counters.getInt(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
 		std::cout << "*** NOT OK *** (Got " << counters.getInt(i) << ")\n"; \
-		countFailures++; \
-	}
+		countFailures++;  failedTests.push_back(testIndex); \
+	} } while(0);
 
-#define VERIFY_WHOLE(i,b) \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+#define VERIFY_WHOLE(i,b) do { \
+	INC_TEST_INDEX;				\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": #" << i << (b ? " is whole: ":" isn't whole: "); \
 	if (counters.isWholeNumber(i)==b) {  \
 		std::cout << "OK (" << counters.getFloat(i) << ")\n";    \
 	} else {     \
 		std::cout << "*** NOT OK *** (" << counters.getFloat(i) << ")\n";  \
-		countFailures++; \
-	}
+		countFailures++;  failedTests.push_back(testIndex); \
+	} } while(0);
 
-#define VERIFY_HEX(i,val) \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+#define VERIFY_HEX(i,val) do { \
+	INC_TEST_INDEX;            \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": #" << i << "==" << val << ": "; \
 	if (counters.getHex(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
 		std::cout << "*** NOT OK *** (Got " << counters.getHex(i) << ")\n"; \
-		countFailures++; \
-	}
+		countFailures++;  failedTests.push_back(testIndex); \
+	} } while(0);
 
-#define VERIFY_FLOAT(i,val) \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+#define VERIFY_FLOAT(i,val) do { \
+	INC_TEST_INDEX; \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": #" << i << "==" << std::setprecision(ALUFloatPrecision) << val << ": "; \
 	if (counters.getFloat(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
 		std::cout << "*** NOT OK *** (Got " << counters.getFloat(i) << ")\n"; \
-		countFailures++; \
-	}
+		countFailures++;  failedTests.push_back(testIndex); \
+	} } while(0);
 
-#define VERIFY_STR(i,val) \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+#define VERIFY_STR(i,val)  do { \
+	INC_TEST_INDEX;				\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": #" << i << "==" << val << ": "; \
 	if (counters.getStr(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
 		std::cout << "*** NOT OK *** (Got " << counters.getStr(i) << ")\n"; \
-		countFailures++; \
-	}
+		countFailures++;  failedTests.push_back(testIndex); \
+	} } while(0);
 
-#define VERIFY_NUMERIC(i,b)	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+#define VERIFY_NUMERIC(i,b)	 do { \
+	INC_TEST_INDEX;				\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": #" << i << (b ? " is numeric: ":" isn't numeric: "); \
 	if (counters.isNumeric(i)==b) {  \
 		std::cout << "OK (";    \
 	} else {     \
 		std::cout << "*** NOT OK *** (";  \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	}  \
-	std::cout << counters.getStr(i) << ")\n";
+	std::cout << counters.getStr(i) << ")\n";  \
+} while(0);
 
-#define VERIFY_DIVINED_TYPE(i,t) \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+#define VERIFY_DIVINED_TYPE(i,t)  do { \
+	INC_TEST_INDEX;				\
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": #" << i << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (counters.divinedType(i)==counterType__##t) { \
 		std::cout << "OK (" << counters.getStr(i) << ")\n";    \
 	} else {     \
 		std::cout << "*** NOT OK *** (" << counters.getStr(i) << " - " <<   \
 				ALUCounterType2Str[counters.divinedType(i)] << ")\n";  \
-		countFailures++; \
-	}
+		countFailures++;  failedTests.push_back(testIndex); \
+	} } while(0);
 
-#define UNIT_DIVINED_TYPE(u,t) { \
+#define UNIT_DIVINED_TYPE(u,t) do { \
+	INC_TEST_INDEX;				\
 	ALUCounter* ctr = u.evaluate(); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (ctr->getDivinedType()==counterType__##t) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
 		std::cout << "*** NOT OK *** (" << ctr->getStr() << " - " <<   \
 				ALUCounterType2Str[ctr->getDivinedType()] << ")\n";  \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} \
 	delete ctr; \
-}
+} while(0);
 
-#define VERIFY_UNIT_ST(u,s) { \
+#define VERIFY_UNIT_ST(u,s) do { \
+	INC_TEST_INDEX;				\
 	ALUCounter* ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is \""<< s <<"\": "; \
 	if (ctr->getStr()==s) { \
 		std::cout << "OK.\n";    \
 	} else {     \
 		std::cout << "*** NOT OK *** (" << ctr->getStr() << ")\n";  \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} \
 	delete ctr; \
-}
+} while(0);
 
-#define VERIFY_UNIT_INT(u,i) { \
+#define VERIFY_UNIT_INT(u,i) do { \
+	INC_TEST_INDEX;				\
 	ALUCounter* ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< i <<": "; \
 	if (ctr->getInt()==i) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
 		std::cout << "*** NOT OK *** (" << ctr->getStr() << " - " << ctr->getInt() << ")\n";  \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} \
 	delete ctr; \
-}
+} while(0);
 
-#define VERIFY_UNIT_F(u,f) { \
+#define VERIFY_UNIT_F(u,f) do { \
+	INC_TEST_INDEX;				\
 	ALUCounter* ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< f <<": "; \
 	if (ctr->getFloat()==f) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
 		std::cout << "*** NOT OK *** (" << ctr->getStr() << " - " << ctr->getFloat() << ")\n";  \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} \
 	delete ctr; \
-}
+} while(0);
 
-#define VERIFY_UNARY(u,o,t,s) { \
+#define VERIFY_UNARY(u,o,t,s) do { \
+	INC_TEST_INDEX;				\
 	AluUnitCounter ctr(o);	\
 	ALUCounter* _op = ctr.compute(&counters);	\
 	ALUCounter* _res = u.compute(_op);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[_res->getType()] << ")\n"; \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} else if ((_res->getType()!=counterType__None) && (_res->getStr() != s)) {	\
 		std::cout << "*** NOT OK *** (" << _res->getStr() << ")\n"; \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} else { \
 		std::cout << "OK.\n"; \
 	} \
 	delete _res; \
-}
+} while(0);
 
-#define VERIFY_BINARY(u,o1,o2,t,s) { \
+#define VERIFY_BINARY(u,o1,o2,t,s) do { \
+	INC_TEST_INDEX;				\
 	AluUnitCounter ctr1(o1);	\
 	AluUnitCounter ctr2(o2);	\
 	ALUCounter* _op1 = ctr1.compute(&counters);	\
 	ALUCounter* _op2 = ctr2.compute(&counters);	\
 	ALUCounter* _res = u.compute(_op1,_op2);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[_res->getType()] << ")\n"; \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} else if ((_res->getType()!=counterType__None) && (_res->getStr() != s)) {	\
 		std::cout << "*** NOT OK *** (" << _res->getStr() << ")\n"; \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} else { \
 		std::cout << "OK.\n"; \
 	} \
 	delete _res; \
-}
+} while(0);
 
-#define VERIFY_ASSN(u,p,o,t,s) {		\
+#define VERIFY_ASSN(u,p,o,t,s) do {		\
+	INC_TEST_INDEX;				\
 	AluUnitCounter 	ctr(o);	\
 	ALUCounter*		op = ctr.compute(&counters);	\
 	u.perform(p,&counters,op);			\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=counters.type(p)) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[counters.type(p)] << ")\n"; \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} else if ((counters.type(p)!=counterType__None) && (counters.getStr(p) != s)) {	\
 		std::cout << "*** NOT OK *** (" << counters.getStr(p) << ")\n"; \
-		countFailures++; \
+		countFailures++;  failedTests.push_back(testIndex); \
 	} else { \
 		std::cout << "OK.\n"; \
 	} \
-}
+} while(0);
 
-#define VERIFY_EXPR(s,e) {						\
+#define VERIFY_EXPR(s,e) do {					\
+	INC_TEST_INDEX;								\
 	std::string _expr(s);						\
 	bool _res = parseAluExpression(_expr,vec);	\
 	std::string _dump = dumpAluVec(vec, true);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": <"<< s << "> ==> \"" << e << "\": "; 	\
 	if (_dump==e) std::cout << "OK\n";			\
 	else {										\
 		std::cout << "*** NOT OK *** - " << _dump << "\n";	\
-		countFailures++;						\
+		countFailures++;  failedTests.push_back(testIndex);	\
 	}											\
-}
+} while(0);
 
-#define VERIFY_ASSNMENT(s,ex)  {							\
+#define VERIFY_ASSNMENT(s,ex) do {							\
+	INC_TEST_INDEX;											\
 	std::string _expr(s);									\
 	ALUCounterKey	k;										\
 	AluAssnOperator op;										\
@@ -224,20 +245,21 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			actual = _dump;									\
 		}													\
 	} catch (SpecsException& e) {							\
-		_res =  (e.what(true)==std::string(ex));				\
-		actual = e.what(true);									\
+		_res =  (e.what(true)==std::string(ex));			\
+		actual = e.what(true);								\
 		dumpAluVec(vec,true);								\
 	}														\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": <"<< s << "> ==> \"" << ex << "\": "; 				\
 	if (_res) std::cout << "OK\n";							\
 	else {													\
 		std::cout << "*** NOT OK *** - " << actual << "\n";	\
-		countFailures++;									\
+		countFailures++;  failedTests.push_back(testIndex);	\
 	}														\
-}
+} while(0);
 
-#define VERIFY_RPN(s,ex) {									\
+#define VERIFY_RPN(s,ex) do {								\
+		INC_TEST_INDEX;										\
 		std::string _expr(s);								\
 		AluVec rpnVec;										\
 		std::string _dump;									\
@@ -250,17 +272,18 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			_dump = e.what(true);							\
 		}													\
 		_res = (_dump==ex);									\
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": <"<< s << "> ==> \"" << ex << "\": ";			\
 		if (_res) std::cout << "OK\n";						\
 		else {												\
 			std::cout << "*** NOT OK *** - " << _dump << "\n";	\
-			countFailures++;								\
+			countFailures++;  failedTests.push_back(testIndex);	\
 		}													\
-	}
+	} while(0);
 
 
-#define VERIFY_EXPR_RES(s,res) {							\
+#define VERIFY_EXPR_RES(s,res) do {							\
+		INC_TEST_INDEX;										\
 		std::string _expr(s);								\
 		AluVec rpnVec;										\
 		bool _res;											\
@@ -269,16 +292,17 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		ALUCounter* _result = NULL;							\
 		if (_res) _result = evaluateExpression(rpnVec, &counters);	\
 		_res = (_result!=NULL) && (_result->getStr()==res);	\
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": "<< s << " ==> " << res << ": ";					\
 		if (_res) std::cout << "OK\n";						\
 		else {												\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
-			countFailures++;								\
+			countFailures++;  failedTests.push_back(testIndex);		\
 		}													\
-	}
+	} while(0);
 
-#define VERIFY_ASSN_RES(s,exp) {								\
+#define VERIFY_ASSN_RES(s,exp) do {								\
+		INC_TEST_INDEX;											\
 		std::string _expr(s);									\
 		ALUCounterKey	k;										\
 		AluAssnOperator op;										\
@@ -290,16 +314,16 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			ALUPerformAssignment(k,&op,rpnVec,&counters);			\
 			_res2 = (counters.getStr(k)==exp);					\
 		}														\
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++testIndex << \
+		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": <"<< s << "> ==> \"" << exp << "\": "; 				\
 		if (_res && _res2) std::cout << "OK\n";					\
 		else {													\
 			std::cout << "*** NOT OK *** - ";					\
-			countFailures++;									\
-			if (_res) std::cout << "Expression did not parse.\n";	\
+			countFailures++;  failedTests.push_back(testIndex);		\
+			if (!_res) std::cout << "Expression did not parse.\n";	\
 			else std::cout << "#" << k << " == " << counters.getStr(k) << "\n";	\
 		}														\
-	}
+	} while(0);
 
 class testGetter : public fieldIdentifierGetter {
 public:
@@ -310,8 +334,9 @@ private:
 	std::map<char,std::string> m_map;
 };
 
-int runALUUnitTests()
+int runALUUnitTests(unsigned int onlyTest)
 {
+	std::vector<unsigned int> failedTests;
 	unsigned int testIndex = 0;
 	unsigned int countFailures = 0;
 
@@ -604,15 +629,26 @@ int runALUUnitTests()
 	VERIFY_EXPR_RES("#3+1", "4.14159265");
 	VERIFY_EXPR_RES("1.1*1.1", "1.21");
 	VERIFY_EXPR_RES("pow(1.1,2)", "1.21");
+	VERIFY_EXPR_RES("1/0", "NaN");
+	VERIFY_EXPR_RES("(1/0)+5", "NaN");
+	VERIFY_EXPR_RES("#17", "0");  // initial value of all counters
 
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
+	VERIFY_ASSN_RES("#6:=1", "1");
+	VERIFY_ASSN_RES("#6/=0", "NaN");
+	VERIFY_ASSN_RES("#6+=5", "NaN");
+	VERIFY_ASSN_RES("#6:=1", "1");   // Let can fix a NaN
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
+		std::cout << "Failed tests:\n";
+		for (int i : failedTests) {
+			std::cout << "\t" << i << "\n";
+		}
 		return 4;
 	} else {
 		std::cout << "\n*** All tests passed.\n";
@@ -622,5 +658,9 @@ int runALUUnitTests()
 
 int main (int argc, char** argv)
 {
-	return runALUUnitTests();
+	unsigned int onlyTest = 0;
+	if (argc>1) {
+		onlyTest = std::stoul(argv[1]);
+	}
+	return runALUUnitTests(onlyTest);
 }

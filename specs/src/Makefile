@@ -4,12 +4,12 @@ OBJ_DIR = ../obj
 INC = -I .
 
 # FOR DEBUG
-# CONDCOMP = -g -DDEBUG
-# CONDLINK = -g
+CONDCOMP = -g -DDEBUG
+CONDLINK = -g
 
 # FOR RELEASE
-CONDLINK =  -O3
-CONDCOMP =  -O3
+# CONDLINK =  -O3
+# CONDCOMP =  -O3
 
 TAG := $(shell git describe --abbrev=0 --tags)
 COMP = g++ -Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 $(INC)
