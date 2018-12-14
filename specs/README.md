@@ -6,7 +6,7 @@ input. It allows re-alignment of fields, some format conversion, and
 re-formatting multiple lines into single lines or vice versa. Input
 comes from standard input, and output flows to standard output.
 
-This version is based on the **CMS Pipelines User's Guide and Reference** ([link](https://publib.boulder.ibm.com/epubs/pdf/hcsj0c30.pdf)), especially chapters 16, 24, and 20.
+This version is liberally based on the **CMS Pipelines User's Guide and Reference** ([link](https://publib.boulder.ibm.com/epubs/pdf/hcsj0c30.pdf)), especially chapters 16, 24, and 20.
 
 The command line format is as follows:
 
@@ -14,15 +14,19 @@ The command line format is as follows:
   
 Switches
 ========
-(To Be Added) 
+* --toASCII -- causes output to be translated into ASCII if it's outside the range.
+* --force-read-input -- forces specs to read every input line even if none of the spec units use it.  By default they won't.
+* --specFile or -f -- reads the specification from a file rather than the command line.
+* --verbose or -v -- outputs more information when something goes wrong.
+* --stats -- output statistics on run time, and records read, and on records written. 
    
 Spec Units
 ==========
-Each spec unit specifies an action to be taken by the program. The spec unit may span from one to four command line arguments.
+Each spec unit specifies an action to be taken by the program. The spec unit may span from one to several command line arguments.
 
-The ordinary spec unit is a *data field*, which consists of four arguments, two of which may be omitted:
+The most common spec unit is a *data field*, which consists of five arguments, three of which may be omitted:
 
-    InputPart [conversion] OutputPart [alignment]
+    [fieldIdentifier] InputPart [conversion] OutputPart [alignment]
   
 The **InputPart** argument may be any of the following:
 
@@ -33,7 +37,11 @@ The **InputPart** argument may be any of the following:
 * **DTODclock** - a 64-bit formatted timestamp, giving nanoseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** - A record counter as a 10-digit decimal number.
 * **TIMEDIFF** - an 8-char decimal number indicating the number of seconds since the invocation of the program.
-* a string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the command line requires you to enclose them in double quotes.
+* An **ID** keyword followed by a previously defined **FieldIdentifier**.
+* The **NUMBER** keyword used as a counter for processed records.
+* The **PRINT** keyword followed by a calculated expression
+* A string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the command line requires you to enclose them in double quotes.
+* A **SUBSTring** of another InputPart.
     
 The **OutputPart** argument specifies where to put the source:
 
@@ -59,13 +67,14 @@ The conversion argument can specify any of the following conversions:
 * **ucase** - converts text to uppercase
 * **lcase** - converts text to lowercase
  
-There are also four special spec units, that may be used:
+There are also other spec units, that may be used:
 
 * **read** - causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string.
 * **readstop** - causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
 * **write**- causes the program to write to output and reset the output 
       line.
-* **redo** - causes the program to use the line of output as the new input, and reset the output line.
+* **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges.
+* **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
       
 Example:
 
