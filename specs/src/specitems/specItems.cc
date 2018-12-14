@@ -134,8 +134,12 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	while ((ps=rd.get())) {
 		pState.setString(ps);
 
-		if (processDo(sb,pState, &rd, &wr)) {
-			wr.Write(sb.GetString());
+		try {
+			if (processDo(sb,pState, &rd, &wr)) {
+				wr.Write(sb.GetString());
+			}
+		} catch (const SpecsException& e) {
+			std::cerr << "Exception processing line " << rd.countUsed() << ": " << e.what(true) << "\n";
 		}
 	}
 }

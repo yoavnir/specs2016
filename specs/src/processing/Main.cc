@@ -66,7 +66,7 @@ int main (int argc, char** argv)
 	}  catch (const SpecsException& e) {
 		std::cerr << "Error while parsing command-line arguments: " << e.what(true) << "\n";
 		if (g_bVerbose) {
-			std::cerr<< "\nProcessing stopped at index " << index
+			std::cerr << "\nProcessing stopped at index " << index
 					<< '/' << vec.size() << ":\n";
 			for (int i=0; i<vec.size(); i++) {
 				std::cerr << i+1 << ". " << vec[i].Debug() << "\n";
@@ -93,7 +93,12 @@ int main (int argc, char** argv)
 		pRd->Begin();
 		pWr->Begin();
 
-		ig.process(sb, ps, *pRd, *pWr);
+		try {
+			ig.process(sb, ps, *pRd, *pWr);
+		} catch (const SpecsException& e) {
+			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
+			std::cerr << e.what() << "\n";
+		}
 
 		pRd->End();
 		delete pRd;

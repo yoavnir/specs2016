@@ -26,6 +26,7 @@ PSpecString Reader::get()
 	if (eof()) return NULL;
 	PSpecString ret;
 	if (m_queue.wait_and_pop(ret)) {
+		m_countUsed++;
 		return ret;
 	} else {
 		return NULL;
@@ -38,6 +39,7 @@ void Reader::readIntoQueue()
 		PSpecString nextRecord = getNextRecord();
 		if (nextRecord) {
 			m_queue.push(nextRecord);
+			m_countRead++;
 		} else {
 			m_queue.Done();
 		}
