@@ -1,9 +1,13 @@
+#include <iomanip>
+#include <cmath>
+#include <ctime>
 #include "cli/tokens.h"
 #include "processing/Config.h"
 #include "specitems/specItems.h"
 #include "processing/StringBuilder.h"
 #include "processing/Reader.h"
 #include "processing/Writer.h"
+#include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
 
 std::string getNextArg(int& argc, char**& argv)
@@ -86,6 +90,13 @@ int main (int argc, char** argv)
 	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
 	setFieldIdentifierGetter(&fiGetter);
 
+	unsigned long readLines;
+	unsigned long usedLines;
+	unsigned long generatedLines;
+	unsigned long writtenLines;
+	uint64_t timeAtStart = specTimeGetTOD();
+	std::clock_t clockAtStart = clock();
+
 	if (ig.readsLines() || g_bForceFileRead) {
 		pRd = new StandardReader();
 		pWr = new SimpleWriter;
@@ -101,14 +112,46 @@ int main (int argc, char** argv)
 		}
 
 		pRd->End();
+		readLines = pRd->countRead();
+		usedLines = pRd->countUsed();
 		delete pRd;
 		pWr->End();
+		generatedLines = pWr->countGenerated();
+		writtenLines = pWr->countWritten();
 		delete pWr;
 		vec.clear();
 	} else {
 		TestReader tRead(5);
 		ig.processDo(sb, ps, &tRead, NULL);
 		std::cout << *sb.GetString() << "\n";
+		readLines = 0;
+		usedLines = 0;
+		generatedLines = 1;
+		writtenLines = 1;
+	}
+
+	uint64_t timeAtEnd = specTimeGetTOD();
+	std::clock_t clockAtEnd = clock();
+
+	if (g_bPrintStats) {
+		std::cerr << "\n";
+		std::cerr << "Read  " << readLines << " lines.";
+		if (readLines!=usedLines) {
+			std::cerr << " " << usedLines << "were used.";
+		}
+		std::cerr << "\nWrote " << generatedLines << " lines.";
+		if (readLines!=usedLines) {
+			std::cerr << " " << writtenLines << "were written out.";
+		}
+		uint64_t runTimeMicroSeconds = timeAtEnd - timeAtStart;
+		std::cerr << "\nRun Time: " << runTimeMicroSeconds / 1000000 << "." <<
+				std::setfill('0') << std::setw(6) << runTimeMicroSeconds % 1000000
+				<< " seconds.\n";
+
+		ALUFloat duration = (ALUFloat(1) * (clockAtEnd-clockAtStart)) / CLOCKS_PER_SEC;
+		std::cerr << "CPU Time: " << std::floor(duration) << "." <<
+				std::setfill('0') << std::setw(6) <<
+				u_int64_t((duration-std::floor(duration)+0.5) * 1000000) << " seconds.\n";
 	}
 
 	return 0;

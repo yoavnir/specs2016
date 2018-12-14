@@ -14,7 +14,11 @@ public:
 	virtual void WriteOut() = 0;
 	void         End();
 	bool         Done();
+	unsigned long 		countGenerated() { return m_countGenerated; }
+	unsigned long 		countWritten()   { return m_countWritten; }
 protected:
+	unsigned long m_countGenerated;
+	unsigned long m_countWritten;
 	bool  m_ended;
 	StringQueue m_queue;
 	std::thread *mp_thread;

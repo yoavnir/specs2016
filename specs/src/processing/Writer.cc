@@ -25,6 +25,7 @@ Writer::~Writer()
 void Writer::Write(PSpecString ps)
 {
 	m_queue.push(ps);
+	m_countGenerated++;
 }
 
 void Writer::Begin()
@@ -51,6 +52,7 @@ void SimpleWriter::WriteOut()
 	PSpecString ps;
 	if (m_queue.wait_and_pop(ps)) {
 		std::cout << *ps << std::endl;
+		m_countWritten++;
 		delete ps;
 	}
 }
