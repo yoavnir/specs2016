@@ -57,3 +57,6 @@ clean:
 	
 clear:
 	/bin/rm */*.d */*.o
+	
+install: $(EXE_DIR)/specs
+	cp $(EXE_DIR)/specs /usr/local/bin/
