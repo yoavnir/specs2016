@@ -33,8 +33,8 @@ The **InputPart** argument may be any of the following:
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
 * A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- spaces by default. The word indexing is 1-based.
 * A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based.
-* **TODclock** - a 64-bit formatted timestamp, giving nanoseconds since the Unix epoch.
-* **DTODclock** - a 64-bit formatted timestamp, giving nanoseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
+* **TODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch.
+* **DTODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** - A record counter as a 10-digit decimal number.
 * **TIMEDIFF** - an 8-char decimal number indicating the number of seconds since the invocation of the program.
 * An **ID** keyword followed by a previously defined **FieldIdentifier**.
@@ -59,13 +59,18 @@ The alignment argument can be `l`, `c`, or `r`, for "left", "center", and "right
 The conversion argument can specify any of the following conversions:
 
 * **rot13** - encrypts the bytes using the ROT-13 cipher
-* **x2d** - converts hex data to decimal
-* **d2x** - converts decimal data to hex
+* **C2B** - converts characters to binary: "AB" --> "0010000100100010"
+* **C2X** - converts characters to hexadecimal: "AB" --> "4142"
+* **B2C** - converts binary to characters: "0010000100100010" --> "AB". Will throw an exception if called with an invalid character.
+* **X2CH** - converts hexadecimal to characters: "4142" --> "AB". Will throw an exception if called with an invalid character.
 * **b2x** - converts binary data to hex
-* **x2b** - converts hex data to binary
-* **x2bt** - converts hex data to binary, padded with zeros to include all nibbles.
-* **ucase** - converts text to uppercase
-* **lcase** - converts text to lowercase
+* **D2X** - convert decimal to hex: "314159265" --> "12b9b0a1"  (not working yet)
+* **X2D** - convert hex to decimal: "12b9b0a1" --> "314159265"  (not working yet)
+* **ucase** - converts text to uppercase (not working yet)
+* **lcase** - converts text to lowercase (not working yet)
+* **BSWAP** - byte swap. reverses the order of bytes. "AB" --> "BA"
+* **ti2f** - convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2i** - convert printable time format to the internal 8-byte representation. 
  
 There are also other spec units, that may be used:
 

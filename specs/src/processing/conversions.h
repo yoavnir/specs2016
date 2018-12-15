@@ -5,6 +5,7 @@
 
 #define STRING_CONVERSIONS_LIST  \
 	X(identity) \
+	X(ROT13)  \
 	X(C2B)    /* bytes to binary string:  "AB" --> "0010000100100010" */  \
 	X(C2X)    /* bytes to hex: "AB" --> "4142" */  \
 	X(B2C)  \

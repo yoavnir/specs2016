@@ -7,6 +7,22 @@ static std::string conv_identity(std::string& s) {
 	return s;
 }
 
+static std::string conv_ROT13(std::string& s) {
+	std::string ret;
+	ret.resize(s.length());
+	for (int i=0; i<s.length(); i++) {
+		char c;
+		if ((s[i]>='A' && s[i]<='M') || (s[i]>='a' && s[i]<='m')) {
+			ret[i] = s[i] + 13;
+		} else if ((s[i]>='N' && s[i]<='Z') || (s[i]>='n' && s[i]<='z')) {
+			ret[i] = s[i] - 13;
+		} else {
+			ret[i] = s[i];
+		}
+	}
+	return ret;
+}
+
 static std::string conv_C2B(std::string& s) {
 	std::string ret;
 	ret.resize(s.length()*8);
@@ -35,7 +51,23 @@ static std::string conv_C2X(std::string& s) {
 }
 
 static std::string conv_B2C(std::string& s) {
-	return s;
+	std::string ret;
+	ret.resize((s.length()+7)/8);
+	unsigned char c = 0;
+	for (int i=0; i<s.length(); i++) {
+		c <<= 1;
+		switch (s[i]) {
+		case '1': c += 1;  break;
+		case '0': break;
+		default: CONVERSION_EXCEPTION(s, "Binary", "Char");
+		}
+
+		if (7==i%8 || i==(s.length() - 1)) {
+			ret[i/8] = char(c);
+			c = 0;
+		}
+	}
+	return ret;
 }
 
 std::string conv_X2CH(std::string& s) {
