@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <string.h>
 #include <iomanip>
 #include "cli/tokens.h"
 #include "specitems/specItems.h"

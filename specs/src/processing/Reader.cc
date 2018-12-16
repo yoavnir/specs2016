@@ -1,3 +1,4 @@
+#include <string.h>
 #include "utils/ErrorReporting.h"
 #include "Reader.h"
 
@@ -55,6 +56,7 @@ StandardReader::StandardReader() {
 	m_File = stdin;
 	m_NeedToClose = false;
 	m_EOF = false;
+    m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
 StandardReader::StandardReader(FILE* f) {
@@ -63,6 +65,7 @@ StandardReader::StandardReader(FILE* f) {
 	m_File = f;
 	m_NeedToClose = false;
 	m_EOF = false;
+    m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
 StandardReader::StandardReader(std::string& fn) {
@@ -73,12 +76,14 @@ StandardReader::StandardReader(std::string& fn) {
 	}
 	m_NeedToClose = true;
 	m_EOF = false;
+    m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
 StandardReader::~StandardReader() {
 	if (m_NeedToClose) {
 		fclose(m_File);
 	}
+    free(m_buffer);
 }
 
 bool StandardReader::endOfSource() {
@@ -87,11 +92,12 @@ bool StandardReader::endOfSource() {
 
 PSpecString StandardReader::getNextRecord() {
 	size_t len;
-	char* line = fgetln(m_File, &len);
+	char* line = fgets(m_buffer, STANDARD_READER_BUFFER_SIZE, m_File);
 	if (!line) {
 		m_EOF = true;
 		return NULL;
 	} else {
+        len = strlen(line);
 		// strip trailing newline if any
 		if (line[len-1]=='\n') {
 			len--;

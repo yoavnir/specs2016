@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include "TimeUtils.h"
 
 #define MICROSECONDS_PER_SECOND 1000000
@@ -37,7 +38,13 @@ PSpecString specTimeConvertToPrintable(uint64_t sinceEpoch, std::string format)
 		}
 	}
 
+#if __GNUC__ > 4
 	oss << std::put_time(&bt, format.c_str());
+#else
+    char timeFormatterString[256];
+    strftime(timeFormatterString, 255, format.c_str(), &bt);
+    oss << timeFormatterString;
+#endif
 	if (fractionalSecondLength) {
 		oss << std::setw(fractionalSecondLength) << std::setfill('0');
 		while (fractionalSecondLength < 6) {
@@ -76,12 +83,18 @@ uint64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 		}
 	}
 
+#if __GNUC__ > 4
 	std::istringstream ss(printable);
 	// ss.imbue(std::locale("de_DE.utf-8"));  TODO: handle locale as preference
 	ss >> std::get_time(&t, format.c_str());
 	if (ss.fail()) {
 		return 0;
 	}
+#else
+    if (!strptime(printable.c_str(), format.c_str(), &t)) {
+        return 0;
+    }
+#endif
 
 	std::time_t secondsSinceEpoch = std::mktime(&t);
 

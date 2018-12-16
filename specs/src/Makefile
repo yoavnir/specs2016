@@ -40,7 +40,7 @@ DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
 -include $(DEPS)
 	
 run_tests: $(TEST_EXES)
-	$(EXE_DIR)/tokenTest
+	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
 

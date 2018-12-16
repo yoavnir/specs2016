@@ -39,6 +39,8 @@ private:
 	size_t       m_MaxCount;
 };
 
+#define STANDARD_READER_BUFFER_SIZE 65536  /* This is also the max size for an input record */
+
 class StandardReader : public Reader {
 public:
 	StandardReader();	      /* simple constructor - stdin becomes the source */
@@ -50,6 +52,7 @@ public:
 protected:
 private:
 	FILE* m_File;
+    char* m_buffer;
 	bool  m_EOF;
 	bool  m_NeedToClose;
 };

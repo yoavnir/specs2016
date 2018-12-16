@@ -1,3 +1,4 @@
+#include <string.h>
 #include "utils/ErrorReporting.h"
 #include "conversions.h"
 #include "utils/SpecString.h"
