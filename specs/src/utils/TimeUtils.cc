@@ -83,6 +83,8 @@ uint64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 		return 0;
 	}
 
+    // automatic detection of DST - Issue #2
+    t.tm_isdst = -1;
 	std::time_t secondsSinceEpoch = std::mktime(&t);
 
 	// take care of microseconds
