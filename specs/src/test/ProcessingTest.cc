@@ -123,7 +123,7 @@ int main(int argc, char** argv)
 	VERIFY("pad /q/ w1 1.10 left pad /w/ w2 11.10 center pad /e/ w3 21.10 right","Theqqqqqqqwwquickwwweeeeebrown"); // Test #32
 	VERIFY("2:3 1 -7:-5 nw -2:* nw", "he azy og"); // Test #33
 	VERIFY("k: w2 . ID k 1", "quick"); // Test #34
-	VERIFY2("1-* tf2i %FT%H:%M:%S.%6f a: ID a ti2f /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #35
+	VERIFY2("1-* tf2i %Y-%m-%dT%H:%M:%S.%6f a: ID a ti2f /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #35
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
