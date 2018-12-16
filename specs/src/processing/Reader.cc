@@ -56,16 +56,18 @@ StandardReader::StandardReader() {
 	m_File = stdin;
 	m_NeedToClose = false;
 	m_EOF = false;
-    m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
 StandardReader::StandardReader(FILE* f) {
 	MYASSERT(f!=NULL);
-	feof(f);  // so it crashes if what we've been passed is not a FILE pointer
+	m_EOF = false;
+	if (feof(f)) {  // so it crashes if what we've been passed is not a FILE pointer
+		m_EOF = true;
+	}
 	m_File = f;
 	m_NeedToClose = false;
-	m_EOF = false;
-    m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
 StandardReader::StandardReader(std::string& fn) {
@@ -76,14 +78,14 @@ StandardReader::StandardReader(std::string& fn) {
 	}
 	m_NeedToClose = true;
 	m_EOF = false;
-    m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
 StandardReader::~StandardReader() {
 	if (m_NeedToClose) {
 		fclose(m_File);
 	}
-    free(m_buffer);
+	free(m_buffer);
 }
 
 bool StandardReader::endOfSource() {
