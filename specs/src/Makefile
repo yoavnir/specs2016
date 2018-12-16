@@ -50,7 +50,7 @@ $(EXE_DIR):
 	$(MKDIR_C) $@
 	
 ../exe/%: test/%.o $(LIBOBJS)
-	$(CXX) $(CONDLINK) -o $@ $^		
+	$(CXX) $(CONDLINK) -o $@ -pthread $^		
 
 clean:
 	/bin/rm -rf $(EXE_DIR) */*.d */*.o
