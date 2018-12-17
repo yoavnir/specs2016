@@ -13,6 +13,8 @@ Writer::Writer()
 {
 	mp_thread = NULL;
 	m_ended = false;
+	m_countGenerated = 0;
+	m_countWritten = 0;
 }
 
 Writer::~Writer()
