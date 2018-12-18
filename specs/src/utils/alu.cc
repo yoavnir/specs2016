@@ -831,6 +831,14 @@ std::string AluOtherToken::_identify()
 	}
 }
 
+/*
+ *
+ *
+ * ALU FUNCTIONS
+ * =============
+ *
+ *
+ */
 ALUCounter* AluFunc_abs(ALUCounter* op)
 {
 	if (op->getType()==counterType__Int) {

@@ -34,7 +34,7 @@ TESTOBJS = $(TESTSRC:.cc=.o)
 #default goal
 some: directories $(EXE_DIR)/specs
 
-all: directories $(TEST_EXES)
+all: directories $(TEST_EXES) specs.1.gz
 
 DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
 
@@ -54,13 +54,18 @@ $(EXE_DIR):
 	$(MKDIR_C) $@
 	
 ../exe/%: test/%.o $(LIBOBJS)
-	$(CXX) $(CONDLINK) -o $@ $^		
+	$(CXX) $(CONDLINK) -o $@ $^
+	
+specs.1.gz: ../../manpage
+	cp ../../manpage specs.1
+	gzip specs.1
 
 clean:
-	/bin/rm -rf $(EXE_DIR) */*.d */*.o
+	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz
 	
 clear:
 	/bin/rm */*.d */*.o
 	
-install: $(EXE_DIR)/specs
+install: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
+	cp specs.1.gz /usr/local/share/man/man1/

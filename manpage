@@ -1,0 +1,308 @@
+.\" Manpage for specs.
+.\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
+.mso www.tmac
+.TH man 1 "15 Dec 2018" "0.1" "specs man page"
+.SH NAME
+specs \- a text processing tool
+.SH SYNOPSIS
+specs [switches] spec-units
+.SH DESCRIPTION
+.B specs
+is a command line utility for parsing and re-arranging text input. It allows re-alignment of fields, some format conversion, and re-formatting multiple lines into single lines or vice versa. Input comes from standard input, and output flows to standard output.
+.P 
+This is a re-writing of the specs pipeline stage from CMS, only changed quite a bit.
+.P 
+This version is liberally based on the CMS Pipelines User's Guide and Reference
+.URL "https://publib.boulder.ibm.com/epubs/pdf/hcsj0c30.pdf"
+-- especially chapters 16, 24, and 20.
+
+.SS "Spec Units"
+The most common spec unit is a 
+.I data field
+which consists of five arguments, three of which may be omitted:
+.P
+.RS 5
+[fieldIdentifier] InputPart [conversion] OutputPart [alignment]
+.RE
+.P
+
+The 
+.B InputPart
+argument may be any of the following:
+.RS 3
+.P
+A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
+.P
+A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- spaces by default. The word indexing is 1-based.
+.P
+A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based.
+.P 
+.B TODclock
+-- A 64-bit formatted timestamp, giving microseconds since the Unix epoch.
+.P 
+.B DTODclock
+-- A 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of
+.I specs
+begun, while DTODclock gives the time of producing the current record.
+.P
+.B NUMBER
+-- A record counter as a 10-digit decimal number.
+.P
+.B TIMEDIFF
+-- An 8-digit decimal number indicating the number of seconds since the invocation of the program.
+.P
+The 
+.B ID
+keyword followed by a previously defined 
+.B FieldIdentifier.
+.P
+The 
+.B PRINT
+keyword followed by a calculated expression
+.P
+A string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the command line requires you to enclose them in double quotes.
+.P
+A 
+.B SUBSTring
+of another InputPart.
+.RE
+    
+The 
+.B OutputPart
+argument specifies where to put the source:
+.RS 3
+.P
+Absolute position (such as `1`) with no limit on output length.
+.P
+A range (such as `1-5` or `1.5`)
+.P
+.B N 
+or
+.B NEXT
+for placing the output immediately after the previous output.
+.P
+.B NW 
+or
+.B NEXTWORD
+for placing the output following a space character after the previous output.
+.P
+.B NF
+or
+.B NEXTFIELD
+for placing the output following a tab character after the previous output.
+.P 
+A field identifier specification such as 
+.B a:
+or
+.B C:
+\&.
+.RE
+    
+The alignment argument can be `l`, `c`, or `r`, for
+.B left
+,
+.B center
+, and
+.B right
+respectively. Yes, you can use the entire word. In fact, for compatibility with other countries, you can even spell it
+.B centre.
+
+The conversion argument can specify any of the following conversions:
+.IP "rot13" 3
+Encrypts the bytes using the ROT-13 cipher
+.IP "C2B" 3
+Converts characters to binary: "AB" --> "0010000100100010"
+.IP "C2X" 3
+Converts characters to hexadecimal: "AB" --> "4142"
+.IP "B2C" 3
+Converts binary to characters: "0010000100100010" --> "AB". Will throw an exception if called with an invalid character.
+.IP "X2CH" 3
+Converts hexadecimal to characters: "4142" --> "AB". Will throw an exception if called with an invalid character.
+.IP "b2x" 3
+Converts binary data to hex
+.IP "D2X" 3
+Convert decimal to hex: "314159265" --> "12b9b0a1"  (not working yet)
+.IP "X2D" 3
+Convert hex to decimal: "12b9b0a1" --> "314159265"  (not working yet)
+.IP "ucase" 3
+Converts text to uppercase (not working yet)
+.IP "lcase" 3
+Converts text to lowercase (not working yet)
+.IP "BSWAP" 3
+Byte Swap. reverses the order of bytes. "AB" --> "BA"
+.IP "ti2f" 3
+Convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+.IP "tf2i" 3
+Convert printable time format to the internal 8-byte representation. 
+
+.SS "Other Spec Units"
+There are also other spec units, that may be used:
+.IP "READ" 3
+Causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string.
+.IP "READSTOP" 3
+Causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
+.IP "WRITE" 3
+Causes the program to write to output and reset the output line.
+.IP "WORDSEPARATOR and FIELDSEPARATOR" 3
+Declare a character to be the word of field separator respectively, which affects word and field ranges.
+.IP "REDO" 3
+Causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
+.IP "SET" 3
+Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
+
+.SS "Expressions and Assignments"
+Expressions are used in PRINT data units as well as in assignments. Assignments are used in SET Spec Units.
+
+Expressions are made up of numbers, field identifiers (no colon needed), and counter numbers preceded by a hash mark. They allow ordinary arithmetic and logical operations as well as function calls for pre-defined functions:
+.IP "Unary Operators" 3
++ (plus - does nothing), - (minus), ! (logical NOT)
+.IP "Binary Arithmetic Operators" 3
++, -, *. / (division), // (integer division), % (remainder)
+.IP "Binary String Operator" 3
+|| (string append)
+.IP "Binary Arithmetic/String Logical Operators" 3
+<, >, <=, >=, =, !=
+.IP "Binary Strict Logical Operators" 3
+<<, >>, <<=, >>=, ==. !==
+.IP "Binary Logical Operators" 3
+& (AND), | (OR)
+
+.P 
+Assignments assign the result of an expression into a numbered counter. For example:
+
+	#3 := b+3
+	
+.IP "Assignment Operators" 3
+:=, +=, -=, *=, /=, //=, %=, ||=
+
+.SS "Built-In Functions"
+.IP "abs(x)" 3
+The absolute function returns the absolute value of the number passed to it. Will return an integer if the parameter is integer, or float otherwise.
+.IP "pow(x,y)" 3
+The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
+.IP "sqrt(x)" 3
+The square root function always returns a float.
+
+.P
+NOTE: This list is going to be expanded greatly in a future version.
+
+.SH OPTIONS
+specs supports the following switches:
+.IP "--toASCII" 3
+Causes output to be translated into ASCII if it's outside the range.
+.IP "--force-read-input" 3
+Forces specs to read every input line even if none of the spec units use it. By default it won't.
+.IP "--specFile or -f" 3
+Makes the program read the specification from a file rather than the command line. This is useful both for reusing specifications and for long specifications. It also relieves the plumber from having to escape a lot of characters in the specification to avoid creative interpretation by the Unix shell.
+.IP "--verbose or -v" 3
+Outputs more information when something goes wrong.
+.IP "--stats"
+Output statistics on run time, and records read, and on records written.
+
+.SH EXAMPLES
+`ls -l` yields this:
+
+    total 352
+    -rw-r--r--@ 1 ynir  admin    574 Aug 25  2009 Makefile
+    -rw-r--r--@ 1 ynir  admin   3542 Nov 23 00:21 README
+    -rw-r--r--@ 1 ynir  admin    362 Nov 19 08:31 conversion.h
+    -rw-r--r--  1 ynir  admin    984 Nov 11 17:45 ls.txt
+    -rw-r--r--@ 1 ynir  admin   2233 Nov 23 00:03 main.cc
+    -rw-r--r--  1 ynir  admin   9412 Nov 23 00:11 main.o
+    -rw-r--r--@ 1 ynir  admin   6567 Nov 23 00:09 spec_build.cc
+    -rw-r--r--  1 ynir  admin  16776 Nov 23 00:11 spec_build.o
+    -rw-r--r--@ 1 ynir  admin   5494 Nov 19 08:30 spec_convert.cc
+    -rw-r--r--  1 ynir  admin  17004 Nov 23 00:11 spec_convert.o
+    -rw-r--r--@ 1 ynir  admin  11419 Nov 23 00:10 spec_params.cc
+    -rw-r--r--  1 ynir  admin  21080 Nov 23 00:11 spec_params.o
+    -rw-r--r--@ 1 ynir  admin    375 Nov 11 09:29 spec_vars.cc
+    -rw-r--r--  1 ynir  admin   4800 Nov 23 00:11 spec_vars.o
+    -rwxr-xr-x  1 ynir  admin  36740 Nov 23 00:11 specs
+    -rw-r--r--@ 1 ynir  admin   1547 Nov 23 00:10 specs.h
+
+Let's run it though a spec:
+
+    ls -l | specs 12-* 1 redo w2 1 w4 d2x 8.8 r w8 17
+    
+The first spec unit converts it to this:
+
+    1 ynir  admin    574 Aug 25  2009 Makefile
+    1 ynir  admin   3542 Nov 23 00:21 README
+    1 ynir  admin    362 Nov 19 08:31 conversion.h
+    1 ynir  admin    984 Nov 11 17:45 ls.txt
+    1 ynir  admin   2233 Nov 23 00:03 main.cc
+    1 ynir  admin   9412 Nov 23 00:11 main.o
+    1 ynir  admin   6567 Nov 23 00:09 spec_build.cc
+    1 ynir  admin  16776 Nov 23 00:11 spec_build.o
+    1 ynir  admin   5494 Nov 19 08:30 spec_convert.cc
+    1 ynir  admin  17004 Nov 23 00:11 spec_convert.o
+    1 ynir  admin  11419 Nov 23 00:10 spec_params.cc
+    1 ynir  admin  21080 Nov 23 00:11 spec_params.o
+    1 ynir  admin    375 Nov 11 09:29 spec_vars.cc
+    1 ynir  admin   4800 Nov 23 00:11 spec_vars.o
+    1 ynir  admin  36740 Nov 23 00:11 specs
+    1 ynir  admin   1547 Nov 23 00:10 specs.h
+
+Then after the redo, we get this:
+
+    ynir        23e Makefile
+    ynir        dd6 README
+    ynir        16a conversion.h
+    ynir        3d8 ls.txt
+    ynir        8b9 main.cc
+    ynir       24c4 main.o
+    ynir       19a7 spec_build.cc
+    ynir       4188 spec_build.o
+    ynir       1576 spec_convert.cc
+    ynir       426c spec_convert.o
+    ynir       2c9b spec_params.cc
+    ynir       5258 spec_params.o
+    ynir        eae spec_vars.cc
+    ynir       12c0 spec_vars.o
+    ynir       8f84 specs
+    ynir        60b specs.h
+
+      
+Alternatively, let's arrange this on multiple lines:
+
+    ls -l | specs w9 1 write "Owner:" 3 w3 10 write "Size:" 3 w5 10-20 r
+
+    Makefile
+      Owner: ynir
+      Size:          574
+    README
+      Owner: ynir
+      Size:         5834
+    conversion.h
+      Owner: ynir
+      Size:          362
+    list.txt
+      Owner: ynir
+      Size:          978
+    ls.txt
+      Owner: ynir
+      Size:          984
+    main.cc
+      Owner: ynir
+      Size:         2233
+    main.o
+      Owner: ynir
+      Size:         9412
+
+Finally, let's make our own version of the multi-column display:
+
+    ls -l | specs w9 1 read w9 26 read w9 51
+                             Makefile                 README
+    conversion.h             main.cc                  main.o
+    spec_build.cc            spec_build.o             spec_convert.cc
+    spec_convert.o           spec_params.cc           spec_params.o
+    spec_vars.cc             spec_vars.o              specs
+    specs.h
+
+
+.SH SEE ALSO
+sed(1), awk(1)
+.SH BUGS
+Too many to list here
+.SH AUTHOR
+Yoav Nir (yoav.nir@gmail.com)
