@@ -135,7 +135,7 @@ Convert internal time format (8-byte microseconds since the epoch) to printable 
 .IP "tf2i" 3
 Convert printable time format to the internal 8-byte representation. 
 
-.P 
+.SS "Other Spec Units"
 There are also other spec units, that may be used:
 .IP "READ" 3
 Causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string.
@@ -147,6 +147,44 @@ Causes the program to write to output and reset the output line.
 Declare a character to be the word of field separator respectively, which affects word and field ranges.
 .IP "REDO" 3
 Causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
+.IP "SET" 3
+Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
+
+.SS "Expressions and Assignments"
+Expressions are used in PRINT data units as well as in assignments. Assignments are used in SET Spec Units.
+
+Expressions are made up of numbers, field identifiers (no colon needed), and counter numbers preceded by a hash mark. They allow ordinary arithmetic and logical operations as well as function calls for pre-defined functions:
+.IP "Unary Operators" 3
++ (plus - does nothing), - (minus), ! (logical NOT)
+.IP "Binary Arithmetic Operators" 3
++, -, *. / (division), // (integer division), % (remainder)
+.IP "Binary String Operator" 3
+|| (string append)
+.IP "Binary Arithmetic/String Logical Operators" 3
+<, >, <=, >=, =, !=
+.IP "Binary Strict Logical Operators" 3
+<<, >>, <<=, >>=, ==. !==
+.IP "Binary Logical Operators" 3
+& (AND), | (OR)
+
+.P 
+Assignments assign the result of an expression into a numbered counter. For example:
+
+	#3 := b+3
+	
+.IP "Assignment Operators" 3
+:=, +=, -=, *=, /=, //=, %=, ||=
+
+.SS "Built-In Functions"
+.IP "abs(x)" 3
+The absolute function returns the absolute value of the number passed to it. Will return an integer if the parameter is integer, or float otherwise.
+.IP "pow(x,y)" 3
+The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
+.IP "sqrt(x)" 3
+The square root function always returns a float.
+
+.P
+NOTE: This list is going to be expanded greatly in a future version.
 
 .SH OPTIONS
 specs supports the following switches:
