@@ -1,7 +1,7 @@
 #ifndef SPECS2016__PROCESSING__READER__H
 #define SPECS2016__PROCESSING__READER__H
 
-#include <stdio.h>  // for FILE
+#include <fstream>
 #include "utils/StringQueue.h"
 
 class Reader {
@@ -39,17 +39,20 @@ private:
 	size_t       m_MaxCount;
 };
 
+#define STANDARD_READER_BUFFER_SIZE 65536  /* This is also the max size for an input record */
+
 class StandardReader : public Reader {
 public:
 	StandardReader();	      /* simple constructor - stdin becomes the source */
-	StandardReader(FILE* f);
+	StandardReader(std::istream* f);
 	StandardReader(std::string& fn);
 	virtual ~StandardReader();
 	virtual bool endOfSource();
 	virtual PSpecString getNextRecord();
 protected:
 private:
-	FILE* m_File;
+	std::istream* m_File;
+    char* m_buffer;
 	bool  m_EOF;
 	bool  m_NeedToClose;
 };

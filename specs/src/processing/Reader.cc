@@ -1,3 +1,5 @@
+#include <string.h>
+#include <fstream>
 #include "utils/ErrorReporting.h"
 #include "Reader.h"
 
@@ -52,33 +54,42 @@ void Reader::Begin() {
 
 
 StandardReader::StandardReader() {
-	m_File = stdin;
+	m_File = &std::cin;
 	m_NeedToClose = false;
 	m_EOF = false;
+	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
-StandardReader::StandardReader(FILE* f) {
+StandardReader::StandardReader(std::istream* f) {
 	MYASSERT(f!=NULL);
-	feof(f);  // so it crashes if what we've been passed is not a FILE pointer
+	m_EOF = false;
+	if (!f->good()) {  // so it crashes if what we've been passed is not a stream pointer
+		m_EOF = true;
+	}
 	m_File = f;
 	m_NeedToClose = false;
-	m_EOF = false;
+	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
 StandardReader::StandardReader(std::string& fn) {
-	m_File = fopen(fn.c_str(), "r");  // In future, allow binary.
-	if (!m_File) {
+	std::ifstream* pInputFile = new std::ifstream(fn);
+	m_File = pInputFile;
+	if (!pInputFile->is_open()) {
 		std::string err = "File not found: " + fn;
 		MYTHROW(err);
 	}
 	m_NeedToClose = true;
 	m_EOF = false;
+	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
 }
 
 StandardReader::~StandardReader() {
 	if (m_NeedToClose) {
-		fclose(m_File);
+		std::ifstream* pInputFile = dynamic_cast<std::ifstream*>(m_File);
+		pInputFile->close();
+		delete pInputFile;
 	}
+	free(m_buffer);
 }
 
 bool StandardReader::endOfSource() {
@@ -86,17 +97,16 @@ bool StandardReader::endOfSource() {
 }
 
 PSpecString StandardReader::getNextRecord() {
-	size_t len;
-	char* line = fgetln(m_File, &len);
-	if (!line) {
+	std::string line;
+	if (!std::getline(*m_File, line)) {
 		m_EOF = true;
 		return NULL;
 	} else {
 		// strip trailing newline if any
-		if (line[len-1]=='\n') {
-			len--;
+		if (line.back() == '\n') {
+			line.pop_back();
 		}
-		return SpecString::newString(line,len);
+		return SpecString::newString(line);
 	}
 }
 

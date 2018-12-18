@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cmath>
 #include <stack>
+#include <algorithm>
 #include "ErrorReporting.h"
 #include "alu.h"
 

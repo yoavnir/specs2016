@@ -2,7 +2,19 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include "TimeUtils.h"
+
+// determine whether the compiler here supports put_time
+#ifdef __clang__
+	#if __GNUC__ > 3
+		#define PUT_TIME__SUPPORTED
+	#endif
+#else
+	#if __GNUC__ > 4
+		#define PUT_TIME__SUPPORTED
+	#endif
+#endif
 
 #define MICROSECONDS_PER_SECOND 1000000
 using TimeResolution = std::chrono::microseconds;
@@ -37,7 +49,13 @@ PSpecString specTimeConvertToPrintable(uint64_t sinceEpoch, std::string format)
 		}
 	}
 
+#ifdef PUT_TIME__SUPPORTED
 	oss << std::put_time(&bt, format.c_str());
+#else
+    char timeFormatterString[256];
+    strftime(timeFormatterString, 255, format.c_str(), &bt);
+    oss << timeFormatterString;
+#endif
 	if (fractionalSecondLength) {
 		oss << std::setw(fractionalSecondLength) << std::setfill('0');
 		while (fractionalSecondLength < 6) {
@@ -76,12 +94,18 @@ uint64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 		}
 	}
 
+#ifdef PUT_TIME__SUPPORTED
 	std::istringstream ss(printable);
 	// ss.imbue(std::locale("de_DE.utf-8"));  TODO: handle locale as preference
 	ss >> std::get_time(&t, format.c_str());
 	if (ss.fail()) {
 		return 0;
 	}
+#else
+    if (!strptime(printable.c_str(), format.c_str(), &t)) {
+        return 0;
+    }
+#endif
 
     // automatic detection of DST - Issue #2
     t.tm_isdst = -1;

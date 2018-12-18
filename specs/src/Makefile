@@ -44,7 +44,7 @@ DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
 -include $(DEPS)
 	
 run_tests: $(TEST_EXES)
-	$(EXE_DIR)/tokenTest
+	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
 
@@ -54,7 +54,7 @@ $(EXE_DIR):
 	$(MKDIR_C) $@
 	
 ../exe/%: test/%.o $(LIBOBJS)
-	$(CXX) $(CONDLINK) -o $@ $^
+	$(CXX) $(CONDLINK) -o $@ -pthread $^
 	
 specs.1.gz: ../../manpage
 	cp ../../manpage specs.1
@@ -69,3 +69,4 @@ clear:
 install: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
 	cp specs.1.gz /usr/local/share/man/man1/
+
