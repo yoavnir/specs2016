@@ -10,6 +10,10 @@ INC = -I .
 CONDLINK =  -O3
 CONDCOMP =  -O3
 
+# For profiling
+# CONDLINK = -O3 -g
+# CONDCOMP = -O3 -g
+
 TAG := $(shell git describe --abbrev=0 --tags)
 
 CXX = g++
