@@ -124,6 +124,12 @@ int main(int argc, char** argv)
 	VERIFY("2:3 1 -7:-5 nw -2:* nw", "he azy og"); // Test #33
 	VERIFY("k: w2 . ID k 1", "quick"); // Test #34
 	VERIFY2("1-* tf2i %Y-%m-%dT%H:%M:%S.%6f a: ID a ti2f /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #35
+	// Following issue #12
+	VERIFY("w1 n", "The"); // Test #36
+	VERIFY("w2 nw", " quick"); // Test #37
+	VERIFY("w3 nf", "\tbrown"); // Test #38
+	VERIFY("w5-* 1 w4 7 w1 nw", "jumpedfox Thehe   lazy dog"); // Test #39
+
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

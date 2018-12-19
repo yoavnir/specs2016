@@ -16,6 +16,7 @@ public:
 	void           insertNextField(PSpecString str);
 private:
 	PSpecString     mp_str;
+	size_t          m_pos; // for Next, NextWord, NextField
 };
 
 #endif
