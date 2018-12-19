@@ -12,6 +12,8 @@
 	X(specFile,                     std::string,  "",     f,specFile,           NEXTARG)    \
 	X(bVerbose,                     bool,         false,  v,verbose,            true)       \
 	X(bPrintStats,                  bool,         false,  0,stats,              true)       \
+	X(inputFile,                    std::string,  "",     i,inFile,             NEXTARG)    \
+	X(outputFile,                   std::string,  "",     o,outFile,            NEXTARG)    \
 
 #define X(nm,typ,defval,ssw,cliswitch,oval) extern typ g_##nm;
 CONFIG_PARAMS

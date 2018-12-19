@@ -3,6 +3,7 @@
 
 #include <string>
 #include <thread>
+#include <fstream>
 #include "utils/StringQueue.h"
 
 class Writer {
@@ -26,7 +27,13 @@ protected:
 
 class SimpleWriter : public Writer {
 public:
+	SimpleWriter();
+	SimpleWriter(std::string& fn);
+	virtual ~SimpleWriter();
 	virtual void WriteOut();
+private:
+	std::ostream* m_File;
+	bool m_NeedToClose;
 };
 
 #endif

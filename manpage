@@ -197,7 +197,11 @@ Makes the program read the specification from a file rather than the command lin
 .IP "--verbose or -v" 3
 Outputs more information when something goes wrong.
 .IP "--stats"
-Output statistics on run time, and records read, and on records written.
+Output statistics on run time, and records read, and on records written to standard error.
+.IP "--inFile or -i" 3
+Makes the program read the input records from a file rather than from standard input.
+.IP "--outFile or -o" 3
+Makes the program write the output records to a file rather than to standard output.
 
 .SH EXAMPLES
 `ls -l` yields this:

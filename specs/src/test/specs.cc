@@ -99,8 +99,17 @@ int main (int argc, char** argv)
 	std::clock_t clockAtStart = clock();
 
 	if (ig.readsLines() || g_bForceFileRead) {
-		pRd = new StandardReader();
-		pWr = new SimpleWriter;
+		if (g_inputFile.empty()) {
+			pRd = new StandardReader();
+		} else {
+			pRd = new StandardReader(g_inputFile);
+		}
+
+		if (g_outputFile.empty()) {
+			pWr = new SimpleWriter();
+		} else {
+			pWr = new SimpleWriter(g_outputFile);
+		}
 
 		pRd->Begin();
 		pWr->Begin();

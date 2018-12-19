@@ -49,7 +49,6 @@ public:
 	virtual ~StandardReader();
 	virtual bool endOfSource();
 	virtual PSpecString getNextRecord();
-protected:
 private:
 	std::istream* m_File;
     char* m_buffer;

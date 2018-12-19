@@ -49,11 +49,34 @@ bool Writer::Done()
 	return m_ended && m_queue.empty();
 }
 
+SimpleWriter::SimpleWriter() {
+	m_File = &std::cout;
+	m_NeedToClose = false;
+}
+
+SimpleWriter::SimpleWriter(std::string& fn) {
+	std::ofstream* pOutFile = new std::ofstream(fn);
+	m_File = pOutFile;
+	if (!pOutFile->is_open()) {
+		std::string err = "Could not open output file " + fn;
+		MYTHROW(err);
+	}
+	m_NeedToClose = true;
+}
+
+SimpleWriter::~SimpleWriter() {
+	if (m_NeedToClose) {
+		std::ofstream* pOutFile = dynamic_cast<std::ofstream*>(m_File);
+		pOutFile->clear();
+		delete pOutFile;
+	}
+}
+
 void SimpleWriter::WriteOut()
 {
 	PSpecString ps;
 	if (m_queue.wait_and_pop(ps)) {
-		std::cout << *ps << std::endl;
+		*m_File << *ps << std::endl;
 		m_countWritten++;
 		delete ps;
 	}
