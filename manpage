@@ -203,6 +203,30 @@ Makes the program read the input records from a file rather than from standard i
 .IP "--outFile or -o" 3
 Makes the program write the output records to a file rather than to standard output.
 
+.SH CONFIGURATION FILE
+.B specs
+reads a configuration file from 
+.B $HOME/.specs
+.P 
+This file will contain some configuration options in a future release. For now, it only allows you to set user-predefined labels. For example, an entry such as this:
+.P
+    myCA: "Honest Abe's Used Cars & Certificates"
+.P
+allows you to issue a 
+.B specs
+command like this:
+.P
+    specs /My certificates come from/ 1 @myCA nw 
+    
+.SS "System-Defined Labels"
+The system also defines some labels:
+.IP "version" 3
+This returns the version of specs, for example "v0.1"
+.P
+To find out the version of specs that you are using, use the following command:
+.P 
+    specs @version 1
+    
 .SH EXAMPLES
 `ls -l` yields this:
 

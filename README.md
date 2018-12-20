@@ -82,8 +82,34 @@ There are also other spec units, that may be used:
       line.
 * **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges.
 * **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
+
+Configuration File
+==================
+
+**specs** allows the user to create a configuration file for two purposes:
+1. Configure some parameters instead of using switches (none exist at the moment)
+1. Define user labels
+
+The file on Linux and other Unix-like operating systems in in the user's home directory and it is called `.specs`. You can edit by pointing your favorite editor at `$HOME/.specs`
+
+#### User Labels
+Suppose you use a certain label often. For example, consider the following specification:
+```
+    specs w1-2 tf2i "%Y-%m-%d %H:%M:%S.%3f" a:
+```
+Typing that string all the time is cumbersome and error-prone, but you use it a lot because this is the date-time format in the log files that you keep analyzing with specs. What to do?  Add the following line to the .specs file:
+```
+    mydt: "%Y-%m-%d %H:%M:%S.%3f"
+```
+Now you can shorted the former specification to this:
+```
+    specs w1-2 tf2i @mydt a:
+```
+There are some pre-configured labels that do not need to be explicitly defined:
+* version - contains the version of *specs*
       
-Example:
+Examples
+========
 
    `ls -l` yields this:
 
