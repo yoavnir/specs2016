@@ -103,7 +103,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 #define UNIT_DIVINED_TYPE(u,t) do { \
 	INC_TEST_INDEX;				\
-	ALUCounter* ctr = u.evaluate(); \
+	ALUValue* ctr = u.evaluate(); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (ctr->getDivinedType()==counterType__##t) { \
@@ -118,7 +118,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 #define VERIFY_UNIT_ST(u,s) do { \
 	INC_TEST_INDEX;				\
-	ALUCounter* ctr = u.compute(&counters); \
+	ALUValue* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is \""<< s <<"\": "; \
 	if (ctr->getStr()==s) { \
@@ -132,7 +132,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 #define VERIFY_UNIT_INT(u,i) do { \
 	INC_TEST_INDEX;				\
-	ALUCounter* ctr = u.compute(&counters); \
+	ALUValue* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< i <<": "; \
 	if (ctr->getInt()==i) { \
@@ -146,7 +146,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 #define VERIFY_UNIT_F(u,f) do { \
 	INC_TEST_INDEX;				\
-	ALUCounter* ctr = u.compute(&counters); \
+	ALUValue* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< f <<": "; \
 	if (ctr->getFloat()==f) { \
@@ -161,8 +161,8 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 #define VERIFY_UNARY(u,o,t,s) do { \
 	INC_TEST_INDEX;				\
 	AluUnitCounter ctr(o);	\
-	ALUCounter* _op = ctr.compute(&counters);	\
-	ALUCounter* _res = u.compute(_op);	\
+	ALUValue* _op = ctr.compute(&counters);	\
+	ALUValue* _res = u.compute(_op);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
@@ -181,9 +181,9 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	INC_TEST_INDEX;				\
 	AluUnitCounter ctr1(o1);	\
 	AluUnitCounter ctr2(o2);	\
-	ALUCounter* _op1 = ctr1.compute(&counters);	\
-	ALUCounter* _op2 = ctr2.compute(&counters);	\
-	ALUCounter* _res = u.compute(_op1,_op2);	\
+	ALUValue* _op1 = ctr1.compute(&counters);	\
+	ALUValue* _op2 = ctr2.compute(&counters);	\
+	ALUValue* _res = u.compute(_op1,_op2);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
@@ -201,7 +201,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 #define VERIFY_ASSN(u,p,o,t,s) do {		\
 	INC_TEST_INDEX;				\
 	AluUnitCounter 	ctr(o);	\
-	ALUCounter*		op = ctr.compute(&counters);	\
+	ALUValue*		op = ctr.compute(&counters);	\
 	u.perform(p,&counters,op);			\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
@@ -289,7 +289,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		bool _res;											\
 		_res = parseAluExpression(_expr,vec);				\
 		if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true);	\
-		ALUCounter* _result = NULL;							\
+		ALUValue* _result = NULL;							\
 		if (_res) _result = evaluateExpression(rpnVec, &counters);	\
 		_res = (_result!=NULL) && (_result->getStr()==res);	\
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \

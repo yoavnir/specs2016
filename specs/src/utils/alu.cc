@@ -14,25 +14,25 @@
 #include "ErrorReporting.h"
 #include "alu.h"
 
-void ALUCounter::set(std::string& s)
+void ALUValue::set(std::string& s)
 {
 	m_value = s;
 	m_type = counterType__Str;
 }
 
-void ALUCounter::set(const char* st)
+void ALUValue::set(const char* st)
 {
 	std::string s(st);
 	set(s);
 }
 
-void ALUCounter::set(ALUInt l)
+void ALUValue::set(ALUInt l)
 {
 	m_value = std::to_string(l);
 	m_type = counterType__Int;
 }
 
-void ALUCounter::set(ALUFloat f)
+void ALUValue::set(ALUFloat f)
 {
     std::ostringstream ost;
     ost.precision(ALUFloatPrecision);
@@ -41,12 +41,12 @@ void ALUCounter::set(ALUFloat f)
 	m_type = counterType__Float;
 }
 
-void ALUCounter::set()
+void ALUValue::set()
 {
 	m_type = counterType__None;
 }
 
-ALUInt ALUCounter::getInt() const
+ALUInt ALUValue::getInt() const
 {
 	try {
 		switch (m_type) {
@@ -67,7 +67,7 @@ ALUInt ALUCounter::getInt() const
 	}
 }
 
-ALUInt ALUCounter::getHex() const
+ALUInt ALUValue::getHex() const
 {
 	try {
 		return (counterType__None==m_type) ? 0 : std::stoll(m_value, NULL, 16);
@@ -76,7 +76,7 @@ ALUInt ALUCounter::getHex() const
 	}
 }
 
-ALUFloat ALUCounter::getFloat() const
+ALUFloat ALUValue::getFloat() const
 {
 	try {
 		return (counterType__None==m_type) ? 0.0 : std::stold(m_value);
@@ -85,24 +85,24 @@ ALUFloat ALUCounter::getFloat() const
 	}
 }
 
-bool ALUCounter::getBool() const
+bool ALUValue::getBool() const
 {
 	return (m_value!="0" && m_value!="0.0");
 }
 
-bool ALUCounter::isWholeNumber() const
+bool ALUValue::isWholeNumber() const
 {
 	if (!isNumeric()) return false;
 	ALUFloat f = getFloat();
 	return (f==std::floor(f));
 }
 
-bool ALUCounter::isFloat() const
+bool ALUValue::isFloat() const
 {
 	return isNumeric() && (!isWholeNumber() || m_value.find('.')!=std::string::npos);
 }
 
-bool ALUCounter::isNumeric() const
+bool ALUValue::isNumeric() const
 {
 	switch (m_type) {
 	case counterType__None:
@@ -120,7 +120,7 @@ bool ALUCounter::isNumeric() const
 	}
 }
 
-ALUCounterType ALUCounter::getDivinedType() const
+ALUCounterType ALUValue::getDivinedType() const
 {
 	if (m_type != counterType__Str) {
 		return m_type;
@@ -139,38 +139,38 @@ ALUCounterType ALUCounter::getDivinedType() const
 
 class ALUCounterDeleter {
 public:
-	ALUCounterDeleter(ALUCounter* p) 	{p_ctr = p;}
+	ALUCounterDeleter(ALUValue* p) 	{p_ctr = p;}
 	~ALUCounterDeleter()				{if (p_ctr) delete p_ctr;}
 private:
-	ALUCounter* p_ctr;
+	ALUValue* p_ctr;
 };
 
 
-ALUCounter* AluUnit::evaluate()
+ALUValue* AluUnit::evaluate()
 {
 	std::string err = _identify() + " should not be called with no operands";
 	MYTHROW(err);
 }
 
-ALUCounter* AluUnit::compute(ALUCounter* op)
+ALUValue* AluUnit::compute(ALUValue* op)
 {
 	std::string err = _identify() + " should not be called with one operand";
 	MYTHROW(err);
 }
 
-ALUCounter* AluUnit::compute(ALUCounter* op1, ALUCounter* op2)
+ALUValue* AluUnit::compute(ALUValue* op1, ALUValue* op2)
 {
 	std::string err = _identify() + " should not be called with two operands";
 	MYTHROW(err);
 }
 
-ALUCounter* AluUnit::compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3)
+ALUValue* AluUnit::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3)
 {
 	std::string err = _identify() + " should not be called with three operands";
 	MYTHROW(err);
 }
 
-ALUCounter* AluUnit::compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4)
+ALUValue* AluUnit::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4)
 {
 	std::string err = _identify() + " should not be called with four operands";
 	MYTHROW(err);
@@ -191,9 +191,9 @@ std::string AluUnitLiteral::_identify()
 	}
 }
 
-ALUCounter* AluUnitLiteral::evaluate()
+ALUValue* AluUnitLiteral::evaluate()
 {
-	ALUCounter* ret = new ALUCounter(m_literal);
+	ALUValue* ret = new ALUValue(m_literal);
 	if (m_hintNumerical) ret->divineType();
 	return ret;
 }
@@ -209,9 +209,9 @@ std::string AluUnitCounter::_identify()
 	return std::string("Counter(") + std::to_string(m_ctrNumber) + ")";
 }
 
-ALUCounter* AluUnitCounter::compute(ALUCounters* pCtrs)
+ALUValue* AluUnitCounter::compute(ALUCounters* pCtrs)
 {
-	return new ALUCounter(*(pCtrs->getPointer(m_ctrNumber)));
+	return new ALUValue(*(pCtrs->getPointer(m_ctrNumber)));
 }
 
 static fieldIdentifierGetter* g_fieldIdentifierGetter = NULL;
@@ -231,13 +231,13 @@ std::string AluUnitFieldIdentifier::_identify()
 	return std::string("FI(") + m_id + ")";
 }
 
-ALUCounter* AluUnitFieldIdentifier::evaluate()
+ALUValue* AluUnitFieldIdentifier::evaluate()
 {
 	if (!g_fieldIdentifierGetter) {
 		MYTHROW("Field Identifier Getter is not set")
 	}
 	std::string content = g_fieldIdentifierGetter->Get(m_id);
-	return new ALUCounter(content);
+	return new ALUValue(content);
 }
 
 #define X(nm,st)	if (s==st) {m_op = UnaryOp__##nm; return;}
@@ -285,11 +285,11 @@ std::string AluUnitUnaryOperator::_identify()
 #undef X
 
 #define X(nm,st)	case UnaryOp__##nm: return compute##nm(operand);
-ALUCounter*		AluUnitUnaryOperator::compute(ALUCounter* operand)
+ALUValue*		AluUnitUnaryOperator::compute(ALUValue* operand)
 {
 	ALUCounterDeleter _op(operand);
 	if (counterType__None==operand->getType()) {
-		return new ALUCounter();
+		return new ALUValue();
 	}
 	switch (m_op) {
 	ALU_UOP_LIST
@@ -299,45 +299,45 @@ ALUCounter*		AluUnitUnaryOperator::compute(ALUCounter* operand)
 }
 #undef X
 
-#define RETURN_FALSE return new ALUCounter(ALUInt(0))
-#define RETURN_TRUE  return new ALUCounter(ALUInt(1))
+#define RETURN_FALSE return new ALUValue(ALUInt(0))
+#define RETURN_TRUE  return new ALUValue(ALUInt(1))
 
 #define RETURN_COND(cond) { if ((cond)) { RETURN_TRUE; } else { RETURN_FALSE; } }
 
-ALUCounter* 	AluUnitUnaryOperator::computeNot(ALUCounter* operand)
+ALUValue* 	AluUnitUnaryOperator::computeNot(ALUValue* operand)
 {
 	RETURN_COND(false==operand->getBool());
 }
 
-ALUCounter* 	AluUnitUnaryOperator::computePlus(ALUCounter* operand)
+ALUValue* 	AluUnitUnaryOperator::computePlus(ALUValue* operand)
 {
 	switch (operand->getType()) {
 	case counterType__Float:
 	case counterType__Int:
-		return new ALUCounter(*operand);
+		return new ALUValue(*operand);
 	case counterType__Str:
 		if (operand->isFloat()) {
-			return new ALUCounter(operand->getFloat());
+			return new ALUValue(operand->getFloat());
 		} else {
-			return new ALUCounter(operand->getInt());
+			return new ALUValue(operand->getInt());
 		}
 	default:
 		MYTHROW("Invalid operand type");
 	}
 }
 
-ALUCounter* 	AluUnitUnaryOperator::computeMinus(ALUCounter* operand)
+ALUValue* 	AluUnitUnaryOperator::computeMinus(ALUValue* operand)
 {
 	switch (operand->getType()) {
 	case counterType__Float:
-		return new ALUCounter(-operand->getFloat());
+		return new ALUValue(-operand->getFloat());
 	case counterType__Int:
-		return new ALUCounter(-operand->getInt());
+		return new ALUValue(-operand->getInt());
 	case counterType__Str:
 		if (operand->isFloat()) {
-			return new ALUCounter(-operand->getFloat());
+			return new ALUValue(-operand->getFloat());
 		} else {
-			return new ALUCounter(-operand->getInt());
+			return new ALUValue(-operand->getInt());
 		}
 	default:
 		MYTHROW("Invalid operand type");
@@ -391,12 +391,12 @@ std::string AluBinaryOperator::_identify()
 #undef X
 
 #define X(nm,st,prio)	case BinaryOp__##nm: return compute##nm(op1, op2);
-ALUCounter*		AluBinaryOperator::compute(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::compute(ALUValue* op1, ALUValue* op2)
 {
 	ALUCounterDeleter _op1(op1);
 	ALUCounterDeleter _op2(op2);
 	if (counterType__None==op1->getType() || counterType__None==op2->getType()) {
-		return new ALUCounter();
+		return new ALUValue();
 	}
 
 	switch (m_op) {
@@ -408,117 +408,117 @@ ALUCounter*		AluBinaryOperator::compute(ALUCounter* op1, ALUCounter* op2)
 #undef X
 
 // Simple floating point or integer addition
-ALUCounter*		AluBinaryOperator::computeAdd(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeAdd(ALUValue* op1, ALUValue* op2)
 {
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUCounter(op1->getFloat() + op2->getFloat());
+		return new ALUValue(op1->getFloat() + op2->getFloat());
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return new ALUCounter(op1->getInt() + op2->getInt());
+		return new ALUValue(op1->getInt() + op2->getInt());
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return new ALUCounter(op1->getInt() + op2->getInt());
+		return new ALUValue(op1->getInt() + op2->getInt());
 	}
-	return new ALUCounter(op1->getFloat() + op2->getFloat());
+	return new ALUValue(op1->getFloat() + op2->getFloat());
 }
 
 // Simple floating point or integer subtraction
-ALUCounter*		AluBinaryOperator::computeSub(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeSub(ALUValue* op1, ALUValue* op2)
 {
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUCounter(op1->getFloat() - op2->getFloat());
+		return new ALUValue(op1->getFloat() - op2->getFloat());
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return new ALUCounter(op1->getInt() - op2->getInt());
+		return new ALUValue(op1->getInt() - op2->getInt());
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return new ALUCounter(op1->getInt() - op2->getInt());
+		return new ALUValue(op1->getInt() - op2->getInt());
 	}
-	return new ALUCounter(op1->getFloat() - op2->getFloat());
+	return new ALUValue(op1->getFloat() - op2->getFloat());
 }
 
 // Floating point or integer multiplication
-ALUCounter*		AluBinaryOperator::computeMult(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeMult(ALUValue* op1, ALUValue* op2)
 {
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUCounter(op1->getFloat() * op2->getFloat());
+		return new ALUValue(op1->getFloat() * op2->getFloat());
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return new ALUCounter(op1->getInt() * op2->getInt());
+		return new ALUValue(op1->getInt() * op2->getInt());
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return new ALUCounter(op1->getInt() * op2->getInt());
+		return new ALUValue(op1->getInt() * op2->getInt());
 	}
-	return new ALUCounter(op1->getFloat() * op2->getFloat());
+	return new ALUValue(op1->getFloat() * op2->getFloat());
 }
 
 // Numeric division. The result quotient may be floating point even when the
 // dividend and divisor are both integers.
-ALUCounter*		AluBinaryOperator::computeDiv(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeDiv(ALUValue* op1, ALUValue* op2)
 {
 	// guard against divide-by-zero: return NaN
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
-		return new ALUCounter();
+		return new ALUValue();
 	}
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUCounter(op1->getFloat() / op2->getFloat());
+		return new ALUValue(op1->getFloat() / op2->getFloat());
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		if (0==(op1->getInt() % op2->getInt())) {
-			return new ALUCounter(op1->getInt() / op2->getInt());
+			return new ALUValue(op1->getInt() / op2->getInt());
 		} else {
-			return new ALUCounter(op1->getFloat() / op2->getFloat());
+			return new ALUValue(op1->getFloat() / op2->getFloat());
 		}
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber() && (0==(op1->getInt() % op2->getInt()))) {
-		return new ALUCounter(op1->getInt() / op2->getInt());
+		return new ALUValue(op1->getInt() / op2->getInt());
 	}
-	return new ALUCounter(op1->getFloat() / op2->getFloat());
+	return new ALUValue(op1->getFloat() / op2->getFloat());
 }
 
 // String concatenation ||
-ALUCounter*		AluBinaryOperator::computeAppnd(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeAppnd(ALUValue* op1, ALUValue* op2)
 {
 	std::string ret = op1->getStr() + op2->getStr();
-	return new ALUCounter(ret);
+	return new ALUValue(ret);
 }
 
 // Integer division. Divides the integer form of both numbers: 19.5 % 2.001 = 9
-ALUCounter*		AluBinaryOperator::computeIntDiv(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeIntDiv(ALUValue* op1, ALUValue* op2)
 {
 	// guard against divide-by-zero: return NaN
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
-		return new ALUCounter();
+		return new ALUValue();
 	}
 
-	return new ALUCounter(op1->getInt() / op2->getInt());
+	return new ALUValue(op1->getInt() / op2->getInt());
 }
 
 // Remainder in integer division. The operator is //
-ALUCounter*		AluBinaryOperator::computeRemDiv(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeRemDiv(ALUValue* op1, ALUValue* op2)
 {
 	// guard against divide-by-zero: return NaN
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
-		return new ALUCounter();
+		return new ALUValue();
 	}
 
-	return new ALUCounter(op1->getInt() % op2->getInt());
+	return new ALUValue(op1->getInt() % op2->getInt());
 }
 
 // Logical AND. Always returns zero or one.
-ALUCounter*		AluBinaryOperator::computeAND(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeAND(ALUValue* op1, ALUValue* op2)
 {
 	RETURN_COND(op1->getBool() && op2->getBool());
 }
 
 // Logical OR. Always returns zero or one.
-ALUCounter*		AluBinaryOperator::computeOR(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeOR(ALUValue* op1, ALUValue* op2)
 {
 	RETURN_COND(op1->getBool() || op2->getBool());
 }
 
 // Simple floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeEQ(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeEQ(ALUValue* op1, ALUValue* op2)
 {
 	if (op1->isNumeric() || op2->isNumeric()) {
 		RETURN_COND(op1->getFloat() == op2->getFloat());
@@ -528,7 +528,7 @@ ALUCounter*		AluBinaryOperator::computeEQ(ALUCounter* op1, ALUCounter* op2)
 }
 
 // Simple floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeNE(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeNE(ALUValue* op1, ALUValue* op2)
 {
 	if (op1->isNumeric() || op2->isNumeric()) {
 		RETURN_COND(op1->getFloat() != op2->getFloat());
@@ -538,7 +538,7 @@ ALUCounter*		AluBinaryOperator::computeNE(ALUCounter* op1, ALUCounter* op2)
 }
 
 // Simple floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeGT(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeGT(ALUValue* op1, ALUValue* op2)
 {
 	if (op1->isNumeric() || op2->isNumeric()) {
 		RETURN_COND(op1->getFloat() > op2->getFloat());
@@ -548,7 +548,7 @@ ALUCounter*		AluBinaryOperator::computeGT(ALUCounter* op1, ALUCounter* op2)
 }
 
 // Simple floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeGE(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeGE(ALUValue* op1, ALUValue* op2)
 {
 	if (op1->isNumeric() || op2->isNumeric()) {
 		RETURN_COND(op1->getFloat() >= op2->getFloat());
@@ -558,7 +558,7 @@ ALUCounter*		AluBinaryOperator::computeGE(ALUCounter* op1, ALUCounter* op2)
 }
 
 // Simple floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeLT(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeLT(ALUValue* op1, ALUValue* op2)
 {
 	if (op1->isNumeric() || op2->isNumeric()) {
 		RETURN_COND(op1->getFloat() < op2->getFloat());
@@ -568,7 +568,7 @@ ALUCounter*		AluBinaryOperator::computeLT(ALUCounter* op1, ALUCounter* op2)
 }
 
 // Simple floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeLE(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeLE(ALUValue* op1, ALUValue* op2)
 {
 	if (op1->isNumeric() || op2->isNumeric()) {
 		RETURN_COND(op1->getFloat() <= op2->getFloat());
@@ -578,37 +578,37 @@ ALUCounter*		AluBinaryOperator::computeLE(ALUCounter* op1, ALUCounter* op2)
 }
 
 // Strict floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeSEQ(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeSEQ(ALUValue* op1, ALUValue* op2)
 {
 	RETURN_COND(op1->getStr() == op2->getStr());
 }
 
 // Strict floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeSNE(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeSNE(ALUValue* op1, ALUValue* op2)
 {
 	RETURN_COND(op1->getStr() != op2->getStr());
 }
 
 // Strict floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeSGT(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeSGT(ALUValue* op1, ALUValue* op2)
 {
 	RETURN_COND(op1->getStr().compare(op2->getStr()) > 0);
 }
 
 // Strict floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeSLT(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeSLT(ALUValue* op1, ALUValue* op2)
 {
 	RETURN_COND(op1->getStr().compare(op2->getStr()) < 0);
 }
 
 // Strict floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeSGTE(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeSGTE(ALUValue* op1, ALUValue* op2)
 {
 	RETURN_COND(op1->getStr().compare(op2->getStr()) >= 0);
 }
 
 // Strict floating point or string comparison
-ALUCounter*		AluBinaryOperator::computeSLTE(ALUCounter* op1, ALUCounter* op2)
+ALUValue*		AluBinaryOperator::computeSLTE(ALUValue* op1, ALUValue* op2)
 {
 	RETURN_COND(op1->getStr().compare(op2->getStr()) <= 0);
 }
@@ -660,12 +660,12 @@ std::string AluAssnOperator::_identify()
 #undef X
 
 #define X(nm,st)	case AssnOp__##nm: result = compute##nm(operand, prevOp); break;
-void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCounter* operand)
+void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUValue* operand)
 {
-	ALUCounter* result;
+	ALUValue* result;
 	ALUCounterDeleter _op(operand);
 
-	ALUCounter* prevOp = ctrs->getPointer(ctrNumber);
+	ALUValue* prevOp = ctrs->getPointer(ctrNumber);
 
 	// NaN is contagious
 	if (counterType__None==operand->getType() ||
@@ -704,100 +704,100 @@ void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCo
 }
 #undef X
 
-ALUCounter* AluAssnOperator::computeLet(ALUCounter* operand, ALUCounter* prevOp)
+ALUValue* AluAssnOperator::computeLet(ALUValue* operand, ALUValue* prevOp)
 {
 	// Previous value is ignored
 	return operand;
 }
 
-ALUCounter* AluAssnOperator::computeAdd(ALUCounter* operand, ALUCounter* prevOp)
+ALUValue* AluAssnOperator::computeAdd(ALUValue* operand, ALUValue* prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return new ALUCounter(prevOp->getFloat() + operand->getFloat());
+		return new ALUValue(prevOp->getFloat() + operand->getFloat());
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
-		return new ALUCounter(prevOp->getInt() + operand->getInt());
+		return new ALUValue(prevOp->getInt() + operand->getInt());
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
-		return new ALUCounter(prevOp->getInt() + operand->getInt());
+		return new ALUValue(prevOp->getInt() + operand->getInt());
 	}
-	return new ALUCounter(prevOp->getFloat() + operand->getFloat());
+	return new ALUValue(prevOp->getFloat() + operand->getFloat());
 }
 
-ALUCounter* AluAssnOperator::computeSub(ALUCounter* operand, ALUCounter* prevOp)
+ALUValue* AluAssnOperator::computeSub(ALUValue* operand, ALUValue* prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return new ALUCounter(prevOp->getFloat() - operand->getFloat());
+		return new ALUValue(prevOp->getFloat() - operand->getFloat());
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
-		return new ALUCounter(prevOp->getInt() - operand->getInt());
+		return new ALUValue(prevOp->getInt() - operand->getInt());
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
-		return new ALUCounter(prevOp->getInt() - operand->getInt());
+		return new ALUValue(prevOp->getInt() - operand->getInt());
 	}
-	return new ALUCounter(prevOp->getFloat() - operand->getFloat());
+	return new ALUValue(prevOp->getFloat() - operand->getFloat());
 }
 
-ALUCounter* AluAssnOperator::computeMult(ALUCounter* operand, ALUCounter* prevOp)
+ALUValue* AluAssnOperator::computeMult(ALUValue* operand, ALUValue* prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return new ALUCounter(prevOp->getFloat() * operand->getFloat());
+		return new ALUValue(prevOp->getFloat() * operand->getFloat());
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
-		return new ALUCounter(prevOp->getInt() * operand->getInt());
+		return new ALUValue(prevOp->getInt() * operand->getInt());
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
-		return new ALUCounter(prevOp->getInt() * operand->getInt());
+		return new ALUValue(prevOp->getInt() * operand->getInt());
 	}
-	return new ALUCounter(prevOp->getFloat() * operand->getFloat());
+	return new ALUValue(prevOp->getFloat() * operand->getFloat());
 }
 
-ALUCounter* AluAssnOperator::computeDiv(ALUCounter* operand, ALUCounter* prevOp)
+ALUValue* AluAssnOperator::computeDiv(ALUValue* operand, ALUValue* prevOp)
 {
 	// guard against divide-by-zero: return NaN
 	if (0.0==operand->getFloat()) {
-		return new ALUCounter();
+		return new ALUValue();
 	}
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return new ALUCounter(prevOp->getFloat() / operand->getFloat());
+		return new ALUValue(prevOp->getFloat() / operand->getFloat());
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		if (0==(prevOp->getInt() % operand->getInt())) {
-			return new ALUCounter(prevOp->getInt() / operand->getInt());
+			return new ALUValue(prevOp->getInt() / operand->getInt());
 		} else {
-			return new ALUCounter(prevOp->getFloat() / operand->getFloat());
+			return new ALUValue(prevOp->getFloat() / operand->getFloat());
 		}
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber() && (0==(prevOp->getInt() % operand->getInt()))) {
-		return new ALUCounter(prevOp->getInt() / operand->getInt());
+		return new ALUValue(prevOp->getInt() / operand->getInt());
 	}
-	return new ALUCounter(prevOp->getFloat() / operand->getFloat());
+	return new ALUValue(prevOp->getFloat() / operand->getFloat());
 }
 
-ALUCounter* AluAssnOperator::computeIntDiv(ALUCounter* operand, ALUCounter* prevOp)
+ALUValue* AluAssnOperator::computeIntDiv(ALUValue* operand, ALUValue* prevOp)
 {
 	// guard against divide-by-zero: return NaN
 	if (0.0==operand->getFloat()) {
-		return new ALUCounter();
+		return new ALUValue();
 	}
 
-	return new ALUCounter(prevOp->getInt() / operand->getInt());
+	return new ALUValue(prevOp->getInt() / operand->getInt());
 }
 
-ALUCounter* AluAssnOperator::computeRemDiv(ALUCounter* operand, ALUCounter* prevOp)
+ALUValue* AluAssnOperator::computeRemDiv(ALUValue* operand, ALUValue* prevOp)
 {
 	// guard against divide-by-zero: return NaN
 	if (0.0==operand->getFloat()) {
-		return new ALUCounter();
+		return new ALUValue();
 	}
 
-	return new ALUCounter(prevOp->getInt() % operand->getInt());
+	return new ALUValue(prevOp->getInt() % operand->getInt());
 }
 
-ALUCounter* AluAssnOperator::computeAppnd(ALUCounter* operand, ALUCounter* prevOp)
+ALUValue* AluAssnOperator::computeAppnd(ALUValue* operand, ALUValue* prevOp)
 {
 	std::string ret = prevOp->getStr() + operand->getStr();
-	return new ALUCounter(ret);
+	return new ALUValue(ret);
 }
 
 
@@ -840,36 +840,36 @@ std::string AluOtherToken::_identify()
  *
  *
  */
-ALUCounter* AluFunc_abs(ALUCounter* op)
+ALUValue* AluFunc_abs(ALUValue* op)
 {
 	if (op->getType()==counterType__Int) {
 		ALUInt i = op->getInt();
 		if (i<0) i = -i;
-		return new ALUCounter(i);
+		return new ALUValue(i);
 	} else {
 		ALUFloat f = op->getFloat();
 		if (f<0) f = -f;
-		return new ALUCounter(f);
+		return new ALUValue(f);
 	}
 }
 
-ALUCounter* AluFunc_pow(ALUCounter* op1, ALUCounter* op2)
+ALUValue* AluFunc_pow(ALUValue* op1, ALUValue* op2)
 {
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUCounter(std::pow(op1->getFloat(), op2->getFloat()));
+		return new ALUValue(std::pow(op1->getFloat(), op2->getFloat()));
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return new ALUCounter(ALUInt(std::pow(op1->getInt(), op2->getInt())));
+		return new ALUValue(ALUInt(std::pow(op1->getInt(), op2->getInt())));
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return new ALUCounter(ALUInt(std::pow(op1->getInt(), op2->getInt())));
+		return new ALUValue(ALUInt(std::pow(op1->getInt(), op2->getInt())));
 	}
-	return new ALUCounter(std::pow(op1->getFloat(), op2->getFloat()));
+	return new ALUValue(std::pow(op1->getFloat(), op2->getFloat()));
 }
 
-ALUCounter* AluFunc_sqrt(ALUCounter* op)
+ALUValue* AluFunc_sqrt(ALUValue* op)
 {
-	return new ALUCounter(std::sqrt(op->getFloat()));
+	return new ALUValue(std::sqrt(op->getFloat()));
 }
 
 #define ALU_FUNCTION_LIST 		\
@@ -877,11 +877,11 @@ ALUCounter* AluFunc_sqrt(ALUCounter* op)
 	X(pow,2)					\
 	X(sqrt,1)					\
 
-typedef ALUCounter* (*AluFunc0)();
-typedef ALUCounter* (*AluFunc1)(ALUCounter* op1);
-typedef ALUCounter* (*AluFunc2)(ALUCounter* op1, ALUCounter* op2);
-typedef ALUCounter* (*AluFunc3)(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3);
-typedef ALUCounter* (*AluFunc4)(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4);
+typedef ALUValue* (*AluFunc0)();
+typedef ALUValue* (*AluFunc1)(ALUValue* op1);
+typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
+typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
+typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 
 
 #define X(nm,cnt)	if (s==#nm) {m_FuncName = s; m_ArgCount = cnt; mp_Func = (void*)AluFunc_##nm; return;}
@@ -900,31 +900,31 @@ void AluFunction::_serialize(std::ostream& os) const
 	os << m_FuncName;
 }
 
-ALUCounter* AluFunction::evaluate()
+ALUValue* AluFunction::evaluate()
 {
 	if (0 != countOperands()) return AluUnit::evaluate();
 	return (AluFunc0(mp_Func))();
 }
 
-ALUCounter* AluFunction::compute(ALUCounter* op1)
+ALUValue* AluFunction::compute(ALUValue* op1)
 {
 	if (1 != countOperands()) return AluUnit::compute(op1);
 	return (AluFunc1(mp_Func))(op1);
 }
 
-ALUCounter* AluFunction::compute(ALUCounter* op1, ALUCounter* op2)
+ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2)
 {
 	if (2 != countOperands()) return AluUnit::compute(op1,op2);
 	return (AluFunc2(mp_Func))(op1,op2);
 }
 
-ALUCounter* AluFunction::compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3)
+ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3)
 {
 	if (3 != countOperands()) return AluUnit::compute(op1,op2,op3);
 	return (AluFunc3(mp_Func))(op1,op2,op3);
 }
 
-ALUCounter* AluFunction::compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4)
+ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4)
 {
 	if (4 != countOperands()) return AluUnit::compute(op1,op2,op3,op4);
 	return (AluFunc4(mp_Func))(op1,op2,op3,op4);
@@ -1273,13 +1273,13 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	return true;
 }
 
-ALUCounter* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
+ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 {
-	std::stack<ALUCounter*> computeStack;
-	ALUCounter* arg1;
-	ALUCounter* arg2;
-	ALUCounter* arg3;
-	ALUCounter* arg4;
+	std::stack<ALUValue*> computeStack;
+	ALUValue* arg1;
+	ALUValue* arg2;
+	ALUValue* arg3;
+	ALUValue* arg4;
 
 	for (AluUnit* pUnit : expr) {
 		switch (pUnit->type()) {
@@ -1364,14 +1364,14 @@ ALUCounter* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	}
 
 	MYASSERT(computeStack.size() == 1);
-	ALUCounter* ret = computeStack.top();
+	ALUValue* ret = computeStack.top();
 	computeStack.pop();
 	return ret;
 }
 
 void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs)
 {
-	ALUCounter* exprResult = evaluateExpression(expr, pctrs);
+	ALUValue* exprResult = evaluateExpression(expr, pctrs);
 
 	pAss->perform(k, pctrs, exprResult);
 }

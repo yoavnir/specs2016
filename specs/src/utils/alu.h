@@ -23,12 +23,12 @@ static std::string ALUCounterType2Str[] = {
 		"Float"
 };
 
-class ALUCounter {
+class ALUValue {
 public:
-	ALUCounter():m_type(counterType__None), m_value("") {}
-	ALUCounter(std::string& s) {set(s);}
-	ALUCounter(ALUInt i)       {set(i);}
-	ALUCounter(ALUFloat f)     {set(f);}
+	ALUValue():m_type(counterType__None), m_value("") {}
+	ALUValue(std::string& s) {set(s);}
+	ALUValue(ALUInt i)       {set(i);}
+	ALUValue(ALUFloat f)     {set(f);}
 	ALUCounterType getType()   {return m_type;}
 	ALUCounterType getDivinedType() const;
 	void           divineType()		{m_type = getDivinedType();}
@@ -50,7 +50,7 @@ private:
 	ALUCounterType m_type;
 };
 
-static std::ostream& operator<< (std::ostream& os, const ALUCounter &c)
+static std::ostream& operator<< (std::ostream& os, const ALUValue &c)
 {
 	os << c.getStr();
     return os;
@@ -66,7 +66,7 @@ public:
 	ALUInt			getHex(ALUCounterKey i)		{return m_map[i].getHex();}
 	ALUFloat		getFloat(ALUCounterKey i)		{return m_map[i].getFloat();}
 	bool			getBool(ALUCounterKey i)		{return m_map[i].getBool();}
-	ALUCounter*		getPointer(ALUCounterKey i)	{
+	ALUValue*		getPointer(ALUCounterKey i)	{
 		if (0 == m_map.count(i)) m_map[i].set(ALUInt(0));
 		return &m_map[i];
 	}
@@ -80,7 +80,7 @@ public:
 	bool         	isWholeNumber(ALUCounterKey i) {return m_map[i].isWholeNumber();}
 	bool          	isNumeric(ALUCounterKey i) {return m_map[i].isNumeric();}
 private:
-	std::map<ALUCounterKey, ALUCounter> m_map;
+	std::map<ALUCounterKey, ALUValue> m_map;
 };
 
 #define ALU_UOP_LIST	\
@@ -149,11 +149,11 @@ public:
 	virtual void   			_serialize(std::ostream& os) const = 0;
 	virtual std::string     _identify() = 0;
 	virtual AluUnitType		type()	{return UT_Invalid;}
-	virtual ALUCounter*		evaluate();
-	virtual ALUCounter*		compute(ALUCounter* op);
-	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2);
-	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3);
-	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4);
+	virtual ALUValue*		evaluate();
+	virtual ALUValue*		compute(ALUValue* op);
+	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2);
+	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
+	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 };
 
 class AluUnitLiteral : public AluUnit {
@@ -163,9 +163,9 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_LiteralNumber;}
-	virtual ALUCounter*			evaluate();
+	virtual ALUValue*			evaluate();
 private:
-	ALUCounter	m_literal;
+	ALUValue	m_literal;
 	bool        m_hintNumerical;
 };
 
@@ -176,7 +176,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_Counter;}
-	virtual ALUCounter*			compute(ALUCounters* pCtrs);
+	virtual ALUValue*			compute(ALUCounters* pCtrs);
 	ALUCounterKey				getKey()		{return m_ctrNumber;}
 private:
 	ALUCounterKey m_ctrNumber;
@@ -197,7 +197,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_FieldIdentifier;}
-	virtual ALUCounter*			evaluate();
+	virtual ALUValue*			evaluate();
 private:
 	char         m_id;
 };
@@ -208,7 +208,7 @@ enum ALU_UnaryOperator {
 };
 #undef X
 
-#define X(nm,str) ALUCounter* compute##nm(ALUCounter* operand);
+#define X(nm,str) ALUValue* compute##nm(ALUValue* operand);
 class AluUnitUnaryOperator : public AluUnit {
 public:
 	AluUnitUnaryOperator(std::string& s);
@@ -218,7 +218,7 @@ public:
 	virtual void			_serialize(std::ostream& os) const;
 	virtual std::string		_identify();
 	virtual AluUnitType		type()			{return UT_UnaryOp;}
-	virtual ALUCounter*		compute(ALUCounter* operand);
+	virtual ALUValue*		compute(ALUValue* operand);
 private:
 	void               setOpByName(std::string& s);
 	ALU_UOP_LIST
@@ -232,7 +232,7 @@ enum ALU_BinaryOperator {
 };
 #undef X
 
-#define X(nm,str,prio) ALUCounter* compute##nm(ALUCounter* op1, ALUCounter* op2);
+#define X(nm,str,prio) ALUValue* compute##nm(ALUValue* op1, ALUValue* op2);
 class AluBinaryOperator : public AluUnit {
 public:
 	AluBinaryOperator(std::string& s);
@@ -242,7 +242,7 @@ public:
 	virtual void			_serialize(std::ostream& os) const;
 	virtual std::string		_identify();
 	virtual AluUnitType		type()			{return UT_BinaryOp;}
-	virtual ALUCounter*		compute(ALUCounter* op1, ALUCounter* op2);
+	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2);
 	unsigned int			priority()	{return m_priority;}
 private:
 	void				setOpByName(std::string& s);
@@ -258,7 +258,7 @@ enum ALU_AssignmentOperator {
 };
 #undef X
 
-#define X(nm,str) ALUCounter* compute##nm(ALUCounter* operand, ALUCounter* prevValue);
+#define X(nm,str) ALUValue* compute##nm(ALUValue* operand, ALUValue* prevValue);
 class AluAssnOperator : public AluUnit {
 public:
 	AluAssnOperator()				{m_op = AssnOp__Let;}
@@ -269,7 +269,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string 		_identify();
 	virtual AluUnitType			type()			{return UT_AssignmentOp;}
-	void	perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUCounter* operand);
+	void	perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUValue* operand);
 private:
 	void               setOpByName(std::string& s);
 	ALU_ASSOP_LIST
@@ -285,11 +285,11 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify()	{return "FUNC("+m_FuncName+")";}
 	virtual AluUnitType			type()		{return UT_Identifier;}
-	virtual ALUCounter*			evaluate();
-	virtual ALUCounter*			compute(ALUCounter* op);
-	virtual ALUCounter*			compute(ALUCounter* op1, ALUCounter* op2);
-	virtual ALUCounter*			compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3);
-	virtual ALUCounter*			compute(ALUCounter* op1, ALUCounter* op2, ALUCounter* op3, ALUCounter* op4);
+	virtual ALUValue*			evaluate();
+	virtual ALUValue*			compute(ALUValue* op);
+	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2);
+	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
+	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 private:
 	std::string		m_FuncName;
 	void*			mp_Func;
@@ -328,7 +328,7 @@ bool isValidExpression(AluVec& vec);  // To Be Added
 
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
 
-ALUCounter* evaluateExpression(AluVec& expr, ALUCounters* pctrs);
+ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs);
 
 void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs);
 
