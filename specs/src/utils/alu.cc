@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "ErrorReporting.h"
 #include "alu.h"
+#include "aluFunctions.h"
 
 void ALUValue::set(std::string& s)
 {
@@ -836,57 +837,8 @@ std::string AluOtherToken::_identify()
 	}
 }
 
-/*
- *
- *
- * ALU FUNCTIONS
- * =============
- *
- *
- */
-ALUValue* AluFunc_abs(ALUValue* op)
-{
-	if (op->getType()==counterType__Int) {
-		ALUInt i = op->getInt();
-		if (i<0) i = -i;
-		return new ALUValue(i);
-	} else {
-		ALUFloat f = op->getFloat();
-		if (f<0) f = -f;
-		return new ALUValue(f);
-	}
-}
 
-ALUValue* AluFunc_pow(ALUValue* op1, ALUValue* op2)
-{
-	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUValue(std::pow(op1->getFloat(), op2->getFloat()));
-	}
-	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return new ALUValue(ALUInt(std::pow(op1->getInt(), op2->getInt())));
-	}
-	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return new ALUValue(ALUInt(std::pow(op1->getInt(), op2->getInt())));
-	}
-	return new ALUValue(std::pow(op1->getFloat(), op2->getFloat()));
-}
-
-ALUValue* AluFunc_sqrt(ALUValue* op)
-{
-	return new ALUValue(std::sqrt(op->getFloat()));
-}
-
-#define ALU_FUNCTION_LIST 		\
-	X(abs,1)					\
-	X(pow,2)					\
-	X(sqrt,1)					\
-
-typedef ALUValue* (*AluFunc0)();
-typedef ALUValue* (*AluFunc1)(ALUValue* op1);
-typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
-typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
-typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
-
+// AluFunction class
 
 #define X(nm,cnt)	if (s==#nm) {m_FuncName = s; m_ArgCount = cnt; mp_Func = (void*)AluFunc_##nm; return;}
 AluFunction::AluFunction(std::string& _s)
