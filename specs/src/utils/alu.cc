@@ -34,6 +34,10 @@ void ALUValue::set(ALUInt l)
 
 void ALUValue::set(ALUFloat f)
 {
+	if (isnan(f)) {
+		m_type = counterType__None;  /* NaN */
+		return;
+	}
     std::ostringstream ost;
     ost.precision(ALUFloatPrecision);
     ost << f;

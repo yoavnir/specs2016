@@ -480,10 +480,13 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
 	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
 	VERIFY_BINARY(uDiv,4,33,Int,"41");      // 123 / 3
+	VERIFY_BINARY(uDiv,4,99,None,"");       // 123 / 0 = NaN
 	VERIFY_BINARY(uIntDiv,4,9,Int,"1");     // 123 % 65 where % is integer division
 	VERIFY_BINARY(uIntDiv,7,3,Int,"32");     // 98.6 % 3.14
+	VERIFY_BINARY(uIntDiv,4,99,None,"");       // 123 // 0 = NaN
 	VERIFY_BINARY(uRemDiv,4,9,Int,"58");     // 123 // 65 where // is modulo
 	VERIFY_BINARY(uRemDiv,7,3,Int,"2");     // 98.6 // 3.14 ==> 98 // 3
+	VERIFY_BINARY(uRemDiv,4,99,None,"");       // 123 % 0 = NaN
 	VERIFY_BINARY(uAppnd,1,3,Str,"hello3.14159265"); // "hello" || "3.14159265"
 	VERIFY_BINARY(uAppnd,23,1,Str,"specshello");	 // "specs" || "hello"
 	VERIFY_BINARY(uLT,9,4,Int,"1");	// 65 < 123
@@ -632,6 +635,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("1/0", "NaN");
 	VERIFY_EXPR_RES("(1/0)+5", "NaN");
 	VERIFY_EXPR_RES("#17", "0");  // initial value of all counters
+
+	// Issue #11: sqrt of a negative number was returning the native nan rather than the ALU NaN
+	VERIFY_EXPR_RES("sqrt(81)","9");
+	VERIFY_EXPR_RES("sqrt(-81)","NaN");
+	VERIFY_EXPR_RES("sqrt(0)", "0");
 
 	// TODO: More
 
