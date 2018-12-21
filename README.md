@@ -60,17 +60,17 @@ The alignment argument can be `l`, `c`, or `r`, for "left", "center", and "right
 
 The conversion argument can specify any of the following conversions:
 
-* **rot13** - encrypts the bytes using the ROT-13 cipher
-* **C2B** - converts characters to binary: "AB" --> "0010000100100010"
-* **C2X** - converts characters to hexadecimal: "AB" --> "4142"
+* **rot13** - encrypts the bytes using the ROT-13 cipher.
+* **C2B** - converts characters to binary: "AB" --> "0010000100100010".
+* **C2X** - converts characters to hexadecimal: "AB" --> "4142".
 * **B2C** - converts binary to characters: "0010000100100010" --> "AB". Will throw an exception if called with an invalid character.
 * **X2CH** - converts hexadecimal to characters: "4142" --> "AB". Will throw an exception if called with an invalid character.
-* **b2x** - converts binary data to hex
-* **D2X** - convert decimal to hex: "314159265" --> "12b9b0a1"  (not working yet)
-* **X2D** - convert hex to decimal: "12b9b0a1" --> "314159265"  (not working yet)
-* **ucase** - converts text to uppercase (not working yet)
-* **lcase** - converts text to lowercase (not working yet)
-* **BSWAP** - byte swap. reverses the order of bytes. "AB" --> "BA"
+* **b2x** - converts binary data to hex.
+* **D2X** - convert decimal to hex: "314159265" --> "12b9b0a1".
+* **X2D** - convert hex to decimal: "12b9b0a1" --> "314159265".
+* **ucase** - converts text to uppercase.
+* **lcase** - converts text to lowercase.
+* **BSWAP** - byte swap. reverses the order of bytes: "AB" --> "BA"
 * **ti2f** - convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * **tf2i** - convert printable time format to the internal 8-byte representation. 
  

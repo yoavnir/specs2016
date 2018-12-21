@@ -132,7 +132,12 @@ int main (int argc, char** argv)
 		vec.clear();
 	} else {
 		TestReader tRead(5);
-		ig.processDo(sb, ps, &tRead, NULL);
+		try {
+			ig.processDo(sb, ps, &tRead, NULL);
+		} catch (const SpecsException& e) {
+			std::cerr << "Runtime error. ";
+			std::cerr << e.what() << "\n";
+		}
 		std::cout << *sb.GetString() << "\n";
 		readLines = 0;
 		usedLines = 0;

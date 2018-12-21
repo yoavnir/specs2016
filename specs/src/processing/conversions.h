@@ -10,8 +10,10 @@
 	X(C2X)    /* bytes to hex: "AB" --> "4142" */  \
 	X(B2C)  \
 	X(X2CH) \
-	X(d2x)    /* convert decimal number to hex: "314159265" --> "12b9b0a1" */ \
-	X(x2d)  \
+	X(D2X)    /* convert decimal number to hex: "314159265" --> "12b9b0a1" */ \
+	X(X2D)  \
+	X(LCASE) \
+	X(UCASE) \
 	X(BSWAP) \
 
 #define PARAMETRIZED_CONVERSIONS_LIST \

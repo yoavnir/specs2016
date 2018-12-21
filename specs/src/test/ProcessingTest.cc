@@ -68,8 +68,12 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	StringBuilder sb;
 
 	PSpecString result = NULL;
-	if (ig.processDo(sb, ps, &tRead, NULL)) {
-		result = sb.GetString();
+	try {
+		if (ig.processDo(sb, ps, &tRead, NULL)) {
+			result = sb.GetString();
+		}
+	} catch (SpecsException& e) {
+		result = SpecString::newString(e.what(true));
 	}
 
 	free(example);
@@ -130,6 +134,16 @@ int main(int argc, char** argv)
 	VERIFY("w3 nf", "\tbrown"); // Test #38
 	VERIFY("w5-* 1 w4 7 w1 nw", "jumpedfox Thehe   lazy dog"); // Test #39
 
+	VERIFY("/100/ d2x 1", "64");                       // Test #40
+	VERIFY("/100/ x2d 1", "256");                      // Test #41
+	VERIFY("/10000000000/ d2x 1", "2540be400");        // Test #42
+	VERIFY("/10000000000/ x2d 1", "1099511627776");    // Test #43
+	VERIFY("/hello/ d2x 1", "Cannot convert <hello> from format <Decimal> to format <Hex>"); // Test #44
+	VERIFY("/-5/ d2x 1", "fffffffffffffffb");          // Test #45
+	VERIFY("/-5/ x2d 1", "1446744073709551611");      // Test #46
+
+	VERIFY("/Star Trek/ ucase 1", "STAR TREK");        // Test #47
+	VERIFY("/Star Trek/ lcase 1", "star trek");        // Test #48
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

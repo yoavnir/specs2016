@@ -109,25 +109,25 @@ respectively. Yes, you can use the entire word. In fact, for compatibility with 
 
 The conversion argument can specify any of the following conversions:
 .IP "rot13" 3
-Encrypts the bytes using the ROT-13 cipher
+Encrypts the bytes using the ROT-13 cipher.
 .IP "C2B" 3
-Converts characters to binary: "AB" --> "0010000100100010"
+Converts characters to binary: "AB" --> "0010000100100010".
 .IP "C2X" 3
-Converts characters to hexadecimal: "AB" --> "4142"
+Converts characters to hexadecimal: "AB" --> "4142".
 .IP "B2C" 3
-Converts binary to characters: "0010000100100010" --> "AB". Will throw an exception if called with an invalid character.
+Converts binary to characters: "0010000100100010" --> "AB". Will throw an exception if called with an invalid. character.
 .IP "X2CH" 3
-Converts hexadecimal to characters: "4142" --> "AB". Will throw an exception if called with an invalid character.
+Converts hexadecimal to characters: "4142" --> "AB". Will throw an exception if called with an invalid. character.
 .IP "b2x" 3
-Converts binary data to hex
+Converts binary data to hex.
 .IP "D2X" 3
-Convert decimal to hex: "314159265" --> "12b9b0a1"  (not working yet)
+Convert decimal to hex: "314159265" --> "12b9b0a1".
 .IP "X2D" 3
-Convert hex to decimal: "12b9b0a1" --> "314159265"  (not working yet)
+Convert hex to decimal: "12b9b0a1" --> "314159265".
 .IP "ucase" 3
-Converts text to uppercase (not working yet)
+Converts text to uppercase.
 .IP "lcase" 3
-Converts text to lowercase (not working yet)
+Converts text to lowercase.
 .IP "BSWAP" 3
 Byte Swap. reverses the order of bytes. "AB" --> "BA"
 .IP "ti2f" 3

@@ -1,4 +1,7 @@
 #include <string.h>
+#include <stdexcept>
+#include <sstream>
+#include <iomanip>
 #include "utils/ErrorReporting.h"
 #include "conversions.h"
 #include "utils/SpecString.h"
@@ -105,12 +108,36 @@ std::string conv_X2CH(std::string& s) {
 	return ret;
 }
 
-static std::string conv_d2x(std::string& s) {
-	return s;
+static std::string conv_D2X(std::string& s) {
+	unsigned long long value;
+	try {
+		try {
+			value = std::stoull(s);
+		} catch (std::invalid_argument) {
+			CONVERSION_EXCEPTION(s, "Decimal", "Hex");
+		}
+	} catch (std::out_of_range) {
+		CONVERSION_EXCEPTION_EX(s, "Decimal", "Hex", "out of range")
+	}
+
+	std::ostringstream oss;
+	oss << std::hex << value;
+	return oss.str();
 }
 
-static std::string conv_x2d(std::string& s) {
-	return s;
+static std::string conv_X2D(std::string& s) {
+	unsigned long long value;
+	try {
+		try {
+			value = std::stoull(s, NULL, 16);
+		} catch (std::invalid_argument) {
+			CONVERSION_EXCEPTION(s, "Hex", "Decimal");
+		}
+	} catch (std::out_of_range) {
+		CONVERSION_EXCEPTION_EX(s, "Hex", "Decimal", "out of range")
+	}
+
+	return std::to_string(value);
 }
 
 static std::string conv_BSWAP(std::string& s) {
@@ -121,6 +148,18 @@ static std::string conv_BSWAP(std::string& s) {
 	while (sIt >= sStart) {
 		*retPtr++ = *(--sIt);
 	}
+	return ret;
+}
+
+static std::string conv_LCASE(std::string& s) {
+	std::string ret(s);
+	for (auto & c : ret) c = tolower(c);
+	return ret;
+}
+
+static std::string conv_UCASE(std::string& s) {
+	std::string ret(s);
+	for (auto & c : ret) c = toupper(c);
 	return ret;
 }
 
