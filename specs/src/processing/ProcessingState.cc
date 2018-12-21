@@ -218,7 +218,7 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 {
 	PSpecString ret = m_fieldIdentifiers[id];
 	if (!ret) {
-		std::string err = std::string("Field Identifier <") + id + "> not defined yet.";
+		std::string err = std::string("Field Identifier <") + id + "> not defined.";
 		MYTHROW(err);
 	}
 	return ret;

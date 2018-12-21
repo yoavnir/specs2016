@@ -103,7 +103,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 #define UNIT_DIVINED_TYPE(u,t) do { \
 	INC_TEST_INDEX;				\
-	ALUCounter* ctr = u.evaluate(); \
+	ALUValue* ctr = u.evaluate(); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (ctr->getDivinedType()==counterType__##t) { \
@@ -118,7 +118,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 #define VERIFY_UNIT_ST(u,s) do { \
 	INC_TEST_INDEX;				\
-	ALUCounter* ctr = u.compute(&counters); \
+	ALUValue* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is \""<< s <<"\": "; \
 	if (ctr->getStr()==s) { \
@@ -132,7 +132,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 #define VERIFY_UNIT_INT(u,i) do { \
 	INC_TEST_INDEX;				\
-	ALUCounter* ctr = u.compute(&counters); \
+	ALUValue* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< i <<": "; \
 	if (ctr->getInt()==i) { \
@@ -146,7 +146,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 #define VERIFY_UNIT_F(u,f) do { \
 	INC_TEST_INDEX;				\
-	ALUCounter* ctr = u.compute(&counters); \
+	ALUValue* ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< f <<": "; \
 	if (ctr->getFloat()==f) { \
@@ -161,8 +161,8 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 #define VERIFY_UNARY(u,o,t,s) do { \
 	INC_TEST_INDEX;				\
 	AluUnitCounter ctr(o);	\
-	ALUCounter* _op = ctr.compute(&counters);	\
-	ALUCounter* _res = u.compute(_op);	\
+	ALUValue* _op = ctr.compute(&counters);	\
+	ALUValue* _res = u.compute(_op);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
@@ -181,9 +181,9 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	INC_TEST_INDEX;				\
 	AluUnitCounter ctr1(o1);	\
 	AluUnitCounter ctr2(o2);	\
-	ALUCounter* _op1 = ctr1.compute(&counters);	\
-	ALUCounter* _op2 = ctr2.compute(&counters);	\
-	ALUCounter* _res = u.compute(_op1,_op2);	\
+	ALUValue* _op1 = ctr1.compute(&counters);	\
+	ALUValue* _op2 = ctr2.compute(&counters);	\
+	ALUValue* _res = u.compute(_op1,_op2);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
@@ -201,7 +201,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 #define VERIFY_ASSN(u,p,o,t,s) do {		\
 	INC_TEST_INDEX;				\
 	AluUnitCounter 	ctr(o);	\
-	ALUCounter*		op = ctr.compute(&counters);	\
+	ALUValue*		op = ctr.compute(&counters);	\
 	u.perform(p,&counters,op);			\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
@@ -289,7 +289,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		bool _res;											\
 		_res = parseAluExpression(_expr,vec);				\
 		if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true);	\
-		ALUCounter* _result = NULL;							\
+		ALUValue* _result = NULL;							\
 		if (_res) _result = evaluateExpression(rpnVec, &counters);	\
 		_res = (_result!=NULL) && (_result->getStr()==res);	\
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
@@ -480,10 +480,13 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
 	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
 	VERIFY_BINARY(uDiv,4,33,Int,"41");      // 123 / 3
+	VERIFY_BINARY(uDiv,4,99,None,"");       // 123 / 0 = NaN
 	VERIFY_BINARY(uIntDiv,4,9,Int,"1");     // 123 % 65 where % is integer division
 	VERIFY_BINARY(uIntDiv,7,3,Int,"32");     // 98.6 % 3.14
+	VERIFY_BINARY(uIntDiv,4,99,None,"");       // 123 // 0 = NaN
 	VERIFY_BINARY(uRemDiv,4,9,Int,"58");     // 123 // 65 where // is modulo
 	VERIFY_BINARY(uRemDiv,7,3,Int,"2");     // 98.6 // 3.14 ==> 98 // 3
+	VERIFY_BINARY(uRemDiv,4,99,None,"");       // 123 % 0 = NaN
 	VERIFY_BINARY(uAppnd,1,3,Str,"hello3.14159265"); // "hello" || "3.14159265"
 	VERIFY_BINARY(uAppnd,23,1,Str,"specshello");	 // "specs" || "hello"
 	VERIFY_BINARY(uLT,9,4,Int,"1");	// 65 < 123
@@ -632,6 +635,19 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("1/0", "NaN");
 	VERIFY_EXPR_RES("(1/0)+5", "NaN");
 	VERIFY_EXPR_RES("#17", "0");  // initial value of all counters
+
+	// Issue #11: sqrt of a negative number was returning the native nan rather than the ALU NaN
+	VERIFY_EXPR_RES("sqrt(81)","9");
+	VERIFY_EXPR_RES("sqrt(-81)","NaN");
+	VERIFY_EXPR_RES("sqrt(0)", "0");
+
+	// Issue #10: conversions from and to binary format
+	VERIFY_EXPR_RES("tobin(65)","A");
+	counters.set(4,"1545406489378645");
+	VERIFY_EXPR_RES("frombin(tobin(#4+3))", "1545406489378648");
+	counters.set(4,"AAAA");
+	VERIFY_EXPR_RES("frombin(#4)", "1094795585");
+	VERIFY_EXPR_RES("tobin(1094795590)","FAAA");
 
 	// TODO: More
 

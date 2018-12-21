@@ -60,17 +60,17 @@ The alignment argument can be `l`, `c`, or `r`, for "left", "center", and "right
 
 The conversion argument can specify any of the following conversions:
 
-* **rot13** - encrypts the bytes using the ROT-13 cipher
-* **C2B** - converts characters to binary: "AB" --> "0010000100100010"
-* **C2X** - converts characters to hexadecimal: "AB" --> "4142"
+* **rot13** - encrypts the bytes using the ROT-13 cipher.
+* **C2B** - converts characters to binary: "AB" --> "0010000100100010".
+* **C2X** - converts characters to hexadecimal: "AB" --> "4142".
 * **B2C** - converts binary to characters: "0010000100100010" --> "AB". Will throw an exception if called with an invalid character.
 * **X2CH** - converts hexadecimal to characters: "4142" --> "AB". Will throw an exception if called with an invalid character.
-* **b2x** - converts binary data to hex
-* **D2X** - convert decimal to hex: "314159265" --> "12b9b0a1"  (not working yet)
-* **X2D** - convert hex to decimal: "12b9b0a1" --> "314159265"  (not working yet)
-* **ucase** - converts text to uppercase (not working yet)
-* **lcase** - converts text to lowercase (not working yet)
-* **BSWAP** - byte swap. reverses the order of bytes. "AB" --> "BA"
+* **b2x** - converts binary data to hex.
+* **D2X** - convert decimal to hex: "314159265" --> "12b9b0a1".
+* **X2D** - convert hex to decimal: "12b9b0a1" --> "314159265".
+* **ucase** - converts text to uppercase.
+* **lcase** - converts text to lowercase.
+* **BSWAP** - byte swap. reverses the order of bytes: "AB" --> "BA"
 * **ti2f** - convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * **tf2i** - convert printable time format to the internal 8-byte representation. 
  
@@ -82,8 +82,34 @@ There are also other spec units, that may be used:
       line.
 * **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges.
 * **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
+
+Configuration File
+==================
+
+**specs** allows the user to create a configuration file for two purposes:
+1. Configure some parameters instead of using switches (none exist at the moment)
+1. Define user labels
+
+The file on Linux and other Unix-like operating systems in in the user's home directory and it is called `.specs`. You can edit by pointing your favorite editor at `$HOME/.specs`
+
+#### User Labels
+Suppose you use a certain label often. For example, consider the following specification:
+```
+    specs w1-2 tf2i "%Y-%m-%d %H:%M:%S.%3f" a:
+```
+Typing that string all the time is cumbersome and error-prone, but you use it a lot because this is the date-time format in the log files that you keep analyzing with specs. What to do?  Add the following line to the .specs file:
+```
+    mydt: "%Y-%m-%d %H:%M:%S.%3f"
+```
+Now you can shorted the former specification to this:
+```
+    specs w1-2 tf2i @mydt a:
+```
+There are some pre-configured labels that do not need to be explicitly defined:
+* version - contains the version of *specs*
       
-Example:
+Examples
+========
 
    `ls -l` yields this:
 

@@ -212,7 +212,7 @@ std::string ExpressionPart::Debug()
 
 PSpecString ExpressionPart::getStr(ProcessingState& pState)
 {
-	ALUCounter* res = evaluateExpression(m_RPNExpr, &g_counters);
+	ALUValue* res = evaluateExpression(m_RPNExpr, &g_counters);
 	std::string ret = res->getStr();
 	delete res;
 	return SpecString::newString(ret);

@@ -45,6 +45,8 @@
 PSpecString runTestOnExample(const char* _specList, const char* _example)
 {
 	ProcessingState ps;
+	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
+	setFieldIdentifierGetter(&fiGetter);
 
 	TestReader tRead(5);
 	char* example = strdup(_example);
@@ -68,8 +70,12 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	StringBuilder sb;
 
 	PSpecString result = NULL;
-	if (ig.processDo(sb, ps, &tRead, NULL)) {
-		result = sb.GetString();
+	try {
+		if (ig.processDo(sb, ps, &tRead, NULL)) {
+			result = sb.GetString();
+		}
+	} catch (SpecsException& e) {
+		result = SpecString::newString(e.what(true));
 	}
 
 	free(example);
@@ -79,15 +85,10 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 
 int main(int argc, char** argv)
 {
-	ProcessingState ps;
 	int errorCount = 0;
 	int testCount  = 0;
 
 	readConfigurationFile();
-
-	// Connect the ALU to the processing state
-	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
-	setFieldIdentifierGetter(&fiGetter);
 
 	VERIFY("w1 1", "The"); // Test #1
 	VERIFY("7-17 1", "ick brown f"); // Test #2
@@ -124,12 +125,26 @@ int main(int argc, char** argv)
 	VERIFY("2:3 1 -7:-5 nw -2:* nw", "he azy og"); // Test #33
 	VERIFY("k: w2 . ID k 1", "quick"); // Test #34
 	VERIFY2("1-* tf2i %Y-%m-%dT%H:%M:%S.%6f a: ID a ti2f /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #35
+
 	// Following issue #12
 	VERIFY("w1 n", "The"); // Test #36
 	VERIFY("w2 nw", " quick"); // Test #37
 	VERIFY("w3 nf", "\tbrown"); // Test #38
 	VERIFY("w5-* 1 w4 7 w1 nw", "jumpedfox Thehe   lazy dog"); // Test #39
 
+	VERIFY("/100/ d2x 1", "64");                       // Test #40
+	VERIFY("/100/ x2d 1", "256");                      // Test #41
+	VERIFY("/10000000000/ d2x 1", "2540be400");        // Test #42
+	VERIFY("/10000000000/ x2d 1", "1099511627776");    // Test #43
+	VERIFY("/hello/ d2x 1", "Cannot convert <hello> from format <Decimal> to format <Hex>"); // Test #44
+	VERIFY("/-5/ d2x 1", "fffffffffffffffb");          // Test #45
+	VERIFY("/-5/ x2d 1", "18446744073709551611");      // Test #46
+
+	VERIFY("/Star Trek/ ucase 1", "STAR TREK");        // Test #47
+	VERIFY("/Star Trek/ lcase 1", "star trek");        // Test #48
+
+	VERIFY("a: /1545407296548900/ . print 'tobin(a)' ti2f '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #49
+	VERIFY("a: /1545407296548900/ . print 'tobin(a+3600000000)' ti2f '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #50
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

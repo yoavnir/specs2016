@@ -109,25 +109,25 @@ respectively. Yes, you can use the entire word. In fact, for compatibility with 
 
 The conversion argument can specify any of the following conversions:
 .IP "rot13" 3
-Encrypts the bytes using the ROT-13 cipher
+Encrypts the bytes using the ROT-13 cipher.
 .IP "C2B" 3
-Converts characters to binary: "AB" --> "0010000100100010"
+Converts characters to binary: "AB" --> "0010000100100010".
 .IP "C2X" 3
-Converts characters to hexadecimal: "AB" --> "4142"
+Converts characters to hexadecimal: "AB" --> "4142".
 .IP "B2C" 3
-Converts binary to characters: "0010000100100010" --> "AB". Will throw an exception if called with an invalid character.
+Converts binary to characters: "0010000100100010" --> "AB". Will throw an exception if called with an invalid. character.
 .IP "X2CH" 3
-Converts hexadecimal to characters: "4142" --> "AB". Will throw an exception if called with an invalid character.
+Converts hexadecimal to characters: "4142" --> "AB". Will throw an exception if called with an invalid. character.
 .IP "b2x" 3
-Converts binary data to hex
+Converts binary data to hex.
 .IP "D2X" 3
-Convert decimal to hex: "314159265" --> "12b9b0a1"  (not working yet)
+Convert decimal to hex: "314159265" --> "12b9b0a1".
 .IP "X2D" 3
-Convert hex to decimal: "12b9b0a1" --> "314159265"  (not working yet)
+Convert hex to decimal: "12b9b0a1" --> "314159265".
 .IP "ucase" 3
-Converts text to uppercase (not working yet)
+Converts text to uppercase.
 .IP "lcase" 3
-Converts text to lowercase (not working yet)
+Converts text to lowercase.
 .IP "BSWAP" 3
 Byte Swap. reverses the order of bytes. "AB" --> "BA"
 .IP "ti2f" 3
@@ -182,9 +182,15 @@ The absolute function returns the absolute value of the number passed to it. Wil
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
 .IP "sqrt(x)" 3
 The square root function always returns a float.
+.IP "frombin(x)" 3
+Returns a decimal number from the binary representation in x.
+.IP "tobine(x,d)" 3
+Returns a binary representation of the unsigned integer in x with field of length d bits. Valid values for d are 8, 16, 32, and 64.
+.IP "tobin(x)" 3
+Returns a binary representation of the unsigned integer in x. The field length is automatically determined by the value of x, but will be 1, 2, 4, or 8 characters in length.
 
 .P
-NOTE: This list is going to be expanded greatly in a future version.
+NOTE: This list is going to be expanded greatly in future versions.
 
 .SH OPTIONS
 specs supports the following switches:
@@ -203,6 +209,30 @@ Makes the program read the input records from a file rather than from standard i
 .IP "--outFile or -o" 3
 Makes the program write the output records to a file rather than to standard output.
 
+.SH CONFIGURATION FILE
+.B specs
+reads a configuration file from 
+.B $HOME/.specs
+.P 
+This file will contain some configuration options in a future release. For now, it only allows you to set user-predefined labels. For example, an entry such as this:
+.P
+    myCA: "Honest Abe's Used Cars & Certificates"
+.P
+allows you to issue a 
+.B specs
+command like this:
+.P
+    specs /My certificates come from/ 1 @myCA nw 
+    
+.SS "System-Defined Labels"
+The system also defines some labels:
+.IP "version" 3
+This returns the version of specs, for example "v0.1"
+.P
+To find out the version of specs that you are using, use the following command:
+.P 
+    specs @version 1
+    
 .SH EXAMPLES
 `ls -l` yields this:
 
