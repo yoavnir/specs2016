@@ -7,6 +7,9 @@
 	X(abs,1)					\
 	X(pow,2)					\
 	X(sqrt,1)					\
+	X(frombin,1)				\
+	X(tobine,2)					\
+	X(tobin,1)					\
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);

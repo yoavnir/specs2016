@@ -29,6 +29,10 @@ public:
 	ALUValue(std::string& s) {set(s);}
 	ALUValue(ALUInt i)       {set(i);}
 	ALUValue(ALUFloat f)     {set(f);}
+	ALUValue(const char* c, int bytes) {
+		std::string s(c,bytes);
+		set(s);
+	}
 	ALUCounterType getType()   {return m_type;}
 	ALUCounterType getDivinedType() const;
 	void           divineType()		{m_type = getDivinedType();}

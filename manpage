@@ -182,9 +182,15 @@ The absolute function returns the absolute value of the number passed to it. Wil
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
 .IP "sqrt(x)" 3
 The square root function always returns a float.
+.IP "frombin(x)" 3
+Returns a decimal number from the binary representation in x.
+.IP "tobine(x,d)" 3
+Returns a binary representation of the unsigned integer in x with field of length d bits. Valid values for d are 8, 16, 32, and 64.
+.IP "tobin(x)" 3
+Returns a binary representation of the unsigned integer in x. The field length is automatically determined by the value of x, but will be 1, 2, 4, or 8 characters in length.
 
 .P
-NOTE: This list is going to be expanded greatly in a future version.
+NOTE: This list is going to be expanded greatly in future versions.
 
 .SH OPTIONS
 specs supports the following switches:

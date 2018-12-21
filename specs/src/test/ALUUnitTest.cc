@@ -641,6 +641,14 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("sqrt(-81)","NaN");
 	VERIFY_EXPR_RES("sqrt(0)", "0");
 
+	// Issue #10: conversions from and to binary format
+	VERIFY_EXPR_RES("tobin(65)","A");
+	counters.set(4,"1545406489378645");
+	VERIFY_EXPR_RES("frombin(tobin(#4+3))", "1545406489378648");
+	counters.set(4,"AAAA");
+	VERIFY_EXPR_RES("frombin(#4)", "1094795585");
+	VERIFY_EXPR_RES("tobin(1094795590)","FAAA");
+
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
