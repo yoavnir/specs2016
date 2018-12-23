@@ -140,8 +140,10 @@ int ProcessingState::getFieldEnd(int idx) {
 	if (m_fieldCount==-1) {
 		identifyFields();
 	}
-	MYASSERT(idx!=0);
-	if (idx < 0) {
+
+	if (idx==0) {
+		idx = m_fieldCount;
+	} else if (idx < 0) {
 		if ((-idx) > m_fieldCount) return 0;
 		idx += m_fieldCount + 1;
 	}

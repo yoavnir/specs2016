@@ -8,9 +8,10 @@
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
 
-#define VERIFY(sp,ex) {          \
+#define VERIFY(sp,ex) do {          \
+		testCount++;                            \
+		if (onlyTest!=0 && onlyTest != testCount) break;  \
 		PSpecString ps = runTestOnExample(sp, "The quick brown fox jumped over the   lazy dog");  \
-		testCount++;                            \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
@@ -23,11 +24,12 @@
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
 		}                                       \
-}
+} while (0);
 
-#define VERIFY2(sp,ln,ex) {          \
-		PSpecString ps = runTestOnExample(sp, ln);  \
+#define VERIFY2(sp,ln,ex) do {          \
 		testCount++;                            \
+		if (onlyTest!=0 && onlyTest != testCount) break;  \
+		PSpecString ps = runTestOnExample(sp, ln);  \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
@@ -40,7 +42,7 @@
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
 		}                                       \
-}
+} while (0);
 
 PSpecString runTestOnExample(const char* _specList, const char* _example)
 {
@@ -87,6 +89,9 @@ int main(int argc, char** argv)
 {
 	int errorCount = 0;
 	int testCount  = 0;
+	int onlyTest   = 0;
+
+	if (argc > 1) onlyTest = std::stoi(argv[1]);
 
 	readConfigurationFile();
 
@@ -145,6 +150,9 @@ int main(int argc, char** argv)
 
 	VERIFY("a: /1545407296548900/ . print 'tobin(a)' ti2f '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #49
 	VERIFY("a: /1545407296548900/ . print 'tobin(a+3600000000)' ti2f '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #50
+
+	// Issue #22
+	VERIFY2("fs : field 1-* 1", "a:b", "a:b");  // Test #51
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
