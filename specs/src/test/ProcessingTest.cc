@@ -154,6 +154,13 @@ int main(int argc, char** argv)
 	// Issue #22
 	VERIFY2("fs : field 1-* 1", "a:b", "a:b");  // Test #51
 
+	// if...then...else...endif
+	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "2",     "even");    // Test #52
+	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "hello", "even");    // Test #53
+	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "7",     "odd");     // Test #54
+	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "7.5",   "odd");     // Test #55
+	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "8.5",   "even");    // Test #56
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {

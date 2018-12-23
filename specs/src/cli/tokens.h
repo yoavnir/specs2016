@@ -45,6 +45,10 @@
 	X(DTODCLOCK,      false, false) \
 	X(SET,            false, false) \
 	X(PRINT,          false, true)  \
+	X(IF,             false, true)  \
+	X(THEN,           false, false) \
+	X(ELSE,           false, false) \
+	X(ENDIF,          false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

@@ -2,6 +2,7 @@
 #define SPECS2016__PROCESSING__PROCESSINGSTATE__H
 
 #include <vector>
+#include <stack>
 #include <map>
 #include "utils/alu.h"
 #include "utils/SpecString.h"
@@ -40,10 +41,21 @@ public:
 	void fieldIdentifierSet(char id, PSpecString ps);
 	PSpecString fieldIdentifierGet(char id);
 	void fieldIdentifierClear();
+	bool needToEvaluate();
+	void setCondition(bool isTrue);
+	void observeIf();
+	void observeElse();
+	void observeEndIf();
 private:
+	enum extremeBool {
+		bFalse,
+		bTrue,
+		bDontCare
+	};
 	void identifyWords();
 	void identifyFields();
 	std::map<char,PSpecString> m_fieldIdentifiers;
+	std::stack<extremeBool> m_Conditions;
 };
 
 

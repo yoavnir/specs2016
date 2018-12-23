@@ -45,11 +45,16 @@ CONTINUE:
 
 int main (int argc, char** argv)
 {
+	bool conciseExceptions = true;
 	readConfigurationFile();
 
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
 	}
+
+#ifdef DEBUG
+	conciseExceptions = !g_bVerbose;
+#endif
 
 	std::vector<Token> vec;
 	if (g_specFile != "") {
@@ -69,7 +74,7 @@ int main (int argc, char** argv)
 	try {
 		ig.Compile(vec, index);
 	}  catch (const SpecsException& e) {
-		std::cerr << "Error while parsing command-line arguments: " << e.what(true) << "\n";
+		std::cerr << "Error while parsing command-line arguments: " << e.what(conciseExceptions) << "\n";
 		if (g_bVerbose) {
 			std::cerr << "\nProcessing stopped at index " << index
 					<< '/' << vec.size() << ":\n";
@@ -118,7 +123,7 @@ int main (int argc, char** argv)
 			ig.process(sb, ps, *pRd, *pWr);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
-			std::cerr << e.what() << "\n";
+			std::cerr << e.what(conciseExceptions) << "\n";
 		}
 
 		pRd->End();
@@ -136,7 +141,7 @@ int main (int argc, char** argv)
 			ig.processDo(sb, ps, &tRead, NULL);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
-			std::cerr << e.what() << "\n";
+			std::cerr << e.what(conciseExceptions) << "\n";
 		}
 		std::cout << *sb.GetString() << "\n";
 		readLines = 0;

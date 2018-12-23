@@ -226,6 +226,46 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 	return ret;
 }
 
+bool ProcessingState::needToEvaluate()
+{
+	return ((m_Conditions.empty()) || (m_Conditions.top() == bTrue));
+}
+
+void ProcessingState::setCondition(bool isTrue)
+{
+	MYASSERT(m_Conditions.empty() || (bTrue == m_Conditions.top()));
+	m_Conditions.push(isTrue ? bTrue : bFalse);
+}
+
+void ProcessingState::observeIf()
+{
+	MYASSERT(!m_Conditions.empty());
+	MYASSERT((bFalse == m_Conditions.top()) || (bDontCare == m_Conditions.top()));
+	m_Conditions.push(bDontCare);
+}
+
+void ProcessingState::observeElse()
+{
+	MYASSERT(!m_Conditions.empty());
+	switch (m_Conditions.top()) {
+	case bTrue:
+		m_Conditions.top() = bFalse;
+		break;
+	case bFalse:
+		m_Conditions.top() = bTrue;
+		break;
+	default:
+		;
+	}
+}
+
+void ProcessingState::observeEndIf()
+{
+	MYASSERT(!m_Conditions.empty());
+	m_Conditions.pop();
+}
+
+
 // Helper class for the ALU
 std::string ProcessingStateFieldIdentifierGetter::Get(char id)
 {

@@ -3,12 +3,12 @@ EXE_DIR = ../exe
 INC = -I .
 
 # FOR DEBUG
-# CONDCOMP = -g -DDEBUG
-# CONDLINK = -g
+CONDCOMP = -g -DDEBUG
+CONDLINK = -g
 
 # FOR RELEASE
-CONDLINK =  -O3
-CONDCOMP =  -O3
+# CONDLINK =  -O3
+# CONDCOMP =  -O3
 
 # For profiling
 # CONDLINK = -O3 -g

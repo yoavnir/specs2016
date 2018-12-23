@@ -146,6 +146,7 @@ public:
 	virtual std::string Debug() = 0;
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
 	virtual bool readsLines() {return false;}
+	virtual bool ApplyUnconditionally() {return false;}
 };
 
 typedef Item* PItem;
@@ -197,6 +198,25 @@ private:
 	AluVec          m_RPNExpression;
 };
 
-// ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs
+class ConditionItem : public Item {
+public:
+	enum predicate {
+		PRED_IF,
+		PRED_THEN,
+		PRED_ELSE,
+		PRED_ENDIF
+	};
+	ConditionItem(std::string& _statement);
+	ConditionItem(ConditionItem::predicate _p);
+	virtual ~ConditionItem();
+	virtual std::string Debug();
+	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool ApplyUnconditionally() {return true;}
+private:
+	std::string m_rawExpression;
+	AluVec      m_RPNExpression;
+	predicate   m_pred;
+};
+
 
 #endif
