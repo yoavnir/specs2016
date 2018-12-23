@@ -1,5 +1,6 @@
 #include "utils/ErrorReporting.h"
 #include "utils/aluFunctions.h"
+#include <string.h>
 #include <cmath>
 
 /*
