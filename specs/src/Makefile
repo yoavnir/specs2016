@@ -3,12 +3,12 @@ EXE_DIR = ../exe
 INC = -I .
 
 # FOR DEBUG
-CONDCOMP = -g -DDEBUG
-CONDLINK = -g
+# CONDCOMP = -g -DDEBUG
+# CONDLINK = -g
 
 # FOR RELEASE
-# CONDLINK =  -O3
-# CONDCOMP =  -O3
+CONDLINK =  -O3
+CONDCOMP =  -O3
 
 # For profiling
 # CONDLINK = -O3 -g
@@ -68,6 +68,7 @@ clear:
 	
 install: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
+	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 
