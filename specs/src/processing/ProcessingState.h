@@ -45,6 +45,7 @@ public:
 	void setCondition(bool isTrue);
 	void observeIf();
 	void observeElse();
+	void observeElseIf(bool& evaluateCond);
 	void observeEndIf();
 private:
 	enum extremeBool {

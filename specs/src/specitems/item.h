@@ -204,6 +204,7 @@ public:
 		PRED_IF,
 		PRED_THEN,
 		PRED_ELSE,
+		PRED_ELSEIF,
 		PRED_ENDIF
 	};
 	ConditionItem(std::string& _statement);
@@ -212,6 +213,7 @@ public:
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 	virtual bool ApplyUnconditionally() {return true;}
+	void    setElseIf();
 private:
 	std::string m_rawExpression;
 	AluVec      m_RPNExpression;

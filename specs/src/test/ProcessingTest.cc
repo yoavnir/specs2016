@@ -161,6 +161,21 @@ int main(int argc, char** argv)
 	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "7.5",   "odd");     // Test #55
 	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "8.5",   "even");    // Test #56
 
+	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "1", "one");    // Test #57
+	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "2", "two");    // Test #58
+	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "2.0", "two");  // Test #59
+	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "3", "three");  // Test #60
+	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "4", "many");   // Test #61
+	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "5", "many");   // Test #62
+	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "yes", "many"); // Test #63
+
+	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "0", "really small");   // Test #64
+	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "1", "really small");   // Test #65
+	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "2.5", "quite small");  // Test #66
+	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "4.5", "not too big");  // Test #67
+	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "6", "very big");       // Test #68
+
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {

@@ -259,6 +259,25 @@ void ProcessingState::observeElse()
 	}
 }
 
+void ProcessingState::observeElseIf(bool& evaluateCond)
+{
+	MYASSERT(!m_Conditions.empty());
+	switch (m_Conditions.top()) {
+	case bTrue:
+		m_Conditions.top() = bDontCare;  // in a series of if..elseif..elseif, once true, never again
+		evaluateCond = false;
+		break;
+	case bFalse:
+		m_Conditions.pop();  // the next setCondition will replace the entry
+		evaluateCond = true;
+		break;
+	default:
+		// leave the bDontCare where it is.
+		evaluateCond = false;
+		break;
+	}
+}
+
 void ProcessingState::observeEndIf()
 {
 	MYASSERT(!m_Conditions.empty());

@@ -48,6 +48,7 @@
 	X(IF,             false, true)  \
 	X(THEN,           false, false) \
 	X(ELSE,           false, false) \
+	X(ELSEIF,         false, true)  \
 	X(ENDIF,          false, false) \
 	X(DUMMY,          false, false)
 

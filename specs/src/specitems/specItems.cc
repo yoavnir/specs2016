@@ -63,11 +63,15 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			break;
 		}
 		case TokenListType__IF:
+		case TokenListType__ELSEIF:
 		{
 			MYASSERT(index < tokenVec.size());
 			MYASSERT(TokenListType__THEN == tokenVec[index+1].Type());
 			try {
 				ConditionItem* pItem = new ConditionItem(tokenVec[index].Literal());
+				if (TokenListType__ELSEIF == tokenVec[index].Type()) {
+					pItem->setElseIf();
+				}
 				index++;
 				addItem(pItem);
 			} catch (const SpecsException& e) {
@@ -302,7 +306,18 @@ std::string ConditionItem::Debug()
 		std::string ret = "IF(" + m_rawExpression + ")";
 		return ret;
 	}
+	case PRED_ELSEIF: {
+		std::string ret = "ELSEIF(" + m_rawExpression + ")";
+		return ret;
 	}
+	}
+	return std::string(""); // Issue #14
+}
+
+void ConditionItem::setElseIf()
+{
+	MYASSERT(PRED_IF == m_pred);
+	m_pred = PRED_ELSEIF;
 }
 
 ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
@@ -312,6 +327,7 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		if (pState.needToEvaluate()) {
 			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
 			pState.setCondition(exprResult->getBool());
+			delete exprResult;
 		} else {
 			pState.observeIf();
 		}
@@ -322,6 +338,16 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	case PRED_ELSE:
 		pState.observeElse();
 		break;
+	case PRED_ELSEIF: {
+		bool bNeedToEvaluate;
+		pState.observeElseIf(bNeedToEvaluate);
+		if (bNeedToEvaluate) {
+			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+			pState.setCondition(exprResult->getBool());
+			delete exprResult;
+		}
+		break;
+	}
 	case PRED_ENDIF:
 		pState.observeEndIf();
 	}
