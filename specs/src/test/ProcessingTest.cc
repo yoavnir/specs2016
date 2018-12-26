@@ -85,11 +85,19 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	return result;
 }
 
+PSpecString runTestOnExample(std::string& s, const char* _example)
+{
+	return runTestOnExample(s.c_str(), _example);
+}
+
 int main(int argc, char** argv)
 {
+	g_bVerbose = true;
 	int errorCount = 0;
 	int testCount  = 0;
 	int onlyTest   = 0;
+
+	std::string spec;
 
 	if (argc > 1) onlyTest = std::stoi(argv[1]);
 
@@ -155,25 +163,88 @@ int main(int argc, char** argv)
 	VERIFY2("fs : field 1-* 1", "a:b", "a:b");  // Test #51
 
 	// if...then...else...endif
-	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "2",     "even");    // Test #52
-	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "hello", "even");    // Test #53
-	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "7",     "odd");     // Test #54
-	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "7.5",   "odd");     // Test #55
-	VERIFY2("a: w1 . if 0=a%2 then even 1 else odd 1", "8.5",   "even");    // Test #56
+	spec = "a: w1 . if 0=a%2 then even 1 else odd 1";
+	VERIFY2(spec, "2",     "even");    // Test #52
+	VERIFY2(spec, "hello", "even");    // Test #53
+	VERIFY2(spec, "7",     "odd");     // Test #54
+	VERIFY2(spec, "7.5",   "odd");     // Test #55
+	VERIFY2(spec, "8.5",   "even");    // Test #56
 
-	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "1", "one");    // Test #57
-	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "2", "two");    // Test #58
-	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "2.0", "two");  // Test #59
-	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "3", "three");  // Test #60
-	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "4", "many");   // Test #61
-	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "5", "many");   // Test #62
-	VERIFY2("a: w1 . if a=1 then one 1 elseif a=2 then two 1 elseif a=3 then three 1 else many 1 endif", "yes", "many"); // Test #63
+	spec = "  a: w1 .           " \
+		   "  if a=1 then       " \
+		   "      one 1         " \
+		   "  elseif a=2 then   " \
+		   "      two 1         " \
+		   "  elseif a=3 then   " \
+		   "      three 1       "\
+		   "  else              " \
+		   "      many 1        "\
+		   "  endif             ";
+	VERIFY2(spec, "1", "one");    // Test #57
+	VERIFY2(spec, "2", "two");    // Test #58
+	VERIFY2(spec, "2.0", "two");  // Test #59
+	VERIFY2(spec, "3", "three");  // Test #60
+	VERIFY2(spec, "4", "many");   // Test #61
+	VERIFY2(spec, "5", "many");   // Test #62
+	VERIFY2(spec, "yes", "many"); // Test #63
 
-	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "0", "really small");   // Test #64
-	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "1", "really small");   // Test #65
-	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "2.5", "quite small");  // Test #66
-	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "4.5", "not too big");  // Test #67
-	VERIFY2("a: w1 . if a>1 then if a>3 then if a>5 then /very big/ 1 else /not too big/ 1 endif else /quite small/ 1 endif else /really small/ 1 endif", "6", "very big");       // Test #68
+	spec = "  a: w1 .                       " \
+		   "  if a>1 then                   " \
+		   "      if a>3 then               " \
+		   "          if a>5 then           " \
+		   "              /very big/ 1      " \
+		   "          else                  " \
+		   "              /not too big/ 1   " \
+		   "          endif                 " \
+		   "      else                      " \
+		   "          /quite small/ 1       " \
+		   "      endif                     " \
+		   "  else                          " \
+		   "      /really small/ 1          " \
+		   "  endif                         ";
+
+	VERIFY2(spec, "0", "really small");   // Test #64
+	VERIFY2(spec, "1", "really small");   // Test #65
+	VERIFY2(spec, "2.5", "quite small");  // Test #66
+	VERIFY2(spec, "4.5", "not too big");  // Test #67
+	VERIFY2(spec, "6", "very big");       // Test #68
+
+	// while...do...done
+	spec =  "  a: w1 .         " \
+			"  set #0:=a       " \
+			"  while #0>0 do   " \
+			"      print #0 n  " \
+			"      set #0-=1   " \
+			"  done            ";
+	VERIFY2(spec, "5", "54321");      // Test #69
+	VERIFY2(spec, "1", "1");          // Test #70
+	VERIFY2(spec, "0", "");           // Test #71
+	VERIFY2(spec, "-5", "");          // Test #72
+	VERIFY2(spec, "3.14", "3.142.141.140.14");  // Test #73
+	VERIFY2(spec, "yes", "");         // Test #74
+
+	spec =  "  a: w1 1 /:/ n   " \
+			"  set #0:=a       " \
+			"  set #1:=2       " \
+			"  while #0>1 do   " \
+			"      if '0=#0 % #1' then  " \
+			"          print #1 nw /(/ n  " \
+			"          set #2:=0         " \
+			"          while '(#0>1) & (0=#0 % #1)' do  " \
+			"              set '#2 += 1'     " \
+			"              set '#0 /= #1'   " \
+			"          done                  " \
+			"          print #2 n /)/ n      " \
+			"      endif                     " \
+			"      set '#1 += 1'             " \
+			"  done                          ";
+	VERIFY2(spec, "28", "28: 2(2) 7(1)");   // Test #75
+	VERIFY2(spec, "1024", "1024: 2(10)");   // Test #76
+	VERIFY2(spec, "67", "67: 67(1)");       // Test #77
+	VERIFY2(spec, "0", "0:");               // Test #78
+	VERIFY2(spec, "-3", "-3:");             // Test #79
+	VERIFY2(spec, "to keep the number", "to:");// VERIFY2(spec, "6.2", "6.2: 2(1) 3(1)"); -- this goes into an endless loop
+	VERIFY2(spec, "hello", "hello:");       // Test #81
 
 
 	if (errorCount) {

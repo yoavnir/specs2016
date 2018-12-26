@@ -64,13 +64,21 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__IF:
 		case TokenListType__ELSEIF:
+		case TokenListType__WHILE:
 		{
 			MYASSERT(index < tokenVec.size());
-			MYASSERT(TokenListType__THEN == tokenVec[index+1].Type());
+			if (TokenListType__WHILE == tokenVec[index].Type()) {
+				MYASSERT(TokenListType__DO == tokenVec[index+1].Type());
+			} else {
+				MYASSERT(TokenListType__THEN == tokenVec[index+1].Type());
+			}
 			try {
 				ConditionItem* pItem = new ConditionItem(tokenVec[index].Literal());
 				if (TokenListType__ELSEIF == tokenVec[index].Type()) {
 					pItem->setElseIf();
+				}
+				else if (TokenListType__WHILE == tokenVec[index].Type()) {
+					pItem->setWhile();
 				}
 				index++;
 				addItem(pItem);
@@ -100,6 +108,20 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__ENDIF:
 		{
 			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_ENDIF);
+			index++;
+			addItem(pItem);
+			break;
+		}
+		case TokenListType__DO:
+		{
+			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_DO);
+			index++;
+			addItem(pItem);
+			break;
+		}
+		case TokenListType__DONE:
+		{
+			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_DONE);
 			index++;
 			addItem(pItem);
 			break;
@@ -162,6 +184,12 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				}
 			}
 			pState.setString(ps);
+			break;
+		case ApplyRet__EnterLoop:
+			pState.pushLoop(i);
+			break;
+		case ApplyRet__DoneLoop:
+			i = pState.getLoopStart() - 1;  // subtracting 1 because the for loop increments
 			break;
 		default:
 			std::string err = "Unexpected return code from TokenItem::apply: ";
@@ -294,6 +322,8 @@ std::string ConditionItem::Debug()
 	static const std::string sThen("THEN");
 	static const std::string sElse("ELSE");
 	static const std::string sEndIf("ENDIF");
+	static const std::string sDo("DO");
+	static const std::string sDone("DONE");
 
 	switch(m_pred) {
 	case PRED_THEN:
@@ -302,12 +332,20 @@ std::string ConditionItem::Debug()
 		return sElse;
 	case PRED_ENDIF:
 		return sEndIf;
+	case PRED_DO:
+		return sDo;
+	case PRED_DONE:
+		return sDone;
 	case PRED_IF: {
 		std::string ret = "IF(" + m_rawExpression + ")";
 		return ret;
 	}
 	case PRED_ELSEIF: {
 		std::string ret = "ELSEIF(" + m_rawExpression + ")";
+		return ret;
+	}
+	case PRED_WHILE: {
+		std::string ret = "WHILE(" + m_rawExpression + ")";
 		return ret;
 	}
 	}
@@ -320,8 +358,16 @@ void ConditionItem::setElseIf()
 	m_pred = PRED_ELSEIF;
 }
 
+void ConditionItem::setWhile()
+{
+	MYASSERT(PRED_IF == m_pred);
+	m_pred = PRED_WHILE;
+}
+
 ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
+	ApplyRet ret = ApplyRet__Continue;
+
 	switch (m_pred) {
 	case PRED_IF: {
 		if (pState.needToEvaluate()) {
@@ -350,7 +396,30 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	}
 	case PRED_ENDIF:
 		pState.observeEndIf();
+		break;
+	case PRED_WHILE: {
+		if (pState.needToEvaluate()) {
+			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+			if (exprResult->getBool()) {
+				ret = ApplyRet__EnterLoop;
+			} else {
+				pState.observeWhile();
+			}
+		} else {
+			pState.observeWhile();
+		}
+		break;
+	}
+	case PRED_DO:
+		break;
+	case PRED_DONE:
+		if (pState.runningOutLoop()) {
+			pState.observeDone();
+		} else {
+			ret = ApplyRet__DoneLoop;
+		}
+		break;
 	}
 
-	return ApplyRet__Continue;
+	return ret;
 }

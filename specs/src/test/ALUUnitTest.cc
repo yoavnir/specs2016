@@ -585,6 +585,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR("5+sqrt(1)-pow(3,4)","Number(5);BOP(+);FUNC(sqrt);(;Number(1););BOP(-);FUNC(pow);(;Number(3);COMMA;Number(4);)");
 	VERIFY_EXPR("a>b & b>c","FI(a);BOP(>);FI(b);BOP(&);FI(b);BOP(>);FI(c)");
 
+	VERIFY_EXPR("37%10", "Number(37);BOP(%);Number(10)");
+
 
 	// TODO: Yeah, a whole bunch of more expressions
 
@@ -605,6 +607,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_RPN("-b","FI(b);UOP(-)");
 	VERIFY_RPN("-2+3","Number(-2);Number(3);BOP(+)");
 	VERIFY_RPN("-(2+3)","Number(2);Number(3);BOP(+);UOP(-)");
+	VERIFY_RPN("37%10","Number(37);Number(10);BOP(%)");
 	VERIFY_RPN("a+b-c","FI(a);FI(b);BOP(+);FI(c);BOP(-)");
 	VERIFY_RPN("a-b+c","FI(a);FI(b);BOP(-);FI(c);BOP(+)")
 	VERIFY_RPN("a*b-c","FI(a);FI(b);BOP(*);FI(c);BOP(-)");
@@ -648,6 +651,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	counters.set(4,"AAAA");
 	VERIFY_EXPR_RES("frombin(#4)", "1094795585");
 	VERIFY_EXPR_RES("tobin(1094795590)","FAAA");
+
+	// Possible problem with integer division
+	VERIFY_EXPR_RES("37/10","3.7");
+	VERIFY_EXPR_RES("37//10","3");
+	VERIFY_EXPR_RES("37%10","7");
 
 	// TODO: More
 

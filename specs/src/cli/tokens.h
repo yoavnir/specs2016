@@ -50,6 +50,9 @@
 	X(ELSE,           false, false) \
 	X(ELSEIF,         false, true)  \
 	X(ENDIF,          false, false) \
+	X(WHILE,          false, true)  \
+	X(DO,             false, false) \
+	X(DONE,           false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

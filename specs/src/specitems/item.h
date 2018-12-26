@@ -132,6 +132,8 @@ enum ApplyRet {
 	ApplyRet__Write,
 	ApplyRet__Read,
 	ApplyRet__ReadStop,
+	ApplyRet__EnterLoop,
+	ApplyRet__DoneLoop,
 	ApplyRet__Last
 };
 
@@ -205,7 +207,10 @@ public:
 		PRED_THEN,
 		PRED_ELSE,
 		PRED_ELSEIF,
-		PRED_ENDIF
+		PRED_ENDIF,
+		PRED_WHILE,
+		PRED_DO,
+		PRED_DONE
 	};
 	ConditionItem(std::string& _statement);
 	ConditionItem(ConditionItem::predicate _p);
@@ -214,6 +219,7 @@ public:
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 	virtual bool ApplyUnconditionally() {return true;}
 	void    setElseIf();
+	void    setWhile();
 private:
 	std::string m_rawExpression;
 	AluVec      m_RPNExpression;

@@ -226,9 +226,14 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 	return ret;
 }
 
+bool ProcessingState::runningOutLoop()
+{
+	return (!m_Loops.empty() && (LOOP_CONDITION_FALSE == m_Loops.top()));
+}
+
 bool ProcessingState::needToEvaluate()
 {
-	return ((m_Conditions.empty()) || (m_Conditions.top() == bTrue));
+	return (((m_Conditions.empty()) || (m_Conditions.top() == bTrue)) && !runningOutLoop());
 }
 
 void ProcessingState::setCondition(bool isTrue)
@@ -239,13 +244,34 @@ void ProcessingState::setCondition(bool isTrue)
 
 void ProcessingState::observeIf()
 {
+	if (runningOutLoop()) return;
 	MYASSERT(!m_Conditions.empty());
 	MYASSERT((bFalse == m_Conditions.top()) || (bDontCare == m_Conditions.top()));
 	m_Conditions.push(bDontCare);
 }
 
+void ProcessingState::observeWhile()
+{
+	m_Loops.push(LOOP_CONDITION_FALSE);
+}
+
+void ProcessingState::observeDone()
+{
+	MYASSERT(!m_Loops.empty() && LOOP_CONDITION_FALSE == m_Loops.top());
+	m_Loops.pop();
+}
+
+int ProcessingState::getLoopStart()
+{
+	MYASSERT(!m_Loops.empty() && LOOP_CONDITION_FALSE != m_Loops.top());
+	int ret = m_Loops.top();
+	m_Loops.pop();
+	return ret;
+}
+
 void ProcessingState::observeElse()
 {
+	if (runningOutLoop()) return;
 	MYASSERT(!m_Conditions.empty());
 	switch (m_Conditions.top()) {
 	case bTrue:
@@ -261,6 +287,7 @@ void ProcessingState::observeElse()
 
 void ProcessingState::observeElseIf(bool& evaluateCond)
 {
+	if (runningOutLoop()) return;
 	MYASSERT(!m_Conditions.empty());
 	switch (m_Conditions.top()) {
 	case bTrue:
@@ -280,6 +307,7 @@ void ProcessingState::observeElseIf(bool& evaluateCond)
 
 void ProcessingState::observeEndIf()
 {
+	if (runningOutLoop()) return;
 	MYASSERT(!m_Conditions.empty());
 	m_Conditions.pop();
 }

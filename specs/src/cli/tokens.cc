@@ -324,6 +324,9 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(then, THEN);
 	SIMPLETOKEN(endif, ENDIF);
 	SIMPLETOKEN(elseif, ELSEIF);
+	SIMPLETOKEN(while, WHILE);
+	SIMPLETOKEN(do, DO);
+	SIMPLETOKEN(done, DONE);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
@@ -605,6 +608,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__PRINT:
 		case TokenListType__IF:
 		case TokenListType__ELSEIF:
+		case TokenListType__WHILE:
 		{
 			if (tok.Literal()=="") {
 				tok.setLiteral(getLiteral(nextTok));

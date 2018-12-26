@@ -11,6 +11,8 @@
 #define DEFAULT_WORDSEPARATOR ' '
 #define DEFAULT_FIELDSEPARATOR '\t'
 
+#define LOOP_CONDITION_FALSE (-5)
+
 class ProcessingState {
 public:
 	ProcessingState();
@@ -42,11 +44,16 @@ public:
 	PSpecString fieldIdentifierGet(char id);
 	void fieldIdentifierClear();
 	bool needToEvaluate();
+	bool runningOutLoop();
 	void setCondition(bool isTrue);
 	void observeIf();
 	void observeElse();
 	void observeElseIf(bool& evaluateCond);
 	void observeEndIf();
+	void observeWhile();
+	void observeDone();
+	void pushLoop(int n)  { m_Loops.push(n); }
+	int  getLoopStart();
 private:
 	enum extremeBool {
 		bFalse,
@@ -57,6 +64,7 @@ private:
 	void identifyFields();
 	std::map<char,PSpecString> m_fieldIdentifiers;
 	std::stack<extremeBool> m_Conditions;
+	std::stack<int> m_Loops;    // The unsigned int holds the number of the token where the while was
 };
 
 
