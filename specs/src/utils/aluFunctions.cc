@@ -121,5 +121,9 @@ ALUValue* AluFunc_tobin(ALUValue* op)
 	if (0 == (value >> 16)) return AluFunc_tobine(op,&bit16);
 	if (0 == (value >> 32)) return AluFunc_tobine(op,&bit32);
 	return AluFunc_tobine(op,&bit64);
+}
 
+ALUValue* AluFunc_len(ALUValue* op)
+{
+	return new ALUValue(ALUInt(op->getStr().length()));
 }

@@ -962,6 +962,26 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			continue;
 		}
 
+		// First character a single or double quote?
+		// Only one is really possible because the other is used to delimit
+		// the expression, but we don't know that inside...
+		if (*c=='\'' || *c=='"') {
+			std::string tok;
+			char delimiter = *c++;
+			char* tokEnd = c;
+			while (tokEnd<cEnd && *tokEnd!=delimiter) {
+				if (*tokEnd=='\\' && tokEnd < (cEnd-1)) {
+					tokEnd++;
+				}
+				tok += *tokEnd++;
+			}
+			pUnit = new AluUnitLiteral(tok);
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c = tokEnd+1;
+			continue;
+		}
+
 		// hash-sign followed by a number is a counter
 		if (*c=='#') {
 			c++;

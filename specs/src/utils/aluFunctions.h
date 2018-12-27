@@ -10,6 +10,7 @@
 	X(frombin,1)				\
 	X(tobine,2)					\
 	X(tobin,1)					\
+	X(len,1)                    \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
