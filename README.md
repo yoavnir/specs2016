@@ -83,6 +83,29 @@ There are also other spec units, that may be used:
 * **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges.
 * **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
 
+Conditions and Loops
+====================
+**specs** also supports conditions and loops. 
+
+Conditions  begin  with  the  word  **if** followed by an **expression** that evaluates to true of false, followed by the token **then**, followed by some **Spec Units**.  Those will be executed only if the condition evaluates to true. They may be followed by an **else** token followed by more **Spec Units** that will be executed if the expression does not evaluate to true, or they may be followed by one or more **elseif** tokens, each with its own condition, **then** token, and set of **Spec Units**.  The chain of **elseif** tokens may be arbitrarily long, but there may only be at most one **else** token. The conditional block ends with an **endif** token.  For example:
+```
+            if #2 > 5 then
+                /big/ 1
+            elseif #2 > 3 then
+                /medium/ 1
+            else
+                /small/ 1
+            endif
+```
+The loop available in specs is a **while** loop.  It begins with the **while** token, followed by an **expression** that evaluates to true of false, followed by the token **do**, and a series of **Spec Units** that will be executed as long as the expression evaluates to true. The series of Spec Units is terminated by the token **done**.  Example:
+```
+            while #2 > 0 do
+                print /#2/ 1
+                write
+                set /#2 -= 1/
+            done
+```
+
 Configuration File
 ==================
 
