@@ -14,6 +14,7 @@
 #include "ErrorReporting.h"
 #include "alu.h"
 #include "aluFunctions.h"
+#include "processing/Config.h"  // for configured literals
 
 void ALUValue::set(std::string& s)
 {
@@ -899,6 +900,14 @@ static bool isLetter(char c) {
 	return ((c>='a' && c<='z') || (c>='A' && c<='Z'));
 }
 
+static bool isCharInIdentifier(char c) {
+	return isLetter(c) || isDigit(c) || c=='_';
+}
+
+static bool isFirstCharInIdentifier(char c) {
+	return isLetter(c) || c=='_';
+}
+
 #define X(nm,st) if (s==st) return new AluUnitUnaryOperator(s);
 static AluUnit* getUnaryOperator(std::string& s)
 {
@@ -979,6 +988,24 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd+1;
+			continue;
+		}
+
+		// Also a configured string
+		if (*c=='@' && isFirstCharInIdentifier(c[1])) {
+			char* tokEnd = ++c;
+			while (isCharInIdentifier(*tokEnd) && (tokEnd<cEnd)) {
+				tokEnd++;
+			}
+			std::string key = std::string(c,tokEnd-c);
+			if (!configSpecLiteralExists(key)) {
+				std::string err = "Key '" + key + "' not found in expression.";
+				MYTHROW(err);
+			}
+			pUnit = new AluUnitLiteral(configSpecLiteralGet(key));
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c = tokEnd;
 			continue;
 		}
 
