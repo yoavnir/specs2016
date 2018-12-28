@@ -37,6 +37,7 @@ std::string RegularRangePart::Debug()
 
 PSpecString RegularRangePart::getStr(ProcessingState& pState)
 {
+	if (pState.isRunOut()) return SpecString::newString();
 	return pState.getFromTo(_from, _to);
 }
 
@@ -51,6 +52,7 @@ std::string WordRangePart::Debug()
 
 PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
+	if (pState.isRunOut()) return SpecString::newString();
 	char keepSeparator;
 	if (m_WordSep) {
 		keepSeparator = pState.getWSChar();
@@ -83,6 +85,7 @@ std::string FieldRangePart::Debug()
 
 PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
+	if (pState.isRunOut()) return SpecString::newString();
 	char keepSeparator;
 	if (m_FieldSep) {
 		keepSeparator = pState.getFSChar();

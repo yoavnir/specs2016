@@ -160,6 +160,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		if (!pit->ApplyUnconditionally() && !pState.needToEvaluate()) {
 			continue;
 		}
+		if (pState.isRunOut() /* && !something that runs in the runout cycle */) {
+			continue;
+		}
 		ApplyRet aRet = pit->apply(pState, &sb);
 		switch (aRet) {
 		case ApplyRet__Continue:
@@ -206,6 +209,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 	while ((ps=rd.get())) {
 		pState.setString(ps);
+		pState.incrementCycleCounter();
 
 		try {
 			if (processDo(sb,pState, &rd, &wr)) {
@@ -214,6 +218,16 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		} catch (const SpecsException& e) {
 			std::cerr << "Exception processing line " << rd.countUsed() << ": " << e.what(true) << "\n";
 		}
+	}
+
+	// run-out cycle
+	pState.setString(NULL);
+	try {
+		if (processDo(sb, pState, &rd, &wr)) {
+			wr.Write(sb.GetString());
+		}
+	} catch (const SpecsException& e) {
+		std::cerr << "Exception processing the run-out cycle: " << e.what(true) << "\n";
 	}
 }
 

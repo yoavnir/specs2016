@@ -38,6 +38,8 @@ public:
 	virtual int     getFieldStart(int idx) = 0;
 	virtual int     getFieldEnd(int idx) = 0;
 	virtual PSpecString getFromTo(int from, int to) = 0;
+	virtual bool    isRunIn() = 0;
+	virtual bool    isRunOut() = 0;
 };
 
 void setStateQueryAgent(stateQueryAgent* qa);

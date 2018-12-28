@@ -38,8 +38,11 @@ public:
 	virtual int     getFieldStart(int idx);
 	virtual int     getFieldEnd(int idx);
 	virtual PSpecString getFromTo(int from, int to);
+	virtual bool    isRunIn()   { return (m_CycleCounter==1); }
+	virtual bool    isRunOut()  { return (m_ps==NULL); } // NOTE: will return true before first record
 
 	void fieldIdentifierSet(char id, PSpecString ps);
+	void incrementCycleCounter() { m_CycleCounter++; }
 	PSpecString fieldIdentifierGet(char id);
 	void fieldIdentifierClear();
 	bool needToEvaluate();
@@ -65,6 +68,7 @@ private:
 	PSpecString m_ps;
 	int  m_wordCount;
 	int  m_fieldCount;
+	unsigned int m_CycleCounter;
 	std::vector<int> m_wordStart;
 	std::vector<int> m_wordEnd;
 	std::vector<int> m_fieldStart;

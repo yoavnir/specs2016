@@ -11,6 +11,7 @@ ProcessingState::ProcessingState()
 	m_fieldSeparator = DEFAULT_FIELDSEPARATOR;
 	m_fieldCount = 0;
 	m_wordCount = 0;
+	m_CycleCounter = 0;
 	m_ps = NULL;
 }
 
@@ -21,6 +22,7 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_fieldSeparator = ps.m_fieldSeparator;
 	m_fieldCount = 0;
 	m_wordCount = 0;
+	m_CycleCounter = 0;
 	m_ps = NULL;
 }
 
@@ -31,6 +33,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_fieldSeparator = pPS->m_fieldSeparator;
 	m_fieldCount = 0;
 	m_wordCount = 0;
+	m_CycleCounter = 0;
 	m_ps = NULL;
 }
 
