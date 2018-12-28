@@ -5,7 +5,7 @@
 #include <stack>
 #include <map>
 #include "utils/alu.h"
-#include "utils/SpecString.h"
+#include "utils/aluFunctions.h"
 
 #define DEFAULT_PAD_CHAR ' '
 #define DEFAULT_WORDSEPARATOR ' '
@@ -13,33 +13,32 @@
 
 #define LOOP_CONDITION_FALSE (-5)
 
-class ProcessingState {
+class ProcessingState : public stateQueryAgent {
 public:
 	ProcessingState();
 	ProcessingState(ProcessingState* pPS);
 	ProcessingState(ProcessingState& ps);
 	~ProcessingState();
+
 	void    setPadChar(char c) {m_pad = c;}
 	void    setWSChar(char c) {m_wordSeparator = c; m_wordCount=-1;}
 	void    setFSChar(char c) {m_fieldSeparator = c; m_fieldCount=-1;}
+
+	char    getPadChar() { return m_pad;            }
+	char    getWSChar()  { return m_wordSeparator;  }
+	char    getFSChar()  { return m_fieldSeparator; }
+
 	void    setString(PSpecString ps);
-	unsigned int getWordCount();
-	unsigned int getFieldCount();
-	int     getWordStart(int idx);
-	int     getWordEnd(int idx);
-	int     getFieldStart(int idx);
-	int     getFieldEnd(int idx);
-	PSpecString getFromTo(int from, int to);
-	char    m_pad;
-	char    m_wordSeparator;
-	char    m_fieldSeparator;
-	PSpecString m_ps;
-	int  m_wordCount;
-	int  m_fieldCount;
-	std::vector<int> m_wordStart;
-	std::vector<int> m_wordEnd;
-	std::vector<int> m_fieldStart;
-	std::vector<int> m_fieldEnd;
+
+	// The stateQueryAgent interface
+	virtual unsigned int getWordCount();
+	virtual unsigned int getFieldCount();
+	virtual int     getWordStart(int idx);
+	virtual int     getWordEnd(int idx);
+	virtual int     getFieldStart(int idx);
+	virtual int     getFieldEnd(int idx);
+	virtual PSpecString getFromTo(int from, int to);
+
 	void fieldIdentifierSet(char id, PSpecString ps);
 	PSpecString fieldIdentifierGet(char id);
 	void fieldIdentifierClear();
@@ -60,6 +59,16 @@ private:
 		bTrue,
 		bDontCare
 	};
+	char    m_pad;
+	char    m_wordSeparator;
+	char    m_fieldSeparator;
+	PSpecString m_ps;
+	int  m_wordCount;
+	int  m_fieldCount;
+	std::vector<int> m_wordStart;
+	std::vector<int> m_wordEnd;
+	std::vector<int> m_fieldStart;
+	std::vector<int> m_fieldEnd;
 	void identifyWords();
 	void identifyFields();
 	std::map<char,PSpecString> m_fieldIdentifiers;

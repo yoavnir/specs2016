@@ -1,6 +1,7 @@
 #ifndef SPECS2016__UTILS__ALU_FUNCTIONS_H
 #define SPECS2016__UTILS__ALU_FUNCTIONS_H
 
+#include "utils/SpecString.h"
 #include "utils/alu.h"
 
 #define ALU_FUNCTION_LIST 		\
@@ -28,5 +29,17 @@ typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
 typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 
+class stateQueryAgent {
+public:
+	virtual unsigned int getWordCount() = 0;
+	virtual unsigned int getFieldCount() = 0;
+	virtual int     getWordStart(int idx) = 0;
+	virtual int     getWordEnd(int idx) = 0;
+	virtual int     getFieldStart(int idx) = 0;
+	virtual int     getFieldEnd(int idx) = 0;
+	virtual PSpecString getFromTo(int from, int to) = 0;
+};
+
+void setStateQueryAgent(stateQueryAgent* qa);
 
 #endif

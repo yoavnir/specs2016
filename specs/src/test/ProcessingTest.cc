@@ -49,6 +49,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	ProcessingState ps;
 	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
 	setFieldIdentifierGetter(&fiGetter);
+	setStateQueryAgent(&ps);
 
 	TestReader tRead(5);
 	char* example = strdup(_example);

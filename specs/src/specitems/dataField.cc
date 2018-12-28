@@ -404,7 +404,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	// truncate or expand if necessary
 	if (m_maxLength>0 && pInput->length()!=m_maxLength) {
-		pInput->Resize(m_maxLength, pState.m_pad, m_alignment);
+		pInput->Resize(m_maxLength, pState.getPadChar(), m_alignment);
 	}
 
 	if (m_outStart==0 && m_maxLength==0) {

@@ -53,7 +53,7 @@ PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
 	char keepSeparator;
 	if (m_WordSep) {
-		keepSeparator = pState.m_wordSeparator;
+		keepSeparator = pState.getWSChar();
 		pState.setWSChar(m_WordSep);  // as a side-effect, invalidates the current word list
 	}
 
@@ -85,7 +85,7 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
 	char keepSeparator;
 	if (m_FieldSep) {
-		keepSeparator = pState.m_fieldSeparator;
+		keepSeparator = pState.getFSChar();
 		pState.setFSChar(m_FieldSep);  // as a side-effect, invalidates the current field list
 	}
 

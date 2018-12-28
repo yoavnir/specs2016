@@ -70,6 +70,8 @@ int main (int argc, char** argv)
 	StandardReader *pRd;
 	SimpleWriter *pWr;
 
+	setStateQueryAgent(&ps);
+
 	unsigned int index = 0;
 	try {
 		ig.Compile(vec, index);

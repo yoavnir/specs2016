@@ -3,6 +3,13 @@
 #include <string.h>
 #include <cmath>
 
+static stateQueryAgent* pStateQueryAgent = NULL;
+
+void setStateQueryAgent(stateQueryAgent* qa)
+{
+	pStateQueryAgent = qa;
+}
+
 /*
  *
  *
