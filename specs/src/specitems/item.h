@@ -134,6 +134,7 @@ enum ApplyRet {
 	ApplyRet__ReadStop,
 	ApplyRet__EnterLoop,
 	ApplyRet__DoneLoop,
+	ApplyRet__EOF,
 	ApplyRet__Last
 };
 

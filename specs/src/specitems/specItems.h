@@ -19,6 +19,8 @@ public:
 	std::string Debug();
 	bool readsLines();
 private:
+	bool bNeedRunoutCycle;
+	bool bFoundSelectSecond;
 	void addItem(PItem pItem);
 	std::vector<PItem> m_items;
 };

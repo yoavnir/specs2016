@@ -6,6 +6,8 @@ ALUCounters g_counters;
 itemGroup::itemGroup()
 {
 	m_items.clear();
+	bNeedRunoutCycle = false;
+	bFoundSelectSecond = false;
 }
 
 void itemGroup::addItem(Item *pItem)
@@ -17,6 +19,8 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	while (index < tokenVec.size()) {
 		switch (tokenVec[index].Type()) {
+		case TokenListType__EOF:
+			bNeedRunoutCycle = true;
 		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
 		case TokenListType__PAD:
@@ -152,15 +156,28 @@ std::string itemGroup::Debug()
 bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, Writer* pWr)
 {
 	bool bSomethingWasDone = false;
-	int i;
+	int i = 0;
+	bool isEOFCycle = false;
 	PSpecString ps; // Used for processing READ and READSTOP tokens
 	bool processingContinue = true;
-	for (i=0; processingContinue && i<m_items.size(); i++) {
+
+	if (pState.isRunOut()) {
+		// Find the EOF token
+		for ( ;  i < m_items.size(); i++) {
+			TokenItem* pTok = dynamic_cast<TokenItem*>(m_items[i]);
+			if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
+				isEOFCycle = true;
+				i++;  // So we start with the one after the EOF
+				break;
+			}
+		}
+	}
+
+	itemLoop:
+	processingContinue = true;
+	for ( ; processingContinue && i<m_items.size(); i++) {
 		PItem pit = m_items[i];
 		if (!pit->ApplyUnconditionally() && !pState.needToEvaluate()) {
-			continue;
-		}
-		if (pState.isRunOut() /* && !something that runs in the runout cycle */) {
 			continue;
 		}
 		ApplyRet aRet = pit->apply(pState, &sb);
@@ -194,11 +211,20 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__DoneLoop:
 			i = pState.getLoopStart() - 1;  // subtracting 1 because the for loop increments
 			break;
+		case ApplyRet__EOF:
+			processingContinue = false;
+			break;
 		default:
 			std::string err = "Unexpected return code from TokenItem::apply: ";
 			err += std::to_string(aRet);
 			MYTHROW(err);
 		}
+	}
+
+	if (isEOFCycle && bFoundSelectSecond) {
+		isEOFCycle = false;
+		i = 0;
+		goto itemLoop;
 	}
 	return bSomethingWasDone;
 }
@@ -218,6 +244,10 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		} catch (const SpecsException& e) {
 			std::cerr << "Exception processing line " << rd.countUsed() << ": " << e.what(true) << "\n";
 		}
+	}
+
+	if (!bNeedRunoutCycle) {
+		return;
 	}
 
 	// run-out cycle
@@ -278,6 +308,8 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__ReadStop;
 	case TokenListType__WRITE:
 		return ApplyRet__Write;
+	case TokenListType__EOF:
+		return ApplyRet__EOF;
 	default:
 		std::string err = "Unhandled TokenItem type " + TokenListType__2str(mp_Token->Type());
 		MYTHROW(err);
