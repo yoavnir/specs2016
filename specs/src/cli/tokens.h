@@ -43,7 +43,7 @@
 	X(NUMBER,         false, false) \
 	X(TODCLOCK,       false, false) \
 	X(DTODCLOCK,      false, false) \
-	X(SET,            false, false) \
+	X(SET,            false, true) \
 	X(PRINT,          false, true)  \
 	X(IF,             false, true)  \
 	X(THEN,           false, false) \
