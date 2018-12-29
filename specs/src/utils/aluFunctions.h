@@ -12,6 +12,8 @@
 	X(tobine,2)					\
 	X(tobin,1)					\
 	X(len,1)                    \
+	X(first,0)                  \
+	X(eof,0)                    \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);

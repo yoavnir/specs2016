@@ -134,3 +134,15 @@ ALUValue* AluFunc_len(ALUValue* op)
 {
 	return new ALUValue(ALUInt(op->getStr().length()));
 }
+
+ALUValue* AluFunc_first()
+{
+	bool isFirst = pStateQueryAgent->isRunIn();
+	return new ALUValue(ALUInt(isFirst ? 1 : 0));
+}
+
+ALUValue* AluFunc_eof()
+{
+	bool isRunOut = pStateQueryAgent->isRunOut();
+	return new ALUValue(ALUInt(isRunOut ? 1 : 0));
+}
