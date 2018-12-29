@@ -1,6 +1,9 @@
 # EXE directory
 specs/exe/
 
+# Work directory
+specs/work
+
 # Eclipse files, assuming the eclipse root is in the src directory
 specs/src/.cproject
 specs/src/.project
