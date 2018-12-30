@@ -13,3 +13,6 @@ specs/src/.settings/
 specs/src/*/*.d
 specs/src/*/*.o
 
+# the compressed manpage
+specs/src/specs.1.gz
+
