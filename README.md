@@ -105,7 +105,26 @@ The loop available in specs is a **while** loop.  It begins with the **while** t
                 set /#2 -= 1/
             done
 ```
+RunIn and RunOut Cycles
+=========================
+A **cycle** is defined as a single run of the specification, which includes reading an input record, processing it, and outputting one or more records. If the specification contains **read** or **readstop** tokens, a single cycle can consume more than one input records.
 
+The **runin** cycle is the first one to run. In the runin cycle, the function **first()** returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
+
+The **runout** cycle happens *after* the last line has been read.  It consists of the spec items that follow the **EOF** token, or (when **select second** is used) conditional specifications with the **eof()** function. Example:
+```
+            if first() then
+                /Item/  1  /Square/ nw write
+                /====/  1  /======/ nw write
+            endif
+            a: w1 1.4 right
+                print "a*a" 6.6 right
+                set '#0+=(a*a)'
+            EOF
+                /==========/ 1 write
+                /Total:/ 1
+                print #0 nw
+```
 Configuration File
 ==================
 
