@@ -140,6 +140,7 @@ int main (int argc, char** argv)
 	} else {
 		TestReader tRead(5);
 		try {
+			ig.setRegularRunAtEOF();
 			ig.processDo(sb, ps, &tRead, NULL);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";

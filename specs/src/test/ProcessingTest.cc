@@ -59,8 +59,6 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		ln = strtok(NULL, "\n");
 	}
 
-	PSpecString pFirstLine = tRead.getNextRecord();
-	ps.setString(pFirstLine);
 	char* specList = (char*)_specList;
 
 	std::vector<Token> vec = parseTokens(1, &specList);
@@ -74,15 +72,34 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 
 	PSpecString result = NULL;
 	try {
-		if (ig.processDo(sb, ps, &tRead, NULL)) {
-			result = sb.GetString();
+		if (ig.readsLines() || !ig.needRunoutCycle()) {
+			PSpecString pFirstLine = tRead.getNextRecord();
+			ps.setString(pFirstLine);
+			ig.processDo(sb, ps, &tRead, NULL);
 		}
 	} catch (SpecsException& e) {
 		result = SpecString::newString(e.what(true));
+		goto end;
 	}
+
+	if (ig.needRunoutCycle()) {
+		if (!ig.readsLines()) {
+			ig.setRegularRunAtEOF();
+		}
+		ps.setString(NULL);
+		try {
+			ig.processDo(sb, ps, NULL, NULL);
+		} catch (SpecsException& e) {
+			result = SpecString::newString(e.what(true));
+			goto end;
+		}
+	}
+
+	result = sb.GetString();
 
 	free(example);
 
+end:
 	return result;
 }
 
@@ -247,6 +264,9 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "to keep the number", "to:");// VERIFY2(spec, "6.2", "6.2: 2(1) 3(1)"); -- this goes into an endless loop
 	VERIFY2(spec, "hello", "hello:");       // Test #81
 
+	// Test run-out cycle
+	VERIFY2("one 1 EOF two 2", "", "oneo");     // Test #82
+	VERIFY2("two 2 EOF one 1", "", "otwo");     // Test #83
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

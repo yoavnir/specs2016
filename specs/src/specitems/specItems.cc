@@ -166,11 +166,11 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		for ( ;  i < m_items.size(); i++) {
 			TokenItem* pTok = dynamic_cast<TokenItem*>(m_items[i]);
 			if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
-				isEOFCycle = true;
 				i++;  // So we start with the one after the EOF
 				break;
 			}
 		}
+		isEOFCycle = true;
 	}
 
 	itemLoop:

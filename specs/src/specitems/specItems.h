@@ -16,6 +16,8 @@ public:
 	void Compile(std::vector<Token> &tokenVec, unsigned int& index);
 	bool processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, Writer* pRw);
 	void process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr);
+	void setRegularRunAtEOF()  { bFoundSelectSecond = true; }
+	bool needRunoutCycle()     { return bNeedRunoutCycle;   }
 	std::string Debug();
 	bool readsLines();
 private:
