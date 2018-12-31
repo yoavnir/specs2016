@@ -383,6 +383,7 @@ void DataField::stripString(PSpecString &pOrig)
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	int _from, _to;
+	bool bWritingWasDone = false;
 	PSpecString pInput = m_InputPart->getStr(pState);
 
 	if (!pInput) pInput = SpecString::newString();
@@ -428,9 +429,11 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		MYTHROW(err);
 	}
 
+	bWritingWasDone = true;
+
 FINISH:
 	delete pInput;
-	return ApplyRet__Continue;
+	return bWritingWasDone ? ApplyRet__ContinueWithDataWritten : ApplyRet__Continue;
 }
 
 bool DataField::readsLines()

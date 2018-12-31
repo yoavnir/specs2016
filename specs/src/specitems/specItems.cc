@@ -182,8 +182,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		}
 		ApplyRet aRet = pit->apply(pState, &sb);
 		switch (aRet) {
-		case ApplyRet__Continue:
+		case ApplyRet__ContinueWithDataWritten:
 			bSomethingWasDone = true;
+		case ApplyRet__Continue:
 			break;
 		case ApplyRet__Write:
 			if (bSomethingWasDone) {

@@ -83,6 +83,7 @@ public:
 	ALUCounterType	divinedType(ALUCounterKey i)     {return m_map[i].getDivinedType();}
 	bool         	isWholeNumber(ALUCounterKey i) {return m_map[i].isWholeNumber();}
 	bool          	isNumeric(ALUCounterKey i) {return m_map[i].isNumeric();}
+	void            clearAll() { m_map.clear(); }
 private:
 	std::map<ALUCounterKey, ALUValue> m_map;
 };

@@ -129,6 +129,7 @@ private:
 
 enum ApplyRet {
 	ApplyRet__Continue,
+	ApplyRet__ContinueWithDataWritten,
 	ApplyRet__Write,
 	ApplyRet__Read,
 	ApplyRet__ReadStop,

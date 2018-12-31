@@ -96,6 +96,14 @@ StringBuilder::~StringBuilder()
 		delete mp_str;
 	}
 }
+PSpecString StringBuilder::GetStringUnsafe()
+{
+	if (!mp_str) return NULL;
+	PSpecString pRet = mp_str;
+	mp_str = NULL;
+	m_pos = 1;
+	return pRet;
+}
 
 PSpecString StringBuilder::GetString()
 {

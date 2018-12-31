@@ -8,6 +8,8 @@
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
 
+extern ALUCounters g_counters;
+
 #define VERIFY(sp,ex) do {          \
 		testCount++;                            \
 		if (onlyTest!=0 && onlyTest != testCount) break;  \
@@ -51,6 +53,8 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	setFieldIdentifierGetter(&fiGetter);
 	setStateQueryAgent(&ps);
 
+	g_counters.clearAll();
+
 	TestReader tRead(5);
 	char* example = strdup(_example);
 	char* ln = strtok(example, "\n");
@@ -73,9 +77,16 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	PSpecString result = NULL;
 	try {
 		if (ig.readsLines() || !ig.needRunoutCycle()) {
-			PSpecString pFirstLine = tRead.getNextRecord();
-			ps.setString(pFirstLine);
-			ig.processDo(sb, ps, &tRead, NULL);
+			do {
+				PSpecString pFirstLine = tRead.getNextRecord();
+				ps.setString(pFirstLine);
+				ig.processDo(sb, ps, &tRead, NULL);
+				if (result) {
+					result->add(sb.GetStringUnsafe());
+				} else {
+					result = sb.GetStringUnsafe();
+				}
+			} while (!tRead.endOfSource());
 		}
 	} catch (SpecsException& e) {
 		result = SpecString::newString(e.what(true));
@@ -89,18 +100,21 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		ps.setString(NULL);
 		try {
 			ig.processDo(sb, ps, NULL, NULL);
+			if (result) {
+				result->add(sb.GetStringUnsafe());
+			} else {
+				result = sb.GetStringUnsafe();
+			}
 		} catch (SpecsException& e) {
 			result = SpecString::newString(e.what(true));
 			goto end;
 		}
 	}
 
-	result = sb.GetString();
-
 	free(example);
 
 end:
-	return result;
+	return result ? result : SpecString::newString();
 }
 
 PSpecString runTestOnExample(std::string& s, const char* _example)
@@ -267,6 +281,19 @@ int main(int argc, char** argv)
 	// Test run-out cycle
 	VERIFY2("one 1 EOF two 2", "", "oneo");     // Test #82
 	VERIFY2("two 2 EOF one 1", "", "otwo");     // Test #83
+
+	spec =  " a: w1 1.4 right                  " \
+			"    set #0:=a*a                   " \
+			"    set #3+=#0                    " \
+			"    print #0 6.6 right            " \
+			" EOF                              " \
+			"    /Total:/ 1 print #3 nw        ";
+	VERIFY2(spec, "1", "   1      1\nTotal: 1");                  // Test #84
+	VERIFY2(spec, "3\n4", "   3      9\n   4     16\nTotal: 25"); // Test #85
+
+	VERIFY2("a: w1 . if 'a==1' then w1 1 endif", "1", "1");       // Test #86
+	VERIFY2("a: w1 . if 'a==1' then w1 1 endif", "0\n1\n2", "1"); // Test #87
+
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
