@@ -146,3 +146,82 @@ ALUValue* AluFunc_eof()
 	bool isRunOut = pStateQueryAgent->isRunOut();
 	return new ALUValue(ALUInt(isRunOut ? 1 : 0));
 }
+
+ALUValue* AluFunc_wordcount()
+{
+	return new ALUValue(ALUInt(pStateQueryAgent->getWordCount()));
+}
+
+ALUValue* AluFunc_fieldcount()
+{
+	return new ALUValue(ALUInt(pStateQueryAgent->getFieldCount()));
+}
+
+// Helper function
+static ALUValue* AluFunc_range(ALUInt start, ALUInt end)
+{
+	PSpecString pRet = pStateQueryAgent->getFromTo(start, end);
+	if (pRet) {
+		std::string st(pRet->data());
+		return new ALUValue(st);
+	} else {
+		return new ALUValue();
+	}
+}
+
+ALUValue* AluFunc_range(ALUValue* pStart, ALUValue* pEnd)
+{
+	return AluFunc_range(pStart->getInt(), pEnd->getInt());
+}
+
+ALUValue* AluFunc_word(ALUValue* pIdx)
+{
+	ALUInt idx = pIdx->getInt();
+	ALUInt start = pStateQueryAgent->getWordStart(idx);
+	ALUInt end = pStateQueryAgent->getWordEnd(idx);
+	return AluFunc_range(start, end);
+}
+
+ALUValue* AluFunc_field(ALUValue* pIdx)
+{
+	ALUInt idx = pIdx->getInt();
+	ALUInt start = pStateQueryAgent->getFieldStart(idx);
+	ALUInt end = pStateQueryAgent->getFieldEnd(idx);
+	return AluFunc_range(start, end);
+}
+
+ALUValue* AluFunc_words(ALUValue* pStart, ALUValue* pEnd)
+{
+	ALUInt start = pStateQueryAgent->getWordStart(pStart->getInt());
+	ALUInt end = pStateQueryAgent->getWordEnd(pEnd->getInt());
+	return AluFunc_range(start, end);
+}
+
+ALUValue* AluFunc_fields(ALUValue* pStart, ALUValue* pEnd)
+{
+	ALUInt start = pStateQueryAgent->getFieldStart(pStart->getInt());
+	ALUInt end = pStateQueryAgent->getFieldEnd(pEnd->getInt());
+	return AluFunc_range(start, end);
+}
+
+ALUValue* AluFunc_fieldstart(ALUValue* pIdx)
+{
+	return new ALUValue(ALUInt(pStateQueryAgent->getFieldStart(pIdx->getInt())));
+}
+
+ALUValue* AluFunc_fieldend(ALUValue* pIdx)
+{
+	return new ALUValue(ALUInt(pStateQueryAgent->getFieldEnd(pIdx->getInt())));
+}
+
+ALUValue* AluFunc_wordstart(ALUValue* pIdx)
+{
+	return new ALUValue(ALUInt(pStateQueryAgent->getWordStart(pIdx->getInt())));
+}
+
+ALUValue* AluFunc_wordend(ALUValue* pIdx)
+{
+	return new ALUValue(ALUInt(pStateQueryAgent->getWordEnd(pIdx->getInt())));
+}
+
+

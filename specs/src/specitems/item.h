@@ -122,6 +122,7 @@ public:
 	virtual ~ExpressionPart();
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
+	virtual bool        readsLines();
 private:
 	AluVec m_RPNExpr;
 	std::string m_rawExpression;

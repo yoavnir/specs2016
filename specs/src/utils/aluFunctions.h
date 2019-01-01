@@ -4,16 +4,28 @@
 #include "utils/SpecString.h"
 #include "utils/alu.h"
 
-#define ALU_FUNCTION_LIST 		\
-	X(abs,1)					\
-	X(pow,2)					\
-	X(sqrt,1)					\
-	X(frombin,1)				\
-	X(tobine,2)					\
-	X(tobin,1)					\
-	X(len,1)                    \
-	X(first,0)                  \
-	X(eof,0)                    \
+// function name, number of arguments, whether it needs lines from input
+#define ALU_FUNCTION_LIST            \
+	X(abs,1,false)                   \
+	X(pow,2,false)                   \
+	X(sqrt,1,false)                  \
+	X(frombin,1,false)               \
+	X(tobine,2,false)                \
+	X(tobin,1,false)                 \
+	X(len,1,false)                   \
+	X(first,0,false)                 \
+	X(eof,0,false)                   \
+	X(wordcount,0,true)              \
+	X(wordstart,1,true)              \
+	X(wordend,1,true)                \
+	X(word,1,true)                   \
+	X(words,2,true)                  \
+	X(fieldcount,0,true)             \
+	X(fieldstart,1,true)             \
+	X(fieldend,1,true)               \
+	X(field,1,true)                  \
+	X(fields,2,true)                 \
+	X(range,2,true)                  \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
@@ -21,7 +33,7 @@
 #define ALUFUNC3(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*));
 #define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*), ALUValue*));
 
-#define X(fn,argc) ALUFUNC##argc(fn)
+#define X(fn,argc,rl) ALUFUNC##argc(fn)
 ALU_FUNCTION_LIST
 #undef X
 

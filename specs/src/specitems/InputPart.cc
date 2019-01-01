@@ -220,3 +220,13 @@ PSpecString ExpressionPart::getStr(ProcessingState& pState)
 	delete res;
 	return SpecString::newString(ret);
 }
+
+bool ExpressionPart::readsLines()
+{
+	for (AluUnit* unit : m_RPNExpr) {
+		if (unit->requiresRead()) {
+			return true;
+		}
+	}
+	return false;
+}

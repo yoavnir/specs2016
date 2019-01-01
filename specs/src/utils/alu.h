@@ -159,6 +159,7 @@ public:
 	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2);
 	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
+	virtual bool            requiresRead() {return false;} // true if this unit requires lines to be read
 };
 
 class AluUnitLiteral : public AluUnit {
@@ -295,10 +296,12 @@ public:
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2);
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
+	virtual bool                requiresRead()  { return m_reliesOnInput; }
 private:
 	std::string		m_FuncName;
 	void*			mp_Func;
 	unsigned int	m_ArgCount;
+	bool            m_reliesOnInput;
 };
 
 class AluOtherToken : public AluUnit {

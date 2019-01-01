@@ -3,8 +3,10 @@
 #include <vector>
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
+#include "processing/ProcessingState.h"
 
 ALUCounters counters;
+ProcessingState g_ps;
 
 std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
@@ -340,6 +342,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	unsigned int testIndex = 0;
 	unsigned int countFailures = 0;
 
+	setStateQueryAgent(&g_ps);
 	testGetter tg;
 	setFieldIdentifierGetter(&tg);
 	tg.set('b', "84");
@@ -665,6 +668,38 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("len('hello')", "5");
 
 	VERIFY_EXPR_RES("sqrt(4)||' by '||sqrt(16)", "2 by 4");
+
+	// The functions that look at the line being processed
+	g_ps.setString(SpecString::newString());
+	VERIFY_EXPR_RES("wordcount()", "0");
+	VERIFY_EXPR_RES("word(2)", "NaN");
+	VERIFY_EXPR_RES("wordstart(3)", "0");
+	VERIFY_EXPR_RES("wordend(2)", "0");
+	VERIFY_EXPR_RES("words(3,4)", "NaN");
+
+	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
+	VERIFY_EXPR_RES("wordcount()", "9");
+	VERIFY_EXPR_RES("word(2)", "quick");
+	VERIFY_EXPR_RES("wordstart(3)", "11");
+	VERIFY_EXPR_RES("wordend(2)", "9");
+	VERIFY_EXPR_RES("words(3,4)", "brown fox");
+
+	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
+	// Add word questions here after resolving issue
+//	VERIFY_EXPR_RES("wordcount()", "9");
+//	VERIFY_EXPR_RES("word(2)", "quick");
+//	VERIFY_EXPR_RES("wordstart(3)", "11");
+//	VERIFY_EXPR_RES("wordend(2)", "9");
+//	VERIFY_EXPR_RES("words(3,4)", "brown fox");
+	VERIFY_EXPR_RES("fieldcount()", "5");
+	VERIFY_EXPR_RES("field(3)", "fox jumps");
+	VERIFY_EXPR_RES("fieldstart(2)", "5");
+	VERIFY_EXPR_RES("fieldend(3)", "25");
+	VERIFY_EXPR_RES("fields(2,3)", "quick brown\tfox jumps");
+	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
+	VERIFY_EXPR_RES("range(41,43)", "dog");
+	VERIFY_EXPR_RES("range(41,45)", "dog");
+	VERIFY_EXPR_RES("range(44,48)", "NaN");
 
 	// TODO: More
 

@@ -319,6 +319,52 @@ cycle, and zero otherwise.
 Returns 1 during the
 .B runout 
 cycle, and zero otherwise.
+.IP "range(s,e)" 3
+Returns the range of characters from
+.B s
+to 
+.B e 
+from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
+.IP "wordcount()" 3
+Returns the count of words in the input record.
+.IP "word(i)" 3
+Returns the i-th word in the input record.
+.IP "wordstart(i)" 3
+Returns the starting position of the i-th word in the input record.
+.IP "wordend(i)" 3
+Returns the ending position of the i-th word in the input record. 
+.I range(wordstart(i),wordend(i))
+is equivalent to 
+.I word(i)
+but less efficient.
+.IP "words(s,e)" 3
+Returns the string from the start of the 
+.B s-th
+word to the end of the 
+.B e-th 
+word. It is also equivalent to 
+.I range(wordstart(s),wordend(e))
+but less efficient.
+.IP "fieldcount()" 3
+Returns the count of fields in the input record.
+.IP "field(i)" 3
+Returns the i-th field in the input record.
+.IP "fieldstart(i)" 3
+Returns the starting position of the i-th field in the input record.
+.IP "fieldend(i)" 3
+Returns the ending position of the i-th field in the input record. 
+.I range(fieldstart(i),fieldend(i))
+is equivalent to 
+.I field(i)
+but less efficient.
+.IP "fields(s,e)" 3
+Returns the string from the start of the 
+.B s-th
+field to the end of the 
+.B e-th 
+field. It is also equivalent to 
+.I range(fieldstart(s),fieldend(e))
+but less efficient.
 
 .P
 NOTE: This list is going to be expanded greatly in future versions.
