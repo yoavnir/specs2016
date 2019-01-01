@@ -6,7 +6,7 @@ input. It allows re-alignment of fields, some format conversion, and
 re-formatting multiple lines into single lines or vice versa. Input
 comes from standard input, and output flows to standard output.
 
-This version is liberally based on the **CMS Pipelines User's Guide and Reference** ([link](https://publib.boulder.ibm.com/epubs/pdf/hcsj0c30.pdf)), especially chapters 16, 24, and 20.
+This version is liberally based on the [**CMS Pipelines User's Guide and Reference**](https://publib.boulder.ibm.com/epubs/pdf/hcsj0c30.pdf)), especially chapters 16, 24, and 20.
 
 The command line format is as follows:
 
