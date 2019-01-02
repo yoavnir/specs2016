@@ -1,3 +1,4 @@
+#include <cctype>
 #include "Config.h"
 #include "utils/ErrorReporting.h"
 #include "ProcessingState.h"
@@ -7,7 +8,11 @@
 ProcessingState::ProcessingState()
 {
 	m_pad = DEFAULT_PAD_CHAR;
-	m_wordSeparator = DEFAULT_WORDSEPARATOR;
+	if (g_bLocalWhiteSpace) {
+		m_wordSeparator = LOCAL_WHITESPACE;
+	} else {
+		m_wordSeparator = DEFAULT_WORDSEPARATOR;
+	}
 	m_fieldSeparator = DEFAULT_FIELDSEPARATOR;
 	m_fieldCount = 0;
 	m_wordCount = 0;
@@ -53,6 +58,7 @@ void ProcessingState::setString(PSpecString ps)
 	fieldIdentifierClear();
 }
 
+#define IS_WHITESPACE(c) ((m_wordSeparator==LOCAL_WHITESPACE) ? (isspace((c))) : ((c)==m_wordSeparator))
 void ProcessingState::identifyWords()
 {
 	m_wordStart.clear();
@@ -64,14 +70,14 @@ void ProcessingState::identifyWords()
 	const char* pc = m_ps->data();
 	int i = 0;
 	/* skip over initial whitespace */
-	while (pc[i]==m_wordSeparator) i++;
+	while (IS_WHITESPACE(pc[i])) i++;
 
 	while (pc[i]!=0) {
 		m_wordCount++;
 		m_wordStart.insert(m_wordStart.end(), i+1);
-		while (pc[i]!=m_wordSeparator && pc[i]!=0) i++;
+		while (!IS_WHITESPACE(pc[i]) && pc[i]!=0) i++;
 		m_wordEnd.insert(m_wordEnd.end(), i);
-		while (pc[i]==m_wordSeparator) i++;
+		while (IS_WHITESPACE(pc[i])) i++;
 	}
 }
 

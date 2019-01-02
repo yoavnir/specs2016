@@ -33,7 +33,7 @@ argument may be any of the following:
 .P
 A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
 .P
-A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- spaces by default. The word indexing is 1-based.
+A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
 .P
 A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based.
 .P 
@@ -144,7 +144,9 @@ Causes the program to read the next line of input. If we have already read the l
 .IP "WRITE" 3
 Causes the program to write to output and reset the output line.
 .IP "WORDSEPARATOR and FIELDSEPARATOR" 3
-Declare a character to be the word of field separator respectively, which affects word and field ranges.
+Declare a character to be the word of field separator respectively, which affects word and field ranges. For WORDSEPARATOR it is possible to use the special value 
+.I default
+to make all whitespace defined by the locale work as a word separator. 
 .IP "REDO" 3
 Causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
 .IP "SET" 3
@@ -385,6 +387,8 @@ Output statistics on run time, and records read, and on records written to stand
 Makes the program read the input records from a file rather than from standard input.
 .IP "--outFile or -o" 3
 Makes the program write the output records to a file rather than to standard output.
+.IP "--spaceWS" 3
+Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
 
 .SH CONFIGURATION FILE
 .B specs

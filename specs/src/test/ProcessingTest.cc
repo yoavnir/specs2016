@@ -294,6 +294,11 @@ int main(int argc, char** argv)
 	VERIFY2("a: w1 . if 'a==1' then w1 1 endif", "1", "1");       // Test #86
 	VERIFY2("a: w1 . if 'a==1' then w1 1 endif", "0\n1\n2", "1"); // Test #87
 
+	// issue #32 = word separator default and special
+	VERIFY2("{ 1 w1 n } n",            "  \tword", "{word}");    // Test #92
+	VERIFY2("ws / / { 1 w1 n } n",     "  \tword", "{\tword}");  // Test #91
+	VERIFY2("ws default { 1 w1 n } n", "  \tword", "{word}");    // Test #90
+
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

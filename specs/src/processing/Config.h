@@ -14,6 +14,7 @@
 	X(bPrintStats,                  bool,         false,  0,stats,              true)       \
 	X(inputFile,                    std::string,  "",     i,inFile,             NEXTARG)    \
 	X(outputFile,                   std::string,  "",     o,outFile,            NEXTARG)    \
+	X(bLocalWhiteSpace,             bool,         true,   w,spaceWS,            false)      \
 
 #define X(nm,typ,defval,ssw,cliswitch,oval) extern typ g_##nm;
 CONFIG_PARAMS

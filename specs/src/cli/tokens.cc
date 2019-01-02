@@ -4,6 +4,7 @@
 #include "processing/Config.h"
 #include "utils/ErrorReporting.h"
 #include "processing/conversions.h"
+#include "processing/ProcessingState.h"
 
 extern std::string conv_X2CH(std::string& s);
 
@@ -559,8 +560,15 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				tokList->erase(tokList->begin()+(i+1));
 			}
 			break;
-		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
+			if (tok.Literal()=="" && getLiteral(nextTok)=="default") {
+				if (g_bLocalWhiteSpace) {
+					nextTok.setLiteral(LOCAL_WHITESPACE);
+				} else {
+					nextTok.setLiteral(DEFAULT_WORDSEPARATOR);
+				}
+			}
+		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__PAD:
 			if (tok.Literal()=="") {
 				if (mayBeLiteral(nextTok)) {

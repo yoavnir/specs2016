@@ -8,6 +8,7 @@
 #include "utils/aluFunctions.h"
 
 #define DEFAULT_PAD_CHAR ' '
+#define LOCAL_WHITESPACE  -1
 #define DEFAULT_WORDSEPARATOR ' '
 #define DEFAULT_FIELDSEPARATOR '\t'
 

@@ -100,6 +100,7 @@ public:
 	void            setRange(TokenFieldRange *prng) {MYASSERT(m_pRange==NULL); m_pRange = prng;}
 	std::string&    Literal() {return m_literal;}
 	void            setLiteral(std::string l) {MYASSERT(m_literal.empty()); m_literal = l;}
+	void            setLiteral(char c) {m_literal.resize(1); m_literal[0]=c;}
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
 	std::string&    HelpIdentify();

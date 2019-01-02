@@ -21,6 +21,7 @@ Switches
 * --stats -- output statistics on run time, and records read, and on records written. 
 * --inFile or -i -- get the input records from a file rather than standard input
 * --outFile or -o -- write the output records to a file rather than standard output
+* --spaceWS -- Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
    
 Spec Units
 ==========
@@ -33,7 +34,7 @@ The most common spec unit is a *data field*, which consists of five arguments, t
 The **InputPart** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
-* A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- spaces by default. The word indexing is 1-based.
+* A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
 * A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based.
 * **TODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch.
 * **DTODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
@@ -80,7 +81,8 @@ There are also other spec units, that may be used:
 * **readstop** - causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
 * **write**- causes the program to write to output and reset the output 
       line.
-* **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges.
+* **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges. For **WordSeparator** it is possible to use the special value, *default*,
+to make all whitespace defined by the locale work as a word separator. 
 * **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
 
 Conditions and Loops
