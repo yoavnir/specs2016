@@ -26,6 +26,8 @@
 	X(field,1,true)                  \
 	X(fields,2,true)                 \
 	X(range,2,true)                  \
+	X(tf2d,2,false)                  \
+	X(d2tf,2,false)                  \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);

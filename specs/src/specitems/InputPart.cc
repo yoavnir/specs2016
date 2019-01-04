@@ -172,7 +172,7 @@ std::string ClockPart::Debug()
 
 PSpecString ClockPart::getStr(ProcessingState& pState)
 {
-	uint64_t timeStamp;
+	clockValue timeStamp;
 	switch (m_Type) {
 	case ClockType__Static:
 		timeStamp = m_StaticClock;
@@ -180,7 +180,8 @@ PSpecString ClockPart::getStr(ProcessingState& pState)
 	case ClockType__Dynamic:
 		timeStamp = specTimeGetTOD();
 	}
-	return SpecString::newString(((char*)&timeStamp), 8);
+	std::string asString = std::to_string(timeStamp);
+	return SpecString::newString(asString);
 }
 
 std::string IDPart::Debug()

@@ -685,12 +685,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("words(3,4)", "brown fox");
 
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
-	// Add word questions here after resolving issue
-//	VERIFY_EXPR_RES("wordcount()", "9");
-//	VERIFY_EXPR_RES("word(2)", "quick");
-//	VERIFY_EXPR_RES("wordstart(3)", "11");
-//	VERIFY_EXPR_RES("wordend(2)", "9");
-//	VERIFY_EXPR_RES("words(3,4)", "brown fox");
+	VERIFY_EXPR_RES("wordcount()", "9");
+	VERIFY_EXPR_RES("word(2)", "quick");
+	VERIFY_EXPR_RES("wordstart(3)", "11");
+	VERIFY_EXPR_RES("wordend(2)", "9");
+	VERIFY_EXPR_RES("words(3,4)", "brown\tfox");
 	VERIFY_EXPR_RES("fieldcount()", "5");
 	VERIFY_EXPR_RES("field(3)", "fox jumps");
 	VERIFY_EXPR_RES("fieldstart(2)", "5");
@@ -700,6 +699,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
 	VERIFY_EXPR_RES("range(44,48)", "NaN");
+
+	// time reformat
+	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
+	VERIFY_EXPR_RES("d2tf(1546550663,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
 	// TODO: More
 

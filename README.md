@@ -74,6 +74,8 @@ The conversion argument can specify any of the following conversions:
 * **BSWAP** - byte swap. reverses the order of bytes: "AB" --> "BA"
 * **ti2f** - convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * **tf2i** - convert printable time format to the internal 8-byte representation. 
+* **d2tf** - convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2d** - convert printable time format to a decimal number, representing seconds since the epoch. 
  
 There are also other spec units, that may be used:
 

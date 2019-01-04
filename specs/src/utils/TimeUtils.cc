@@ -16,21 +16,21 @@
 	#endif
 #endif
 
-#define MICROSECONDS_PER_SECOND 1000000
 using TimeResolution = std::chrono::microseconds;
 
 using Clock = std::chrono::system_clock;
 using TimePoint = std::chrono::time_point<Clock>;
 
-uint64_t specTimeGetTOD()
+clockValue specTimeGetTOD()
 {
 	auto currentTime = std::chrono::system_clock::now();
 	auto sinceEpoch = currentTime.time_since_epoch();
-	return std::chrono::duration_cast<TimeResolution>(sinceEpoch).count();
+	int64_t microseconds = std::chrono::duration_cast<TimeResolution>(sinceEpoch).count();
+	return (clockValue(microseconds) / MICROSECONDS_PER_SECOND);
 }
 
 
-PSpecString specTimeConvertToPrintable(uint64_t sinceEpoch, std::string format)
+PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 {
 	Clock::duration dur = std::chrono::microseconds(sinceEpoch);
 	TimePoint tp(dur);
@@ -68,7 +68,7 @@ PSpecString specTimeConvertToPrintable(uint64_t sinceEpoch, std::string format)
 	return SpecString::newString(ret);
 }
 
-uint64_t specTimeConvertFromPrintable(std::string printable, std::string format)
+int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 {
 	// initialize t in case of missing fields
 	std::time_t now = std::time(nullptr);

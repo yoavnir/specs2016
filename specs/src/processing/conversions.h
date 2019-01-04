@@ -18,7 +18,9 @@
 
 #define PARAMETRIZED_CONVERSIONS_LIST \
 	Y(ti2f)   /* internal time representation (microseconds since epoch) to format */ \
-	Y(tf2i)   /* internal time representation (microseconds since epoch) to format */ \
+	Y(tf2i)   /* format to internal time representation (microseconds since epoch) */ \
+	Y(d2tf)   /* decimal time representation (microseconds since epoch) to format  */ \
+	Y(tf2d)   /* format to decimal time representation (microseconds since epoch)  */ \
 
 #define X(c) StringConversion__##c,
 #define Y(c) StringConversion__##c,

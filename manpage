@@ -134,6 +134,10 @@ Byte Swap. reverses the order of bytes. "AB" --> "BA"
 Convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 .IP "tf2i" 3
 Convert printable time format to the internal 8-byte representation. 
+.IP "d2tf" 3
+Convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+.IP "tf2d" 3
+Convert printable time format to a decimal number, representing seconds since the epoch. 
 
 .SS "Other Spec Units"
 There are also other spec units, that may be used:
@@ -367,9 +371,15 @@ field to the end of the
 field. It is also equivalent to 
 .I range(fieldstart(s),fieldend(e))
 but less efficient.
+.IP "tf2d(string,format)" 3
+Converts a string containing a date and time representation using the format specified in the 
+.I format
+argument to a floating point or integer number representing the number of seconds since the UNIX epoch. Formatting is as described for the similarly named conversion.
+.IP "d2tf(seconds,format)" 3
+Converts a number (integer or float) representing the number of seconds since the UNIX epoch to a printable format.
 
 .P
-NOTE: This list is going to be expanded greatly in future versions.
+NOTE: This list is going to be expanded in future versions.
 
 .SH OPTIONS
 specs supports the following switches:

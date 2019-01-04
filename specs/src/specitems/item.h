@@ -8,6 +8,7 @@
 #include "processing/StringBuilder.h"
 #include "processing/ProcessingState.h"
 #include "utils/alu.h"
+#include "utils/TimeUtils.h"
 
 class InputPart {
 public:
@@ -102,8 +103,8 @@ public:
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 private:
-	clockType  m_Type;
-	uint64_t   m_StaticClock;
+	clockType    m_Type;
+	clockValue   m_StaticClock;
 };
 
 class IDPart : public InputPart {
