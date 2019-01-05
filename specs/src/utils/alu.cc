@@ -1014,6 +1014,16 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			continue;
 		}
 
+		// A special string @@ representing the entire input record
+		if (*c=='@' && c[1]=='@')  {
+			static std::string wholeRecordFunctionName("thewholerecord");
+			c+=2;
+			pUnit = new AluFunction(wholeRecordFunctionName);
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			continue;
+		}
+
 		// hash-sign followed by a number is a counter
 		if (*c=='#') {
 			c++;

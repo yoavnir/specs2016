@@ -683,6 +683,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("words(3,4)", "brown fox");
+	VERIFY_EXPR_RES("thewholerecord()", "The quick brown fox jumps over the lazy dog");
+	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
+	VERIFY_EXPR_RES("len(@@)", "43");
 
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
@@ -699,6 +702,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
 	VERIFY_EXPR_RES("range(44,48)", "NaN");
+	VERIFY_EXPR_RES("thewholerecord()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
+	VERIFY_EXPR_RES("@@", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 
 	// time reformat
 	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");

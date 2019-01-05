@@ -170,6 +170,11 @@ static ALUValue* AluFunc_range(ALUInt start, ALUInt end)
 	}
 }
 
+ALUValue* AluFunc_thewholerecord()
+{
+	return AluFunc_range(1,-1);
+}
+
 ALUValue* AluFunc_range(ALUValue* pStart, ALUValue* pEnd)
 {
 	return AluFunc_range(pStart->getInt(), pEnd->getInt());
