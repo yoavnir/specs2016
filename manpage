@@ -302,6 +302,9 @@ Assignments assign the result of an expression into a numbered counter. For exam
 .IP "Assignment Operators" 3
 :=, +=, -=, *=, /=, //=, %=, ||=
 
+.IP "At-sign (@) Operator" 3
+The at-sign allows the inclusion of user-defined and system-defined labels as strings in expressions. The double at-sign (@@) substitutes for the entire input record.
+
 .SS "Built-In Functions"
 .IP "abs(x)" 3
 The absolute function returns the absolute value of the number passed to it. Will return an integer if the parameter is integer, or float otherwise.
