@@ -11,6 +11,7 @@
 #include <cmath>
 #include <stack>
 #include <algorithm>
+#include <iomanip>
 #include "ErrorReporting.h"
 #include "alu.h"
 #include "aluFunctions.h"
@@ -937,6 +938,41 @@ static AluAssnOperator* getAssnOperator(std::string& s)
 	return NULL;
 }
 
+void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
+{
+	std::cerr << title << ": ALU Vector at " << &vec << " with " << vec.size() << " items:\n";
+	int index = 0;
+	for (AluUnit* pUnit : vec) {
+		if (index==pointer) {
+			std::cerr << "   ==> | ";
+		} else {
+			std::cerr << "       | ";
+		}
+		std::cerr << std::setw(40) << std::left << pUnit->_identify() << "|" << std::endl;
+		index++;
+	}
+	std::cerr << "       +" << std::setw(42) << std::setfill('-') <<
+		std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << std::endl;
+}
+
+void dumpAluStack(const char* title, std::stack<ALUValue*>& stk)
+{
+	std::cerr << title << ": ALU Stack at " << &stk << " with " << stk.size() << " items:\n";
+	std::stack<ALUValue*> tmp;
+	while (!stk.empty()) {
+		ALUValue* v = stk.top();
+		stk.pop();
+		std::cerr << "   > " << v->getStr() << std::endl;
+		tmp.push(v);
+	}
+	std::cerr << std::endl;
+	while (!tmp.empty()) {
+		ALUValue* v = tmp.top();
+		tmp.pop();
+		stk.push(v);
+	}
+}
+
 bool parseAluExpression(std::string& s, AluVec& vec)
 {
 	char* c = (char*)s.c_str();
@@ -947,6 +983,12 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	if (!vec.empty()){
 		MYTHROW("Entered with non-empty vec.");
 	}
+
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) {
+		std::cerr << __FUNCTION__ << ": Parsing Expression: " << s << std::endl;
+	}
+#endif
 
 	while (c<cEnd) {
 		// skip over whitespace (if any)
@@ -1118,6 +1160,9 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			continue;
 		}
 	}
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) dumpAluVec("Parsed Expression", vec);
+#endif
 	return true;
 }
 
@@ -1207,6 +1252,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		MYTHROW("Entered with non-empty vec.");
 	}
 
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) dumpAluVec("Expression to Convert to RPN", source);
+#endif
+
 	for (AluUnit* pUnit : source) {
 		switch (pUnit->type()) {
 		case UT_Comma:
@@ -1288,6 +1337,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		source.clear();
 	}
 
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) dumpAluVec("RPN Expression", dest);
+#endif
+
 	return true;
 }
 
@@ -1299,7 +1352,22 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	ALUValue* arg3;
 	ALUValue* arg4;
 
+#ifdef ALU_DUMP
+	if (g_bDebugAluRun) {
+		std::cerr << "\n============= " << __FUNCTION__ << " ==============\n";
+	}
+	int index = 0;
+#endif
+
 	for (AluUnit* pUnit : expr) {
+#ifdef ALU_DUMP
+		if (g_bDebugAluRun) {
+			dumpAluVec("Expression Progress", expr, index);
+			dumpAluStack("Execution Stack", computeStack);
+			std::cerr << std::endl << std::endl;
+		}
+		index++;
+#endif
 		switch (pUnit->type()) {
 		case UT_LiteralNumber:
 		case UT_FieldIdentifier:
@@ -1377,11 +1445,16 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 			break;
 			default:
 				MYTHROW("Logic error, should not have gotten this type of Unit");
-		}
+			}
 		}
 	}
 
 	MYASSERT(computeStack.size() == 1);
+#ifdef ALU_DUMP
+		if (g_bDebugAluRun) {
+			dumpAluStack("Final Stack", computeStack);
+		}
+#endif
 	ALUValue* ret = computeStack.top();
 	computeStack.pop();
 	return ret;

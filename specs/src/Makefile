@@ -3,7 +3,7 @@ EXE_DIR = ../exe
 INC = -I .
 
 # FOR DEBUG
-# CONDCOMP = -g -DDEBUG
+# CONDCOMP = -g -DDEBUG -DALU_DUMP
 # CONDLINK = -g
 
 # FOR RELEASE

@@ -22,6 +22,8 @@ Switches
 * --inFile or -i -- get the input records from a file rather than standard input
 * --outFile or -o -- write the output records to a file rather than standard output
 * --spaceWS -- Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
+* --debug-alu-comp -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
+* --debug-alu-run -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
    
 Spec Units
 ==========
