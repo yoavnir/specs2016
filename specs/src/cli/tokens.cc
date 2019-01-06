@@ -282,6 +282,9 @@ static bool compareStringWithMinLength(std::string& shortString, const char* sz,
 		}
 
 /* Big parser functions */
+static bool isPossibleDelimiter(char c) {
+	return (c=='/' || c=='"' || c=='\'');
+}
 static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int argidx);
 void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 {
@@ -457,7 +460,7 @@ CONT1:
 	/* Add as literal */
 	{
 		std::string literal;
-		if (arg.front()==arg.back() && arg.length()>=2) {
+		if (arg.front()==arg.back() && arg.length()>=2 && isPossibleDelimiter(arg.front())) {
 			literal = arg.substr(1, arg.length()-2);
 		} else {
 			literal = arg;
