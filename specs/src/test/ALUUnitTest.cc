@@ -709,6 +709,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
 	VERIFY_EXPR_RES("d2tf(1546550663,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
+	// Issue #38
+	VERIFY_EXPR_RES("2-2", "0");
+
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";

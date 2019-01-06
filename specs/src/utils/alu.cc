@@ -990,14 +990,21 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	}
 #endif
 
+	bool mayBeStart = true; // will be false after an expression that is not followed by whitespace
+
 	while (c<cEnd) {
 		// skip over whitespace (if any)
-		while (c<cEnd && *c<=32) c++;
+		while (c<cEnd && *c<=32) {
+			c++;
+			mayBeStart = true;
+		}
 
 		if (c==cEnd) break;
 
 		// First character a digit, a dot, or a minus sign?
-		if (*c=='.' || (*c=='-' && (c+1 < cEnd) && isDigit(*(c+1))) || isDigit(*c)) {
+		if (*c=='.' ||
+				(*c=='-' && mayBeStart && (c+1 < cEnd) && isDigit(*(c+1))) ||
+				isDigit(*c)) {
 			unsigned int countDots = (*c=='.') ? 1 : 0;
 			char* tokEnd = c+1;
 			while (tokEnd < cEnd) {
@@ -1015,6 +1022,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -1035,6 +1043,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd+1;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -1053,6 +1062,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -1063,6 +1073,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			pUnit = new AluFunction(wholeRecordFunctionName);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
+			mayBeStart = false;
 			continue;
 		}
 
@@ -1076,6 +1087,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -1092,6 +1104,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -1101,6 +1114,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
+			mayBeStart = true;
 			continue;
 		}
 
@@ -1109,6 +1123,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -1117,6 +1132,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
+			mayBeStart = true;
 			continue;
 		}
 
@@ -1141,6 +1157,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = true;
 			continue;
 		}
 
@@ -1157,6 +1174,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
 			continue;
 		}
 	}

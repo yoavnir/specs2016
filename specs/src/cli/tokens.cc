@@ -520,6 +520,7 @@ static bool mayBeLiteral(Token& tok)
 	switch (tok.Type()) {
 	case TokenListType__LITERAL:
 	case TokenListType__PERIOD:
+	case TokenListType__RANGE:
 		/* TODO: expand this list */
 		return true;
 	default:
