@@ -973,6 +973,24 @@ void dumpAluStack(const char* title, std::stack<ALUValue*>& stk)
 	}
 }
 
+void dumpAluStack(const char* title, std::stack<AluUnit*>& stk)
+{
+	std::cerr << title << ": ALU Unit Stack at " << &stk << " with " << stk.size() << " items:\n";
+	std::stack<AluUnit*> tmp;
+	while (!stk.empty()) {
+		AluUnit* v = stk.top();
+		stk.pop();
+		std::cerr << "   > " << v->_identify() << std::endl;
+		tmp.push(v);
+	}
+	std::cerr << std::endl;
+	while (!tmp.empty()) {
+		AluUnit* v = tmp.top();
+		tmp.pop();
+		stk.push(v);
+	}
+}
+
 bool parseAluExpression(std::string& s, AluVec& vec)
 {
 	char* c = (char*)s.c_str();
@@ -1271,10 +1289,25 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	}
 
 #ifdef ALU_DUMP
-	if (g_bDebugAluCompile) dumpAluVec("Expression to Convert to RPN", source);
+	if (g_bDebugAluCompile) {
+		dumpAluVec("Expression to Convert to RPN", source);
+		if (g_bVerbose) {
+			clearSource = false;
+		}
+	}
 #endif
 
+	int stepNumber = 0;
+
 	for (AluUnit* pUnit : source) {
+#ifdef ALU_DUMP
+		if (g_bDebugAluCompile && g_bVerbose) {
+			std::cerr << "\n\n\nStep #" << stepNumber << std::endl;
+			dumpAluVec("Source", source, stepNumber++);
+			dumpAluVec("Dest", dest);
+			dumpAluStack("operator stack",operatorStack);
+		}
+#endif
 		switch (pUnit->type()) {
 		case UT_Comma:
 			if (clearSource) delete pUnit;
@@ -1337,6 +1370,11 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 					delete operatorStack.top();
 				}
 				operatorStack.pop(); // Pop off the opening parenthesis
+				// issue #37 - if what remains is a function, it should also go
+				if (!operatorStack.empty() && UT_Identifier==operatorStack.top()->type()) {
+					dest.push_back(operatorStack.top());
+					operatorStack.pop();
+				}
 			}
 		}
 	}

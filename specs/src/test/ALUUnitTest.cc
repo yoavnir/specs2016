@@ -621,6 +621,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_RPN("a>b","FI(a);FI(b);BOP(>)");
 	VERIFY_RPN("a>b & b>c","FI(a);FI(b);BOP(>);FI(b);FI(c);BOP(>);BOP(&)");
 
+	// Issue #37
+	VERIFY_RPN("tf2d(words(1,2),'%d')", "Number(1);Number(2);FUNC(words);Literal(%d);FUNC(tf2d)");
+
 	// TODO: More here as well
 
 	std::cout << "\nEvaluating Expressions\n======================\n\n";
