@@ -317,6 +317,16 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	}
 }
 
+bool TokenItem::readsLines() {
+	switch (mp_Token->Type()) {
+	case TokenListType__READ:
+	case TokenListType__READSTOP:
+		return true;
+	default:
+		return false;
+	}
+}
+
 
 SetItem::SetItem(std::string& _statement)
 {
@@ -337,6 +347,11 @@ ApplyRet SetItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	ALUPerformAssignment(m_key, &m_oper, m_RPNExpression, &g_counters);
 	return ApplyRet__Continue;
+}
+
+bool SetItem::readsLines()
+{
+	return AluExpressionReadsLines(m_RPNExpression);
 }
 
 
@@ -469,4 +484,9 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	}
 
 	return ret;
+}
+
+bool ConditionItem::readsLines()
+{
+	return AluExpressionReadsLines(m_RPNExpression);
 }

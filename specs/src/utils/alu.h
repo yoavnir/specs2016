@@ -340,4 +340,6 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs);
 
 void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs);
 
+bool AluExpressionReadsLines(AluVec& vec);
+
 #endif

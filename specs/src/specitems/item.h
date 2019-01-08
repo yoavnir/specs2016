@@ -187,6 +187,7 @@ public:
 	Token* getToken()   {return mp_Token;}
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool readsLines();
 private:
 	Token* mp_Token;
 };
@@ -197,6 +198,7 @@ public:
 	virtual ~SetItem();
 	virtual std::string Debug()		{return m_rawExpression;}
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool readsLines();
 private:
 	std::string     m_rawExpression;
 	ALUCounterKey   m_key;
@@ -224,6 +226,7 @@ public:
 	virtual bool ApplyUnconditionally() {return true;}
 	void    setElseIf();
 	void    setWhile();
+	virtual bool readsLines();
 private:
 	std::string m_rawExpression;
 	AluVec      m_RPNExpression;

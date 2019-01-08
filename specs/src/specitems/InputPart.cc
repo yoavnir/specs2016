@@ -224,10 +224,5 @@ PSpecString ExpressionPart::getStr(ProcessingState& pState)
 
 bool ExpressionPart::readsLines()
 {
-	for (AluUnit* unit : m_RPNExpr) {
-		if (unit->requiresRead()) {
-			return true;
-		}
-	}
-	return false;
+	return AluExpressionReadsLines(m_RPNExpr);
 }

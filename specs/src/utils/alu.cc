@@ -1522,3 +1522,13 @@ void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr,
 
 	pAss->perform(k, pctrs, exprResult);
 }
+
+bool AluExpressionReadsLines(AluVec& vec)
+{
+	for (AluUnit* unit : vec) {
+		if (unit->requiresRead()) {
+			return true;
+		}
+	}
+	return false;
+}
