@@ -34,7 +34,7 @@ TESTOBJS = $(TESTSRC:.cc=.o)
 #default goal
 some: directories $(EXE_DIR)/specs
 
-all: directories $(TEST_EXES) specs.1.gz
+all: directories $(TEST_EXES)
 
 DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
 
@@ -71,4 +71,5 @@ install: $(EXE_DIR)/specs specs.1.gz
 	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
+	/bin/rm specs.1.gz
 
