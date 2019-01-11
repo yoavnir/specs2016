@@ -27,12 +27,18 @@ Switches
    
 Spec Units
 ==========
-Each spec unit specifies an action to be taken by the program. The spec unit may span from one to several command line arguments.
+Spec Units are the building blocks of a specs specification.  Each spec unit specifies an action to be taken by the program. The spec unit may span from one to several command line arguments.
 
 The most common spec unit is a *data field*, which consists of five arguments, three of which may be omitted:
 
     [fieldIdentifier] InputPart [conversion] OutputPart [alignment]
-  
+
+A *fieldIdentifier* is a single letter followed by a colon (like _a:_), that maps to the input or output of a single data field unit for later reference such as in later data fields or in expressions.  If the fieldIdentifier is at the start of the data field unit, it contains the input. If it is the OutputPart, it contains the output.  For example:
+
+     a: w1 ucase b:
+
+sets _a_ to the content of the first word of the input record, and sets _b_ to an upper-case version of the same.
+
 The **InputPart** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.

@@ -17,7 +17,13 @@ This version is liberally based on the CMS Pipelines User's Guide and Reference
 -- especially chapters 16, 24, and 20.
 
 .SS "Spec Units"
-The most common spec unit is a 
+.B Spec Units 
+are the building blocks of a 
+.B specs
+.I specification.
+Each spec unit tells the 
+.B specs
+engine to perform some action. The most common spec unit is a 
 .I data field
 which consists of five arguments, three of which may be omitted:
 .P
@@ -25,6 +31,24 @@ which consists of five arguments, three of which may be omitted:
 [fieldIdentifier] InputPart [conversion] OutputPart [alignment]
 .RE
 .P
+
+A 
+.B fieldIdentifier 
+is a single letter followed by a colon (like
+.I a:
+), that maps to the input or output of a single data field unit for later reference such as
+in later data fields or in 
+.I expressions. 
+If the fieldIdentifier is at the start of the data field unit, it contains the input. It it
+is the OutputPart, it contains the output.  For example:
+.RS 5
+a: w1 ucase b:
+.RE
+.I a
+contains the first word of the input, while 
+.I b
+contains an uppercase version of 
+.I a
 
 The 
 .B InputPart
@@ -380,6 +404,71 @@ Converts a string containing a date and time representation using the format spe
 argument to a floating point or integer number representing the number of seconds since the UNIX epoch. Formatting is as described for the similarly named conversion.
 .IP "d2tf(seconds,format)" 3
 Converts a number (integer or float) representing the number of seconds since the UNIX epoch to a printable format.
+
+.SS "Built-In String Functions"
+.IP "substr(bigstring, start, length)" 3
+Returns a substring of 
+.I bigstring
+starting at offset 
+.I start
+with a length of 
+.I length
+. If the length exceeds the end of the string, it is truncated. As always in 
+.B specs
+the indexes are 1-based. Negative indexes can be used to indicate offsets from the end of the string.
+.IP "left(bigstring, length)" 3
+Returns
+.I length
+characters starting at the beginning of 
+.I bigstring.
+If the length exceeds the length of bigstring, the result will be right-padded with blanks. If the 
+length is negative, the length of the string + 1 will be added to it, so 
+.B left(bigstring,-3)
+is the entire string less the last two characters.
+.IP "right(bigstring, length)" 3
+Returns the last
+.I length
+characters of 
+.I bigstring.
+If the length exceeds the length of bigstring, the result will be left-padded with blanks. If the 
+length is negative, the length of the string + 1 will be added to it, so 
+.B right(bigstring,-3)
+is the entire string less the first two characters.
+.IP "center(bigstring, length)" 3
+Returns
+.I length
+consecutive characters from
+.I bigstring
+as centered as possible in the string. If the length exceeds the length of bigstring, the result will be right-padded and left-padded with blanks. If the 
+length is negative, the length of the string + 1 will be added to it, so 
+.B center(bigstring,-3)
+is the entire string less the first and last characters. This function can also be spelled 
+.B centre
+because the CMS Pipelines version also does so.
+.IP "pos(needle, haystack)" 3
+Returns the 1-based index of the 
+.B first 
+position of 
+.I needle
+in 
+.I haystack.
+.IP "rpos(needle, haystack)" 3
+Returns the 1-based index of the 
+.B last 
+position of 
+.I needle
+in 
+.I haystack.
+.IP "includes(haystack, needle)" 3
+Returns
+.B TRUE
+(1) if the string 
+.I haystack
+includes the string
+.I needle
+as a substring, or 
+.B FALSE
+(0) otherwise.
 
 .P
 NOTE: This list is going to be expanded in future versions.

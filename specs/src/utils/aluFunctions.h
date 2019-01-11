@@ -26,15 +26,22 @@
 	X(field,1,true)                  \
 	X(fields,2,true)                 \
 	X(range,2,true)                  \
-	X(thewholerecord,0,true)         \
 	X(tf2d,2,false)                  \
 	X(d2tf,2,false)                  \
+	X(substr,3,false)                \
+	X(pos,2,false)                   \
+	X(rpos,2,false)                  \
+	X(includes,2,false)              \
+	X(left,2,false)                  \
+	X(right,2,false)                 \
+	X(center,2,false)                \
+	X(centre,2,false)                \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
 #define ALUFUNC2(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*);
-#define ALUFUNC3(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*));
-#define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*), ALUValue*));
+#define ALUFUNC3(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*);
+#define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*), ALUValue*);
 
 #define X(fn,argc,rl) ALUFUNC##argc(fn)
 ALU_FUNCTION_LIST

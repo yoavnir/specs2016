@@ -17,7 +17,15 @@
 #include "aluFunctions.h"
 #include "processing/Config.h"  // for configured literals
 
+extern stateQueryAgent* g_pStateQueryAgent;
+
 void ALUValue::set(std::string& s)
+{
+	m_value = s;
+	m_type = counterType__Str;
+}
+
+void ALUValue::set(const std::string& s)
 {
 	m_value = s;
 	m_type = counterType__Str;
@@ -807,6 +815,18 @@ ALUValue* AluAssnOperator::computeAppnd(ALUValue* operand, ALUValue* prevOp)
 	return new ALUValue(ret);
 }
 
+void AluInputRecord::_serialize(std::ostream& os) const
+{
+	os << "@@";
+}
+
+ALUValue* AluInputRecord::evaluate()
+{
+	PSpecString ps = g_pStateQueryAgent->getFromTo(1,-1);
+	ALUValue* ret = new ALUValue(ps->data(), ps->length());
+	delete ps;
+	return ret;
+}
 
 void AluOtherToken::_serialize(std::ostream& os) const
 {
@@ -1086,9 +1106,8 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 
 		// A special string @@ representing the entire input record
 		if (*c=='@' && c[1]=='@')  {
-			static std::string wholeRecordFunctionName("thewholerecord");
 			c+=2;
-			pUnit = new AluFunction(wholeRecordFunctionName);
+			pUnit = new AluInputRecord();
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			mayBeStart = false;
@@ -1321,6 +1340,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		case UT_LiteralNumber:
 		case UT_Counter:
 		case UT_FieldIdentifier:
+		case UT_InputRecord:
 			dest.push_back(pUnit);
 			availableOperands++;
 			break;
@@ -1427,6 +1447,7 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 		switch (pUnit->type()) {
 		case UT_LiteralNumber:
 		case UT_FieldIdentifier:
+		case UT_InputRecord:
 			computeStack.push(pUnit->evaluate());
 			break;
 		case UT_Counter: {

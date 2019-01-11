@@ -686,7 +686,6 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("words(3,4)", "brown fox");
-	VERIFY_EXPR_RES("thewholerecord()", "The quick brown fox jumps over the lazy dog");
 	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
 	VERIFY_EXPR_RES("len(@@)", "43");
 
@@ -705,7 +704,6 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
 	VERIFY_EXPR_RES("range(44,48)", "NaN");
-	VERIFY_EXPR_RES("thewholerecord()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 	VERIFY_EXPR_RES("@@", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 
 	// time reformat
@@ -714,6 +712,61 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	// Issue #38
 	VERIFY_EXPR_RES("2-2", "0");
+
+	// String processing functions
+	counters.set(9,"Magna Carta");
+	VERIFY_EXPR_RES("substr(#9,2,4)", "agna");
+	VERIFY_EXPR_RES("substr(#9,5,-1)", "a Carta");
+	VERIFY_EXPR_RES("substr(#9,-3,-1)", "rta");
+	VERIFY_EXPR_RES("substr(#9,2,-3)", "agna Cart");
+	VERIFY_EXPR_RES("substr(#9,-3,999)", "rta");
+	VERIFY_EXPR_RES("substr(#9,11,2)", "a");
+	VERIFY_EXPR_RES("substr(#9,12,5)", "");
+	VERIFY_EXPR_RES("substr(#9,-13,5)", "");
+	VERIFY_EXPR_RES("substr(#9,0,3)", "NaN");
+	VERIFY_EXPR_RES("substr(#9,3,0)", "");
+
+	VERIFY_EXPR_RES("left(#9,0)", "");
+	VERIFY_EXPR_RES("left(#9,1)", "M");
+	VERIFY_EXPR_RES("left(#9,7)", "Magna C");
+	VERIFY_EXPR_RES("left(#9,11)", "Magna Carta");
+	VERIFY_EXPR_RES("left(#9,15)", "Magna Carta    ");
+	VERIFY_EXPR_RES("left(#9,-1)", "Magna Carta");
+	VERIFY_EXPR_RES("left(#9,-3)", "Magna Car");
+
+	VERIFY_EXPR_RES("right(#9,0)", "");
+	VERIFY_EXPR_RES("right(#9,1)", "a");
+	VERIFY_EXPR_RES("right(#9,7)", "a Carta");
+	VERIFY_EXPR_RES("right(#9,11)", "Magna Carta");
+	VERIFY_EXPR_RES("right(#9,15)", "    Magna Carta");
+	VERIFY_EXPR_RES("right(#9,-1)", "Magna Carta");
+	VERIFY_EXPR_RES("right(#9,-3)", "gna Carta");
+
+	VERIFY_EXPR_RES("center(#9,0)", "");
+	VERIFY_EXPR_RES("center(#9,1)", " ");
+	VERIFY_EXPR_RES("center(#9,7)", "gna Car");
+	VERIFY_EXPR_RES("center(#9,6)", "gna Ca");
+	VERIFY_EXPR_RES("center(#9,11)", "Magna Carta");
+	VERIFY_EXPR_RES("center(#9,15)", "  Magna Carta  ");
+	VERIFY_EXPR_RES("center(#9,-1)", "Magna Carta");
+	VERIFY_EXPR_RES("center(#9,-3)", "agna Cart");
+
+	VERIFY_EXPR_RES("pos('g', #9)", "3");
+	VERIFY_EXPR_RES("pos('a', #9)", "2");
+	VERIFY_EXPR_RES("pos('x', #9)", "0");
+	VERIFY_EXPR_RES("pos('a ', #9)", "5");
+	VERIFY_EXPR_RES("pos('a ', left(#9,13))", "5");
+
+	VERIFY_EXPR_RES("rpos('g', #9)", "3");
+	VERIFY_EXPR_RES("rpos('a', #9)", "11");
+	VERIFY_EXPR_RES("rpos('x', #9)", "0");
+	VERIFY_EXPR_RES("rpos('a ', #9)", "5");
+	VERIFY_EXPR_RES("rpos('a ', left(#9,13))", "11");
+
+	VERIFY_EXPR_RES("includes(#9, 'a')", "1");
+	VERIFY_EXPR_RES("includes(#9, 'x')", "0");
+	VERIFY_EXPR_RES("includes(#9, 'gn')", "1");
+	VERIFY_EXPR_RES("includes(#9, 'rt ')", "0");
 
 	// TODO: More
 
