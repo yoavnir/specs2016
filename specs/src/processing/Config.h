@@ -14,6 +14,9 @@
 	X(bPrintStats,                  bool,         false,  0,stats,              true)       \
 	X(inputFile,                    std::string,  "",     i,inFile,             NEXTARG)    \
 	X(outputFile,                   std::string,  "",     o,outFile,            NEXTARG)    \
+	X(bLocalWhiteSpace,             bool,         true,   w,spaceWS,            false)      \
+	X(bDebugAluCompile,             bool,         false,  0,debug-alu-comp,     true)       \
+	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
 
 #define X(nm,typ,defval,ssw,cliswitch,oval) extern typ g_##nm;
 CONFIG_PARAMS

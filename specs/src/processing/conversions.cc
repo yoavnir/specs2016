@@ -166,7 +166,7 @@ static std::string conv_UCASE(std::string& s) {
 static std::string conv_ti2f(std::string& s, std::string& parm)
 {
 	if (s.length()!=8) return std::string();
-	uint64_t internal = *((uint64_t*)(s.c_str()));
+	int64_t internal = *((int64_t*)(s.c_str()));
 	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
 	std::string ret = std::string(pRet->data());
 	delete pRet;
@@ -175,8 +175,29 @@ static std::string conv_ti2f(std::string& s, std::string& parm)
 
 static std::string conv_tf2i(std::string& s, std::string& parm)
 {
-	uint64_t ret = specTimeConvertFromPrintable(s,parm);
-	return std::string(((char*)(&ret)), sizeof(uint64_t));
+	int64_t ret = specTimeConvertFromPrintable(s,parm);
+	return std::string(((char*)(&ret)), sizeof(int64_t));
+}
+
+static std::string conv_d2tf(std::string& s, std::string& parm)
+{
+	int64_t internal = int64_t(std::stold(s) * MICROSECONDS_PER_SECOND + 0.5);
+	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
+	std::string ret = std::string(pRet->data());
+	delete pRet;
+	return ret;
+}
+
+static std::string conv_tf2d(std::string& s, std::string& parm)
+{
+	int64_t tm = specTimeConvertFromPrintable(s,parm);
+	long double seconds;
+	if (0 == (tm % MICROSECONDS_PER_SECOND)) {
+		seconds = (long double)(tm / MICROSECONDS_PER_SECOND);
+	} else {
+		seconds = ((long double)tm) / MICROSECONDS_PER_SECOND;
+	}
+	return std::to_string(seconds);
 }
 
 #define X(c) if (0==strcasecmp(s.c_str(),#c)) return StringConversion__##c;

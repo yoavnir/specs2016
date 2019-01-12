@@ -9,6 +9,7 @@ public:
 	StringBuilder();
 	~StringBuilder();
 	PSpecString    GetString();
+	PSpecString    GetStringUnsafe();
 	size_t         Length() { return mp_str->length(); }
 	void           insert(PSpecString str, size_t offset, bool bOnlyPhysical=false);
 	void           insertNext(PSpecString str);

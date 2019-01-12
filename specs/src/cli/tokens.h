@@ -43,8 +43,16 @@
 	X(NUMBER,         false, false) \
 	X(TODCLOCK,       false, false) \
 	X(DTODCLOCK,      false, false) \
-	X(SET,            false, false) \
+	X(SET,            false, true) \
 	X(PRINT,          false, true)  \
+	X(IF,             false, true)  \
+	X(THEN,           false, false) \
+	X(ELSE,           false, false) \
+	X(ELSEIF,         false, true)  \
+	X(ENDIF,          false, false) \
+	X(WHILE,          false, true)  \
+	X(DO,             false, false) \
+	X(DONE,           false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,
@@ -92,6 +100,7 @@ public:
 	void            setRange(TokenFieldRange *prng) {MYASSERT(m_pRange==NULL); m_pRange = prng;}
 	std::string&    Literal() {return m_literal;}
 	void            setLiteral(std::string l) {MYASSERT(m_literal.empty()); m_literal = l;}
+	void            setLiteral(char c) {m_literal.resize(1); m_literal[0]=c;}
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
 	std::string&    HelpIdentify();

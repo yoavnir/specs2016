@@ -3,8 +3,10 @@
 #include <vector>
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
+#include "processing/ProcessingState.h"
 
 ALUCounters counters;
+ProcessingState g_ps;
 
 std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
@@ -340,6 +342,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	unsigned int testIndex = 0;
 	unsigned int countFailures = 0;
 
+	setStateQueryAgent(&g_ps);
 	testGetter tg;
 	setFieldIdentifierGetter(&tg);
 	tg.set('b', "84");
@@ -585,6 +588,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR("5+sqrt(1)-pow(3,4)","Number(5);BOP(+);FUNC(sqrt);(;Number(1););BOP(-);FUNC(pow);(;Number(3);COMMA;Number(4);)");
 	VERIFY_EXPR("a>b & b>c","FI(a);BOP(>);FI(b);BOP(&);FI(b);BOP(>);FI(c)");
 
+	VERIFY_EXPR("37%10", "Number(37);BOP(%);Number(10)");
+
+	VERIFY_EXPR("len(5)", "FUNC(len);(;Number(5);)");
 
 	// TODO: Yeah, a whole bunch of more expressions
 
@@ -605,6 +611,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_RPN("-b","FI(b);UOP(-)");
 	VERIFY_RPN("-2+3","Number(-2);Number(3);BOP(+)");
 	VERIFY_RPN("-(2+3)","Number(2);Number(3);BOP(+);UOP(-)");
+	VERIFY_RPN("37%10","Number(37);Number(10);BOP(%)");
 	VERIFY_RPN("a+b-c","FI(a);FI(b);BOP(+);FI(c);BOP(-)");
 	VERIFY_RPN("a-b+c","FI(a);FI(b);BOP(-);FI(c);BOP(+)")
 	VERIFY_RPN("a*b-c","FI(a);FI(b);BOP(*);FI(c);BOP(-)");
@@ -613,6 +620,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_RPN("2<3","Number(2);Number(3);BOP(<)");
 	VERIFY_RPN("a>b","FI(a);FI(b);BOP(>)");
 	VERIFY_RPN("a>b & b>c","FI(a);FI(b);BOP(>);FI(b);FI(c);BOP(>);BOP(&)");
+
+	// Issue #37
+	VERIFY_RPN("tf2d(words(1,2),'%d')", "Number(1);Number(2);FUNC(words);Literal(%d);FUNC(tf2d)");
 
 	// TODO: More here as well
 
@@ -648,6 +658,115 @@ int runALUUnitTests(unsigned int onlyTest)
 	counters.set(4,"AAAA");
 	VERIFY_EXPR_RES("frombin(#4)", "1094795585");
 	VERIFY_EXPR_RES("tobin(1094795590)","FAAA");
+
+	// Possible problem with integer division
+	VERIFY_EXPR_RES("37/10","3.7");
+	VERIFY_EXPR_RES("37//10","3");
+	VERIFY_EXPR_RES("37%10","7");
+
+	// length and quoted string
+	VERIFY_EXPR_RES("len(0)", "1");
+	VERIFY_EXPR_RES("len(5)", "1");
+	VERIFY_EXPR_RES("len(512)", "3");
+	VERIFY_EXPR_RES("len('hello')", "5");
+
+	VERIFY_EXPR_RES("sqrt(4)||' by '||sqrt(16)", "2 by 4");
+
+	// The functions that look at the line being processed
+	g_ps.setString(SpecString::newString());
+	VERIFY_EXPR_RES("wordcount()", "0");
+	VERIFY_EXPR_RES("word(2)", "NaN");
+	VERIFY_EXPR_RES("wordstart(3)", "0");
+	VERIFY_EXPR_RES("wordend(2)", "0");
+	VERIFY_EXPR_RES("words(3,4)", "NaN");
+
+	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
+	VERIFY_EXPR_RES("wordcount()", "9");
+	VERIFY_EXPR_RES("word(2)", "quick");
+	VERIFY_EXPR_RES("wordstart(3)", "11");
+	VERIFY_EXPR_RES("wordend(2)", "9");
+	VERIFY_EXPR_RES("words(3,4)", "brown fox");
+	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
+	VERIFY_EXPR_RES("len(@@)", "43");
+
+	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
+	VERIFY_EXPR_RES("wordcount()", "9");
+	VERIFY_EXPR_RES("word(2)", "quick");
+	VERIFY_EXPR_RES("wordstart(3)", "11");
+	VERIFY_EXPR_RES("wordend(2)", "9");
+	VERIFY_EXPR_RES("words(3,4)", "brown\tfox");
+	VERIFY_EXPR_RES("fieldcount()", "5");
+	VERIFY_EXPR_RES("field(3)", "fox jumps");
+	VERIFY_EXPR_RES("fieldstart(2)", "5");
+	VERIFY_EXPR_RES("fieldend(3)", "25");
+	VERIFY_EXPR_RES("fields(2,3)", "quick brown\tfox jumps");
+	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
+	VERIFY_EXPR_RES("range(41,43)", "dog");
+	VERIFY_EXPR_RES("range(41,45)", "dog");
+	VERIFY_EXPR_RES("range(44,48)", "NaN");
+	VERIFY_EXPR_RES("@@", "The\tquick brown\tfox jumps\tover the\tlazy dog");
+
+	// time reformat
+	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
+	VERIFY_EXPR_RES("d2tf(1546550663,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
+
+	// Issue #38
+	VERIFY_EXPR_RES("2-2", "0");
+
+	// String processing functions
+	counters.set(9,"Magna Carta");
+	VERIFY_EXPR_RES("substr(#9,2,4)", "agna");
+	VERIFY_EXPR_RES("substr(#9,5,-1)", "a Carta");
+	VERIFY_EXPR_RES("substr(#9,-3,-1)", "rta");
+	VERIFY_EXPR_RES("substr(#9,2,-3)", "agna Cart");
+	VERIFY_EXPR_RES("substr(#9,-3,999)", "rta");
+	VERIFY_EXPR_RES("substr(#9,11,2)", "a");
+	VERIFY_EXPR_RES("substr(#9,12,5)", "");
+	VERIFY_EXPR_RES("substr(#9,-13,5)", "");
+	VERIFY_EXPR_RES("substr(#9,0,3)", "NaN");
+	VERIFY_EXPR_RES("substr(#9,3,0)", "");
+
+	VERIFY_EXPR_RES("left(#9,0)", "");
+	VERIFY_EXPR_RES("left(#9,1)", "M");
+	VERIFY_EXPR_RES("left(#9,7)", "Magna C");
+	VERIFY_EXPR_RES("left(#9,11)", "Magna Carta");
+	VERIFY_EXPR_RES("left(#9,15)", "Magna Carta    ");
+	VERIFY_EXPR_RES("left(#9,-1)", "Magna Carta");
+	VERIFY_EXPR_RES("left(#9,-3)", "Magna Car");
+
+	VERIFY_EXPR_RES("right(#9,0)", "");
+	VERIFY_EXPR_RES("right(#9,1)", "a");
+	VERIFY_EXPR_RES("right(#9,7)", "a Carta");
+	VERIFY_EXPR_RES("right(#9,11)", "Magna Carta");
+	VERIFY_EXPR_RES("right(#9,15)", "    Magna Carta");
+	VERIFY_EXPR_RES("right(#9,-1)", "Magna Carta");
+	VERIFY_EXPR_RES("right(#9,-3)", "gna Carta");
+
+	VERIFY_EXPR_RES("center(#9,0)", "");
+	VERIFY_EXPR_RES("center(#9,1)", " ");
+	VERIFY_EXPR_RES("center(#9,7)", "gna Car");
+	VERIFY_EXPR_RES("center(#9,6)", "gna Ca");
+	VERIFY_EXPR_RES("center(#9,11)", "Magna Carta");
+	VERIFY_EXPR_RES("center(#9,15)", "  Magna Carta  ");
+	VERIFY_EXPR_RES("center(#9,-1)", "Magna Carta");
+	VERIFY_EXPR_RES("center(#9,-3)", "agna Cart");
+
+	VERIFY_EXPR_RES("pos('g', #9)", "3");
+	VERIFY_EXPR_RES("pos('a', #9)", "2");
+	VERIFY_EXPR_RES("pos('x', #9)", "0");
+	VERIFY_EXPR_RES("pos('a ', #9)", "5");
+	VERIFY_EXPR_RES("pos('a ', left(#9,13))", "5");
+
+	VERIFY_EXPR_RES("rpos('g', #9)", "3");
+	VERIFY_EXPR_RES("rpos('a', #9)", "11");
+	VERIFY_EXPR_RES("rpos('x', #9)", "0");
+	VERIFY_EXPR_RES("rpos('a ', #9)", "5");
+	VERIFY_EXPR_RES("rpos('a ', left(#9,13))", "11");
+
+	VERIFY_EXPR_RES("includes(#9, 'a')", "1");
+	VERIFY_EXPR_RES("includes(#9, 'x')", "0");
+	VERIFY_EXPR_RES("includes(#9, 'gn')", "1");
+	VERIFY_EXPR_RES("includes(#9, 'rt ')", "0");
 
 	// TODO: More
 

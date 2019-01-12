@@ -6,6 +6,8 @@ ALUCounters g_counters;
 itemGroup::itemGroup()
 {
 	m_items.clear();
+	bNeedRunoutCycle = false;
+	bFoundSelectSecond = false;
 }
 
 void itemGroup::addItem(Item *pItem)
@@ -17,6 +19,8 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	while (index < tokenVec.size()) {
 		switch (tokenVec[index].Type()) {
+		case TokenListType__EOF:
+			bNeedRunoutCycle = true;
 		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
 		case TokenListType__PAD:
@@ -62,6 +66,70 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			}
 			break;
 		}
+		case TokenListType__IF:
+		case TokenListType__ELSEIF:
+		case TokenListType__WHILE:
+		{
+			MYASSERT(index < tokenVec.size());
+			if (TokenListType__WHILE == tokenVec[index].Type()) {
+				MYASSERT(TokenListType__DO == tokenVec[index+1].Type());
+			} else {
+				MYASSERT(TokenListType__THEN == tokenVec[index+1].Type());
+			}
+			try {
+				ConditionItem* pItem = new ConditionItem(tokenVec[index].Literal());
+				if (TokenListType__ELSEIF == tokenVec[index].Type()) {
+					pItem->setElseIf();
+				}
+				else if (TokenListType__WHILE == tokenVec[index].Type()) {
+					pItem->setWhile();
+				}
+				index++;
+				addItem(pItem);
+			} catch (const SpecsException& e) {
+				if (g_bVerbose) {
+					std::cerr << "While parsing conditional expression, got: " << e.what(true) << "\n";
+				}
+				std::string err = "Error in conditional expression " + tokenVec[index].HelpIdentify();
+				MYTHROW(err);
+			}
+			break;
+		}
+		case TokenListType__THEN:
+		{
+			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_THEN);
+			index++;
+			addItem(pItem);
+			break;
+		}
+		case TokenListType__ELSE:
+		{
+			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_ELSE);
+			index++;
+			addItem(pItem);
+			break;
+		}
+		case TokenListType__ENDIF:
+		{
+			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_ENDIF);
+			index++;
+			addItem(pItem);
+			break;
+		}
+		case TokenListType__DO:
+		{
+			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_DO);
+			index++;
+			addItem(pItem);
+			break;
+		}
+		case TokenListType__DONE:
+		{
+			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_DONE);
+			index++;
+			addItem(pItem);
+			break;
+		}
 		default:
 			std::string err = std::string("Unhandled token type ")
 				+ TokenListType__2str(tokenVec[index].Type())
@@ -88,15 +156,35 @@ std::string itemGroup::Debug()
 bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, Writer* pWr)
 {
 	bool bSomethingWasDone = false;
-	int i;
+	int i = 0;
+	bool isEOFCycle = false;
 	PSpecString ps; // Used for processing READ and READSTOP tokens
 	bool processingContinue = true;
-	for (i=0; processingContinue && i<m_items.size(); i++) {
+
+	if (pState.isRunOut()) {
+		// Find the EOF token
+		for ( ;  i < m_items.size(); i++) {
+			TokenItem* pTok = dynamic_cast<TokenItem*>(m_items[i]);
+			if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
+				i++;  // So we start with the one after the EOF
+				break;
+			}
+		}
+		isEOFCycle = true;
+	}
+
+	itemLoop:
+	processingContinue = true;
+	for ( ; processingContinue && i<m_items.size(); i++) {
 		PItem pit = m_items[i];
+		if (!pit->ApplyUnconditionally() && !pState.needToEvaluate()) {
+			continue;
+		}
 		ApplyRet aRet = pit->apply(pState, &sb);
 		switch (aRet) {
-		case ApplyRet__Continue:
+		case ApplyRet__ContinueWithDataWritten:
 			bSomethingWasDone = true;
+		case ApplyRet__Continue:
 			break;
 		case ApplyRet__Write:
 			if (bSomethingWasDone) {
@@ -118,11 +206,26 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			}
 			pState.setString(ps);
 			break;
+		case ApplyRet__EnterLoop:
+			pState.pushLoop(i);
+			break;
+		case ApplyRet__DoneLoop:
+			i = pState.getLoopStart() - 1;  // subtracting 1 because the for loop increments
+			break;
+		case ApplyRet__EOF:
+			processingContinue = false;
+			break;
 		default:
 			std::string err = "Unexpected return code from TokenItem::apply: ";
 			err += std::to_string(aRet);
 			MYTHROW(err);
 		}
+	}
+
+	if (isEOFCycle && bFoundSelectSecond) {
+		isEOFCycle = false;
+		i = 0;
+		goto itemLoop;
 	}
 	return bSomethingWasDone;
 }
@@ -133,6 +236,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 	while ((ps=rd.get())) {
 		pState.setString(ps);
+		pState.incrementCycleCounter();
 
 		try {
 			if (processDo(sb,pState, &rd, &wr)) {
@@ -141,6 +245,20 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		} catch (const SpecsException& e) {
 			std::cerr << "Exception processing line " << rd.countUsed() << ": " << e.what(true) << "\n";
 		}
+	}
+
+	if (!bNeedRunoutCycle) {
+		return;
+	}
+
+	// run-out cycle
+	pState.setString(NULL);
+	try {
+		if (processDo(sb, pState, &rd, &wr)) {
+			wr.Write(sb.GetString());
+		}
+	} catch (const SpecsException& e) {
+		std::cerr << "Exception processing the run-out cycle: " << e.what(true) << "\n";
 	}
 }
 
@@ -191,9 +309,21 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__ReadStop;
 	case TokenListType__WRITE:
 		return ApplyRet__Write;
+	case TokenListType__EOF:
+		return ApplyRet__EOF;
 	default:
 		std::string err = "Unhandled TokenItem type " + TokenListType__2str(mp_Token->Type());
 		MYTHROW(err);
+	}
+}
+
+bool TokenItem::readsLines() {
+	switch (mp_Token->Type()) {
+	case TokenListType__READ:
+	case TokenListType__READSTOP:
+		return true;
+	default:
+		return false;
 	}
 }
 
@@ -219,3 +349,144 @@ ApplyRet SetItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	return ApplyRet__Continue;
 }
 
+bool SetItem::readsLines()
+{
+	return AluExpressionReadsLines(m_RPNExpression);
+}
+
+
+ConditionItem::ConditionItem(std::string& _statement)
+{
+	m_pred = PRED_IF;
+	m_rawExpression = _statement;
+	AluVec expr;
+	MYASSERT(parseAluExpression(_statement, expr));
+	MYASSERT(convertAluVecToPostfix(expr, m_RPNExpression, true));
+}
+
+ConditionItem::ConditionItem(ConditionItem::predicate _p)
+{
+	MYASSERT(_p != PRED_IF);
+	m_pred = _p;
+}
+
+ConditionItem::~ConditionItem()
+{
+	if (m_pred == PRED_IF) {
+		for (AluUnit* unit : m_RPNExpression) {
+			delete unit;
+		}
+	}
+}
+
+std::string ConditionItem::Debug()
+{
+	static const std::string sThen("THEN");
+	static const std::string sElse("ELSE");
+	static const std::string sEndIf("ENDIF");
+	static const std::string sDo("DO");
+	static const std::string sDone("DONE");
+
+	switch(m_pred) {
+	case PRED_THEN:
+		return sThen;
+	case PRED_ELSE:
+		return sElse;
+	case PRED_ENDIF:
+		return sEndIf;
+	case PRED_DO:
+		return sDo;
+	case PRED_DONE:
+		return sDone;
+	case PRED_IF: {
+		std::string ret = "IF(" + m_rawExpression + ")";
+		return ret;
+	}
+	case PRED_ELSEIF: {
+		std::string ret = "ELSEIF(" + m_rawExpression + ")";
+		return ret;
+	}
+	case PRED_WHILE: {
+		std::string ret = "WHILE(" + m_rawExpression + ")";
+		return ret;
+	}
+	}
+	return std::string(""); // Issue #14
+}
+
+void ConditionItem::setElseIf()
+{
+	MYASSERT(PRED_IF == m_pred);
+	m_pred = PRED_ELSEIF;
+}
+
+void ConditionItem::setWhile()
+{
+	MYASSERT(PRED_IF == m_pred);
+	m_pred = PRED_WHILE;
+}
+
+ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
+{
+	ApplyRet ret = ApplyRet__Continue;
+
+	switch (m_pred) {
+	case PRED_IF: {
+		if (pState.needToEvaluate()) {
+			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+			pState.setCondition(exprResult->getBool());
+			delete exprResult;
+		} else {
+			pState.observeIf();
+		}
+		break;
+	}
+	case PRED_THEN:
+		break;
+	case PRED_ELSE:
+		pState.observeElse();
+		break;
+	case PRED_ELSEIF: {
+		bool bNeedToEvaluate;
+		pState.observeElseIf(bNeedToEvaluate);
+		if (bNeedToEvaluate) {
+			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+			pState.setCondition(exprResult->getBool());
+			delete exprResult;
+		}
+		break;
+	}
+	case PRED_ENDIF:
+		pState.observeEndIf();
+		break;
+	case PRED_WHILE: {
+		if (pState.needToEvaluate()) {
+			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+			if (exprResult->getBool()) {
+				ret = ApplyRet__EnterLoop;
+			} else {
+				pState.observeWhile();
+			}
+		} else {
+			pState.observeWhile();
+		}
+		break;
+	}
+	case PRED_DO:
+		break;
+	case PRED_DONE:
+		if (pState.runningOutLoop()) {
+			pState.observeDone();
+		} else {
+			ret = ApplyRet__DoneLoop;
+		}
+		break;
+	}
+
+	return ret;
+}
+
+bool ConditionItem::readsLines()
+{
+	return AluExpressionReadsLines(m_RPNExpression);
+}

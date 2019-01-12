@@ -8,6 +8,7 @@
 #include "processing/StringBuilder.h"
 #include "processing/ProcessingState.h"
 #include "utils/alu.h"
+#include "utils/TimeUtils.h"
 
 class InputPart {
 public:
@@ -102,8 +103,8 @@ public:
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 private:
-	clockType  m_Type;
-	uint64_t   m_StaticClock;
+	clockType    m_Type;
+	clockValue   m_StaticClock;
 };
 
 class IDPart : public InputPart {
@@ -122,6 +123,7 @@ public:
 	virtual ~ExpressionPart();
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
+	virtual bool        readsLines();
 private:
 	AluVec m_RPNExpr;
 	std::string m_rawExpression;
@@ -129,9 +131,13 @@ private:
 
 enum ApplyRet {
 	ApplyRet__Continue,
+	ApplyRet__ContinueWithDataWritten,
 	ApplyRet__Write,
 	ApplyRet__Read,
 	ApplyRet__ReadStop,
+	ApplyRet__EnterLoop,
+	ApplyRet__DoneLoop,
+	ApplyRet__EOF,
 	ApplyRet__Last
 };
 
@@ -146,6 +152,7 @@ public:
 	virtual std::string Debug() = 0;
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
 	virtual bool readsLines() {return false;}
+	virtual bool ApplyUnconditionally() {return false;}
 };
 
 typedef Item* PItem;
@@ -180,6 +187,7 @@ public:
 	Token* getToken()   {return mp_Token;}
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool readsLines();
 private:
 	Token* mp_Token;
 };
@@ -190,6 +198,7 @@ public:
 	virtual ~SetItem();
 	virtual std::string Debug()		{return m_rawExpression;}
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool readsLines();
 private:
 	std::string     m_rawExpression;
 	ALUCounterKey   m_key;
@@ -197,6 +206,32 @@ private:
 	AluVec          m_RPNExpression;
 };
 
-// ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs
+class ConditionItem : public Item {
+public:
+	enum predicate {
+		PRED_IF,
+		PRED_THEN,
+		PRED_ELSE,
+		PRED_ELSEIF,
+		PRED_ENDIF,
+		PRED_WHILE,
+		PRED_DO,
+		PRED_DONE
+	};
+	ConditionItem(std::string& _statement);
+	ConditionItem(ConditionItem::predicate _p);
+	virtual ~ConditionItem();
+	virtual std::string Debug();
+	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool ApplyUnconditionally() {return true;}
+	void    setElseIf();
+	void    setWhile();
+	virtual bool readsLines();
+private:
+	std::string m_rawExpression;
+	AluVec      m_RPNExpression;
+	predicate   m_pred;
+};
+
 
 #endif

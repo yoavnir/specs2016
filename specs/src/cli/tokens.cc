@@ -4,6 +4,7 @@
 #include "processing/Config.h"
 #include "utils/ErrorReporting.h"
 #include "processing/conversions.h"
+#include "processing/ProcessingState.h"
 
 extern std::string conv_X2CH(std::string& s);
 
@@ -281,6 +282,9 @@ static bool compareStringWithMinLength(std::string& shortString, const char* sz,
 		}
 
 /* Big parser functions */
+static bool isPossibleDelimiter(char c) {
+	return (c=='/' || c=='"' || c=='\'');
+}
 static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int argidx);
 void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 {
@@ -319,6 +323,14 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKENV(dtodclock, DTODCLOCK, 4);
 	SIMPLETOKEN(set, SET);
 	SIMPLETOKEN(print, PRINT);
+	SIMPLETOKEN(if, IF);
+	SIMPLETOKEN(else, ELSE);
+	SIMPLETOKEN(then, THEN);
+	SIMPLETOKEN(endif, ENDIF);
+	SIMPLETOKEN(elseif, ELSEIF);
+	SIMPLETOKEN(while, WHILE);
+	SIMPLETOKEN(do, DO);
+	SIMPLETOKEN(done, DONE);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
@@ -448,7 +460,7 @@ CONT1:
 	/* Add as literal */
 	{
 		std::string literal;
-		if (arg.front()==arg.back() && arg.length()>=2) {
+		if (arg.front()==arg.back() && arg.length()>=2 && isPossibleDelimiter(arg.front())) {
 			literal = arg.substr(1, arg.length()-2);
 		} else {
 			literal = arg;
@@ -508,6 +520,7 @@ static bool mayBeLiteral(Token& tok)
 	switch (tok.Type()) {
 	case TokenListType__LITERAL:
 	case TokenListType__PERIOD:
+	case TokenListType__RANGE:
 		/* TODO: expand this list */
 		return true;
 	default:
@@ -551,8 +564,15 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				tokList->erase(tokList->begin()+(i+1));
 			}
 			break;
-		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
+			if (tok.Literal()=="" && getLiteral(nextTok)=="default") {
+				if (g_bLocalWhiteSpace) {
+					nextTok.setLiteral(LOCAL_WHITESPACE);
+				} else {
+					nextTok.setLiteral(DEFAULT_WORDSEPARATOR);
+				}
+			}
+		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__PAD:
 			if (tok.Literal()=="") {
 				if (mayBeLiteral(nextTok)) {
@@ -598,6 +618,9 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		}
 		case TokenListType__SET:
 		case TokenListType__PRINT:
+		case TokenListType__IF:
+		case TokenListType__ELSEIF:
+		case TokenListType__WHILE:
 		{
 			if (tok.Literal()=="") {
 				tok.setLiteral(getLiteral(nextTok));

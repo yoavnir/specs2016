@@ -3,7 +3,7 @@ EXE_DIR = ../exe
 INC = -I .
 
 # FOR DEBUG
-# CONDCOMP = -g -DDEBUG
+# CONDCOMP = -g -DDEBUG -DALU_DUMP
 # CONDLINK = -g
 
 # FOR RELEASE
@@ -34,7 +34,7 @@ TESTOBJS = $(TESTSRC:.cc=.o)
 #default goal
 some: directories $(EXE_DIR)/specs
 
-all: directories $(TEST_EXES) specs.1.gz
+all: directories $(TEST_EXES)
 
 DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
 
@@ -68,6 +68,8 @@ clear:
 	
 install: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
+	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
+	/bin/rm specs.1.gz
 

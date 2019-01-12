@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "15 Dec 2018" "0.1" "specs man page"
+.TH man 1 "15 Dec 2018" "0.2" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -17,7 +17,13 @@ This version is liberally based on the CMS Pipelines User's Guide and Reference
 -- especially chapters 16, 24, and 20.
 
 .SS "Spec Units"
-The most common spec unit is a 
+.B Spec Units 
+are the building blocks of a 
+.B specs
+.I specification.
+Each spec unit tells the 
+.B specs
+engine to perform some action. The most common spec unit is a 
 .I data field
 which consists of five arguments, three of which may be omitted:
 .P
@@ -26,6 +32,24 @@ which consists of five arguments, three of which may be omitted:
 .RE
 .P
 
+A 
+.B fieldIdentifier 
+is a single letter followed by a colon (like
+.I a:
+), that maps to the input or output of a single data field unit for later reference such as
+in later data fields or in 
+.I expressions. 
+If the fieldIdentifier is at the start of the data field unit, it contains the input. It it
+is the OutputPart, it contains the output.  For example:
+.RS 5
+a: w1 ucase b:
+.RE
+.I a
+contains the first word of the input, while 
+.I b
+contains an uppercase version of 
+.I a
+
 The 
 .B InputPart
 argument may be any of the following:
@@ -33,7 +57,7 @@ argument may be any of the following:
 .P
 A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
 .P
-A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- spaces by default. The word indexing is 1-based.
+A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
 .P
 A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based.
 .P 
@@ -134,6 +158,10 @@ Byte Swap. reverses the order of bytes. "AB" --> "BA"
 Convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 .IP "tf2i" 3
 Convert printable time format to the internal 8-byte representation. 
+.IP "d2tf" 3
+Convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+.IP "tf2d" 3
+Convert printable time format to a decimal number, representing seconds since the epoch. 
 
 .SS "Other Spec Units"
 There are also other spec units, that may be used:
@@ -144,11 +172,134 @@ Causes the program to read the next line of input. If we have already read the l
 .IP "WRITE" 3
 Causes the program to write to output and reset the output line.
 .IP "WORDSEPARATOR and FIELDSEPARATOR" 3
-Declare a character to be the word of field separator respectively, which affects word and field ranges.
+Declare a character to be the word of field separator respectively, which affects word and field ranges. For WORDSEPARATOR it is possible to use the special value 
+.I default
+to make all whitespace defined by the locale work as a word separator. 
 .IP "REDO" 3
 Causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
 .IP "SET" 3
 Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
+
+.SS "Conditions and Loops"
+A specification can include conditions and loops. 
+
+Conditions begin with the word 
+.B if
+followed by an 
+.B expression 
+that evaluates to true of false, followed by the token
+.B then,
+followed by some 
+.B Spec Units.
+Those will be executed only if the condition evaluates to true. They may be followed by an
+.B else
+token followed by more
+.B Spec Units 
+that will be executed if the expression is not true, or they may be followed by an
+.B elseif
+token with its own condition, 
+.B then 
+token, and set of 
+.B Spec Units.
+The chain of 
+.B elseif
+tokens may be arbitrarily long, but there may only be at most one 
+.B else
+token. The conditional block ends with an
+.B endif
+token.  For example:
+
+.RS 5
+.B if
+#2 > 5
+.B then 
+.RS 4
+/big/ 1
+.RE 
+.B elseif
+#2 > 3
+.B then 
+.RS 4
+/medium/ 1
+.RE
+.B else 
+.RS 4
+/small/ 1
+.RE 
+.B endif
+.RE
+
+The loop available in 
+.B specs
+is a 
+.B while
+loop.  It begins with the 
+.B while
+token, followed by an 
+.B expression 
+that evaluates to true of false, followed by the token
+.B do,
+and a series of 
+.B Spec Units
+that will be executed as long as the expression evaluates to true. The series of 
+.B Spec Units is terminated by the token
+.B done.
+Example:
+
+.RS 5
+.B while
+#2 > 0
+.B do
+.RS 4
+print /#2/ 1
+.RS 1
+.RE 
+write
+.RS 1
+.RE 
+set /#2 -= 1/
+.RE
+.B done
+.RE
+
+.SS "RunIn and RunOut Cycles"
+A 
+.B cycle 
+is defined as a single run of the specification, which includes reading an input record, processing it, and outputting one or more records. If the specification contains 
+.B read 
+or 
+.B readstop 
+tokens, a single cycle can consume more than one input records.
+
+The 
+.B runin 
+cycle is the first one to run. In the runin cycle, the function 
+.B first()
+returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
+
+The 
+.B runout 
+cycle happens 
+.I after 
+the last line has been read.  It consists of the spec items that follow the 
+.B EOF 
+token, or (when 
+.I select second 
+is used) conditional specifications with the 
+.B eof() 
+function. Example:
+
+    if first() then
+        /Item/  1  /Square/ nw write
+        /====/  1  /======/ nw write
+    endif
+    a:  w1 1.4 right
+        print "a*a" 6.6 right
+        set '#0+=(a*a)'
+    EOF
+        /==========/ 1 write
+        /Total:/ 1
+        print #0 nw
 
 .SS "Expressions and Assignments"
 Expressions are used in PRINT data units as well as in assignments. Assignments are used in SET Spec Units.
@@ -175,6 +326,9 @@ Assignments assign the result of an expression into a numbered counter. For exam
 .IP "Assignment Operators" 3
 :=, +=, -=, *=, /=, //=, %=, ||=
 
+.IP "At-sign (@) Operator" 3
+The at-sign allows the inclusion of user-defined and system-defined labels as strings in expressions. The double at-sign (@@) substitutes for the entire input record.
+
 .SS "Built-In Functions"
 .IP "abs(x)" 3
 The absolute function returns the absolute value of the number passed to it. Will return an integer if the parameter is integer, or float otherwise.
@@ -188,9 +342,136 @@ Returns a decimal number from the binary representation in x.
 Returns a binary representation of the unsigned integer in x with field of length d bits. Valid values for d are 8, 16, 32, and 64.
 .IP "tobin(x)" 3
 Returns a binary representation of the unsigned integer in x. The field length is automatically determined by the value of x, but will be 1, 2, 4, or 8 characters in length.
+.IP "len(x)" 3
+Returns the length of the argument when viewed as a string. For example, len(37) is 2; len('hello') is 5.
+.IP "first()" 3
+Returns 1 during the 
+.B runin
+cycle, and zero otherwise.
+.IP "eof()" 3
+Returns 1 during the
+.B runout 
+cycle, and zero otherwise.
+.IP "range(s,e)" 3
+Returns the range of characters from
+.B s
+to 
+.B e 
+from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
+.IP "wordcount()" 3
+Returns the count of words in the input record.
+.IP "word(i)" 3
+Returns the i-th word in the input record.
+.IP "wordstart(i)" 3
+Returns the starting position of the i-th word in the input record.
+.IP "wordend(i)" 3
+Returns the ending position of the i-th word in the input record. 
+.I range(wordstart(i),wordend(i))
+is equivalent to 
+.I word(i)
+but less efficient.
+.IP "words(s,e)" 3
+Returns the string from the start of the 
+.B s-th
+word to the end of the 
+.B e-th 
+word. It is also equivalent to 
+.I range(wordstart(s),wordend(e))
+but less efficient.
+.IP "fieldcount()" 3
+Returns the count of fields in the input record.
+.IP "field(i)" 3
+Returns the i-th field in the input record.
+.IP "fieldstart(i)" 3
+Returns the starting position of the i-th field in the input record.
+.IP "fieldend(i)" 3
+Returns the ending position of the i-th field in the input record. 
+.I range(fieldstart(i),fieldend(i))
+is equivalent to 
+.I field(i)
+but less efficient.
+.IP "fields(s,e)" 3
+Returns the string from the start of the 
+.B s-th
+field to the end of the 
+.B e-th 
+field. It is also equivalent to 
+.I range(fieldstart(s),fieldend(e))
+but less efficient.
+.IP "tf2d(string,format)" 3
+Converts a string containing a date and time representation using the format specified in the 
+.I format
+argument to a floating point or integer number representing the number of seconds since the UNIX epoch. Formatting is as described for the similarly named conversion.
+.IP "d2tf(seconds,format)" 3
+Converts a number (integer or float) representing the number of seconds since the UNIX epoch to a printable format.
+
+.SS "Built-In String Functions"
+.IP "substr(bigstring, start, length)" 3
+Returns a substring of 
+.I bigstring
+starting at offset 
+.I start
+with a length of 
+.I length
+. If the length exceeds the end of the string, it is truncated. As always in 
+.B specs
+the indexes are 1-based. Negative indexes can be used to indicate offsets from the end of the string.
+.IP "left(bigstring, length)" 3
+Returns
+.I length
+characters starting at the beginning of 
+.I bigstring.
+If the length exceeds the length of bigstring, the result will be right-padded with blanks. If the 
+length is negative, the length of the string + 1 will be added to it, so 
+.B left(bigstring,-3)
+is the entire string less the last two characters.
+.IP "right(bigstring, length)" 3
+Returns the last
+.I length
+characters of 
+.I bigstring.
+If the length exceeds the length of bigstring, the result will be left-padded with blanks. If the 
+length is negative, the length of the string + 1 will be added to it, so 
+.B right(bigstring,-3)
+is the entire string less the first two characters.
+.IP "center(bigstring, length)" 3
+Returns
+.I length
+consecutive characters from
+.I bigstring
+as centered as possible in the string. If the length exceeds the length of bigstring, the result will be right-padded and left-padded with blanks. If the 
+length is negative, the length of the string + 1 will be added to it, so 
+.B center(bigstring,-3)
+is the entire string less the first and last characters. This function can also be spelled 
+.B centre
+because the CMS Pipelines version also does so.
+.IP "pos(needle, haystack)" 3
+Returns the 1-based index of the 
+.B first 
+position of 
+.I needle
+in 
+.I haystack.
+.IP "rpos(needle, haystack)" 3
+Returns the 1-based index of the 
+.B last 
+position of 
+.I needle
+in 
+.I haystack.
+.IP "includes(haystack, needle)" 3
+Returns
+.B TRUE
+(1) if the string 
+.I haystack
+includes the string
+.I needle
+as a substring, or 
+.B FALSE
+(0) otherwise.
 
 .P
-NOTE: This list is going to be expanded greatly in future versions.
+NOTE: This list is going to be expanded in future versions.
 
 .SH OPTIONS
 specs supports the following switches:
@@ -208,6 +489,16 @@ Output statistics on run time, and records read, and on records written to stand
 Makes the program read the input records from a file rather than from standard input.
 .IP "--outFile or -o" 3
 Makes the program write the output records to a file rather than to standard output.
+.IP "--spaceWS" 3
+Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
+.IP "--debug-alu-comp" 3
+Prints out detailed information about the parsing and compiling of expressions (
+.I only in debug build
+).
+.IP "--debug-alu-run" 3
+Prints out detailed step-by-step information about the evaluation of expressions (
+.I only in debug build
+).   
 
 .SH CONFIGURATION FILE
 .B specs
@@ -227,7 +518,7 @@ command like this:
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
-This returns the version of specs, for example "v0.1"
+This returns the version of specs, for example "v0.2"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 

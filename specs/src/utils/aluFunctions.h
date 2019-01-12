@@ -1,23 +1,49 @@
 #ifndef SPECS2016__UTILS__ALU_FUNCTIONS_H
 #define SPECS2016__UTILS__ALU_FUNCTIONS_H
 
+#include "utils/SpecString.h"
 #include "utils/alu.h"
 
-#define ALU_FUNCTION_LIST 		\
-	X(abs,1)					\
-	X(pow,2)					\
-	X(sqrt,1)					\
-	X(frombin,1)				\
-	X(tobine,2)					\
-	X(tobin,1)					\
+// function name, number of arguments, whether it needs lines from input
+#define ALU_FUNCTION_LIST            \
+	X(abs,1,false)                   \
+	X(pow,2,false)                   \
+	X(sqrt,1,false)                  \
+	X(frombin,1,false)               \
+	X(tobine,2,false)                \
+	X(tobin,1,false)                 \
+	X(len,1,false)                   \
+	X(first,0,false)                 \
+	X(eof,0,false)                   \
+	X(wordcount,0,true)              \
+	X(wordstart,1,true)              \
+	X(wordend,1,true)                \
+	X(word,1,true)                   \
+	X(words,2,true)                  \
+	X(fieldcount,0,true)             \
+	X(fieldstart,1,true)             \
+	X(fieldend,1,true)               \
+	X(field,1,true)                  \
+	X(fields,2,true)                 \
+	X(range,2,true)                  \
+	X(tf2d,2,false)                  \
+	X(d2tf,2,false)                  \
+	X(substr,3,false)                \
+	X(pos,2,false)                   \
+	X(rpos,2,false)                  \
+	X(includes,2,false)              \
+	X(left,2,false)                  \
+	X(right,2,false)                 \
+	X(center,2,false)                \
+	X(centre,2,false)                \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
 #define ALUFUNC2(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*);
-#define ALUFUNC3(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*));
-#define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*), ALUValue*));
+#define ALUFUNC3(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*);
+#define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*), ALUValue*);
 
-#define X(fn,argc) ALUFUNC##argc(fn)
+#define X(fn,argc,rl) ALUFUNC##argc(fn)
 ALU_FUNCTION_LIST
 #undef X
 
@@ -27,5 +53,19 @@ typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
 typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 
+class stateQueryAgent {
+public:
+	virtual unsigned int getWordCount() = 0;
+	virtual unsigned int getFieldCount() = 0;
+	virtual int     getWordStart(int idx) = 0;
+	virtual int     getWordEnd(int idx) = 0;
+	virtual int     getFieldStart(int idx) = 0;
+	virtual int     getFieldEnd(int idx) = 0;
+	virtual PSpecString getFromTo(int from, int to) = 0;
+	virtual bool    isRunIn() = 0;
+	virtual bool    isRunOut() = 0;
+};
+
+void setStateQueryAgent(stateQueryAgent* qa);
 
 #endif

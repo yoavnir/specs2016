@@ -5,10 +5,14 @@
 #include <string>
 #include "utils/SpecString.h"
 
-uint64_t specTimeGetTOD();
+#define MICROSECONDS_PER_SECOND 1000000
 
-PSpecString specTimeConvertToPrintable(uint64_t sinceEpoch, std::string format);
+typedef long double clockValue;
 
-uint64_t specTimeConvertFromPrintable(std::string printable, std::string format);
+clockValue specTimeGetTOD();
+
+PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format);
+
+int64_t specTimeConvertFromPrintable(std::string printable, std::string format);
 
 #endif

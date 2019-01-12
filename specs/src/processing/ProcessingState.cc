@@ -1,3 +1,4 @@
+#include <cctype>
 #include "Config.h"
 #include "utils/ErrorReporting.h"
 #include "ProcessingState.h"
@@ -7,10 +8,15 @@
 ProcessingState::ProcessingState()
 {
 	m_pad = DEFAULT_PAD_CHAR;
-	m_wordSeparator = DEFAULT_WORDSEPARATOR;
+	if (g_bLocalWhiteSpace) {
+		m_wordSeparator = LOCAL_WHITESPACE;
+	} else {
+		m_wordSeparator = DEFAULT_WORDSEPARATOR;
+	}
 	m_fieldSeparator = DEFAULT_FIELDSEPARATOR;
 	m_fieldCount = 0;
 	m_wordCount = 0;
+	m_CycleCounter = 0;
 	m_ps = NULL;
 }
 
@@ -21,6 +27,7 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_fieldSeparator = ps.m_fieldSeparator;
 	m_fieldCount = 0;
 	m_wordCount = 0;
+	m_CycleCounter = 0;
 	m_ps = NULL;
 }
 
@@ -31,6 +38,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_fieldSeparator = pPS->m_fieldSeparator;
 	m_fieldCount = 0;
 	m_wordCount = 0;
+	m_CycleCounter = 0;
 	m_ps = NULL;
 }
 
@@ -50,6 +58,7 @@ void ProcessingState::setString(PSpecString ps)
 	fieldIdentifierClear();
 }
 
+#define IS_WHITESPACE(c) ((m_wordSeparator==LOCAL_WHITESPACE) ? (isspace((c))) : ((c)==m_wordSeparator))
 void ProcessingState::identifyWords()
 {
 	m_wordStart.clear();
@@ -61,14 +70,14 @@ void ProcessingState::identifyWords()
 	const char* pc = m_ps->data();
 	int i = 0;
 	/* skip over initial whitespace */
-	while (pc[i]==m_wordSeparator) i++;
+	while (IS_WHITESPACE(pc[i])) i++;
 
 	while (pc[i]!=0) {
 		m_wordCount++;
 		m_wordStart.insert(m_wordStart.end(), i+1);
-		while (pc[i]!=m_wordSeparator && pc[i]!=0) i++;
+		while (!IS_WHITESPACE(pc[i]) && pc[i]!=0) i++;
 		m_wordEnd.insert(m_wordEnd.end(), i);
-		while (pc[i]==m_wordSeparator) i++;
+		while (IS_WHITESPACE(pc[i])) i++;
 	}
 }
 
@@ -140,8 +149,10 @@ int ProcessingState::getFieldEnd(int idx) {
 	if (m_fieldCount==-1) {
 		identifyFields();
 	}
-	MYASSERT(idx!=0);
-	if (idx < 0) {
+
+	if (idx==0) {
+		idx = m_fieldCount;
+	} else if (idx < 0) {
 		if ((-idx) > m_fieldCount) return 0;
 		idx += m_fieldCount + 1;
 	}
@@ -223,6 +234,93 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 	}
 	return ret;
 }
+
+bool ProcessingState::runningOutLoop()
+{
+	return (!m_Loops.empty() && (LOOP_CONDITION_FALSE == m_Loops.top()));
+}
+
+bool ProcessingState::needToEvaluate()
+{
+	return (((m_Conditions.empty()) || (m_Conditions.top() == bTrue)) && !runningOutLoop());
+}
+
+void ProcessingState::setCondition(bool isTrue)
+{
+	MYASSERT(m_Conditions.empty() || (bTrue == m_Conditions.top()));
+	m_Conditions.push(isTrue ? bTrue : bFalse);
+}
+
+void ProcessingState::observeIf()
+{
+	if (runningOutLoop()) return;
+	MYASSERT(!m_Conditions.empty());
+	MYASSERT((bFalse == m_Conditions.top()) || (bDontCare == m_Conditions.top()));
+	m_Conditions.push(bDontCare);
+}
+
+void ProcessingState::observeWhile()
+{
+	m_Loops.push(LOOP_CONDITION_FALSE);
+}
+
+void ProcessingState::observeDone()
+{
+	MYASSERT(!m_Loops.empty() && LOOP_CONDITION_FALSE == m_Loops.top());
+	m_Loops.pop();
+}
+
+int ProcessingState::getLoopStart()
+{
+	MYASSERT(!m_Loops.empty() && LOOP_CONDITION_FALSE != m_Loops.top());
+	int ret = m_Loops.top();
+	m_Loops.pop();
+	return ret;
+}
+
+void ProcessingState::observeElse()
+{
+	if (runningOutLoop()) return;
+	MYASSERT(!m_Conditions.empty());
+	switch (m_Conditions.top()) {
+	case bTrue:
+		m_Conditions.top() = bFalse;
+		break;
+	case bFalse:
+		m_Conditions.top() = bTrue;
+		break;
+	default:
+		;
+	}
+}
+
+void ProcessingState::observeElseIf(bool& evaluateCond)
+{
+	if (runningOutLoop()) return;
+	MYASSERT(!m_Conditions.empty());
+	switch (m_Conditions.top()) {
+	case bTrue:
+		m_Conditions.top() = bDontCare;  // in a series of if..elseif..elseif, once true, never again
+		evaluateCond = false;
+		break;
+	case bFalse:
+		m_Conditions.pop();  // the next setCondition will replace the entry
+		evaluateCond = true;
+		break;
+	default:
+		// leave the bDontCare where it is.
+		evaluateCond = false;
+		break;
+	}
+}
+
+void ProcessingState::observeEndIf()
+{
+	if (runningOutLoop()) return;
+	MYASSERT(!m_Conditions.empty());
+	m_Conditions.pop();
+}
+
 
 // Helper class for the ALU
 std::string ProcessingStateFieldIdentifierGetter::Get(char id)

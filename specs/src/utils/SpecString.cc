@@ -17,6 +17,15 @@ void StdSpecString::Overlay(PSpecString pss, size_t offset, void* pPadChar)
 	memcpy((void*)(m_str.c_str() + offset), pSmallString->data(), pSmallString->length());
 }
 
+// Used only for the ProcessingTest
+void StdSpecString::add(PSpecString ps) {
+	StdSpecString* pStringToAdd = dynamic_cast<StdSpecString*>(ps);
+	if (pStringToAdd) {
+		m_str += "\n";
+		m_str += *pStringToAdd->getStdString();
+	}
+}
+
 void StdSpecString::Overlay(SpecString& ss, size_t offset, void* pPadChar)
 {
 	Overlay(&ss, offset, pPadChar);

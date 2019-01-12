@@ -37,6 +37,7 @@ std::string RegularRangePart::Debug()
 
 PSpecString RegularRangePart::getStr(ProcessingState& pState)
 {
+	if (pState.isRunOut()) return SpecString::newString();
 	return pState.getFromTo(_from, _to);
 }
 
@@ -51,9 +52,10 @@ std::string WordRangePart::Debug()
 
 PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
+	if (pState.isRunOut()) return SpecString::newString();
 	char keepSeparator;
 	if (m_WordSep) {
-		keepSeparator = pState.m_wordSeparator;
+		keepSeparator = pState.getWSChar();
 		pState.setWSChar(m_WordSep);  // as a side-effect, invalidates the current word list
 	}
 
@@ -83,9 +85,10 @@ std::string FieldRangePart::Debug()
 
 PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
+	if (pState.isRunOut()) return SpecString::newString();
 	char keepSeparator;
 	if (m_FieldSep) {
-		keepSeparator = pState.m_fieldSeparator;
+		keepSeparator = pState.getFSChar();
 		pState.setFSChar(m_FieldSep);  // as a side-effect, invalidates the current field list
 	}
 
@@ -169,7 +172,7 @@ std::string ClockPart::Debug()
 
 PSpecString ClockPart::getStr(ProcessingState& pState)
 {
-	uint64_t timeStamp;
+	clockValue timeStamp;
 	switch (m_Type) {
 	case ClockType__Static:
 		timeStamp = m_StaticClock;
@@ -177,7 +180,8 @@ PSpecString ClockPart::getStr(ProcessingState& pState)
 	case ClockType__Dynamic:
 		timeStamp = specTimeGetTOD();
 	}
-	return SpecString::newString(((char*)&timeStamp), 8);
+	std::string asString = std::to_string(timeStamp);
+	return SpecString::newString(asString);
 }
 
 std::string IDPart::Debug()
@@ -216,4 +220,9 @@ PSpecString ExpressionPart::getStr(ProcessingState& pState)
 	std::string ret = res->getStr();
 	delete res;
 	return SpecString::newString(ret);
+}
+
+bool ExpressionPart::readsLines()
+{
+	return AluExpressionReadsLines(m_RPNExpr);
 }

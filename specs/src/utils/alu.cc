@@ -11,11 +11,21 @@
 #include <cmath>
 #include <stack>
 #include <algorithm>
+#include <iomanip>
 #include "ErrorReporting.h"
 #include "alu.h"
 #include "aluFunctions.h"
+#include "processing/Config.h"  // for configured literals
+
+extern stateQueryAgent* g_pStateQueryAgent;
 
 void ALUValue::set(std::string& s)
+{
+	m_value = s;
+	m_type = counterType__Str;
+}
+
+void ALUValue::set(const std::string& s)
 {
 	m_value = s;
 	m_type = counterType__Str;
@@ -805,6 +815,18 @@ ALUValue* AluAssnOperator::computeAppnd(ALUValue* operand, ALUValue* prevOp)
 	return new ALUValue(ret);
 }
 
+void AluInputRecord::_serialize(std::ostream& os) const
+{
+	os << "@@";
+}
+
+ALUValue* AluInputRecord::evaluate()
+{
+	PSpecString ps = g_pStateQueryAgent->getFromTo(1,-1);
+	ALUValue* ret = new ALUValue(ps->data(), ps->length());
+	delete ps;
+	return ret;
+}
 
 void AluOtherToken::_serialize(std::ostream& os) const
 {
@@ -840,7 +862,12 @@ std::string AluOtherToken::_identify()
 
 // AluFunction class
 
-#define X(nm,cnt)	if (s==#nm) {m_FuncName = s; m_ArgCount = cnt; mp_Func = (void*)AluFunc_##nm; return;}
+#define X(nm,cnt,rl)	if (s==#nm) {      \
+		m_FuncName = s; m_ArgCount = cnt;  \
+		m_reliesOnInput = rl;              \
+		mp_Func = (void*)AluFunc_##nm;     \
+		return;                            \
+	}
 AluFunction::AluFunction(std::string& _s)
 {
 	std::string s(_s);
@@ -899,6 +926,14 @@ static bool isLetter(char c) {
 	return ((c>='a' && c<='z') || (c>='A' && c<='Z'));
 }
 
+static bool isCharInIdentifier(char c) {
+	return isLetter(c) || isDigit(c) || c=='_';
+}
+
+static bool isFirstCharInIdentifier(char c) {
+	return isLetter(c) || c=='_';
+}
+
 #define X(nm,st) if (s==st) return new AluUnitUnaryOperator(s);
 static AluUnit* getUnaryOperator(std::string& s)
 {
@@ -923,6 +958,59 @@ static AluAssnOperator* getAssnOperator(std::string& s)
 	return NULL;
 }
 
+void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
+{
+	std::cerr << title << ": ALU Vector at " << &vec << " with " << vec.size() << " items:\n";
+	int index = 0;
+	for (AluUnit* pUnit : vec) {
+		if (index==pointer) {
+			std::cerr << "   ==> | ";
+		} else {
+			std::cerr << "       | ";
+		}
+		std::cerr << std::setw(40) << std::left << pUnit->_identify() << "|" << std::endl;
+		index++;
+	}
+	std::cerr << "       +" << std::setw(42) << std::setfill('-') <<
+		std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << std::endl;
+}
+
+void dumpAluStack(const char* title, std::stack<ALUValue*>& stk)
+{
+	std::cerr << title << ": ALU Stack at " << &stk << " with " << stk.size() << " items:\n";
+	std::stack<ALUValue*> tmp;
+	while (!stk.empty()) {
+		ALUValue* v = stk.top();
+		stk.pop();
+		std::cerr << "   > " << v->getStr() << std::endl;
+		tmp.push(v);
+	}
+	std::cerr << std::endl;
+	while (!tmp.empty()) {
+		ALUValue* v = tmp.top();
+		tmp.pop();
+		stk.push(v);
+	}
+}
+
+void dumpAluStack(const char* title, std::stack<AluUnit*>& stk)
+{
+	std::cerr << title << ": ALU Unit Stack at " << &stk << " with " << stk.size() << " items:\n";
+	std::stack<AluUnit*> tmp;
+	while (!stk.empty()) {
+		AluUnit* v = stk.top();
+		stk.pop();
+		std::cerr << "   > " << v->_identify() << std::endl;
+		tmp.push(v);
+	}
+	std::cerr << std::endl;
+	while (!tmp.empty()) {
+		AluUnit* v = tmp.top();
+		tmp.pop();
+		stk.push(v);
+	}
+}
+
 bool parseAluExpression(std::string& s, AluVec& vec)
 {
 	char* c = (char*)s.c_str();
@@ -934,14 +1022,27 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		MYTHROW("Entered with non-empty vec.");
 	}
 
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) {
+		std::cerr << __FUNCTION__ << ": Parsing Expression: " << s << std::endl;
+	}
+#endif
+
+	bool mayBeStart = true; // will be false after an expression that is not followed by whitespace
+
 	while (c<cEnd) {
 		// skip over whitespace (if any)
-		while (c<cEnd && *c<=32) c++;
+		while (c<cEnd && *c<=32) {
+			c++;
+			mayBeStart = true;
+		}
 
 		if (c==cEnd) break;
 
 		// First character a digit, a dot, or a minus sign?
-		if (*c=='.' || (*c=='-' && (c+1 < cEnd) && isDigit(*(c+1))) || isDigit(*c)) {
+		if (*c=='.' ||
+				(*c=='-' && mayBeStart && (c+1 < cEnd) && isDigit(*(c+1))) ||
+				isDigit(*c)) {
 			unsigned int countDots = (*c=='.') ? 1 : 0;
 			char* tokEnd = c+1;
 			while (tokEnd < cEnd) {
@@ -959,6 +1060,57 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
+			continue;
+		}
+
+		// First character a single or double quote?
+		// Only one is really possible because the other is used to delimit
+		// the expression, but we don't know that inside...
+		if (*c=='\'' || *c=='"') {
+			std::string tok;
+			char delimiter = *c++;
+			char* tokEnd = c;
+			while (tokEnd<cEnd && *tokEnd!=delimiter) {
+				if (*tokEnd=='\\' && tokEnd < (cEnd-1)) {
+					tokEnd++;
+				}
+				tok += *tokEnd++;
+			}
+			pUnit = new AluUnitLiteral(tok);
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c = tokEnd+1;
+			mayBeStart = false;
+			continue;
+		}
+
+		// Also a configured string
+		if (*c=='@' && isFirstCharInIdentifier(c[1])) {
+			char* tokEnd = ++c;
+			while (isCharInIdentifier(*tokEnd) && (tokEnd<cEnd)) {
+				tokEnd++;
+			}
+			std::string key = std::string(c,tokEnd-c);
+			if (!configSpecLiteralExists(key)) {
+				std::string err = "Key '" + key + "' not found in expression.";
+				MYTHROW(err);
+			}
+			pUnit = new AluUnitLiteral(configSpecLiteralGet(key));
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c = tokEnd;
+			mayBeStart = false;
+			continue;
+		}
+
+		// A special string @@ representing the entire input record
+		if (*c=='@' && c[1]=='@')  {
+			c+=2;
+			pUnit = new AluInputRecord();
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			mayBeStart = false;
 			continue;
 		}
 
@@ -972,6 +1124,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -988,6 +1141,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -997,6 +1151,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
+			mayBeStart = true;
 			continue;
 		}
 
@@ -1005,6 +1160,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
+			mayBeStart = false;
 			continue;
 		}
 
@@ -1013,6 +1169,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
+			mayBeStart = true;
 			continue;
 		}
 
@@ -1037,6 +1194,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = true;
 			continue;
 		}
 
@@ -1053,9 +1211,13 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
+			mayBeStart = false;
 			continue;
 		}
 	}
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) dumpAluVec("Parsed Expression", vec);
+#endif
 	return true;
 }
 
@@ -1145,7 +1307,26 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		MYTHROW("Entered with non-empty vec.");
 	}
 
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) {
+		dumpAluVec("Expression to Convert to RPN", source);
+		if (g_bVerbose) {
+			clearSource = false;
+		}
+	}
+#endif
+
+	int stepNumber = 0;
+
 	for (AluUnit* pUnit : source) {
+#ifdef ALU_DUMP
+		if (g_bDebugAluCompile && g_bVerbose) {
+			std::cerr << "\n\n\nStep #" << stepNumber << std::endl;
+			dumpAluVec("Source", source, stepNumber++);
+			dumpAluVec("Dest", dest);
+			dumpAluStack("operator stack",operatorStack);
+		}
+#endif
 		switch (pUnit->type()) {
 		case UT_Comma:
 			if (clearSource) delete pUnit;
@@ -1159,6 +1340,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		case UT_LiteralNumber:
 		case UT_Counter:
 		case UT_FieldIdentifier:
+		case UT_InputRecord:
 			dest.push_back(pUnit);
 			availableOperands++;
 			break;
@@ -1208,6 +1390,11 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 					delete operatorStack.top();
 				}
 				operatorStack.pop(); // Pop off the opening parenthesis
+				// issue #37 - if what remains is a function, it should also go
+				if (!operatorStack.empty() && UT_Identifier==operatorStack.top()->type()) {
+					dest.push_back(operatorStack.top());
+					operatorStack.pop();
+				}
 			}
 		}
 	}
@@ -1226,6 +1413,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		source.clear();
 	}
 
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) dumpAluVec("RPN Expression", dest);
+#endif
+
 	return true;
 }
 
@@ -1237,10 +1428,26 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	ALUValue* arg3;
 	ALUValue* arg4;
 
+#ifdef ALU_DUMP
+	if (g_bDebugAluRun) {
+		std::cerr << "\n============= " << __FUNCTION__ << " ==============\n";
+	}
+	int index = 0;
+#endif
+
 	for (AluUnit* pUnit : expr) {
+#ifdef ALU_DUMP
+		if (g_bDebugAluRun) {
+			dumpAluVec("Expression Progress", expr, index);
+			dumpAluStack("Execution Stack", computeStack);
+			std::cerr << std::endl << std::endl;
+		}
+		index++;
+#endif
 		switch (pUnit->type()) {
 		case UT_LiteralNumber:
 		case UT_FieldIdentifier:
+		case UT_InputRecord:
 			computeStack.push(pUnit->evaluate());
 			break;
 		case UT_Counter: {
@@ -1315,11 +1522,16 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 			break;
 			default:
 				MYTHROW("Logic error, should not have gotten this type of Unit");
-		}
+			}
 		}
 	}
 
 	MYASSERT(computeStack.size() == 1);
+#ifdef ALU_DUMP
+		if (g_bDebugAluRun) {
+			dumpAluStack("Final Stack", computeStack);
+		}
+#endif
 	ALUValue* ret = computeStack.top();
 	computeStack.pop();
 	return ret;
@@ -1330,4 +1542,14 @@ void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr,
 	ALUValue* exprResult = evaluateExpression(expr, pctrs);
 
 	pAss->perform(k, pctrs, exprResult);
+}
+
+bool AluExpressionReadsLines(AluVec& vec)
+{
+	for (AluUnit* unit : vec) {
+		if (unit->requiresRead()) {
+			return true;
+		}
+	}
+	return false;
 }

@@ -21,19 +21,28 @@ Switches
 * --stats -- output statistics on run time, and records read, and on records written. 
 * --inFile or -i -- get the input records from a file rather than standard input
 * --outFile or -o -- write the output records to a file rather than standard output
+* --spaceWS -- Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
+* --debug-alu-comp -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
+* --debug-alu-run -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
    
 Spec Units
 ==========
-Each spec unit specifies an action to be taken by the program. The spec unit may span from one to several command line arguments.
+Spec Units are the building blocks of a specs specification.  Each spec unit specifies an action to be taken by the program. The spec unit may span from one to several command line arguments.
 
 The most common spec unit is a *data field*, which consists of five arguments, three of which may be omitted:
 
     [fieldIdentifier] InputPart [conversion] OutputPart [alignment]
-  
+
+A *fieldIdentifier* is a single letter followed by a colon (like _a:_), that maps to the input or output of a single data field unit for later reference such as in later data fields or in expressions.  If the fieldIdentifier is at the start of the data field unit, it contains the input. If it is the OutputPart, it contains the output.  For example:
+
+     a: w1 ucase b:
+
+sets _a_ to the content of the first word of the input record, and sets _b_ to an upper-case version of the same.
+
 The **InputPart** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
-* A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- spaces by default. The word indexing is 1-based.
+* A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
 * A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based.
 * **TODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch.
 * **DTODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
@@ -73,6 +82,8 @@ The conversion argument can specify any of the following conversions:
 * **BSWAP** - byte swap. reverses the order of bytes: "AB" --> "BA"
 * **ti2f** - convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * **tf2i** - convert printable time format to the internal 8-byte representation. 
+* **d2tf** - convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2d** - convert printable time format to a decimal number, representing seconds since the epoch. 
  
 There are also other spec units, that may be used:
 
@@ -80,9 +91,52 @@ There are also other spec units, that may be used:
 * **readstop** - causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
 * **write**- causes the program to write to output and reset the output 
       line.
-* **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges.
+* **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges. For **WordSeparator** it is possible to use the special value, *default*,
+to make all whitespace defined by the locale work as a word separator. 
 * **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
 
+Conditions and Loops
+====================
+**specs** also supports conditions and loops. 
+
+Conditions  begin  with  the  word  **if** followed by an **expression** that evaluates to true of false, followed by the token **then**, followed by some **Spec Units**.  Those will be executed only if the condition evaluates to true. They may be followed by an **else** token followed by more **Spec Units** that will be executed if the expression does not evaluate to true, or they may be followed by one or more **elseif** tokens, each with its own condition, **then** token, and set of **Spec Units**.  The chain of **elseif** tokens may be arbitrarily long, but there may only be at most one **else** token. The conditional block ends with an **endif** token.  For example:
+```
+            if #2 > 5 then
+                /big/ 1
+            elseif #2 > 3 then
+                /medium/ 1
+            else
+                /small/ 1
+            endif
+```
+The loop available in specs is a **while** loop.  It begins with the **while** token, followed by an **expression** that evaluates to true of false, followed by the token **do**, and a series of **Spec Units** that will be executed as long as the expression evaluates to true. The series of Spec Units is terminated by the token **done**.  Example:
+```
+            while #2 > 0 do
+                print /#2/ 1
+                write
+                set /#2 -= 1/
+            done
+```
+RunIn and RunOut Cycles
+=========================
+A **cycle** is defined as a single run of the specification, which includes reading an input record, processing it, and outputting one or more records. If the specification contains **read** or **readstop** tokens, a single cycle can consume more than one input records.
+
+The **runin** cycle is the first one to run. In the runin cycle, the function **first()** returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
+
+The **runout** cycle happens *after* the last line has been read.  It consists of the spec items that follow the **EOF** token, or (when **select second** is used) conditional specifications with the **eof()** function. Example:
+```
+            if first() then
+                /Item/  1  /Square/ nw write
+                /====/  1  /======/ nw write
+            endif
+            a: w1 1.4 right
+                print "a*a" 6.6 right
+                set '#0+=(a*a)'
+            EOF
+                /==========/ 1 write
+                /Total:/ 1
+                print #0 nw
+```
 Configuration File
 ==================
 
