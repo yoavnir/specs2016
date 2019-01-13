@@ -15,9 +15,11 @@ public:
 	void           insertNext(PSpecString str);
 	void           insertNextWord(PSpecString str);
 	void           insertNextField(PSpecString str);
+	void           setPadChar(char c)     {m_pad = c;}
 private:
 	PSpecString     mp_str;
 	size_t          m_pos; // for Next, NextWord, NextField
+	char			m_pad;
 };
 
 #endif

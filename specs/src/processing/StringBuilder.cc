@@ -88,6 +88,7 @@ StringBuilder::StringBuilder()
 {
 	mp_str = NULL;
 	m_pos = 1;
+	m_pad = 0;
 }
 
 StringBuilder::~StringBuilder()
@@ -139,7 +140,8 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 
 	size_t endPos = offset + psss->length();
 	if (mp_str->length() < endPos) {
-		mp_str->Resize(endPos, ' ', outputAlignmentLeft);
+		MYASSERT(m_pad!=0);
+		mp_str->Resize(endPos, m_pad, outputAlignmentLeft);
 	}
 	memcpy((void*)(mp_str->data()+offset), (void*)(s->data()), s->length());
 	m_pos = endPos + 1;

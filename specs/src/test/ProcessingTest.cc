@@ -304,6 +304,9 @@ int main(int argc, char** argv)
 	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #92
 	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #93
 
+	// Issue #43
+	VERIFY2("word 1 5 pad * word 2 15", "First record", "    First*****record"); // Test #94
+
 
 
 	if (errorCount) {
