@@ -1,6 +1,7 @@
 #include "utils/ErrorReporting.h"
 #include "utils/aluFunctions.h"
 #include "utils/TimeUtils.h"
+#include "processing/Config.h"
 #include <string.h>
 #include <cmath>
 
@@ -366,4 +367,14 @@ ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle)
 	std::string* pHaystack = _pHaystack->getStrPtr();
 	bool bIsIncluded = (std::string::npos != pHaystack->find(*pNeedle));
 	return new ALUValue(ALUInt(bIsIncluded ? 1 : 0));
+}
+
+ALUValue* AluFunc_conf(ALUValue* _pKey)
+{
+	std::string key = _pKey->getStr();
+	if (configSpecLiteralExists(key)) {
+		return new ALUValue(configSpecLiteralGet(key));
+	} else {
+		return new ALUValue();
+	}
 }

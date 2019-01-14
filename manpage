@@ -469,6 +469,12 @@ includes the string
 as a substring, or 
 .B FALSE
 (0) otherwise.
+.IP "conf(key)" 3
+Returns the configured string from either the built-in configured strings such as 
+.I version
+or from the 
+.B $HOME/.specs
+file. 
 
 .P
 NOTE: This list is going to be expanded in future versions.

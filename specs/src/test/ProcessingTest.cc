@@ -307,6 +307,9 @@ int main(int argc, char** argv)
 	// Issue #43
 	VERIFY2("word 1 5 pad * word 2 15", "First record", "    First*****record"); // Test #94
 
+	// Issue #44
+	VERIFY("print \"'hello'\" 1", "hello");
+
 
 
 	if (errorCount) {

@@ -36,6 +36,7 @@
 	X(right,2,false)                 \
 	X(center,2,false)                \
 	X(centre,2,false)                \
+	X(conf,1,false)                  \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
