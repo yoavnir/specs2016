@@ -203,6 +203,8 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				} else {
 					processingContinue = false; // Stop processing if no extra record is available
 				}
+			} else {
+				pState.incrementExtraReads();
 			}
 			pState.setString(ps);
 			break;

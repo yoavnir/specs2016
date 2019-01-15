@@ -41,9 +41,12 @@ public:
 	virtual PSpecString getFromTo(int from, int to);
 	virtual bool    isRunIn()   { return (m_CycleCounter==1); }
 	virtual bool    isRunOut()  { return (m_ps==NULL); } // NOTE: will return true before first record
+	virtual ALUInt  getRecordCount()    { return ALUInt(m_CycleCounter + m_ExtraReads); }
+	virtual ALUInt  getIterationCount() { return ALUInt(m_CycleCounter); }
 
 	void fieldIdentifierSet(char id, PSpecString ps);
 	void incrementCycleCounter() { m_CycleCounter++; }
+	void incrementExtraReads()   { m_ExtraReads++; }
 	PSpecString fieldIdentifierGet(char id);
 	void fieldIdentifierClear();
 	bool needToEvaluate();
@@ -70,6 +73,7 @@ private:
 	int  m_wordCount;
 	int  m_fieldCount;
 	unsigned int m_CycleCounter;
+	unsigned int m_ExtraReads;
 	std::vector<int> m_wordStart;
 	std::vector<int> m_wordEnd;
 	std::vector<int> m_fieldStart;

@@ -14,6 +14,8 @@
 	X(tobin,1,false)                 \
 	X(len,1,false)                   \
 	X(first,0,false)                 \
+	X(recno,0,true)                  \
+	X(iterno,0,true)                 \
 	X(eof,0,false)                   \
 	X(wordcount,0,true)              \
 	X(wordstart,1,true)              \
@@ -65,6 +67,8 @@ public:
 	virtual PSpecString getFromTo(int from, int to) = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;
+	virtual ALUInt  getRecordCount() = 0;
+	virtual ALUInt  getIterationCount() = 0;
 };
 
 void setStateQueryAgent(stateQueryAgent* qa);

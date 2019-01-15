@@ -352,6 +352,16 @@ cycle, and zero otherwise.
 Returns 1 during the
 .B runout 
 cycle, and zero otherwise.
+.IP "iterno()" 3
+Returns the number of times the specification has so far been run on different records.
+.IP "recno()" 3
+Returns the number of input records that have been read so far. If the specification contains no 
+.I READ
+or
+.I READSTOP
+spec units, then this number will be equal to the result of 
+.B iterno().
+Otherwise, it will be higher.
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s

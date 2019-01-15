@@ -145,6 +145,16 @@ ALUValue* AluFunc_first()
 	return new ALUValue(ALUInt(isFirst ? 1 : 0));
 }
 
+ALUValue* AluFunc_iterno()
+{
+	return new ALUValue(g_pStateQueryAgent->getIterationCount());
+}
+
+ALUValue* AluFunc_recno()
+{
+	return new ALUValue(g_pStateQueryAgent->getRecordCount());
+}
+
 ALUValue* AluFunc_eof()
 {
 	bool isRunOut = g_pStateQueryAgent->isRunOut();

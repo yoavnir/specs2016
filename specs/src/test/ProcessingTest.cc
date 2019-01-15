@@ -80,6 +80,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			do {
 				PSpecString pFirstLine = tRead.getNextRecord();
 				ps.setString(pFirstLine);
+				ps.incrementCycleCounter();
 				ig.processDo(sb, ps, &tRead, NULL);
 				if (result) {
 					result->add(sb.GetStringUnsafe());
@@ -308,7 +309,13 @@ int main(int argc, char** argv)
 	VERIFY2("word 1 5 pad * word 2 15", "First record", "    First*****record"); // Test #94
 
 	// Issue #44
-	VERIFY("print \"'hello'\" 1", "hello");
+	VERIFY("print \"'hello'\" 1", "hello"); // Test #95
+
+	// NUMBER
+	VERIFY2("w1 1 NUMBER nw", "One\nTwo\nThree", "One          1\nTwo          2\nThree          3"); // Test #96
+
+	// recno and iterno
+	VERIFY2("print 'recno()' 1 print 'iterno()' nw READ w1 nw", "a\nb\nc\nd","1 1 b\n3 2 d"); // Test #97
 
 
 

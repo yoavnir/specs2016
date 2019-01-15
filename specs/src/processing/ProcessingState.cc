@@ -17,6 +17,7 @@ ProcessingState::ProcessingState()
 	m_fieldCount = 0;
 	m_wordCount = 0;
 	m_CycleCounter = 0;
+	m_ExtraReads = 0;
 	m_ps = NULL;
 }
 
@@ -28,6 +29,7 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_fieldCount = 0;
 	m_wordCount = 0;
 	m_CycleCounter = 0;
+	m_ExtraReads = 0;
 	m_ps = NULL;
 }
 
@@ -39,6 +41,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_fieldCount = 0;
 	m_wordCount = 0;
 	m_CycleCounter = 0;
+	m_ExtraReads = 0;
 	m_ps = NULL;
 }
 
