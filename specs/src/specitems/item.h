@@ -87,6 +87,7 @@ public:
 	virtual ~NumberPart() {}
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
+	virtual bool        readsLines() {return true;}
 private:
 	unsigned long m_Num;
 };
