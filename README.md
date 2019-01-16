@@ -11,8 +11,8 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 Sources
 =======
 To download your copy of *specs*, you can get it from [github](https://github.com/yoavnir/specs2016) in either of two ways:
-# Using git: `git clone https://github.com/yoavnir/specs2016.git`
-# Using http: `wget https://github.com/yoavnir/specs2016/archive/dev.zip`
+1. Using git: `git clone https://github.com/yoavnir/specs2016.git`
+2. Using http: `wget https://github.com/yoavnir/specs2016/archive/dev.zip`
 
 Building
 ========
@@ -23,8 +23,8 @@ git checkout v0.2
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 
 After that, _cd_ to the specs/src directory, and run the following two commands:
-# `make some`
-# `sudo make install`
+* `make some`
+* `sudo make install`
 
 Contributing
 ============
