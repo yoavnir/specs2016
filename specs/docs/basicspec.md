@@ -119,9 +119,9 @@ Let's use the output of ls we used earlier again:
 ```
 Let's arrange the line so that the filename is centered in the first 35 columns, and convert the date (in words 6-8) to the internal format (seconds since the epoch):
 ```
-    specs substr fs / field -1 of word -1 1.35 center w6-8 tf2d "%b %d %H:%M" nw
+    specs substr fs / field -1 of word -1 1.35 center    w6-8 tf2d "%b %d %H:%M" nw
 ```
-The result comes out something like this:
+This *specification* contains two data fields which I've separated using multiple space characters. The result comes out something like this:
 ```
     DiffieHellmanErrorPage.html     1572421577.000000
          InfoPlist.strings          1572397157.000000
