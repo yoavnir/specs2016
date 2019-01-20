@@ -8,6 +8,17 @@ comes from standard input, and output flows to standard output.
 
 This version is liberally based on the [**CMS Pipelines User's Guide and Reference**](https://publib.boulder.ibm.com/epubs/pdf/hcsj0c30.pdf), especially chapters 16, 24, and 20.
 
+News
+====
+31-Jan-2019: Version 0.2 is out. New stuff:
+-------------------------------------------
+* **if** and **while** structures.
+* **Run-In** and **Run-Out** cycles.
+* New functions: `iterno`, `recno`, `conf`, `first`, `eof`, string functions, input line functions and the token `@@`.
+* Time/Date improvements: TOD is not expressed in seconds; `tf2d` and `d2tf` conversions.
+* ALU debugging for usability
+* Bug fixes
+
 Sources
 =======
 To download your copy of *specs*, you can get it from [github](https://github.com/yoavnir/specs2016) in either of two ways:
