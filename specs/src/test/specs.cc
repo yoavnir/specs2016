@@ -102,7 +102,7 @@ int main (int argc, char** argv)
 	unsigned long usedLines;
 	unsigned long generatedLines;
 	unsigned long writtenLines;
-	uint64_t timeAtStart = specTimeGetTOD();
+	clockValue timeAtStart = specTimeGetTOD();
 	std::clock_t clockAtStart = clock();
 
 	if (ig.readsLines() || g_bForceFileRead) {
@@ -153,7 +153,7 @@ int main (int argc, char** argv)
 		writtenLines = 1;
 	}
 
-	uint64_t timeAtEnd = specTimeGetTOD();
+	clockValue timeAtEnd = specTimeGetTOD();
 	std::clock_t clockAtEnd = clock();
 
 	if (g_bPrintStats) {
@@ -166,10 +166,8 @@ int main (int argc, char** argv)
 		if (readLines!=usedLines) {
 			std::cerr << " " << writtenLines << "were written out.";
 		}
-		uint64_t runTimeMicroSeconds = timeAtEnd - timeAtStart;
-		std::cerr << "\nRun Time: " << runTimeMicroSeconds / 1000000 << "." <<
-				std::setfill('0') << std::setw(6) << runTimeMicroSeconds % 1000000
-				<< " seconds.\n";
+		clockValue runTimeSeconds = timeAtEnd - timeAtStart;
+		std::cerr << "\nRun Time: " << runTimeSeconds << " seconds.\n";
 
 		ALUFloat duration = (ALUFloat(1) * (clockAtEnd-clockAtStart)) / CLOCKS_PER_SEC;
 		std::cerr << "CPU Time: " << std::floor(duration) << "." <<

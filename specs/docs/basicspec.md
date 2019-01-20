@@ -16,15 +16,15 @@ Data Fields
 =========== 
 Data fields are the most common type of *spec unit*. They consist of six arguments, four of which may be omitted:
 ```
-    [fieldIdentifier] InputPart [STRIP] [conversion] OutputPart [alignment]
+    [fieldIdentifier] InputSource [STRIP] [conversion] OutputPlacement [alignment]
 ```
-A *fieldIdentifier* is a single letter followed by a colon (like _a:_), that maps to the input or output of a single data field unit for later reference such as in later data fields or in expressions.  If the fieldIdentifier is at the start of the data field unit, it contains the input. If it is the OutputPart, it contains the output.  For example:
+A *fieldIdentifier* is a single letter followed by a colon (like _a:_), that maps to the input or output of a single data field unit for later reference such as in later data fields or in expressions.  If the fieldIdentifier is at the start of the data field unit, it contains the input. If it is the OutputPlacement, it contains the output.  For example:
 ```
      a: w1 ucase b:
 ```
 sets _a_ to the content of the first word of the input record, and sets _b_ to an upper-case version of the same.
 
-The **InputPart** argument may be any of the following:
+The **InputSource** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based. Negative values can be used for counting characters from the end, so -1 means the last character, -2 the penultimate character, etc.
 * A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based. Negative indexes can be used here as well.
@@ -37,11 +37,11 @@ The **InputPart** argument may be any of the following:
 * The **NUMBER** keyword used as a counter for processed records.
 * The **PRINT** keyword followed by a calculated expression
 * A string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the command line requires you to enclose them in double quotes.
-* A **SUBSTring** of another InputPart.
+* A **SUBSTring** of another InputSource.
 
 *SUBSTring* is formatted as follows:
 ```
-     SUBSTRING [WORDSEP char] [FIELDSEP char] range|wordrange|fieldrange OF ANOTHER-INPUTPART
+     SUBSTRING [WORDSEP char] [FIELDSEP char] range|wordrange|fieldrange OF InputSource
 ```
 *WORDSEP* and *FIELDSEP* are used to specify word separator and field separator characters respectively and the are covered in another page. This allows you to pick words or fields based on some other character. For example, suppose we are parsing the output of the `ls -l` command:
 ```
@@ -55,12 +55,12 @@ The **InputPart** argument may be any of the following:
 -rw-r--r--  1 root  wheel  2396 Oct 30 09:46 /Applications/Safari.app/Contents/Resources/en.lproj/WebProcessCrashErrorPage.html
 -rw-r--r--  1 root  wheel  6958 Oct 30 09:46 /Applications/Safari.app/Contents/Resources/en.lproj/localizedStrings.js
 ```
-We only want the file name, but there are two issues there. First, the file name is part of the long full path at the end. As words are defined as strings separated by spaces, the full path is the 9th word. But we don't want all of that word. We only want the last _field_ if we define a field to be separated by slash characters. So to get the last field we would use this input part
+We only want the file name, but there are two issues here. First, the file name is part of the long full path at the end. As words are defined as strings separated by spaces, the full path is the 9th (or last) word. But we don't want all of that word. We only want the last _field_ if we define a field to be separated by slash characters. So to get the last field we would use this input part
 ```
      SUBSTRING FIELDSEP / FIELD -1 OF WORD -1
 ```
     
-The **OutputPart** argument specifies where to put the source:
+The **OutputPlacement** argument specifies where to put the source:
 
 * absolute position (such as `1`)
 * range (such as `1-5` or `1.5`)
