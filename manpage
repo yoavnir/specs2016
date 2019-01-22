@@ -362,6 +362,9 @@ or
 spec units, then this number will be equal to the result of 
 .B iterno().
 Otherwise, it will be higher.
+.IP "record()" 3
+Returns the entire input record. Equivalent to 
+.B range(1,-1)
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s

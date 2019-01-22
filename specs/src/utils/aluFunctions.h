@@ -17,6 +17,7 @@
 	X(recno,0,true)                  \
 	X(iterno,0,true)                 \
 	X(eof,0,false)                   \
+	X(record,0,true)                 \
 	X(wordcount,0,true)              \
 	X(wordstart,1,true)              \
 	X(wordend,1,true)                \
