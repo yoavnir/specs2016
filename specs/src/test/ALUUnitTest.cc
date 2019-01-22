@@ -676,15 +676,16 @@ int runALUUnitTests(unsigned int onlyTest)
 	g_ps.setString(SpecString::newString());
 	VERIFY_EXPR_RES("wordcount()", "0");
 	VERIFY_EXPR_RES("word(2)", "NaN");
-	VERIFY_EXPR_RES("wordstart(3)", "0");
+	VERIFY_EXPR_RES("wordindex(3)", "0");
 	VERIFY_EXPR_RES("wordend(2)", "0");
 	VERIFY_EXPR_RES("words(3,4)", "NaN");
 
 	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
-	VERIFY_EXPR_RES("wordstart(3)", "11");
+	VERIFY_EXPR_RES("wordindex(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
+	VERIFY_EXPR_RES("wordlength(2)", "5");
 	VERIFY_EXPR_RES("words(3,4)", "brown fox");
 	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
 	VERIFY_EXPR_RES("len(@@)", "43");
@@ -692,19 +693,21 @@ int runALUUnitTests(unsigned int onlyTest)
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
-	VERIFY_EXPR_RES("wordstart(3)", "11");
+	VERIFY_EXPR_RES("wordindex(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("words(3,4)", "brown\tfox");
 	VERIFY_EXPR_RES("fieldcount()", "5");
 	VERIFY_EXPR_RES("field(3)", "fox jumps");
-	VERIFY_EXPR_RES("fieldstart(2)", "5");
+	VERIFY_EXPR_RES("fieldindex(2)", "5");
 	VERIFY_EXPR_RES("fieldend(3)", "25");
+	VERIFY_EXPR_RES("fieldlength(2)", "11"); // length of "quick brown"
 	VERIFY_EXPR_RES("fields(2,3)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
 	VERIFY_EXPR_RES("range(44,48)", "NaN");
 	VERIFY_EXPR_RES("@@", "The\tquick brown\tfox jumps\tover the\tlazy dog");
+	VERIFY_EXPR_RES("record()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 
 	// time reformat
 	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");

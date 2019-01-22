@@ -19,12 +19,14 @@
 	X(eof,0,false)                   \
 	X(record,0,true)                 \
 	X(wordcount,0,true)              \
-	X(wordstart,1,true)              \
+	X(wordindex,1,true)              \
+	X(wordlength,1,true)             \
 	X(wordend,1,true)                \
 	X(word,1,true)                   \
 	X(words,2,true)                  \
 	X(fieldcount,0,true)             \
-	X(fieldstart,1,true)             \
+	X(fieldindex,1,true)             \
+	X(fieldlength,1,true)            \
 	X(fieldend,1,true)               \
 	X(field,1,true)                  \
 	X(fields,2,true)                 \

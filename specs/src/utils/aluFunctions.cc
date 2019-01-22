@@ -224,7 +224,7 @@ ALUValue* AluFunc_fields(ALUValue* pStart, ALUValue* pEnd)
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_fieldstart(ALUValue* pIdx)
+ALUValue* AluFunc_fieldindex(ALUValue* pIdx)
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldStart(pIdx->getInt())));
 }
@@ -234,7 +234,14 @@ ALUValue* AluFunc_fieldend(ALUValue* pIdx)
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldEnd(pIdx->getInt())));
 }
 
-ALUValue* AluFunc_wordstart(ALUValue* pIdx)
+ALUValue* AluFunc_fieldlength(ALUValue* pIdx)
+{
+	auto idx = pIdx->getInt();
+	auto len = g_pStateQueryAgent->getFieldEnd(idx) - g_pStateQueryAgent->getFieldStart(idx) + 1;
+	return new ALUValue(ALUInt(len));
+}
+
+ALUValue* AluFunc_wordindex(ALUValue* pIdx)
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordStart(pIdx->getInt())));
 }
@@ -242,6 +249,13 @@ ALUValue* AluFunc_wordstart(ALUValue* pIdx)
 ALUValue* AluFunc_wordend(ALUValue* pIdx)
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordEnd(pIdx->getInt())));
+}
+
+ALUValue* AluFunc_wordlength(ALUValue* pIdx)
+{
+	auto idx = pIdx->getInt();
+	auto len = g_pStateQueryAgent->getWordEnd(idx) - g_pStateQueryAgent->getWordStart(idx) + 1;
+	return new ALUValue(ALUInt(len));
 }
 
 ALUValue* AluFunc_tf2d(ALUValue* pTimeFormatted, ALUValue* pFormat)
