@@ -62,31 +62,47 @@ specs r: word 1 .
 | 3 | Tau is 6.2831853; Circle area is 28.27433385; My favorite animal is a cat; My motto is: memento mori |
 
 **Note:** The specification above was written as in a file. When used on the Unix command-line, those quotes around the string configured literals are considered to be marking off a single argument. For example, the following specification:
-`specs PRINT "@favoriteAnimal" 1`
+```
+specs PRINT "@favoriteAnimal" 1
+```
 is interpreted as 
-`specs PRINT @favoriteAnimal 1`
+```
+specs PRINT @favoriteAnimal 1
+```
 Configured literals work also outside of expressions, so that is the same as 
-`specs PRINT /cat/ 1`
+```
+specs PRINT /cat/ 1
+```
 which generates an error:
-`Error while parsing command-line arguments: Error in expression in Token PRINT at index 1 with content <cat>`
+```
+Error while parsing command-line arguments: Error in expression in Token PRINT at index 1 with content <cat>
+```
 What you want to do instead is 
-`specs PRINT "'@favoriteAnimal'" 1`
+```
+specs PRINT "'@favoriteAnimal'" 1
+```
 which gives you
-`cat`
+```
+cat
+```
 
 There is also a pre-defined value that behaves like a configured literal. That is `@version`. It returns the current version of specs. Try it:
-`specs @version 1` or `specs PRINT "'@version'" 1`
+```
+specs @version 1
+```
 
 Additionally, the `@@` string stands for the entire input record.
 
 ### Operators
 The ALU supports many of the operators available in the *REXX* programming languages. This includes addition, subtraction, logical comparisons, and string concatenation. 
 There are three division operands:
+
 | Op | Name | Meaning | Example |
 | -- | ---- | ------- | ------- |
 | `/` | Division | returns the quotient of dividing two numbers | 17 / 4 ==> 4.25 |
 | `//` | Integer Division | returns the integer quotient of two numbers | 17 // 4 ==> 4 |
 | `%` | Remainder or Modulu | returns the remainder in division | 17 % 4 ==> 1 |
+
 **Note:** The roles of the `//` and `%` operators is reversed compared to *CMS Pipelines*. The reason for this is that CMS Pipelines was written for people who know the *REXX* language, where the `//` is the remainder operand and `%` is the integer division. Unix and Windows users are more accustomed to languages like C/C++/C#, Java, and Javascript where `%` is the remainder operator.
 
 A full list of supported operators can be found in [Advanced ALU Topics](alu_adv.md).
