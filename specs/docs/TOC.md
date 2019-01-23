@@ -8,10 +8,12 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 Basic Functionality
 ===================
 * [Basic Specifications](basicspec.md)
+* [Arithmetic-Logical Unit (ALU)](alu.md)
 
 Advanced Topics
 ===============
 * [Command-Line Switches](cliswitch.md)
+* [Advanced ALU](alu_adv.md)
 
 
 This page is a placeholder for the future Table Of Contents.  For the current one-page draft of documentation, 
