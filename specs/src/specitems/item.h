@@ -127,6 +127,9 @@ public:
 	virtual bool        readsLines();
 private:
 	AluVec m_RPNExpr;
+	bool   m_isAssignment;
+	ALUCounterKey	m_counter;
+	AluAssnOperator *m_assnOp;
 	std::string m_rawExpression;
 };
 
@@ -229,9 +232,13 @@ public:
 	void    setWhile();
 	virtual bool readsLines();
 private:
+	bool        evaluate();
 	std::string m_rawExpression;
 	AluVec      m_RPNExpression;
 	predicate   m_pred;
+	bool   m_isAssignment;
+	ALUCounterKey	m_counter;
+	AluAssnOperator *m_assnOp;
 };
 
 

@@ -1011,6 +1011,13 @@ void dumpAluStack(const char* title, std::stack<AluUnit*>& stk)
 	}
 }
 
+bool expressionIsAssignment(AluVec& vec)
+{
+	return (vec.size() > 2 &&
+			UT_Counter == vec[0]->type() &&
+			UT_AssignmentOp == vec[1]->type());
+}
+
 bool parseAluExpression(std::string& s, AluVec& vec)
 {
 	char* c = (char*)s.c_str();

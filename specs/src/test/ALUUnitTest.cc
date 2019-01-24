@@ -288,15 +288,30 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		INC_TEST_INDEX;										\
 		std::string _expr(s);								\
 		AluVec rpnVec;										\
-		bool _res;											\
-		_res = parseAluExpression(_expr,vec);				\
-		if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true);	\
+		bool _res, _res2;									\
 		ALUValue* _result = NULL;							\
-		if (_res) _result = evaluateExpression(rpnVec, &counters);	\
-		_res = (_result!=NULL) && (_result->getStr()==res);	\
+		_res = parseAluExpression(_expr,vec);				\
+		if (_res) {                                         \
+			if (expressionIsAssignment(vec)) {              \
+				ALUCounterKey	k;							\
+				AluAssnOperator op;							\
+				vec.clear();								\
+				_res = parseAluStatement(_expr,k,&op,vec);  \
+				if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
+				if (_res) {									\
+					ALUPerformAssignment(k,&op,rpnVec,&counters); \
+					_res2 = (counters.getStr(k)==res);		\
+				}											\
+			} else {                                        \
+				_res2 = true;								\
+				_res = convertAluVecToPostfix(vec, rpnVec,true);	\
+				if (_res) _result = evaluateExpression(rpnVec, &counters);	\
+				_res = (_result!=NULL) && (_result->getStr()==res);	\
+			}                                               \
+		}                                                   \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": "<< s << " ==> " << res << ": ";					\
-		if (_res) std::cout << "OK\n";						\
+		if (_res && _res2) std::cout << "OK\n";						\
 		else {												\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
 			countFailures++;  failedTests.push_back(testIndex);		\
@@ -770,6 +785,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includes(#9, 'x')", "0");
 	VERIFY_EXPR_RES("includes(#9, 'gn')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'rt ')", "0");
+
+	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
 
 	// TODO: More
 

@@ -103,7 +103,7 @@ There are three division operands:
 | `//` | Integer Division | returns the integer quotient of two numbers | 17 // 4 ==> 4 |
 | `%` | Remainder or Modulu | returns the remainder in division | 17 % 4 ==> 1 |
 
-**Note:** The roles of the `//` and `%` operators is reversed compared to *CMS Pipelines*. The reason for this is that CMS Pipelines was written for people who know the *REXX* language, where the `//` is the remainder operand and `%` is the integer division. Unix and Windows users are more accustomed to languages like C/C++/C#, Java, and Javascript where `%` is the remainder operator.
+**Note:** The roles of the `//` and `%` operators is reversed compared to *CMS Pipelines*. The reason for this is that CMS Pipelines was written for people who know the *REXX* language, where the `//` is the remainder operand and `%` is the integer division. Unix and Windows users are more accustomed to languages like C/C++, Java, Javascript and Python, where `%` is the remainder operator.
 
 A full list of supported operators can be found in [Advanced ALU Topics](alu_adv.md).
 
@@ -117,11 +117,26 @@ The specs ALU has a bunch of built-in functions. The full list is available at [
 * includes(hatstack,needle)
 
 Examples:
-`tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')` ==> 1546550603
-`len(743)` ==> 3
-`left(743,2)` ==> 74
+```
+tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S') ==> 1546550603
+len(743) ==> 3
+left(743,2) ==> 74
+```
 
 ## SET
 Counters are set through the *SET* spec unit. The string that follows the SET token consists of a counter, an assignment operator, and an expression. For example:
 `#0 := #2 - 5`
 The full list of operators is in [Advanced ALU Topics](alu_adv.md). The most common ones are the regular assignment operator: `:=`, and those derived from binary operators such as `+=`, `*=` etc.
+
+### Assignments as Expressions
+Assignment statements can also be used in expressions. Wherever an expression is required, an assignment statement can be used. It is performed, and the expression evaluates to the final result in the counter. For example:
+```
+   specs PRINT "#0:=2"    1
+         /plus/           nextword
+         PRINT "#1:=3"    nextword
+         /equals/         nextword
+         PRINT "#1+=#0"   nextword
+```
+will output: `2 plus 3 equals 5`
+
+**Note:** Using assignments as expressions has the side effect of setting the counter. With conditional specifications (see [Structured Specification](struct.md)) some expressions are never evaluated. When assignments are used for such expressions, they will not be performed and the counter will not be altered.

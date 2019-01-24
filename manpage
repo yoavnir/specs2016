@@ -319,9 +319,17 @@ Expressions are made up of numbers, field identifiers (no colon needed), and cou
 & (AND), | (OR)
 
 .P 
-Assignments assign the result of an expression into a numbered counter. For example:
+Assignments assign the result of an expression into a 
+.I numbered counter. 
+For example:
 
 	#3 := b+3
+	
+Assignment can also be used as expressions. When used as such, the value returned is the content of the counter after executing the assignment. For example, the following specification:
+
+    specs print "#0:=2+2" 1
+    
+will output 4.  The assignment is performed and the value stored in the counter.
 	
 .IP "Assignment Operators" 3
 :=, +=, -=, *=, /=, //=, %=, ||=

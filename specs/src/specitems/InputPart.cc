@@ -198,6 +198,20 @@ ExpressionPart::ExpressionPart(std::string& _expr)
 {
 	AluVec infixExpression;
 	MYASSERT(parseAluExpression(_expr, infixExpression));
+	if (expressionIsAssignment(infixExpression)) {
+		AluUnit* aUnit = infixExpression[0];
+		AluUnitCounter* pCounterUnit = dynamic_cast<AluUnitCounter*>(aUnit);
+		MYASSERT(NULL != pCounterUnit);
+		m_counter = pCounterUnit->getKey();
+		delete aUnit;
+		m_assnOp = dynamic_cast<AluAssnOperator*>(infixExpression[1]);
+		MYASSERT(NULL != m_assnOp);
+		infixExpression.erase(infixExpression.begin(), infixExpression.begin()+2);
+		m_isAssignment = true;
+	} else {
+		m_isAssignment = false;
+	}
+
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_RPNExpr, true));
 	m_rawExpression = _expr;
 }
@@ -206,6 +220,9 @@ ExpressionPart::~ExpressionPart()
 {
 	for (AluUnit* unit : m_RPNExpr) {
 		delete unit;
+	}
+	if (m_isAssignment) {
+		delete m_assnOp;
 	}
 }
 
@@ -216,9 +233,17 @@ std::string ExpressionPart::Debug()
 
 PSpecString ExpressionPart::getStr(ProcessingState& pState)
 {
-	ALUValue* res = evaluateExpression(m_RPNExpr, &g_counters);
+	ALUValue* res;
+	bool bDelete = true;
+	if (m_isAssignment) {
+		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpr, &g_counters);
+		res = g_counters.getPointer(m_counter);
+		bDelete = false;
+	} else {
+		res = evaluateExpression(m_RPNExpr, &g_counters);
+	}
 	std::string ret = res->getStr();
-	delete res;
+	if (bDelete) delete res;
 	return SpecString::newString(ret);
 }
 
