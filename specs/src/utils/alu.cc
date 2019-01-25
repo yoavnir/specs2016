@@ -102,7 +102,7 @@ ALUFloat ALUValue::getFloat() const
 
 bool ALUValue::getBool() const
 {
-	return (m_value!="0" && m_value!="0.0");
+	return (counterType__None!=m_type && m_value!="" && m_value!="0" && m_value!="0.0");
 }
 
 bool ALUValue::isWholeNumber() const

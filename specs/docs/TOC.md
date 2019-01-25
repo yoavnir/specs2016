@@ -9,6 +9,7 @@ Basic Functionality
 ===================
 * [Basic Specifications](basicspec.md)
 * [Arithmetic-Logical Unit (ALU)](alu.md)
+* [Structured Specification](struct.md)
 
 Advanced Topics
 ===============

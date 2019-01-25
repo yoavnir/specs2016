@@ -5,7 +5,7 @@ The Arithmetic-Logical Unit (**ALU**) is a part of **specs** that allows you to 
 The ALU allows you to form **expressions** to be used in conditional statements (see [program structure](struct.md) -- currently a dead link).  For example, the following does exactly what you would expect:
 `specs print "2+3" 1`
 
-## Elements of ALU 
+## Elements of the ALU 
 
 ### String and Numerical Literals
 These are string or numerical values that appear in the expression.  The numbers `2` and `3` in the above example are such literals. The ALU is not at all strongly typed, so the following is entirely valid and produces the output `2+3=5`

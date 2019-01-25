@@ -125,8 +125,8 @@ private:
 	X(Sub,"-=")		\
 	X(Mult,"*=")	\
 	X(Div,"/=")		\
-	X(IntDiv,"%=")	\
-	X(RemDiv,"//=")	\
+	X(RemDiv,"%=")	\
+	X(IntDiv,"//=")	\
 	X(Appnd,"||=")	\
 
 

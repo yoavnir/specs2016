@@ -324,7 +324,7 @@ Assignments assign the result of an expression into a
 For example:
 
 	#3 := b+3
-	
+.P	
 Assignment can also be used as expressions. When used as such, the value returned is the content of the counter after executing the assignment. For example, the following specification:
 
     specs print "#0:=2+2" 1
