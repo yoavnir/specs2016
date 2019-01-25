@@ -36,7 +36,9 @@ The `THEN` keywords are necessary. The `ELSEIF (condition) THEN` blocks are opti
 In any conditional execution statement, at most one of the unit sequences is executed. In a conditional execution statement that includes an `ELSE` clause, exactly one unit-sequence is executed.
 
 A simple, one-line example:
+
 `specs  a: w1 1  /is/ nextword  IF "a%2" THEN  /odd/ nextword  ELSE  /even/ nextword  ENDIF`
+
 | Input | Output |
 | ----- | ------ |
 | 0 | 0 is even |
@@ -46,6 +48,7 @@ A simple, one-line example:
 | 2.5 | 2.5 is even |
 | 3.5 | 3.5 is odd |
 | hello | hello is even|
+
 As usual with computers, the GIGO (garbage in -- garbage out) rule applies. The first four inputs are numbers and the output is correct. Attempting to use the remainder operator on 2.5 forces **specs** to treat that value as an integer, which evaluates to 2. Similarly, 3.5 evaluates to 3. All strings that don't look like numbers evaluate to zero when forced to be treated like integers, so `hello` turns out to be even.
 
 ## Loops
@@ -68,6 +71,7 @@ Consider the following simple loop:
 | 25 | 25************************* |
 | 1.5 | 1.5** |
 | hello | hello |
+
 **Note:** In the Unix command-line you will have to escape the star with a backslash, otherwise it evaluates to a list of files at the root directory of the file system.
 
 The above specification can be naïvely simplified some:
@@ -129,3 +133,11 @@ specs
       /Total:/   1
       print #0   Next
 ```
+| Input | Output |
+| ----- | ------ |
+| 1 | 1 |
+| 2 | 2 |
+| 3 | 3 |
+| 4 | 4 |
+| | Total: 10 |
+
