@@ -48,24 +48,52 @@ Very much a draft
 | Function | Description |
 | -------- | ----------- |
 | `abs(x)` | Returns the absolute value of `x` |
+| `frombin(x)` | Returns the decimal value of the binary `x`. For example, if `x` is "A", the function returns 65; if `x` is "AB" the function returns 16961. Binary values are assumed to be in little-endian order. |
 | `pow(x,y)` | Returns `x` raised to the power of `y` |
 | `sqrt(x)` | Returns the square root of `x` |
+| `tobin(x)` | Returns a binary (usually unprintable) representation of the integer number x. For example, if `x` is 65 the function returns "A"; if `x` is 16961 the function returns "AB". |
+| `tobine(x,n)` | Returns a binary representation of the integer number x as an *n*-byte string. |
 
 ## Table of String Functions
 | Function | Description |
 | -------- | ----------- |
+| `center(s,n)` or `centre(s,n)` | Returns the `n` center-most characters of the string `s`. The result is padded with spaces on both sides if `n` is greater than the length of `s`. |
+| `includes(haystack,needle)` | Boolean function. Returns `1` if `needle` is a substring of `haystack`, or `0` otherwise |
+| `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s`. |
 | `len(s)` | Returns the length (in characters) of the string `s` |
+| `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |
+| `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |
+| `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack` |
+| `rpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack` |
 
 ## Table of Record Access Functions
 | Function | Description |
 | -------- | ----------- |
+| `field(n)` | Returns the *n*-th field |
+| `fields(n,m)` | Returns the substring from the *n*-th field to the *m*-th field |
+| `fieldcount()` | Returns the number of fields in the current record |
+| `fieldend(n)` | Returns the offset from the start of the record that the *n*-th field ends at. Like other things in **specs**, this is 1-based. | 
+| `fieldindex(n)` | Returns the offset from the start of the record that the *n*-th field starts at. |
+| `fieldlength(n)` | Returns the length of the *n*-th field |
+| `iterno()` | Returns the number of processing cycles we have already gone through. Unless `READ` or `READSTOP` are used, this will be equal to the number of records read so far. |
+| `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `iterno()` |
 | `record()` | Returns the entire input record |
+| `word(n)` | Returns the *n*-th word |
+| `words(n,m)` | Returns the substring from the *n*-th word to the *m*-th word |
+| `wordcount()` | Returns the number of words in the current record |
+| `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
+| `wordindex(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
+| `wordlength(n)` | Returns the length of the *n*-th word |
+
 
 ## Table of Special Functions
 | Function | Description |
 | -------- | ----------- |
 | `first()` | Returns `1` in the run-in phase, or `0` otherwise |
 | `eof()` | Returns `1` in the run-out phase, or `0` otherwise |
+| `conf(s)` | Returns the configured string `s` if it exists |
+| `tf2d(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is seconds since the UNIX epoch with up to 6 decimal places. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
+| `d2tf(x,f)` | Returns the string representation of the number `x` treated as the internal time format and formatted according to the string in `f`. |
 
 
 

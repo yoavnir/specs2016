@@ -82,7 +82,7 @@ But that doesn't work correctly. Suppose the input was 3. So #1 is set to 3. In 
 
 `specs  a: w1 1  SET "#1:=a+1"  WHILE "#1-=1" DO  /*/ n  DONE`
 
-This now returns the correct values for all the integers from zero and up.  But it tends to get into endless loops. Plug in inputs like `-1`, `1.2`, or `hello` and **specs** hangs. A future version will have a **while-guard** feature that will make specs exit with an error in a case like this, but it is up to the specification to avoid endless loops. Do not use a loop condition such as this unless it is certain that `#1` is positive integer when entering the loop for the first time.
+This now returns the correct values for all the integers from zero and up.  But it tends to get into endless loops. Plug in inputs like `-1`, `1.2`, or `hello` and **specs** hangs. A future version will have a **while-guard** feature that will make specs exit with an error in a case like this, but it is up to the specification to avoid endless loops. Do not use a loop condition such as this unless it is certain that `#1` is a positive integer when entering the loop for the first time.
 
 ## Run-In and Run-Out
 To help with summaries and initialization, **specs** provides ways to execute certain units only at the Run-In cycle or only at the Run-Out cycle.
@@ -101,8 +101,9 @@ specs if "first()" then
 
 ### Run-Out
 The Run-Out cycle runs *after* the last record is processed. It is only run if it has something to do. There are two ways to do things on the run-out cycles:
-1. Using the boolean function `eof()`
-2. Using the `EOF` keyword
+1. Using the boolean function `eof()`.
+2. Using the `EOF` keyword.
+
 The following enhancement of the run-in example will demonstrate both:
 ```
 # Print all the records that match the first record's first word.
