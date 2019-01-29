@@ -18,9 +18,9 @@ specs    /Filename:/ 1
 | Input | Output |
 | ----- | ------ |
 | -rw-r--r--   1 synp  staff  1404 Jan 25 00:14 Makefile | Filename: Makefile |
-| | type: directory |
-| drwxr-xr-x   9 synp  staff   288 Jan 25 10:44 cli | Filename: cli |
 | | type: file |
+| drwxr-xr-x   9 synp  staff   288 Jan 25 10:44 cli | Filename: cli |
+| | type: directory |
 
 Every WRITE resets the output record to empty and it can get filled again from scratch.
 
