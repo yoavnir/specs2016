@@ -16,8 +16,9 @@ News
 * **Run-In** and **Run-Out** cycles.
 * New functions: `iterno`, `recno`, `conf`, `first`, `eof`, string functions, input line functions and the token `@@`.
 * Time/Date improvements: TOD is not expressed in seconds; `tf2d` and `d2tf` conversions.
-* ALU debugging for usability
-* Bug fixes
+* ALU debugging for usability.
+* Bug fixes.
+* [Documentation](specs/docs/TOC.md) here on GitHub. 
 
 Sources
 =======

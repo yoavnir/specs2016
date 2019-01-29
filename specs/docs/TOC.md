@@ -10,6 +10,7 @@ Basic Functionality
 * [Basic Specifications](basicspec.md)
 * [Arithmetic-Logical Unit (ALU)](alu.md)
 * [Structured Specification](struct.md)
+* [Input and Output Streams and Records](streams.md)
 
 Advanced Topics
 ===============
@@ -17,5 +18,4 @@ Advanced Topics
 * [Advanced ALU](alu_adv.md)
 
 
-This page is a placeholder for the future Table Of Contents.  For the current one-page draft of documentation, 
-you can read [this](onepage.md).
+The old, one-page draft of documentation can be read [here](onepage.md).
