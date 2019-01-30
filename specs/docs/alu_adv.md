@@ -9,13 +9,13 @@ Very much a draft
 | `+` | Unary Plus | |
 | `-` | Unary Minus | Negates its operand, so if `a` is 5.3 then `-a` is -5.3 |
 | `!` | Unary Not | Logical Not. If the result is zero, returns `1`, otherwise returns zero |
-| `+` | Binary Plus | Returns the addition of its two operands |
+| `+` | Binary Plus | Returns the sum of its two operands |
 | `-` | Binary Minus | Returns the difference between the left-hand operand and the right-hand operand |
 | `*` | Binary Multiplication | Returns the product of its two operands |
 | `/` | Binary Division | Returns the quotient from dividing the left-hand operand by the right-hand operand |
 | `//` | Binary Integer Division | Returns the integer quotient from dividing the left-hand operand by the right-hand operand |
 | `%` | Binary Modulu | Returns the remainder from dividing the left-hand operand (the dividend) by the right-hand operand (the divisor) |
-| `||` | Concatenation | Returns the concatenation of its two operands |
+| `\|\|` | Concatenation | Returns the concatenation of its two operands |
 | `<` | Logical LT | Returns `1` is the left-hand operand is smaller than the right-hand operand, or `0` otherwise |
 | `<=` | Logical LTE | Returns `1` is the left-hand operand is smaller than or equal to the right-hand operand, or `0` otherwise |
 | `>` | Logical GT | Returns `1` is the left-hand operand is greater than the right-hand operand, or `0` otherwise |
@@ -29,7 +29,7 @@ Very much a draft
 | `!=` | Logical Equality | Returns `1` if its two operands are not equal numerically or string-wise, or `0` otherwise |
 | `!==` | Strict Equality | Returns `1` if its two operands are not equal string-wise, or `0` otherwise |
 | `&` | Logical And | Returns `1` if both of its two operands are non-zero, non-NaN, or `0` otherwise |
-| `|` | Logical Or | Returns `1` if either of its two operands are non-zero, non-NaN, or `0` otherwise |
+| `\|` | Logical Or | Returns `1` if either of its two operands are non-zero, non-NaN, or `0` otherwise |
 
 ## Table of Assignment Operators
 
@@ -42,7 +42,7 @@ Very much a draft
 | `/=` | Div | Divides the value of the left-hand counter by the right-hand counter, storing the quotient in that counter |
 | `//=` | IntDiv | Divides the value of the left-hand counter by the right-hand counter, storing the **integer** quotient in that counter |
 | `%=` | RemDiv | Divides the value of the left-hand counter by the right-hand counter, storing the **remainder** in that counter |
-| `||=` | Appnd | Appends the string value of the right-hand operand to the string value of the left-hand counter, storing the concatenation in that counter |
+| `\|\|=` | Appnd | Appends the string value of the right-hand operand to the string value of the left-hand counter, storing the concatenation in that counter |
 
 ## Table of Numerical Functions
 | Function | Description |

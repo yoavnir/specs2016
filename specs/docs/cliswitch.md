@@ -3,10 +3,8 @@
 Here's a list of the command-line switches available for *specs*:
 * `--toASCII` -- causes output to be translated into ASCII if it's outside the range.
 Any character that is not ASCII-printable is rendered as a period.
-* `--force-read-input` -- forces specs to read every input line even if none of the spec units use it.  By default they won't.
-Not reading a line is useful for simple specifications such as:
-    `specs @version 1`
-    `specs print "2+2" 1`
+* `--force-read-input` -- forces **specs** to read records even if none of the spec units reference input records.  By default they won't.
+Not reading a line is useful for simple specifications such as: `specs @version 1` or `specs print "2+2" 1`.
 * `--specFile` **filename** or `-f` **filename** -- reads the specification from a file rather than the command line.
 Using files allows you to write some very sophisticated specifications, and to aid readability by using indentation. For example, consider the following specification from the CMS Pipelines book.  That would be unwieldy to write on a single command-line:
 ```
@@ -33,6 +31,6 @@ CPU Time: 69.1277526 seconds.
 ```
 * `--inFile` **filename** or `-i` **filename** -- get the input records from a file rather than standard input.
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.
-* `--spaceWS` -- Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
+* `--spaceWS` -- Makes **specs** only treat spaces as the default word separator. By default all locale-defined whitespace is treated as the word separator.
 * `--debug-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
 * `--debug-alu-run` -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).

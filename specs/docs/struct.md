@@ -1,5 +1,5 @@
 # Structure in Specifications
-The specifications described in previous pages is linear. It is a series of **Data Field** units and **SET** units which are performed in sequence for each and every record.
+The specifications described in previous pages are linear. They are a series of **Data Field** units and **SET** units which are performed in sequence for each and every record.
 
 But **specs** also allows some structure in specifications, including loops, conditional execution, run-in and run-out cycles. This page describes those structures.
 

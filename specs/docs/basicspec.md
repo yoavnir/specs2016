@@ -1,14 +1,14 @@
 # Basic Specifications
 
-*specs* is a command-line utility for processing text. The basic format is as follows:
+**specs** is a command-line utility for processing text. The basic format is as follows:
 ```
   specs [switches] [spec-units]
 ```
-Most invocations of *specs* do not require command-line switches, so we will not describe them here. For a full description, you can go to [Command-Line Switches](cliswitch.md)
+Most invocations of **specs** do not require command-line switches, so we will not describe them here. For a full description, you can go to [Command-Line Switches](cliswitch.md)
 
 Spec Units
 ==========
-Spec Units are the building blocks of a specs specification.  Each spec unit specifies an action to be taken by the program. The spec unit may span from one to several command line arguments. The collection of spec units in a single invocation of *specs* is called a *specification*.
+Spec Units are the building blocks of a specs specification.  Each spec unit specifies an action to be taken by the program. The spec unit may span from one to several command line arguments. The collection of spec units in a single invocation of **specs** is called a *specification*.
 
 The most common spec unit is a *data field*. They will be covered in the following section. Other kinds of spec units are covered in other pages
 
@@ -133,3 +133,25 @@ This *specification* contains two data fields which I've separated using multipl
         localizedStrings.js         1572421577.000000
 ```
 You may get different results depending on when you run this. Why? Because the time format looks like this: `Oct 30 09:46`, represented by the strftime string `%b %d %H:%M`. The year is missing, so what does the C++ function do? It replaces unspecified values with current values. So in this case, the year was supplied as 2019, even though the dates in the output are from 2018.
+
+## Other Common *Spec Units*
+Here are a few more common spec units:
+### WORDSEPARATOR or WS
+This is used to set the word separator character to something other than the default. For example:
+```
+specs wordseparator / word 2 1
+```
+will output `bye` from the folowing input record:
+```
+/Good///bye/old///paint
+```
+
+### FIELDSEPARATOR or FS
+This is used to set the field separator character to something other than the default (tab). For example:
+```
+specs fieldseparator , /</ 1 f2 n />/ n /</ nw f4 n />/ n
+```
+This will produce the output `<bye><>` from this input record:
+```
+Good,bye,old,,paint
+```
