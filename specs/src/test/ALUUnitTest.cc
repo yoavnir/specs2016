@@ -288,15 +288,30 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		INC_TEST_INDEX;										\
 		std::string _expr(s);								\
 		AluVec rpnVec;										\
-		bool _res;											\
-		_res = parseAluExpression(_expr,vec);				\
-		if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true);	\
+		bool _res, _res2;									\
 		ALUValue* _result = NULL;							\
-		if (_res) _result = evaluateExpression(rpnVec, &counters);	\
-		_res = (_result!=NULL) && (_result->getStr()==res);	\
+		_res = parseAluExpression(_expr,vec);				\
+		if (_res) {                                         \
+			if (expressionIsAssignment(vec)) {              \
+				ALUCounterKey	k;							\
+				AluAssnOperator op;							\
+				vec.clear();								\
+				_res = parseAluStatement(_expr,k,&op,vec);  \
+				if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
+				if (_res) {									\
+					ALUPerformAssignment(k,&op,rpnVec,&counters); \
+					_res2 = (counters.getStr(k)==res);		\
+				}											\
+			} else {                                        \
+				_res2 = true;								\
+				_res = convertAluVecToPostfix(vec, rpnVec,true);	\
+				if (_res) _result = evaluateExpression(rpnVec, &counters);	\
+				_res = (_result!=NULL) && (_result->getStr()==res);	\
+			}                                               \
+		}                                                   \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": "<< s << " ==> " << res << ": ";					\
-		if (_res) std::cout << "OK\n";						\
+		if (_res && _res2) std::cout << "OK\n";						\
 		else {												\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
 			countFailures++;  failedTests.push_back(testIndex);		\
@@ -676,15 +691,16 @@ int runALUUnitTests(unsigned int onlyTest)
 	g_ps.setString(SpecString::newString());
 	VERIFY_EXPR_RES("wordcount()", "0");
 	VERIFY_EXPR_RES("word(2)", "NaN");
-	VERIFY_EXPR_RES("wordstart(3)", "0");
+	VERIFY_EXPR_RES("wordindex(3)", "0");
 	VERIFY_EXPR_RES("wordend(2)", "0");
 	VERIFY_EXPR_RES("words(3,4)", "NaN");
 
 	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
-	VERIFY_EXPR_RES("wordstart(3)", "11");
+	VERIFY_EXPR_RES("wordindex(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
+	VERIFY_EXPR_RES("wordlength(2)", "5");
 	VERIFY_EXPR_RES("words(3,4)", "brown fox");
 	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
 	VERIFY_EXPR_RES("len(@@)", "43");
@@ -692,19 +708,21 @@ int runALUUnitTests(unsigned int onlyTest)
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
-	VERIFY_EXPR_RES("wordstart(3)", "11");
+	VERIFY_EXPR_RES("wordindex(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("words(3,4)", "brown\tfox");
 	VERIFY_EXPR_RES("fieldcount()", "5");
 	VERIFY_EXPR_RES("field(3)", "fox jumps");
-	VERIFY_EXPR_RES("fieldstart(2)", "5");
+	VERIFY_EXPR_RES("fieldindex(2)", "5");
 	VERIFY_EXPR_RES("fieldend(3)", "25");
+	VERIFY_EXPR_RES("fieldlength(2)", "11"); // length of "quick brown"
 	VERIFY_EXPR_RES("fields(2,3)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
 	VERIFY_EXPR_RES("range(44,48)", "NaN");
 	VERIFY_EXPR_RES("@@", "The\tquick brown\tfox jumps\tover the\tlazy dog");
+	VERIFY_EXPR_RES("record()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 
 	// time reformat
 	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
@@ -767,6 +785,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includes(#9, 'x')", "0");
 	VERIFY_EXPR_RES("includes(#9, 'gn')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'rt ')", "0");
+
+	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
 
 	// TODO: More
 

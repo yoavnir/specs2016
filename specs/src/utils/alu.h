@@ -125,8 +125,8 @@ private:
 	X(Sub,"-=")		\
 	X(Mult,"*=")	\
 	X(Div,"/=")		\
-	X(IntDiv,"%=")	\
-	X(RemDiv,"//=")	\
+	X(RemDiv,"%=")	\
+	X(IntDiv,"//=")	\
 	X(Appnd,"||=")	\
 
 
@@ -339,6 +339,8 @@ static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
 
 
 typedef std::vector<AluUnit*> AluVec;
+
+bool expressionIsAssignment(AluVec& vec);
 
 bool parseAluExpression(std::string& s, AluVec& vec);
 

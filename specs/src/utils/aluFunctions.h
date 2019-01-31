@@ -14,14 +14,19 @@
 	X(tobin,1,false)                 \
 	X(len,1,false)                   \
 	X(first,0,false)                 \
+	X(recno,0,true)                  \
+	X(iterno,0,true)                 \
 	X(eof,0,false)                   \
+	X(record,0,true)                 \
 	X(wordcount,0,true)              \
-	X(wordstart,1,true)              \
+	X(wordindex,1,true)              \
+	X(wordlength,1,true)             \
 	X(wordend,1,true)                \
 	X(word,1,true)                   \
 	X(words,2,true)                  \
 	X(fieldcount,0,true)             \
-	X(fieldstart,1,true)             \
+	X(fieldindex,1,true)             \
+	X(fieldlength,1,true)            \
 	X(fieldend,1,true)               \
 	X(field,1,true)                  \
 	X(fields,2,true)                 \
@@ -36,6 +41,7 @@
 	X(right,2,false)                 \
 	X(center,2,false)                \
 	X(centre,2,false)                \
+	X(conf,1,false)                  \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
@@ -64,6 +70,8 @@ public:
 	virtual PSpecString getFromTo(int from, int to) = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;
+	virtual ALUInt  getRecordCount() = 0;
+	virtual ALUInt  getIterationCount() = 0;
 };
 
 void setStateQueryAgent(stateQueryAgent* qa);

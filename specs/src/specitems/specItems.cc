@@ -203,6 +203,8 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				} else {
 					processingContinue = false; // Stop processing if no extra record is available
 				}
+			} else {
+				pState.incrementExtraReads();
 			}
 			pState.setString(ps);
 			break;
@@ -361,20 +363,37 @@ ConditionItem::ConditionItem(std::string& _statement)
 	m_rawExpression = _statement;
 	AluVec expr;
 	MYASSERT(parseAluExpression(_statement, expr));
+	if (expressionIsAssignment(expr)) {
+		AluUnit* aUnit = expr[0];
+		AluUnitCounter* pCounterUnit = dynamic_cast<AluUnitCounter*>(aUnit);
+		MYASSERT(NULL != pCounterUnit);
+		m_counter = pCounterUnit->getKey();
+		delete aUnit;
+		m_assnOp = dynamic_cast<AluAssnOperator*>(expr[1]);
+		MYASSERT(NULL != m_assnOp);
+		expr.erase(expr.begin(), expr.begin()+2);
+		m_isAssignment = true;
+	} else {
+		m_isAssignment = false;
+	}
 	MYASSERT(convertAluVecToPostfix(expr, m_RPNExpression, true));
 }
 
-ConditionItem::ConditionItem(ConditionItem::predicate _p)
+ConditionItem::ConditionItem(ConditionItem::predicate _p) : m_counter(0), m_assnOp(NULL)
 {
 	MYASSERT(_p != PRED_IF);
+	m_isAssignment = false;
 	m_pred = _p;
 }
 
 ConditionItem::~ConditionItem()
 {
-	if (m_pred == PRED_IF) {
+	if ((m_pred == PRED_IF) || (m_pred == PRED_ELSEIF) || (m_pred == PRED_WHILE)) {
 		for (AluUnit* unit : m_RPNExpression) {
 			delete unit;
+		}
+		if (m_isAssignment) {
+			delete m_assnOp;
 		}
 	}
 }
@@ -426,6 +445,21 @@ void ConditionItem::setWhile()
 	m_pred = PRED_WHILE;
 }
 
+bool ConditionItem::evaluate()
+{
+	bool ret;
+	if (m_isAssignment) {
+		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpression, &g_counters);
+		ret = g_counters.getPointer(m_counter)->getBool();
+	} else {
+		ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+		ret = exprResult->getBool();
+		delete exprResult;
+	}
+
+	return ret;
+}
+
 ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	ApplyRet ret = ApplyRet__Continue;
@@ -433,9 +467,7 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	switch (m_pred) {
 	case PRED_IF: {
 		if (pState.needToEvaluate()) {
-			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
-			pState.setCondition(exprResult->getBool());
-			delete exprResult;
+			pState.setCondition(evaluate());
 		} else {
 			pState.observeIf();
 		}
@@ -450,9 +482,7 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		bool bNeedToEvaluate;
 		pState.observeElseIf(bNeedToEvaluate);
 		if (bNeedToEvaluate) {
-			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
-			pState.setCondition(exprResult->getBool());
-			delete exprResult;
+			pState.setCondition(evaluate());
 		}
 		break;
 	}
@@ -461,8 +491,7 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		break;
 	case PRED_WHILE: {
 		if (pState.needToEvaluate()) {
-			ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
-			if (exprResult->getBool()) {
+			if (evaluate()) {
 				ret = ApplyRet__EnterLoop;
 			} else {
 				pState.observeWhile();

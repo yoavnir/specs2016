@@ -319,9 +319,17 @@ Expressions are made up of numbers, field identifiers (no colon needed), and cou
 & (AND), | (OR)
 
 .P 
-Assignments assign the result of an expression into a numbered counter. For example:
+Assignments assign the result of an expression into a 
+.I numbered counter. 
+For example:
 
 	#3 := b+3
+.P	
+Assignment can also be used as expressions. When used as such, the value returned is the content of the counter after executing the assignment. For example, the following specification:
+
+    specs print "#0:=2+2" 1
+    
+will output 4.  The assignment is performed and the value stored in the counter.
 	
 .IP "Assignment Operators" 3
 :=, +=, -=, *=, /=, //=, %=, ||=
@@ -352,6 +360,19 @@ cycle, and zero otherwise.
 Returns 1 during the
 .B runout 
 cycle, and zero otherwise.
+.IP "iterno()" 3
+Returns the number of times the specification has so far been run on different records.
+.IP "recno()" 3
+Returns the number of input records that have been read so far. If the specification contains no 
+.I READ
+or
+.I READSTOP
+spec units, then this number will be equal to the result of 
+.B iterno().
+Otherwise, it will be higher.
+.IP "record()" 3
+Returns the entire input record. Equivalent to 
+.B range(1,-1)
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s
@@ -469,6 +490,12 @@ includes the string
 as a substring, or 
 .B FALSE
 (0) otherwise.
+.IP "conf(key)" 3
+Returns the configured string from either the built-in configured strings such as 
+.I version
+or from the 
+.B $HOME/.specs
+file. 
 
 .P
 NOTE: This list is going to be expanded in future versions.

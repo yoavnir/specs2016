@@ -102,7 +102,7 @@ ALUFloat ALUValue::getFloat() const
 
 bool ALUValue::getBool() const
 {
-	return (m_value!="0" && m_value!="0.0");
+	return (counterType__None!=m_type && m_value!="" && m_value!="0" && m_value!="0.0");
 }
 
 bool ALUValue::isWholeNumber() const
@@ -1009,6 +1009,13 @@ void dumpAluStack(const char* title, std::stack<AluUnit*>& stk)
 		tmp.pop();
 		stk.push(v);
 	}
+}
+
+bool expressionIsAssignment(AluVec& vec)
+{
+	return (vec.size() > 2 &&
+			UT_Counter == vec[0]->type() &&
+			UT_AssignmentOp == vec[1]->type());
 }
 
 bool parseAluExpression(std::string& s, AluVec& vec)

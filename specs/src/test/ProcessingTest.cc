@@ -80,6 +80,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			do {
 				PSpecString pFirstLine = tRead.getNextRecord();
 				ps.setString(pFirstLine);
+				ps.incrementCycleCounter();
 				ig.processDo(sb, ps, &tRead, NULL);
 				if (result) {
 					result->add(sb.GetStringUnsafe());
@@ -303,6 +304,18 @@ int main(int argc, char** argv)
 	VERIFY2("1-* tf2d %Y-%m-%dT%H:%M:%S.%6f a: ID a d2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #91
 	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #92
 	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #93
+
+	// Issue #43
+	VERIFY2("word 1 5 pad * word 2 15", "First record", "    First*****record"); // Test #94
+
+	// Issue #44
+	VERIFY("print \"'hello'\" 1", "hello"); // Test #95
+
+	// NUMBER
+	VERIFY2("w1 1 NUMBER nw", "One\nTwo\nThree", "One          1\nTwo          2\nThree          3"); // Test #96
+
+	// recno and iterno
+	VERIFY2("print 'recno()' 1 print 'iterno()' nw READ w1 nw", "a\nb\nc\nd","1 1 b\n3 2 d"); // Test #97
 
 
 

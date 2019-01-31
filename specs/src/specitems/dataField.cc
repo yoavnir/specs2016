@@ -416,6 +416,8 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		goto FINISH;
 	}
 
+	pSB->setPadChar(pState.getPadChar());
+
 	if (m_outStart==POS_SPECIAL_VALUE_NEXT) {
 		pSB->insertNext(pInput);
 	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTWORD) {

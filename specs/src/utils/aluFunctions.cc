@@ -1,6 +1,7 @@
 #include "utils/ErrorReporting.h"
 #include "utils/aluFunctions.h"
 #include "utils/TimeUtils.h"
+#include "processing/Config.h"
 #include <string.h>
 #include <cmath>
 
@@ -144,6 +145,16 @@ ALUValue* AluFunc_first()
 	return new ALUValue(ALUInt(isFirst ? 1 : 0));
 }
 
+ALUValue* AluFunc_iterno()
+{
+	return new ALUValue(g_pStateQueryAgent->getIterationCount());
+}
+
+ALUValue* AluFunc_recno()
+{
+	return new ALUValue(g_pStateQueryAgent->getRecordCount());
+}
+
 ALUValue* AluFunc_eof()
 {
 	bool isRunOut = g_pStateQueryAgent->isRunOut();
@@ -171,6 +182,11 @@ static ALUValue* AluFunc_range(ALUInt start, ALUInt end)
 	} else {
 		return new ALUValue();
 	}
+}
+
+ALUValue* AluFunc_record()
+{
+	return AluFunc_range(1,-1);
 }
 
 ALUValue* AluFunc_range(ALUValue* pStart, ALUValue* pEnd)
@@ -208,7 +224,7 @@ ALUValue* AluFunc_fields(ALUValue* pStart, ALUValue* pEnd)
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_fieldstart(ALUValue* pIdx)
+ALUValue* AluFunc_fieldindex(ALUValue* pIdx)
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldStart(pIdx->getInt())));
 }
@@ -218,7 +234,14 @@ ALUValue* AluFunc_fieldend(ALUValue* pIdx)
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldEnd(pIdx->getInt())));
 }
 
-ALUValue* AluFunc_wordstart(ALUValue* pIdx)
+ALUValue* AluFunc_fieldlength(ALUValue* pIdx)
+{
+	auto idx = pIdx->getInt();
+	auto len = g_pStateQueryAgent->getFieldEnd(idx) - g_pStateQueryAgent->getFieldStart(idx) + 1;
+	return new ALUValue(ALUInt(len));
+}
+
+ALUValue* AluFunc_wordindex(ALUValue* pIdx)
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordStart(pIdx->getInt())));
 }
@@ -226,6 +249,13 @@ ALUValue* AluFunc_wordstart(ALUValue* pIdx)
 ALUValue* AluFunc_wordend(ALUValue* pIdx)
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordEnd(pIdx->getInt())));
+}
+
+ALUValue* AluFunc_wordlength(ALUValue* pIdx)
+{
+	auto idx = pIdx->getInt();
+	auto len = g_pStateQueryAgent->getWordEnd(idx) - g_pStateQueryAgent->getWordStart(idx) + 1;
+	return new ALUValue(ALUInt(len));
 }
 
 ALUValue* AluFunc_tf2d(ALUValue* pTimeFormatted, ALUValue* pFormat)
@@ -366,4 +396,14 @@ ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle)
 	std::string* pHaystack = _pHaystack->getStrPtr();
 	bool bIsIncluded = (std::string::npos != pHaystack->find(*pNeedle));
 	return new ALUValue(ALUInt(bIsIncluded ? 1 : 0));
+}
+
+ALUValue* AluFunc_conf(ALUValue* _pKey)
+{
+	std::string key = _pKey->getStr();
+	if (configSpecLiteralExists(key)) {
+		return new ALUValue(configSpecLiteralGet(key));
+	} else {
+		return new ALUValue();
+	}
 }
