@@ -34,6 +34,11 @@ git checkout v0.2
 ```
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 
+A simple way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
+```
+git checkout stable
+```
+
 After that, _cd_ to the specs/src directory, and run the following two commands:
 * `make some`
 * `sudo make install`
