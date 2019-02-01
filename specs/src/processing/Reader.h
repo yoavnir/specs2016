@@ -6,11 +6,12 @@
 
 class Reader {
 public:
-	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0;}
+	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0; m_pUnreadString = NULL;}
 	virtual ~Reader();
 	virtual bool        endOfSource() = 0;
 	virtual PSpecString getNextRecord() = 0;
 	virtual PSpecString get();
+	void                pushBack(PSpecString ps);
 	virtual void        readIntoQueue();
 	virtual void        Begin();
 	virtual bool        eof() { return endOfSource() && m_queue.empty(); }
@@ -20,6 +21,7 @@ public:
 protected:
 	StringQueue m_queue;
 	std::thread *mp_thread;
+	PSpecString   m_pUnreadString;
 	unsigned long m_countRead;
 	unsigned long m_countUsed;
 };

@@ -180,7 +180,7 @@ static ALUValue* AluFunc_range(ALUInt start, ALUInt end)
 		delete pRet;
 		return new ALUValue(st);
 	} else {
-		return new ALUValue();
+		return new ALUValue("");
 	}
 }
 

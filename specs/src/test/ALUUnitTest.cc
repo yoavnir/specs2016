@@ -690,10 +690,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	// The functions that look at the line being processed
 	g_ps.setString(SpecString::newString());
 	VERIFY_EXPR_RES("wordcount()", "0");
-	VERIFY_EXPR_RES("word(2)", "NaN");
+	VERIFY_EXPR_RES("word(2)", "");
 	VERIFY_EXPR_RES("wordindex(3)", "0");
 	VERIFY_EXPR_RES("wordend(2)", "0");
-	VERIFY_EXPR_RES("words(3,4)", "NaN");
+	VERIFY_EXPR_RES("words(3,4)", "");
 
 	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
@@ -720,7 +720,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
-	VERIFY_EXPR_RES("range(44,48)", "NaN");
+	VERIFY_EXPR_RES("range(44,48)", "");
 	VERIFY_EXPR_RES("@@", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 	VERIFY_EXPR_RES("record()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 

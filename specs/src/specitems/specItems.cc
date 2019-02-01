@@ -27,6 +27,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__READ:
 		case TokenListType__READSTOP:
 		case TokenListType__WRITE:
+		case TokenListType__UNREAD:
 		{
 			TokenItem *pItem = new TokenItem(tokenVec[index++]);
 			addItem(pItem);
@@ -217,6 +218,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__EOF:
 			processingContinue = false;
 			break;
+		case ApplyRet__UNREAD:
+			pRd->pushBack(pState.extractCurrentRecord());
+			break;
 		default:
 			std::string err = "Unexpected return code from TokenItem::apply: ";
 			err += std::to_string(aRet);
@@ -240,12 +244,8 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		pState.setString(ps);
 		pState.incrementCycleCounter();
 
-		try {
-			if (processDo(sb,pState, &rd, &wr)) {
-				wr.Write(sb.GetString());
-			}
-		} catch (const SpecsException& e) {
-			std::cerr << "Exception processing line " << rd.countUsed() << ": " << e.what(true) << "\n";
+		if (processDo(sb,pState, &rd, &wr)) {
+			wr.Write(sb.GetString());
 		}
 	}
 
@@ -255,12 +255,8 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 	// run-out cycle
 	pState.setString(NULL);
-	try {
-		if (processDo(sb, pState, &rd, &wr)) {
-			wr.Write(sb.GetString());
-		}
-	} catch (const SpecsException& e) {
-		std::cerr << "Exception processing the run-out cycle: " << e.what(true) << "\n";
+	if (processDo(sb, pState, &rd, &wr)) {
+		wr.Write(sb.GetString());
 	}
 }
 
@@ -313,6 +309,8 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__Write;
 	case TokenListType__EOF:
 		return ApplyRet__EOF;
+	case TokenListType__UNREAD:
+		return ApplyRet__UNREAD;
 	default:
 		std::string err = "Unhandled TokenItem type " + TokenListType__2str(mp_Token->Type());
 		MYTHROW(err);

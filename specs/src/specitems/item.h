@@ -142,6 +142,7 @@ enum ApplyRet {
 	ApplyRet__EnterLoop,
 	ApplyRet__DoneLoop,
 	ApplyRet__EOF,
+	ApplyRet__UNREAD,
 	ApplyRet__Last
 };
 

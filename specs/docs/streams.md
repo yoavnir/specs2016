@@ -81,3 +81,21 @@ df3438ed9e95c2aa37a429ab07f0956164ec4229 synp71 1548013241.000000
 e6d7f9ac591379d653a5685f9d75deccc1792545 synp71 1548011387.000000
 241002cf5a66737bbfd29888244a0a463cd9bcae synp71 1547761521.000000
 ```
+
+## Pushing Back The Last Record
+That specification in the previous section reads several lines in a `WHILE` loop searching for the line we need for the next iteration. This is a common pattern and we were forced to use a variable to transfer the content of the next commit record to the next iteration.
+
+**specs** version 0.3 introduces the `UNREAD` spec unit. What it does is push back the current read record so that it is possible to process it as the first record of the next iteration. The specification above can thus be simplified as follows:
+
+```
+specs WORD 2                    1
+      READSTOP
+      WORD 2             NEXTWORD
+      READSTOP
+      WORD 2-6 tf2d "%c" NEXTWORD
+      WHILE "word(1)!='commit'" DO
+          READ
+      DONE
+      UNREAD
+
+```

@@ -61,6 +61,13 @@ void ProcessingState::setString(PSpecString ps)
 	fieldIdentifierClear();
 }
 
+PSpecString ProcessingState::extractCurrentRecord()
+{
+	PSpecString ret = m_ps;
+	m_ps = SpecString::newString(); // empty string
+	return ret;
+}
+
 #define IS_WHITESPACE(c) ((m_wordSeparator==LOCAL_WHITESPACE) ? (isspace((c))) : ((c)==m_wordSeparator))
 void ProcessingState::identifyWords()
 {

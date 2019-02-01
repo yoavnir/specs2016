@@ -823,7 +823,12 @@ void AluInputRecord::_serialize(std::ostream& os) const
 ALUValue* AluInputRecord::evaluate()
 {
 	PSpecString ps = g_pStateQueryAgent->getFromTo(1,-1);
-	ALUValue* ret = new ALUValue(ps->data(), ps->length());
+	ALUValue* ret;
+	if (ps) {
+		ret = new ALUValue(ps->data(), ps->length());
+	} else {
+		ret = new ALUValue("");
+	}
 	delete ps;
 	return ret;
 }

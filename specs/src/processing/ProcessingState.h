@@ -48,6 +48,7 @@ public:
 	void incrementCycleCounter() { m_CycleCounter++; }
 	void incrementExtraReads()   { m_ExtraReads++; }
 	PSpecString fieldIdentifierGet(char id);
+	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
 	bool needToEvaluate();
 	bool runningOutLoop();
@@ -69,7 +70,7 @@ private:
 	char    m_pad;
 	char    m_wordSeparator;
 	char    m_fieldSeparator;
-	PSpecString m_ps;
+	PSpecString m_ps;  // The current record
 	int  m_wordCount;
 	int  m_fieldCount;
 	unsigned int m_CycleCounter;

@@ -169,6 +169,12 @@ There are also other spec units, that may be used:
 Causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string.
 .IP "READSTOP" 3
 Causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
+.IP "UNREAD" 3
+Causes the program to push back the current active record back to the reader, so that the next iteration of the specification or the next 
+.I READ
+or
+.I READSTOP
+spec unit will read it back.  This is useful when looping with READ searching for the next line to run the specification on.
 .IP "WRITE" 3
 Causes the program to write to output and reset the output line.
 .IP "WORDSEPARATOR and FIELDSEPARATOR" 3
