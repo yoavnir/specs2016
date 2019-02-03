@@ -317,6 +317,10 @@ int main(int argc, char** argv)
 	// recno and iterno
 	VERIFY2("print 'recno()' 1 print 'iterno()' nw READ w1 nw", "a\nb\nc\nd","1 1 b\n3 2 d"); // Test #97
 
+	// REDO
+	VERIFY("w3-* 1 REDO w1 1", "brown");     // Test  #98
+	VERIFY("6-* 1 REDO w1 1", "uick");       // Test  #99
+	VERIFY("1-* BSWAP 1 REDO w2 1", "yzal"); // Test #100
 
 
 	if (errorCount) {

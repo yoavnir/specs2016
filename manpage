@@ -182,7 +182,7 @@ Declare a character to be the word of field separator respectively, which affect
 .I default
 to make all whitespace defined by the locale work as a word separator. 
 .IP "REDO" 3
-Causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
+Causes the current output line to become the new input line.
 .IP "SET" 3
 Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
 

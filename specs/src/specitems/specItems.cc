@@ -28,6 +28,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__READSTOP:
 		case TokenListType__WRITE:
 		case TokenListType__UNREAD:
+		case TokenListType__REDO:
 		{
 			TokenItem *pItem = new TokenItem(tokenVec[index++]);
 			addItem(pItem);
@@ -195,6 +196,14 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			}
 			bSomethingWasDone = false;
 			break;
+		case ApplyRet__ReDo:
+			if (bSomethingWasDone) {
+				ps = sb.GetString();
+			} else {
+				ps = SpecString::newString();
+			}
+			pState.setString(ps);
+			break;
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
 			ps = pRd->get();
@@ -311,6 +320,8 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__EOF;
 	case TokenListType__UNREAD:
 		return ApplyRet__UNREAD;
+	case TokenListType__REDO:
+		return ApplyRet__ReDo;
 	default:
 		std::string err = "Unhandled TokenItem type " + TokenListType__2str(mp_Token->Type());
 		MYTHROW(err);

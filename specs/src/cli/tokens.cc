@@ -332,6 +332,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(do, DO);
 	SIMPLETOKEN(done, DONE);
 	SIMPLETOKEN(unread, UNREAD);
+	SIMPLETOKEN(redo, REDO);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
