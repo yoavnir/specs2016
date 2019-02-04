@@ -31,11 +31,15 @@ PSpecString Reader::get()
 		m_pUnreadString = NULL;
 		return ret;
 	}
-	if (eof()) return NULL;
+	if (eof()) {
+		m_bRanDry = true;
+		return NULL;
+	}
 	if (m_queue.wait_and_pop(ret)) {
 		m_countUsed++;
 		return ret;
 	} else {
+		m_bRanDry = true;
 		return NULL;
 	}
 }

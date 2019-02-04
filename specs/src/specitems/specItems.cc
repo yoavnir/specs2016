@@ -228,7 +228,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			processingContinue = false;
 			break;
 		case ApplyRet__UNREAD:
-			pRd->pushBack(pState.extractCurrentRecord());
+			if (!pRd->hasRunDry()) {
+				pRd->pushBack(pState.extractCurrentRecord());
+			}
 			break;
 		default:
 			std::string err = "Unexpected return code from TokenItem::apply: ";
