@@ -45,7 +45,7 @@ void ALUValue::set(ALUInt l)
 
 void ALUValue::set(ALUFloat f)
 {
-	if (isnan(f)) {
+	if (std::isnan(f)) {
 		m_type = counterType__None;  /* NaN */
 		return;
 	}
