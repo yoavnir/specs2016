@@ -144,6 +144,7 @@ enum ApplyRet {
 	ApplyRet__EOF,
 	ApplyRet__UNREAD,
 	ApplyRet__ReDo,
+	ApplyRet__Break,
 	ApplyRet__Last
 };
 
@@ -158,6 +159,7 @@ public:
 	virtual std::string Debug() = 0;
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
 	virtual bool readsLines() {return false;}
+	virtual bool isBreak()    {return false;}
 	virtual bool ApplyUnconditionally() {return false;}
 };
 
@@ -241,6 +243,17 @@ private:
 	bool   m_isAssignment;
 	ALUCounterKey	m_counter;
 	AluAssnOperator *m_assnOp;
+};
+
+class BreakItem : public Item {
+public:
+	BreakItem(char identifier);
+	virtual ~BreakItem()  {}
+	virtual std::string Debug();
+	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool isBreak() { return true;}
+private:
+	char m_identifier;
 };
 
 

@@ -50,6 +50,8 @@ public:
 	PSpecString fieldIdentifierGet(char id);
 	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
+	void resetBreaks();
+	bool breakEstablished(char id);
 	bool needToEvaluate();
 	bool runningOutLoop();
 	void setCondition(bool isTrue);
@@ -82,6 +84,8 @@ private:
 	void identifyWords();
 	void identifyFields();
 	std::map<char,PSpecString> m_fieldIdentifiers;
+	std::map<char,PSpecString> m_breakValues;
+	char m_breakLevel;
 	std::stack<extremeBool> m_Conditions;
 	std::stack<int> m_Loops;    // The unsigned int holds the number of the token where the while was
 };

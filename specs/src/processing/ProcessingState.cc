@@ -5,6 +5,33 @@
 
 #define EMPTY_FIELD_MARKER  999999999
 
+// helper functions
+
+/*
+ * This function establishes the order between field identifiers:
+ *   a, b, c..., z, A, B, ..., Z
+ */
+#define IS_UPPERCASE(x) ((x)>='A' && (x)<='Z')
+#define IS_LOWERCASE(x) ((x)>='a' && (x)<='z')
+
+bool breakLevelGE(char c1, char c2)
+{
+	if (!c2) return true;
+	if (IS_UPPERCASE(c1)) {
+		if (IS_UPPERCASE(c2)) {
+			return (c1>=c2);
+		} else if (IS_LOWERCASE(c2)) {
+			return true;  // all uppercase is greater than all lowercase
+		} else return false;
+	} else if (IS_LOWERCASE(c1)) {
+		if (IS_UPPERCASE(c2)) {
+			return false;  // all uppercase is greater than all lowercase
+		} else if (IS_LOWERCASE(c2)) {
+			return (c1>=c2);
+		} else return false;
+	} else return false;
+}
+
 ProcessingState::ProcessingState()
 {
 	m_pad = DEFAULT_PAD_CHAR;
@@ -59,6 +86,7 @@ void ProcessingState::setString(PSpecString ps)
 	m_wordCount = -1;
 	m_fieldCount = -1;
 	fieldIdentifierClear();
+	resetBreaks();
 }
 
 PSpecString ProcessingState::extractCurrentRecord()
@@ -232,7 +260,17 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 		std::string err = std::string("Field Identifier <") + id + "> redefined.";
 		MYTHROW(err);
 	}
+
 	m_fieldIdentifiers[id] = SpecStringCopy(ps);
+
+	if (m_breakValues[id] && 0==ps->Compare(m_breakValues[id]->data())) return;
+
+	if (m_breakValues[id]) delete m_breakValues[id];
+
+	m_breakValues[id] = SpecStringCopy(ps);
+	if (breakLevelGE(id, m_breakLevel)) {
+		m_breakLevel = id;
+	}
 }
 
 PSpecString ProcessingState::fieldIdentifierGet(char id)
@@ -243,6 +281,16 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 		MYTHROW(err);
 	}
 	return ret;
+}
+
+void ProcessingState::resetBreaks()
+{
+	m_breakLevel = 0;
+}
+
+bool ProcessingState::breakEstablished(char id)
+{
+	return breakLevelGE(m_breakLevel, id);
 }
 
 bool ProcessingState::runningOutLoop()

@@ -333,6 +333,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(done, DONE);
 	SIMPLETOKEN(unread, UNREAD);
 	SIMPLETOKEN(redo, REDO);
+	SIMPLETOKEN(break, BREAK);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
@@ -612,7 +613,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
 				} else {
-					std::string err = "Bad field identifier <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex());
+					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for ID at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
 				}
 			}
@@ -627,6 +628,19 @@ void normalizeTokenList(std::vector<Token> *tokList)
 			if (tok.Literal()=="") {
 				tok.setLiteral(getLiteral(nextTok));
 				tokList->erase(tokList->begin()+(i+1));
+			}
+			break;
+		}
+		case TokenListType__BREAK:  // next token must be a literal one-letter
+		{
+			if (tok.Literal()=="") {
+				if (mayBeFieldIdentifier(nextTok)) {
+					tok.setLiteral(getLiteral(nextTok));
+					tokList->erase(tokList->begin()+(i+1));
+				} else {
+					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for BREAK at index "+std::to_string(nextTok.argIndex());
+					MYTHROW(err);
+				}
 			}
 			break;
 		}

@@ -132,6 +132,13 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			addItem(pItem);
 			break;
 		}
+		case TokenListType__BREAK:
+		{
+			BreakItem* pItem = new BreakItem(tokenVec[index].Literal()[0]);
+			index++;
+			addItem(pItem);
+			break;
+		}
 		default:
 			std::string err = std::string("Unhandled token type ")
 				+ TokenListType__2str(tokenVec[index].Type())
@@ -162,6 +169,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 	bool isEOFCycle = false;
 	PSpecString ps; // Used for processing READ and READSTOP tokens
 	bool processingContinue = true;
+	bool suspendUntilBreak = false;
 
 	if (pState.isRunOut()) {
 		// Find the EOF token
@@ -181,6 +189,12 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		PItem pit = m_items[i];
 		if (!pit->ApplyUnconditionally() && !pState.needToEvaluate()) {
 			continue;
+		}
+		if (suspendUntilBreak && !pit->isBreak()) {
+			continue;
+		}
+		if (pit->isBreak()) {
+			suspendUntilBreak = false;
 		}
 		ApplyRet aRet = pit->apply(pState, &sb);
 		switch (aRet) {
@@ -231,6 +245,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			if (!pRd->hasRunDry()) {
 				pRd->pushBack(pState.extractCurrentRecord());
 			}
+			break;
+		case ApplyRet__Break:
+			suspendUntilBreak = true;
 			break;
 		default:
 			std::string err = "Unexpected return code from TokenItem::apply: ";
@@ -529,4 +546,25 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 bool ConditionItem::readsLines()
 {
 	return AluExpressionReadsLines(m_RPNExpression);
+}
+
+BreakItem::BreakItem(char identifier)
+{
+	m_identifier = identifier;
+}
+
+std::string BreakItem::Debug()
+{
+	std::string ret("BREAK:");
+	ret += m_identifier;
+	return ret;
+}
+
+ApplyRet BreakItem::apply(ProcessingState& pState, StringBuilder* pSB)
+{
+	if (pState.breakEstablished(m_identifier)) {
+		return ApplyRet__Continue;
+	} else {
+		return ApplyRet__Break;
+	}
 }
