@@ -243,11 +243,17 @@ void AluUnitFieldIdentifier::_serialize(std::ostream& os) const
 
 std::string AluUnitFieldIdentifier::_identify()
 {
+	if (m_ReturnIdentifier) {
+		return std::string("FI(") + m_id + " - by name)";
+	}
 	return std::string("FI(") + m_id + ")";
 }
 
 ALUValue* AluUnitFieldIdentifier::evaluate()
 {
+	if (m_ReturnIdentifier) {
+		return new ALUValue(ALUInt(m_id));
+	}
 	if (!g_fieldIdentifierGetter) {
 		MYTHROW("Field Identifier Getter is not set")
 	}
@@ -1309,7 +1315,15 @@ bool isHigherPrecedenceBinaryOp(AluUnit* op1, AluUnit* op2)
  * Function: convertAluVecToPostfix
  * Implements the Shunting-Yard algorithm to convert an infix expression
  * to a postfix expression for easier calculation later on.
+ *
+ * This function also finds and fixes instances of the break() pseudo-function
  */
+enum breakFindingState {
+	BFS_lookingForBreak,
+	BFS_lookingForOpen,
+	BFS_lookingForFI,
+	BFS_lookingForClose
+};
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 {
 	std::stack<AluUnit*> operatorStack;
@@ -1317,6 +1331,46 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 
 	if (!dest.empty()){
 		MYTHROW("Entered with non-empty vec.");
+	}
+
+	// Handle the special case of the break() pseudo-function.
+	// The parameter should be a field identifier and it is converted to a number
+	// representing the ASCII value of the character
+	breakFindingState bfs = BFS_lookingForBreak;
+	for (AluUnit* pUnit : source) {
+		switch (bfs) {
+		case BFS_lookingForBreak: {
+			if (pUnit->type() != UT_Identifier) continue;
+			AluFunction* func = (AluFunction*)pUnit;
+			if (func->getName() != "break") continue;
+			bfs = BFS_lookingForOpen;
+			break;
+		}
+		case BFS_lookingForOpen: {
+			if (pUnit->type() != UT_OpenParenthesis) {
+				bfs = BFS_lookingForBreak;
+				continue;
+			}
+			bfs = BFS_lookingForFI;
+			break;
+		}
+		case BFS_lookingForFI: {
+			if (pUnit->type() != UT_FieldIdentifier) {
+				MYTHROW("break() function may only get a field identifier argument");
+			}
+			AluUnitFieldIdentifier* pFI = (AluUnitFieldIdentifier*)pUnit;
+			pFI->setEvaluateToName();
+			bfs = BFS_lookingForClose;
+			break;
+		}
+		case BFS_lookingForClose: {
+			if (pUnit->type() != UT_ClosingParenthesis) {
+				MYTHROW("break() function may only get one argument");
+			}
+			bfs = BFS_lookingForBreak;
+			break;
+		}
+		}
 	}
 
 #ifdef ALU_DUMP

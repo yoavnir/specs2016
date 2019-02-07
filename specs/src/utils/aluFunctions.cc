@@ -407,3 +407,10 @@ ALUValue* AluFunc_conf(ALUValue* _pKey)
 		return new ALUValue();
 	}
 }
+
+ALUValue* AluFunc_break(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	bool bIsBreakEstablished = g_pStateQueryAgent->breakEstablished(fId);
+	return new ALUValue(ALUInt(bIsBreakEstablished ? 1 : 0));
+}

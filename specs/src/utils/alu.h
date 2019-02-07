@@ -202,14 +202,16 @@ void setFieldIdentifierGetter(fieldIdentifierGetter* getter);
 
 class AluUnitFieldIdentifier : public AluUnit {
 public:
-	AluUnitFieldIdentifier(char _fId):m_id(_fId) {};
+	AluUnitFieldIdentifier(char _fId):m_id(_fId),m_ReturnIdentifier(false) {};
 	~AluUnitFieldIdentifier()			{}
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_FieldIdentifier;}
 	virtual ALUValue*			evaluate();
+	void                        setEvaluateToName()  {m_ReturnIdentifier = true;}
 private:
 	char         m_id;
+	bool         m_ReturnIdentifier;
 };
 
 #define X(nm,str) UnaryOp__##nm,
@@ -301,6 +303,7 @@ public:
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 	virtual bool                requiresRead()  { return m_reliesOnInput; }
+	std::string&                getName()       { return m_FuncName; }
 private:
 	std::string		m_FuncName;
 	void*			mp_Func;

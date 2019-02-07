@@ -43,6 +43,7 @@ public:
 	virtual bool    isRunOut()  { return (m_ps==NULL); } // NOTE: will return true before first record
 	virtual ALUInt  getRecordCount()    { return ALUInt(m_CycleCounter + m_ExtraReads); }
 	virtual ALUInt  getIterationCount() { return ALUInt(m_CycleCounter); }
+	virtual bool    breakEstablished(char id);
 
 	void fieldIdentifierSet(char id, PSpecString ps);
 	void incrementCycleCounter() { m_CycleCounter++; }
@@ -51,7 +52,6 @@ public:
 	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
 	void resetBreaks();
-	bool breakEstablished(char id);
 	bool needToEvaluate();
 	bool runningOutLoop();
 	void setCondition(bool isTrue);
