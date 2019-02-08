@@ -268,6 +268,30 @@ set /#2 -= 1/
 .B done
 .RE
 
+.SS "Control Breaks"
+The 
+.B Field Identifiers
+have another use. When used with the
+.B BREAK
+keyword or the 
+.B break()
+function they act as flow control. A 
+.B break level 
+is 
+.I established
+when the value of the corresponding field identifier changes from the previous iteration. For
+example, consider a three-field CSV file where the first field is the department name, the second is 
+the employee's first name, and the third is his or her last name.  Suppose further that the file is 
+sorted by department name. You can print this out without repeating the department name like this:
+
+          FIELDSEPARATOR ,
+       c: FIELD 1   .
+          FIELD 3  10
+          /,/      NEXT
+          FIELD 2  NEXTWORD
+          BREAK c
+              ID c 1
+
 .SS "RunIn and RunOut Cycles"
 A 
 .B cycle 

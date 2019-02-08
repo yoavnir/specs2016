@@ -142,3 +142,119 @@ specs
 | 4 | 4 |
 | | Total: 10 |
 
+### Control Breaks
+**Field identifiers** can be used for conditional execution when their value changes from record to record. Consider the following example CSV file containing personnel records:
+```
+Payroll,Eddy,Eck
+Payroll,Janel,Polen
+Finance,Leonard,Cockett
+Finance,Dorie,Lugo
+Finance,Wiley,Cheung
+Finance,Carmelo,Reitz
+Finance,Donetta,Rybak
+R&D,Jamaal,Mcgillis
+R&D,Jonna,Scheffer
+R&D,Shawnna,Driskell
+R&D,Maybell,Ditmore
+R&D,Ami,Fentress
+R&D,Randee,Tarkington
+R&D,Jerica,Jimenez
+Sales,Kristopher,Lind
+Sales,Margret,Picone
+Sales,Damien,Daniel
+Support,Deann,Rushton
+Support,Spencer,Marse
+Support,Devora,Fortier
+```
+Suppose we want to print this out, but suppress repetition of the department field:
+```
+specs
+          FIELDSEPARATOR ,
+       c: FIELD 1   .
+          FIELD 3  10
+          /,/      NEXT
+          FIELD 2  NEXTWORD
+          BREAK c
+              ID c 1
+```
+Result:
+```
+Payroll  Eck, Eddy
+         Polen, Janel
+Finance  Cockett, Leonard
+         Lugo, Dorie
+         Cheung, Wiley
+         Reitz, Carmelo
+         Rybak, Donetta
+R&D      Mcgillis, Jamaal
+         Scheffer, Jonna
+         Driskell, Shawnna
+         Ditmore, Maybell
+         Fentress, Ami
+         Tarkington, Randee
+         Jimenez, Jerica
+Sales    Lind, Kristopher
+         Picone, Margret
+         Daniel, Damien
+Support  Rushton, Deann
+         Marse, Spencer
+         Fortier, Devora
+```
+So what happened here? For every record the field identifier `c` is calculated. Whenever the value of `c` in the new record is different from its value in the previous record, this *sets the **break level** to `c`*. What does that mean?  It means that any specification units following a `BREAK c`, `BREAK b`, or `BREAK a` will get executed, but units following `BREAK d` will not. Another way of expressing this is that the **break levels** a, b, and c are **established**, while break level d is not.
+
+A specification can have multiple field identifiers and so multiple break levels. The highest field identifier alphabetically (capital letters are considered higher than lower-case) sets the break level for the iteration. This break level and all break levels below it are considered established.
+
+The keyword `BREAK` is one way of using conditional execution with control breaks. Another is the pseudo-function `break()`. This is a pseudo-function because the only argument it is allowed to have is a field identifier.  Example:
+```
+specs
+         FIELDSEPARATOR ,
+      a: FIELD 1    .
+         IF break(a) THEN
+            ID a           1
+            /Department:/ NW
+            WRITE
+         ENDIF
+         FIELD 3   10
+         ,          N
+         FIELD 2   NW
+```
+Result:
+```
+Payroll Department:
+         Eck, Eddy
+         Polen, Janel
+Finance Department:
+         Cockett, Leonard
+         Lugo, Dorie
+         Cheung, Wiley
+         Reitz, Carmelo
+         Rybak, Donetta
+R&D Department:
+         Mcgillis, Jamaal
+         Scheffer, Jonna
+         Driskell, Shawnna
+         Ditmore, Maybell
+         Fentress, Ami
+         Tarkington, Randee
+         Jimenez, Jerica
+Sales Department:
+         Lind, Kristopher
+         Picone, Margret
+         Daniel, Damien
+Support Department:
+         Rushton, Deann
+         Marse, Spencer
+         Fortier, Devora
+```
+
+
+
+
+
+
+
+
+
+
+
+

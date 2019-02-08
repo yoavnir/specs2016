@@ -10,6 +10,13 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+01-Mar-2019: Version 0.3 Alpha is here
+--------------------------------------
+What's new:
+* The `UNREAD` and `REDO` keywords
+* Control breaks, both as the `BREAK` keyword and the `break()` pseudo-function.
+* Updated [documentation](specs/docs/TOC.md).
+
 31-Jan-2019: Version 0.2 is out. New stuff:
 -------------------------------------------
 * **if** and **while** structures.
@@ -18,7 +25,7 @@ News
 * Time/Date improvements: TOD is not expressed in seconds; `tf2d` and `d2tf` conversions.
 * ALU debugging for usability.
 * Bug fixes.
-* [Documentation](specs/docs/TOC.md) here on GitHub. 
+* [Documentation](https://github.com/yoavnir/specs2016/blob/stable/specs/docs/TOC.md) here on GitHub. 
 
 Sources
 =======
