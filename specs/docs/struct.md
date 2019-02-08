@@ -3,6 +3,13 @@ The specifications described in previous pages are linear. They are a series of 
 
 But **specs** also allows some structure in specifications, including loops, conditional execution, run-in and run-out cycles. This page describes those structures.
 
+## TOC
+* [Condition](#conditions)
+* [Conditional Execution](#conditional-execution)
+* [Loops](#loops)
+* [Run-In and Run-Out](#run-in-and-run-out)
+* [Control Breaks](#control-breaks)
+
 ## Conditions
 The [Arithmetic-Logical Unit (ALU) page](alu.md) described **expressions** and used them in **PRINT** data fields. 
 
