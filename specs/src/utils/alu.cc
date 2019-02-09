@@ -1138,6 +1138,10 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			char* tokEnd = c;
 			while (tokEnd<cEnd && *tokEnd>='0' && *tokEnd<='9') tokEnd++;
 			std::string num(c,(tokEnd-c));
+			if ((num.length() == 0) || (num.length() > 3)) {
+				std::string err = "Invalid counter <#" + num + *tokEnd + "> in expression";
+				MYTHROW(err);
+			}
 			pUnit = new AluUnitCounter(std::stoi(num));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
