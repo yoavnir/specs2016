@@ -218,6 +218,7 @@ int ProcessingState::getWordEnd(int idx) {
 // Convention: to=0 means to the end
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
+	MYASSERT_WITH_MSG(NULL!=m_ps,"Tried to read record in run-out cycle");
 	int slen = (int)(m_ps->length());
 
 	if (from==1 && to==EMPTY_FIELD_MARKER) return SpecString::newString();

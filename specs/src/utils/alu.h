@@ -319,6 +319,7 @@ public:
 	virtual std::string     _identify()	{return "@@";}
 	virtual AluUnitType		type()	{return UT_InputRecord;}
 	virtual ALUValue*		evaluate();
+	virtual bool            requiresRead() {return true;}
 };
 
 class AluOtherToken : public AluUnit {
