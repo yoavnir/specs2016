@@ -80,6 +80,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			do {
 				PSpecString pFirstLine = tRead.getNextRecord();
 				ps.setString(pFirstLine);
+				ps.setFirst();
 				ps.incrementCycleCounter();
 				ig.processDo(sb, ps, &tRead, NULL);
 				if (result) {
@@ -99,6 +100,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			ig.setRegularRunAtEOF();
 		}
 		ps.setString(NULL);
+		ps.setFirst();
 		try {
 			ig.processDo(sb, ps, NULL, NULL);
 			if (result) {
@@ -174,7 +176,7 @@ int main(int argc, char** argv)
 
 	// Following issue #12
 	VERIFY("w1 n", "The"); // Test #36
-	VERIFY("w2 nw", " quick"); // Test #37
+	VERIFY("w2 nw", "quick"); // Test #37 -- nextword starts at column 1 if string is empty
 	VERIFY("w3 nf", "\tbrown"); // Test #38
 	VERIFY("w5-* 1 w4 7 w1 nw", "jumpedfox Thehe   lazy dog"); // Test #39
 
@@ -280,8 +282,8 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "hello", "hello:");       // Test #81
 
 	// Test run-out cycle
-	VERIFY2("one 1 EOF two 2", "", "oneo");     // Test #82
-	VERIFY2("two 2 EOF one 1", "", "otwo");     // Test #83
+	VERIFY2("one 1 EOF two 2", " ", "one\n two");     // Test #82
+	VERIFY2("two 2 EOF one 1", " ", " two\none");     // Test #83
 
 	spec =  " a: w1 1.4 right                  " \
 			"    set #0:=a*a                   " \
@@ -322,6 +324,15 @@ int main(int argc, char** argv)
 	VERIFY("6-* 1 REDO w1 1", "uick");       // Test  #99
 	VERIFY("1-* BSWAP 1 REDO w2 1", "yzal"); // Test #100
 
+	// SELECT SECOND
+	spec =  "WORD 1        1 " \
+			"SELECT SECOND   " \
+			"WORD 1 NEXTWORD " \
+			"SELECT FIRST    " \
+			"WORD 2 NEXTWORD " \
+			"SELECT SECOND   " \
+			"WORD 2 NEXTWORD ";
+	VERIFY2(spec, "first record\nsecond line\nlast one", "first record\nsecond first line record\nlast second one line\nlast one"); // Test #101
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

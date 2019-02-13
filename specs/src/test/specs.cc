@@ -57,13 +57,19 @@ int main (int argc, char** argv)
 #endif
 
 	std::vector<Token> vec;
-	if (g_specFile != "") {
-		vec = parseTokensFile(g_specFile);
-	} else {
-		vec = parseTokens(argc, argv);
-	}
 
-	normalizeTokenList(&vec);
+	try {
+		if (g_specFile != "") {
+			vec = parseTokensFile(g_specFile);
+		} else {
+			vec = parseTokens(argc, argv);
+		}
+
+		normalizeTokenList(&vec);
+	} catch (const SpecsException& e) {
+		std::cerr << "Error reading specification tokens: " << e.what(conciseExceptions) << "\n";
+		exit (0);
+	}
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;

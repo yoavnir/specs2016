@@ -12,6 +12,9 @@
 #define DEFAULT_WORDSEPARATOR ' '
 #define DEFAULT_FIELDSEPARATOR '\t'
 
+#define STREAM_FIRST   1
+#define STREAM_SECOND -2
+
 #define LOOP_CONDITION_FALSE (-5)
 
 class ProcessingState : public stateQueryAgent {
@@ -63,6 +66,11 @@ public:
 	void observeDone();
 	void pushLoop(int n)  { m_Loops.push(n); }
 	int  getLoopStart();
+	void setFirst();
+	void setSecond();
+	int  getActiveInputStream() { return m_inputStream; }
+	PSpecString currRecord() { return (m_inputStream==STREAM_FIRST) ? m_ps : m_prevPs; }
+	bool recordNotAvailable() { return NULL==currRecord(); }
 private:
 	enum extremeBool {
 		bFalse,
@@ -73,6 +81,7 @@ private:
 	char    m_wordSeparator;
 	char    m_fieldSeparator;
 	PSpecString m_ps;  // The current record
+	PSpecString m_prevPs; // The previous record
 	int  m_wordCount;
 	int  m_fieldCount;
 	unsigned int m_CycleCounter;
@@ -88,6 +97,7 @@ private:
 	char m_breakLevel;
 	std::stack<extremeBool> m_Conditions;
 	std::stack<int> m_Loops;    // The unsigned int holds the number of the token where the while was
+	int             m_inputStream;
 };
 
 

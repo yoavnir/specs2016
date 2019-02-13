@@ -155,7 +155,9 @@ void StringBuilder::insertNext(PSpecString s)
 void StringBuilder::insertNextWord(PSpecString s)
 {
 	static PSpecString pSpace = SpecString::newString(" ");
-	insert(pSpace,m_pos,true);
+	if (s->length()==0) return;
+	if (Length() > 0)
+		insert(pSpace,m_pos,true);
 	insert(s, m_pos, true);
 }
 

@@ -63,6 +63,9 @@
 	X(UNREAD,         false, false) \
 	X(REDO,           false, false) \
 	X(BREAK,          false, true)  \
+	X(SELECT,         false, true)  \
+	X(FIRST,          false, false) \
+	X(SECOND,         false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

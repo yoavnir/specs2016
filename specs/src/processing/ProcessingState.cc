@@ -46,6 +46,8 @@ ProcessingState::ProcessingState()
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
 	m_ps = NULL;
+	m_prevPs = NULL;
+	m_inputStream = 1;
 }
 
 ProcessingState::ProcessingState(ProcessingState& ps)
@@ -58,6 +60,8 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
 	m_ps = NULL;
+	m_prevPs = NULL;
+	m_inputStream = 1;
 }
 
 ProcessingState::ProcessingState(ProcessingState* pPS)
@@ -70,6 +74,8 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
 	m_ps = NULL;
+	m_prevPs = NULL;
+	m_inputStream = 1;
 }
 
 ProcessingState::~ProcessingState()
@@ -80,13 +86,35 @@ ProcessingState::~ProcessingState()
 void ProcessingState::setString(PSpecString ps)
 {
 	if (m_ps && ps!=m_ps) {
-		delete m_ps;
+		if (m_prevPs) delete m_prevPs;
+		m_prevPs = m_ps;
+	} else {
+		MYASSERT(m_prevPs==NULL);
+		m_prevPs = SpecString::newString();
 	}
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
 	fieldIdentifierClear();
 	resetBreaks();
+}
+
+void ProcessingState::setFirst()
+{
+	if (m_inputStream != STREAM_FIRST) {
+		m_inputStream = STREAM_FIRST;
+		m_wordCount = -1;
+		m_fieldCount = -1;
+	}
+}
+
+void ProcessingState::setSecond()
+{
+	if (m_inputStream != STREAM_SECOND) {
+		m_inputStream = STREAM_SECOND;
+		m_wordCount = -1;
+		m_fieldCount = -1;
+	}
 }
 
 PSpecString ProcessingState::extractCurrentRecord()
@@ -105,7 +133,7 @@ void ProcessingState::identifyWords()
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 is not yet supported");
 	}
-	const char* pc = m_ps->data();
+	const char* pc = currRecord()->data();
 	int i = 0;
 	/* skip over initial whitespace */
 	while (IS_WHITESPACE(pc[i])) i++;
@@ -127,7 +155,7 @@ void ProcessingState::identifyFields()
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 is not yet supported");
 	}
-	const char* pc = m_ps->data();
+	const char* pc = currRecord()->data();
 	int i = 0;
 
 	while (pc[i]!=0) {
@@ -218,8 +246,10 @@ int ProcessingState::getWordEnd(int idx) {
 // Convention: to=0 means to the end
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
-	MYASSERT_WITH_MSG(NULL!=m_ps,"Tried to read record in run-out cycle");
-	int slen = (int)(m_ps->length());
+	if (m_inputStream != STREAM_SECOND) {
+		MYASSERT_WITH_MSG(NULL!=m_ps,"Tried to read record in run-out cycle");
+	}
+	int slen = (int)(currRecord()->length());
 
 	if (from==1 && to==EMPTY_FIELD_MARKER) return SpecString::newString();
 
@@ -244,7 +274,7 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	// to < from ==> empty string
 	if (to<from) return NULL;
 
-	return SpecString::newString(m_ps, from-1, to-from+1);
+	return SpecString::newString(currRecord(), from-1, to-from+1);
 }
 
 void ProcessingState::fieldIdentifierClear()

@@ -330,6 +330,31 @@ function. Example:
         /==========/ 1 write
         /Total:/ 1
         print #0 nw
+        
+.SS "Input Streams"
+The keyword 
+.B SELECT
+along with the keywords 
+.B FIRST
+and
+.B SECOND 
+can be used to select between two input streams. The 
+.B FIRST 
+input stream is the regular primary input. The
+.B SECOND 
+input stream holds the previous record from the primary input stream.
+
+Imagine an input stream that has the natural numbers. Let's run the following specification:
+
+    specs w1 1 /- 1 =/ NW SELECT SECOND w1 nw
+    
+The result will be the following:
+    1 - 1 =
+    2 - 1 = 1
+    3 - 1 = 2
+    4 - 1 = 3
+    5 - 1 = 5
+and so on.
 
 .SS "Expressions and Assignments"
 Expressions are used in PRINT data units as well as in assignments. Assignments are used in SET Spec Units.

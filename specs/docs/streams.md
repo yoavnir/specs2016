@@ -124,3 +124,39 @@ But this seems inelegant. **specs** includes the `REDO` spec unit just for this.
 ```
 grep shuttle test* | specs fs : f2-* 1 REDO /source:/ 1 w1 nw
 ```
+
+## The Second Reading Station
+At the conclusion of each cycle, **specs** loads the record from the primary input into a buffer, called the *second reading station*, that can be accessed during the next cycle.  Similar to the `EOF` token and the `eof()` function, any access to the second reading forces a *run-out cycle*.
+
+The second reading is accessed using the keywords `SELECT SECOND`.  You can return to reading the primary input stream using `SELECT FIRST` or `SELECT 1`.
+
+Consider the following input:
+```
+first record
+second line
+last one
+```
+And use the following specification:
+```
+specs WORD 1        1
+      SELECT SECOND
+      WORD 1 NEXTWORD
+      SELECT FIRST
+      WORD 2 NEXTWORD
+      SELECT SECOND
+      WORD 2 NEXTWORD
+```
+The output is:
+```
+first record
+second first line record
+last second one line
+last one
+```
+A few things to note:
+1. The fourth line comes from the run-out cycle that has nothing in the primary input but has the last input line in the secondary reading.
+1. `NEXTWORD` with an empty argument does not leave a space. This is why the last output record has only one space between the words.
+1. `NEXTWORD` begins at column 1 if the output record is empty. That is why the last output record does not begin with a space.
+1. It does not matter what the selected stream is at the end of the specification. The next cycle always begins with the primary stream selected.
+1. `READ` and `READSTOP` **MUST NOT** be used during secondary reading. This will result in an error.
+1. Specifications should not mix `READ` and `READSTOP` with `SELECT SECOND` even if the `READ` or `READSTOP` is during reading of the primary record. The results are undefined and may change in future releases.

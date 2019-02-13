@@ -139,6 +139,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			addItem(pItem);
 			break;
 		}
+		case TokenListType__SELECT:
+		{
+			SelectItem* pItem = new SelectItem(tokenVec[index].Literal());
+			index++;
+			addItem(pItem);
+			if (pItem->isSelectSecond()) setRegularRunAtEOF();
+			break;
+		}
 		default:
 			std::string err = std::string("Unhandled token type ")
 				+ TokenListType__2str(tokenVec[index].Type())
@@ -173,7 +181,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 
 	if (pState.isRunOut()) {
 		// Find the EOF token
-		for ( ;  i < m_items.size(); i++) {
+		for ( ;  i < m_items.size() && !bFoundSelectSecond; i++) {
 			TokenItem* pTok = dynamic_cast<TokenItem*>(m_items[i]);
 			if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
 				i++;  // So we start with the one after the EOF
@@ -217,9 +225,11 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				ps = SpecString::newString();
 			}
 			pState.setString(ps);
+			pState.setFirst();
 			break;
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
+			MYASSERT_WITH_MSG(pState.getActiveInputStream() != STREAM_SECOND, "Cannot READ or READSTOP during SELECT SECOND");
 			ps = pRd->get();
 			if (!ps) {
 				if (aRet==ApplyRet__Read) {
@@ -256,11 +266,6 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		}
 	}
 
-	if (isEOFCycle && bFoundSelectSecond) {
-		isEOFCycle = false;
-		i = 0;
-		goto itemLoop;
-	}
 	return bSomethingWasDone;
 }
 
@@ -270,6 +275,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 	while ((ps=rd.get())) {
 		pState.setString(ps);
+		pState.setFirst();
 		pState.incrementCycleCounter();
 
 		if (processDo(sb,pState, &rd, &wr)) {
@@ -283,6 +289,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 	// run-out cycle
 	pState.setString(NULL);
+	pState.setFirst();
 	if (processDo(sb, pState, &rd, &wr)) {
 		wr.Write(sb.GetString());
 	}
@@ -351,6 +358,7 @@ bool TokenItem::readsLines() {
 	switch (mp_Token->Type()) {
 	case TokenListType__READ:
 	case TokenListType__READSTOP:
+	case TokenListType__EOF:
 		return true;
 	default:
 		return false;
@@ -567,4 +575,38 @@ ApplyRet BreakItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	} else {
 		return ApplyRet__Break;
 	}
+}
+
+SelectItem::SelectItem(std::string& st)
+{
+	if (st=="FIRST") {
+		m_stream = STREAM_FIRST;
+	} else if (st=="SECOND") {
+		m_stream = STREAM_SECOND;
+	} else {
+		std::string err = "Invalid stream " + st;
+		MYTHROW(err);
+	}
+}
+
+std::string SelectItem::Debug()
+{
+	if (m_stream == STREAM_SECOND) {
+		return "SELECT:SECOND";
+	}
+	std::string ret("SELECT:");
+	ret += std::to_string(m_stream);
+	return ret;
+}
+
+ApplyRet SelectItem::apply(ProcessingState& pState, StringBuilder* pSB)
+{
+	if (m_stream == STREAM_FIRST) {
+		pState.setFirst();
+	} else if (m_stream == STREAM_SECOND) {
+		pState.setSecond();
+	} else {
+		MYTHROW("Invalid SelectItem");
+	}
+	return ApplyRet__Continue;
 }
