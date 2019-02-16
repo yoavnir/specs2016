@@ -42,6 +42,13 @@
 	X(center,2,false)                \
 	X(centre,2,false)                \
 	X(conf,1,false)                  \
+	X(x2d,1,false)                   \
+	X(d2x,1,false)                   \
+	X(x2ch,1,false)                  \
+	X(c2x,1,false)                   \
+	X(ucase,1,false)                 \
+	X(lcase,1,false)                 \
+	X(bswap,1,false)                 \
 	X(break,1,false)                 \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();

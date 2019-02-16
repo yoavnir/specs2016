@@ -41,7 +41,7 @@ static std::string conv_C2B(std::string& s) {
 	return ret;
 }
 
-static std::string conv_C2X(std::string& s) {
+std::string conv_C2X(std::string& s) {
 	static char hexchars[]="0123456789abcdef";
 	std::string ret;
 	ret.resize(s.length()*2);
@@ -108,7 +108,7 @@ std::string conv_X2CH(std::string& s) {
 	return ret;
 }
 
-static std::string conv_D2X(std::string& s) {
+std::string conv_D2X(std::string& s) {
 	unsigned long long value;
 	try {
 		try {
@@ -125,7 +125,7 @@ static std::string conv_D2X(std::string& s) {
 	return oss.str();
 }
 
-static std::string conv_X2D(std::string& s) {
+std::string conv_X2D(std::string& s) {
 	unsigned long long value;
 	try {
 		try {
@@ -140,7 +140,7 @@ static std::string conv_X2D(std::string& s) {
 	return std::to_string(value);
 }
 
-static std::string conv_BSWAP(std::string& s) {
+std::string conv_BSWAP(std::string& s) {
 	std::string ret(s.size(), 0);
 	const char* sStart = s.c_str();
 	char* retPtr = (char*)(ret.c_str());
@@ -151,13 +151,13 @@ static std::string conv_BSWAP(std::string& s) {
 	return ret;
 }
 
-static std::string conv_LCASE(std::string& s) {
+std::string conv_LCASE(std::string& s) {
 	std::string ret(s);
 	for (auto & c : ret) c = tolower(c);
 	return ret;
 }
 
-static std::string conv_UCASE(std::string& s) {
+std::string conv_UCASE(std::string& s) {
 	std::string ret(s);
 	for (auto & c : ret) c = toupper(c);
 	return ret;

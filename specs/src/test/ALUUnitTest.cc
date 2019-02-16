@@ -305,7 +305,11 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			} else {                                        \
 				_res2 = true;								\
 				_res = convertAluVecToPostfix(vec, rpnVec,true);	\
-				if (_res) _result = evaluateExpression(rpnVec, &counters);	\
+				if (_res) try {                             \
+					_result = evaluateExpression(rpnVec, &counters);	\
+				} catch(SpecsException& e) {                \
+					_result = new ALUValue(e.what(true));   \
+				}                                           \
 				_res = (_result!=NULL) && (_result->getStr()==res);	\
 			}                                               \
 		}                                                   \
@@ -787,6 +791,51 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includes(#9, 'rt ')", "0");
 
 	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
+
+	// Conversion-equivalent functions
+	VERIFY_EXPR_RES("x2d('A')", "10");
+	VERIFY_EXPR_RES("x2d('1234567890abcdef')", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abCdEf')", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abcdefg')", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abcdeff')", "Cannot convert <1234567890abcdeff> from format <Hex> to format <Decimal>: out of range");
+
+	VERIFY_EXPR_RES("d2x('153')", "99");
+	VERIFY_EXPR_RES("d2x('18446744073709551615')", "ffffffffffffffff");
+	VERIFY_EXPR_RES("d2x('18446744073709551616')", "Cannot convert <18446744073709551616> from format <Decimal> to format <Hex>: out of range");
+	VERIFY_EXPR_RES("d2x('18446744073709551616a')", "Cannot convert <18446744073709551616a> from format <Decimal> to format <Hex>: out of range");
+	VERIFY_EXPR_RES("d2x('184467440737095516166')", "Cannot convert <184467440737095516166> from format <Decimal> to format <Hex>: out of range");
+	VERIFY_EXPR_RES("d2x('-8')", "fffffffffffffff8");
+
+	VERIFY_EXPR_RES("c2x('A')", "41");
+	VERIFY_EXPR_RES("c2x('AbC.')", "4162432e");
+	VERIFY_EXPR_RES("c2x('')", "");
+	VERIFY_EXPR_RES("c2x('hello\tthere')", "68656c6c6f097468657265");
+
+	VERIFY_EXPR_RES("x2ch('61')", "a");
+	VERIFY_EXPR_RES("x2ch('4e43432d31373031')", "NCC-1701");
+	VERIFY_EXPR_RES("x2ch('')", "");
+	VERIFY_EXPR_RES("x2ch('616')", "Cannot convert <616> from format <Hex> to format <Char>");
+	VERIFY_EXPR_RES("x2ch('616g')", "Cannot convert <616g> from format <Hex> to format <Char>");
+	VERIFY_EXPR_RES("x2ch('6161g')", "Cannot convert <6161g> from format <Hex> to format <Char>");
+
+	VERIFY_EXPR_RES("ucase('a')", "A");
+	VERIFY_EXPR_RES("ucase('A')", "A");
+	VERIFY_EXPR_RES("ucase('7-')", "7-");
+	VERIFY_EXPR_RES("ucase('UpPeRcAsE')", "UPPERCASE");
+	VERIFY_EXPR_RES("ucase('')", "");
+
+	VERIFY_EXPR_RES("lcase('a')", "a");
+	VERIFY_EXPR_RES("lcase('A')", "a");
+	VERIFY_EXPR_RES("lcase('7-')", "7-");
+	VERIFY_EXPR_RES("lcase('LoWeRcAsE')", "lowercase");
+	VERIFY_EXPR_RES("lcase('')", "");
+
+	VERIFY_EXPR_RES("bswap('a')", "a");
+	VERIFY_EXPR_RES("bswap('A')", "A");
+	VERIFY_EXPR_RES("bswap('7-')", "-7");
+	VERIFY_EXPR_RES("c2x(bswap(x2ch('c0a80102')))", "0201a8c0")
+	VERIFY_EXPR_RES("bswap('LoWeRcAsE')", "EsAcReWoL");
+	VERIFY_EXPR_RES("bswap('')", "");
 
 	// TODO: More
 
