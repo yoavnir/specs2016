@@ -76,6 +76,7 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 
 	unsigned int fractionalSeconds = 0;
 	unsigned char fractionalSecondLength = 0;
+	std::string fractionalPart;
 
 	if (format.length() >= 3) {
 		auto l = format.length();
@@ -83,14 +84,6 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 				format[l-2]>='0' && format[l-2]<='6') {
 			fractionalSecondLength = format[l-2] - '0';
 			format = format.substr(0,l-3);
-			if (printable.length() < fractionalSecondLength) {
-				return 0;
-			}
-			try {
-				fractionalSeconds = std::stoi(printable.substr(printable.length()-fractionalSecondLength));
-			} catch (std::invalid_argument& e) {
-				return 0; // perhaps throw instead?
-			}
 		}
 	}
 
@@ -101,9 +94,19 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 	if (ss.fail()) {
 		return 0;
 	}
+	if (fractionalSecondLength > 0) {
+		std::getline(ss, fractionalPart);
+		if (fractionalPart.length() != fractionalSecondLength) {
+			fractionalPart.resize(fractionalSecondLength, '0');
+		}
+	}
 #else
-    if (!strptime(printable.c_str(), format.c_str(), &t)) {
+	char* fractionalPartPtr = strptime(printable.c_str(), format.c_str(), &t);
+    if (!fractionalPartPtr) {
         return 0;
+    }
+    if (fractionalSecondLength > 0) {
+    	fractionalPart = fractionalPartPtr;
     }
 #endif
 
@@ -113,9 +116,15 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 
 	// take care of microseconds
 	if (fractionalSecondLength > 0) {
-		while (fractionalSecondLength < 6) {
-			fractionalSeconds *= 10;
-			fractionalSecondLength++;
+		try {
+			int extraZeros = 6 - fractionalPart.length();
+			fractionalSeconds = std::stoi(fractionalPart);
+			while (extraZeros > 0) {
+				fractionalSeconds *= 10;
+				extraZeros--;
+			}
+		} catch (std::invalid_argument& e) {
+			fractionalSeconds = 0;
 		}
 	}
 
