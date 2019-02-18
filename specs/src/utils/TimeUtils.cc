@@ -52,9 +52,9 @@ PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 #ifdef PUT_TIME__SUPPORTED
 	oss << std::put_time(&bt, format.c_str());
 #else
-    char timeFormatterString[256];
-    strftime(timeFormatterString, 255, format.c_str(), &bt);
-    oss << timeFormatterString;
+	char timeFormatterString[256];
+	strftime(timeFormatterString, 255, format.c_str(), &bt);
+	oss << timeFormatterString;
 #endif
 	if (fractionalSecondLength) {
 		oss << std::setw(fractionalSecondLength) << std::setfill('0');
@@ -102,16 +102,19 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 	}
 #else
 	char* fractionalPartPtr = strptime(printable.c_str(), format.c_str(), &t);
-    if (!fractionalPartPtr) {
-        return 0;
-    }
-    if (fractionalSecondLength > 0) {
-    	fractionalPart = fractionalPartPtr;
-    }
+	if (!fractionalPartPtr) {
+		return 0;
+	}
+	if (fractionalSecondLength > 0) {
+		fractionalPart = fractionalPartPtr;
+		if (fractionalPart.length() != fractionalSecondLength) {
+			fractionalPart.resize(fractionalSecondLength, '0');
+		}
+	}
 #endif
 
-    // automatic detection of DST - Issue #2
-    t.tm_isdst = -1;
+	// automatic detection of DST - Issue #2
+	t.tm_isdst = -1;
 	std::time_t secondsSinceEpoch = std::mktime(&t);
 
 	// take care of microseconds
