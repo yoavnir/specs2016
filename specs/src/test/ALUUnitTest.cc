@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include "utils/platform.h"  // For put_time and get_time vs strftime and strptime
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
 #include "processing/ProcessingState.h"
@@ -737,7 +738,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241.985317");   // proper 6 digits in the subsecond
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241.985317");  // 7 digits in the subsecond
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.','%d/%m %H:%M:%S.%6f')", "1547097241");                // no subsecond digits at all
+#ifdef PUT_TIME__SUPPORTED
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "1547097241");                 // no subsecond digits and a missing dot!
+#else
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
+#endif
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:0153','%d/%m %H:%M:%S.%6f')", "0");                        // This is just weird
 
 	// Issue #38

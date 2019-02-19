@@ -1,4 +1,3 @@
-#include <arpa/inet.h>
 #include "processing/Config.h"
 #include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"

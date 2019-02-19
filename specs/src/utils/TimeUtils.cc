@@ -3,18 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include "platform.h"  // For put_time and get_time vs strftime and strptime
 #include "TimeUtils.h"
-
-// determine whether the compiler here supports put_time
-#ifdef __clang__
-	#if __GNUC__ > 3
-		#define PUT_TIME__SUPPORTED
-	#endif
-#else
-	#if __GNUC__ > 4
-		#define PUT_TIME__SUPPORTED
-	#endif
-#endif
 
 using TimeResolution = std::chrono::microseconds;
 
