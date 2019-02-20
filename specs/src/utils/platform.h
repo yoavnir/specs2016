@@ -18,4 +18,8 @@
 	#endif
 #endif
 
+#ifdef WIN64
+typedef unsigned long long int u_int64_t;
+#endif
+
 #endif

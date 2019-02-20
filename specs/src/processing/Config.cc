@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include "utils/platform.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -27,7 +28,11 @@ static void useKeyValue(std::string& key, std::string& value)
 	}
 }
 
-#ifndef WINDOWS
+#ifdef WIN64
+static std::string getConfigFileName() {
+	return std::string(std::getenv("HOMEDRIVE")) + std::getenv("HOMEPATH") + "\\specs.cfg";
+}
+#else
 static std::string getConfigFileName() {
 	return std::string(std::getenv("HOME")) + "/.specs";
 }
@@ -53,7 +58,8 @@ void readConfigurationFile()
 {
 	std::string line;
 	unsigned int lineCounter = 0;
-	std::ifstream configFile(getConfigFileName());
+	std::string configFileName = getConfigFileName();
+	std::ifstream configFile(configFileName);
 	if (configFile.is_open())
 	{
 		while (getline(configFile,line)) {

@@ -2,6 +2,7 @@
 #include <string>
 #include <string.h>
 #include <iomanip>
+#include "utils/platform.h"
 #include "cli/tokens.h"
 #include "specitems/specItems.h"
 #include "processing/Config.h"
@@ -191,8 +192,13 @@ int main(int argc, char** argv)
 	VERIFY("/Star Trek/ ucase 1", "STAR TREK");        // Test #47
 	VERIFY("/Star Trek/ lcase 1", "star trek");        // Test #48
 
+#ifdef WIN64
+	VERIFY("a: /1545407296548900/ . print 'tobin(a)' ti2f '%c' 1", "12/21/18 17:48:16");  // Test #49
+	VERIFY("a: /1545407296548900/ . print 'tobin(a+3600000000)' ti2f '%c' 1", "12/21/18 18:48:16");  // Test #50
+#else
 	VERIFY("a: /1545407296548900/ . print 'tobin(a)' ti2f '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #49
 	VERIFY("a: /1545407296548900/ . print 'tobin(a+3600000000)' ti2f '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #50
+#endif
 
 	// Issue #22
 	VERIFY2("fs : field 1-* 1", "a:b", "a:b");  // Test #51
@@ -298,14 +304,14 @@ int main(int argc, char** argv)
 	VERIFY2("a: w1 . if 'a==1' then w1 1 endif", "0\n1\n2", "1"); // Test #87
 
 	// issue #32 = word separator default and special
-	VERIFY2("{ 1 w1 n } n",            "  \tword", "{word}");    // Test #92
-	VERIFY2("ws / / { 1 w1 n } n",     "  \tword", "{\tword}");  // Test #91
+	VERIFY2("{ 1 w1 n } n",            "  \tword", "{word}");    // Test #88
+	VERIFY2("ws / / { 1 w1 n } n",     "  \tword", "{\tword}");  // Test #89
 	VERIFY2("ws default { 1 w1 n } n", "  \tword", "{word}");    // Test #90
 
 	// tf2d and d2tf
 	VERIFY2("1-* tf2d %Y-%m-%dT%H:%M:%S.%6f a: ID a d2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #91
-	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #92
-	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #93
+	VERIFY("/1545407296.548900/ d2tf '%c' 1", "12/21/18 17:48:16");  // Test #92
+	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "12/21/18 18:48:16");  // Test #93
 
 	// Issue #43
 	VERIFY2("word 1 5 pad * word 2 15", "First record", "    First*****record"); // Test #94

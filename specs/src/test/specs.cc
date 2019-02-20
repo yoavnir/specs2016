@@ -2,6 +2,7 @@
 #include <cmath>
 #include <ctime>
 #include <string.h>
+#include "utils/platform.h"
 #include "cli/tokens.h"
 #include "processing/Config.h"
 #include "specitems/specItems.h"
