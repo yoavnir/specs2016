@@ -310,8 +310,13 @@ int main(int argc, char** argv)
 
 	// tf2d and d2tf
 	VERIFY2("1-* tf2d %Y-%m-%dT%H:%M:%S.%6f a: ID a d2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #91
+#ifdef WIN64
 	VERIFY("/1545407296.548900/ d2tf '%c' 1", "12/21/18 17:48:16");  // Test #92
 	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "12/21/18 18:48:16");  // Test #93
+#else
+	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #92
+	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #93
+#endif
 
 	// Issue #43
 	VERIFY2("word 1 5 pad * word 2 15", "First record", "    First*****record"); // Test #94
