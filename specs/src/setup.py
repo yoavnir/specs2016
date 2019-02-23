@@ -1,6 +1,6 @@
 import os,sys,argparse
 
-body = \
+body1 = \
 """
 INC = -I .
 
@@ -24,14 +24,22 @@ TESTOBJS = $(TESTSRC:.cc=.o)
 some: directories $(EXE_DIR)/specs
 
 all: directories $(TEST_EXES)
+"""
 
+make_depends = \
+"""
 DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
 
 %.d: %.cc
 	@$(CXX) $(CPPFLAGS) $< -MM -MT $(@:.d=.o) >$@
 	
 -include $(DEPS)
-	
+"""
+
+cached_depends = "-include Makefile.cached_depends"
+
+body2 = \
+"""	
 run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
@@ -97,16 +105,26 @@ else:
 	
 parser = argparse.ArgumentParser(description="Parse compiler and variation flags")
 parser.add_argument("-c", dest="compiler", action="store", default=default_compiler, 
-					help="Compiler to be used")
+					help="Compiler to be used. Options: {}".format(", ".join(valid_compilers)))
 parser.add_argument("-p", dest="platform", action="store", default=default_platform, 
-					help="Platform to target")
+					help="Platform to target. Options: {}".format(", ".join(valid_platforms)))
 parser.add_argument("-v", dest="variation", action="store", default="RELEASE", 
-					help="Variation to be used")
+					help="Variation to be used. Options: {}".format(", ".join(valid_variations)))
+parser.add_argument("--use_cached_depends", dest="ucd", action="store_true",
+					help="Use Cached Depends rather than re-calculating. Necessary for VS")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
 variation = args.variation.upper()
 platform = args.platform.upper()
+use_cached_depends = args.ucd
+
+# default for use_cached_depends depends on the choice of compiler
+if use_cached_depends is None:
+	if compiler=="VS":
+		use_cached_depends = True
+	else:
+		use_cached_depends = False
 
 if compiler not in valid_compilers:
 	sys.stderr.write("compiler {} is not a valid compiler for specs.\nValid compilers are: {}\n".format(compiler, ", ".join(valid_compilers)))
@@ -120,7 +138,7 @@ if platform not in valid_platforms:
 	sys.stderr.write("Platform {} is not a valid platform for specs.\nValid platforms are: {}\n".format(platform, ", ".join(valid_platforms)))
 	exit(-4)
 	
-sys.stderr.write("Platform={}; Compiler={}; Variation={}\n".format(platform,compiler,variation))
+sys.stderr.write("Platform={}; Compiler={}; Variation={}; Cached Dependencies={}\n".format(platform,compiler,variation,use_cached_depends))
 
 if compiler=="GCC":
 	cxx = "g++"
@@ -175,10 +193,17 @@ with open("Makefile", "w") as makefile:
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
 	
-	makefile.write("{}\n".format(body))
+	makefile.write("{}\n".format(body1))
+	if use_cached_depends:
+		makefile.write("\n{}\n".format(cached_depends))
+	else:
+		makefile.write("\n{}\n".format(make_depends))
+	makefile.write("{}\n".format(body2))
 	makefile.write("{}\n".format(clear_clean_part))
 	
 	if platform!="NT":
 		makefile.write("{}\n\ninstall: install_unix\n".format(manpart))
 	else:
 		makefile.write("install: install_win\n")
+		
+sys.stderr.write("Makefile created.\n")
