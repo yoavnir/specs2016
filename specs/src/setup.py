@@ -83,7 +83,7 @@ specs.1.gz: ../../manpage
 	gzip specs.1
 """
 
-valid_compilers = ["GCC"]
+valid_compilers = ["GCC", "CLANG"]
 valid_variations = ["RELEASE", "DEBUG", "PROF"]
 valid_platforms = ["POSIX","NT"]
 
@@ -136,6 +136,20 @@ if compiler=="GCC":
 	
 	if platform=="NT":
 		condcomp = condcomp + " -DWIN64"
+elif compiler=="CLANG":
+	cxx = "clang++"
+	if variation=="RELEASE":
+		condlink = "-O3"
+		condcomp = "-O3"
+	elif variation=="DEBUG":
+		condlink = "-g"
+		condcomp = "-g -DDEBUG -DALU_DUMP"
+	else:
+		condlink = "-O3 -g"
+		condcomp = "-O3 -g"
+	
+if platform=="NT":
+	condcomp = condcomp + " -DWIN64"
 		
 # Other compilers switches go here
 
