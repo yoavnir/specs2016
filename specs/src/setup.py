@@ -1,13 +1,10 @@
 import os,sys,argparse
 
+cppflags_other = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
+cppflags_vs = "CPPFLAGS = $(CONDCOMP) /DGITTAG=$(TAG) /I."
+
 body1 = \
 """
-INC = -I .
-
-TAG := $(shell git describe --abbrev=0 --tags)
-
-CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 $(INC)
-
 CCSRC = $(wildcard cli/*.cc) \
 		$(wildcard specitems/*.cc) \
 		$(wildcard processing/*.cc) \
@@ -15,15 +12,19 @@ CCSRC = $(wildcard cli/*.cc) \
 		
 TESTSRC = $(wildcard test/*.cc)
 TESTS = $(notdir $(basename $(TESTSRC)))
-TEST_EXES = $(addprefix ../exe/,$(TESTS))
+TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
 		
-LIBOBJS = $(CCSRC:.cc=.o)
-TESTOBJS = $(TESTSRC:.cc=.o)
+LIBOBJS = $(CCSRC:.cc=.{})
+TESTOBJS = $(TESTSRC:.cc=.{})
 
 #default goal
 some: directories $(EXE_DIR)/specs
 
 all: directories $(TEST_EXES)
+
+%.obj : %.cc
+	$(CXX) $(CPPFLAGS) /Fo$@ /c $<
+
 """
 
 make_depends = \
@@ -38,6 +39,8 @@ DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
 
 cached_depends = "-include Makefile.cached_depends"
 
+cached_depends_vs = "-include Makefile.cached_depends_vs"
+
 body2 = \
 """	
 run_tests: $(TEST_EXES)
@@ -50,7 +53,7 @@ directories: $(EXE_DIR)
 $(EXE_DIR):
 	$(MKDIR_C) $@
 	
-../exe/%: test/%.o $(LIBOBJS)
+$(EXE_DIR)/%: test/%.{} $(LIBOBJS)
 	$(CXX) $(CONDLINK) -o $@ -pthread $^
 		
 install_unix: $(EXE_DIR)/specs specs.1.gz
@@ -76,12 +79,12 @@ clear:
 clear_clean_nt = \
 """
 clean:
-	del /S *.d *.o
+	del /S *.d *.o *.obj
 	del $(EXE_DIR)\*.exe
 	rmdir $(EXE_DIR)
 	
 clear:
-	del /S *.d *.o
+	del /S *.d *.o *.obj
 """
 
 manpart = \
@@ -91,7 +94,7 @@ specs.1.gz: ../../manpage
 	gzip specs.1
 """
 
-valid_compilers = ["GCC", "CLANG"]
+valid_compilers = ["GCC", "CLANG", "VS"]
 valid_variations = ["RELEASE", "DEBUG", "PROF"]
 valid_platforms = ["POSIX","NT"]
 
@@ -110,7 +113,7 @@ parser.add_argument("-p", dest="platform", action="store", default=default_platf
 					help="Platform to target. Options: {}".format(", ".join(valid_platforms)))
 parser.add_argument("-v", dest="variation", action="store", default="RELEASE", 
 					help="Variation to be used. Options: {}".format(", ".join(valid_variations)))
-parser.add_argument("--use_cached_depends", dest="ucd", action="store_true",
+parser.add_argument("--use_cached_depends", dest="ucd", action="store_true", default=None,
 					help="Use Cached Depends rather than re-calculating. Necessary for VS")
 args = parser.parse_args()
 
@@ -150,10 +153,7 @@ if compiler=="GCC":
 		condcomp = "-g -DDEBUG -DALU_DUMP"
 	else:
 		condlink = "-O3 -g"
-		condcomp = "-O3 -g"
-	
-	if platform=="NT":
-		condcomp = condcomp + " -DWIN64"
+		condcomp = "-O3 -g"	
 elif compiler=="CLANG":
 	cxx = "clang++"
 	if variation=="RELEASE":
@@ -164,10 +164,21 @@ elif compiler=="CLANG":
 		condcomp = "-g -DDEBUG -DALU_DUMP"
 	else:
 		condlink = "-O3 -g"
-		condcomp = "-O3 -g"
+		condcomp = "-O3 -g"	
+elif compiler=="VS":
+	cxx = "cl.exe"
+	if variation=="RELEASE":
+		condlink = "/O2"
+		condcomp = "/O2"
+	elif variation=="DEBUG":
+		condlink = ""
+		condcomp = "/Zi /DDEBUG /DALU_DUMP"
+	else:
+		condlink = "/O2 /Zi"
+		condcomp = "/O2 /Zi"	
 	
 if platform=="NT":
-	condcomp = condcomp + " -DWIN64"
+	condcomp = condcomp + (" -DWIN64" if compiler!="VS" else " /DWIN64")
 		
 # Other compilers switches go here
 
@@ -192,13 +203,26 @@ with open("Makefile", "w") as makefile:
 	makefile.write("CONDLINK={}\n".format(condlink))
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
+	makefile.write("TAG := $(shell git describe --abbrev=0 --tags)\n\n")
 	
-	makefile.write("{}\n".format(body1))
+	if compiler=="VS":
+		makefile.write("{}\n".format(cppflags_vs))
+		body1fmt = body1.format("obj","obj")
+		body2fmt = body2.format("obj")
+	else:
+		makefile.write("{}\n".format(cppflags_other))
+		body1fmt = body1.format("o","o")
+		body2fmt = body2.format("o")
+	
+	makefile.write("{}\n".format(body1fmt))
 	if use_cached_depends:
-		makefile.write("\n{}\n".format(cached_depends))
+		if compiler=="VS":
+			makefile.write("\n{}\n".format(cached_depends_vs))
+		else:
+			makefile.write("\n{}\n".format(cached_depends))
 	else:
 		makefile.write("\n{}\n".format(make_depends))
-	makefile.write("{}\n".format(body2))
+	makefile.write("{}\n".format(body2fmt))
 	makefile.write("{}\n".format(clear_clean_part))
 	
 	if platform!="NT":
