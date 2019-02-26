@@ -4,10 +4,10 @@
 #include <map>
 #include <vector>
 #include <string>
+#include "utils/platform.h"
 
 typedef long long int ALUInt;
 typedef long double   ALUFloat;
-#define ALUFloatPrecision 16
 
 enum ALUCounterType {
 	counterType__None,

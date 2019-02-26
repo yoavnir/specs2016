@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
+#include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "conversions.h"
 #include "utils/SpecString.h"

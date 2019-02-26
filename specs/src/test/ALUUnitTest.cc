@@ -501,7 +501,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_BINARY(uMult,8,11,Float,"-788.8");    // 98.6 * (-8)
 	VERIFY_BINARY(uMult,9,4,Int,"7995");    // 65*123
 	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
+#ifdef VISUAL_STUDIO
+	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769");  // 123 / 65 - VS has one less digit of precision
+#else
 	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
+#endif
 	VERIFY_BINARY(uDiv,4,33,Int,"41");      // 123 / 3
 	VERIFY_BINARY(uDiv,4,99,None,"");       // 123 / 0 = NaN
 	VERIFY_BINARY(uIntDiv,4,9,Int,"1");     // 123 % 65 where % is integer division
@@ -735,11 +739,20 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	// Issue #62
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.98531','%d/%m %H:%M:%S.%6f')", "1547097241.98531");     // only 5 digits in the subsecond
+#ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241.98532");   // Unfortunately, VS requires truncating the fraction
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241.98532");  // Unfortunately, VS requires truncating the fraction
+#else
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241.985317");   // proper 6 digits in the subsecond
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241.985317");  // 7 digits in the subsecond
+#endif
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.','%d/%m %H:%M:%S.%6f')", "1547097241");                // no subsecond digits at all
 #ifdef PUT_TIME__SUPPORTED
+  #ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
+  #else
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "1547097241");                 // no subsecond digits and a missing dot!
+  #endif
 #else
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
 #endif

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <regex>
+#include "utils/platform.h"
 #include "tokens.h"
 #include "processing/Config.h"
 #include "utils/ErrorReporting.h"
