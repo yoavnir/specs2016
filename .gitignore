@@ -9,9 +9,13 @@ specs/src/.cproject
 specs/src/.project
 specs/src/.settings/
 
+# Generated Makefile
+specs/src/Makefile
+
 # object and dependency file
 specs/src/*/*.d
 specs/src/*/*.o
+specs/src/*/*.obj
 
 # the compressed manpage
 specs/src/specs.1.gz
