@@ -54,7 +54,7 @@ $(EXE_DIR):
 	$(MKDIR_C) $@
 	
 $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
-	$(CXX) $(CONDLINK) -o $@ -pthread $^
+	$(CXX) $(CONDLINK) {}$@ {} $^
 		
 install_unix: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
@@ -81,6 +81,8 @@ clear_clean_nt = \
 clean:
 	del /S *.d *.o *.obj
 	del $(EXE_DIR)\*.exe
+	del $(EXE_DIR)\*.ilk
+	del $(EXE_DIR)\*.pdb
 	rmdir $(EXE_DIR)
 	
 clear:
@@ -169,13 +171,13 @@ elif compiler=="VS":
 	cxx = "cl.exe"
 	if variation=="RELEASE":
 		condlink = "/O2"
-		condcomp = "/O2"
+		condcomp = "/O2 /EHsc"
 	elif variation=="DEBUG":
-		condlink = ""
-		condcomp = "/Zi /DDEBUG /DALU_DUMP"
+		condlink = "/MAP /DEBUG"
+		condcomp = "/Zi /EHsc /DDEBUG /DALU_DUMP"
 	else:
-		condlink = "/O2 /Zi"
-		condcomp = "/O2 /Zi"	
+		condlink = "/O2 /Zi /MAP /DEBUG"
+		condcomp = "/O2 /Zi /EHsc"	
 	
 if platform=="NT":
 	condcomp = condcomp + (" -DWIN64" if compiler!="VS" else " /DWIN64")
@@ -208,11 +210,11 @@ with open("Makefile", "w") as makefile:
 	if compiler=="VS":
 		makefile.write("{}\n".format(cppflags_vs))
 		body1fmt = body1.format("obj","obj")
-		body2fmt = body2.format("obj")
+		body2fmt = body2.format("obj","-o ","")
 	else:
 		makefile.write("{}\n".format(cppflags_other))
-		body1fmt = body1.format("o","o")
-		body2fmt = body2.format("o")
+		body1fmt = body1.format("o","-o ")
+		body2fmt = body2.format("o", "-o ", "-pthread")    # should be "/OUT:" but I haven't got it to work yet
 	
 	makefile.write("{}\n".format(body1fmt))
 	if use_cached_depends:
