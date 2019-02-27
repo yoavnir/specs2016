@@ -1,6 +1,7 @@
 import os,sys,argparse
 
-cppflags_other = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
+cppflags_gcc = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
+cppflags_clang = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++11 -stdlib=libc++ -I ."
 cppflags_vs = "CPPFLAGS = $(CONDCOMP) /DGITTAG=$(TAG) /I."
 
 body1 = \
@@ -210,11 +211,15 @@ with open("Makefile", "w") as makefile:
 	if compiler=="VS":
 		makefile.write("{}\n".format(cppflags_vs))
 		body1fmt = body1.format("obj","obj")
-		body2fmt = body2.format("obj","-o ","")
-	else:
-		makefile.write("{}\n".format(cppflags_other))
+		body2fmt = body2.format("obj","-o ","")    # should be "/OUT:" but I haven't got it to work yet
+	elif compiler=="CLANG":
+		makefile.write("{}\n".format(cppflags_clang))
 		body1fmt = body1.format("o","-o ")
-		body2fmt = body2.format("o", "-o ", "-pthread")    # should be "/OUT:" but I haven't got it to work yet
+		body2fmt = body2.format("o", "-o ", "-pthread")
+	else:
+		makefile.write("{}\n".format(cppflags_gcc))
+		body1fmt = body1.format("o","-o ")
+		body2fmt = body2.format("o", "-o ", "-pthread")
 	
 	makefile.write("{}\n".format(body1fmt))
 	if use_cached_depends:
