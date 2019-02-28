@@ -1,8 +1,8 @@
 import os,sys,argparse
 
-cppflags_gcc = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
-cppflags_clang = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++11 -I ."
-cppflags_vs = "CPPFLAGS = $(CONDCOMP) /DGITTAG=$(TAG) /I."
+cppflags_gcc = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
+cppflags_clang = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++11 -I ."
+cppflags_vs = "$(CONDCOMP) /DGITTAG=$(TAG) /I."
 
 body1 = \
 """
@@ -131,6 +131,11 @@ if use_cached_depends is None:
 		use_cached_depends = True
 	else:
 		use_cached_depends = False
+		
+if compiler=="VS":
+	def_prefix = " /D"
+else:
+	def_prefix = " -D"
 
 if compiler not in valid_compilers:
 	sys.stderr.write("compiler {} is not a valid compiler for specs.\nValid compilers are: {}\n".format(compiler, ", ".join(valid_compilers)))
@@ -181,7 +186,7 @@ elif compiler=="VS":
 		condcomp = "/O2 /Zi /EHsc"	
 	
 if platform=="NT":
-	condcomp = condcomp + (" -DWIN64" if compiler!="VS" else " /DWIN64")
+	condcomp = condcomp + "{}WIN64".format(def_prefix)
 		
 # Other compilers switches go here
 
@@ -196,9 +201,34 @@ elif platform=="NT":
 else:
 	sys.stderr.write("Logic error: platform {} is not supported.\n".format(platform))
 	exit(-4)
+	
+if compiler=="VS":
+	cppflags = cppflags_vs
+	cppflags_test = ""
+elif compiler=="CLANG":
+	cppflags = cppflags_clang
+	cppflags_test = "-std=c++11"
+else:
+	cppflags = cppflags_gcc
+	cppflags_test = "--std=c++11"
 
-
-
+if compiler!="VS":
+	test_put_time_cmd = "{} {} -o /dev/null -c xx.cc".format(cxx,cppflags_test)
+	with open("xx.cc", "w") as testfile:
+		testfile.write('#include <iomanip>\nvoid x() { std::put_time(NULL,""); }\n')
+	sys.stdout.write("Testing std::put_time()...")
+	if 0==os.system(test_put_time_cmd):
+		sys.stdout.write("supported.\n")
+		CFG_put_time = True
+	else:
+		sys.stdout.write("not supported.\n")
+		CFG_put_time = False
+	os.system("/bin/rm xx.cc")
+else:
+	CFG_put_time = True
+	
+if CFG_put_time:
+	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))
@@ -207,17 +237,15 @@ with open("Makefile", "w") as makefile:
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
 	makefile.write("TAG := $(shell git describe --abbrev=0 --tags)\n\n")
+	makefile.write("CPPFLAGS = {}\n".format(cppflags))
 	
 	if compiler=="VS":
-		makefile.write("{}\n".format(cppflags_vs))
 		body1fmt = body1.format("obj","obj")
 		body2fmt = body2.format("obj","-o ","")    # should be "/OUT:" but I haven't got it to work yet
 	elif compiler=="CLANG":
-		makefile.write("{}\n".format(cppflags_clang))
 		body1fmt = body1.format("o","-o ")
 		body2fmt = body2.format("o", "-o ", "-pthread")
 	else:
-		makefile.write("{}\n".format(cppflags_gcc))
 		body1fmt = body1.format("o","-o ")
 		body2fmt = body2.format("o", "-o ", "-pthread")
 	
