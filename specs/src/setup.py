@@ -1,7 +1,7 @@
 import os,sys,argparse
 
 cppflags_gcc = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
-cppflags_clang = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++11 -stdlib=libc++ -I ."
+cppflags_clang = "CPPFLAGS = -Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++11 -I ."
 cppflags_vs = "CPPFLAGS = $(CONDCOMP) /DGITTAG=$(TAG) /I."
 
 body1 = \
