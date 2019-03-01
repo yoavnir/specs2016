@@ -213,7 +213,7 @@ else:
 	cppflags_test = "--std=c++11"
 
 if compiler!="VS":
-	test_put_time_cmd = "{} {} -o /dev/null -c xx.cc".format(cxx,cppflags_test)
+	test_put_time_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 	with open("xx.cc", "w") as testfile:
 		testfile.write('#include <iomanip>\nvoid x() { std::put_time(NULL,""); }\n')
 	sys.stdout.write("Testing std::put_time()...")
@@ -223,7 +223,10 @@ if compiler!="VS":
 	else:
 		sys.stdout.write("not supported.\n")
 		CFG_put_time = False
-	os.system("/bin/rm xx.cc")
+	if platform=="NT":
+		os.system("del xx.cc xx.o")
+	else:
+		os.system("/bin/rm xx.cc xx.o")
 else:
 	CFG_put_time = True
 	
