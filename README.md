@@ -10,12 +10,17 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-01-Mar-2019: Version 0.3 Alpha is here
+03-Mar-2019: Version 0.3 Alpha is here
 --------------------------------------
 What's new:
 * The `UNREAD` and `REDO` keywords
 * Control breaks, both as the `BREAK` keyword and the `break()` pseudo-function.
+* Support for Secondary Input Station
+* Conversions as functions
+* Support for Microsoft Windows, compiled with either GCC or with Visual Studio
+* Support for Clang
 * Updated [documentation](specs/docs/TOC.md).
+* **NOTE**: New build instructions.  See below.
 
 31-Jan-2019: Version 0.2 is out. New stuff:
 -------------------------------------------
@@ -49,6 +54,16 @@ git checkout stable
 After that, _cd_ to the specs/src directory, and run the following two commands:
 * `make some`
 * `sudo make install`
+
+Building version 0.3
+====================
+* Check out the 0.3 branch:  `git checkout v0.3-alpha`
+* Move to the specs/src directory and generate the Makefile: `python setup.py`
+* `make clean some`
+* `sudo make install`
+Note: For non-default options, use `python setup.py -h` to see your options.
+
+Note: Windows does not need `sudo`
 
 Contributing
 ============
