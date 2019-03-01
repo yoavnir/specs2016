@@ -246,10 +246,10 @@ with open("Makefile", "w") as makefile:
 		body1fmt = body1.format("obj","obj")
 		body2fmt = body2.format("obj","-o ","")    # should be "/OUT:" but I haven't got it to work yet
 	elif compiler=="CLANG":
-		body1fmt = body1.format("o","-o ")
+		body1fmt = body1.format("o","o")
 		body2fmt = body2.format("o", "-o ", "-pthread")
 	else:
-		body1fmt = body1.format("o","-o ")
+		body1fmt = body1.format("o","o")
 		body2fmt = body2.format("o", "-o ", "-pthread")
 	
 	makefile.write("{}\n".format(body1fmt))
