@@ -10,7 +10,7 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-03-Mar-2019: Version 0.3 Alpha is here
+04-Mar-2019: Version 0.3 Alpha is here
 --------------------------------------
 What's new:
 * The `UNREAD` and `REDO` keywords
@@ -21,6 +21,8 @@ What's new:
 * Support for Clang
 * Updated [documentation](specs/docs/TOC.md).
 * **NOTE**: New build instructions.  See below.
+* The beta is planned for the end of March.
+* The GA is planned for April 15th.
 
 31-Jan-2019: Version 0.2 is out. New stuff:
 -------------------------------------------
