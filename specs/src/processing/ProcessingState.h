@@ -12,6 +12,9 @@
 #define DEFAULT_WORDSEPARATOR ' '
 #define DEFAULT_FIELDSEPARATOR '\t'
 
+#define STREAM_FIRST   1
+#define STREAM_SECOND -2
+
 #define LOOP_CONDITION_FALSE (-5)
 
 class ProcessingState : public stateQueryAgent {
@@ -43,12 +46,15 @@ public:
 	virtual bool    isRunOut()  { return (m_ps==NULL); } // NOTE: will return true before first record
 	virtual ALUInt  getRecordCount()    { return ALUInt(m_CycleCounter + m_ExtraReads); }
 	virtual ALUInt  getIterationCount() { return ALUInt(m_CycleCounter); }
+	virtual bool    breakEstablished(char id);
 
 	void fieldIdentifierSet(char id, PSpecString ps);
 	void incrementCycleCounter() { m_CycleCounter++; }
 	void incrementExtraReads()   { m_ExtraReads++; }
 	PSpecString fieldIdentifierGet(char id);
+	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
+	void resetBreaks();
 	bool needToEvaluate();
 	bool runningOutLoop();
 	void setCondition(bool isTrue);
@@ -60,6 +66,11 @@ public:
 	void observeDone();
 	void pushLoop(int n)  { m_Loops.push(n); }
 	int  getLoopStart();
+	void setFirst();
+	void setSecond();
+	int  getActiveInputStream() { return m_inputStream; }
+	PSpecString currRecord() { return (m_inputStream==STREAM_FIRST) ? m_ps : m_prevPs; }
+	bool recordNotAvailable() { return NULL==currRecord(); }
 private:
 	enum extremeBool {
 		bFalse,
@@ -69,7 +80,8 @@ private:
 	char    m_pad;
 	char    m_wordSeparator;
 	char    m_fieldSeparator;
-	PSpecString m_ps;
+	PSpecString m_ps;  // The current record
+	PSpecString m_prevPs; // The previous record
 	int  m_wordCount;
 	int  m_fieldCount;
 	unsigned int m_CycleCounter;
@@ -81,8 +93,11 @@ private:
 	void identifyWords();
 	void identifyFields();
 	std::map<char,PSpecString> m_fieldIdentifiers;
+	std::map<char,PSpecString> m_breakValues;
+	char m_breakLevel;
 	std::stack<extremeBool> m_Conditions;
 	std::stack<int> m_Loops;    // The unsigned int holds the number of the token where the while was
+	int             m_inputStream;
 };
 
 

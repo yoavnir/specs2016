@@ -25,14 +25,29 @@ void Reader::End()
 
 PSpecString Reader::get()
 {
-	if (eof()) return NULL;
 	PSpecString ret;
+	if (m_pUnreadString) {
+		ret = m_pUnreadString;
+		m_pUnreadString = NULL;
+		return ret;
+	}
+	if (eof()) {
+		m_bRanDry = true;
+		return NULL;
+	}
 	if (m_queue.wait_and_pop(ret)) {
 		m_countUsed++;
 		return ret;
 	} else {
+		m_bRanDry = true;
 		return NULL;
 	}
+}
+
+void Reader::pushBack(PSpecString ps)
+{
+	MYASSERT_WITH_MSG(m_pUnreadString==NULL, "Only one record can be UNREAD at a time");
+	m_pUnreadString = ps;
 }
 
 void Reader::readIntoQueue()

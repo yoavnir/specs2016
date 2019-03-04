@@ -5,6 +5,13 @@
 #include <vector>
 #include "utils/ErrorReporting.h"
 
+//
+// The TOKEN_TYPE_LIST X-macro
+//
+//   X(t,r,l)
+//     t = the token name
+//     r = token contains a range
+//     l = token contains a literal
 #define TOKEN_TYPE_LIST   \
 	/* The MainOptions */    \
 	X(STOP,           false, false) \
@@ -53,6 +60,12 @@
 	X(WHILE,          false, true)  \
 	X(DO,             false, false) \
 	X(DONE,           false, false) \
+	X(UNREAD,         false, false) \
+	X(REDO,           false, false) \
+	X(BREAK,          false, true)  \
+	X(SELECT,         false, true)  \
+	X(FIRST,          false, false) \
+	X(SECOND,         false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

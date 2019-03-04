@@ -180,7 +180,7 @@ static ALUValue* AluFunc_range(ALUInt start, ALUInt end)
 		delete pRet;
 		return new ALUValue(st);
 	} else {
-		return new ALUValue();
+		return new ALUValue("");
 	}
 }
 
@@ -406,4 +406,60 @@ ALUValue* AluFunc_conf(ALUValue* _pKey)
 	} else {
 		return new ALUValue();
 	}
+}
+
+extern std::string conv_D2X(std::string& s);
+ALUValue* AluFunc_d2x(ALUValue* _pDecValue)
+{
+	std::string dec = _pDecValue->getStr();
+	return new ALUValue(conv_D2X(dec));
+}
+
+extern std::string conv_X2D(std::string& s);
+ALUValue* AluFunc_x2d(ALUValue* _pHexValue)
+{
+	std::string hex = _pHexValue->getStr();
+	return new ALUValue(conv_X2D(hex));
+}
+
+extern std::string conv_C2X(std::string& s);
+ALUValue* AluFunc_c2x(ALUValue* _pCharValue)
+{
+	std::string cv = _pCharValue->getStr();
+	return new ALUValue(conv_C2X(cv));
+}
+
+std::string conv_X2CH(std::string& s);
+ALUValue* AluFunc_x2ch(ALUValue* _pHexValue)
+{
+	std::string hex = _pHexValue->getStr();
+	return new ALUValue(conv_X2CH(hex));
+}
+
+extern std::string conv_UCASE(std::string& s);
+ALUValue* AluFunc_ucase(ALUValue* _pString)
+{
+	std::string st = _pString->getStr();
+	return new ALUValue(conv_UCASE(st));
+}
+
+extern std::string conv_LCASE(std::string& s);
+ALUValue* AluFunc_lcase(ALUValue* _pString)
+{
+	std::string st = _pString->getStr();
+	return new ALUValue(conv_LCASE(st));
+}
+
+extern std::string conv_BSWAP(std::string& s);
+ALUValue* AluFunc_bswap(ALUValue* _pString)
+{
+	std::string st = _pString->getStr();
+	return new ALUValue(conv_BSWAP(st));
+}
+
+ALUValue* AluFunc_break(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	bool bIsBreakEstablished = g_pStateQueryAgent->breakEstablished(fId);
+	return new ALUValue(ALUInt(bIsBreakEstablished ? 1 : 0));
 }

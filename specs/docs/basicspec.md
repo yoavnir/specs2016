@@ -6,6 +6,14 @@
 ```
 Most invocations of **specs** do not require command-line switches, so we will not describe them here. For a full description, you can go to [Command-Line Switches](cliswitch.md)
 
+* [Spec Units](#spec-units)
+* [Data Fields](#data-fields)
+* [Alignment](#alignment)
+* [Conversions](#conversions)
+* [Words vs Fields](#words-vs-fields)
+* [Examples](#examples)
+* [Other Common Spec Units](#other-common-spec-units)
+
 Spec Units
 ==========
 Spec Units are the building blocks of a specs specification.  Each spec unit specifies an action to be taken by the program. The spec unit may span from one to several command line arguments. The collection of spec units in a single invocation of **specs** is called a *specification*.

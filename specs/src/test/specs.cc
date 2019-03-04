@@ -2,6 +2,7 @@
 #include <cmath>
 #include <ctime>
 #include <string.h>
+#include "utils/platform.h"
 #include "cli/tokens.h"
 #include "processing/Config.h"
 #include "specitems/specItems.h"
@@ -57,13 +58,19 @@ int main (int argc, char** argv)
 #endif
 
 	std::vector<Token> vec;
-	if (g_specFile != "") {
-		vec = parseTokensFile(g_specFile);
-	} else {
-		vec = parseTokens(argc, argv);
-	}
 
-	normalizeTokenList(&vec);
+	try {
+		if (g_specFile != "") {
+			vec = parseTokensFile(g_specFile);
+		} else {
+			vec = parseTokens(argc, argv);
+		}
+
+		normalizeTokenList(&vec);
+	} catch (const SpecsException& e) {
+		std::cerr << "Error reading specification tokens: " << e.what(conciseExceptions) << "\n";
+		exit (0);
+	}
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
@@ -126,6 +133,7 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
 			std::cerr << e.what(conciseExceptions) << "\n";
+			return -4;
 		}
 
 		pRd->End();
@@ -145,6 +153,7 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
+			return -4;
 		}
 		std::cout << *sb.GetString() << "\n";
 		readLines = 0;
