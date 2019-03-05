@@ -352,6 +352,8 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 
 std::string dumpAluVec(AluVec& vec, bool deleteUnits);
 
+void cleanAluVec(AluVec& vec);
+
 bool isValidExpression(AluVec& vec);  // To Be Added
 
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);

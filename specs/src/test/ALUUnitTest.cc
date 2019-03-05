@@ -250,7 +250,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	} catch (SpecsException& e) {							\
 		_res =  (e.what(true)==std::string(ex));			\
 		actual = e.what(true);								\
-		dumpAluVec(vec,true);								\
+		cleanAluVec(vec);									\
 	}														\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": <"<< s << "> ==> \"" << ex << "\": "; 				\
@@ -296,12 +296,13 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			if (expressionIsAssignment(vec)) {              \
 				ALUCounterKey	k;							\
 				AluAssnOperator op;							\
-				vec.clear();								\
+				cleanAluVec(vec);							\
 				_res = parseAluStatement(_expr,k,&op,vec);  \
 				if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
 				if (_res) {									\
 					ALUPerformAssignment(k,&op,rpnVec,&counters); \
 					_res2 = (counters.getStr(k)==res);		\
+					cleanAluVec(rpnVec);					\
 				}											\
 			} else {                                        \
 				_res2 = true;								\
@@ -311,6 +312,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 				} catch(SpecsException& e) {                \
 					_result = new ALUValue(e.what(true));   \
 				}                                           \
+				cleanAluVec(rpnVec);						\
 				_res = (_result!=NULL) && (_result->getStr()==res);	\
 			}                                               \
 		}                                                   \
@@ -320,7 +322,8 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		else {												\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
 			countFailures++;  failedTests.push_back(testIndex);		\
-		}													\
+		}															\
+		if (_result) delete(_result);								\
 	} while(0);
 
 #define VERIFY_ASSN_RES(s,exp) do {								\
@@ -336,6 +339,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			ALUPerformAssignment(k,&op,rpnVec,&counters);			\
 			_res2 = (counters.getStr(k)==exp);					\
 		}														\
+		cleanAluVec(rpnVec); 									\
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": <"<< s << "> ==> \"" << exp << "\": "; 				\
 		if (_res && _res2) std::cout << "OK\n";					\

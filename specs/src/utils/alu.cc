@@ -1243,14 +1243,25 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	return true;
 }
 
+void cleanAluVec(AluVec& vec)
+{
+	while (!vec.empty()) {
+		AluUnit* pUnit = vec[0];
+		vec.erase(vec.begin());
+		delete pUnit;
+	}
+}
+
 std::string dumpAluVec(AluVec& vec, bool deleteUnits)
 {
 	std::string ret;
 	if (deleteUnits) {
 		while (!vec.empty()) {
+			AluUnit* pUnit = vec[0];
 			if (!ret.empty()) ret += ";";
-			ret += vec[0]->_identify();
+			ret += pUnit->_identify();
 			vec.erase(vec.begin());
+			delete pUnit;
 		}
 	} else {
 		for (int i=0; i<vec.size(); i++) {
@@ -1286,12 +1297,14 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 	}
 
 	AluUnitCounter* ctr = dynamic_cast<AluUnitCounter*>(vec[0]);
-	*pAss = *(dynamic_cast<AluAssnOperator*>(vec[1]));
+	AluAssnOperator* pAssnOp = dynamic_cast<AluAssnOperator*>(vec[1]);
+	*pAss = *pAssnOp;
 	k = ctr->getKey();
 
 	vec.erase(vec.begin());
 	vec.erase(vec.begin());
 	delete ctr;
+	delete pAssnOp;
 
 	// Check that we don't have something terrible like an assignment operator in the
 	// expression. Like this is C or something
@@ -1480,7 +1493,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	}
 
 	if (clearSource) {
-		source.clear();
+		while (!source.empty()) {
+			AluUnit* pUnit = source[0];
+			source.erase(source.begin());
+		}
 	}
 
 #ifdef ALU_DUMP
@@ -1565,22 +1581,52 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				computeStack.push(pUnit->evaluate());
 				break;
 			case 1:
-				computeStack.push(pUnit->compute(arg1));
-				delete arg1;
+				try {
+					computeStack.push(pUnit->compute(arg1));
+				}
+				catch (const SpecsException& e) {
+					delete arg1;
+					throw;
+				}
+				delete arg1;  // Argh. Why doesn't C++ have a finally clause???!!!!!
 				break;
 			case 2:
-				computeStack.push(pUnit->compute(arg1, arg2));
+				try {
+					computeStack.push(pUnit->compute(arg1, arg2));
+				}
+				catch (const SpecsException& e) {
+					delete arg1;
+					delete arg2;
+					throw;
+				}
 				delete arg1;
 				delete arg2;
 				break;
 			case 3:
-				computeStack.push(pUnit->compute(arg1, arg2, arg3));
+				try {
+					computeStack.push(pUnit->compute(arg1, arg2, arg3));
+				}
+				catch (const SpecsException& e) {
+					delete arg1;
+					delete arg2;
+					delete arg3;
+					throw;
+				}
 				delete arg1;
 				delete arg2;
 				delete arg3;
 				break;
 			case 4:
-				computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4));
+				try {
+					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4));
+				}
+				catch (const SpecsException& e) {
+					delete arg1;
+					delete arg2;
+					delete arg3;
+					delete arg4;
+					throw;
+				}
 				delete arg1;
 				delete arg2;
 				delete arg3;
