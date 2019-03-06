@@ -10,7 +10,16 @@ itemGroup::itemGroup()
 	bFoundSelectSecond = false;
 }
 
-void itemGroup::addItem(Item *pItem)
+itemGroup::~itemGroup()
+{
+	while (!m_items.empty()) {
+		PItem pItem = m_items[0];
+		m_items.erase(m_items.begin());
+		delete pItem;
+	}
+}
+
+void itemGroup::addItem(PItem pItem)
 {
 	m_items.insert(m_items.end(), pItem);
 }

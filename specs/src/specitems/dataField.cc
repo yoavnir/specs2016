@@ -31,7 +31,7 @@ DataField::DataField()
 }
 
 DataField::~DataField() {
-	fprintf(stderr, "~DataField\n");
+	if (m_InputPart) delete m_InputPart;
 }
 
 /*

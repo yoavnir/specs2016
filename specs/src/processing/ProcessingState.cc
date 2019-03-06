@@ -81,6 +81,12 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 ProcessingState::~ProcessingState()
 {
 	fieldIdentifierClear();
+	if (m_prevPs) {
+		delete m_prevPs;
+	}
+	if (m_ps) {
+		delete m_ps;
+	}
 }
 
 void ProcessingState::setString(PSpecString ps)

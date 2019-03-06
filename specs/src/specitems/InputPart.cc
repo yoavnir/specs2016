@@ -133,7 +133,6 @@ PSpecString SubstringPart::getStr(ProcessingState& pState)
 	subState.setString(bigPart);
 
 	PSpecString ret = mp_SubPart->getStr(subState);
-	delete bigPart;
 	return ret;
 }
 

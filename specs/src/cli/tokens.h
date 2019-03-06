@@ -117,6 +117,7 @@ public:
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
 	std::string&    HelpIdentify();
+	void            deallocDynamic() {if (m_pRange) {delete m_pRange; m_pRange = NULL;}}
 private:
 	TokenListTypes  m_type;
 	TokenFieldRange *m_pRange;
