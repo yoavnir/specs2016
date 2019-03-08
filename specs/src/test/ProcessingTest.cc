@@ -45,6 +45,7 @@ extern ALUCounters g_counters;
 			} else {                            \
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
+			delete ps;			\
 		}                                       \
 } while (0);
 
