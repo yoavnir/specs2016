@@ -398,8 +398,8 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (m_conversion) {
 		std::string currentString(pInput->data(), pInput->length());
-		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
 		delete pInput;
+		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
 		pInput = SpecString::newString(convertedString);
 	}
 

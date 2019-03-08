@@ -121,9 +121,8 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		}
 	}
 
-	free(example);
-
 end:
+	free(example);
 	while (!vec.empty()) {
 		vec[0].deallocDynamic();
 		vec.erase(vec.begin());
