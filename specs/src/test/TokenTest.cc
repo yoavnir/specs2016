@@ -18,6 +18,7 @@ std::string callParseTokens(int argc, char** argv)
 		if (vec.size()>1 && i<vec.size()-1) {
 			ret += '|';
 		}
+		vec[i].deallocDynamic();
 	}
 
 	return ret;
