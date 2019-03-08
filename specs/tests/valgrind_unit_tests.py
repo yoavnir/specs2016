@@ -1,7 +1,7 @@
 import sys, memcheck
 
-count_ALU_tests = 3 # 343
-count_processing_tests = 3 # 101
+count_ALU_tests = 343
+count_processing_tests = 101
 
 tests_that_may_fail = [43,48,58,61,63,152,153,154,342]
 for i in range(count_ALU_tests):
