@@ -20,3 +20,8 @@ specs/src/*/*.obj
 # the compressed manpage
 specs/src/specs.1.gz
 
+# the tests temporary files
+specs/tests/__pycache__
+specs/tests/cmd.out
+specs/tests/valgrind.out
+

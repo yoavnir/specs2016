@@ -36,3 +36,9 @@ def leak_check(cmd):
 
     return (RetCode_GENERIC_ERROR,0)
 
+def cleanup():
+    os.system("/bin/rm valgrind.out cmd.out")
+
+def cleanup_valgrind():
+    os.system("/bin/rm valgrind.out")
+

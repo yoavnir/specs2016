@@ -4,6 +4,8 @@
 #include "string.h"
 #include "cli/tokens.h"
 
+unsigned int onlyTest = 0;
+
 std::string callParseTokens(int argc, char** argv)
 {
 	std::vector<Token> vec = parseTokens(argc, argv); // skipping the program name
@@ -51,6 +53,10 @@ bool checkParsing(const char* _str, const char* _expected, bool bSingle)
 	}
 
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << ++ctr;
+	if (onlyTest!=0 && onlyTest!=ctr) {
+		std::cout << " -- Skipped\n";
+		return true;
+	}
 	if (bSingle) std::cout << "(s)";
 	if (parsed==_expected) {
 		std::cout << ": *** OK ***  in=<" << _str << ">  out=" << parsed << "\n";
@@ -64,6 +70,9 @@ bool checkParsing(const char* _str, const char* _expected, bool bSingle)
 #define TESTNS(t,e) if (false==checkParsing(t,e,false)) failedTests++;
 int main(int argc, char** argv)
 {
+	if (argc>1) {
+		onlyTest = std::stoul(argv[1]);
+	}
 	unsigned int failedTests = 0;
 
 	TESTNS("w1 1","WORDRANGE; S:1|RANGE; S:1");
