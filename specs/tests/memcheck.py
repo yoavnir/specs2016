@@ -2,9 +2,12 @@ import os
 
 RetCode_SUCCESS = 0
 RetCode_COMMAND_FAILED = 1
+RetCode_DEF_LOST = 2
+RetCode_IND_LOST = 3
+RetCode_POSS_LOST = 4
 RetCode_GENERIC_ERROR = 10
 
-RetCode_strings = ["SUCCESS", "Command Failed", "", "", "", "", "", "", "", "", "Generic Error"]
+RetCode_strings = ["SUCCESS", "Command Failed", "Definitely Lost", "Indirectly Lost", "Possibly Lost", "", "", "", "", "", "Generic Error"]
 
 def leak_check(cmd):
     cmd_to_execute = "valgrind --leak-check=full --log-file=valgrind.out {} > cmd.out".format(cmd)
@@ -34,7 +37,15 @@ def leak_check(cmd):
     if no_definitely_lost and no_indirectly_lost and no_possibly_lost:
         return good_return
 
-    return (RetCode_GENERIC_ERROR,0)
+    if not no_definitely_lost:
+        return (RetCode_DEF_LOST, 0)
+
+    if not no_indirectly_lost:
+        return (RetCode_IND_LOST, 0)
+
+    if not no_possibly_lost:
+        return (RetCode_POSS_LOST, 0)
+
 
 def cleanup():
     os.system("/bin/rm valgrind.out cmd.out")
