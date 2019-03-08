@@ -42,7 +42,7 @@ for i in range(count_token_tests):
     memcheck.cleanup()
 
 
-tests_that_may_fail = []
+tests_that_may_fail = [73]
 for i in range(count_processing_tests):
     cmd = "../exe/ProcessingTest {}".format(i+1)
     (rc,info) = memcheck.leak_check(cmd)
