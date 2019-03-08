@@ -53,3 +53,14 @@ def cleanup():
 def cleanup_valgrind():
     os.system("/bin/rm valgrind.out")
 
+def leak_check_specs(spec, inp):
+    with open("thespec", "w") as s:
+        s.write(spec)
+    with open("theinp", "w") as i:
+        if inp is None:
+            i.write("")
+        else:
+            i.write(inp)
+    cmd = "../exe/specs -s tehspec -i theinp -o theout"
+    return leak_check(cmd)
+
