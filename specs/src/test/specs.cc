@@ -95,6 +95,10 @@ int main (int argc, char** argv)
 		exit (0);
 	}
 
+	// After the compilation, the token vector contents are no longer necessary
+	for (int i=0; i<vec.size(); i++) vec[i].deallocDynamic();
+	vec.clear();
+
 #ifdef DEBUG
 	std::cerr << "After parsing, index = " << index << "/" << vec.size() << "\n";
 
@@ -144,7 +148,6 @@ int main (int argc, char** argv)
 		generatedLines = pWr->countGenerated();
 		writtenLines = pWr->countWritten();
 		delete pWr;
-		vec.clear();
 	} else {
 		TestReader tRead(5);
 		try {
@@ -155,7 +158,9 @@ int main (int argc, char** argv)
 			std::cerr << e.what(conciseExceptions) << "\n";
 			return -4;
 		}
-		std::cout << *sb.GetString() << "\n";
+		PSpecString ps = sb.GetString();
+		std::cout << *ps << "\n";
+		delete ps;
 		readLines = 0;
 		usedLines = 0;
 		generatedLines = 1;
