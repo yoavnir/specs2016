@@ -12,7 +12,12 @@ void ReadAllRecordsIntoReaderQueue(Reader* r)
 
 Reader::~Reader()
 {
+	PSpecString ps;
 	End();
+	while (!m_queue.empty()) {
+		m_queue.wait_and_pop(ps);
+		delete ps;
+	}
 }
 
 void Reader::End()

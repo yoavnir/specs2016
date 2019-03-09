@@ -137,6 +137,10 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
 			std::cerr << e.what(conciseExceptions) << "\n";
+			pRd->End();
+			delete pRd;
+			pWr->End();
+			delete pWr;
 			return -4;
 		}
 
