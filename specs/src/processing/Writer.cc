@@ -21,6 +21,7 @@ Writer::~Writer()
 {
 	if (mp_thread && mp_thread->joinable()) {
 		mp_thread->join();
+		delete mp_thread;
 	}
 }
 
@@ -41,6 +42,8 @@ void Writer::End()
 	m_queue.Done();
 	if (mp_thread) {
 		mp_thread->join();
+		delete mp_thread;
+		mp_thread = NULL;
 	}
 }
 

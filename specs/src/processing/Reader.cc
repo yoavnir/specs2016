@@ -20,6 +20,7 @@ void Reader::End()
 	if (mp_thread) {
 		mp_thread->join();
 	}
+	delete mp_thread;
 	mp_thread = NULL;
 }
 
