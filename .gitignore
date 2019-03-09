@@ -28,3 +28,4 @@ specs/tests/theinp
 specs/tests/theout 
 specs/tests/thespec 
 specs/tests/memcheck.pyc
+specs/tests/input_samples.pyc
