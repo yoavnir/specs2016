@@ -61,6 +61,6 @@ def leak_check_specs(spec, inp):
             i.write("")
         else:
             i.write(inp)
-    cmd = "../exe/specs -s tehspec -i theinp -o theout"
+    cmd = "../exe/specs -f thespec -i theinp -o theout"
     return leak_check(cmd)
 

@@ -24,4 +24,7 @@ specs/src/specs.1.gz
 specs/tests/__pycache__
 specs/tests/cmd.out
 specs/tests/valgrind.out
-
+specs/tests/theinp  
+specs/tests/theout 
+specs/tests/thespec 
+specs/tests/memcheck.pyc
