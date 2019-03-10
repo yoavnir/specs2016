@@ -9,13 +9,22 @@ RetCode_GENERIC_ERROR = 10
 
 RetCode_strings = ["SUCCESS", "Command Failed", "Definitely Lost", "Indirectly Lost", "Possibly Lost", "", "", "", "", "", "Generic Error"]
 
+no_valgrind = False
+
 def leak_check(cmd):
-    cmd_to_execute = "valgrind --leak-check=full --log-file=valgrind.out {} > cmd.out".format(cmd)
+    global no_valgrind
+    if no_valgrind:
+        cmd_to_execute = "{} > cmd.out".format(cmd)
+    else:
+        cmd_to_execute = "valgrind --leak-check=full --log-file=valgrind.out {} > cmd.out".format(cmd)
     rc = os.system(cmd_to_execute)
     if rc!=0:
         good_return = (RetCode_COMMAND_FAILED,rc)
     else:
         good_return = (RetCode_SUCCESS,0)
+        
+    if no_valgrind:
+        return good_return
 
     with open("valgrind.out", "r") as f:
         lines = f.readlines()
