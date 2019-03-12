@@ -211,14 +211,47 @@ elif compiler=="CLANG":
 else:
 	cppflags = cppflags_gcc
 	cppflags_test = "--std=c++11"
+	
+# Test if the compiler exists
+test_compiler_exists_cmd = "{} {} -o xx.o -c xx.cc 2> /dev/null".format(cxx,cppflags_test)
+with open("xx.cc", "w") as testfile:
+	testfile.write('void iefbr14() {}\n')
+sys.stdout.write("Testing compiler exists...")
+rc = os.system(test_compiler_exists_cmd)
+if platform=="NT":
+	os.system("del xx.cc xx.o")
+else:
+	os.system("/bin/rm xx.cc xx.o 2> /dev/null")
+if 0==rc:
+	sys.stdout.write("Yes.\n")
+else:
+	sys.stdout.write("No.  Aborting...\n")
+	exit(-4)
+	
+# Test if the compiler supports C++11
+test_cpp11_cmd = "{} {} -o xx.o -c xx.cc 2> /dev/null".format(cxx,cppflags_test)
+with open("xx.cc", "w") as testfile:
+	testfile.write('int ret_auto_0() {auto i=0; return i;}\n')
+sys.stdout.write("Testing C++11 support.....")
+rc = os.system(test_cpp11_cmd)
+if platform=="NT":
+	os.system("del xx.cc xx.o")
+else:
+	os.system("/bin/rm xx.cc xx.o 2> /dev/null")
+if 0==rc:
+	sys.stdout.write("Yes.\n")
+else:
+	sys.stdout.write("No.  Aborting...\n")
+	exit(-4)
 
+# Test if the compiler supports put_time
 if compiler!="VS":
 	test_put_time_cmd = "{} {} -o xx.o -c xx.cc 2> /dev/null".format(cxx,cppflags_test)
 	with open("xx.cc", "w") as testfile:
 		testfile.write('#include <iomanip>\nvoid x() { std::put_time(NULL,""); }\n')
 	sys.stdout.write("Testing std::put_time()...")
 	if 0==os.system(test_put_time_cmd):
-		sys.stdout.write("supported.\n")
+		sys.stdout.write("Supported.\n")
 		CFG_put_time = True
 	else:
 		sys.stdout.write("not supported.\n")
