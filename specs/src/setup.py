@@ -204,7 +204,7 @@ else:
 	
 if compiler=="VS":
 	cppflags = cppflags_vs
-	cppflags_test = "/nologo"
+	cppflags_test = "/EHsc /nologo"
 elif compiler=="CLANG":
 	cppflags = cppflags_clang
 	cppflags_test = "-std=c++11"
