@@ -10,13 +10,20 @@ RetCode_GENERIC_ERROR = 10
 RetCode_strings = ["SUCCESS", "Command Failed", "Definitely Lost", "Indirectly Lost", "Possibly Lost", "", "", "", "", "", "Generic Error"]
 
 no_valgrind = False
+keep_specs_output = False
 
-def leak_check(cmd):
-    global no_valgrind
-    if no_valgrind:
-        cmd_to_execute = "{} > cmd.out".format(cmd)
+def leak_check(cmd, test_id="0"):
+    global no_valgrind,keep_specs_output
+    if keep_specs_output:
+        valgfile = "valgrind.out." + test_id
+        outfile = "cmd.out." + test_id
     else:
-        cmd_to_execute = "valgrind --leak-check=full --log-file=valgrind.out {} > cmd.out".format(cmd)
+    	valgfile = "valgrind.out"
+    	outfile = "cmd.out"
+    if no_valgrind:
+        cmd_to_execute = "{} > {}".format(cmd,outfile)
+    else:
+        cmd_to_execute = "valgrind --leak-check=full --log-file={} {} > {}".format(valgfile,cmd,outfile)
     rc = os.system(cmd_to_execute)
     if rc!=0:
         good_return = (RetCode_COMMAND_FAILED,rc)
@@ -57,19 +64,28 @@ def leak_check(cmd):
 
 
 def cleanup():
-    os.system("/bin/rm valgrind.out cmd.out")
+    os.system("/bin/rm valgrind.out* cmd.out*")
 
 def cleanup_valgrind():
-    os.system("/bin/rm valgrind.out")
+    os.system("/bin/rm valgrind.out*")
 
-def leak_check_specs(spec, inp):
-    with open("thespec", "w") as s:
+def leak_check_specs(spec, inp, testid):
+    global keep_specs_output
+    if keep_specs_output:
+    	specfile = "thespec."+str(testid)
+    	inpfile = "theinp."+str(testid)
+    	outfile = "theout."+str(testid)
+    else:
+    	specfile = "thespec"
+    	inpfile = "theinp"
+    	outfile = "theout"
+    with open(specfile, "w") as s:
         s.write(spec)
-    with open("theinp", "w") as i:
+    with open(inpfile, "w") as i:
         if inp is None:
             i.write("")
         else:
             i.write(inp)
-    cmd = "../exe/specs -f thespec -i theinp -o theout"
-    return leak_check(cmd)
+    cmd = "../exe/specs -f {} -i {} -o {}".format(specfile,inpfile,outfile)
+    return leak_check(cmd,str(testid))
 
