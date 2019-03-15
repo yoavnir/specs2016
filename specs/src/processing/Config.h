@@ -17,6 +17,7 @@
 	X(bLocalWhiteSpace,             bool,         true,   w,spaceWS,            false)      \
 	X(bDebugAluCompile,             bool,         false,  0,debug-alu-comp,     true)       \
 	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
+	X(configurationFile,            std::string,  "",     c,config,             NEXTARG)    \
 
 #define X(nm,typ,defval,ssw,cliswitch,oval) extern typ g_##nm;
 CONFIG_PARAMS

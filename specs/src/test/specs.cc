@@ -47,11 +47,12 @@ CONTINUE:
 int main (int argc, char** argv)
 {
 	bool conciseExceptions = true;
-	readConfigurationFile();
 
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
 	}
+
+	readConfigurationFile();
 
 #ifdef DEBUG
 	conciseExceptions = !g_bVerbose;

@@ -69,23 +69,27 @@ def cleanup():
 def cleanup_valgrind():
     os.system("/bin/rm valgrind.out*")
 
-def leak_check_specs(spec, inp, testid):
+def leak_check_specs(spec, inp, testid, confFile):
     global keep_specs_output
     if keep_specs_output:
     	specfile = "thespec."+str(testid)
     	inpfile = "theinp."+str(testid)
     	outfile = "theout."+str(testid)
+    	conffile = "theconf."+str(testid)
     else:
     	specfile = "thespec"
     	inpfile = "theinp"
     	outfile = "theout"
+    	conffile = "theconf"
     with open(specfile, "w") as s:
         s.write(spec)
+    with open(conffile,"w") as c:
+    	c.write(confFile)
     with open(inpfile, "w") as i:
         if inp is None:
             i.write("")
         else:
             i.write(inp)
-    cmd = "../exe/specs -f {} -i {} -o {}".format(specfile,inpfile,outfile)
+    cmd = "../exe/specs -c {} -f {} -i {} -o {}".format(conffile, specfile,inpfile,outfile)
     return leak_check(cmd,str(testid))
 

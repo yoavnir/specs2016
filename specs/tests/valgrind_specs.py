@@ -2,10 +2,14 @@ import memcheck,input_samples,sys,argparse
 
 case_counter = 0
 
-def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS):
-    global case_counter
+tests_to_run = None
+
+def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, conf=""):
+    global case_counter, tests_to_run
     case_counter = case_counter + 1
-    (rc,info) = memcheck.leak_check_specs(spec,input,case_counter)
+    if tests_to_run is not None and str(case_counter) not in tests_to_run:
+    	return
+    (rc,info) = memcheck.leak_check_specs(spec,input,case_counter,conf)
     sys.stdout.write("Test case #{} - {} - ".format(case_counter,description))
     if rc!=expected_rc:
         sys.stdout.write("Failed. RC={}; info={}; expected: {}\n".format(memcheck.RetCode_strings[rc],info,memcheck.RetCode_strings[expected_rc]))
@@ -20,11 +24,16 @@ parser.add_argument("--no_valgrind", dest="nvg", action="store_true", default=No
 					help="Don't run valgrind - just check if the command succeeds.")
 parser.add_argument("--keep_output", dest="keep", action="store_true", default=None,
 					help="Keep output files.")
+parser.add_argument("--only", dest="only", action="store", default="", 
+					help="Comma-separated list of test numbers")
 args = parser.parse_args()
 if args.nvg==True:
 	memcheck.no_valgrind = True
 if args.keep==True:
 	memcheck.keep_specs_output = True
+if args.only!="":
+	tests_to_run = args.only.split(",")
+
 
 # Now come the test cases
 
@@ -120,6 +129,98 @@ run_case(s,i,"SUBSTR with field separator")
 s = "fs ' ' substr ws , w3 of f2 1"
 i = "Let t,h,e,r,e be light\nAnd there was light"
 run_case(s,i,"SUBSTR with word separator")
+
+# Some basic ALU stuff
+
+s = 'print "\'2+3=\' || (2+3)" 1'
+i = None
+run_case(s,i,"Simple ALU addition and concatenation")
+
+s = 'a: word 1 .  PRINT "\'The first word is \' || a" 1'
+i = "Hello, there\nMy, it's been a long long time"
+run_case(s,i,"Concatenation with field identifier")
+
+s = 'a: word 1 1  "items. Total is" nextword  SET "#0+=a"  PRINT "#0" nextword'
+i = "5\n7\n3"
+run_case(s,i,"Counter summing up a field identifier")
+
+s = \
+'''
+r: word 1 .
+   /Tau is/ 1
+   PRINT "@pi*2" nextword
+   /; Circle area is/ next
+   PRINT "@pi*r*r" nextword
+   /; My favorite animal is a/ next
+   PRINT "@favoriteAnimal" nextword
+   /; My motto is:/ next
+   PRINT "@Motto" nextword
+'''
+i = "5\n7\n3"
+c = \
+'''
+pi: 3.14159265
+favoriteAnimal: cat
+billion: 1000000000
+Motto: "memento mori"
+'''
+run_case(s,i,"Fun with configured values",conf=c)
+
+s = "print '@version' 1 print '@@' nw"
+i = "cat"
+run_case(s,i,"entire line and version")
+
+# Some operator tests
+
+s = "a: word 1 . print '!a' 1 print '+a' nw print '-a' nw"
+i = "0\n1\n2"
+run_case(s,i,"Unary Operators")
+
+s = \
+"""
+a: word 1 . b: word 2 . c: word 3 . d: word 4 .
+   print 'a+b-c*d/6' 1
+   print 'a//b' nw
+   print 'a%b' nw
+   print 'a||b' nw
+   write
+   print 'a<b' 1
+   print 'a<=b' nw
+   print 'a>b' nw
+   print 'a>=b' nw
+   print 'a<<b' nw
+   print 'c>>d' nw
+   print 'a<<=c' nw
+   print 'b>>=d' nw
+   print 'a=d' nw
+   print 'b==c' nw
+   print 'c!=a' nw
+   print 'd!==b' nw
+   print 'a>b & c<d' nw
+   print 'a>b | c<d' nw
+"""
+i = "1 2 3 4\n9 8 7 6"
+run_case(s,i,"Binary Operators")
+
+s = \
+'''
+a: word 1 .
+   set '#0:=a'
+   set '#1+=a'
+   set '#2-=a'
+   set '#3*=a'
+   set '#4/=a'
+   set '#5//=a'
+   set '#6%=a'
+   set '#7||=a'
+   print '#0 + #1 + #2 + #3 + #4 + #5 + #6 + #7' 1
+'''
+i = "1\n2\n3\n4\n1\n2\n3\n4"
+run_case(s,i,"Assignment Operators")
+
+s = "a: word 1 . print '#0:=a' 1 print '#1+=a' nw"
+i = "1\n2\n3\n4"
+run_case(s,i,"Assignments as Expressions")
 
 
 

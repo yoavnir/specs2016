@@ -30,10 +30,16 @@ static void useKeyValue(std::string& key, std::string& value)
 
 #ifdef WIN64
 static std::string getConfigFileName() {
+	if (g_configurationFile!="") {
+		return g_configurationFile;
+	}
 	return std::string(std::getenv("HOMEDRIVE")) + std::getenv("HOMEPATH") + "\\specs.cfg";
 }
 #else
 static std::string getConfigFileName() {
+	if (g_configurationFile!="") {
+		return g_configurationFile;
+	}
 	return std::string(std::getenv("HOME")) + "/.specs";
 }
 #endif
