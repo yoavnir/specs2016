@@ -1,6 +1,6 @@
 import sys, memcheck
 
-count_ALU_tests = 343
+count_ALU_tests = 344
 count_processing_tests = 101
 count_token_tests = 14
 

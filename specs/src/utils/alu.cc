@@ -79,6 +79,9 @@ ALUInt ALUValue::getInt() const
 		return std::stoll(m_value);
 	} catch (std::invalid_argument& e) {
 		return 0;
+	} catch (std::out_of_range& e) {
+		std::string err = "Out of range trying to convert " + m_value + " to Int";
+		MYTHROW(err);
 	}
 }
 

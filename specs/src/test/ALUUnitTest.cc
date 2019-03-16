@@ -687,6 +687,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("frombin(#4)", "1094795585");
 	VERIFY_EXPR_RES("tobin(1094795590)","FAAA");
 
+	// Issue #71: tobin/tobine of large input
+	VERIFY_EXPR_RES("tobin('1234567890123456789012')", "Out of range trying to convert 1234567890123456789012 to Int")
+
 	// Possible problem with integer division
 	VERIFY_EXPR_RES("37/10","3.7");
 	VERIFY_EXPR_RES("37//10","3");
