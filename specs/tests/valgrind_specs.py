@@ -222,6 +222,35 @@ s = "a: word 1 . print '#0:=a' 1 print '#1+=a' nw"
 i = "1\n2\n3\n4"
 run_case(s,i,"Assignments as Expressions")
 
+# Some functions
+
+s = 'a: word 1 . print "abs(a)" 1'
+i = "1\n-1\n0\n-9.83\n1234567890\n1234567890123456789012\n-987654321"
+run_case(s,i,"Functions: abs")
+
+s = 'a: word 1 . print "frombin(a)" 1'
+i = "A\nABCD\nABCDEFGH\nQWERTYUIOP\n"
+run_case(s,i,"Functions: frombin",memcheck.RetCode_COMMAND_FAILED) 
+# Because of the invalid length lines: QWERTYUIOP and the blank line
+
+s = 'a: word 1 . b: word 2 . print "pow(a,b)" 1'
+i = "1 0\n2 2\n5 9\n3.14 9.2\n98765.4 1234.8"
+run_case(s,i,"Functions: pow")
+
+s = 'a: word 1 . print "sqrt(a)" 1'
+i = "1\n-1\n0\n-9.83\n1234567890\n1234567890123456789012\n-987654321\nAA"
+run_case(s,i,"Functions: sqrt")
+
+s = 'a: word 1 . print "tobin(a)" 1'
+i = "1\n-1\n0\n1234567890\n1234567890123456789012\n-987654321\n9.83\n"
+run_case(s,i,"Functions: tobin",memcheck.RetCode_COMMAND_FAILED)
+# out of range exception is stoll converting big number to int
+
+s = 'a: word 1 . b: word 2 . print "tobine(a,b)" 1'
+i = "1 8\n-1 8\n0 8\n1234567890 32\n1234567890123456789012 64\n-987654321 32\n9.83 32\n"
+run_case(s,i,"Functions: tobine",memcheck.RetCode_COMMAND_FAILED)
+# same
+
 
 
 
