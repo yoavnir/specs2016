@@ -480,6 +480,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_UNARY(uNot,1,Int,"0");
 	counters.set(12,ALUInt(0));
 	counters.set(13,0.0L);
+	counters.set(0);
 	VERIFY_UNARY(uNot,0,None,"0");
 	VERIFY_UNARY(uNot,12,Int,"1");
 	VERIFY_UNARY(uNot,13,Int,"1");
@@ -596,8 +597,11 @@ int runALUUnitTests(unsigned int onlyTest)
 #undef X
 
 	VERIFY_ASSN(uAssLet,33,3,Float,"3.14159265");
+	counters.set(33,3.14159265L);
 	VERIFY_ASSN(uAssAdd,33,3,Float,"6.2831853");
+	counters.set(33,6.2831853L);
 	VERIFY_ASSN(uAssSub,33,3,Float,"3.14159265");
+	counters.set(33,3.14159265L);
 	VERIFY_ASSN(uAssAppnd,33,3,Str,"3.141592653.14159265");
 
 	// TODO: Many more needed
@@ -877,6 +881,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
 	VERIFY_ASSN_RES("#6:=1", "1");
 	VERIFY_ASSN_RES("#6/=0", "NaN");
+
+	counters.set(6,std::numeric_limits<ALUFloat>::quiet_NaN());
 	VERIFY_ASSN_RES("#6+=5", "NaN");
 	VERIFY_ASSN_RES("#6:=1", "1");   // Let can fix a NaN
 

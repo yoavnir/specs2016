@@ -251,6 +251,38 @@ i = "1 8\n-1 8\n0 8\n1234567890 32\n1234567890123456789012 64\n-987654321 32\n9.
 run_case(s,i,"Functions: tobine",memcheck.RetCode_COMMAND_FAILED)
 # same
 
+s = "a: word 1 . print 'center(a,8)' 1"
+i = "the\nincredible\nhulk"
+run_case(s,i,"Functions: center")
+
+s = "a: word 1 . print 'left(a,8)' 1"
+i = "the\nincredible\nhulk"
+run_case(s,i,"Functions: left")
+
+s = "a: word 1 . print 'right(a,8)' 1"
+i = "the\nincredible\nhulk"
+run_case(s,i,"Functions: right")
+
+s = "a: word 1 . print 'includes(a,\"red\")' 1"
+i = "the\nred\nincredible"
+run_case(s,i,"Functions: includes")
+
+s = "a: word 1 . print 'len(a)' 1"
+i = "the\nred\n\nincredible"
+run_case(s,i,"Functions: len")
+
+s = "a: word 1 . print 'substr(a,4,3)' 1"
+i = "the\nincredible\n\nhulk"
+run_case(s,i,"Functions: substr")
+
+s = "a: word 1 . print 'pos(\"red\",a)' 1"
+i = "the\nred\nincredible"
+run_case(s,i,"Functions: pos")
+
+s = "a: word 1 . print 'rpos(\"red\",a)' 1"
+i = "the\nred\nincredible"
+run_case(s,i,"Functions: rpos")
+
 
 
 

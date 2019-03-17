@@ -4,7 +4,7 @@ count_ALU_tests = 344
 count_processing_tests = 101
 count_token_tests = 14
 
-tests_that_may_fail = [43,48,58,61,63,152,153,154,342]
+tests_that_may_fail = [43,48]
 for i in range(count_ALU_tests):
     cmd = "../exe/ALUUnitTest {}".format(i+1)
     (rc,info) = memcheck.leak_check(cmd)
