@@ -64,10 +64,10 @@ def leak_check(cmd, test_id="0"):
 
 
 def cleanup():
-    os.system("/bin/rm valgrind.out* cmd.out*")
+    os.system("/bin/rm valgrind.out* cmd.out* 2> /dev/null")
 
 def cleanup_valgrind():
-    os.system("/bin/rm valgrind.out*")
+    os.system("/bin/rm valgrind.out* 2> /dev/null")
 
 def leak_check_specs(spec, inp, testid, confFile):
     global keep_specs_output

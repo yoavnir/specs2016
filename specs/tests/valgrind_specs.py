@@ -17,8 +17,7 @@ def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, con
     else:
         sys.stdout.write("No leaks\n")
         
-# Parse the one command line option - --no_valgrind
-
+# Parse the one command line options
 parser = argparse.ArgumentParser()
 parser.add_argument("--no_valgrind", dest="nvg", action="store_true", default=None,
 					help="Don't run valgrind - just check if the command succeeds.")
