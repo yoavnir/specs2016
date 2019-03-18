@@ -282,6 +282,76 @@ s = "a: word 1 . print 'rpos(\"red\",a)' 1"
 i = "the\nred\nincredible"
 run_case(s,i,"Functions: rpos")
 
+# Record Access Functions
+
+s = "print 'field(3)' 1"
+i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
+run_case(s,i,"Functions: field")
+
+s = "print 'fields(2,3)' 1"
+i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
+run_case(s,i,"Functions: fields")
+
+s = "print 'fieldcount()' 1"
+i = "a\tb\tc\td \n a\tb \n \t\t\t\t\n"
+run_case(s,i,"Functions: fieldcount")
+
+s = "print 'fieldend(3)' 1"
+i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
+run_case(s,i,"Functions: fieldend")
+
+s = "print 'fieldindex(3)' 1"
+i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
+run_case(s,i,"Functions: fieldindex")
+
+s = "print 'fieldlength(3)' 1"
+i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
+run_case(s,i,"Functions: fieldlength")
+
+s = "print 'iterno()' 1 print 'recno()' nw"
+i = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"
+run_case(s,i,"Functions: iterno & recno (1)")
+
+s = "print 'iterno()' 1 print 'recno()' nw READ print 'iterno()' nw print 'recno()' nw"
+i = "1\n2\n3\n4\n5\n6\n7\n8\n9"
+run_case(s,i,"Functions: iterno & recno (2)")
+
+s = "print 'iterno()' 1 print 'recno()' nw READSTOP print 'iterno()' nw print 'recno()' nw"
+i = "1\n2\n3\n4\n5\n6\n7\n8\n9"
+run_case(s,i,"Functions: iterno & recno (3)")
+
+s = "print 'record()' 1"
+i = "1\n\nhello"
+run_case(s,i,"Functions: record")
+
+s = "print 'word(3)' 1"
+i = "Hope is the thing\n with feathers\n\n\n"
+run_case(s,i,"Functions: word")
+
+s = "print 'words(2,3)' 1"
+i = "Hope is the thing\n with feathers\n\n\n"
+run_case(s,i,"Functions: words")
+
+s = "print 'wordcount()' 1"
+i = "Hope is the thing\n with feathers\n\n\n"
+run_case(s,i,"Functions: wordcount")
+
+s = "print 'wordend(3)' 1"
+i = "Hope is the thing\n with feathers\n\n\n"
+run_case(s,i,"Functions: wordend")
+
+s = "print 'wordindex(3)' 1"
+i = "Hope is the thing\n with feathers\n\n\n"
+run_case(s,i,"Functions: wordindex")
+
+s = "print 'wordlength(3)' 1"
+i = "Hope is the thing\n with feathers\n\n\n"
+run_case(s,i,"Functions: wordlength")
+
+
+
+
+
 
 
 
