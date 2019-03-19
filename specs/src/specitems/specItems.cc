@@ -7,6 +7,7 @@ itemGroup::itemGroup()
 {
 	m_items.clear();
 	bNeedRunoutCycle = false;
+	bNeedRunoutCycleFromStart = false;
 	bFoundSelectSecond = false;
 }
 
@@ -58,6 +59,9 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			DataField *pItem = new DataField;
 			pItem->parse(tokenVec, index);
+			if (pItem->forcesRunoutCycle()) {
+				bNeedRunoutCycleFromStart = bNeedRunoutCycle = true;
+			}
 			addItem(pItem);
 			break;
 		}
@@ -94,6 +98,10 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				}
 				else if (TokenListType__WHILE == tokenVec[index].Type()) {
 					pItem->setWhile();
+				}
+
+				if (pItem->forcesRunoutCycle()) {
+					bNeedRunoutCycleFromStart = bNeedRunoutCycle = true;
 				}
 				index++;
 				addItem(pItem);
@@ -190,7 +198,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 
 	if (pState.isRunOut()) {
 		// Find the EOF token
-		for ( ;  i < m_items.size() && !bFoundSelectSecond; i++) {
+		for ( ; !bNeedRunoutCycleFromStart && i < m_items.size() && !bFoundSelectSecond; i++) {
 			TokenItem* pTok = dynamic_cast<TokenItem*>(m_items[i]);
 			if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
 				i++;  // So we start with the one after the EOF

@@ -1672,3 +1672,20 @@ bool AluExpressionReadsLines(AluVec& vec)
 	}
 	return false;
 }
+
+bool expressionForcesRunoutCycle(AluVec& vec)
+{
+	for (AluUnit* unit : vec) {
+		switch (unit->type()) {
+		case UT_Identifier:
+		{
+			AluFunction* pFunction = dynamic_cast<AluFunction*>(unit);
+			MYASSERT(NULL!=pFunction);
+			return ("eof" == pFunction->getName());
+		}
+		default:
+			return false;
+		}
+	}
+	return false;
+}

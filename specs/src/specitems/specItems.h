@@ -22,6 +22,7 @@ public:
 	bool readsLines();
 private:
 	bool bNeedRunoutCycle;
+	bool bNeedRunoutCycleFromStart;
 	bool bFoundSelectSecond;
 	void addItem(PItem pItem);
 	std::vector<PItem> m_items;

@@ -344,6 +344,8 @@ static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
 
 typedef std::vector<AluUnit*> AluVec;
 
+bool expressionForcesRunoutCycle(AluVec& vec);
+
 bool expressionIsAssignment(AluVec& vec);
 
 bool parseAluExpression(std::string& s, AluVec& vec);
