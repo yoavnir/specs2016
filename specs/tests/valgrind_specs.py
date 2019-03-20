@@ -348,6 +348,65 @@ s = "print 'wordlength(3)' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
 run_case(s,i,"Functions: wordlength")
 
+# Special functions
+
+s = "print 'first()' 1"
+i = None
+run_case(s,i,"Functions: first(1) - nor reading lines")
+
+s = "print 'first()' 1 w1 nw"
+i = "a\nb\nc\nd"
+run_case(s,i,"Functions: first(2) - reading lines")
+
+s = \
+"""
+if 'first()' then 
+	w1 1
+else
+	w2 1
+endif
+"""
+i = "a\nb\nc\nd"
+run_case(s,i,"Functions: first(3) - reading lines and branching on the result")
+
+s = "print 'eof()' 1"
+i = None
+run_case(s,i,"Functions: eof(1) - nor reading lines")
+
+s = "print 'eof()' 1 w1 nw"
+i = "a\nb\nc\nd"
+run_case(s,i,"Functions: eof(2) - reading lines")
+
+s = \
+"""
+if 'eof()' then 
+	w1 1
+else
+	w2 1
+endif
+"""
+i = "a\nb\nc\nd"
+run_case(s,i,"Functions: eof(3) - reading lines and branching on the result")
+
+s = "print 'conf(\"version\")' 1 print 'conf(\"cracker\")' nw"
+i = None
+run_case(s,i,"Functions: conf")
+
+s = "a: w1 . print 'd2tf(a,\"%Y-%m-%dT%H:%M:%S\")' 1"
+i = "1553109338\n1553109340\n15\n-1953109338"
+run_case(s,i,"Functions: d2tf(1)")
+
+s = "a: w1 . print 'd2tf(a,\"%Y-%m-%dT%H:%M:%S.%6f\")' 1"
+i = "1553109338\n1553109340.15\n15.9876\n-1953109338.123456"
+run_case(s,i,"Functions: d2tf(2)")
+
+s = "print 'tf2d(@@,\"%Y-%m-%dT%H:%M:%S\")' 1"
+i = "2024-12-05T23:45:12"
+run_case(s,i,"Functions: tf2d(1)")
+
+s = "print 'tf2d(@@,\"%H:%M:%S.%6f\")' 1"
+i = "23:45:12\n12:12:76.743\n13:13:13.123456"
+run_case(s,i,"Functions: tf2d(1)")
 
 
 
