@@ -221,6 +221,14 @@ s = "a: word 1 . print '#0:=a' 1 print '#1+=a' nw"
 i = "1\n2\n3\n4"
 run_case(s,i,"Assignments as Expressions")
 
+s = "w1 1 @version nw"
+i = "1\n2\n3\n4"
+run_case(s,i,"Configured strings - No errors")
+
+s = "w1 1 @version nw @kuku nw"
+i = "1\n2\n3\n4"
+run_case(s,i,"Configured strings - With errors")
+
 # Some functions
 
 s = 'a: word 1 . print "abs(a)" 1'
@@ -408,7 +416,138 @@ s = "print 'tf2d(@@,\"%H:%M:%S.%6f\")' 1"
 i = "23:45:12\n12:12:76.743\n13:13:13.123456"
 run_case(s,i,"Functions: tf2d(1)")
 
+# Conditional Execution
 
+s = \
+'''
+a: w1 1 /is/ nw
+    if "a%2" then
+        /odd/ nw
+    else
+        /even/ nw
+    endif
+'''
+i = "0\n1\n25\n404\n2.5\n3.5\nhello"
+run_case(s,i,"Conditional Execution (1) - if-then-else-endif")
+
+s = \
+'''
+a: w1 1 /is/ nw
+    if "a%2" then
+        /odd/ nw
+    else
+        /even/ nw
+'''
+i = "0\n1\n25\n404\n2.5\n3.5\nhello"
+run_case(s,i,"Conditional Execution (2) - if-then-else; missing endif")
+
+s = \
+'''
+a: w1 .
+    if "0==a%15" then
+        /fizzbuzz/ 1
+    elseif "0==a%5" then
+        /buzz/ 1
+    elseif "0==a%3" then
+        /fizz/ 1
+    else 
+        ID a 1
+    endif
+'''
+i = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+run_case(s,i,"Conditional Execution (3) - fizzbuzz")
+
+s = "a: w1 1 /is/ nw if 'a%2' then /not/ nw endif /even/ nw"
+i = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+run_case(s,i,"Conditional Execution (4) - no else clause")
+
+s = "a: w1 1 /is/ nw if '0==a%8' then /very much not/ nw elseif 'a%2' then /not/ nw endif /even/ nw"
+i = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+run_case(s,i,"Conditional Execution (5) - elseif, but no else clause")
+
+s = \
+"""
+a: w1 1 /is/ nw 
+	if "a==1 | a==4 | a==9 | a==16 | a==25" then
+		/a square/ nw
+	else
+		/probably not a square/ nw
+	endif
+"""
+i = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+run_case(s,i,"Conditional Execution (6) - complex condition")
+
+# loops
+s = \
+"""
+a: w1 1.3 right / / n
+	set '#0:=a'
+	while '#0>0' do
+		/*/ n
+		set '#0-=1'
+	done
+"""
+i = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+run_case(s,i,"While Loop (1) - simple counter")
+
+s = \
+"""
+while '#1<20' do
+	set "#1+=1"
+	set '#0:=#1'
+	while '#0>0' do
+		/*/ n
+		set '#0-=1'
+	done
+done
+"""
+i = None
+run_case(s,i,"While Loop (2) - same as (1) but no input")
+
+# EOF
+
+s = \
+"""
+    1-*    1
+ a: word 1 .
+    set '#0+=a'
+ EOF
+ 	/Total:/ 1
+ 	print #0 NW
+"""
+i = "1\n2\n3\n4"
+run_case(s,i,"Run-Out Cycle with EOF")
+
+# Control Break
+
+s = \
+'''
+	FIELDSEPARATOR ,
+ c: FIELD 1   .
+	FIELD 3  10
+	/,/      NEXT
+	FIELD 2  NEXTWORD
+	BREAK c
+		ID c 1
+'''
+i = input_samples.employees
+run_case(s,i,"Control Break (1) - with BREAK keyword")
+
+s = \
+'''
+	FIELDSEPARATOR ,
+ a: FIELD 1    .
+	IF break(a) THEN
+		ID a           1
+		/Department:/ NW
+			WRITE
+	ENDIF
+	FIELD 3   10
+	,          N
+	FIELD 2   NW
+'''
+i = input_samples.employees
+run_case(s,i,"Control Break (2) - with break() function")
 
 
 

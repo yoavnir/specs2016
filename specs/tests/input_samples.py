@@ -57,3 +57,27 @@ O frabjous day! Callooh! Callay!'
 All mimsy were the borogoves,
       And the mome raths outgrabe.
 """
+
+employees = \
+'''
+Payroll,Eddy,Eck
+Payroll,Janel,Polen
+Finance,Leonard,Cockett
+Finance,Dorie,Lugo
+Finance,Wiley,Cheung
+Finance,Carmelo,Reitz
+Finance,Donetta,Rybak
+R&D,Jamaal,Mcgillis
+R&D,Jonna,Scheffer
+R&D,Shawnna,Driskell
+R&D,Maybell,Ditmore
+R&D,Ami,Fentress
+R&D,Randee,Tarkington
+R&D,Jerica,Jimenez
+Sales,Kristopher,Lind
+Sales,Margret,Picone
+Sales,Damien,Daniel
+Support,Deann,Rushton
+Support,Spencer,Marse
+Support,Devora,Fortier
+'''
