@@ -549,7 +549,80 @@ s = \
 i = input_samples.employees
 run_case(s,i,"Control Break (2) - with break() function")
 
+# WRITE
 
+s = \
+'''
+/Filename:/ 1
+word -1     nw
+WRITE
+/type:/ 1
+if "range(1,1)=='d'" then
+	/directory/ nw
+else
+	/file/ nw
+endif
+'''
+i = input_samples.ls_out
+run_case(s,i,"WRITE")
 
+# READ
+s = \
+"""
+IF "first()" THEN
+	READ  # Read away the first blank line from the input
+	SET "#4:=word(2)"
+ELSE
+	PRINT "#4"                1
+	WORD 2             NEXTWORD
+	READ
+	WORD 2-6 tf2d "%c" NEXTWORD
+	WHILE "word(1)!='commit'" DO
+		READSTOP
+	DONE
+	SET "#4:=word(2)"
+ENDIF
+"""
+i = input_samples.gitlog
+run_case(s,i,"READ and READSTOP")
+
+# UNREAD
+s = \
+"""
+IF "first()" THEN
+	READ  # Read away the first blank line from the input
+ENDIF
+WORD 2                    1
+READSTOP
+WORD 2             NEXTWORD
+READSTOP
+WORD 2-6 tf2d "%c" NEXTWORD
+WHILE "word(1)!='commit'" DO
+	READSTOP
+DONE
+UNREAD
+"""
+i = input_samples.gitlog
+run_case(s,i,"UNREAD")
+
+# REDO
+
+s = "fs : f2-* 1 REDO /source:/ 1 w1 nw"
+i = input_samples.httplog
+run_case(s,i,"REDO")
+
+# Second Reading
+s = \
+'''
+WORD 1        1
+SELECT SECOND
+WORD 1 NEXTWORD
+SELECT FIRST
+WORD 2 NEXTWORD
+SELECT SECOND
+WORD 2 NEXTWORD
+'''
+i = "first record\nsecond line\nlast one"
+run_case(s,i,"Second Reading")
 
 

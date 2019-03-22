@@ -81,3 +81,49 @@ Support,Deann,Rushton
 Support,Spencer,Marse
 Support,Devora,Fortier
 '''
+
+gitlog = \
+'''
+commit df3438ed9e95c2aa37a429ab07f0956164ec4229
+Author: synp71 <yoav.nir@gmail.com>
+Date:   Sun Jan 20 21:40:41 2019 +0200
+
+    Add NEWS section to Readme.md
+
+commit e6d7f9ac591379d653a5685f9d75deccc1792545
+Author: synp71 <yoav.nir@gmail.com>
+Date:   Sun Jan 20 21:09:47 2019 +0200
+
+    Issue #33: Some more docs improvement
+    
+    Also fixed the stats to conform to current timestamp format.
+
+commit 241002cf5a66737bbfd29888244a0a463cd9bcae
+Author: synp71 <yoav.nir@gmail.com>
+Date:   Thu Jan 17 23:45:21 2019 +0200
+
+    Issue #33: fix formatting
+
+commit 9efb13277c561a3a28195d469420031add60946e
+Author: synp71 <yoav.nir@gmail.com>
+Date:   Thu Jan 17 23:38:01 2019 +0200
+
+    Issue #33 basic specification and CLI switches
+'''
+
+httplog = \
+'''
+test8:mmind.wariat.org - - [04/Jul/1995:08:12:26 -0400] "GET /shuttle/countdown/video/livevideo.gif HTTP/1.0" 304 0
+test8:bruosh01.brussels.hp.com - - [04/Jul/1995:08:12:26 -0400] "GET /shuttle/missions/sts-71/mission-sts-71.html HTTP/1.0" 200 12418
+test8:beastie-ppp1.knoware.nl - - [04/Jul/1995:08:12:26 -0400] "GET /shuttle/missions/sts-71/images/KSC-95EC-0423.txt HTTP/1.0" 200 1224
+test8:piweba3y.prodigy.com - - [04/Jul/1995:08:12:28 -0400] "GET /shuttle/countdown/liftoff.html HTTP/1.0" 200 4535
+test8:sullivan.connix.com - - [04/Jul/1995:08:12:28 -0400] "GET /shuttle/missions/sts-71/images/index71.gif HTTP/1.0" 200 57344
+test8:bruosh01.brussels.hp.com - - [04/Jul/1995:08:12:33 -0400] "GET /shuttle/missions/sts-71/sts-71-patch-small.gif HTTP/1.0" 200 12054
+test9:mmind.wariat.org - - [04/Jul/1995:08:12:33 -0400] "GET /shuttle/countdown/liftoff.html HTTP/1.0" 304 0
+test9:www-d4.proxy.aol.com - - [04/Jul/1995:08:12:34 -0400] "GET /shuttle/missions/sts-71/sts-71-day-01-highlights.html HTTP/1.0" 200 2722
+test9:mmind.wariat.org - - [04/Jul/1995:08:12:35 -0400] "GET /shuttle/countdown/video/livevideo.gif HTTP/1.0" 304 0
+test9:eepc50.ee.surrey.ac.uk - - [04/Jul/1995:08:12:35 -0400] "GET /shuttle/countdown/video/livevideo.jpeg HTTP/1.0" 200 50437
+test10:piweba3y.prodigy.com - - [04/Jul/1995:08:12:37 -0400] "GET /shuttle/countdown/video/livevideo.gif HTTP/1.0" 200 61490
+test10:crocus-fddi.csv.warwick.ac.uk - - [04/Jul/1995:08:12:39 -0400] "GET /shuttle/missions/sts-71/mission-sts-71.html HTTP/1.0" 200 12418
+test10:crocus-fddi.csv.warwick.ac.uk - - [04/Jul/1995:08:12:41 -0400] "GET /shuttle/missions/sts-71/sts-71-patch-small.gif HTTP/1.0" 200 12054
+'''

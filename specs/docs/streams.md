@@ -69,7 +69,7 @@ specs   IF "first()" THEN
            READ
            WORD 2-6 tf2d "%c" NEXTWORD
            WHILE "word(1)!='commit'" DO
-              READ
+              READSTOP
            DONE
            SET "#4:=word(2)"
         ENDIF
@@ -94,7 +94,7 @@ specs WORD 2                    1
       READSTOP
       WORD 2-6 tf2d "%c" NEXTWORD
       WHILE "word(1)!='commit'" DO
-          READ
+          READSTOP
       DONE
       UNREAD
 ```
