@@ -181,6 +181,9 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 	case TokenListType__DTODCLOCK:
 		ret = new ClockPart(ClockType__Dynamic);
 		break;
+	case TokenListType__TIMEDIFF:
+		ret = new ClockPart(ClockType__Diff);
+		break;
 	case TokenListType__ID:
 		ret = new IDPart(token.Literal());
 		break;

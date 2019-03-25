@@ -82,6 +82,7 @@ private:
 };
 
 #define NUMBER_PART_FIELD_LEN  10
+#define CLOCKDIFF_PART_FIELD_LEN 8
 class NumberPart : public InputPart {
 public:
 	NumberPart() {m_Num = 0;}
@@ -95,7 +96,8 @@ private:
 
 enum clockType {
 	ClockType__Static,
-	ClockType__Dynamic
+	ClockType__Dynamic,
+	ClockType__Diff
 };
 
 class ClockPart : public InputPart {
