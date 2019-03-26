@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "15 Dec 2018" "0.2" "specs man page"
+.TH man 1 "15 Apr 2019" "0.3" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -581,14 +581,21 @@ Prints out detailed information about the parsing and compiling of expressions (
 Prints out detailed step-by-step information about the evaluation of expressions (
 .I only in debug build
 ).   
+.IP "--config or -c" 3
+Changes the configuration file from the default 
+.I ~/.specs
+to whatever the parameter says
+.IP "--timezone" 3
+Changes the timezone from the default which is the current timezone to the value specified.
 
 .SH CONFIGURATION FILE
 .B specs
-reads a configuration file from 
+reads a configuration file by default from 
 .B $HOME/.specs
 .P 
-This file will contain some configuration options in a future release. For now, it only allows you to set user-predefined labels. For example, an entry such as this:
+This file contains some configuration options. For now, it only allows you to set user-predefined labels and the timezone configuration option. For example, an entry such as this:
 .P
+    timezone: "Europe/Belfast"
     myCA: "Honest Abe's Used Cars & Certificates"
 .P
 allows you to issue a 
@@ -600,7 +607,7 @@ command like this:
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
-This returns the version of specs, for example "v0.2"
+This returns the version of specs, for example "v0.3"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 

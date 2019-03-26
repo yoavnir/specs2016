@@ -54,6 +54,10 @@ int main (int argc, char** argv)
 
 	readConfigurationFile();
 
+	if (g_timeZone != "") {
+		specTimeSetTimeZone(g_timeZone);
+	}
+
 #ifdef DEBUG
 	conciseExceptions = !g_bVerbose;
 #endif
