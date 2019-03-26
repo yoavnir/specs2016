@@ -5,6 +5,7 @@
 #include "utils/platform.h"  // For put_time and get_time vs strftime and strptime
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
+#include "utils/TimeUtils.h"
 #include "processing/ProcessingState.h"
 
 ALUCounters counters;
@@ -906,5 +907,8 @@ int main (int argc, char** argv)
 	if (argc>1) {
 		onlyTest = std::stoul(argv[1]);
 	}
+
+	specTimeSetTimeZone("Asia/Jerusalem"); // All the time-format tests were set based on this time zone
+
 	return runALUUnitTests(onlyTest);
 }
