@@ -2,7 +2,7 @@ import os,sys,argparse
 
 cppflags_gcc = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
 cppflags_clang = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++11 -I ."
-cppflags_vs = "$(CONDCOMP) /DGITTAG=$(TAG) /I."
+cppflags_vs = "$(CONDCOMP) /DGITTAG=$(TAG) /nologo /I."
 
 body1 = \
 """
@@ -204,31 +204,66 @@ else:
 	
 if compiler=="VS":
 	cppflags = cppflags_vs
-	cppflags_test = ""
+	cppflags_test = "/EHsc /nologo"
 elif compiler=="CLANG":
 	cppflags = cppflags_clang
 	cppflags_test = "-std=c++11"
 else:
 	cppflags = cppflags_gcc
 	cppflags_test = "--std=c++11"
-
-if compiler!="VS":
-	test_put_time_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
-	with open("xx.cc", "w") as testfile:
-		testfile.write('#include <iomanip>\nvoid x() { std::put_time(NULL,""); }\n')
-	sys.stdout.write("Testing std::put_time()...")
-	if 0==os.system(test_put_time_cmd):
-		sys.stdout.write("supported.\n")
-		CFG_put_time = True
-	else:
-		sys.stdout.write("not supported.\n")
-		CFG_put_time = False
-	if platform=="NT":
-		os.system("del xx.cc xx.o")
-	else:
-		os.system("/bin/rm xx.cc xx.o")
+	
+if platform=="POSIX":
+	errs = "2> /dev/null"
 else:
+	errs = "2> nul"
+	
+# Test if the compiler exists
+test_compiler_exists_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+with open("xx.cc", "w") as testfile:
+	testfile.write('void iefbr14() {}\n')
+sys.stdout.write("Testing compiler exists...")
+rc = os.system(test_compiler_exists_cmd)
+if platform=="NT":
+	os.system("del xx.cc xx.o")
+else:
+	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+if 0==rc:
+	sys.stdout.write("Yes.\n")
+else:
+	sys.stdout.write("No.  Aborting...\n")
+	exit(-4)
+	
+# Test if the compiler supports C++11
+test_cpp11_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+with open("xx.cc", "w") as testfile:
+	testfile.write('int ret_auto_0() {auto i=0; return i;}\n')
+sys.stdout.write("Testing C++11 support.....")
+rc = os.system(test_cpp11_cmd)
+if platform=="NT":
+	os.system("del xx.cc xx.o")
+else:
+	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+if 0==rc:
+	sys.stdout.write("Yes.\n")
+else:
+	sys.stdout.write("No.  Aborting...\n")
+	exit(-4)
+
+# Test if the compiler supports put_time
+test_put_time_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+with open("xx.cc", "w") as testfile:
+	testfile.write('#include <iomanip>\nvoid x() { std::put_time(NULL,""); }\n')
+sys.stdout.write("Testing std::put_time()...")
+if 0==os.system(test_put_time_cmd):
+	sys.stdout.write("Supported.\n")
 	CFG_put_time = True
+else:
+	sys.stdout.write("not supported.\n")
+	CFG_put_time = False
+if platform=="NT":
+	os.system("del xx.cc xx.o")
+else:
+	os.system("/bin/rm xx.cc xx.o {}".format(errs))
 	
 if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)

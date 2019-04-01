@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <stdlib.h> // defines setenv
 #include "platform.h"  // For put_time and get_time vs strftime and strptime
 #include "TimeUtils.h"
 
@@ -125,3 +126,10 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 
 	return ret;
 }
+
+void specTimeSetTimeZone(const std::string& tzname)
+{
+	static const char sTZ[] = "TZ";
+	setenv(sTZ, tzname.data(), 1);
+}
+

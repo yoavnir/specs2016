@@ -50,6 +50,7 @@
 	X(NUMBER,         false, false) \
 	X(TODCLOCK,       false, false) \
 	X(DTODCLOCK,      false, false) \
+	X(TIMEDIFF,       false, false) \
 	X(SET,            false, true) \
 	X(PRINT,          false, true)  \
 	X(IF,             false, true)  \
@@ -117,6 +118,7 @@ public:
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
 	std::string&    HelpIdentify();
+	void            deallocDynamic() {if (m_pRange) {delete m_pRange; m_pRange = NULL;}}
 private:
 	TokenListTypes  m_type;
 	TokenFieldRange *m_pRange;

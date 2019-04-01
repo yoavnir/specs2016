@@ -15,4 +15,6 @@ PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format);
 
 int64_t specTimeConvertFromPrintable(std::string printable, std::string format);
 
+void specTimeSetTimeZone(const std::string& tzname);
+
 #endif

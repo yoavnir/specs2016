@@ -16,6 +16,7 @@ public:
 	virtual std::string Debug() = 0;
 	virtual PSpecString getStr(ProcessingState& pState) = 0;
 	virtual bool        readsLines() {return false;}
+	virtual bool        forcesRunoutCycle() {return false;}
 };
 
 class LiteralPart : public InputPart {
@@ -81,6 +82,7 @@ private:
 };
 
 #define NUMBER_PART_FIELD_LEN  10
+#define CLOCKDIFF_PART_FIELD_LEN 8
 class NumberPart : public InputPart {
 public:
 	NumberPart() {m_Num = 0;}
@@ -94,7 +96,8 @@ private:
 
 enum clockType {
 	ClockType__Static,
-	ClockType__Dynamic
+	ClockType__Dynamic,
+	ClockType__Diff
 };
 
 class ClockPart : public InputPart {
@@ -125,6 +128,7 @@ public:
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 	virtual bool        readsLines();
+	virtual bool        forcesRunoutCycle() {return expressionForcesRunoutCycle(m_RPNExpr);}
 private:
 	AluVec m_RPNExpr;
 	bool   m_isAssignment;
@@ -159,6 +163,7 @@ public:
 	virtual std::string Debug() = 0;
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
 	virtual bool readsLines() {return false;}
+	virtual bool forcesRunoutCycle() {return false;}
 	virtual bool isBreak()    {return false;}
 	virtual bool ApplyUnconditionally() {return false;}
 };
@@ -173,6 +178,7 @@ public:
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 	virtual bool readsLines();
+	virtual bool forcesRunoutCycle() {return m_InputPart ? m_InputPart->forcesRunoutCycle() : false;}
 private:
 	InputPart* getInputPart(std::vector<Token> &tokenVec, unsigned int& index, char _wordSep=0, char _fieldSep=0);
 	SubstringPart* getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
@@ -207,6 +213,7 @@ public:
 	virtual std::string Debug()		{return m_rawExpression;}
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 	virtual bool readsLines();
+	virtual bool forcesRunoutCycle() { return expressionForcesRunoutCycle(m_RPNExpression);}
 private:
 	std::string     m_rawExpression;
 	ALUCounterKey   m_key;
@@ -235,6 +242,7 @@ public:
 	void    setElseIf();
 	void    setWhile();
 	virtual bool readsLines();
+	virtual bool forcesRunoutCycle() { return expressionForcesRunoutCycle(m_RPNExpression);}
 private:
 	bool        evaluate();
 	std::string m_rawExpression;

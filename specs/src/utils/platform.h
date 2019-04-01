@@ -9,6 +9,7 @@
 
 #ifdef WIN64
 typedef unsigned long long int u_int64_t;
+int setenv(const char *name, const char *value, int overwrite);
 #endif
 
 #ifdef _MSC_VER 

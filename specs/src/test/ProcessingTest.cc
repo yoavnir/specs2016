@@ -27,6 +27,7 @@ extern ALUCounters g_counters;
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
 		}                                       \
+		delete ps;								\
 } while (0);
 
 #define VERIFY2(sp,ln,ex) do {          \
@@ -44,6 +45,7 @@ extern ALUCounters g_counters;
 			} else {                            \
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
+			delete ps;			\
 		}                                       \
 } while (0);
 
@@ -84,10 +86,12 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.setFirst();
 				ps.incrementCycleCounter();
 				ig.processDo(sb, ps, &tRead, NULL);
+				PSpecString pOut = sb.GetStringUnsafe();
 				if (result) {
-					result->add(sb.GetStringUnsafe());
+					result->add(pOut);
+					delete pOut;
 				} else {
-					result = sb.GetStringUnsafe();
+					result = pOut;
 				}
 			} while (!tRead.endOfSource());
 		}
@@ -104,10 +108,12 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		ps.setFirst();
 		try {
 			ig.processDo(sb, ps, NULL, NULL);
+			PSpecString pOut = sb.GetStringUnsafe();
 			if (result) {
-				result->add(sb.GetStringUnsafe());
+				result->add(pOut);
+				delete pOut;
 			} else {
-				result = sb.GetStringUnsafe();
+				result = pOut;
 			}
 		} catch (SpecsException& e) {
 			result = SpecString::newString(e.what(true));
@@ -115,9 +121,12 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		}
 	}
 
-	free(example);
-
 end:
+	free(example);
+	while (!vec.empty()) {
+		vec[0].deallocDynamic();
+		vec.erase(vec.begin());
+	}
 	return result ? result : SpecString::newString();
 }
 
@@ -138,6 +147,8 @@ int main(int argc, char** argv)
 	if (argc > 1) onlyTest = std::stoi(argv[1]);
 
 	readConfigurationFile();
+
+	specTimeSetTimeZone("Asia/Jerusalem"); // All the time-format tests were set based on this time zone
 
 	VERIFY("w1 1", "The"); // Test #1
 	VERIFY("7-17 1", "ick brown f"); // Test #2

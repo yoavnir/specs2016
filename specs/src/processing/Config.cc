@@ -8,6 +8,7 @@
 #include <fstream>
 #include <cstdlib>
 #include "utils/platform.h"
+#include "utils/TimeUtils.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -24,16 +25,26 @@ static void useKeyValue(std::string& key, std::string& value)
 {
 	if (':'==key.at(key.length() - 1)) {
 		key = key.substr(0,key.length() - 1);
-		ExternalLiterals[key] = value;
+		if (key == "timezone") {
+			specTimeSetTimeZone(value);
+		} else {
+			ExternalLiterals[key] = value;
+		}
 	}
 }
 
 #ifdef WIN64
 static std::string getConfigFileName() {
+	if (g_configurationFile!="") {
+		return g_configurationFile;
+	}
 	return std::string(std::getenv("HOMEDRIVE")) + std::getenv("HOMEPATH") + "\\specs.cfg";
 }
 #else
 static std::string getConfigFileName() {
+	if (g_configurationFile!="") {
+		return g_configurationFile;
+	}
 	return std::string(std::getenv("HOME")) + "/.specs";
 }
 #endif

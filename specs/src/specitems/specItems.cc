@@ -7,10 +7,20 @@ itemGroup::itemGroup()
 {
 	m_items.clear();
 	bNeedRunoutCycle = false;
+	bNeedRunoutCycleFromStart = false;
 	bFoundSelectSecond = false;
 }
 
-void itemGroup::addItem(Item *pItem)
+itemGroup::~itemGroup()
+{
+	while (!m_items.empty()) {
+		PItem pItem = m_items[0];
+		m_items.erase(m_items.begin());
+		delete pItem;
+	}
+}
+
+void itemGroup::addItem(PItem pItem)
 {
 	m_items.insert(m_items.end(), pItem);
 }
@@ -44,11 +54,15 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__NUMBER:
 		case TokenListType__TODCLOCK:
 		case TokenListType__DTODCLOCK:
+		case TokenListType__TIMEDIFF:
 		case TokenListType__ID:
 		case TokenListType__PRINT:
 		{
 			DataField *pItem = new DataField;
 			pItem->parse(tokenVec, index);
+			if (pItem->forcesRunoutCycle()) {
+				bNeedRunoutCycleFromStart = bNeedRunoutCycle = true;
+			}
 			addItem(pItem);
 			break;
 		}
@@ -85,6 +99,10 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				}
 				else if (TokenListType__WHILE == tokenVec[index].Type()) {
 					pItem->setWhile();
+				}
+
+				if (pItem->forcesRunoutCycle()) {
+					bNeedRunoutCycleFromStart = bNeedRunoutCycle = true;
 				}
 				index++;
 				addItem(pItem);
@@ -181,7 +199,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 
 	if (pState.isRunOut()) {
 		// Find the EOF token
-		for ( ;  i < m_items.size() && !bFoundSelectSecond; i++) {
+		for ( ; !bNeedRunoutCycleFromStart && i < m_items.size() && !bFoundSelectSecond; i++) {
 			TokenItem* pTok = dynamic_cast<TokenItem*>(m_items[i]);
 			if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
 				i++;  // So we start with the one after the EOF

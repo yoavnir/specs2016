@@ -36,11 +36,12 @@ specs  a: word 1 1  "items. Total is" nextword  SET "#0+=a"  PRINT "#0" nextword
 All counters are initialized to the value zero (0) before they are first set.
 
 ### Configured Literals
-If you have literals that you use a lot, you can place them in the `.specs` file located in your home directory. Here's an example of such a file:
+If you have literals that you use a lot, you can place them in the `.specs` file located in your home directory if you are using a POSIX-based OS (such as Mac OS or Linux), or the specs.cfg file located in your Windows home directory. Here's an example of such a file:
 ```
 pi: 3.14159265
 favoriteAnimal: cat
 billion: 1000000000
+timezone: Asia/Bangkok
 Motto: "memento mori"
 ```
 So let's use them in a specification:
@@ -92,6 +93,8 @@ specs @version 1
 ```
 
 Additionally, the `@@` string stands for the entire input record.
+
+**Note:** The timezone used in the date conversion can also be set in the configuration file with a timezone entry. That does not produce a configured literal.
 
 ### Operators
 The ALU supports many of the operators available in the *REXX* programming languages. This includes addition, subtraction, logical comparisons, and string concatenation. 

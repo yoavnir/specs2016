@@ -47,10 +47,15 @@ CONTINUE:
 int main (int argc, char** argv)
 {
 	bool conciseExceptions = true;
-	readConfigurationFile();
 
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
+	}
+
+	readConfigurationFile();
+
+	if (g_timeZone != "") {
+		specTimeSetTimeZone(g_timeZone);
 	}
 
 #ifdef DEBUG
@@ -95,6 +100,10 @@ int main (int argc, char** argv)
 		exit (0);
 	}
 
+	// After the compilation, the token vector contents are no longer necessary
+	for (int i=0; i<vec.size(); i++) vec[i].deallocDynamic();
+	vec.clear();
+
 #ifdef DEBUG
 	std::cerr << "After parsing, index = " << index << "/" << vec.size() << "\n";
 
@@ -133,6 +142,10 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
 			std::cerr << e.what(conciseExceptions) << "\n";
+			pRd->End();
+			delete pRd;
+			pWr->End();
+			delete pWr;
 			return -4;
 		}
 
@@ -144,7 +157,6 @@ int main (int argc, char** argv)
 		generatedLines = pWr->countGenerated();
 		writtenLines = pWr->countWritten();
 		delete pWr;
-		vec.clear();
 	} else {
 		TestReader tRead(5);
 		try {
@@ -155,7 +167,9 @@ int main (int argc, char** argv)
 			std::cerr << e.what(conciseExceptions) << "\n";
 			return -4;
 		}
-		std::cout << *sb.GetString() << "\n";
+		PSpecString ps = sb.GetString();
+		std::cout << *ps << "\n";
+		delete ps;
 		readLines = 0;
 		usedLines = 0;
 		generatedLines = 1;

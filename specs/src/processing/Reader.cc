@@ -12,7 +12,12 @@ void ReadAllRecordsIntoReaderQueue(Reader* r)
 
 Reader::~Reader()
 {
+	PSpecString ps;
 	End();
+	while (!m_queue.empty()) {
+		m_queue.wait_and_pop(ps);
+		delete ps;
+	}
 }
 
 void Reader::End()
@@ -20,6 +25,7 @@ void Reader::End()
 	if (mp_thread) {
 		mp_thread->join();
 	}
+	delete mp_thread;
 	mp_thread = NULL;
 }
 
@@ -130,6 +136,17 @@ TestReader::TestReader(size_t maxLineCount)
 	mp_arr = (SpecString**)malloc(sizeof(PSpecString) * maxLineCount);
 	m_count = m_idx = 0;
 	m_MaxCount = maxLineCount;
+}
+
+TestReader::~TestReader()
+{
+	if (mp_arr) {
+		size_t i;
+		for (i=0; i<m_count; i++) {
+			delete mp_arr[i];
+		}
+		free(mp_arr);
+	}
 }
 
 void TestReader::InsertString(const char* s)

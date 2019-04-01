@@ -31,6 +31,7 @@ protected:
 class TestReader : public Reader {
 public:
 	TestReader(size_t maxLineCount);
+	virtual ~TestReader();
 	void    InsertString(const char* s);
 	void    InsertString(PSpecString ps);
 	virtual bool endOfSource() {return m_idx >= m_count;}

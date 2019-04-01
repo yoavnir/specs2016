@@ -1,9 +1,11 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <limits>  // For std::numeric_limits<ALUFloat>::quiet_NaN()
 #include "utils/platform.h"  // For put_time and get_time vs strftime and strptime
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
+#include "utils/TimeUtils.h"
 #include "processing/ProcessingState.h"
 
 ALUCounters counters;
@@ -250,7 +252,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	} catch (SpecsException& e) {							\
 		_res =  (e.what(true)==std::string(ex));			\
 		actual = e.what(true);								\
-		dumpAluVec(vec,true);								\
+		cleanAluVec(vec);									\
 	}														\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": <"<< s << "> ==> \"" << ex << "\": "; 				\
@@ -296,12 +298,13 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			if (expressionIsAssignment(vec)) {              \
 				ALUCounterKey	k;							\
 				AluAssnOperator op;							\
-				vec.clear();								\
+				cleanAluVec(vec);							\
 				_res = parseAluStatement(_expr,k,&op,vec);  \
 				if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
 				if (_res) {									\
 					ALUPerformAssignment(k,&op,rpnVec,&counters); \
 					_res2 = (counters.getStr(k)==res);		\
+					cleanAluVec(rpnVec);					\
 				}											\
 			} else {                                        \
 				_res2 = true;								\
@@ -311,6 +314,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 				} catch(SpecsException& e) {                \
 					_result = new ALUValue(e.what(true));   \
 				}                                           \
+				cleanAluVec(rpnVec);						\
 				_res = (_result!=NULL) && (_result->getStr()==res);	\
 			}                                               \
 		}                                                   \
@@ -320,7 +324,8 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		else {												\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
 			countFailures++;  failedTests.push_back(testIndex);		\
-		}													\
+		}															\
+		if (_result) delete(_result);								\
 	} while(0);
 
 #define VERIFY_ASSN_RES(s,exp) do {								\
@@ -336,6 +341,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			ALUPerformAssignment(k,&op,rpnVec,&counters);			\
 			_res2 = (counters.getStr(k)==exp);					\
 		}														\
+		cleanAluVec(rpnVec); 									\
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": <"<< s << "> ==> \"" << exp << "\": "; 				\
 		if (_res && _res2) std::cout << "OK\n";					\
@@ -476,6 +482,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_UNARY(uNot,1,Int,"0");
 	counters.set(12,ALUInt(0));
 	counters.set(13,0.0L);
+	counters.set(0);
 	VERIFY_UNARY(uNot,0,None,"0");
 	VERIFY_UNARY(uNot,12,Int,"1");
 	VERIFY_UNARY(uNot,13,Int,"1");
@@ -592,8 +599,11 @@ int runALUUnitTests(unsigned int onlyTest)
 #undef X
 
 	VERIFY_ASSN(uAssLet,33,3,Float,"3.14159265");
+	counters.set(33,3.14159265L);
 	VERIFY_ASSN(uAssAdd,33,3,Float,"6.2831853");
+	counters.set(33,6.2831853L);
 	VERIFY_ASSN(uAssSub,33,3,Float,"3.14159265");
+	counters.set(33,3.14159265L);
 	VERIFY_ASSN(uAssAppnd,33,3,Str,"3.141592653.14159265");
 
 	// TODO: Many more needed
@@ -682,6 +692,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	counters.set(4,"AAAA");
 	VERIFY_EXPR_RES("frombin(#4)", "1094795585");
 	VERIFY_EXPR_RES("tobin(1094795590)","FAAA");
+
+	// Issue #71: tobin/tobine of large input
+	VERIFY_EXPR_RES("tobin('1234567890123456789012')", "Out of range trying to convert 1234567890123456789012 to Int")
 
 	// Possible problem with integer division
 	VERIFY_EXPR_RES("37/10","3.7");
@@ -870,6 +883,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
 	VERIFY_ASSN_RES("#6:=1", "1");
 	VERIFY_ASSN_RES("#6/=0", "NaN");
+
+	counters.set(6,std::numeric_limits<ALUFloat>::quiet_NaN());
 	VERIFY_ASSN_RES("#6+=5", "NaN");
 	VERIFY_ASSN_RES("#6:=1", "1");   // Let can fix a NaN
 
@@ -892,5 +907,8 @@ int main (int argc, char** argv)
 	if (argc>1) {
 		onlyTest = std::stoul(argv[1]);
 	}
+
+	specTimeSetTimeZone("Asia/Jerusalem"); // All the time-format tests were set based on this time zone
+
 	return runALUUnitTests(onlyTest);
 }

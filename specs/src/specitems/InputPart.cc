@@ -2,6 +2,7 @@
 #include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
 #include "item.h"
+#include <math.h>
 
 extern ALUCounters g_counters;
 
@@ -133,7 +134,6 @@ PSpecString SubstringPart::getStr(ProcessingState& pState)
 	subState.setString(bigPart);
 
 	PSpecString ret = mp_SubPart->getStr(subState);
-	delete bigPart;
 	return ret;
 }
 
@@ -152,9 +152,7 @@ PSpecString NumberPart::getStr(ProcessingState& pState)
 ClockPart::ClockPart(clockType _type)
 {
 	m_Type = _type;
-	if (m_Type==ClockType__Static) {
-		m_StaticClock = specTimeGetTOD();
-	}
+	m_StaticClock = specTimeGetTOD();
 }
 
 std::string ClockPart::Debug()
@@ -164,6 +162,8 @@ std::string ClockPart::Debug()
 		return "TODclock";
 	case ClockType__Dynamic:
 		return "TODclock(dynamic)";
+	case ClockType__Diff:
+		return "TimeDiff";
 	default:
 		MYTHROW("Invalid clock type");
 	}
@@ -178,6 +178,14 @@ PSpecString ClockPart::getStr(ProcessingState& pState)
 		break;
 	case ClockType__Dynamic:
 		timeStamp = specTimeGetTOD();
+		break;
+	case ClockType__Diff:
+		{
+			clockValue diff = trunc(specTimeGetTOD() - m_StaticClock);
+			std::string s = std::to_string(ALUInt(diff));
+			s = std::string(CLOCKDIFF_PART_FIELD_LEN - s.length(), ' ') + s;
+			return SpecString::newString(s);
+		}
 	}
 	std::string asString = std::to_string(timeStamp);
 	return SpecString::newString(asString);

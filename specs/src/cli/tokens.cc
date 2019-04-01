@@ -322,6 +322,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(id, ID);
 	SIMPLETOKENV(todclock, TODCLOCK, 3);
 	SIMPLETOKENV(dtodclock, DTODCLOCK, 4);
+	SIMPLETOKEN(timediff, TIMEDIFF);
 	SIMPLETOKEN(set, SET);
 	SIMPLETOKEN(print, PRINT);
 	SIMPLETOKEN(if, IF);

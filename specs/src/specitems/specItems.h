@@ -12,7 +12,7 @@
 class itemGroup {
 public:
 	itemGroup();
-	~itemGroup()  {}
+	~itemGroup();
 	void Compile(std::vector<Token> &tokenVec, unsigned int& index);
 	bool processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, Writer* pRw);
 	void process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr);
@@ -22,6 +22,7 @@ public:
 	bool readsLines();
 private:
 	bool bNeedRunoutCycle;
+	bool bNeedRunoutCycleFromStart;
 	bool bFoundSelectSecond;
 	void addItem(PItem pItem);
 	std::vector<PItem> m_items;
