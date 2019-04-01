@@ -148,7 +148,7 @@ int main(int argc, char** argv)
 
 	readConfigurationFile();
 
-	specTimeSetTimeZone("Asia/Jerusalem"); // All the time-format tests were set based on this time zone
+	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
 
 	VERIFY("w1 1", "The"); // Test #1
 	VERIFY("7-17 1", "ick brown f"); // Test #2
