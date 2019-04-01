@@ -908,7 +908,7 @@ int main (int argc, char** argv)
 		onlyTest = std::stoul(argv[1]);
 	}
 
-	specTimeSetTimeZone("Asia/Jerusalem"); // All the time-format tests were set based on this time zone
+	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
 
 	return runALUUnitTests(onlyTest);
 }
