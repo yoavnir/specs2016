@@ -631,8 +631,20 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__WHILE:
 		{
 			if (tok.Literal()=="") {
-				tok.setLiteral(getLiteral(nextTok));
-				tokList->erase(tokList->begin()+(i+1));
+				if (TokenListType__GROUPSTART == nextTok.Type()) {
+					std::string expression = "(";
+					do {
+						tokList->erase(tokList->begin()+(i+1));
+						nextTok = tokList->at(i+1);
+						expression += getLiteral(nextTok);
+					} while (TokenListType__GROUPEND != nextTok.Type());
+					expression += ")";
+					tokList->erase(tokList->begin()+(i+1));
+					tok.setLiteral(expression);
+				} else {
+					tok.setLiteral(getLiteral(nextTok));
+					tokList->erase(tokList->begin()+(i+1));
+				}
 			}
 			break;
 		}
