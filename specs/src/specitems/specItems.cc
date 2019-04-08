@@ -315,8 +315,37 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 bool itemGroup::readsLines()
 {
+	bool bInRedo[MAX_DEPTH_CONDITION_STATEMENTS];
+	unsigned int bInRedoIdx = 0;
+	bInRedo[bInRedoIdx] = false;
 	for (PItem pItem : m_items) {
-		if (pItem->readsLines()) return true;
+		// Check if we need to go up or down a level
+		ConditionItem* pCond = dynamic_cast<ConditionItem*>(pItem);
+		if (pCond) {
+			switch (pCond->pred()) {
+			case ConditionItem::PRED_THEN:
+			case ConditionItem::PRED_DO:
+				MYASSERT_WITH_MSG((bInRedoIdx+1)<MAX_DEPTH_CONDITION_STATEMENTS, "Too many nested conditions");
+				bInRedoIdx++;
+				bInRedo[bInRedoIdx] = bInRedo[bInRedoIdx-1];
+				break;
+			case ConditionItem::PRED_DONE:
+			case ConditionItem::PRED_ENDIF:
+				MYASSERT_WITH_MSG(bInRedoIdx>0, "Too many ends of conditions");
+				bInRedoIdx--;
+				break;
+			default:
+				break;
+			}
+		}
+
+		// Check if we are starting a REDO so all ranges can be ignored.
+		TokenItem* pToken = dynamic_cast<TokenItem*>(pItem);
+		if (pToken && TokenListType__REDO==pToken->getToken()->Type()) {
+			bInRedo[bInRedoIdx] = true;
+		}
+
+		if (!bInRedo[bInRedoIdx] && pItem->readsLines()) return true;
 	}
 	return false;
 }
