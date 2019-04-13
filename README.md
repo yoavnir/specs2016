@@ -13,15 +13,15 @@ News
 15-Apr-2019: Version 0.3 is here
 --------------------------------
 What's new:
-* The `UNREAD` and `REDO` keywords
+* The `UNREAD` and `REDO` keywords.
 * Control breaks, both as the `BREAK` keyword and the `break()` pseudo-function.
-* Support for Secondary Input Station
-* Conversions as functions
-* Support for Microsoft Windows, compiled with either GCC or with Visual Studio
-* Support for Clang
+* Support for Secondary Input Station.
+* Conversions as functions.
+* Support for Microsoft Windows, compiled with either GCC or with Visual Studio.
+* Support for Clang.
 * Updated [documentation](specs/docs/TOC.md).
 * **NOTE**: New build instructions.  See below.
-* The GA is planned for April 15th.
+* Bug fixes.
 
 Sources
 =======
@@ -40,6 +40,7 @@ You can also choose to checkout alpha or beta tags, but they will obviously be l
 A simple way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
 git checkout stable
+git rebase
 ```
 
 After that, _cd_ to the specs/src directory, and run the following three commands:
@@ -65,3 +66,4 @@ The documentation for *specs2016* exists in two places:
 License
 =======
 *specs2016* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
+
