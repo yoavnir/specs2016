@@ -174,11 +174,11 @@ ALUValue* AluFunc_fieldcount()
 // Helper function
 static ALUValue* AluFunc_range(ALUInt start, ALUInt end)
 {
-	PSpecString pRet = g_pStateQueryAgent->getFromTo(start, end);
-	if (pRet) {
-		std::string st(pRet->data());
-		delete pRet;
-		return new ALUValue(st);
+	PSpecString pRange = g_pStateQueryAgent->getFromTo(start, end);
+	if (pRange) {
+		ALUValue *pRet = new ALUValue(pRange->data());
+		delete pRange;
+		return pRet;
 	} else {
 		return new ALUValue("");
 	}

@@ -241,6 +241,7 @@ public:
 	virtual bool ApplyUnconditionally() {return true;}
 	void    setElseIf();
 	void    setWhile();
+	predicate pred() { return m_pred;}
 	virtual bool readsLines();
 	virtual bool forcesRunoutCycle() { return expressionForcesRunoutCycle(m_RPNExpression);}
 private:

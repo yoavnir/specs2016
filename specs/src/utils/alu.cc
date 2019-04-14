@@ -260,8 +260,7 @@ ALUValue* AluUnitFieldIdentifier::evaluate()
 	if (!g_fieldIdentifierGetter) {
 		MYTHROW("Field Identifier Getter is not set")
 	}
-	std::string content = g_fieldIdentifierGetter->Get(m_id);
-	return new ALUValue(content);
+	return new ALUValue(g_fieldIdentifierGetter->Get(m_id));
 }
 
 #define X(nm,st)	if (s==st) {m_op = UnaryOp__##nm; return;}
@@ -503,8 +502,7 @@ ALUValue*		AluBinaryOperator::computeDiv(ALUValue* op1, ALUValue* op2)
 // String concatenation ||
 ALUValue*		AluBinaryOperator::computeAppnd(ALUValue* op1, ALUValue* op2)
 {
-	std::string ret = op1->getStr() + op2->getStr();
-	return new ALUValue(ret);
+	return new ALUValue(op1->getStr() + op2->getStr());
 }
 
 // Integer division. Divides the integer form of both numbers: 19.5 % 2.001 = 9

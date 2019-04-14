@@ -10,28 +10,18 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-31-Mar-2019: Version 0.3 Beta is here
---------------------------------------
+15-Apr-2019: Version 0.3 is here
+--------------------------------
 What's new:
-* The `UNREAD` and `REDO` keywords
+* The `UNREAD` and `REDO` keywords.
 * Control breaks, both as the `BREAK` keyword and the `break()` pseudo-function.
-* Support for Secondary Input Station
-* Conversions as functions
-* Support for Microsoft Windows, compiled with either GCC or with Visual Studio
-* Support for Clang
+* Support for Secondary Input Station.
+* Conversions as functions.
+* Support for Microsoft Windows, compiled with either GCC or with Visual Studio.
+* Support for Clang.
 * Updated [documentation](specs/docs/TOC.md).
 * **NOTE**: New build instructions.  See below.
-* The GA is planned for April 15th.
-
-31-Jan-2019: Version 0.2 is out. New stuff:
--------------------------------------------
-* **if** and **while** structures.
-* **Run-In** and **Run-Out** cycles.
-* New functions: `iterno`, `recno`, `conf`, `first`, `eof`, string functions, input line functions and the token `@@`.
-* Time/Date improvements: TOD is not expressed in seconds; `tf2d` and `d2tf` conversions.
-* ALU debugging for usability.
 * Bug fixes.
-* [Documentation](https://github.com/yoavnir/specs2016/blob/stable/specs/docs/TOC.md) here on GitHub. 
 
 Sources
 =======
@@ -41,28 +31,22 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.2:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.3:
 ```
-git checkout v0.2
+git checkout v0.3
 ```
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 
 A simple way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
 git checkout stable
+git rebase
 ```
 
-After that, _cd_ to the specs/src directory, and run the following two commands:
+After that, _cd_ to the specs/src directory, and run the following three commands:
+* `python setup.py`
 * `make some`
 * `sudo make install`
-
-Building version 0.3
-====================
-* Check out the 0.3 branch:  `git checkout v0.3-alpha`
-* Move to the specs/src directory and generate the Makefile: `python setup.py`
-* `make clean some`
-* `sudo make install`
-Note: For non-default options, use `python setup.py -h` to see your options.
 
 Note: Windows does not need `sudo`
 
@@ -82,3 +66,4 @@ The documentation for *specs2016* exists in two places:
 License
 =======
 *specs2016* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
+

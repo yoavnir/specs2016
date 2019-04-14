@@ -9,6 +9,8 @@
 #include "processing/Writer.h"
 #include "processing/ProcessingState.h"
 
+#define MAX_DEPTH_CONDITION_STATEMENTS  64
+
 class itemGroup {
 public:
 	itemGroup();
