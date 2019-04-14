@@ -79,6 +79,9 @@ ALUInt ALUValue::getInt() const
 		return std::stoll(m_value);
 	} catch (std::invalid_argument& e) {
 		return 0;
+	} catch (std::out_of_range& e) {
+		std::string err = "Out of range trying to convert " + m_value + " to Int";
+		MYTHROW(err);
 	}
 }
 
@@ -243,16 +246,21 @@ void AluUnitFieldIdentifier::_serialize(std::ostream& os) const
 
 std::string AluUnitFieldIdentifier::_identify()
 {
+	if (m_ReturnIdentifier) {
+		return std::string("FI(") + m_id + " - by name)";
+	}
 	return std::string("FI(") + m_id + ")";
 }
 
 ALUValue* AluUnitFieldIdentifier::evaluate()
 {
+	if (m_ReturnIdentifier) {
+		return new ALUValue(ALUInt(m_id));
+	}
 	if (!g_fieldIdentifierGetter) {
 		MYTHROW("Field Identifier Getter is not set")
 	}
-	std::string content = g_fieldIdentifierGetter->Get(m_id);
-	return new ALUValue(content);
+	return new ALUValue(g_fieldIdentifierGetter->Get(m_id));
 }
 
 #define X(nm,st)	if (s==st) {m_op = UnaryOp__##nm; return;}
@@ -494,8 +502,7 @@ ALUValue*		AluBinaryOperator::computeDiv(ALUValue* op1, ALUValue* op2)
 // String concatenation ||
 ALUValue*		AluBinaryOperator::computeAppnd(ALUValue* op1, ALUValue* op2)
 {
-	std::string ret = op1->getStr() + op2->getStr();
-	return new ALUValue(ret);
+	return new ALUValue(op1->getStr() + op2->getStr());
 }
 
 // Integer division. Divides the integer form of both numbers: 19.5 % 2.001 = 9
@@ -823,7 +830,12 @@ void AluInputRecord::_serialize(std::ostream& os) const
 ALUValue* AluInputRecord::evaluate()
 {
 	PSpecString ps = g_pStateQueryAgent->getFromTo(1,-1);
-	ALUValue* ret = new ALUValue(ps->data(), ps->length());
+	ALUValue* ret;
+	if (ps) {
+		ret = new ALUValue(ps->data(), ps->length());
+	} else {
+		ret = new ALUValue("");
+	}
 	delete ps;
 	return ret;
 }
@@ -1127,6 +1139,10 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			char* tokEnd = c;
 			while (tokEnd<cEnd && *tokEnd>='0' && *tokEnd<='9') tokEnd++;
 			std::string num(c,(tokEnd-c));
+			if ((num.length() == 0) || (num.length() > 3)) {
+				std::string err = "Invalid counter <#" + num + *tokEnd + "> in expression";
+				MYTHROW(err);
+			}
 			pUnit = new AluUnitCounter(std::stoi(num));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
@@ -1228,14 +1244,25 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	return true;
 }
 
+void cleanAluVec(AluVec& vec)
+{
+	while (!vec.empty()) {
+		AluUnit* pUnit = vec[0];
+		vec.erase(vec.begin());
+		delete pUnit;
+	}
+}
+
 std::string dumpAluVec(AluVec& vec, bool deleteUnits)
 {
 	std::string ret;
 	if (deleteUnits) {
 		while (!vec.empty()) {
+			AluUnit* pUnit = vec[0];
 			if (!ret.empty()) ret += ";";
-			ret += vec[0]->_identify();
+			ret += pUnit->_identify();
 			vec.erase(vec.begin());
+			delete pUnit;
 		}
 	} else {
 		for (int i=0; i<vec.size(); i++) {
@@ -1271,12 +1298,14 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 	}
 
 	AluUnitCounter* ctr = dynamic_cast<AluUnitCounter*>(vec[0]);
-	*pAss = *(dynamic_cast<AluAssnOperator*>(vec[1]));
+	AluAssnOperator* pAssnOp = dynamic_cast<AluAssnOperator*>(vec[1]);
+	*pAss = *pAssnOp;
 	k = ctr->getKey();
 
 	vec.erase(vec.begin());
 	vec.erase(vec.begin());
 	delete ctr;
+	delete pAssnOp;
 
 	// Check that we don't have something terrible like an assignment operator in the
 	// expression. Like this is C or something
@@ -1304,7 +1333,15 @@ bool isHigherPrecedenceBinaryOp(AluUnit* op1, AluUnit* op2)
  * Function: convertAluVecToPostfix
  * Implements the Shunting-Yard algorithm to convert an infix expression
  * to a postfix expression for easier calculation later on.
+ *
+ * This function also finds and fixes instances of the break() pseudo-function
  */
+enum breakFindingState {
+	BFS_lookingForBreak,
+	BFS_lookingForOpen,
+	BFS_lookingForFI,
+	BFS_lookingForClose
+};
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 {
 	std::stack<AluUnit*> operatorStack;
@@ -1312,6 +1349,46 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 
 	if (!dest.empty()){
 		MYTHROW("Entered with non-empty vec.");
+	}
+
+	// Handle the special case of the break() pseudo-function.
+	// The parameter should be a field identifier and it is converted to a number
+	// representing the ASCII value of the character
+	breakFindingState bfs = BFS_lookingForBreak;
+	for (AluUnit* pUnit : source) {
+		switch (bfs) {
+		case BFS_lookingForBreak: {
+			if (pUnit->type() != UT_Identifier) continue;
+			AluFunction* func = (AluFunction*)pUnit;
+			if (func->getName() != "break") continue;
+			bfs = BFS_lookingForOpen;
+			break;
+		}
+		case BFS_lookingForOpen: {
+			if (pUnit->type() != UT_OpenParenthesis) {
+				bfs = BFS_lookingForBreak;
+				continue;
+			}
+			bfs = BFS_lookingForFI;
+			break;
+		}
+		case BFS_lookingForFI: {
+			if (pUnit->type() != UT_FieldIdentifier) {
+				MYTHROW("break() function may only get a field identifier argument");
+			}
+			AluUnitFieldIdentifier* pFI = (AluUnitFieldIdentifier*)pUnit;
+			pFI->setEvaluateToName();
+			bfs = BFS_lookingForClose;
+			break;
+		}
+		case BFS_lookingForClose: {
+			if (pUnit->type() != UT_ClosingParenthesis) {
+				MYTHROW("break() function may only get one argument");
+			}
+			bfs = BFS_lookingForBreak;
+			break;
+		}
+		}
 	}
 
 #ifdef ALU_DUMP
@@ -1417,7 +1494,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	}
 
 	if (clearSource) {
-		source.clear();
+		while (!source.empty()) {
+			AluUnit* pUnit = source[0];
+			source.erase(source.begin());
+		}
 	}
 
 #ifdef ALU_DUMP
@@ -1502,22 +1582,52 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				computeStack.push(pUnit->evaluate());
 				break;
 			case 1:
-				computeStack.push(pUnit->compute(arg1));
-				delete arg1;
+				try {
+					computeStack.push(pUnit->compute(arg1));
+				}
+				catch (const SpecsException& e) {
+					delete arg1;
+					throw;
+				}
+				delete arg1;  // Argh. Why doesn't C++ have a finally clause???!!!!!
 				break;
 			case 2:
-				computeStack.push(pUnit->compute(arg1, arg2));
+				try {
+					computeStack.push(pUnit->compute(arg1, arg2));
+				}
+				catch (const SpecsException& e) {
+					delete arg1;
+					delete arg2;
+					throw;
+				}
 				delete arg1;
 				delete arg2;
 				break;
 			case 3:
-				computeStack.push(pUnit->compute(arg1, arg2, arg3));
+				try {
+					computeStack.push(pUnit->compute(arg1, arg2, arg3));
+				}
+				catch (const SpecsException& e) {
+					delete arg1;
+					delete arg2;
+					delete arg3;
+					throw;
+				}
 				delete arg1;
 				delete arg2;
 				delete arg3;
 				break;
 			case 4:
-				computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4));
+				try {
+					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4));
+				}
+				catch (const SpecsException& e) {
+					delete arg1;
+					delete arg2;
+					delete arg3;
+					delete arg4;
+					throw;
+				}
 				delete arg1;
 				delete arg2;
 				delete arg3;
@@ -1556,6 +1666,23 @@ bool AluExpressionReadsLines(AluVec& vec)
 	for (AluUnit* unit : vec) {
 		if (unit->requiresRead()) {
 			return true;
+		}
+	}
+	return false;
+}
+
+bool expressionForcesRunoutCycle(AluVec& vec)
+{
+	for (AluUnit* unit : vec) {
+		switch (unit->type()) {
+		case UT_Identifier:
+		{
+			AluFunction* pFunction = dynamic_cast<AluFunction*>(unit);
+			MYASSERT(NULL!=pFunction);
+			return ("eof" == pFunction->getName());
+		}
+		default:
+			return false;
 		}
 	}
 	return false;

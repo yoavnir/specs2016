@@ -10,7 +10,7 @@ public:
 	~StringBuilder();
 	PSpecString    GetString();
 	PSpecString    GetStringUnsafe();
-	size_t         Length() { return mp_str->length(); }
+	size_t         Length() { return mp_str ? mp_str->length() : 0; }
 	void           insert(PSpecString str, size_t offset, bool bOnlyPhysical=false);
 	void           insertNext(PSpecString str);
 	void           insertNextWord(PSpecString str);

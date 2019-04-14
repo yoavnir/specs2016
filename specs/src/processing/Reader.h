@@ -6,27 +6,32 @@
 
 class Reader {
 public:
-	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0;}
+	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0; m_pUnreadString = NULL; m_bRanDry = false;}
 	virtual ~Reader();
 	virtual bool        endOfSource() = 0;
 	virtual PSpecString getNextRecord() = 0;
 	virtual PSpecString get();
+	void                pushBack(PSpecString ps);
 	virtual void        readIntoQueue();
 	virtual void        Begin();
 	virtual bool        eof() { return endOfSource() && m_queue.empty(); }
 	void                End();
 	unsigned long 		countRead() { return m_countRead; }
 	unsigned long 		countUsed() { return m_countUsed; }
+	bool                hasRunDry() { return m_bRanDry;   }
 protected:
 	StringQueue m_queue;
 	std::thread *mp_thread;
+	PSpecString   m_pUnreadString;
 	unsigned long m_countRead;
 	unsigned long m_countUsed;
+	bool          m_bRanDry;    // true *after* the reader returned NULL once
 };
 
 class TestReader : public Reader {
 public:
 	TestReader(size_t maxLineCount);
+	virtual ~TestReader();
 	void    InsertString(const char* s);
 	void    InsertString(PSpecString ps);
 	virtual bool endOfSource() {return m_idx >= m_count;}

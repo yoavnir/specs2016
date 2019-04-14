@@ -12,7 +12,12 @@ void ReadAllRecordsIntoReaderQueue(Reader* r)
 
 Reader::~Reader()
 {
+	PSpecString ps;
 	End();
+	while (!m_queue.empty()) {
+		m_queue.wait_and_pop(ps);
+		delete ps;
+	}
 }
 
 void Reader::End()
@@ -20,19 +25,35 @@ void Reader::End()
 	if (mp_thread) {
 		mp_thread->join();
 	}
+	delete mp_thread;
 	mp_thread = NULL;
 }
 
 PSpecString Reader::get()
 {
-	if (eof()) return NULL;
 	PSpecString ret;
+	if (m_pUnreadString) {
+		ret = m_pUnreadString;
+		m_pUnreadString = NULL;
+		return ret;
+	}
+	if (eof()) {
+		m_bRanDry = true;
+		return NULL;
+	}
 	if (m_queue.wait_and_pop(ret)) {
 		m_countUsed++;
 		return ret;
 	} else {
+		m_bRanDry = true;
 		return NULL;
 	}
+}
+
+void Reader::pushBack(PSpecString ps)
+{
+	MYASSERT_WITH_MSG(m_pUnreadString==NULL, "Only one record can be UNREAD at a time");
+	m_pUnreadString = ps;
 }
 
 void Reader::readIntoQueue()
@@ -115,6 +136,17 @@ TestReader::TestReader(size_t maxLineCount)
 	mp_arr = (SpecString**)malloc(sizeof(PSpecString) * maxLineCount);
 	m_count = m_idx = 0;
 	m_MaxCount = maxLineCount;
+}
+
+TestReader::~TestReader()
+{
+	if (mp_arr) {
+		size_t i;
+		for (i=0; i<m_count; i++) {
+			delete mp_arr[i];
+		}
+		free(mp_arr);
+	}
 }
 
 void TestReader::InsertString(const char* s)

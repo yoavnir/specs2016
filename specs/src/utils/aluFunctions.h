@@ -42,6 +42,14 @@
 	X(center,2,false)                \
 	X(centre,2,false)                \
 	X(conf,1,false)                  \
+	X(x2d,1,false)                   \
+	X(d2x,1,false)                   \
+	X(x2ch,1,false)                  \
+	X(c2x,1,false)                   \
+	X(ucase,1,false)                 \
+	X(lcase,1,false)                 \
+	X(bswap,1,false)                 \
+	X(break,1,false)                 \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
@@ -72,6 +80,7 @@ public:
 	virtual bool    isRunOut() = 0;
 	virtual ALUInt  getRecordCount() = 0;
 	virtual ALUInt  getIterationCount() = 0;
+	virtual bool    breakEstablished(char id) = 0;
 };
 
 void setStateQueryAgent(stateQueryAgent* qa);

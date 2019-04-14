@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "15 Dec 2018" "0.2" "specs man page"
+.TH man 1 "15 Apr 2019" "0.3" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -169,6 +169,12 @@ There are also other spec units, that may be used:
 Causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string.
 .IP "READSTOP" 3
 Causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
+.IP "UNREAD" 3
+Causes the program to push back the current active record back to the reader, so that the next iteration of the specification or the next 
+.I READ
+or
+.I READSTOP
+spec unit will read it back.  This is useful when looping with READ searching for the next line to run the specification on.
 .IP "WRITE" 3
 Causes the program to write to output and reset the output line.
 .IP "WORDSEPARATOR and FIELDSEPARATOR" 3
@@ -176,7 +182,7 @@ Declare a character to be the word of field separator respectively, which affect
 .I default
 to make all whitespace defined by the locale work as a word separator. 
 .IP "REDO" 3
-Causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
+Causes the current output line to become the new input line.
 .IP "SET" 3
 Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
 
@@ -262,6 +268,30 @@ set /#2 -= 1/
 .B done
 .RE
 
+.SS "Control Breaks"
+The 
+.B Field Identifiers
+have another use. When used with the
+.B BREAK
+keyword or the 
+.B break()
+function they act as flow control. A 
+.B break level 
+is 
+.I established
+when the value of the corresponding field identifier changes from the previous iteration. For
+example, consider a three-field CSV file where the first field is the department name, the second is 
+the employee's first name, and the third is his or her last name.  Suppose further that the file is 
+sorted by department name. You can print this out without repeating the department name like this:
+
+          FIELDSEPARATOR ,
+       c: FIELD 1   .
+          FIELD 3  10
+          /,/      NEXT
+          FIELD 2  NEXTWORD
+          BREAK c
+              ID c 1
+
 .SS "RunIn and RunOut Cycles"
 A 
 .B cycle 
@@ -300,6 +330,31 @@ function. Example:
         /==========/ 1 write
         /Total:/ 1
         print #0 nw
+        
+.SS "Input Streams"
+The keyword 
+.B SELECT
+along with the keywords 
+.B FIRST
+and
+.B SECOND 
+can be used to select between two input streams. The 
+.B FIRST 
+input stream is the regular primary input. The
+.B SECOND 
+input stream holds the previous record from the primary input stream.
+
+Imagine an input stream that has the natural numbers. Let's run the following specification:
+
+    specs w1 1 /- 1 =/ NW SELECT SECOND w1 nw
+    
+The result will be the following:
+    1 - 1 =
+    2 - 1 = 1
+    3 - 1 = 2
+    4 - 1 = 3
+    5 - 1 = 5
+and so on.
 
 .SS "Expressions and Assignments"
 Expressions are used in PRINT data units as well as in assignments. Assignments are used in SET Spec Units.
@@ -526,14 +581,21 @@ Prints out detailed information about the parsing and compiling of expressions (
 Prints out detailed step-by-step information about the evaluation of expressions (
 .I only in debug build
 ).   
+.IP "--config or -c" 3
+Changes the configuration file from the default 
+.I ~/.specs
+to whatever the parameter says
+.IP "--timezone" 3
+Changes the timezone from the default which is the current timezone to the value specified.
 
 .SH CONFIGURATION FILE
 .B specs
-reads a configuration file from 
+reads a configuration file by default from 
 .B $HOME/.specs
 .P 
-This file will contain some configuration options in a future release. For now, it only allows you to set user-predefined labels. For example, an entry such as this:
+This file contains some configuration options. For now, it only allows you to set user-predefined labels and the timezone configuration option. For example, an entry such as this:
 .P
+    timezone: "Europe/Belfast"
     myCA: "Honest Abe's Used Cars & Certificates"
 .P
 allows you to issue a 
@@ -545,7 +607,7 @@ command like this:
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
-This returns the version of specs, for example "v0.2"
+This returns the version of specs, for example "v0.3"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 

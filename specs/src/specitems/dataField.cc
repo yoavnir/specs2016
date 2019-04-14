@@ -31,7 +31,7 @@ DataField::DataField()
 }
 
 DataField::~DataField() {
-	fprintf(stderr, "~DataField\n");
+	if (m_InputPart) delete m_InputPart;
 }
 
 /*
@@ -180,6 +180,9 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 		break;
 	case TokenListType__DTODCLOCK:
 		ret = new ClockPart(ClockType__Dynamic);
+		break;
+	case TokenListType__TIMEDIFF:
+		ret = new ClockPart(ClockType__Diff);
 		break;
 	case TokenListType__ID:
 		ret = new IDPart(token.Literal());
@@ -398,8 +401,8 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (m_conversion) {
 		std::string currentString(pInput->data(), pInput->length());
-		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
 		delete pInput;
+		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
 		pInput = SpecString::newString(convertedString);
 	}
 

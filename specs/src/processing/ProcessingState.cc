@@ -5,6 +5,33 @@
 
 #define EMPTY_FIELD_MARKER  999999999
 
+// helper functions
+
+/*
+ * This function establishes the order between field identifiers:
+ *   a, b, c..., z, A, B, ..., Z
+ */
+#define IS_UPPERCASE(x) ((x)>='A' && (x)<='Z')
+#define IS_LOWERCASE(x) ((x)>='a' && (x)<='z')
+
+bool breakLevelGE(char c1, char c2)
+{
+	if (!c2) return true;
+	if (IS_UPPERCASE(c1)) {
+		if (IS_UPPERCASE(c2)) {
+			return (c1>=c2);
+		} else if (IS_LOWERCASE(c2)) {
+			return true;  // all uppercase is greater than all lowercase
+		} else return false;
+	} else if (IS_LOWERCASE(c1)) {
+		if (IS_UPPERCASE(c2)) {
+			return false;  // all uppercase is greater than all lowercase
+		} else if (IS_LOWERCASE(c2)) {
+			return (c1>=c2);
+		} else return false;
+	} else return false;
+}
+
 ProcessingState::ProcessingState()
 {
 	m_pad = DEFAULT_PAD_CHAR;
@@ -19,6 +46,8 @@ ProcessingState::ProcessingState()
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
 	m_ps = NULL;
+	m_prevPs = NULL;
+	m_inputStream = 1;
 }
 
 ProcessingState::ProcessingState(ProcessingState& ps)
@@ -31,6 +60,8 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
 	m_ps = NULL;
+	m_prevPs = NULL;
+	m_inputStream = 1;
 }
 
 ProcessingState::ProcessingState(ProcessingState* pPS)
@@ -43,22 +74,61 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
 	m_ps = NULL;
+	m_prevPs = NULL;
+	m_inputStream = 1;
 }
 
 ProcessingState::~ProcessingState()
 {
 	fieldIdentifierClear();
+	breakValuesClear();
+	if (m_prevPs) {
+		delete m_prevPs;
+	}
+	if (m_ps) {
+		delete m_ps;
+	}
 }
 
 void ProcessingState::setString(PSpecString ps)
 {
 	if (m_ps && ps!=m_ps) {
-		delete m_ps;
+		if (m_prevPs) delete m_prevPs;
+		m_prevPs = m_ps;
+	} else {
+		MYASSERT(m_prevPs==NULL);
+		m_prevPs = SpecString::newString();
 	}
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
 	fieldIdentifierClear();
+	resetBreaks();
+}
+
+void ProcessingState::setFirst()
+{
+	if (m_inputStream != STREAM_FIRST) {
+		m_inputStream = STREAM_FIRST;
+		m_wordCount = -1;
+		m_fieldCount = -1;
+	}
+}
+
+void ProcessingState::setSecond()
+{
+	if (m_inputStream != STREAM_SECOND) {
+		m_inputStream = STREAM_SECOND;
+		m_wordCount = -1;
+		m_fieldCount = -1;
+	}
+}
+
+PSpecString ProcessingState::extractCurrentRecord()
+{
+	PSpecString ret = m_ps;
+	m_ps = SpecString::newString(); // empty string
+	return ret;
 }
 
 #define IS_WHITESPACE(c) ((m_wordSeparator==LOCAL_WHITESPACE) ? (isspace((c))) : ((c)==m_wordSeparator))
@@ -70,7 +140,7 @@ void ProcessingState::identifyWords()
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 is not yet supported");
 	}
-	const char* pc = m_ps->data();
+	const char* pc = currRecord()->data();
 	int i = 0;
 	/* skip over initial whitespace */
 	while (IS_WHITESPACE(pc[i])) i++;
@@ -92,7 +162,7 @@ void ProcessingState::identifyFields()
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 is not yet supported");
 	}
-	const char* pc = m_ps->data();
+	const char* pc = currRecord()->data();
 	int i = 0;
 
 	while (pc[i]!=0) {
@@ -183,7 +253,10 @@ int ProcessingState::getWordEnd(int idx) {
 // Convention: to=0 means to the end
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
-	int slen = (int)(m_ps->length());
+	if (m_inputStream != STREAM_SECOND) {
+		MYASSERT_WITH_MSG(NULL!=m_ps,"Tried to read record in run-out cycle");
+	}
+	int slen = (int)(currRecord()->length());
 
 	if (from==1 && to==EMPTY_FIELD_MARKER) return SpecString::newString();
 
@@ -208,7 +281,7 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	// to < from ==> empty string
 	if (to<from) return NULL;
 
-	return SpecString::newString(m_ps, from-1, to-from+1);
+	return SpecString::newString(currRecord(), from-1, to-from+1);
 }
 
 void ProcessingState::fieldIdentifierClear()
@@ -219,13 +292,31 @@ void ProcessingState::fieldIdentifierClear()
 	m_fieldIdentifiers.clear();
 }
 
+void ProcessingState::breakValuesClear()
+{
+	for (const auto &pair : m_breakValues) {
+		delete pair.second;
+	}
+	m_breakValues.clear();
+}
+
 void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 {
 	if (m_fieldIdentifiers[id]!=NULL) {
 		std::string err = std::string("Field Identifier <") + id + "> redefined.";
 		MYTHROW(err);
 	}
+
 	m_fieldIdentifiers[id] = SpecStringCopy(ps);
+
+	if (m_breakValues[id] && 0==ps->Compare(m_breakValues[id]->data())) return;
+
+	if (m_breakValues[id]) delete m_breakValues[id];
+
+	m_breakValues[id] = SpecStringCopy(ps);
+	if (breakLevelGE(id, m_breakLevel)) {
+		m_breakLevel = id;
+	}
 }
 
 PSpecString ProcessingState::fieldIdentifierGet(char id)
@@ -236,6 +327,16 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 		MYTHROW(err);
 	}
 	return ret;
+}
+
+void ProcessingState::resetBreaks()
+{
+	m_breakLevel = 0;
+}
+
+bool ProcessingState::breakEstablished(char id)
+{
+	return breakLevelGE(m_breakLevel, id);
 }
 
 bool ProcessingState::runningOutLoop()

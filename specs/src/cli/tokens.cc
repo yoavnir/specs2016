@@ -1,5 +1,6 @@
 #include <string.h>
 #include <regex>
+#include "utils/platform.h"
 #include "tokens.h"
 #include "processing/Config.h"
 #include "utils/ErrorReporting.h"
@@ -321,6 +322,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(id, ID);
 	SIMPLETOKENV(todclock, TODCLOCK, 3);
 	SIMPLETOKENV(dtodclock, DTODCLOCK, 4);
+	SIMPLETOKEN(timediff, TIMEDIFF);
 	SIMPLETOKEN(set, SET);
 	SIMPLETOKEN(print, PRINT);
 	SIMPLETOKEN(if, IF);
@@ -331,6 +333,12 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(while, WHILE);
 	SIMPLETOKEN(do, DO);
 	SIMPLETOKEN(done, DONE);
+	SIMPLETOKEN(unread, UNREAD);
+	SIMPLETOKEN(redo, REDO);
+	SIMPLETOKEN(break, BREAK);
+	SIMPLETOKEN(select, SELECT);
+	SIMPLETOKEN(first, FIRST);
+	SIMPLETOKEN(second, SECOND);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
@@ -610,7 +618,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
 				} else {
-					std::string err = "Bad field identifier <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex());
+					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for ID at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
 				}
 			}
@@ -623,9 +631,61 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__WHILE:
 		{
 			if (tok.Literal()=="") {
-				tok.setLiteral(getLiteral(nextTok));
+				if (TokenListType__GROUPSTART == nextTok.Type()) {
+					std::string expression = "(";
+					do {
+						tokList->erase(tokList->begin()+(i+1));
+						nextTok = tokList->at(i+1);
+						expression += getLiteral(nextTok);
+					} while (TokenListType__GROUPEND != nextTok.Type());
+					expression += ")";
+					tokList->erase(tokList->begin()+(i+1));
+					tok.setLiteral(expression);
+				} else {
+					tok.setLiteral(getLiteral(nextTok));
+					tokList->erase(tokList->begin()+(i+1));
+				}
+			}
+			break;
+		}
+		case TokenListType__SELECT:
+		{
+			if (tok.Literal()=="") {
+				TokenListTypes nextType = nextTok.Type();
+				switch (nextType) {
+				case TokenListType__FIRST:
+					tok.setLiteral("FIRST");
+					break;
+				case TokenListType__SECOND:
+					tok.setLiteral("SECOND");
+					break;
+				default:
+					std::string err = "Invalid token of type " + TokenListType__2str(nextType) +
+						" with content <" + nextTok.Orig() + ">";
+					MYTHROW(err);
+				}
 				tokList->erase(tokList->begin()+(i+1));
 			}
+			break;
+		}
+		case TokenListType__BREAK:  // next token must be a literal one-letter
+		{
+			if (tok.Literal()=="") {
+				if (mayBeFieldIdentifier(nextTok)) {
+					tok.setLiteral(getLiteral(nextTok));
+					tokList->erase(tokList->begin()+(i+1));
+				} else {
+					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for BREAK at index "+std::to_string(nextTok.argIndex());
+					MYTHROW(err);
+				}
+			}
+			break;
+		}
+		case TokenListType__FIRST:
+		case TokenListType__SECOND:
+		{
+			std::string err = "Invalid token of type " + TokenListType__2str(tok.Type());
+			MYTHROW(err);
 			break;
 		}
 		default:

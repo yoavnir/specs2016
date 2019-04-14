@@ -117,6 +117,20 @@ std::vector<Token> parseTokensSplit(const char* arg)
 	return ret;
 }
 
+// A comment is defined as starting with the last hash mark + space  ("# ") sequence 
+// on the line, preceded by a space unless it's at the start of the line.
+std::string removeComment(std::string& st)
+{
+	std::size_t found = st.rfind("# ");
+	if (found==std::string::npos) return st;
+
+	if (found>0 && st[found-1]!=' ') return st;
+
+	if (found==0) return std::string("");
+
+	return st.substr(0,found);
+}
+
 std::vector<Token> parseTokensFile(std::string& fileName)
 {
 	std::ifstream specFile(fileName);
@@ -125,7 +139,7 @@ std::vector<Token> parseTokensFile(std::string& fileName)
 		std::string line;
 		while (getline(specFile,line)) {
 			spec += " ";
-			spec += line;
+			spec += removeComment(line);
 		}
 		return parseTokensSplit(spec.c_str());
 	} else {

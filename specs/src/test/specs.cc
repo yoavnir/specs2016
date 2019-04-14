@@ -2,6 +2,7 @@
 #include <cmath>
 #include <ctime>
 #include <string.h>
+#include "utils/platform.h"
 #include "cli/tokens.h"
 #include "processing/Config.h"
 #include "specitems/specItems.h"
@@ -46,10 +47,15 @@ CONTINUE:
 int main (int argc, char** argv)
 {
 	bool conciseExceptions = true;
-	readConfigurationFile();
 
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
+	}
+
+	readConfigurationFile();
+
+	if (g_timeZone != "") {
+		specTimeSetTimeZone(g_timeZone);
 	}
 
 #ifdef DEBUG
@@ -57,13 +63,19 @@ int main (int argc, char** argv)
 #endif
 
 	std::vector<Token> vec;
-	if (g_specFile != "") {
-		vec = parseTokensFile(g_specFile);
-	} else {
-		vec = parseTokens(argc, argv);
-	}
 
-	normalizeTokenList(&vec);
+	try {
+		if (g_specFile != "") {
+			vec = parseTokensFile(g_specFile);
+		} else {
+			vec = parseTokens(argc, argv);
+		}
+
+		normalizeTokenList(&vec);
+	} catch (const SpecsException& e) {
+		std::cerr << "Error reading specification tokens: " << e.what(conciseExceptions) << "\n";
+		exit (0);
+	}
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
@@ -87,6 +99,10 @@ int main (int argc, char** argv)
 		}
 		exit (0);
 	}
+
+	// After the compilation, the token vector contents are no longer necessary
+	for (int i=0; i<vec.size(); i++) vec[i].deallocDynamic();
+	vec.clear();
 
 #ifdef DEBUG
 	std::cerr << "After parsing, index = " << index << "/" << vec.size() << "\n";
@@ -126,6 +142,11 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
 			std::cerr << e.what(conciseExceptions) << "\n";
+			pRd->End();
+			delete pRd;
+			pWr->End();
+			delete pWr;
+			return -4;
 		}
 
 		pRd->End();
@@ -136,7 +157,6 @@ int main (int argc, char** argv)
 		generatedLines = pWr->countGenerated();
 		writtenLines = pWr->countWritten();
 		delete pWr;
-		vec.clear();
 	} else {
 		TestReader tRead(5);
 		try {
@@ -145,8 +165,11 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
+			return -4;
 		}
-		std::cout << *sb.GetString() << "\n";
+		PSpecString ps = sb.GetString();
+		std::cout << *ps << "\n";
+		delete ps;
 		readLines = 0;
 		usedLines = 0;
 		generatedLines = 1;

@@ -2,6 +2,7 @@
 #include <string>
 #include <string.h>
 #include <iomanip>
+#include "utils/platform.h"
 #include "cli/tokens.h"
 #include "specitems/specItems.h"
 #include "processing/Config.h"
@@ -26,6 +27,7 @@ extern ALUCounters g_counters;
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
 		}                                       \
+		delete ps;								\
 } while (0);
 
 #define VERIFY2(sp,ln,ex) do {          \
@@ -43,6 +45,7 @@ extern ALUCounters g_counters;
 			} else {                            \
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
+			delete ps;			\
 		}                                       \
 } while (0);
 
@@ -80,12 +83,15 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			do {
 				PSpecString pFirstLine = tRead.getNextRecord();
 				ps.setString(pFirstLine);
+				ps.setFirst();
 				ps.incrementCycleCounter();
 				ig.processDo(sb, ps, &tRead, NULL);
+				PSpecString pOut = sb.GetStringUnsafe();
 				if (result) {
-					result->add(sb.GetStringUnsafe());
+					result->add(pOut);
+					delete pOut;
 				} else {
-					result = sb.GetStringUnsafe();
+					result = pOut;
 				}
 			} while (!tRead.endOfSource());
 		}
@@ -99,12 +105,15 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			ig.setRegularRunAtEOF();
 		}
 		ps.setString(NULL);
+		ps.setFirst();
 		try {
 			ig.processDo(sb, ps, NULL, NULL);
+			PSpecString pOut = sb.GetStringUnsafe();
 			if (result) {
-				result->add(sb.GetStringUnsafe());
+				result->add(pOut);
+				delete pOut;
 			} else {
-				result = sb.GetStringUnsafe();
+				result = pOut;
 			}
 		} catch (SpecsException& e) {
 			result = SpecString::newString(e.what(true));
@@ -112,9 +121,12 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		}
 	}
 
-	free(example);
-
 end:
+	free(example);
+	while (!vec.empty()) {
+		vec[0].deallocDynamic();
+		vec.erase(vec.begin());
+	}
 	return result ? result : SpecString::newString();
 }
 
@@ -135,6 +147,8 @@ int main(int argc, char** argv)
 	if (argc > 1) onlyTest = std::stoi(argv[1]);
 
 	readConfigurationFile();
+
+	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
 
 	VERIFY("w1 1", "The"); // Test #1
 	VERIFY("7-17 1", "ick brown f"); // Test #2
@@ -174,7 +188,7 @@ int main(int argc, char** argv)
 
 	// Following issue #12
 	VERIFY("w1 n", "The"); // Test #36
-	VERIFY("w2 nw", " quick"); // Test #37
+	VERIFY("w2 nw", "quick"); // Test #37 -- nextword starts at column 1 if string is empty
 	VERIFY("w3 nf", "\tbrown"); // Test #38
 	VERIFY("w5-* 1 w4 7 w1 nw", "jumpedfox Thehe   lazy dog"); // Test #39
 
@@ -189,8 +203,13 @@ int main(int argc, char** argv)
 	VERIFY("/Star Trek/ ucase 1", "STAR TREK");        // Test #47
 	VERIFY("/Star Trek/ lcase 1", "star trek");        // Test #48
 
+#ifdef WIN64
+	VERIFY("a: /1545407296548900/ . print 'tobin(a)' ti2f '%c' 1", "12/21/18 17:48:16");  // Test #49
+	VERIFY("a: /1545407296548900/ . print 'tobin(a+3600000000)' ti2f '%c' 1", "12/21/18 18:48:16");  // Test #50
+#else
 	VERIFY("a: /1545407296548900/ . print 'tobin(a)' ti2f '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #49
 	VERIFY("a: /1545407296548900/ . print 'tobin(a+3600000000)' ti2f '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #50
+#endif
 
 	// Issue #22
 	VERIFY2("fs : field 1-* 1", "a:b", "a:b");  // Test #51
@@ -280,8 +299,8 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "hello", "hello:");       // Test #81
 
 	// Test run-out cycle
-	VERIFY2("one 1 EOF two 2", "", "oneo");     // Test #82
-	VERIFY2("two 2 EOF one 1", "", "otwo");     // Test #83
+	VERIFY2("one 1 EOF two 2", " ", "one\n two");     // Test #82
+	VERIFY2("two 2 EOF one 1", " ", " two\none");     // Test #83
 
 	spec =  " a: w1 1.4 right                  " \
 			"    set #0:=a*a                   " \
@@ -296,14 +315,19 @@ int main(int argc, char** argv)
 	VERIFY2("a: w1 . if 'a==1' then w1 1 endif", "0\n1\n2", "1"); // Test #87
 
 	// issue #32 = word separator default and special
-	VERIFY2("{ 1 w1 n } n",            "  \tword", "{word}");    // Test #92
-	VERIFY2("ws / / { 1 w1 n } n",     "  \tword", "{\tword}");  // Test #91
+	VERIFY2("{ 1 w1 n } n",            "  \tword", "{word}");    // Test #88
+	VERIFY2("ws / / { 1 w1 n } n",     "  \tword", "{\tword}");  // Test #89
 	VERIFY2("ws default { 1 w1 n } n", "  \tword", "{word}");    // Test #90
 
 	// tf2d and d2tf
 	VERIFY2("1-* tf2d %Y-%m-%dT%H:%M:%S.%6f a: ID a d2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #91
+#ifdef WIN64
+	VERIFY("/1545407296.548900/ d2tf '%c' 1", "12/21/18 17:48:16");  // Test #92
+	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "12/21/18 18:48:16");  // Test #93
+#else
 	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #92
 	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #93
+#endif
 
 	// Issue #43
 	VERIFY2("word 1 5 pad * word 2 15", "First record", "    First*****record"); // Test #94
@@ -317,7 +341,20 @@ int main(int argc, char** argv)
 	// recno and iterno
 	VERIFY2("print 'recno()' 1 print 'iterno()' nw READ w1 nw", "a\nb\nc\nd","1 1 b\n3 2 d"); // Test #97
 
+	// REDO
+	VERIFY("w3-* 1 REDO w1 1", "brown");     // Test  #98
+	VERIFY("6-* 1 REDO w1 1", "uick");       // Test  #99
+	VERIFY("1-* BSWAP 1 REDO w2 1", "yzal"); // Test #100
 
+	// SELECT SECOND
+	spec =  "WORD 1        1 " \
+			"SELECT SECOND   " \
+			"WORD 1 NEXTWORD " \
+			"SELECT FIRST    " \
+			"WORD 2 NEXTWORD " \
+			"SELECT SECOND   " \
+			"WORD 2 NEXTWORD ";
+	VERIFY2(spec, "first record\nsecond line\nlast one", "first record\nsecond first line record\nlast second one line\nlast one"); // Test #101
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

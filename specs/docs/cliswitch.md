@@ -8,10 +8,10 @@ Not reading a line is useful for simple specifications such as: `specs @version 
 * `--specFile` **filename** or `-f` **filename** -- reads the specification from a file rather than the command line.
 Using files allows you to write some very sophisticated specifications, and to aid readability by using indentation. For example, consider the following specification from the CMS Pipelines book.  That would be unwieldy to write on a single command-line:
 ```
-specs 
+# This counts and adds up a list of numbers
     printonly eof
     a: word 1
-       set (#0+=a; #1+=1)
+       set (#0+=a; #1+=1) # Counter #0 is an accumulator; #1 is a counter
     eof
        /Total:/   1
        print #0 strip nextword
@@ -19,7 +19,8 @@ specs
        print #1 strip nextword
        /records./     nextword
 ``` 
-**Version 0.2 Note:** The above is not yet supported, as neither `printonly eof` not multiple assignments in a single **set** are supported in this version.
+**Version 0.3 Note:** The above is not yet supported, as neither `printonly eof` not multiple assignments in a single **set** are supported in this version.
+Using files also allows you to include comments. The rules for comments are that either the line begins with a hash mark and a space, and then the entire line is a comment; or the last occurrence of a hash mark and a space is also preceded by a space, and that is where the comment starts. 
 * `--verbose` or `-v` -- outputs more information when something goes wrong.
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
 The resulting stats look something like this:
@@ -34,3 +35,5 @@ CPU Time: 69.1277526 seconds.
 * `--spaceWS` -- Makes **specs** only treat spaces as the default word separator. By default all locale-defined whitespace is treated as the word separator.
 * `--debug-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
 * `--debug-alu-run` -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
+* `--timezone` **name** -- convert to and from time-formatted strings using the selected timezone. Valid values are from the TZ database and look like `Africa/Dakar`, `America/Chicago`, `Asia/Calcutta`, `Australia/Sydney`, or `Europe/Berlin`.  A full list of such timezones is available on [Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).  Note that the same timezones can also be configured in the config
+* `--config` **filename** or `-c` **filename** -- overrides the default configuration file which is `~/.specs` on POSIX-based operating systems (Mac OS and Linux) or `%HOME%\specs.cfg` on Windows.

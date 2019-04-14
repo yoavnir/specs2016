@@ -1,8 +1,11 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <limits>  // For std::numeric_limits<ALUFloat>::quiet_NaN()
+#include "utils/platform.h"  // For put_time and get_time vs strftime and strptime
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
+#include "utils/TimeUtils.h"
 #include "processing/ProcessingState.h"
 
 ALUCounters counters;
@@ -249,7 +252,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 	} catch (SpecsException& e) {							\
 		_res =  (e.what(true)==std::string(ex));			\
 		actual = e.what(true);								\
-		dumpAluVec(vec,true);								\
+		cleanAluVec(vec);									\
 	}														\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": <"<< s << "> ==> \"" << ex << "\": "; 				\
@@ -295,17 +298,23 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			if (expressionIsAssignment(vec)) {              \
 				ALUCounterKey	k;							\
 				AluAssnOperator op;							\
-				vec.clear();								\
+				cleanAluVec(vec);							\
 				_res = parseAluStatement(_expr,k,&op,vec);  \
 				if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
 				if (_res) {									\
 					ALUPerformAssignment(k,&op,rpnVec,&counters); \
 					_res2 = (counters.getStr(k)==res);		\
+					cleanAluVec(rpnVec);					\
 				}											\
 			} else {                                        \
 				_res2 = true;								\
 				_res = convertAluVecToPostfix(vec, rpnVec,true);	\
-				if (_res) _result = evaluateExpression(rpnVec, &counters);	\
+				if (_res) try {                             \
+					_result = evaluateExpression(rpnVec, &counters);	\
+				} catch(SpecsException& e) {                \
+					_result = new ALUValue(e.what(true));   \
+				}                                           \
+				cleanAluVec(rpnVec);						\
 				_res = (_result!=NULL) && (_result->getStr()==res);	\
 			}                                               \
 		}                                                   \
@@ -315,7 +324,8 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		else {												\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
 			countFailures++;  failedTests.push_back(testIndex);		\
-		}													\
+		}															\
+		if (_result) delete(_result);								\
 	} while(0);
 
 #define VERIFY_ASSN_RES(s,exp) do {								\
@@ -331,6 +341,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			ALUPerformAssignment(k,&op,rpnVec,&counters);			\
 			_res2 = (counters.getStr(k)==exp);					\
 		}														\
+		cleanAluVec(rpnVec); 									\
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 		": <"<< s << "> ==> \"" << exp << "\": "; 				\
 		if (_res && _res2) std::cout << "OK\n";					\
@@ -471,6 +482,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_UNARY(uNot,1,Int,"0");
 	counters.set(12,ALUInt(0));
 	counters.set(13,0.0L);
+	counters.set(0);
 	VERIFY_UNARY(uNot,0,None,"0");
 	VERIFY_UNARY(uNot,12,Int,"1");
 	VERIFY_UNARY(uNot,13,Int,"1");
@@ -496,7 +508,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_BINARY(uMult,8,11,Float,"-788.8");    // 98.6 * (-8)
 	VERIFY_BINARY(uMult,9,4,Int,"7995");    // 65*123
 	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
+#ifdef VISUAL_STUDIO
+	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769");  // 123 / 65 - VS has one less digit of precision
+#else
 	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
+#endif
 	VERIFY_BINARY(uDiv,4,33,Int,"41");      // 123 / 3
 	VERIFY_BINARY(uDiv,4,99,None,"");       // 123 / 0 = NaN
 	VERIFY_BINARY(uIntDiv,4,9,Int,"1");     // 123 % 65 where % is integer division
@@ -583,8 +599,11 @@ int runALUUnitTests(unsigned int onlyTest)
 #undef X
 
 	VERIFY_ASSN(uAssLet,33,3,Float,"3.14159265");
+	counters.set(33,3.14159265L);
 	VERIFY_ASSN(uAssAdd,33,3,Float,"6.2831853");
+	counters.set(33,6.2831853L);
 	VERIFY_ASSN(uAssSub,33,3,Float,"3.14159265");
+	counters.set(33,3.14159265L);
 	VERIFY_ASSN(uAssAppnd,33,3,Str,"3.141592653.14159265");
 
 	// TODO: Many more needed
@@ -674,6 +693,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("frombin(#4)", "1094795585");
 	VERIFY_EXPR_RES("tobin(1094795590)","FAAA");
 
+	// Issue #71: tobin/tobine of large input
+	VERIFY_EXPR_RES("tobin('1234567890123456789012')", "Out of range trying to convert 1234567890123456789012 to Int")
+
 	// Possible problem with integer division
 	VERIFY_EXPR_RES("37/10","3.7");
 	VERIFY_EXPR_RES("37//10","3");
@@ -690,10 +712,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	// The functions that look at the line being processed
 	g_ps.setString(SpecString::newString());
 	VERIFY_EXPR_RES("wordcount()", "0");
-	VERIFY_EXPR_RES("word(2)", "NaN");
+	VERIFY_EXPR_RES("word(2)", "");
 	VERIFY_EXPR_RES("wordindex(3)", "0");
 	VERIFY_EXPR_RES("wordend(2)", "0");
-	VERIFY_EXPR_RES("words(3,4)", "NaN");
+	VERIFY_EXPR_RES("words(3,4)", "");
 
 	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
@@ -720,13 +742,34 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
-	VERIFY_EXPR_RES("range(44,48)", "NaN");
+	VERIFY_EXPR_RES("range(44,48)", "");
 	VERIFY_EXPR_RES("@@", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 	VERIFY_EXPR_RES("record()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 
 	// time reformat
 	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
 	VERIFY_EXPR_RES("d2tf(1546550663,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
+
+	// Issue #62
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.98531','%d/%m %H:%M:%S.%6f')", "1547097241.98531");     // only 5 digits in the subsecond
+#ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241.98532");   // Unfortunately, VS requires truncating the fraction
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241.98532");  // Unfortunately, VS requires truncating the fraction
+#else
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241.985317");   // proper 6 digits in the subsecond
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241.985317");  // 7 digits in the subsecond
+#endif
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.','%d/%m %H:%M:%S.%6f')", "1547097241");                // no subsecond digits at all
+#ifdef PUT_TIME__SUPPORTED
+  #ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
+  #else
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "1547097241");                 // no subsecond digits and a missing dot!
+  #endif
+#else
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
+#endif
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:0153','%d/%m %H:%M:%S.%6f')", "0");                        // This is just weird
 
 	// Issue #38
 	VERIFY_EXPR_RES("2-2", "0");
@@ -788,6 +831,51 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
 
+	// Conversion-equivalent functions
+	VERIFY_EXPR_RES("x2d('A')", "10");
+	VERIFY_EXPR_RES("x2d('1234567890abcdef')", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abCdEf')", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abcdefg')", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abcdeff')", "Cannot convert <1234567890abcdeff> from format <Hex> to format <Decimal>: out of range");
+
+	VERIFY_EXPR_RES("d2x('153')", "99");
+	VERIFY_EXPR_RES("d2x('18446744073709551615')", "ffffffffffffffff");
+	VERIFY_EXPR_RES("d2x('18446744073709551616')", "Cannot convert <18446744073709551616> from format <Decimal> to format <Hex>: out of range");
+	VERIFY_EXPR_RES("d2x('18446744073709551616a')", "Cannot convert <18446744073709551616a> from format <Decimal> to format <Hex>: out of range");
+	VERIFY_EXPR_RES("d2x('184467440737095516166')", "Cannot convert <184467440737095516166> from format <Decimal> to format <Hex>: out of range");
+	VERIFY_EXPR_RES("d2x('-8')", "fffffffffffffff8");
+
+	VERIFY_EXPR_RES("c2x('A')", "41");
+	VERIFY_EXPR_RES("c2x('AbC.')", "4162432e");
+	VERIFY_EXPR_RES("c2x('')", "");
+	VERIFY_EXPR_RES("c2x('hello\tthere')", "68656c6c6f097468657265");
+
+	VERIFY_EXPR_RES("x2ch('61')", "a");
+	VERIFY_EXPR_RES("x2ch('4e43432d31373031')", "NCC-1701");
+	VERIFY_EXPR_RES("x2ch('')", "");
+	VERIFY_EXPR_RES("x2ch('616')", "Cannot convert <616> from format <Hex> to format <Char>");
+	VERIFY_EXPR_RES("x2ch('616g')", "Cannot convert <616g> from format <Hex> to format <Char>");
+	VERIFY_EXPR_RES("x2ch('6161g')", "Cannot convert <6161g> from format <Hex> to format <Char>");
+
+	VERIFY_EXPR_RES("ucase('a')", "A");
+	VERIFY_EXPR_RES("ucase('A')", "A");
+	VERIFY_EXPR_RES("ucase('7-')", "7-");
+	VERIFY_EXPR_RES("ucase('UpPeRcAsE')", "UPPERCASE");
+	VERIFY_EXPR_RES("ucase('')", "");
+
+	VERIFY_EXPR_RES("lcase('a')", "a");
+	VERIFY_EXPR_RES("lcase('A')", "a");
+	VERIFY_EXPR_RES("lcase('7-')", "7-");
+	VERIFY_EXPR_RES("lcase('LoWeRcAsE')", "lowercase");
+	VERIFY_EXPR_RES("lcase('')", "");
+
+	VERIFY_EXPR_RES("bswap('a')", "a");
+	VERIFY_EXPR_RES("bswap('A')", "A");
+	VERIFY_EXPR_RES("bswap('7-')", "-7");
+	VERIFY_EXPR_RES("c2x(bswap(x2ch('c0a80102')))", "0201a8c0")
+	VERIFY_EXPR_RES("bswap('LoWeRcAsE')", "EsAcReWoL");
+	VERIFY_EXPR_RES("bswap('')", "");
+
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
@@ -795,6 +883,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
 	VERIFY_ASSN_RES("#6:=1", "1");
 	VERIFY_ASSN_RES("#6/=0", "NaN");
+
+	counters.set(6,std::numeric_limits<ALUFloat>::quiet_NaN());
 	VERIFY_ASSN_RES("#6+=5", "NaN");
 	VERIFY_ASSN_RES("#6:=1", "1");   // Let can fix a NaN
 
@@ -817,5 +907,8 @@ int main (int argc, char** argv)
 	if (argc>1) {
 		onlyTest = std::stoul(argv[1]);
 	}
+
+	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
+
 	return runALUUnitTests(onlyTest);
 }

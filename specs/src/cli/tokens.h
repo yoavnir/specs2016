@@ -5,6 +5,13 @@
 #include <vector>
 #include "utils/ErrorReporting.h"
 
+//
+// The TOKEN_TYPE_LIST X-macro
+//
+//   X(t,r,l)
+//     t = the token name
+//     r = token contains a range
+//     l = token contains a literal
 #define TOKEN_TYPE_LIST   \
 	/* The MainOptions */    \
 	X(STOP,           false, false) \
@@ -43,6 +50,7 @@
 	X(NUMBER,         false, false) \
 	X(TODCLOCK,       false, false) \
 	X(DTODCLOCK,      false, false) \
+	X(TIMEDIFF,       false, false) \
 	X(SET,            false, true) \
 	X(PRINT,          false, true)  \
 	X(IF,             false, true)  \
@@ -53,6 +61,12 @@
 	X(WHILE,          false, true)  \
 	X(DO,             false, false) \
 	X(DONE,           false, false) \
+	X(UNREAD,         false, false) \
+	X(REDO,           false, false) \
+	X(BREAK,          false, true)  \
+	X(SELECT,         false, true)  \
+	X(FIRST,          false, false) \
+	X(SECOND,         false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,
@@ -104,6 +118,7 @@ public:
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
 	std::string&    HelpIdentify();
+	void            deallocDynamic() {if (m_pRange) {delete m_pRange; m_pRange = NULL;}}
 private:
 	TokenListTypes  m_type;
 	TokenFieldRange *m_pRange;
