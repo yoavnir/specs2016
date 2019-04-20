@@ -79,7 +79,7 @@ int main (int argc, char** argv)
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
-	StandardReader *pRd;
+	Reader *pRd;
 	SimpleWriter *pWr;
 
 	setStateQueryAgent(&ps);
@@ -127,6 +127,8 @@ int main (int argc, char** argv)
 		} else {
 			pRd = new StandardReader(g_inputFile);
 		}
+
+		pRd = new multiReader(pRd);
 
 		if (g_outputFile.empty()) {
 			pWr = new SimpleWriter();

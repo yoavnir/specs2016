@@ -8,6 +8,7 @@ class Reader {
 public:
 	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0; m_pUnreadString = NULL; m_bRanDry = false;}
 	virtual ~Reader();
+	virtual void        selectStream(unsigned char idx);
 	virtual bool        endOfSource() = 0;
 	virtual PSpecString getNextRecord() = 0;
 	virtual PSpecString get();
@@ -60,5 +61,34 @@ private:
 	bool  m_EOF;
 	bool  m_NeedToClose;
 };
+
+#define MAX_INPUT_STREAMS  8
+#define DEFAULT_READER_IDX 1 // externally. Internally it is stored as zero
+
+class multiReader : public Reader {
+public:
+	multiReader(Reader* pDefaultReader);   // Please don't initiate with another multiReader...
+	virtual ~multiReader();
+	void addStream(unsigned char idx, std::istream* f);
+	void addStream(unsigned char idx, std::string& fn);
+	virtual void selectStream(unsigned char idx);
+	virtual bool        endOfSource();
+	virtual PSpecString getNextRecord();
+	virtual PSpecString get();
+	// void                pushBack(PSpecString ps);
+	// virtual void        readIntoQueue();
+	virtual void        Begin();
+	// virtual bool        eof();
+	void                End();
+	// unsigned long 		countRead();
+	// unsigned long 		countUsed();
+	// bool                hasRunDry();
+	unsigned int        getReaderIdx()  { return readerIdx+1; }
+private:
+	Reader*             readerArray[MAX_INPUT_STREAMS];
+	unsigned int        readerIdx;
+	unsigned int        maxReaderIdx;
+};
+
 
 #endif

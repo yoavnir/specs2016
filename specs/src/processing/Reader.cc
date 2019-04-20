@@ -20,6 +20,14 @@ Reader::~Reader()
 	}
 }
 
+void Reader::selectStream(unsigned char idx)
+{
+	if (idx != DEFAULT_READER_IDX) {
+		std::string err = "Attempted to select stream " + std::to_string(idx) + " when no secondary streams are defined.";
+		MYTHROW(err);
+	}
+}
+
 void Reader::End()
 {
 	if (mp_thread) {
@@ -163,4 +171,104 @@ void TestReader::InsertString(PSpecString ps)
 		MYTHROW("Attempting to insert too many lines into TestReader");
 	}
 	mp_arr[m_count++] = ps;
+}
+
+// #include <cstring>  // for memset
+// #include "utils/ErrorReporting.h"
+
+#define ITERATE_VALID_STREAMS(i)                \
+	unsigned char i;                            \
+	for (i=0 ; i < maxReaderIdx+1 ; i++) {   \
+		if (NULL != readerArray[i]) {
+
+#define ITERATE_VALID_STREAMS_END				\
+		}                                       \
+    }
+
+
+multiReader::multiReader(Reader* pDefaultReader)
+{
+	memset(readerArray, 0, sizeof(readerArray));
+	readerIdx = DEFAULT_READER_IDX - 1;
+	maxReaderIdx = readerIdx;
+	readerArray[readerIdx] = pDefaultReader;
+}
+
+
+multiReader::~multiReader()
+{
+	ITERATE_VALID_STREAMS(idx)
+		delete readerArray[idx];
+		readerArray[idx] = NULL;
+	ITERATE_VALID_STREAMS_END
+}
+
+void multiReader::addStream(unsigned char idx, std::istream* f)
+{
+	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
+	idx--;  // Set to C-style index
+	MYASSERT_WITH_MSG(NULL==readerArray[idx], "Input stream is already defined");
+
+	readerArray[idx] = new StandardReader(f);
+	if (idx > maxReaderIdx) maxReaderIdx = idx;
+}
+
+void multiReader::addStream(unsigned char idx, std::string& fn)
+{
+	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
+	idx--;  // Set to C-style index
+	MYASSERT_WITH_MSG(NULL==readerArray[idx], "Input stream is already defined");
+
+	readerArray[idx] = new StandardReader(fn);
+	if (idx > maxReaderIdx) maxReaderIdx = idx;
+}
+
+void multiReader::selectStream(unsigned char idx)
+{
+	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
+	idx--;  // Set to C-style index
+	MYASSERT_WITH_MSG(NULL!=readerArray[idx], "Invalid input stream");
+
+	readerIdx = idx;
+}
+
+void multiReader::Begin()
+{
+	ITERATE_VALID_STREAMS(idx)
+		readerArray[idx]->Begin();
+	ITERATE_VALID_STREAMS_END
+}
+
+PSpecString multiReader::get()
+{
+	PSpecString ret = readerArray[readerIdx]->get();
+	if (!ret) return NULL;
+
+	PSpecString ps;
+	ITERATE_VALID_STREAMS(idx)
+		if (idx != readerIdx) {
+			PSpecString ps = readerArray[idx]->get();
+			if (ps) {
+				delete ps;
+			} else {
+				std::string err = "Input stream " + std::to_string(idx+1) + " ran dry while active stream ("
+						+ std::to_string(readerIdx+1) + ") still has records";
+				MYTHROW(err);
+			}
+		}
+	ITERATE_VALID_STREAMS_END
+
+	return ret;
+}
+
+bool multiReader::endOfSource()
+{
+	MYTHROW("multiReader::endOfSource() should not have been called.");
+	return false;
+}
+
+PSpecString multiReader::getNextRecord()
+{
+	MYTHROW("multiReader::getNextRecord() should not have been called.");
+	return NULL;
 }
