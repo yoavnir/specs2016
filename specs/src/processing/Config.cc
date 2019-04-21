@@ -131,3 +131,21 @@ std::string& configSpecLiteralGet(std::string& key)
 {
 	return ExternalLiterals[key];
 }
+
+bool anyNonPrimaryInputStreamDefined()
+{
+	static bool ret = false;
+	static bool firstRun = true;
+
+	if (firstRun) {
+		ret = (g_inputStream2 != "")
+				|| (g_inputStream3 != "")
+				|| (g_inputStream4 != "")
+				|| (g_inputStream5 != "")
+				|| (g_inputStream6 != "")
+				|| (g_inputStream7 != "")
+				|| (g_inputStream8 != "");
+	}
+
+	return ret;
+}

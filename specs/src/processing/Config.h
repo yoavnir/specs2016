@@ -19,6 +19,13 @@
 	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
 	X(configurationFile,            std::string,  "",     c,config,             NEXTARG)    \
 	X(timeZone,                     std::string,  "",     0,timezone,           NEXTARG)    \
+	X(inputStream2,                 std::string,  "",     0,is2,                NEXTARG)    \
+	X(inputStream3,                 std::string,  "",     0,is3,                NEXTARG)    \
+	X(inputStream4,                 std::string,  "",     0,is4,                NEXTARG)    \
+	X(inputStream5,                 std::string,  "",     0,is5,                NEXTARG)    \
+	X(inputStream6,                 std::string,  "",     0,is6,                NEXTARG)    \
+	X(inputStream7,                 std::string,  "",     0,is7,                NEXTARG)    \
+	X(inputStream8,                 std::string,  "",     0,is8,                NEXTARG)    \
 
 #define X(nm,typ,defval,ssw,cliswitch,oval) extern typ g_##nm;
 CONFIG_PARAMS
@@ -29,5 +36,7 @@ void readConfigurationFile();
 bool configSpecLiteralExists(std::string& key);
 
 std::string& configSpecLiteralGet(std::string& key);
+
+bool anyNonPrimaryInputStreamDefined();
 
 #endif

@@ -128,7 +128,17 @@ int main (int argc, char** argv)
 			pRd = new StandardReader(g_inputFile);
 		}
 
-		pRd = new multiReader(pRd);
+		if (anyNonPrimaryInputStreamDefined()) {
+			multiReader* pmRd = new multiReader(pRd);
+			if (g_inputStream2 != "") pmRd->addStream(2, g_inputStream2);
+			if (g_inputStream3 != "") pmRd->addStream(3, g_inputStream3);
+			if (g_inputStream4 != "") pmRd->addStream(4, g_inputStream4);
+			if (g_inputStream5 != "") pmRd->addStream(5, g_inputStream5);
+			if (g_inputStream6 != "") pmRd->addStream(6, g_inputStream6);
+			if (g_inputStream7 != "") pmRd->addStream(7, g_inputStream7);
+			if (g_inputStream8 != "") pmRd->addStream(8, g_inputStream8);
+			pRd = pmRd;
+		}
 
 		if (g_outputFile.empty()) {
 			pWr = new SimpleWriter();
