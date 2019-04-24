@@ -271,7 +271,7 @@ public:
 	virtual ~SelectItem() {}
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
-	bool    isSelectSecond()  {return m_stream==STREAM_SECOND;}
+	bool    isSelectSecond()  {return m_stream==STATION_SECOND;}
 private:
 	int  m_stream;
 };

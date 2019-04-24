@@ -71,23 +71,19 @@ public:
 	virtual ~multiReader();
 	void addStream(unsigned char idx, std::istream* f);
 	void addStream(unsigned char idx, std::string& fn);
-	virtual void selectStream(unsigned char idx);
+	virtual void selectStream(unsigned char idx, PSpecString* ppRecord);
 	virtual bool        endOfSource();
 	virtual PSpecString getNextRecord();
 	virtual PSpecString get();
-	// void                pushBack(PSpecString ps);
-	// virtual void        readIntoQueue();
 	virtual void        Begin();
-	// virtual bool        eof();
 	void                End();
-	// unsigned long 		countRead();
-	// unsigned long 		countUsed();
-	// bool                hasRunDry();
 	unsigned int        getReaderIdx()  { return readerIdx+1; }
 private:
 	Reader*             readerArray[MAX_INPUT_STREAMS];
+	PSpecString         stringArray[MAX_INPUT_STREAMS];
 	unsigned int        readerIdx;
 	unsigned int        maxReaderIdx;
+	bool                bFirstGet;
 };
 
 

@@ -1,6 +1,7 @@
 #include <cctype>
 #include "Config.h"
 #include "utils/ErrorReporting.h"
+#include "Reader.h"
 #include "ProcessingState.h"
 
 #define EMPTY_FIELD_MARKER  999999999
@@ -47,7 +48,10 @@ ProcessingState::ProcessingState()
 	m_ExtraReads = 0;
 	m_ps = NULL;
 	m_prevPs = NULL;
-	m_inputStream = 1;
+	m_inputStation = STATION_FIRST;
+	m_breakLevel = 0;
+	m_inputStream = DEFAULT_READER_IDX;
+	m_inputStreamChanged = false;
 }
 
 ProcessingState::ProcessingState(ProcessingState& ps)
@@ -61,7 +65,10 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_ExtraReads = 0;
 	m_ps = NULL;
 	m_prevPs = NULL;
-	m_inputStream = 1;
+	m_inputStation = STATION_FIRST;
+	m_breakLevel = 0;
+	m_inputStream = DEFAULT_READER_IDX;
+	m_inputStreamChanged = false;
 }
 
 ProcessingState::ProcessingState(ProcessingState* pPS)
@@ -75,7 +82,10 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_ExtraReads = 0;
 	m_ps = NULL;
 	m_prevPs = NULL;
-	m_inputStream = 1;
+	m_inputStation = STATION_FIRST;
+	m_breakLevel = 0;
+	m_inputStream = DEFAULT_READER_IDX;
+	m_inputStreamChanged = false;
 }
 
 ProcessingState::~ProcessingState()
@@ -106,10 +116,15 @@ void ProcessingState::setString(PSpecString ps)
 	resetBreaks();
 }
 
+void ProcessingState::setStringInPlace(PSpecString ps)
+{
+	m_ps = ps;
+}
+
 void ProcessingState::setFirst()
 {
-	if (m_inputStream != STREAM_FIRST) {
-		m_inputStream = STREAM_FIRST;
+	if (m_inputStation != STATION_FIRST) {
+		m_inputStation = STATION_FIRST;
 		m_wordCount = -1;
 		m_fieldCount = -1;
 	}
@@ -117,10 +132,22 @@ void ProcessingState::setFirst()
 
 void ProcessingState::setSecond()
 {
-	if (m_inputStream != STREAM_SECOND) {
-		m_inputStream = STREAM_SECOND;
+	if (m_inputStation != STATION_SECOND) {
+		m_inputStation = STATION_SECOND;
 		m_wordCount = -1;
 		m_fieldCount = -1;
+	}
+}
+
+void ProcessingState::setStream(int inputStreamIndex)
+{
+	MYASSERT(inputStreamIndex >= DEFAULT_READER_IDX);
+	MYASSERT(inputStreamIndex <= MAX_INPUT_STREAMS);
+	if (inputStreamIndex != m_inputStream) {
+		m_wordCount = -1;
+		m_fieldCount = -1;
+		m_inputStream = inputStreamIndex;
+		m_inputStreamChanged = true;
 	}
 }
 
@@ -253,7 +280,7 @@ int ProcessingState::getWordEnd(int idx) {
 // Convention: to=0 means to the end
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
-	if (m_inputStream != STREAM_SECOND) {
+	if (m_inputStation != STATION_SECOND) {
 		MYASSERT_WITH_MSG(NULL!=m_ps,"Tried to read record in run-out cycle");
 	}
 	int slen = (int)(currRecord()->length());

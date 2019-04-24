@@ -12,8 +12,8 @@
 #define DEFAULT_WORDSEPARATOR ' '
 #define DEFAULT_FIELDSEPARATOR '\t'
 
-#define STREAM_FIRST   1
-#define STREAM_SECOND -2
+#define STATION_FIRST  -1
+#define STATION_SECOND -2
 
 #define LOOP_CONDITION_FALSE (-5)
 
@@ -33,6 +33,7 @@ public:
 	char    getFSChar()  { return m_fieldSeparator; }
 
 	void    setString(PSpecString ps);
+	void    setStringInPlace(PSpecString ps);
 
 	// The stateQueryAgent interface
 	virtual unsigned int getWordCount();
@@ -69,9 +70,13 @@ public:
 	int  getLoopStart();
 	void setFirst();
 	void setSecond();
-	int  getActiveInputStream() { return m_inputStream; }
-	PSpecString currRecord() { return (m_inputStream==STREAM_FIRST) ? m_ps : m_prevPs; }
+	void setStream(int i);
+	int  getActiveInputStation() { return m_inputStation; }
+	PSpecString currRecord() { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
 	bool recordNotAvailable() { return NULL==currRecord(); }
+	bool inputStreamHasChanged() { return m_inputStreamChanged; }
+	void resetInputStreamFlag() { m_inputStreamChanged = false; }
+	int  getActiveInputStream() { return m_inputStream; }
 private:
 	enum extremeBool {
 		bFalse,
@@ -98,7 +103,9 @@ private:
 	char m_breakLevel;
 	std::stack<extremeBool> m_Conditions;
 	std::stack<int> m_Loops;    // The unsigned int holds the number of the token where the while was
+	int             m_inputStation;
 	int             m_inputStream;
+	bool            m_inputStreamChanged;
 };
 
 

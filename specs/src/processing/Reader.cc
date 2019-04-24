@@ -189,9 +189,11 @@ void TestReader::InsertString(PSpecString ps)
 multiReader::multiReader(Reader* pDefaultReader)
 {
 	memset(readerArray, 0, sizeof(readerArray));
+	memset(stringArray, 0, sizeof(stringArray));
 	readerIdx = DEFAULT_READER_IDX - 1;
 	maxReaderIdx = readerIdx;
 	readerArray[readerIdx] = pDefaultReader;
+	bFirstGet = true;
 }
 
 
@@ -200,6 +202,9 @@ multiReader::~multiReader()
 	ITERATE_VALID_STREAMS(idx)
 		delete readerArray[idx];
 		readerArray[idx] = NULL;
+		if (stringArray[idx]) {
+			delete stringArray[idx];
+		}
 	ITERATE_VALID_STREAMS_END
 }
 
@@ -223,13 +228,19 @@ void multiReader::addStream(unsigned char idx, std::string& fn)
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
 }
 
-void multiReader::selectStream(unsigned char idx)
+void multiReader::selectStream(unsigned char idx, PSpecString* ppRecord)
 {
 	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
 	idx--;  // Set to C-style index
 	MYASSERT_WITH_MSG(NULL!=readerArray[idx], "Invalid input stream");
 
-	readerIdx = idx;
+	if (readerIdx!=idx) {
+		MYASSERT(NULL == stringArray[readerIdx]);
+		stringArray[readerIdx] = *ppRecord;
+		*ppRecord = stringArray[idx];
+		stringArray[idx] = NULL;
+		readerIdx = idx;
+	}
 }
 
 void multiReader::Begin()
@@ -244,20 +255,31 @@ PSpecString multiReader::get()
 	PSpecString ret = readerArray[readerIdx]->get();
 	if (!ret) return NULL;
 
-	PSpecString ps;
 	ITERATE_VALID_STREAMS(idx)
-		if (idx != readerIdx) {
-			PSpecString ps = readerArray[idx]->get();
-			if (ps) {
-				delete ps;
-			} else {
+		if (stringArray[idx]) {
+			MYASSERT(idx!=readerIdx);
+			delete stringArray[idx];
+			stringArray[idx] = readerArray[idx]->get();
+			if (!stringArray[idx]) {
 				std::string err = "Input stream " + std::to_string(idx+1) + " ran dry while active stream ("
 						+ std::to_string(readerIdx+1) + ") still has records";
 				MYTHROW(err);
 			}
+		} else {
+			MYASSERT(idx==readerIdx || bFirstGet);
+			/* ret has already been read, and the stringArray slot remains NULL */
+			if (bFirstGet && idx!=readerIdx) {
+				stringArray[idx] = readerArray[idx]->get();
+				if (!stringArray[idx]) {
+					std::string err = "Input stream " + std::to_string(idx+1) + " ran dry at the first record"
+							" while active stream (" + std::to_string(readerIdx+1) + ") still has records";
+					MYTHROW(err);
+				}
+			}
 		}
 	ITERATE_VALID_STREAMS_END
 
+	bFirstGet = false;
 	return ret;
 }
 

@@ -5,6 +5,7 @@
 #include "processing/Config.h"
 #include "utils/ErrorReporting.h"
 #include "processing/conversions.h"
+#include "processing/Reader.h"
 #include "processing/ProcessingState.h"
 
 extern std::string conv_X2CH(std::string& s);
@@ -659,6 +660,22 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				case TokenListType__SECOND:
 					tok.setLiteral("SECOND");
 					break;
+				case TokenListType__RANGE:
+				{
+					TokenFieldRange* pRange = nextTok.Range();
+					// We just want one number between 1 and 8. Anything else causes an exception.
+					if (!pRange || !pRange->isSingleNumber()) {
+						std::string err = "Invalid input stream descriptor: " + pRange->Debug();
+						MYTHROW(err);
+					}
+					int streamIndex = pRange->getSingleNumber();
+					if (streamIndex < DEFAULT_READER_IDX || streamIndex > MAX_INPUT_STREAMS) {
+						std::string err = "Invalid input stream descriptor: "+ std::to_string(streamIndex);
+						MYTHROW(err);
+					}
+					tok.setLiteral(std::to_string(streamIndex));
+					break;
+				}
 				default:
 					std::string err = "Invalid token of type " + TokenListType__2str(nextType) +
 						" with content <" + nextTok.Orig() + ">";

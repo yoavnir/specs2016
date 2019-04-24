@@ -212,6 +212,15 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 	itemLoop:
 	processingContinue = true;
 	for ( ; processingContinue && i<m_items.size(); i++) {
+		if (pState.inputStreamHasChanged()) {
+			multiReader* pmRead = dynamic_cast<multiReader*>(pRd);
+			MYASSERT_WITH_MSG(NULL != pmRead, "Stream selected in non-multi-stream specification");
+			pState.setFirst();
+			PSpecString ps = pState.currRecord();
+			pmRead->selectStream(pState.getActiveInputStream(), &ps);
+			pState.resetInputStreamFlag();
+			pState.setStringInPlace(ps);
+		}
 		PItem pit = m_items[i];
 		if (!pit->ApplyUnconditionally() && !pState.needToEvaluate()) {
 			continue;
@@ -247,7 +256,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			break;
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
-			MYASSERT_WITH_MSG(pState.getActiveInputStream() != STREAM_SECOND, "Cannot READ or READSTOP during SELECT SECOND");
+			MYASSERT_WITH_MSG(pState.getActiveInputStation() != STATION_SECOND, "Cannot READ or READSTOP during SELECT SECOND");
 			ps = pRd->get();
 			if (!ps) {
 				if (aRet==ApplyRet__Read) {
@@ -298,6 +307,10 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 		if (processDo(sb,pState, &rd, &wr)) {
 			wr.Write(sb.GetString());
+		}
+
+		if (DEFAULT_READER_IDX != pState.getActiveInputStream()) {
+			pState.setStream(DEFAULT_READER_IDX);
 		}
 	}
 
@@ -627,9 +640,13 @@ ApplyRet BreakItem::apply(ProcessingState& pState, StringBuilder* pSB)
 SelectItem::SelectItem(std::string& st)
 {
 	if (st=="FIRST") {
-		m_stream = STREAM_FIRST;
+		m_stream = STATION_FIRST;
 	} else if (st=="SECOND") {
-		m_stream = STREAM_SECOND;
+		m_stream = STATION_SECOND;
+	} else if (st.length()==1) {
+		m_stream = st[0] - '0';
+		MYASSERT(m_stream >= DEFAULT_READER_IDX);
+		MYASSERT(m_stream <= MAX_INPUT_STREAMS);
 	} else {
 		std::string err = "Invalid stream " + st;
 		MYTHROW(err);
@@ -638,7 +655,7 @@ SelectItem::SelectItem(std::string& st)
 
 std::string SelectItem::Debug()
 {
-	if (m_stream == STREAM_SECOND) {
+	if (m_stream == STATION_SECOND) {
 		return "SELECT:SECOND";
 	}
 	std::string ret("SELECT:");
@@ -648,10 +665,12 @@ std::string SelectItem::Debug()
 
 ApplyRet SelectItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
-	if (m_stream == STREAM_FIRST) {
+	if (m_stream == STATION_FIRST) {
 		pState.setFirst();
-	} else if (m_stream == STREAM_SECOND) {
+	} else if (m_stream == STATION_SECOND) {
 		pState.setSecond();
+	} else if (m_stream>=DEFAULT_READER_IDX && m_stream<=MAX_INPUT_STREAMS) {
+		pState.setStream(m_stream);
 	} else {
 		MYTHROW("Invalid SelectItem");
 	}
