@@ -338,11 +338,11 @@ along with the keywords
 .B FIRST
 and
 .B SECOND 
-can be used to select between two input streams. The 
+can be used to select between two input stations. The 
 .B FIRST 
-input stream is the regular primary input. The
+input station is the regular primary input. The
 .B SECOND 
-input stream holds the previous record from the primary input stream.
+input station holds the previous record from the primary input.
 
 Imagine an input stream that has the natural numbers. Let's run the following specification:
 
@@ -353,7 +353,27 @@ The result will be the following:
     2 - 1 = 1
     3 - 1 = 2
     4 - 1 = 3
-    5 - 1 = 5
+    5 - 1 = 4
+
+and so on.
+
+The keyword
+.B SELECT
+can also be used with a number between 1 and 8 to denote different input streams. These extra streams are specified with the
+.B --is2 - --is8
+command-line switches to specify the files that contain the other input streams. Every cycle of the specification begins with 
+.B specs
+set to stream #1.  For example, suppose we have two files: f1 and f2, both of which contain lists of numbers, and we want to add them:
+
+    specs -i f1 --is2 f2 a: W1 1 '+' NW  SELECT 2  b: W1 NW  '=' NW  PRINT "a+b" NW
+    
+If both files contained the natural numbers we would get the following output:
+    1 + 1 = 2
+    2 + 2 = 4
+    3 + 3 = 6
+    4 + 4 = 8
+    5 + 5 = 10
+
 and so on.
 
 .SS "Expressions and Assignments"

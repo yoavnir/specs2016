@@ -128,7 +128,7 @@ grep shuttle test* | specs fs : f2-* 1 REDO /source:/ 1 w1 nw
 ## The Second Reading Station
 At the conclusion of each cycle, **specs** loads the record from the primary input into a buffer, called the *second reading station*, that can be accessed during the next cycle.  Similar to the `EOF` token and the `eof()` function, any access to the second reading forces a *run-out cycle*.
 
-The second reading is accessed using the keywords `SELECT SECOND`.  You can return to reading the primary input stream using `SELECT FIRST` or `SELECT 1`.
+The second reading is accessed using the keywords `SELECT SECOND`.  You can return to reading the primary input stream using `SELECT FIRST`.
 
 Consider the following input:
 ```
@@ -160,3 +160,41 @@ A few things to note:
 1. It does not matter what the selected stream is at the end of the specification. The next cycle always begins with the primary stream selected.
 1. `READ` and `READSTOP` **MUST NOT** be used during secondary reading. This will result in an error.
 1. Specifications should not mix `READ` and `READSTOP` with `SELECT SECOND` even if the `READ` or `READSTOP` is during reading of the primary record. The results are undefined and may change in future releases.
+
+## Multiple Input Streams
+**specs** allows you to use multiple input streams in your specifications. The way this works is that you use the `--is2` to `--is8` CLI switches to specify additional (up to a total of 8) input streams to use. At each cycle of the specification, 1 record is read from each input stream, which implies that the number of records in each stream should be equal. 
+
+The multiple input streams is mostly useful in collating data, because the input stream records need to be matched.
+
+The way you use multiple streams is by using the `SELECT` keyword followed by a stream number. For example, suppose we have two input files as follows:
+
+| file1 | file2 |
+| ----- | ----- |
+| Alice  164 | Alice 65 |
+| Bob    178 | Bob   82 |
+| Carol  171 | Carol 66 |
+| Eve    169 | Eve   68 |
+
+Both files have two words, but we'd like to combine them into three-word records. Here's how to do it:
+
+`specs -i file1 --is2 file2 WORD 1 1  WORD 2 NW  SELECT 2  WORD 2 NW`
+
+At the start of a new cycle, the active stream resets to #1. The end result will look like this:
+```
+Alice 164 65
+Bob 178 82
+Carol 171 66
+Eve 169 68
+```
+
+
+
+
+
+
+
+
+
+
+
+
