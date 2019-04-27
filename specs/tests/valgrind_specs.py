@@ -4,12 +4,12 @@ case_counter = 0
 
 tests_to_run = None
 
-def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, conf=""):
+def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, conf="", inp2=None):
     global case_counter, tests_to_run
     case_counter = case_counter + 1
     if tests_to_run is not None and str(case_counter) not in tests_to_run:
     	return
-    (rc,info) = memcheck.leak_check_specs(spec,input,case_counter,conf)
+    (rc,info) = memcheck.leak_check_specs(spec,input,case_counter,conf,inp2)
     sys.stdout.write("Test case #{} - {} - ".format(case_counter,description))
     if rc!=expected_rc:
         sys.stdout.write("Failed. RC={}; info={}; expected: {}\n".format(memcheck.RetCode_strings[rc],info,memcheck.RetCode_strings[expected_rc]))
@@ -625,4 +625,23 @@ WORD 2 NEXTWORD
 i = "first record\nsecond line\nlast one"
 run_case(s,i,"Second Reading")
 
+# Dual stream
+s = \
+"""
+WORD 9 1.25 LEFT
+SELECT 2 
+WORD 1 NEXTWORD
+SELECT 1
+WORD 5 NW.9 RIGHT
+"""
+i = input_samples.ls_out
+i2 = input_samples.ls_out_inodes
+run_case(s,i,"dual input stream",inp2=i2)
+
+# Dual stream without specifying it
+run_case(s,i,"dual input stream missing secondary",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+
+# Dual stream with mismatched streams
+i2 = input_samples.ls_out_inodes_mismatched
+run_case(s,i,"dual input stream with mismatched secondary",expected_rc=memcheck.RetCode_COMMAND_FAILED,inp2=i2)
 

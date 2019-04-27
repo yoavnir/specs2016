@@ -24,7 +24,8 @@ specs/src/specs.1.gz
 specs/tests/__pycache__
 specs/tests/cmd.out
 specs/tests/valgrind.out
-specs/tests/theinp  
+specs/tests/theinp
+specs/tests/theinp2
 specs/tests/theout 
 specs/tests/thespec
 specs/tests/theconf

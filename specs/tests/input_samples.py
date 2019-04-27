@@ -20,6 +20,44 @@ drwxr-xr-x  19 synp  staff     608 Mar  9 10:45 utils
 -rw-r--r--   1 synp  staff   11931 Feb 27 21:39 xxx
 """
 
+ls_out_inodes = \
+"""
+8630081633 Makefile
+8630080989 Makefile.cached_depends
+8630080990 Makefile.cached_depends_vs
+8631159018 clang_on_centos.txt
+8631159021 clang_on_mac.txt
+8630953247 clc.txt
+8618332863 cli
+8630994304 clm.txt
+8630080994 mkcache.sh
+8630080991 patch.txt
+8618569561 processing
+8630081005 setup.py
+8618553163 specitems
+8630997293 test
+8619309532 utils
+8630997296 xxx
+"""
+
+ls_out_inodes_mismatched = \
+"""
+8630081633 Makefile
+8630080989 Makefile.cached_depends
+8630080990 Makefile.cached_depends_vs
+8630953247 clc.txt
+8618332863 cli
+8630994304 clm.txt
+8630080994 mkcache.sh
+8630080991 patch.txt
+8618569561 processing
+8630081005 setup.py
+8618553163 specitems
+8630997293 test
+8619309532 utils
+8630997296 xxx
+"""
+
 Jabberwocky = \
 """
 'Twas brillig, and the slithy toves
