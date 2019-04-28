@@ -155,6 +155,7 @@ enum ApplyRet {
 #define POS_SPECIAL_VALUE_NEXTWORD  0xffffffff
 #define POS_SPECIAL_VALUE_NEXTFIELD 0xfffffffe
 #define POS_SPECIAL_VALUE_NEXT      0xfffffffd
+#define POS_SPECIAL_VALUE_COMPOSED  0xfffffffc
 #define MAX_OUTPUT_POSITION         65536
 
 class Item {
@@ -183,6 +184,7 @@ private:
 	InputPart* getInputPart(std::vector<Token> &tokenVec, unsigned int& index, char _wordSep=0, char _fieldSep=0);
 	SubstringPart* getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
 	void stripString(PSpecString &pOrig);
+	void interpretComposedOutputPlacement(std::string& outputPlacement);
 	char m_label;
 	char m_tailLabel;
 	InputPart *m_InputPart;
@@ -192,6 +194,9 @@ private:
 	StringConversions m_conversion;
 	outputAlignment   m_alignment;
 	std::string       m_conversionParam;
+	AluVec            m_outputStartExpression;
+	AluVec            m_outputWidthExpression;
+	AluVec            m_outputAlignmentExpression;
 };
 
 class TokenItem : public Item {

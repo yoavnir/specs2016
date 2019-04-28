@@ -1329,6 +1329,51 @@ bool isHigherPrecedenceBinaryOp(AluUnit* op1, AluUnit* op2)
 	return bop1->priority() >= bop2->priority();
 }
 
+bool breakAluVecByComma(AluVec& source, AluVec& dest)
+{
+	int countOpens = 0;
+	int countUnits = 0;
+	bool foundComma = false;
+
+	if (!dest.empty()){
+		MYTHROW("Entered with non-empty destinatin vec.");
+	}
+
+
+	for (AluUnit* pUnit : source) {
+		countUnits++;
+		switch(pUnit->type()) {
+		case UT_OpenParenthesis:
+			countOpens++;
+			break;
+		case UT_ClosingParenthesis:
+			MYASSERT(countOpens>0);
+			countOpens--;
+			break;
+		case UT_Comma:
+			if (0==countOpens) foundComma = true;
+			break;
+		default:
+			break;
+		}
+
+		if (foundComma) {
+			break;
+		}
+		else {
+			dest.push_back(pUnit);
+		}
+	}
+
+	for (int i=0 ; i < countUnits ; i++) {
+		source.erase(source.begin());
+	}
+
+	MYASSERT(foundComma || source.empty());
+
+	return true;
+}
+
 /*
  * Function: convertAluVecToPostfix
  * Implements the Shunting-Yard algorithm to convert an infix expression

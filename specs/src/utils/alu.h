@@ -360,6 +360,8 @@ bool isValidExpression(AluVec& vec);  // To Be Added
 
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
 
+bool breakAluVecByComma(AluVec& source, AluVec& dest);
+
 ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs);
 
 void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs);

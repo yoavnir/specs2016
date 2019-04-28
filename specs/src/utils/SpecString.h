@@ -10,7 +10,8 @@
 enum outputAlignment {
 	outputAlignmentLeft,
 	outputAlignmentCenter,
-	outputAlignmentRight
+	outputAlignmentRight,
+	outputAlignmentComposed
 };
 
 class SpecString;

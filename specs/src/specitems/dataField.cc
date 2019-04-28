@@ -2,6 +2,8 @@
 #include "processing/Config.h"
 #include "item.h"
 
+extern ALUCounters g_counters;
+
 #define GET_NEXT_TOKEN_NO_ADVANCE {           \
 		if (index>=tokenVec.size()) {         \
 			token = dummyToken;               \
@@ -296,6 +298,16 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 			m_maxLength = (size_t)(token.Range()->getSimpleLast());
 		}
 		break;
+	case TokenListType__GROUPSTART:
+	{
+		GET_NEXT_TOKEN;  // advance to the literal
+		std::string composedOutputPlacement = token.Literal();
+		GET_NEXT_TOKEN;
+		MYASSERT(token.Type()==TokenListType__GROUPEND);
+		index++;
+		interpretComposedOutputPlacement(composedOutputPlacement);
+		return;
+	}
 	default:
 		std::string err = "Bad output placement " + token.HelpIdentify();
 		MYTHROW(err);
@@ -317,6 +329,34 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	default:
 		;
 	}
+}
+
+void DataField::interpretComposedOutputPlacement(std::string& outputPlacement)
+{
+	AluVec outputPlacementExpression;
+	AluVec infixExpression;
+
+	m_outStart = POS_SPECIAL_VALUE_COMPOSED;
+	m_maxLength = 0;
+	m_alignment = outputAlignmentLeft;
+
+	MYASSERT(parseAluExpression(outputPlacement, outputPlacementExpression));
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputStartExpression, true));
+
+	if (outputPlacement.empty()) return;
+
+	m_maxLength = POS_SPECIAL_VALUE_COMPOSED;
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputWidthExpression, true));
+
+	if (outputPlacement.empty()) return;
+
+	m_alignment = outputAlignmentComposed;
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputAlignmentExpression, true));
+
+	MYASSERT(outputPlacementExpression.empty());
 }
 
 std::string DataField::Debug() {
@@ -388,6 +428,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	int _from, _to;
 	bool bWritingWasDone = false;
 	PSpecString pInput = m_InputPart->getStr(pState);
+	size_t outputWidth = m_maxLength;
 
 	if (!pInput) pInput = SpecString::newString();
 
@@ -407,11 +448,33 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	}
 
 	// truncate or expand if necessary
-	if (m_maxLength>0 && pInput->length()!=m_maxLength) {
-		pInput->Resize(m_maxLength, pState.getPadChar(), m_alignment);
+
+	if (outputWidth==POS_SPECIAL_VALUE_COMPOSED) {
+		ALUValue* res = evaluateExpression(m_outputWidthExpression, &g_counters);
+		outputWidth = res->getInt();
+		delete res;
+	} else if (outputWidth > MAX_OUTPUT_POSITION) {
+		MYTHROW("Excessive output width");
 	}
 
-	if (m_outStart==0 && m_maxLength==0) {
+	if (outputWidth>0 && pInput->length()!=outputWidth) {
+		if (m_alignment != outputAlignmentComposed) {
+			pInput->Resize(m_maxLength, pState.getPadChar(), m_alignment);
+		} else {
+			outputAlignment al = outputAlignmentLeft;
+			ALUValue* res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
+			std::string s = res->getStr();
+			delete res;
+			if (s[0]=='c' || s[0]=='C') {
+				al = outputAlignmentCenter;
+			} else if (s[0]=='r' || s[0]=='R') {
+				al = outputAlignmentRight;
+			}
+			pInput->Resize(m_maxLength, pState.getPadChar(), al);
+		}
+	}
+
+	if (m_outStart==0 && outputWidth==0) {
 		// This is the no output option
 		if (m_tailLabel) {
 			pState.fieldIdentifierSet(m_tailLabel, pInput);
@@ -427,6 +490,10 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		pSB->insertNextWord(pInput);
 	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTFIELD) {
 		pSB->insertNextField(pInput);
+	} else if (m_outStart==POS_SPECIAL_VALUE_COMPOSED) {
+		ALUValue* res = evaluateExpression(m_outputStartExpression, &g_counters);
+		pSB->insert(pInput, res->getInt());
+		delete res;
 	} else if (m_outStart <= MAX_OUTPUT_POSITION) {
 		pSB->insert(pInput, m_outStart);
 	} else {
