@@ -370,7 +370,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	if ((pRange = parseAsAnySimpleRangeSpec(arg))) {
 		pVec->insert(pVec->end(),
 				Token(TokenListType__RANGE,
-						pRange, "", argidx, arg));
+						pRange, arg, argidx, arg));
 		NEXT_TOKEN;
 	}
 
@@ -379,7 +379,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 		if ((pRange = parseAsAnySimpleRangeSpec(arg.substr(1)))) {
 			pVec->insert(pVec->end(),
 					Token(TokenListType__WORDRANGE,
-							pRange, "", argidx, arg));
+							pRange, arg, argidx, arg));
 			NEXT_TOKEN;
 		}
 	}
@@ -389,7 +389,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 		if ((pRange = parseAsAnySimpleRangeSpec(arg.substr(1)))) {
 			pVec->insert(pVec->end(),
 					Token(TokenListType__FIELDRANGE,
-							pRange, "", argidx, arg));
+							pRange, arg, argidx, arg));
 			NEXT_TOKEN;
 		}
 	}

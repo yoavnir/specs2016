@@ -300,10 +300,13 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		break;
 	case TokenListType__GROUPSTART:
 	{
-		GET_NEXT_TOKEN;  // advance to the literal
-		std::string composedOutputPlacement = token.Literal();
+		std::string composedOutputPlacement = "";
 		GET_NEXT_TOKEN;
-		MYASSERT(token.Type()==TokenListType__GROUPEND);
+		while (token.Type()!=TokenListType__GROUPEND && token.Type()!=TokenListType__DUMMY) {
+			composedOutputPlacement += token.Literal();
+			GET_NEXT_TOKEN;
+		}
+		MYASSERT_WITH_MSG(token.Type()==TokenListType__GROUPEND, "Unterminated composed output placement");
 		index++;
 		interpretComposedOutputPlacement(composedOutputPlacement);
 		return;
@@ -344,13 +347,13 @@ void DataField::interpretComposedOutputPlacement(std::string& outputPlacement)
 	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputStartExpression, true));
 
-	if (outputPlacement.empty()) return;
+	if (outputPlacementExpression.empty()) return;
 
 	m_maxLength = POS_SPECIAL_VALUE_COMPOSED;
 	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputWidthExpression, true));
 
-	if (outputPlacement.empty()) return;
+	if (outputPlacementExpression.empty()) return;
 
 	m_alignment = outputAlignmentComposed;
 	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
@@ -459,7 +462,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (outputWidth>0 && pInput->length()!=outputWidth) {
 		if (m_alignment != outputAlignmentComposed) {
-			pInput->Resize(m_maxLength, pState.getPadChar(), m_alignment);
+			pInput->Resize(outputWidth, pState.getPadChar(), m_alignment);
 		} else {
 			outputAlignment al = outputAlignmentLeft;
 			ALUValue* res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
@@ -470,7 +473,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 			} else if (s[0]=='r' || s[0]=='R') {
 				al = outputAlignmentRight;
 			}
-			pInput->Resize(m_maxLength, pState.getPadChar(), al);
+			pInput->Resize(outputWidth, pState.getPadChar(), al);
 		}
 	}
 

@@ -84,6 +84,18 @@ Alignment
 =========    
 The _alignment_ argument can be "left", "center", or "right", or even "centre" if you're so inclined.
 
+Composed Output Placement
+=========================
+The **OutputPlacement** and the **Alignment** arguments can be replaced by a **composed output placement** argument.  It is enclosed in non-optional parenthesis and includes 1, 2, or 3 comma-separated expressions. Those expressions are evaluated at each cycle to produce the starting column, the field width, and the alignment of the field. 
+
+If the parenthesis include only one expression, that expression is the starting column. If it contains two expressions, those expressions are the starting column and the width. A width of zero is a special value denoting the normal width of the output. If all three expressions are present, the last one is evaluated as a string, and the alignment will be centered in the value begins with a capital or lower-case 'c', right-aligned if the value begins with a capital or lower-case 'r', and left-aligned in all other cases.
+
+If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.
+
+Examples:
+* `specs w1 (20-len(word(1)))` - a silly way to right align a word in a 20-character output field
+* `specs /##########/ (recno()%5 + 1, 2*(6 - recno()%5 - 1))` - pretty triangles
+
 Conversions
 ===========
 The _conversion_ argument can specify any of the following conversions:

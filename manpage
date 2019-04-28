@@ -130,6 +130,13 @@ The alignment argument can be `l`, `c`, or `r`, for
 .B right
 respectively. Yes, you can use the entire word. In fact, for compatibility with other countries, you can even spell it
 .B centre.
+.RE
+    
+The 
+.B OutputPart
+argument can also be specified as a 
+.B Composed Output Placement
+argument. It is enclosed in non-optional parenthesis and includes 1, 2, or 3 comma-separated expressions. Those expressions are evaluated at each cycle to produce the starting column, the field width, and the alignment of the field.  If the parenthesis include only one expression, that expression is the starting column. If it contains two expressions, those expressions are the starting column and the width. A width of zero is a special value denoting the normal width of the output. If all three expressions are present, the last one is evaluated as a string, and the alignment will be centered in the value begins with a capital or lower-case 'c', right-aligned if the value begins with a capital or lower-case 'r', and left-aligned in all other cases.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.
 
 The conversion argument can specify any of the following conversions:
 .IP "rot13" 3
