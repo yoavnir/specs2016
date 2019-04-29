@@ -261,6 +261,7 @@ PSpecString multiReader::get()
 			delete stringArray[idx];
 			stringArray[idx] = readerArray[idx]->get();
 			if (!stringArray[idx]) {
+				delete ret;
 				std::string err = "Input stream " + std::to_string(idx+1) + " ran dry while active stream ("
 						+ std::to_string(readerIdx+1) + ") still has records";
 				MYTHROW(err);
