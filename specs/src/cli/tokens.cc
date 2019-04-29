@@ -674,6 +674,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 						MYTHROW(err);
 					}
 					tok.setLiteral(std::to_string(streamIndex));
+					nextTok.deallocDynamic();
 					break;
 				}
 				default:
