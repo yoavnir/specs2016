@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 	pRd->Begin();
 	pWr->Begin();
 
-	ig.process(sb, ps, *pRd, *pWr);
+	ig.process(sb, ps, *pRd);
 
 	delete pRd;
 	pWr->End();

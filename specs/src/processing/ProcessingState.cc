@@ -151,6 +151,26 @@ void ProcessingState::setStream(int inputStreamIndex)
 	}
 }
 
+void ProcessingState::setActiveWriter(int idx)
+{
+	MYASSERT(idx==STATION_STDERR || idx >= DEFAULT_READER_IDX);
+	MYASSERT(idx <= MAX_INPUT_STREAMS);
+	if (idx==STATION_STDERR) {
+		m_outputIndex = 0;
+	} else {
+		m_outputIndex = idx;
+		if (NULL == m_Writers[idx]) {
+			std::string err = "Undefined output stream " + std::to_string(idx) + " selected.";
+			MYTHROW(err);
+		}
+	}
+}
+
+Writer* ProcessingState::getCurrentWriter()
+{
+	return m_Writers[m_outputIndex];
+}
+
 PSpecString ProcessingState::extractCurrentRecord()
 {
 	PSpecString ret = m_ps;

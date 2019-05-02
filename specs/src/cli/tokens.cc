@@ -340,6 +340,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(select, SELECT);
 	SIMPLETOKEN(first, FIRST);
 	SIMPLETOKEN(second, SECOND);
+	SIMPLETOKEN(outstream, OUTSTREAM);
+	SIMPLETOKEN(stderr, STDERR);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
@@ -679,7 +681,41 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				}
 				default:
 					std::string err = "Invalid token of type " + TokenListType__2str(nextType) +
-						" with content <" + nextTok.Orig() + ">";
+						" with content <" + nextTok.Orig() + "> following SELECT";
+					MYTHROW(err);
+				}
+				tokList->erase(tokList->begin()+(i+1));
+			}
+			break;
+		}
+		case TokenListType__OUTSTREAM:
+		{
+			if (tok.Literal()=="") {
+				TokenListTypes nextType = nextTok.Type();
+				switch (nextType) {
+				case TokenListType__STDERR:
+					tok.setLiteral("err");
+					break;
+				case TokenListType__RANGE:
+				{
+					TokenFieldRange* pRange = nextTok.Range();
+					// We just want one number between 1 and 8. Anything else causes an exception.
+					if (!pRange || !pRange->isSingleNumber()) {
+						std::string err = "Invalid input stream descriptor: " + pRange->Debug();
+						MYTHROW(err);
+					}
+					int streamIndex = pRange->getSingleNumber();
+					if (streamIndex < DEFAULT_READER_IDX || streamIndex > MAX_INPUT_STREAMS) {
+						std::string err = "Invalid input stream descriptor: "+ std::to_string(streamIndex);
+						MYTHROW(err);
+					}
+					tok.setLiteral(std::to_string(streamIndex));
+					nextTok.deallocDynamic();
+					break;
+				}
+				default:
+					std::string err = "Invalid token of type " + TokenListType__2str(nextType) +
+						" with content <" + nextTok.Orig() + "> following OUTSTREAM";
 					MYTHROW(err);
 				}
 				tokList->erase(tokList->begin()+(i+1));

@@ -46,6 +46,7 @@ CONTINUE:
 
 int main (int argc, char** argv)
 {
+	static const std::string _stderr = WRITER_STDERR;
 	bool conciseExceptions = true;
 
 	if (!parseSwitches(argc, argv)) { // also skips the program name
@@ -80,9 +81,11 @@ int main (int argc, char** argv)
 	StringBuilder sb;
 	ProcessingState ps;
 	Reader *pRd;
-	SimpleWriter *pWr;
+	SimpleWriter *pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
+
+	memset(pWrtrs, 0, sizeof(void*) * (1 + MAX_INPUT_STREAMS));
 
 	unsigned int index = 0;
 	try {
@@ -121,6 +124,28 @@ int main (int argc, char** argv)
 	clockValue timeAtStart = specTimeGetTOD();
 	std::clock_t clockAtStart = clock();
 
+	if (g_outputFile.empty()) {
+		pWrtrs[1] = new SimpleWriter();
+	} else {
+		pWrtrs[1] = new SimpleWriter(g_outputFile);
+	}
+
+	pWrtrs[0] = new SimpleWriter(_stderr);
+
+	if (g_outputStream2 != "") pWrtrs[2] = new SimpleWriter(g_outputStream2);
+	if (g_outputStream3 != "") pWrtrs[3] = new SimpleWriter(g_outputStream3);
+	if (g_outputStream4 != "") pWrtrs[4] = new SimpleWriter(g_outputStream4);
+	if (g_outputStream5 != "") pWrtrs[5] = new SimpleWriter(g_outputStream5);
+	if (g_outputStream6 != "") pWrtrs[6] = new SimpleWriter(g_outputStream6);
+	if (g_outputStream7 != "") pWrtrs[7] = new SimpleWriter(g_outputStream7);
+	if (g_outputStream8 != "") pWrtrs[8] = new SimpleWriter(g_outputStream8);
+
+	for (int i=0; i <= MAX_INPUT_STREAMS ; i++) {
+		if (pWrtrs[i]) pWrtrs[i]->Begin();
+	}
+	ps.setWriters((PWriter*)pWrtrs);
+
+
 	if (ig.readsLines() || g_bForceFileRead) {
 		if (g_inputFile.empty()) {
 			pRd = new StandardReader();
@@ -140,48 +165,56 @@ int main (int argc, char** argv)
 			pRd = pmRd;
 		}
 
-		if (g_outputFile.empty()) {
-			pWr = new SimpleWriter();
-		} else {
-			pWr = new SimpleWriter(g_outputFile);
-		}
 
 		pRd->Begin();
-		pWr->Begin();
 
 		try {
-			ig.process(sb, ps, *pRd, *pWr);
+			ig.process(sb, ps, *pRd);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
 			std::cerr << e.what(conciseExceptions) << "\n";
 			pRd->End();
 			delete pRd;
-			pWr->End();
-			delete pWr;
+			for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
+				if (pWrtrs[i]) {
+					pWrtrs[i]->End();
+					delete pWrtrs[i];
+					pWrtrs[i] = NULL;
+				}
+			}
 			return -4;
 		}
 
 		pRd->End();
 		readLines = pRd->countRead();
 		usedLines = pRd->countUsed();
+		generatedLines = 0;
+		writtenLines = 0;
 		delete pRd;
-		pWr->End();
-		generatedLines = pWr->countGenerated();
-		writtenLines = pWr->countWritten();
-		delete pWr;
+		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
+			if (pWrtrs[i]) {
+				pWrtrs[i]->End();
+				generatedLines += pWrtrs[i]->countGenerated();
+				writtenLines = pWrtrs[i]->countWritten();
+				delete pWrtrs[i];
+				pWrtrs[i] = NULL;
+			}
+		}
 	} else {
 		TestReader tRead(5);
+
 		try {
 			ig.setRegularRunAtEOF();
-			ig.processDo(sb, ps, &tRead, NULL);
+			ig.processDo(sb, ps, &tRead);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
 			return -4;
 		}
-		PSpecString ps = sb.GetString();
-		std::cout << *ps << "\n";
-		delete ps;
+		PSpecString pstr = sb.GetString();
+		SimpleWriter* pSW = (SimpleWriter*)(ps.getCurrentWriter());
+		*pSW->getStream() << *pstr << std::endl;
+		delete pstr;
 		readLines = 0;
 		usedLines = 0;
 		generatedLines = 1;

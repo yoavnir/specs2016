@@ -57,14 +57,20 @@ SimpleWriter::SimpleWriter() {
 	m_NeedToClose = false;
 }
 
-SimpleWriter::SimpleWriter(std::string& fn) {
-	std::ofstream* pOutFile = new std::ofstream(fn);
-	m_File = pOutFile;
-	if (!pOutFile->is_open()) {
-		std::string err = "Could not open output file " + fn;
-		MYTHROW(err);
+SimpleWriter::SimpleWriter(const std::string& fn) {
+	static const std::string _stderr = WRITER_STDERR;
+	if (fn == _stderr) {
+		m_File = &std::cerr;
+		m_NeedToClose = false;
+	} else {
+		std::ofstream* pOutFile = new std::ofstream(fn);
+		m_File = pOutFile;
+		if (!pOutFile->is_open()) {
+			std::string err = "Could not open output file " + fn;
+			MYTHROW(err);
+		}
+		m_NeedToClose = true;
 	}
-	m_NeedToClose = true;
 }
 
 SimpleWriter::~SimpleWriter() {

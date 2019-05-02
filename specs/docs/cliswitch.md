@@ -44,3 +44,11 @@ CPU Time: 69.1277526 seconds.
 * `--is6` **filename** -- sets input stream number 6 to read from the specified file. 
 * `--is7` **filename** -- sets input stream number 7 to read from the specified file. 
 * `--is8` **filename** -- sets input stream number 8 to read from the specified file. 
+* `--os2` **filename** -- sets output stream number 2 to write to the specified file.
+* `--os3` **filename** -- sets output stream number 3 to write to the specified file.
+* `--os4` **filename** -- sets output stream number 4 to write to the specified file.
+* `--os5` **filename** -- sets output stream number 5 to write to the specified file.
+* `--os6` **filename** -- sets output stream number 6 to write to the specified file.
+* `--os7` **filename** -- sets output stream number 7 to write to the specified file.
+* `--os8` **filename** -- sets output stream number 8 to write to the specified file.
+

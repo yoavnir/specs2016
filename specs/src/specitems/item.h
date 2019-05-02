@@ -272,13 +272,14 @@ private:
 
 class SelectItem : public Item {
 public:
-	SelectItem(std::string& st);
+	SelectItem(std::string& st, bool bIsOutput);
 	virtual ~SelectItem() {}
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 	bool    isSelectSecond()  {return m_stream==STATION_SECOND;}
 private:
 	int  m_stream;
+	bool bOutput;
 };
 
 

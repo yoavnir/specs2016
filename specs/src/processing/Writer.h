@@ -6,6 +6,8 @@
 #include <fstream>
 #include "utils/StringQueue.h"
 
+#define WRITER_STDERR "::stderr::";
+
 class Writer {
 public:
 	Writer();
@@ -25,12 +27,15 @@ protected:
 	std::thread *mp_thread;
 };
 
+typedef class Writer *PWriter;
+
 class SimpleWriter : public Writer {
 public:
 	SimpleWriter();
-	SimpleWriter(std::string& fn);
+	SimpleWriter(const std::string& fn);
 	virtual ~SimpleWriter();
 	virtual void WriteOut();
+	std::ostream* getStream() { return m_File; }
 private:
 	std::ostream* m_File;
 	bool m_NeedToClose;

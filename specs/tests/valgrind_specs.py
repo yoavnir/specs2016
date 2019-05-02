@@ -645,3 +645,13 @@ run_case(s,i,"dual input stream missing secondary",expected_rc=memcheck.RetCode_
 i2 = input_samples.ls_out_inodes_mismatched
 run_case(s,i,"dual input stream with mismatched secondary",expected_rc=memcheck.RetCode_COMMAND_FAILED,inp2=i2)
 
+# Dual output stream 
+i = input_samples.ls_out_inodes
+s = \
+"""
+WORD 1 1
+WRITE
+OUTSTREAM STDERR
+WORD 2 1 
+"""
+run_case(s,i,"dual output")

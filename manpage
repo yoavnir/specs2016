@@ -383,6 +383,26 @@ If both files contained the natural numbers we would get the following output:
 
 and so on.
 
+.SS "Output Streams"
+The keyword
+.B OUTSTREAM
+can be used to select between multiple output streams. Output stream number #1 is the primary default output stream. Output streams #2 through #8 can be files specified with the
+.B --os2 - --os8
+command-line switches.  There is one additional output stream, which is the standard error.  It is selected with the keyword
+.B STDERR
+for a total of up to 9 output streams.  Example:
+
+    ls -l | specs --os2 filesizes --os3 owners 
+                W9 1 WRITE 
+                OUTSTREAM 2 W5 1 WRITE
+                OUTSTREAM 3 w3 1
+                
+This specification will print the list of owners to file 
+.I owners
+the file sizes to file
+.I filesizes
+and the file names to standard output.
+
 .SS "Expressions and Assignments"
 Expressions are used in PRINT data units as well as in assignments. Assignments are used in SET Spec Units.
 

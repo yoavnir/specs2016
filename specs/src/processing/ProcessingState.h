@@ -4,6 +4,7 @@
 #include <vector>
 #include <stack>
 #include <map>
+#include "processing/Writer.h"
 #include "utils/alu.h"
 #include "utils/aluFunctions.h"
 
@@ -14,6 +15,7 @@
 
 #define STATION_FIRST  -1
 #define STATION_SECOND -2
+#define STATION_STDERR  0
 
 #define LOOP_CONDITION_FALSE (-5)
 
@@ -77,6 +79,9 @@ public:
 	bool inputStreamHasChanged() { return m_inputStreamChanged; }
 	void resetInputStreamFlag() { m_inputStreamChanged = false; }
 	int  getActiveInputStream() { return m_inputStream; }
+	void setWriters(PWriter* p)  {m_Writers = p; m_outputIndex = 1; }
+	void setActiveWriter(int idx);
+	Writer* getCurrentWriter();
 private:
 	enum extremeBool {
 		bFalse,
@@ -106,6 +111,8 @@ private:
 	int             m_inputStation;
 	int             m_inputStream;
 	bool            m_inputStreamChanged;
+	PWriter         *m_Writers;
+	int             m_outputIndex;
 };
 
 

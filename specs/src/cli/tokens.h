@@ -67,6 +67,8 @@
 	X(SELECT,         false, true)  \
 	X(FIRST,          false, false) \
 	X(SECOND,         false, false) \
+	X(OUTSTREAM,      false, true)  \
+	X(STDERR,         false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

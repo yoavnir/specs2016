@@ -26,6 +26,13 @@
 	X(inputStream6,                 std::string,  "",     0,is6,                NEXTARG)    \
 	X(inputStream7,                 std::string,  "",     0,is7,                NEXTARG)    \
 	X(inputStream8,                 std::string,  "",     0,is8,                NEXTARG)    \
+	X(outputStream2,                std::string,  "",     0,os2,                NEXTARG)    \
+	X(outputStream3,                std::string,  "",     0,os3,                NEXTARG)    \
+	X(outputStream4,                std::string,  "",     0,os4,                NEXTARG)    \
+	X(outputStream5,                std::string,  "",     0,os5,                NEXTARG)    \
+	X(outputStream6,                std::string,  "",     0,os6,                NEXTARG)    \
+	X(outputStream7,                std::string,  "",     0,os7,                NEXTARG)    \
+	X(outputStream8,                std::string,  "",     0,os8,                NEXTARG)    \
 
 #define X(nm,typ,defval,ssw,cliswitch,oval) extern typ g_##nm;
 CONFIG_PARAMS

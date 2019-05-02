@@ -159,10 +159,17 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__SELECT:
 		{
-			SelectItem* pItem = new SelectItem(tokenVec[index].Literal());
+			SelectItem* pItem = new SelectItem(tokenVec[index].Literal(), false /* bIsOutput */);
 			index++;
 			addItem(pItem);
 			if (pItem->isSelectSecond()) setRegularRunAtEOF();
+			break;
+		}
+		case TokenListType__OUTSTREAM:
+		{
+			SelectItem* pItem = new SelectItem(tokenVec[index].Literal(), true /* bIsOutput */);
+			index++;
+			addItem(pItem);
 			break;
 		}
 		default:
@@ -188,7 +195,7 @@ std::string itemGroup::Debug()
 	return ret;
 }
 
-bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, Writer* pWr)
+bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd)
 {
 	bool bSomethingWasDone = false;
 	int i = 0;
@@ -239,9 +246,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			break;
 		case ApplyRet__Write:
 			if (bSomethingWasDone) {
-				pWr->Write(sb.GetString());
+				pState.getCurrentWriter()->Write(sb.GetString());
 			} else {
-				pWr->Write(SpecString::newString());
+				pState.getCurrentWriter()->Write(SpecString::newString());
 			}
 			bSomethingWasDone = false;
 			break;
@@ -296,7 +303,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 	return bSomethingWasDone;
 }
 
-void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, Writer& wr)
+void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd)
 {
 	PSpecString ps;
 
@@ -305,13 +312,14 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		pState.setFirst();
 		pState.incrementCycleCounter();
 
-		if (processDo(sb,pState, &rd, &wr)) {
-			wr.Write(sb.GetString());
+		if (processDo(sb,pState, &rd)) {
+			pState.getCurrentWriter()->Write(sb.GetString());
 		}
 
 		if (DEFAULT_READER_IDX != pState.getActiveInputStream()) {
 			pState.setStream(DEFAULT_READER_IDX);
 		}
+		pState.setActiveWriter(1);
 	}
 
 	if (!bNeedRunoutCycle) {
@@ -321,8 +329,8 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	// run-out cycle
 	pState.setString(NULL);
 	pState.setFirst();
-	if (processDo(sb, pState, &rd, &wr)) {
-		wr.Write(sb.GetString());
+	if (processDo(sb, pState, &rd)) {
+		pState.getCurrentWriter()->Write(sb.GetString());
 	}
 }
 
@@ -637,18 +645,28 @@ ApplyRet BreakItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	}
 }
 
-SelectItem::SelectItem(std::string& st)
+SelectItem::SelectItem(std::string& st, bool bIsOutput)
 {
+	bOutput = bIsOutput;
 	if (st=="FIRST") {
+		MYASSERT(!bIsOutput);
 		m_stream = STATION_FIRST;
 	} else if (st=="SECOND") {
+		MYASSERT(!bIsOutput);
 		m_stream = STATION_SECOND;
+	} else if (st=="err") {
+		MYASSERT(bIsOutput);
+		m_stream = STATION_STDERR;
 	} else if (st.length()==1) {
 		m_stream = st[0] - '0';
 		MYASSERT(m_stream >= DEFAULT_READER_IDX);
 		MYASSERT(m_stream <= MAX_INPUT_STREAMS);
 	} else {
-		std::string err = "Invalid stream " + st;
+		std::string err = "Invalid ";
+		if (bIsOutput)
+			err += "output";
+		else err += "input";
+		err += " stream " + st;
 		MYTHROW(err);
 	}
 }
@@ -656,9 +674,14 @@ SelectItem::SelectItem(std::string& st)
 std::string SelectItem::Debug()
 {
 	if (m_stream == STATION_SECOND) {
+		MYASSERT(!bOutput);
 		return "SELECT:SECOND";
+	} else if (m_stream == STATION_STDERR) {
+		MYASSERT(bOutput);
+		return "OUTSTREAM:STDERR";
 	}
-	std::string ret("SELECT:");
+	std::string ret;
+	ret = bOutput ? "OUTSTREAM:" : "SELECT:";
 	ret += std::to_string(m_stream);
 	return ret;
 }
@@ -669,8 +692,13 @@ ApplyRet SelectItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		pState.setFirst();
 	} else if (m_stream == STATION_SECOND) {
 		pState.setSecond();
-	} else if (m_stream>=DEFAULT_READER_IDX && m_stream<=MAX_INPUT_STREAMS) {
-		pState.setStream(m_stream);
+	} else if (m_stream>=0 && m_stream<=MAX_INPUT_STREAMS) {
+		if (bOutput) {
+			pState.setActiveWriter(m_stream);
+		} else {
+			MYASSERT(m_stream >= DEFAULT_READER_IDX);
+			pState.setStream(m_stream);
+		}
 	} else {
 		MYTHROW("Invalid SelectItem");
 	}

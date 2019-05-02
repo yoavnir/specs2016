@@ -187,6 +187,10 @@ Carol 171 66
 Eve 169 68
 ```
 
+## Multiple Output Streams
+**specs** allows you to use multiple output streams as well. Similar to input streams, you can use the `--os2` to `--os8` CLI switches to assign file names to the numbered output streams.  There is an additional defined output stream called `STDERR` which outputs to the stderr stream of the **specs** invocation.
+
+The way you select among the multiple output streams is by using the `OUTSTREAM` keyword followed by either a stream number or the `STDERR` keyword.
 
 
 
