@@ -191,15 +191,6 @@ int main (int argc, char** argv)
 		generatedLines = 0;
 		writtenLines = 0;
 		delete pRd;
-		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
-			if (pWrtrs[i]) {
-				pWrtrs[i]->End();
-				generatedLines += pWrtrs[i]->countGenerated();
-				writtenLines = pWrtrs[i]->countWritten();
-				delete pWrtrs[i];
-				pWrtrs[i] = NULL;
-			}
-		}
 	} else {
 		TestReader tRead(5);
 
@@ -223,6 +214,16 @@ int main (int argc, char** argv)
 
 	clockValue timeAtEnd = specTimeGetTOD();
 	std::clock_t clockAtEnd = clock();
+
+	for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
+		if (pWrtrs[i]) {
+			pWrtrs[i]->End();
+			generatedLines += pWrtrs[i]->countGenerated();
+			writtenLines = pWrtrs[i]->countWritten();
+			delete pWrtrs[i];
+			pWrtrs[i] = NULL;
+		}
+	}
 
 	if (g_bPrintStats) {
 		std::cerr << "\n";
