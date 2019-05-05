@@ -597,7 +597,26 @@ Returns the configured string from either the built-in configured strings such a
 .I version
 or from the 
 .B $HOME/.specs
-file. 
+file.
+
+.SS "Built-In Statistical Pseudo-Functions" 
+All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
+.IP "sum(a)" 3
+Returns the sum of all values in
+.B Field Identifier
+a. 
+.IP "min(a)" 3
+Returns the minimum of all values in
+.B Field Identifier
+a. 
+.IP "max(a)" 3
+Returns the maximum of all values in
+.B Field Identifier
+a. 
+.IP "avg(a)" 3
+Returns the average (mathematical mean) of all values in
+.B Field Identifier
+a. 
 
 .P
 NOTE: This list is going to be expanded in future versions.

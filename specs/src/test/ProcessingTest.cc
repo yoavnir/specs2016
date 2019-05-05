@@ -356,6 +356,16 @@ int main(int argc, char** argv)
 			"WORD 2 NEXTWORD ";
 	VERIFY2(spec, "first record\nsecond line\nlast one", "first record\nsecond first line record\nlast second one line\nlast one"); // Test #101
 
+	// Statistics Pseudo-Functions
+	spec =  "a: WORD 1 .                  " \
+			" EOF                         " \
+			"   /AVG:/  1 PRINT 'avg(a)' N" \
+			"   /SUM:/ NW PRINT 'sum(a)' N" \
+			"   /MIN:/ NW PRINT 'min(a)' N" \
+			"   /MAX:/ NW PRINT 'max(a)' N";
+	VERIFY2(spec, "1\n2\n3\n4\n5", "AVG:3 SUM:15 MIN:1 MAX:5"); // TEST #102
+
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {

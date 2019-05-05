@@ -1374,6 +1374,13 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 	return true;
 }
 
+bool isPseudoFunctionName(std::string& fn)
+{
+#define X(nm) if (#nm==fn) return true;
+	ALU_PSEUDO_FUNCTION_LIST
+	return false;
+}
+
 /*
  * Function: convertAluVecToPostfix
  * Implements the Shunting-Yard algorithm to convert an infix expression
@@ -1381,11 +1388,11 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
  *
  * This function also finds and fixes instances of the break() pseudo-function
  */
-enum breakFindingState {
-	BFS_lookingForBreak,
-	BFS_lookingForOpen,
-	BFS_lookingForFI,
-	BFS_lookingForClose
+enum pseudoFunctionFindingState {
+	PFFS_lookingForPseudoFunction,
+	PFFS_lookingForOpen,
+	PFFS_lookingForFI,
+	PFFS_lookingForClose
 };
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 {
@@ -1399,38 +1406,38 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	// Handle the special case of the break() pseudo-function.
 	// The parameter should be a field identifier and it is converted to a number
 	// representing the ASCII value of the character
-	breakFindingState bfs = BFS_lookingForBreak;
+	pseudoFunctionFindingState pffs = PFFS_lookingForPseudoFunction;
 	for (AluUnit* pUnit : source) {
-		switch (bfs) {
-		case BFS_lookingForBreak: {
+		switch (pffs) {
+		case PFFS_lookingForPseudoFunction: {
 			if (pUnit->type() != UT_Identifier) continue;
 			AluFunction* func = (AluFunction*)pUnit;
-			if (func->getName() != "break") continue;
-			bfs = BFS_lookingForOpen;
+			if (!isPseudoFunctionName(func->getName())) continue;
+			pffs = PFFS_lookingForOpen;
 			break;
 		}
-		case BFS_lookingForOpen: {
+		case PFFS_lookingForOpen: {
 			if (pUnit->type() != UT_OpenParenthesis) {
-				bfs = BFS_lookingForBreak;
+				pffs = PFFS_lookingForPseudoFunction;
 				continue;
 			}
-			bfs = BFS_lookingForFI;
+			pffs = PFFS_lookingForFI;
 			break;
 		}
-		case BFS_lookingForFI: {
+		case PFFS_lookingForFI: {
 			if (pUnit->type() != UT_FieldIdentifier) {
 				MYTHROW("break() function may only get a field identifier argument");
 			}
 			AluUnitFieldIdentifier* pFI = (AluUnitFieldIdentifier*)pUnit;
 			pFI->setEvaluateToName();
-			bfs = BFS_lookingForClose;
+			pffs = PFFS_lookingForClose;
 			break;
 		}
-		case BFS_lookingForClose: {
+		case PFFS_lookingForClose: {
 			if (pUnit->type() != UT_ClosingParenthesis) {
 				MYTHROW("break() function may only get one argument");
 			}
-			bfs = BFS_lookingForBreak;
+			pffs = PFFS_lookingForPseudoFunction;
 			break;
 		}
 		}
@@ -1733,3 +1740,157 @@ bool expressionForcesRunoutCycle(AluVec& vec)
 	}
 	return false;
 }
+
+void AluValueStats::initialize()
+{
+	m_intCount = 0;
+	m_floatCount = 0;
+	m_sumInt = 0;
+	m_sumFloat = 0.0;
+	m_minInt = 0;
+	m_minFloat = 0.0;
+	m_maxInt = 0;
+	m_maxFloat = 0.0;
+}
+
+AluValueStats::AluValueStats()
+{
+	initialize();
+}
+
+AluValueStats::AluValueStats(char id)
+{
+	initialize();
+	AddValue(id);
+}
+
+void AluValueStats::AddValue(char id)
+{
+	ALUValue v(g_fieldIdentifierGetter->Get(id));
+	switch (v.getDivinedType()) {
+	case counterType__Int:
+	{
+		ALUInt value = v.getInt();
+		m_intCount++;
+		if (1 == m_intCount) {
+			m_sumInt = value;
+			m_minInt = value;
+			m_maxInt = value;
+		} else {
+			if (value > m_maxInt) m_maxInt = value;
+			if (value < m_minInt) m_minInt = value;
+			m_sumInt += value;
+		}
+		break;
+	}
+	case counterType__Float:
+	{
+		ALUFloat value = v.getFloat();
+		m_floatCount++;
+		if (1 == m_floatCount) {
+			m_sumFloat = value;
+			m_minFloat = value;
+			m_maxFloat = value;
+		} else {
+			if (value > m_maxFloat) m_maxFloat = value;
+			if (value < m_minFloat) m_minFloat = value;
+			m_sumFloat += value;
+		}
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+
+ALUValue* AluValueStats::sum()
+{
+	if (0 < m_floatCount) {
+		return new ALUValue(m_sumFloat + m_sumInt);
+	} else {
+		return new ALUValue(m_sumInt);
+	}
+}
+
+ALUValue* AluValueStats::sumi()
+{
+	return new ALUValue(m_sumInt);
+}
+
+ALUValue* AluValueStats::sumf()
+{
+	return new ALUValue(m_sumFloat);
+}
+
+ALUValue* AluValueStats::min()
+{
+	if (0 < m_floatCount) {
+		if (0 < m_intCount && m_minInt < m_minFloat) {
+			return new ALUValue(ALUFloat(m_minInt));
+		} else {
+			return new ALUValue(m_minFloat);
+		}
+	} else {
+		return mini();
+	}
+}
+
+ALUValue* AluValueStats::mini()
+{
+	if (0 < m_intCount) {
+		return new ALUValue(m_minInt);
+	} else {
+		return new ALUValue(); /* returns NaN */
+	}
+}
+
+ALUValue* AluValueStats::minf()
+{
+	if (0 < m_floatCount) {
+		return new ALUValue(m_minFloat);
+	} else {
+		return new ALUValue(); /* returns NaN */
+	}
+}
+
+ALUValue* AluValueStats::max()
+{
+	if (0 < m_floatCount) {
+		if (0 < m_intCount && m_maxInt < m_maxFloat) {
+			return new ALUValue(ALUFloat(m_maxInt));
+		} else {
+			return new ALUValue(m_maxFloat);
+		}
+	} else {
+		return maxi();
+	}
+}
+
+ALUValue* AluValueStats::maxi()
+{
+	if (0 < m_intCount) {
+		return new ALUValue(m_maxInt);
+	} else {
+		return new ALUValue(); /* returns NaN */
+	}
+}
+
+ALUValue* AluValueStats::maxf()
+{
+	if (0 < m_floatCount) {
+		return new ALUValue(m_maxFloat);
+	} else {
+		return new ALUValue(); /* returns NaN */
+	}
+}
+
+ALUValue* AluValueStats::avg()
+{
+	if (m_intCount==0 && m_floatCount==0) {
+		return new ALUValue(); /* returns NaN */
+	}
+
+	return new ALUValue((m_sumFloat + m_sumInt)  /  (m_intCount + m_floatCount));
+}
+

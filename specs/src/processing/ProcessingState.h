@@ -50,6 +50,7 @@ public:
 	virtual ALUInt  getRecordCount()    { return ALUInt(m_CycleCounter + m_ExtraReads); }
 	virtual ALUInt  getIterationCount() { return ALUInt(m_CycleCounter); }
 	virtual bool    breakEstablished(char id);
+	virtual PAluValueStats valueStatistics(char id);
 
 	void fieldIdentifierSet(char id, PSpecString ps);
 	void incrementCycleCounter() { m_CycleCounter++; }
@@ -104,6 +105,7 @@ private:
 	void identifyWords();
 	void identifyFields();
 	std::map<char,PSpecString> m_fieldIdentifiers;
+	std::map<char,PAluValueStats> m_fiStatistics;
 	std::map<char,PSpecString> m_breakValues;
 	char m_breakLevel;
 	std::stack<extremeBool> m_Conditions;

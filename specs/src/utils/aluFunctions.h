@@ -50,6 +50,17 @@
 	X(lcase,1,false)                 \
 	X(bswap,1,false)                 \
 	X(break,1,false)                 \
+	X(sum,1,false)                   \
+	X(min,1,false)                   \
+	X(max,1,false)                   \
+	X(avg,1,false)                   \
+
+#define ALU_PSEUDO_FUNCTION_LIST     \
+	X(break)                         \
+	X(sum)                           \
+	X(min)                           \
+	X(max)                           \
+	X(avg)                           \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
@@ -81,6 +92,7 @@ public:
 	virtual ALUInt  getRecordCount() = 0;
 	virtual ALUInt  getIterationCount() = 0;
 	virtual bool    breakEstablished(char id) = 0;
+	virtual PAluValueStats valueStatistics(char id) = 0;
 };
 
 void setStateQueryAgent(stateQueryAgent* qa);

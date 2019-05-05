@@ -356,6 +356,14 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 
 	m_fieldIdentifiers[id] = SpecStringCopy(ps);
 
+	// Count the statistics of this field value.
+	// TODO: Make this dependent on those statistics actually being needed.
+	if (m_fiStatistics[id]==NULL) {
+		m_fiStatistics[id] = new AluValueStats(id);
+	} else {
+		m_fiStatistics[id]->AddValue(id);
+	}
+
 	if (m_breakValues[id] && 0==ps->Compare(m_breakValues[id]->data())) return;
 
 	if (m_breakValues[id]) delete m_breakValues[id];
@@ -384,6 +392,11 @@ void ProcessingState::resetBreaks()
 bool ProcessingState::breakEstablished(char id)
 {
 	return breakLevelGE(m_breakLevel, id);
+}
+
+PAluValueStats ProcessingState::valueStatistics(char id)
+{
+	return m_fiStatistics[id];
 }
 
 bool ProcessingState::runningOutLoop()

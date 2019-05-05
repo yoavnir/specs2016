@@ -85,6 +85,14 @@ Very much a draft
 | `wordindex(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
 | `wordlength(n)` | Returns the length of the *n*-th word |
 
+## Table of Statistical Pseudo-Functions
+| Function | Description |
+| -------- | ----------- |
+| `sum(a)` | Returns the sum of all values that have been assigned to *field identifier* `a` |
+| `min(a)` | Returns the minimum of all values that have been assigned to *field identifier* `a` |
+| `max(a)` | Returns the maximum of all values that have been assigned to *field identifier* `a` |
+| `avg(a)` | Returns the average (arithmetic mean) of all values that have been assigned to *field identifier* `a` |
+
 
 ## Table of Special Functions
 | Function | Description |

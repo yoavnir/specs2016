@@ -341,6 +341,36 @@ static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
     return os;
 }
 
+class AluValueStats {
+public:
+	AluValueStats();
+	AluValueStats(char id);
+	void         AddValue(char id);
+
+	ALUValue*    sum();
+	ALUValue*    sumi();
+	ALUValue*    sumf();
+	ALUValue*    min();
+	ALUValue*    mini();
+	ALUValue*    minf();
+	ALUValue*    max();
+	ALUValue*    maxi();
+	ALUValue*    maxf();
+	ALUValue*    avg();
+
+private:
+	void         initialize();
+	unsigned int m_intCount;
+	unsigned int m_floatCount;
+	ALUInt       m_sumInt;
+	ALUFloat     m_sumFloat;
+	ALUInt       m_minInt;
+	ALUFloat     m_minFloat;
+	ALUInt       m_maxInt;
+	ALUFloat     m_maxFloat;
+};
+
+typedef AluValueStats* PAluValueStats;
 
 typedef std::vector<AluUnit*> AluVec;
 

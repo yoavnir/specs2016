@@ -463,3 +463,35 @@ ALUValue* AluFunc_break(ALUValue* _pFieldIdentifier)
 	bool bIsBreakEstablished = g_pStateQueryAgent->breakEstablished(fId);
 	return new ALUValue(ALUInt(bIsBreakEstablished ? 1 : 0));
 }
+
+ALUValue* AluFunc_sum(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
+	MYASSERT_WITH_MSG(pVStats!=NULL, "SUM requested for undefined field identifier")
+	return pVStats->sum();
+}
+
+ALUValue* AluFunc_min(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
+	MYASSERT_WITH_MSG(pVStats!=NULL, "MIN requested for undefined field identifier")
+	return pVStats->min();
+}
+
+ALUValue* AluFunc_max(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
+	MYASSERT_WITH_MSG(pVStats!=NULL, "MAX requested for undefined field identifier")
+	return pVStats->max();
+}
+
+ALUValue* AluFunc_avg(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
+	MYASSERT_WITH_MSG(pVStats!=NULL, "AVG requested for undefined field identifier")
+	return pVStats->avg();
+}
