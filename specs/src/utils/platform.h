@@ -22,20 +22,24 @@ int setenv(const char *name, const char *value, int overwrite);
 	#define ALUFloatPrecision 16
 #endif
 
-#if ALURAND == CommonCrypto
+#ifdef ALURAND_CommonCrypto
   #include <CommonCrypto/CommonRandom.h>
   #define AluRandContext   char
   #define AluRandSeedType  char
   #define AluRandSeed(s)
   #define ALU_RAND_FUNC_WITH_LEN
   #define AluRandFunc(d,l) CCRandomGenerateBytes((void*)(d), (size_t)(l))
-#elif ALURAND == rand48
+#endif
+
+#ifdef ALURAND_rand48
   #include <stdlib.h>
   #define AluRandContext    drand48_data
   #define AluRandSeedType   long int
   #define AluRandSeed(s)    srand48_r(s,&AluRandCtxBuffer_G)
   #define AluRandFunc(r)    lrand48_r(&AluRandCtxBuffer_G, &r)
-#elif ALURAND == wincrypt
+#endif
+
+#ifdef ALURAND_wincrypt
   #include <wincrypt.h>
   #define AluRandContext    HCRYPTPROV
   #define AluRandSeedType   char
@@ -43,14 +47,18 @@ int setenv(const char *name, const char *value, int overwrite);
 		  (LPCWSTR)L"Microsoft Base Cryptographic Provider v1.0", \
 		  PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)
   #define AluRandFunc(r)    CryptGenRandom(AluRandCtxBuffer_G, ALUInt_SZ, &r)
-#elif ALURAND == rand
+#endif
+
+#ifdef ALURAND_rand
   #include <stdlib.h>
   #define AluRandContext    unsigned int
   #define AluRandSeedType   unsigned int
   #define AluRandSeed(s)    srand(s)
-  #define AluRandFunc(r)    rand_r(&AluRandCtxBuffer_G, &r)
-#else
-  #error "No random number generator found."
+  #define AluRandFunc(r)    r = rand_r(&AluRandCtxBuffer_G)
+#endif
+
+#ifndef AluRandContext
+  #error "No random number generator defined"
 #endif
 
 #endif

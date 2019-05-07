@@ -325,7 +325,7 @@ if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
 	
 if rand_source is not None:
-	condcomp = condcomp + "{}ALURAND={}".format(def_prefix,rand_source)
+	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))

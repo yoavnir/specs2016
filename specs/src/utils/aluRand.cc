@@ -6,6 +6,8 @@
 
 AluRandContext    AluRandCtxBuffer_G;
 
+AluRandSeedType   AluRandSeed_G;
+
 bool              AluRand_RandomSeeded_G = false;
 
 void AluRand_Seed()
@@ -31,7 +33,7 @@ static ALUInt AluRandGetInt()
 	ALUInt res1, res2;
 	AluRandFunc(res1);
 	AluRandFunc(res2);
-	return res1 << 31 + res2;
+	return (res1 << 31) | res2;
 }
 #endif
 
