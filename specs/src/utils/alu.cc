@@ -1823,7 +1823,7 @@ ALUValue* AluValueStats::sumf()
 	return new ALUValue(m_sumFloat);
 }
 
-ALUValue* AluValueStats::min()
+ALUValue* AluValueStats::_min()
 {
 	if (0 < m_floatCount) {
 		if (0 < m_intCount && m_minInt < m_minFloat) {
@@ -1854,7 +1854,7 @@ ALUValue* AluValueStats::minf()
 	}
 }
 
-ALUValue* AluValueStats::max()
+ALUValue* AluValueStats::_max()
 {
 	if (0 < m_floatCount) {
 		if (0 < m_intCount && m_maxInt < m_maxFloat) {

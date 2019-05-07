@@ -478,7 +478,7 @@ ALUValue* AluFunc_min(ALUValue* _pFieldIdentifier)
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "MIN requested for undefined field identifier")
-	return pVStats->min();
+	return pVStats->_min();
 }
 
 ALUValue* AluFunc_max(ALUValue* _pFieldIdentifier)
@@ -486,7 +486,7 @@ ALUValue* AluFunc_max(ALUValue* _pFieldIdentifier)
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "MAX requested for undefined field identifier")
-	return pVStats->max();
+	return pVStats->_max();
 }
 
 ALUValue* AluFunc_avg(ALUValue* _pFieldIdentifier)

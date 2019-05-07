@@ -352,10 +352,10 @@ public:
 	ALUValue*    sum();
 	ALUValue*    sumi();
 	ALUValue*    sumf();
-	ALUValue*    min();
+	ALUValue*    _min();
 	ALUValue*    mini();
 	ALUValue*    minf();
-	ALUValue*    max();
+	ALUValue*    _max();
 	ALUValue*    maxi();
 	ALUValue*    maxf();
 	ALUValue*    avg();
