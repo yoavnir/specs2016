@@ -9,6 +9,8 @@
 typedef long long int ALUInt;
 typedef long double   ALUFloat;
 
+#define ALUInt_SZ sizeof(ALUInt)
+
 enum ALUCounterType {
 	counterType__None,
 	counterType__Str,

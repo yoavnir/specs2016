@@ -1,6 +1,7 @@
 #include "utils/ErrorReporting.h"
 #include "utils/aluFunctions.h"
 #include "utils/TimeUtils.h"
+#include "utils/aluRand.h"
 #include "processing/Config.h"
 #include <string.h>
 #include <cmath>
@@ -494,4 +495,10 @@ ALUValue* AluFunc_avg(ALUValue* _pFieldIdentifier)
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "AVG requested for undefined field identifier")
 	return pVStats->avg();
+}
+
+ALUValue* AluFunc_rand(ALUValue* pLimit)
+{
+	ALUValue res = AluRandGetIntUpTo(pLimit->getInt());
+	return new ALUValue(res);
 }

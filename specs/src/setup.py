@@ -118,12 +118,15 @@ parser.add_argument("-v", dest="variation", action="store", default="RELEASE",
 					help="Variation to be used. Options: {}".format(", ".join(valid_variations)))
 parser.add_argument("--use_cached_depends", dest="ucd", action="store_true", default=None,
 					help="Use Cached Depends rather than re-calculating. Necessary for VS")
+parser.add_argument("--fast_random", dest="nocrypt", action="store_true", default=None,
+					help="Avoid cryptographic random number generators")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
 variation = args.variation.upper()
 platform = args.platform.upper()
 use_cached_depends = args.ucd
+avoid_cryptographic_random = args.nocrypt
 
 # default for use_cached_depends depends on the choice of compiler
 if use_cached_depends is None:
@@ -265,8 +268,64 @@ if platform=="NT":
 else:
 	os.system("/bin/rm xx.cc xx.o {}".format(errs))
 	
+# Test if the environment contains a random number generator
+found_random_source = False
+rand_source = "rand"
+
+test_rand_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+with open("xx.cc", "w") as testfile:
+	testfile.write("#include <CommonCrypto/CommonRandom.h>\nvoid x() {}\n")
+sys.stdout.write("Testing if the CommonCrypto library is available...")
+if 0==os.system(test_rand_cmd):
+	sys.stdout.write("Yes.\n")
+	if not avoid_cryptographic_random:
+		rand_source="CommonCrypto"
+		found_random_source = True
+else:
+	sys.stdout.write("No.\n")
+if platform=="NT":
+	os.system("del xx.cc xx.o")
+else:
+	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+
+test_rand_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+with open("xx.cc", "w") as testfile:
+	testfile.write("#include <wincrypt.h>\nvoid x() {}\n")
+sys.stdout.write("Testing if the wincrypt library is available...")
+if 0==os.system(test_rand_cmd):
+	sys.stdout.write("Yes.\n")
+	if not found_random_source and not avoid_cryptographic_random:
+		rand_source="wincrypt"
+		found_random_source = True
+else:
+	sys.stdout.write("No.\n")
+if platform=="NT":
+	os.system("del xx.cc xx.o")
+else:
+	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+	
+test_rand_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+with open("xx.cc", "w") as testfile:
+	testfile.write("#include <stdlib.h>\nint x() { return drand48_r(NULL, NULL); }\n")
+sys.stdout.write("Testing if the drand48_r is available...")
+if 0==os.system(test_rand_cmd):
+	sys.stdout.write("Yes.\n")
+	if not found_random_source:
+		rand_source="rand48"
+		found_random_source = True
+else:
+	sys.stdout.write("No.\n")
+if platform=="NT":
+	os.system("del xx.cc xx.o")
+else:
+	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+
+	
 if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
+	
+if rand_source is not None:
+	condcomp = condcomp + "{}ALURAND={}".format(def_prefix,rand_source)
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))
