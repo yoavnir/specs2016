@@ -290,7 +290,7 @@ else:
 
 test_rand_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
 with open("xx.cc", "w") as testfile:
-	testfile.write("#include <wincrypt.h>\nvoid x() {}\n")
+	testfile.write("#include <windows.h>\n#include <wincrypt.h>\nvoid x() {}\n")
 sys.stdout.write("Testing if the wincrypt library is available...")
 if 0==os.system(test_rand_cmd):
 	sys.stdout.write("Yes.\n")
