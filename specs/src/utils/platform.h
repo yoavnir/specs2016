@@ -54,7 +54,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandContext    unsigned int
   #define AluRandSeedType   unsigned int
   #define AluRandSeed(s)    srand(s)
-  #define AluRandFunc(r)    r = rand_r(&AluRandCtxBuffer_G)
+  #define AluRandFunc(r)    r = rand()
 #endif
 
 #ifndef AluRandContext
