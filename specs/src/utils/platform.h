@@ -36,7 +36,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandContext    drand48_data
   #define AluRandSeedType   long int
   #define AluRandSeed(s)    srand48_r(s,&AluRandCtxBuffer_G)
-  #define AluRandFunc(r)    lrand48_r(&AluRandCtxBuffer_G, &r)
+  #define AluRandFunc(r)    lrand48_r(&AluRandCtxBuffer_G, (long int*)(&r))
 #endif
 
 #ifdef ALURAND_wincrypt
