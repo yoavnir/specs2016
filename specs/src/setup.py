@@ -338,7 +338,7 @@ with open("Makefile", "w") as makefile:
 	
 	if compiler=="VS":
 		body1fmt = body1.format("obj","obj")
-		body2fmt = body2.format("obj","-o ","")    # should be "/OUT:" but I haven't got it to work yet
+		body2fmt = body2.format("obj","-o ","advapi32.lib")    # should be "/OUT:" but I haven't got it to work yet
 	elif compiler=="CLANG":
 		body1fmt = body1.format("o","o")
 		body2fmt = body2.format("o", "-o ", "-pthread")

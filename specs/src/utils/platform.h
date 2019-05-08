@@ -45,9 +45,9 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandContext    HCRYPTPROV
   #define AluRandSeedType   char
   #define AluRandSeed(s)    CryptAcquireContext(&AluRandCtxBuffer_G, NULL, \
-		  (LPCWSTR)L"Microsoft Base Cryptographic Provider v1.0", \
+		  (LPCSTR)L"Microsoft Base Cryptographic Provider v1.0", \
 		  PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)
-  #define AluRandFunc(r)    CryptGenRandom(AluRandCtxBuffer_G, ALUInt_SZ, &r)
+  #define AluRandFunc(r)    CryptGenRandom(AluRandCtxBuffer_G, ALUInt_SZ, (BYTE*)(&r))
 #endif
 
 #ifdef ALURAND_rand
