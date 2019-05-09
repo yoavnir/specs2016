@@ -1,8 +1,9 @@
 #include "aluRand.h"
 #include "platform.h"
+#include "ErrorReporting.h"
 #include <fstream>
 
-#define MAX_ALURAND_INT 4611686018427387903
+#define MAX_ALURAND_INT 0x3fffffffffffffff
 
 AluRandContext    AluRandCtxBuffer_G;
 
@@ -16,8 +17,9 @@ void AluRand_Seed()
 		AluRandSeedType   AluRandSeed;
 		std::ifstream     devRandom("/dev/random");
 		devRandom.read((char*)&AluRandSeed, sizeof(AluRandSeedType));
-		AluRandSeed(AluRandSeed_G);
 	}
+	
+	AluRandSeed(AluRandSeed_G);
 }
 
 #ifdef ALU_RAND_FUNC_WITH_LEN

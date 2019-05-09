@@ -44,10 +44,16 @@ int setenv(const char *name, const char *value, int overwrite);
   #include <wincrypt.h>
   #define AluRandContext    HCRYPTPROV
   #define AluRandSeedType   char
-  #define AluRandSeed(s)    CryptAcquireContext(&AluRandCtxBuffer_G, NULL, \
-		  (LPCSTR)L"Microsoft Base Cryptographic Provider v1.0", \
-		  PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)
-  #define AluRandFunc(r)    CryptGenRandom(AluRandCtxBuffer_G, ALUInt_SZ, (BYTE*)(&r))
+  #define AluRandSeed(s)    if (0==CryptAcquireContext(&AluRandCtxBuffer_G, NULL, \
+		  NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {                            \
+		      std::string err = "CryptAquireContext() failed. GetLastError() returns " + std::to_string(GetLastError()); \
+		      MYTHROW(err);   \
+		  }
+  #define ALU_RAND_FUNC_WITH_LEN
+  #define AluRandFunc(d,l)    if (0==CryptGenRandom(AluRandCtxBuffer_G, (DWORD)(l), (BYTE*)(d))) {  \
+		      std::string err = "CryptGenRandom() failed. GetLastError() returns " + std::to_string(GetLastError()); \
+		      MYTHROW(err);   \
+		  }
 #endif
 
 #ifdef ALURAND_rand

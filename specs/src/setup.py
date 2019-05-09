@@ -307,7 +307,7 @@ else:
 test_rand_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
 with open("xx.cc", "w") as testfile:
 	testfile.write("#include <stdlib.h>\nint x() { return drand48_r(NULL, NULL); }\n")
-sys.stdout.write("Testing if the drand48_r is available...")
+sys.stdout.write("Testing if the rand48 extension to stdlib is available...")
 if 0==os.system(test_rand_cmd):
 	sys.stdout.write("Yes.\n")
 	if not found_random_source:
