@@ -91,6 +91,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 ProcessingState::~ProcessingState()
 {
 	fieldIdentifierClear();
+	fieldIdentifierStatsClear();
 	breakValuesClear();
 	if (m_prevPs) {
 		delete m_prevPs;
@@ -337,6 +338,14 @@ void ProcessingState::fieldIdentifierClear()
 		delete pair.second;
 	}
 	m_fieldIdentifiers.clear();
+}
+
+void ProcessingState::fieldIdentifierStatsClear()
+{
+	for (const auto &pair : m_fiStatistics) {
+		delete pair.second;
+	}
+	m_fiStatistics.clear();
 }
 
 void ProcessingState::breakValuesClear()

@@ -58,6 +58,7 @@ public:
 	PSpecString fieldIdentifierGet(char id);
 	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
+	void fieldIdentifierStatsClear();
 	void breakValuesClear();
 	void resetBreaks();
 	bool needToEvaluate();
