@@ -233,7 +233,7 @@ run_case(s,i,"Configured strings - With errors")
 
 s = 'a: word 1 . print "abs(a)" 1'
 i = "1\n-1\n0\n-9.83\n1234567890\n1234567890123456789012\n-987654321"
-run_case(s,i,"Functions: abs")
+run_case(s,i,"Functions: abs",memcheck.RetCode_COMMAND_FAILED)
 
 s = 'a: word 1 . print "frombin(a)" 1'
 i = "A\nABCD\nABCDEFGH\nQWERTYUIOP\n"
@@ -246,7 +246,7 @@ run_case(s,i,"Functions: pow")
 
 s = 'a: word 1 . print "sqrt(a)" 1'
 i = "1\n-1\n0\n-9.83\n1234567890\n1234567890123456789012\n-987654321\nAA"
-run_case(s,i,"Functions: sqrt")
+run_case(s,i,"Functions: sqrt",memcheck.RetCode_COMMAND_FAILED)
 
 s = 'a: word 1 . print "tobin(a)" 1'
 i = "1\n-1\n0\n1234567890\n1234567890123456789012\n-987654321\n9.83\n"

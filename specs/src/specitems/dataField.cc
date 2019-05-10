@@ -436,7 +436,12 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	if (!pInput) pInput = SpecString::newString();
 
 	if (m_label) {
-		pState.fieldIdentifierSet(m_label, pInput);
+		try {
+			pState.fieldIdentifierSet(m_label, pInput);
+		} catch (std::out_of_range& e) {
+			delete pInput;
+			throw e;
+		}
 	}
 
 	if (m_strip) {
