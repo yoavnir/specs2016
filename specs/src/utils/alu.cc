@@ -132,7 +132,9 @@ bool ALUValue::isNumeric() const
 		std::size_t pos;
 		std::stold(m_value, &pos);
 		return m_value.length() == pos;
-	} catch (std::invalid_argument& e) {
+	} catch (std::out_of_range& e) {
+		return false;
+	} eatch (std::invalid_argument& e) {
 		return false;
 	}
 	}

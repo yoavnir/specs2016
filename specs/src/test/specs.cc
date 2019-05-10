@@ -172,9 +172,10 @@ int main (int argc, char** argv)
 			ig.process(sb, ps, *pRd);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
-			std::cerr << e.what(conciseExceptions) << "\n";
+			std::cerr << e.what(conciseExceptions) << std::endl;
 			pRd->End();
 			delete pRd;
+			ps.fieldIdentifierStatsClear();
 			for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 				if (pWrtrs[i]) {
 					pWrtrs[i]->End();
