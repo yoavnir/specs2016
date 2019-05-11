@@ -1,7 +1,5 @@
 # Advanced ALU
 
-Very much a draft
-
 ## Table of Operands
 
 | Op | Name | Meaning |
@@ -48,8 +46,10 @@ Very much a draft
 | Function | Description |
 | -------- | ----------- |
 | `abs(x)` | Returns the absolute value of `x` |
+| `frand()` | Returns a random value between 0.0 up to and not including 1.0 |
 | `frombin(x)` | Returns the decimal value of the binary `x`. For example, if `x` is "A", the function returns 65; if `x` is "AB" the function returns 16961. Binary values are assumed to be in little-endian order. |
 | `pow(x,y)` | Returns `x` raised to the power of `y` |
+| `rand(x)` | Returns a random value up to and not including the integer x |
 | `sqrt(x)` | Returns the square root of `x` |
 | `tobin(x)` | Returns a binary (usually unprintable) representation of the integer number x. For example, if `x` is 65 the function returns "A"; if `x` is 16961 the function returns "AB". |
 | `tobine(x,n)` | Returns a binary representation of the integer number x as an *n*-byte string. |

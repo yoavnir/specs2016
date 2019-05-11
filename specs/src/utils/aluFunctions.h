@@ -55,6 +55,7 @@
 	X(max,1,false)                   \
 	X(avg,1,false)                   \
 	X(rand,1,false)                  \
+	X(frand,0,false)                 \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

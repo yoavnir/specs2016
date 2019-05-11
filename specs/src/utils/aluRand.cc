@@ -56,13 +56,3 @@ ALUInt AluRandGetIntUpTo(ALUInt limit)
 
 	return rndValue % limit;
 }
-
-ALUFloat AluRandGetFloat()
-{
-	if (!AluRand_RandomSeeded_G) {
-		AluRand_Seed();
-		AluRand_RandomSeeded_G = true;
-	}
-
-	return 0.0;
-}

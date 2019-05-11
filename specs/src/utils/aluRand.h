@@ -5,7 +5,5 @@
 
 ALUInt AluRandGetIntUpTo(ALUInt limit);
 
-ALUFloat AluRandGetFloat();
-
 #endif
 

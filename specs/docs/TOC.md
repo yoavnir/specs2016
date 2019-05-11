@@ -47,6 +47,8 @@ Advanced Topics
   * [Table of String Functions](alu_adv.md#table-of-string-functions)
   * [Table of Record Access Functions](alu_adv.md#table-of-record-access-functions)
   * [Table of Special Functions](alu_adv.md#table-of-special-functions)
+* [Examples](examples.md)
+  * [Estimation of PI](examples.md#pi-estimate)
 
 
 The old, one-page draft of documentation can be read [here](onepage.md).

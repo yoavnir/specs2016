@@ -442,8 +442,12 @@ The at-sign allows the inclusion of user-defined and system-defined labels as st
 .SS "Built-In Functions"
 .IP "abs(x)" 3
 The absolute function returns the absolute value of the number passed to it. Will return an integer if the parameter is integer, or float otherwise.
+.IP "frand()" 3
+The floating-point random function returns a random value no smaller than 0.0 and smaller than 1.0.
 .IP "pow(x,y)" 3
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
+.IP "rand(x)" 3
+The random function returns a random integer value between 0 up to and not including x.
 .IP "sqrt(x)" 3
 The square root function always returns a float.
 .IP "frombin(x)" 3

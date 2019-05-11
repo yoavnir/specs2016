@@ -5,6 +5,8 @@
 #include "processing/Config.h"
 #include <string.h>
 #include <cmath>
+#include <sstream>
+#include <iomanip>
 
 #define PAD_CHAR ' '
 
@@ -499,6 +501,15 @@ ALUValue* AluFunc_avg(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_rand(ALUValue* pLimit)
 {
-	ALUValue res = AluRandGetIntUpTo(pLimit->getInt());
+	ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
 	return new ALUValue(res);
+}
+
+ALUValue* AluFunc_frand()
+{
+	static ALUInt decimalLimit = 100000000000000000;
+	ALUInt randomDecimal = AluRandGetIntUpTo(decimalLimit);
+	std::ostringstream str;
+	str << "0." << std::setw(17) << std::setfill('0') << randomDecimal;
+	return new ALUValue(str.str());
 }
