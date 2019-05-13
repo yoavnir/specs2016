@@ -56,6 +56,22 @@
 	X(avg,1,false)                   \
 	X(rand,1,false)                  \
 	X(frand,0,false)                 \
+	X(floor,1,false)                 \
+	X(round,1,false)                 \
+	X(roundd,2,false)                \
+	X(ceil,1,false)                  \
+	X(sin,1,false)                   \
+	X(cos,1,false)                   \
+	X(tan,1,false)                   \
+	X(arcsin,1,false)                \
+	X(arccos,1,false)                \
+	X(arctan,1,false)                \
+	X(dsin,1,false)                  \
+	X(dcos,1,false)                  \
+	X(dtan,1,false)                  \
+	X(arcdsin,1,false)               \
+	X(arcdcos,1,false)               \
+	X(arcdtan,1,false)               \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

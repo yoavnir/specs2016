@@ -876,6 +876,46 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("bswap('LoWeRcAsE')", "EsAcReWoL");
 	VERIFY_EXPR_RES("bswap('')", "");
 
+	// rounding functions
+	VERIFY_EXPR_RES("floor(3.4)", "3");
+	VERIFY_EXPR_RES("floor(-3.4)", "-4");
+	VERIFY_EXPR_RES("ceil(3.4)", "4");
+	VERIFY_EXPR_RES("ceil(-3.4)", "-3");
+	VERIFY_EXPR_RES("round(3.4)", "3");
+	VERIFY_EXPR_RES("round(-3.4)", "-3");
+	VERIFY_EXPR_RES("roundd(3.14159265, 0)", "3");
+	VERIFY_EXPR_RES("roundd(3.14159265, 1)", "3.1");
+	VERIFY_EXPR_RES("roundd(3.14159265, 2)", "3.14");
+	VERIFY_EXPR_RES("roundd(3.14159265, 3)", "3.142");
+	VERIFY_EXPR_RES("roundd(3.14159265, 4)", "3.1416");
+
+	// trig
+	VERIFY_EXPR_RES("roundd(sin(\"0.523598775\"),8)", "0.5");
+	VERIFY_EXPR_RES("roundd(sin(3.14159265),8)", "0");
+	VERIFY_EXPR_RES("roundd(cos(\"0.523598775\"),8)", "0.8660254");
+	VERIFY_EXPR_RES("roundd(cos(3.14159265),8)", "-1");
+	VERIFY_EXPR_RES("roundd(tan(\"0.523598775\"),8)", "0.57735027");
+	VERIFY_EXPR_RES("roundd(tan(3.14159265),8)", "-0");
+	VERIFY_EXPR_RES("roundd(arcsin(0.5),8)", "0.52359878");
+	VERIFY_EXPR_RES("roundd(arcsin(-0.2),8)", "-0.20135792");
+	VERIFY_EXPR_RES("roundd(arccos(0.5),8)", "1.04719755");
+	VERIFY_EXPR_RES("roundd(arccos(-0.2),8)", "1.77215425");
+	VERIFY_EXPR_RES("roundd(arctan(0.5),8)", "0.46364761");
+	VERIFY_EXPR_RES("roundd(arctan(-0.2),8)", "-0.19739556");
+
+	VERIFY_EXPR_RES("roundd(dsin(30),8)", "0.5");
+	VERIFY_EXPR_RES("roundd(dsin(180),8)", "-0");
+	VERIFY_EXPR_RES("roundd(dcos(30),8)", "0.8660254");
+	VERIFY_EXPR_RES("roundd(dcos(180),8)", "-1");
+	VERIFY_EXPR_RES("roundd(dtan(30),8)", "0.57735027");
+	VERIFY_EXPR_RES("roundd(dtan(180),8)", "0");
+	VERIFY_EXPR_RES("roundd(arcdsin(0.5),8)", "30");
+	VERIFY_EXPR_RES("roundd(arcdsin(-0.2),8)", "-11.53695903");
+	VERIFY_EXPR_RES("roundd(arcdcos(0.5),8)", "60");
+	VERIFY_EXPR_RES("roundd(arcdcos(-0.2),8)", "101.53695903");
+	VERIFY_EXPR_RES("roundd(arcdtan(0.5),8)", "26.56505118");
+	VERIFY_EXPR_RES("roundd(arcdtan(-0.2),8)", "-11.30993247");
+
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";

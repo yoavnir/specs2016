@@ -513,3 +513,88 @@ ALUValue* AluFunc_frand()
 	str << "0." << std::setw(17) << std::setfill('0') << randomDecimal;
 	return new ALUValue(str.str());
 }
+
+ALUValue* AluFunc_floor(ALUValue* pX)
+{
+	return new ALUValue(floor(pX->getFloat()));
+}
+
+ALUValue* AluFunc_round(ALUValue* pX)
+{
+	return new ALUValue(round(pX->getFloat()));
+}
+
+ALUValue* AluFunc_roundd(ALUValue* pX, ALUValue* pDecimals)
+{
+	ALUFloat scale = pow(((ALUFloat)(10.0)), pDecimals->getInt());
+	return new ALUValue((round(scale * pX->getFloat())) / scale);
+}
+
+ALUValue* AluFunc_ceil(ALUValue* pX)
+{
+	return new ALUValue(ceil(pX->getFloat()));
+}
+
+ALUValue* AluFunc_sin(ALUValue* pX)
+{
+	return new ALUValue(sin(pX->getFloat()));
+}
+
+ALUValue* AluFunc_cos(ALUValue* pX)
+{
+	return new ALUValue(cos(pX->getFloat()));
+}
+
+ALUValue* AluFunc_tan(ALUValue* pX)
+{
+	return new ALUValue(tan(pX->getFloat()));
+}
+
+ALUValue* AluFunc_arcsin(ALUValue* pX)
+{
+	return new ALUValue(asin(pX->getFloat()));
+}
+
+ALUValue* AluFunc_arccos(ALUValue* pX)
+{
+	return new ALUValue(acos(pX->getFloat()));
+}
+
+ALUValue* AluFunc_arctan(ALUValue* pX)
+{
+	return new ALUValue(atan(pX->getFloat()));
+}
+
+static ALUFloat degrees_to_radians = 0.0174532925199433;
+static ALUFloat radians_to_degrees = 57.29577951308232;
+
+ALUValue* AluFunc_dsin(ALUValue* pX)
+{
+	return new ALUValue(sin(degrees_to_radians*pX->getFloat()));
+}
+
+ALUValue* AluFunc_dcos(ALUValue* pX)
+{
+	return new ALUValue(cos(degrees_to_radians*pX->getFloat()));
+}
+
+ALUValue* AluFunc_dtan(ALUValue* pX)
+{
+	return new ALUValue(tan(degrees_to_radians*pX->getFloat()));
+}
+
+ALUValue* AluFunc_arcdsin(ALUValue* pX)
+{
+	return new ALUValue(radians_to_degrees*asin(pX->getFloat()));
+}
+
+ALUValue* AluFunc_arcdcos(ALUValue* pX)
+{
+	return new ALUValue(radians_to_degrees*acos(pX->getFloat()));
+}
+
+ALUValue* AluFunc_arcdtan(ALUValue* pX)
+{
+	return new ALUValue(radians_to_degrees*atan(pX->getFloat()));
+}
+

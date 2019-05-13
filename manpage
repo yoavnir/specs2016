@@ -442,12 +442,55 @@ The at-sign allows the inclusion of user-defined and system-defined labels as st
 .SS "Built-In Functions"
 .IP "abs(x)" 3
 The absolute function returns the absolute value of the number passed to it. Will return an integer if the parameter is integer, or float otherwise.
+.IP "ceil(x), floor(x), round(x), roundd(x,d)" 3
+These function return the closest numbers to 
+.I x
+:
+.B ceil
+returns a whole number no smaller than 
+.I x
+;
+.B floor
+returns a whole number no greater than 
+.I x
+;
+.B round
+returns a whole number closest to 
+.I x
+; 
+and
+.B roundd
+returns a number with up to
+.I d
+decimal places closest to 
+.I x
+, 
 .IP "frand()" 3
 The floating-point random function returns a random value no smaller than 0.0 and smaller than 1.0.
 .IP "pow(x,y)" 3
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
 .IP "rand(x)" 3
 The random function returns a random integer value between 0 up to and not including x.
+.IP "sin(x), cos(x), tan(x), dsin(x), dcos(x), dtan(x)" 3
+These trigonometric functions return the sine, cosine and tangent of an angle.
+.B sin, cos,
+and
+.B tan
+accept an argument in radians, while
+.B dsin, dcos,
+and
+.B dtan 
+accept an argument in degrees.
+.IP "arcsin(x), arccos(x), arctan(x), arcdsin(x), arcdcos(x), arcdtan(x)" 3
+These trigonometric functions return the inverse sine, cosine and tangent.
+.B arcsin, arccos,
+and
+.B arctan
+return an angle in radians, while
+.B arcdsin, arcdcos,
+and
+.B arcdtan 
+return an angle in degrees.
 .IP "sqrt(x)" 3
 The square root function always returns a float.
 .IP "frombin(x)" 3
