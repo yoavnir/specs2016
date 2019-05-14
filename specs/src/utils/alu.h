@@ -306,11 +306,13 @@ public:
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 	virtual bool                requiresRead()  { return m_reliesOnInput; }
 	std::string&                getName()       { return m_FuncName; }
+	static unsigned char        functionTypes() { return m_flags; }
 private:
-	std::string		m_FuncName;
-	void*			mp_Func;
-	unsigned int	m_ArgCount;
-	bool            m_reliesOnInput;
+	static unsigned char m_flags;
+	std::string		     m_FuncName;
+	void*			     mp_Func;
+	unsigned int	     m_ArgCount;
+	bool                 m_reliesOnInput;
 };
 
 class AluInputRecord : public AluUnit {

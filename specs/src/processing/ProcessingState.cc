@@ -366,11 +366,16 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 	m_fieldIdentifiers[id] = SpecStringCopy(ps);
 
 	// Count the statistics of this field value.
-	// TODO: Make this dependent on those statistics actually being needed.
-	if (m_fiStatistics[id]==NULL) {
-		m_fiStatistics[id] = new AluValueStats(id);
-	} else {
-		m_fiStatistics[id]->AddValue(id);
+	if (ALUFUNC_STATISTICAL & AluFunction::functionTypes()) {
+		if (m_fiStatistics[id]==NULL) {
+			m_fiStatistics[id] = new AluValueStats(id);
+		} else {
+			m_fiStatistics[id]->AddValue(id);
+		}
+	}
+
+	if (ALUFUNC_FREQUENCY & AluFunction::functionTypes()) {
+		MYTHROW("Frequency function when no such functions have yet been defined.");
 	}
 
 	if (m_breakValues[id] && 0==ps->Compare(m_breakValues[id]->data())) return;

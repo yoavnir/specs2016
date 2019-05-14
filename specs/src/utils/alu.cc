@@ -876,10 +876,13 @@ std::string AluOtherToken::_identify()
 
 // AluFunction class
 
-#define X(nm,cnt,rl)	if (s==#nm) {      \
+unsigned char AluFunction::m_flags = ALUFUNC_REGULAR;
+
+#define X(nm,cnt,flags,rl)	if (s==#nm) {  \
 		m_FuncName = s; m_ArgCount = cnt;  \
 		m_reliesOnInput = rl;              \
 		mp_Func = (void*)AluFunc_##nm;     \
+		m_flags |= flags;                  \
 		return;                            \
 	}
 AluFunction::AluFunction(std::string& _s)
