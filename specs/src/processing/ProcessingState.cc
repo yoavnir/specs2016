@@ -375,7 +375,19 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 	}
 
 	if (ALUFUNC_FREQUENCY & AluFunction::functionTypes()) {
-		MYTHROW("Frequency function when no such functions have yet been defined.");
+		std::string s(ps->data(), ps->length());
+		if (m_freqMaps[id]==NULL) {
+			m_freqMaps[id] = new frequencyMap();
+		}
+
+		auto search = m_freqMaps[id]->find(s);
+		if (search == m_freqMaps[id]->end()) {
+			// This string is not yet in the map
+			m_freqMaps[id]->insert({s, 0});
+			search = m_freqMaps[id]->find(s);
+		}
+
+		search++;
 	}
 
 	if (m_breakValues[id] && 0==ps->Compare(m_breakValues[id]->data())) return;
@@ -411,6 +423,11 @@ bool ProcessingState::breakEstablished(char id)
 PAluValueStats ProcessingState::valueStatistics(char id)
 {
 	return m_fiStatistics[id];
+}
+
+PFrequencyMap ProcessingState::getFrequencyMap(char id)
+{
+	return m_freqMaps[id];
 }
 
 bool ProcessingState::runningOutLoop()

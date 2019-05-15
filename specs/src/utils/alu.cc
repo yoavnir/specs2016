@@ -1159,7 +1159,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		// string of letters and digits. May be function or field identifier
 		if (isLetter(*c)) {
 			char *tokEnd = c+1;
-			while (tokEnd<cEnd && (isLetter(*tokEnd) || isDigit(*tokEnd))) tokEnd++;
+			while (tokEnd<cEnd && (isLetter(*tokEnd) || isDigit(*tokEnd) || *tokEnd=='_')) tokEnd++;
 			if (tokEnd == c+1) {
 				pUnit = new AluUnitFieldIdentifier(*c);
 			} else {
@@ -1408,7 +1408,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		MYTHROW("Entered with non-empty vec.");
 	}
 
-	// Handle the special case of the break() pseudo-function.
+	// Handle the special case of pseudo-functions.
 	// The parameter should be a field identifier and it is converted to a number
 	// representing the ASCII value of the character
 	pseudoFunctionFindingState pffs = PFFS_lookingForPseudoFunction;
@@ -1431,7 +1431,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		}
 		case PFFS_lookingForFI: {
 			if (pUnit->type() != UT_FieldIdentifier) {
-				MYTHROW("break() function may only get a field identifier argument");
+				MYTHROW("Pseudo-functions may only get a field identifier argument");
 			}
 			AluUnitFieldIdentifier* pFI = (AluUnitFieldIdentifier*)pUnit;
 			pFI->setEvaluateToName();
@@ -1440,7 +1440,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		}
 		case PFFS_lookingForClose: {
 			if (pUnit->type() != UT_ClosingParenthesis) {
-				MYTHROW("break() function may only get one argument");
+				MYTHROW("pseudo-functions may only get one argument");
 			}
 			pffs = PFFS_lookingForPseudoFunction;
 			break;

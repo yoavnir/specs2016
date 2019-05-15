@@ -51,6 +51,7 @@ public:
 	virtual ALUInt  getIterationCount() { return ALUInt(m_CycleCounter); }
 	virtual bool    breakEstablished(char id);
 	virtual PAluValueStats valueStatistics(char id);
+	virtual PFrequencyMap  getFrequencyMap(char id);
 
 	void fieldIdentifierSet(char id, PSpecString ps);
 	void incrementCycleCounter() { m_CycleCounter++; }
@@ -108,6 +109,7 @@ private:
 	std::map<char,PSpecString> m_fieldIdentifiers;
 	std::map<char,PAluValueStats> m_fiStatistics;
 	std::map<char,PSpecString> m_breakValues;
+	std::map<char,PFrequencyMap> m_freqMaps;
 	char m_breakLevel;
 	std::stack<extremeBool> m_Conditions;
 	std::stack<int> m_Loops;    // The unsigned int holds the number of the token where the while was

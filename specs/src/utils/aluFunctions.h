@@ -1,6 +1,7 @@
 #ifndef SPECS2016__UTILS__ALU_FUNCTIONS_H
 #define SPECS2016__UTILS__ALU_FUNCTIONS_H
 
+#include <unordered_map>
 #include "utils/SpecString.h"
 #include "utils/alu.h"
 
@@ -76,6 +77,7 @@
 	X(arcdsin,        1, ALUFUNC_REGULAR,     false)  \
 	X(arcdcos,        1, ALUFUNC_REGULAR,     false)  \
 	X(arcdtan,        1, ALUFUNC_REGULAR,     false)  \
+	X(fmap_nelem,     1, ALUFUNC_FREQUENCY,   false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
@@ -83,6 +85,7 @@
 	X(min)                           \
 	X(max)                           \
 	X(avg)                           \
+	X(fmap_nelem)                    \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
@@ -100,6 +103,9 @@ typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
 typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 
+typedef std::unordered_map<std::string,ALUInt>  frequencyMap;
+typedef frequencyMap *PFrequencyMap;
+
 class stateQueryAgent {
 public:
 	virtual unsigned int getWordCount() = 0;
@@ -115,6 +121,7 @@ public:
 	virtual ALUInt  getIterationCount() = 0;
 	virtual bool    breakEstablished(char id) = 0;
 	virtual PAluValueStats valueStatistics(char id) = 0;
+	virtual PFrequencyMap  getFrequencyMap(char id) = 0;
 };
 
 void setStateQueryAgent(stateQueryAgent* qa);
