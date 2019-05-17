@@ -78,6 +78,10 @@
 	X(arcdcos,        1, ALUFUNC_REGULAR,     false)  \
 	X(arcdtan,        1, ALUFUNC_REGULAR,     false)  \
 	X(fmap_nelem,     1, ALUFUNC_FREQUENCY,   false)  \
+	X(fmap_nsamples,  1, ALUFUNC_FREQUENCY,   false)  \
+	X(fmap_count,     2, ALUFUNC_FREQUENCY,   false)  \
+	X(fmap_frac,      2, ALUFUNC_FREQUENCY,   false)  \
+	X(fmap_pct,       2, ALUFUNC_FREQUENCY,   false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
@@ -86,6 +90,10 @@
 	X(max)                           \
 	X(avg)                           \
 	X(fmap_nelem)                    \
+	X(fmap_nsamples)                 \
+	X(fmap_count)                    \
+	X(fmap_frac)                     \
+	X(fmap_pct)                      \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);

@@ -91,7 +91,7 @@ int main (int argc, char** argv)
 	try {
 		ig.Compile(vec, index);
 	}  catch (const SpecsException& e) {
-		std::cerr << "Error while parsing command-line arguments: " << e.what(conciseExceptions) << "\n";
+		std::cerr << "Error while parsing command-line arguments:\n" << e.what(conciseExceptions) << "\n";
 		if (g_bVerbose) {
 			std::cerr << "\nProcessing stopped at index " << index
 					<< '/' << vec.size() << ":\n";

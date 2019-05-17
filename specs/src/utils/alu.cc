@@ -1431,7 +1431,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		}
 		case PFFS_lookingForFI: {
 			if (pUnit->type() != UT_FieldIdentifier) {
-				MYTHROW("Pseudo-functions may only get a field identifier argument");
+				MYTHROW("Pseudo-functions' first argument may only be a field identifier");
 			}
 			AluUnitFieldIdentifier* pFI = (AluUnitFieldIdentifier*)pUnit;
 			pFI->setEvaluateToName();
@@ -1440,7 +1440,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		}
 		case PFFS_lookingForClose: {
 			if (pUnit->type() != UT_ClosingParenthesis) {
-				MYTHROW("pseudo-functions may only get one argument");
+				continue;
 			}
 			pffs = PFFS_lookingForPseudoFunction;
 			break;

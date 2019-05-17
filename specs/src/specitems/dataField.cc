@@ -194,10 +194,8 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 		try {
 			ret = new ExpressionPart(token.Literal());
 		} catch(const SpecsException& e) {
-			if (g_bVerbose) {
-				std::cerr << "While parsing Expression, got: " << e.what(true) << "\n";
-			}
-			std::string err = "Error in expression in "+ token.HelpIdentify();
+			std::string err = "Expression in "+ token.HelpIdentify()
+					+ ":\n" + e.what(true /* concise */);
 			MYTHROW(err);
 		}
 		break;

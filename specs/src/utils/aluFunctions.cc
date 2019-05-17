@@ -10,6 +10,8 @@
 
 #define PAD_CHAR ' '
 
+#define PERCENTS (ALUFloat(100.0))
+
 stateQueryAgent* g_pStateQueryAgent = NULL;
 
 void setStateQueryAgent(stateQueryAgent* qa)
@@ -611,3 +613,35 @@ ALUValue* AluFunc_fmap_nelem(ALUValue* _pFieldIdentifier)
 	return new ALUValue(pfMap->nelem());
 }
 
+ALUValue* AluFunc_fmap_nsamples(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
+	return new ALUValue(pfMap->count());
+}
+
+ALUValue* AluFunc_fmap_count(ALUValue* _pFieldIdentifier, ALUValue* pVal)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
+	std::string s = pVal->getStr();
+	return new ALUValue((*pfMap)[s]);
+}
+
+ALUValue* AluFunc_fmap_frac(ALUValue* _pFieldIdentifier, ALUValue* pVal)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
+	std::string s = pVal->getStr();
+	ALUFloat frac = ALUFloat((*pfMap)[s]) / ALUFloat(pfMap->count());
+	return new ALUValue(frac);
+}
+
+ALUValue* AluFunc_fmap_pct(ALUValue* _pFieldIdentifier, ALUValue* pVal)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
+	std::string s = pVal->getStr();
+	ALUFloat frac = ALUFloat((*pfMap)[s]) / ALUFloat(pfMap->count());
+	return new ALUValue(PERCENTS * frac);
+}
