@@ -598,10 +598,16 @@ ALUValue* AluFunc_arcdtan(ALUValue* pX)
 	return new ALUValue(ALUFloat(radians_to_degrees*atan(pX->getFloat())));
 }
 
+void frequencyMap::note(std::string& s)
+{
+	map[s]++;
+	counter++;
+}
+
 ALUValue* AluFunc_fmap_nelem(ALUValue* _pFieldIdentifier)
 {
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
-	return new ALUValue(ALUInt(pfMap->size()));
+	return new ALUValue(pfMap->nelem());
 }
 

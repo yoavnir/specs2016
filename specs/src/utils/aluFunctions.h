@@ -103,7 +103,18 @@ typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
 typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 
-typedef std::unordered_map<std::string,ALUInt>  frequencyMap;
+// typedef std::unordered_map<std::string,ALUInt>  frequencyMap;
+
+class frequencyMap {
+public:
+	void             note(std::string& s);
+	ALUInt           nelem()     { return map.size(); }
+	ALUInt           operator[](std::string& s) {return map[s];}
+	ALUInt           count()     { return counter; }
+private:
+	std::unordered_map<std::string,ALUInt> map;
+	ALUInt                                 counter;
+};
 typedef frequencyMap *PFrequencyMap;
 
 class stateQueryAgent {
