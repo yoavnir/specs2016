@@ -101,13 +101,36 @@
 | `wordindex(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
 | `wordlength(n)` | Returns the length of the *n*-th word |
 
-## Table of Statistical Pseudo-Functions
+## Table of Statistical and Frequency Map Pseudo-Functions
 | Function | Description |
 | -------- | ----------- |
 | `sum(a)` | Returns the sum of all values that have been assigned to *field identifier* `a` |
 | `min(a)` | Returns the minimum of all values that have been assigned to *field identifier* `a` |
 | `max(a)` | Returns the maximum of all values that have been assigned to *field identifier* `a` |
 | `avg(a)` | Returns the average (arithmetic mean) of all values that have been assigned to *field identifier* `a` |
+| `fmap_nelem(a)` | Returns the number of distinct values of *field identifier* `a` |
+| `fmap_nsamples(a)` | Returns the number of samples collected of *field identifier* `a` |
+| `fmap_common(a)` | Returns the string value with most occurrences of *field identifier* `a`. In case of a tie, one of the values is returned. |
+| `fmap_rare(a)` | Returns the string value with least but non-zero occurrences of *field identifier* `a`. In case of a tie, one of the values is returned. |
+| `fmap_count(a,s)` | Returns the number of occurences of string `s` in *field identifier* `a` |
+| `fmap_frac(a,s)` | Returns the fraction of *field identifier* `a` values that are equal to `s` |
+| `fmap_pct(a,s)` | Returns the percentage of *field identifier* `a` values that are equal to `s` |
+| `fmap_sample(a,s)` | Treats the value of the string in `s` as a new sample for *field identifier* `a`. Returns the count of occurences of `s`. This is useful mainly in tests. |
+| `fmap_dump(a,format,sortOrder,showPct)` | Returns a string containing a dump of the frequency map for *field identifier* `a`. |
+
+The parameters for the `fmap_dump` functions are as follows:
+* *format*. Possible values:
+  * *txt* or *0* or empty string: textual representation of string and count, with the field width adjusted to fit the largest value of the field.
+  * *lin*: same as *txt*, but surrounded by lines.
+  * Integer value: same as *txt*, but the width of the string field is fixed.
+  * *csv*: a Commad Seperated Value dataset.
+  * *json*: a JavaScript Object Notation dataset.
+* *sortOrder*. Possible values:
+  * *s*, *sa*, or empty string: Sort by ascending alphabetical order of the string key.
+  * *sd*: Sort by descending alphabetical order of the key.
+  * *c* or *ca*: Sort by ascending count numbers -- from least common to most common.
+  * *cd*: Sort by descending count numbers -- from most common to rarest.
+* *showPct* - evaluated as boolean. If *true* causes the textual formats to print out a percentage. Causes the CSV and JSON formats to add a fraction.
 
 
 ## Table of Special Functions

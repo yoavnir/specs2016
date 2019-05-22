@@ -58,7 +58,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 
 	g_counters.clearAll();
 
-	TestReader tRead(5);
+	TestReader tRead(20);
 	char* example = strdup(_example);
 	char* ln = strtok(example, "\n");
 	while (ln) {
@@ -364,6 +364,58 @@ int main(int argc, char** argv)
 			"   /MIN:/ NW PRINT 'min(a)' N" \
 			"   /MAX:/ NW PRINT 'max(a)' N";
 	VERIFY2(spec, "1\n2\n3\n4\n5", "AVG:3 SUM:15 MIN:1 MAX:5"); // TEST #102
+
+	spec = "a: WORD 1 ." \
+		   " EOF " \
+		   "   print 'fmap_nelem(a)'               1 " \
+		   "   print 'fmap_nsamples(a)'           NW " \
+		   "   print 'fmap_common(a)'             NW " \
+		   "   print 'fmap_rare(a)'               NW " \
+		   "   print 'fmap_count(a,3)'            NW " \
+		   "   print 'roundd(fmap_frac(a,3),4)'   NW " \
+		   "   print 'roundd(fmap_pct(a,3),3)'    NW /%/ N";
+	VERIFY2(spec, "1\n2\n3\n4\n1\n5\n2\n3\n4\n3\n3", "5 11 3 5 4 0.3636 36.364%"); // TEST #103
+
+	// random and statistics
+	spec = "while '#0<10000' do                  " \
+           "   print 'fmap_sample(a,rand(10))' . " \
+           "   set '#0+=1'                       " \
+           "done                                 " \
+           "set '#1:=fmap_count(a,7)'            " \
+           "if '#1 > 920 & #1 < 1080' then       " \
+           "   /OK/ 1                            " \
+           "else                                 " \
+           "   /NOT OK/ 1                        " \
+           "endif                                ";
+	VERIFY(spec, "OK");  // TEST #104
+
+	spec = "while '#0<10000' do                  " \
+		   "   set '#2:=frand()'                 " \
+		   "   if '#2 >= 0.7 & #2 < 0.8' then    " \
+		   "      set '#1+=1'                    " \
+		   "   endif                             " \
+           "   set '#0+=1'                       " \
+           "done                                 " \
+           "if '#1 > 920 & #1 < 1080' then       " \
+           "   /OK/ 1                            " \
+           "else                                 " \
+           "   /NOT OK/ 1                        " \
+           "endif                                ";
+	VERIFY(spec, "OK");  // TEST #105
+
+	spec = "while '#0<10000' do                  " \
+		   "   set '#2:=rand(10)'                " \
+		   "   if '#2 = 3' then                  " \
+		   "      set '#1+=1'                    " \
+		   "   endif                             " \
+           "   set '#0+=1'                       " \
+           "done                                 " \
+           "if '#1 > 920 & #1 < 1080' then       " \
+           "   /OK/ 1                            " \
+           "else                                 " \
+           "   /NOT OK/ 1                        " \
+           "endif                                ";
+	VERIFY(spec, "OK");  // TEST #106
 
 
 	if (errorCount) {

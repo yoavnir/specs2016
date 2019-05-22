@@ -82,6 +82,10 @@
 	X(fmap_count,     2, ALUFUNC_FREQUENCY,   false)  \
 	X(fmap_frac,      2, ALUFUNC_FREQUENCY,   false)  \
 	X(fmap_pct,       2, ALUFUNC_FREQUENCY,   false)  \
+	X(fmap_common,    1, ALUFUNC_FREQUENCY,   false)  \
+	X(fmap_rare,      1, ALUFUNC_FREQUENCY,   false)  \
+	X(fmap_sample,    2, ALUFUNC_FREQUENCY,   false)  \
+	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
@@ -94,12 +98,16 @@
 	X(fmap_count)                    \
 	X(fmap_frac)                     \
 	X(fmap_pct)                      \
+	X(fmap_common)                   \
+	X(fmap_rare)                     \
+	X(fmap_sample)                   \
+	X(fmap_dump)                     \
 
 #define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
 #define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
 #define ALUFUNC2(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*);
 #define ALUFUNC3(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*);
-#define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*), ALUValue*);
+#define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*);
 
 #define X(fn,argc,flags,rl) ALUFUNC##argc(fn)
 ALU_FUNCTION_LIST
@@ -111,7 +119,25 @@ typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
 typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
 
-// typedef std::unordered_map<std::string,ALUInt>  frequencyMap;
+
+enum fmap_format {
+	/* Leave a gap because low numbers are the string width */
+	fmap_format__textualJustified,
+	fmap_format__textualJustifiedLines = 1024,
+	fmap_format__csv,
+	fmap_format__json,
+};
+
+enum fmap_sortOrder {
+	fmap_sortOrder__byStringAscending,
+	fmap_sortOrder__byStringDescending,
+	fmap_sortOrder__byCountAscending,
+	fmap_sortOrder__byCountDescending,
+};
+
+typedef std::unordered_map<std::string, ALUInt> freqMapImpl;
+
+typedef std::pair<const std::string, ALUInt> freqMapPair;
 
 class frequencyMap {
 public:
@@ -119,9 +145,12 @@ public:
 	ALUInt           nelem()     { return map.size(); }
 	ALUInt           operator[](std::string& s) {return map[s];}
 	ALUInt           count()     { return counter; }
+	std::string      mostCommon();
+	std::string      leastCommon();
+	std::string      dump(fmap_format f, fmap_sortOrder o, bool includePercentage);
 private:
-	std::unordered_map<std::string,ALUInt> map;
-	ALUInt                                 counter;
+	freqMapImpl      map;
+	ALUInt           counter;
 };
 typedef frequencyMap *PFrequencyMap;
 

@@ -420,6 +420,9 @@ PAluValueStats ProcessingState::valueStatistics(char id)
 
 PFrequencyMap ProcessingState::getFrequencyMap(char id)
 {
+	if (m_freqMaps[id]==NULL) {
+		m_freqMaps[id] = new frequencyMap();
+	}
 	return m_freqMaps[id];
 }
 

@@ -664,9 +664,50 @@ a.
 Returns the average (mathematical mean) of all values in
 .B Field Identifier
 a. 
-
-.P
-NOTE: This list is going to be expanded in future versions.
+.IP "fmap_nelem(a)" 3
+Returns the number of distinct values of
+.B Field Identifier
+a. 
+.IP "fmap_nsamples(a)" 3
+Returns the number of samples collected of
+.B Field Identifier
+a. 
+.IP "fmap_common(a)" 3
+Returns the string value with most occurrences of
+.B Field Identifier
+a. In case of a tie, one of the values is returned.
+.IP "fmap_rare(a)" 3
+Returns the string value with least but non-zero occurrences of 
+.B Field Identifier
+a. In case of a tie, one of the values is returned.
+.IP "fmap_count(a,s)" 3
+Returns the number of occurences of the 
+.B string 
+s in
+.B Field Identifier
+a. 
+.IP "fmap_frac(a,s)" 3
+Returns the fraction of
+.B Field Identifier
+a values that are equal to the
+.B string 
+s.
+.IP "fmap_pct(a,s)" 3
+Returns the fraction of
+.B Field Identifier
+a values that are equal to the
+.B string 
+s.
+.IP "fmap_sample(a,s)" 3
+Treats the value of the 
+.B string 
+s as a new sample for
+.B Field Identifier
+a. Returns the count of occurences of s. 
+.IP "fmap_dump(a,format,sortOrder,showPct)" 3
+Returns a string containing a dump of the frequency map for
+.B Field Identifier
+a.
 
 .SH OPTIONS
 specs supports the following switches:

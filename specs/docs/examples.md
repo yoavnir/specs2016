@@ -18,3 +18,19 @@ EOF
   PRINT  "4*#3/#4" 20            # The proportion of points within the unit circle multiplied 
                                  # by 4 is a good estimate of PI
 ```
+
+## Random Check
+
+This specification doesn't need any input. It generates 10,000 random numbers between 0 and 9, and counts how may of them are 7. The expected value is, of course, 1000, and the standard deviation should be 30. This specification returns `OK` if the number of occurrences of 7 is within two standard deviations from the expected value. 
+```
+WHILE '#0<10000' DO
+   PRINT 'fmap_sample(a,rand(10))' .
+   SET '#0+=1'
+DONE
+SET '#1:=fmap_count(a,7)'
+IF '#1 > 940 & #1 < 1060' THEN
+   /OK/ 1
+ELSE
+   /NOT OK/ 1
+ENDIF
+```

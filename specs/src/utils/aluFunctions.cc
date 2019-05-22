@@ -5,6 +5,7 @@
 #include "processing/Config.h"
 #include <string.h>
 #include <cmath>
+#include <set>
 #include <sstream>
 #include <iomanip>
 
@@ -600,11 +601,187 @@ ALUValue* AluFunc_arcdtan(ALUValue* pX)
 	return new ALUValue(ALUFloat(radians_to_degrees*atan(pX->getFloat())));
 }
 
+/*
+ * FREQUENCE MAP - CLASS AND ALU FUNCTIONS
+ */
+
+static std::string quotedString(const std::string& s)
+{
+	std::string ret = "\"";
+	for (auto& c : s) {
+		switch (c) {
+		case '"': ret += '"';  // double the double-quote
+		// intentional fall-through
+		default:
+			ret += c;
+		}
+	}
+	ret += '"';
+
+	return ret;
+}
+
+static std::string convertToCsv(const std::string& s)
+{
+	/* if s contains neither a comma nor a double-quote nor a non-printable, just return s */
+	bool bNeedsQuoting = false;
+	for (auto& c : s) {
+		if (c==',' || c=='"' || (c<' ' && c>0)) {
+			bNeedsQuoting = true;
+			break;
+		}
+	}
+
+	if (!bNeedsQuoting) return s;
+
+	/* OK, we need to quote this... */
+	return quotedString(s);
+}
+
 void frequencyMap::note(std::string& s)
 {
 	map[s]++;
 	counter++;
 }
+
+std::string frequencyMap::mostCommon()
+{
+	ALUInt max = 0;
+	std::string ret = "";
+	for (freqMapPair& kv : map) {
+		if (kv.second > max) {
+			ret = kv.first;
+			max = kv.second;
+		}
+	}
+	return ret;
+}
+
+std::string frequencyMap::leastCommon()
+{
+	ALUInt min = 0;
+	std::string ret = "";
+	for (freqMapPair& kv : map) {
+		if ((min == 0) || (kv.second < min)) {
+			ret = kv.first;
+			if (kv.second == 1) { // it doesn't get any rarer that this
+				return ret;
+			}
+			min = kv.second;
+		}
+	}
+	return ret;
+}
+
+std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePercentage)
+{
+	typedef std::function<bool(freqMapPair, freqMapPair)> Comparator;
+
+	Comparator compFunctor;
+	switch (o) {
+	case fmap_sortOrder__byStringAscending:
+		compFunctor = [](freqMapPair e1, freqMapPair e2) {
+			return e1.first < e2.first;
+		};
+		break;
+	case fmap_sortOrder__byStringDescending:
+		compFunctor = [](freqMapPair e1, freqMapPair e2) {
+			return e1.first > e2.first;
+		};
+		break;
+	case fmap_sortOrder__byCountAscending:
+		compFunctor = [](freqMapPair e1, freqMapPair e2) {
+			return (e1.second == e2.second)
+					? e1.first < e2.first
+					: e1.second < e2.second;
+		};
+		break;
+	case fmap_sortOrder__byCountDescending:
+		compFunctor = [](freqMapPair e1, freqMapPair e2) {
+			return (e1.second == e2.second)
+					? e1.first > e2.first
+					: e1.second > e2.second;
+		};
+		break;
+	}
+
+	std::set<freqMapPair, Comparator> setOfFreqs(map.begin(), map.end(), compFunctor);
+
+	unsigned int width = 0;
+	ALUInt maxFreq = 0;
+	ALUInt sumFreq = 0;
+	for (auto& kv : setOfFreqs) {
+		if (kv.first.size() > width) {
+			width = kv.first.size();
+		}
+		if (kv.second > maxFreq) {
+			maxFreq = kv.second;
+		}
+		sumFreq += kv.second;
+	}
+
+	unsigned int freqWidth = std::to_string(maxFreq).size();
+
+	if ((f > fmap_format__textualJustified) && (f < fmap_format__textualJustifiedLines)) {
+		width = (unsigned int)(f);
+	}
+
+	std::ostringstream oss;
+
+	// preamble
+
+	if (fmap_format__textualJustifiedLines == f) {
+		oss << "+" << std::setw(width+3) << std::setfill('-') << "+"
+				<< std::setw(freqWidth+3) << std::setfill('-') << "+";
+		if (includePercentage) oss << "--------+";
+		oss << '\n';
+	} else if (fmap_format__json == f) {
+		oss << "\"frequencyMap\": {\n\t\"Entries\": [\n";
+	}
+
+	for (auto& kv : setOfFreqs) {
+		if (fmap_format__textualJustifiedLines > f) {
+			oss << std::setw(width) << std::setfill(' ') << std::left << kv.first;
+			oss << std::setw(freqWidth+1) << std::setfill(' ') << std::right << kv.second;
+			if (includePercentage) {
+				oss << std::fixed << std::setw(7) << std::setprecision(2) << ALUFloat(kv.second) * 100.0 / ALUFloat(sumFreq) << "%";
+			}
+		}
+		else if (fmap_format__textualJustifiedLines == f) {
+			oss << "| " << std::setw(width) << std::setfill(' ') << std::left << kv.first;
+			oss << " | " << std::setw(freqWidth) << std::setfill(' ') << std::right << kv.second << " |";
+			if (includePercentage) {
+				oss << std::fixed <<std::setw(6) << std::setprecision(2) <<
+						ALUFloat(kv.second) * 100.0 / ALUFloat(sumFreq) << "% |";
+			}
+		} else if (fmap_format__csv == f) {
+			oss << convertToCsv(kv.first) << "," << kv.second;
+			if (includePercentage) oss << "." << std::fixed << std::setprecision(6) << ALUFloat(kv.second) / ALUFloat(sumFreq);
+		} else if (fmap_format__json == f) {
+			oss << "\t\t{ \"Key\":" << quotedString(kv.first) << ", \"Samples\":\"" << kv.second << "\"";
+			if (includePercentage) oss << ", \"fraction\":\"" << std::fixed << std::setprecision(6) << ALUFloat(kv.second) / ALUFloat(sumFreq) << "\"";
+			oss << " }";
+		} else {
+			MYASSERT ("Invalid format.");
+		}
+
+		oss << '\n';
+	}
+
+	// postamble
+
+	if (fmap_format__textualJustifiedLines == f) {
+		oss << "+" << std::setw(width+3) << std::setfill('-') << "+"
+				<< std::setw(freqWidth+3) << std::setfill('-') << "+";
+		if (includePercentage) oss << "--------+";
+		oss << '\n';
+	} else if (fmap_format__json == f) {
+		oss << "\t]\n}\n";
+	}
+
+	return oss.str();
+}
+
 
 ALUValue* AluFunc_fmap_nelem(ALUValue* _pFieldIdentifier)
 {
@@ -644,4 +821,63 @@ ALUValue* AluFunc_fmap_pct(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 	std::string s = pVal->getStr();
 	ALUFloat frac = ALUFloat((*pfMap)[s]) / ALUFloat(pfMap->count());
 	return new ALUValue(PERCENTS * frac);
+}
+
+ALUValue* AluFunc_fmap_common(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
+	return new ALUValue(pfMap->mostCommon());
+}
+
+ALUValue* AluFunc_fmap_rare(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
+	return new ALUValue(pfMap->leastCommon());
+}
+
+ALUValue* AluFunc_fmap_sample(ALUValue* _pFieldIdentifier, ALUValue* pVal)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
+	std::string s = pVal->getStr();
+	pfMap->note(s);
+	return new ALUValue((*pfMap)[s]);
+}
+
+ALUValue* AluFunc_fmap_dump(ALUValue* _pFieldIdentifier, ALUValue* pFormat, ALUValue* pOrder, ALUValue* pPct)
+{
+	std::string s;
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
+
+	fmap_format f;
+	s = pFormat->getStr();
+	if (s=="" || s=="txt" || s=="0") f = fmap_format__textualJustified;
+	else if (s=="lin") f = fmap_format__textualJustifiedLines;
+	else if (s=="csv") f = fmap_format__csv;
+	else if (s=="json") f = fmap_format__json;
+	else if (counterType__Int == pFormat->getDivinedType()) {
+		f = (fmap_format(pFormat->getInt()));
+	}
+	else {
+		std::string err = "Invalid frequency map dump format: " + s;
+		MYTHROW(err);
+	}
+
+	fmap_sortOrder o;
+	s = pOrder->getStr();
+	if (s=="" || s=="s" || s=="sa") o = fmap_sortOrder__byStringAscending;
+	else if (s=="sd") o = fmap_sortOrder__byStringDescending;
+	else if (s=="c" || s=="ca") o = fmap_sortOrder__byCountAscending;
+	else if (s=="cd") o = fmap_sortOrder__byCountDescending;
+	else {
+		std::string err = "Invalid frequency map sort order: " + s;
+		MYTHROW(err);
+	}
+
+	bool includePercentage = pPct->getBool();
+
+	return new ALUValue(pfMap->dump(f, o, includePercentage));
 }
