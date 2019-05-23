@@ -337,11 +337,7 @@ void ProcessingState::fieldIdentifierClear()
 	for (const auto &pair : m_fieldIdentifiers) {
 		delete pair.second;
 	}
-	for (const auto &pair : m_freqMaps) {
-		delete pair.second;
-	}
 	m_fieldIdentifiers.clear();
-	m_freqMaps.clear();
 }
 
 void ProcessingState::fieldIdentifierStatsClear()
@@ -349,7 +345,11 @@ void ProcessingState::fieldIdentifierStatsClear()
 	for (const auto &pair : m_fiStatistics) {
 		delete pair.second;
 	}
+	for (const auto &pair : m_freqMaps) {
+		delete pair.second;
+	}
 	m_fiStatistics.clear();
+	m_freqMaps.clear();
 }
 
 void ProcessingState::breakValuesClear()
