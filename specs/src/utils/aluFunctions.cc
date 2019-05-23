@@ -5,6 +5,7 @@
 #include "processing/Config.h"
 #include <string.h>
 #include <cmath>
+#include <functional>
 #include <set>
 #include <sstream>
 #include <iomanip>
