@@ -12,7 +12,7 @@ args = parser.parse_args()
 if args.nvg==True:
 	memcheck.no_valgrind = True
 
-tests_that_may_fail = [43,48,61,63]
+tests_that_may_fail = [43,48,61,63,353,355,365,367]
 for i in range(count_ALU_tests):
     cmd = "../exe/ALUUnitTest {}".format(i+1)
     (rc,info) = memcheck.leak_check(cmd)
