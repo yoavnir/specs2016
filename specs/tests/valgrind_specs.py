@@ -655,3 +655,8 @@ OUTSTREAM STDERR
 WORD 2 1 
 """
 run_case(s,i,"dual output")
+
+# NOWRITE
+s = "WORD 1 1 NOWRITE"
+i = "first record\nsecond line\nlast one"
+run_case(s,i,"nowrite")

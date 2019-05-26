@@ -87,11 +87,15 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.incrementCycleCounter();
 				ig.processDo(sb, ps, &tRead);
 				PSpecString pOut = sb.GetStringUnsafe();
-				if (result) {
-					result->add(pOut);
-					delete pOut;
+				if (ps.shouldWrite()) {
+					if (result) {
+						result->add(pOut);
+						delete pOut;
+					} else {
+						result = pOut;
+					}
 				} else {
-					result = pOut;
+					delete pOut;
 				}
 			} while (!tRead.endOfSource());
 		}
@@ -416,6 +420,9 @@ int main(int argc, char** argv)
            "   /NOT OK/ 1                        " \
            "endif                                ";
 	VERIFY(spec, "OK");  // TEST #106
+
+	spec = "word 1 1 noprint";
+	VERIFY2(spec, "1 2\n2 3\n3 4\n2 2 2 2\n1\n\n", ""); // TEST #107
 
 
 	if (errorCount) {
