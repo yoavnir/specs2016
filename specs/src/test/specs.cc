@@ -204,8 +204,12 @@ int main (int argc, char** argv)
 			return -4;
 		}
 		PSpecString pstr = sb.GetString();
-		SimpleWriter* pSW = (SimpleWriter*)(ps.getCurrentWriter());
-		*pSW->getStream() << *pstr << std::endl;
+		if (ps.shouldWrite()) {
+			SimpleWriter* pSW = (SimpleWriter*)(ps.getCurrentWriter());
+			*pSW->getStream() << *pstr << std::endl;
+		} else {
+			ps.resetNoWrite();
+		}
 		delete pstr;
 		readLines = 0;
 		usedLines = 0;

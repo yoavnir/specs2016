@@ -85,6 +85,9 @@ public:
 	void setWriters(PWriter* p)  {m_Writers = p; m_outputIndex = 1; }
 	void setActiveWriter(int idx);
 	Writer* getCurrentWriter();
+	void setNoWrite()            { m_bNoWrite = true;  }
+	void resetNoWrite()          { m_bNoWrite = false; }
+	bool shouldWrite()           { return !m_bNoWrite; }
 private:
 	enum extremeBool {
 		bFalse,
@@ -118,6 +121,7 @@ private:
 	bool            m_inputStreamChanged;
 	PWriter         *m_Writers;
 	int             m_outputIndex;
+	bool            m_bNoWrite;
 };
 
 

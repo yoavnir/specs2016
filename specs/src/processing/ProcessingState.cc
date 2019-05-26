@@ -52,6 +52,7 @@ ProcessingState::ProcessingState()
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
+	m_bNoWrite = false;
 }
 
 ProcessingState::ProcessingState(ProcessingState& ps)
@@ -69,6 +70,7 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
+	m_bNoWrite = false;
 }
 
 ProcessingState::ProcessingState(ProcessingState* pPS)
@@ -86,6 +88,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
+	m_bNoWrite = false;
 }
 
 ProcessingState::~ProcessingState()

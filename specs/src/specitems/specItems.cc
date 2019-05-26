@@ -39,6 +39,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__WRITE:
 		case TokenListType__UNREAD:
 		case TokenListType__REDO:
+		case TokenListType__NOWRITE:
 		{
 			TokenItem *pItem = new TokenItem(tokenVec[index++]);
 			addItem(pItem);
@@ -313,7 +314,13 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd)
 		pState.incrementCycleCounter();
 
 		if (processDo(sb,pState, &rd)) {
-			pState.getCurrentWriter()->Write(sb.GetString());
+			PSpecString pOutString = sb.GetString();
+			if (pState.shouldWrite()) {
+				pState.getCurrentWriter()->Write(pOutString);
+			} else {
+				delete pOutString;
+				pState.resetNoWrite();
+			}
 		}
 
 		if (DEFAULT_READER_IDX != pState.getActiveInputStream()) {
@@ -403,6 +410,9 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__Continue;
 	case TokenListType__PAD:
 		pState.setPadChar(mp_Token->Literal()[0]);
+		return ApplyRet__Continue;
+	case TokenListType__NOWRITE:
+		pState.setNoWrite();
 		return ApplyRet__Continue;
 	case TokenListType__READ:
 		return ApplyRet__Read;

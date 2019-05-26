@@ -184,6 +184,14 @@ or
 spec unit will read it back.  This is useful when looping with READ searching for the next line to run the specification on.
 .IP "WRITE" 3
 Causes the program to write to output and reset the output line.
+.IP "NOWRITE" 3
+Causes the program not to suppress the write at the end of the cycle.
+.I NOPRINT
+is a synonym for 
+.I NOWRITE
+.IP "NOPRINT" 3
+A synonym for 
+.I NOWRITE
 .IP "WORDSEPARATOR and FIELDSEPARATOR" 3
 Declare a character to be the word of field separator respectively, which affects word and field ranges. For WORDSEPARATOR it is possible to use the special value 
 .I default
