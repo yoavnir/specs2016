@@ -253,14 +253,34 @@ Support Department:
          Fortier, Devora
 ```
 
+### ABEND (ABnormal END)
+`ABEND` units are used to unconditionally halt the running of the specification with an error message. They only make sense within a conditional statement. When an `ABEND` unit is executed, the output record being prepared is *not* printed out, the reading of input records is halted, and no further records are processed. The error message is output to **standard error**.
 
+Here's a trivial example:
+```
+specs
+         /Name:/ 1
+         WORD 1-2  NW         
+         /Employee ID:/ 25
+         32-40     NW
+         /Age:/    36
+      a: 55-57     NW
+         IF 'a>120' THEN
+             ABEND /Age in record exceeds limit/ 
+         ENDIF
+```
 
+### ASSERT
+`ASSERT` units allow for sanity checks on internal state or input. An `ASSERT` token is followed by a **condition** similar to `IF`, `ELSEIF`, or `WHILE`. When the *specs* program processes an **assertion**, it evaluates the **condition**, and if that condition evaluates to **false**, the program aborts with a message that contains the text of the failed **condition**.
 
-
-
-
-
-
-
-
-
+Unlike `ABEND`s, **assertions** make sense as sanity checks within the normal flow of the specification. As an example, here's a re-write of the above specification:
+```
+specs
+         /Name:/ 1
+         WORD 1-2  NW         
+         /Employee ID:/ 25
+         32-40     NW
+         /Age:/    36
+      a: 55-57     NW
+         ASSERT  'a<=120'
+```

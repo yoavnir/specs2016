@@ -192,6 +192,14 @@ is a synonym for
 .IP "NOPRINT" 3
 A synonym for 
 .I NOWRITE
+.IP "ASSERT" 3
+Followed by a condition, this keyword halts the specification immediately if the condition evaluates to 
+.B false
+or zero. The normal use of assertions is to make sure that the read data or the internal state makes sense. 
+.IP "ABEND" 3
+The 
+.I ABnormal END 
+keyword is used to abruptly end the run of the specification. The token that follows the ABEND token is output in the error message. ABEND units make sense only within conditionals as they are never part of the normal processing or a record.
 .IP "WORDSEPARATOR and FIELDSEPARATOR" 3
 Declare a character to be the word of field separator respectively, which affects word and field ranges. For WORDSEPARATOR it is possible to use the special value 
 .I default
