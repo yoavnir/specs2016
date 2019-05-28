@@ -25,6 +25,8 @@
 	X(READSTOP,       false, false) \
 	X(WRITE,          false, false) \
 	X(NOWRITE,        false, false) \
+	X(ASSERT,         false, true)  \
+	X(ABEND,          false, true)  \
 	/* The input ranges */  \
 	X(RANGELABEL,     false, true)  \
 	X(ID,             false, true)  \

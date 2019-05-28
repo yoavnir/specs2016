@@ -5,18 +5,22 @@
 
 class SpecsException : public std::exception {
 public:
-	explicit SpecsException(const char* _fn, unsigned int _ln, const char* _msg):
-		fn(_fn), ln(_ln), msg(_msg) {}
-	explicit SpecsException(const char* _fn, unsigned int _ln, std::string& _msg):
-		fn(_fn), ln(_ln), msg(_msg) {}
+	explicit SpecsException(const char* _fn, unsigned int _ln, const char* _msg, bool _abend = false):
+		fn(_fn), ln(_ln), msg(_msg), bIsAbend(_abend) {}
+	explicit SpecsException(const char* _fn, unsigned int _ln, std::string& _msg, bool _abend = false):
+		fn(_fn), ln(_ln), msg(_msg), bIsAbend(_abend) {}
 	virtual const char* what(bool concise = false) const throw ();
+	virtual const bool  isAbend() const throw();
 protected:
 	const char*  fn;
 	std::string  msg;
 	unsigned int ln;
+	bool         bIsAbend;
 };
 
 #define MYTHROW(s) throw SpecsException(__FILE__, __LINE__, s);
+
+#define MYABEND(s) throw SpecsException(__FILE__, __LINE__, s, true);
 
 #define MYASSERT(cond) { if (!(cond)) { \
 	std::string _assert_err = std::string("Failed assertion: ") + #cond; \

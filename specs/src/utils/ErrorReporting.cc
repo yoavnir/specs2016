@@ -17,3 +17,8 @@ const char* SpecsException::what(bool concise) const throw ()
 	}
 	return (const char*)(ret);
 }
+
+const bool SpecsException::isAbend() const throw()
+{
+	return (const bool)(bIsAbend);
+}

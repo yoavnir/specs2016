@@ -40,6 +40,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__UNREAD:
 		case TokenListType__REDO:
 		case TokenListType__NOWRITE:
+		case TokenListType__ABEND:
 		{
 			TokenItem *pItem = new TokenItem(tokenVec[index++]);
 			addItem(pItem);
@@ -86,11 +87,12 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__IF:
 		case TokenListType__ELSEIF:
 		case TokenListType__WHILE:
+		case TokenListType__ASSERT:
 		{
 			MYASSERT(index < tokenVec.size());
 			if (TokenListType__WHILE == tokenVec[index].Type()) {
 				MYASSERT(TokenListType__DO == tokenVec[index+1].Type());
-			} else {
+			} else if (TokenListType__ASSERT != tokenVec[index].Type()) {
 				MYASSERT(TokenListType__THEN == tokenVec[index+1].Type());
 			}
 			try {
@@ -100,6 +102,9 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				}
 				else if (TokenListType__WHILE == tokenVec[index].Type()) {
 					pItem->setWhile();
+				}
+				else if (TokenListType__ASSERT == tokenVec[index].Type()) {
+					pItem->setAssert();
 				}
 
 				if (pItem->forcesRunoutCycle()) {
@@ -414,6 +419,11 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	case TokenListType__NOWRITE:
 		pState.setNoWrite();
 		return ApplyRet__Continue;
+	case TokenListType__ABEND: {
+		std::string err = "ABEND: " + mp_Token->Literal();
+		MYABEND(err);
+	}
+		return ApplyRet__Continue;
 	case TokenListType__READ:
 		return ApplyRet__Read;
 	case TokenListType__READSTOP:
@@ -543,6 +553,10 @@ std::string ConditionItem::Debug()
 		std::string ret = "WHILE(" + m_rawExpression + ")";
 		return ret;
 	}
+	case PRED_ASSERT: {
+		std::string ret = "ASSERT " + m_rawExpression;
+		return ret;
+	}
 	}
 	return std::string(""); // Issue #14
 }
@@ -557,6 +571,12 @@ void ConditionItem::setWhile()
 {
 	MYASSERT(PRED_IF == m_pred);
 	m_pred = PRED_WHILE;
+}
+
+void ConditionItem::setAssert()
+{
+	MYASSERT(PRED_IF == m_pred);
+	m_pred = PRED_ASSERT;
 }
 
 bool ConditionItem::evaluate()
@@ -584,6 +604,13 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 			pState.setCondition(evaluate());
 		} else {
 			pState.observeIf();
+		}
+		break;
+	}
+	case PRED_ASSERT: {
+		if (!evaluate()) {
+			std::string err = "ASSERTION failed: " + m_rawExpression;
+			MYABEND(err);
 		}
 		break;
 	}

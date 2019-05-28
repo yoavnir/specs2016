@@ -171,8 +171,11 @@ int main (int argc, char** argv)
 		try {
 			ig.process(sb, ps, *pRd);
 		} catch (const SpecsException& e) {
-			std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
+			if (!e.isAbend()) {
+				std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
+			}
 			std::cerr << e.what(conciseExceptions) << std::endl;
+			pRd->abortRead();
 			pRd->End();
 			delete pRd;
 			ps.fieldIdentifierStatsClear();

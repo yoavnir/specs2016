@@ -236,7 +236,8 @@ public:
 		PRED_ENDIF,
 		PRED_WHILE,
 		PRED_DO,
-		PRED_DONE
+		PRED_DONE,
+		PRED_ASSERT,
 	};
 	ConditionItem(std::string& _statement);
 	ConditionItem(ConditionItem::predicate _p);
@@ -246,6 +247,7 @@ public:
 	virtual bool ApplyUnconditionally() {return true;}
 	void    setElseIf();
 	void    setWhile();
+	void    setAssert();
 	predicate pred() { return m_pred;}
 	virtual bool readsLines();
 	virtual bool forcesRunoutCycle() { return expressionForcesRunoutCycle(m_RPNExpression);}

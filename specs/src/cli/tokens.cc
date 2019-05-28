@@ -322,6 +322,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(write, WRITE);
 	SIMPLETOKEN(nowrite, NOWRITE);
 	SIMPLETOKEN(noprint, NOWRITE);
+	SIMPLETOKEN(assert, ASSERT);
+	SIMPLETOKEN(abend, ABEND);
 	SIMPLETOKEN(id, ID);
 	SIMPLETOKENV(todclock, TODCLOCK, 3);
 	SIMPLETOKENV(dtodclock, DTODCLOCK, 4);
@@ -634,6 +636,8 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__IF:
 		case TokenListType__ELSEIF:
 		case TokenListType__WHILE:
+		case TokenListType__ASSERT:
+		case TokenListType__ABEND:
 		{
 			if (tok.Literal()=="") {
 				if (TokenListType__GROUPSTART == nextTok.Type()) {
