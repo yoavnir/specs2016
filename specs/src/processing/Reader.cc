@@ -122,7 +122,7 @@ StandardReader::~StandardReader() {
 }
 
 bool StandardReader::endOfSource() {
-	return m_EOF;
+	return m_bAbort || m_EOF;
 }
 
 PSpecString StandardReader::getNextRecord() {

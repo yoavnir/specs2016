@@ -6,7 +6,7 @@
 
 class Reader {
 public:
-	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0; m_pUnreadString = NULL; m_bRanDry = false;}
+	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0; m_pUnreadString = NULL; m_bAbort = false; m_bRanDry = false;}
 	virtual ~Reader();
 	virtual void        selectStream(unsigned char idx);
 	virtual bool        endOfSource() = 0;
@@ -17,6 +17,7 @@ public:
 	virtual void        Begin();
 	virtual bool        eof() { return endOfSource() && m_queue.empty(); }
 	void                End();
+	void                abortRead() { m_bAbort = true;    }
 	unsigned long 		countRead() { return m_countRead; }
 	unsigned long 		countUsed() { return m_countUsed; }
 	bool                hasRunDry() { return m_bRanDry;   }
@@ -26,6 +27,7 @@ protected:
 	PSpecString   m_pUnreadString;
 	unsigned long m_countRead;
 	unsigned long m_countUsed;
+	bool          m_bAbort;
 	bool          m_bRanDry;    // true *after* the reader returned NULL once
 };
 
@@ -35,7 +37,7 @@ public:
 	virtual ~TestReader();
 	void    InsertString(const char* s);
 	void    InsertString(PSpecString ps);
-	virtual bool endOfSource() {return m_idx >= m_count;}
+	virtual bool endOfSource() {return m_bAbort || (m_idx >= m_count); }
 	virtual PSpecString getNextRecord() {return SpecStringCopy(mp_arr[m_idx++]);}
 	virtual PSpecString get() {return getNextRecord();}
 private:
