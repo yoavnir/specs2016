@@ -660,3 +660,18 @@ run_case(s,i,"dual output")
 s = "WORD 1 1 NOWRITE"
 i = "first record\nsecond line\nlast one"
 run_case(s,i,"nowrite")
+
+# ASSERT & ABEND
+s = "a: WORD 1 1 ASSERT 'a<5'"
+i = '1\n2\n1\n2'
+run_case(s,i,"an assertion that always succeeds")
+
+i = '1\n2\n3\n4\n5'
+run_case(s,i,"an assertion that fails",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+
+s = "a: WORD 1 1 if 'a>=5' then abend 'oops' endif"
+i = '1\n2\n1\n2'
+run_case(s,i,"an abend that is never reached")
+
+i = '1\n2\n3\n4\n5'
+run_case(s,i,"an abend that is reached",expected_rc=memcheck.RetCode_COMMAND_FAILED)

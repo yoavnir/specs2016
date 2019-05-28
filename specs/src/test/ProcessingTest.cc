@@ -424,6 +424,13 @@ int main(int argc, char** argv)
 	spec = "word 1 1 noprint";
 	VERIFY2(spec, "1 2\n2 3\n3 4\n2 2 2 2\n1\n\n", ""); // TEST #107
 
+	// ASSERT and ABEND
+	spec = "a: word 1 1 assert 'a<5'";
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "ASSERTION failed: a<5");  // TEST #108
+
+	spec = "a: word 1 1 if 'a>4' then abend 'too big' endif";
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "ABEND: too big");  // TEST #109
+
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
