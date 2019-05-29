@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "15 Apr 2019" "0.3" "specs man page"
+.TH man 1 "1 Jun 2019" "0.4-alpha" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -887,6 +887,6 @@ Finally, let's make our own version of the multi-column display:
 .SH SEE ALSO
 sed(1), awk(1)
 .SH BUGS
-Too many to list here
+Too many to list here, but it's getting better.
 .SH AUTHOR
 Yoav Nir (yoav.nir@gmail.com)
