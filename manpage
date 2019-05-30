@@ -525,7 +525,7 @@ cycle, and zero otherwise.
 Returns 1 during the
 .B runout 
 cycle, and zero otherwise.
-.IP "iterno()" 3
+.IP "number()" 3
 Returns the number of times the specification has so far been run on different records.
 .IP "recno()" 3
 Returns the number of input records that have been read so far. If the specification contains no 
@@ -533,7 +533,7 @@ Returns the number of input records that have been read so far. If the specifica
 or
 .I READSTOP
 spec units, then this number will be equal to the result of 
-.B iterno().
+.B number().
 Otherwise, it will be higher.
 .IP "record()" 3
 Returns the entire input record. Equivalent to 
@@ -664,6 +664,14 @@ file.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
+.IP "present(a)" 3
+Returns 
+.I 1
+if the
+.B Field Identifier
+a is set, or
+.I 0
+otherwise. 
 .IP "sum(a)" 3
 Returns the sum of all values in
 .B Field Identifier
@@ -676,7 +684,7 @@ a.
 Returns the maximum of all values in
 .B Field Identifier
 a. 
-.IP "avg(a)" 3
+.IP "average(a)" 3
 Returns the average (mathematical mean) of all values in
 .B Field Identifier
 a. 

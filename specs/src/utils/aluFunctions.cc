@@ -152,7 +152,7 @@ ALUValue* AluFunc_first()
 	return new ALUValue(ALUInt(isFirst ? 1 : 0));
 }
 
-ALUValue* AluFunc_iterno()
+ALUValue* AluFunc_number()
 {
 	return new ALUValue(g_pStateQueryAgent->getIterationCount());
 }
@@ -471,6 +471,13 @@ ALUValue* AluFunc_break(ALUValue* _pFieldIdentifier)
 	return new ALUValue(ALUInt(bIsBreakEstablished ? 1 : 0));
 }
 
+ALUValue* AluFunc_present(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	bool bIsSet = g_pStateQueryAgent->fieldIdentifierIsSet(fId);
+	return new ALUValue(ALUInt(bIsSet ? 1 : 0));
+}
+
 ALUValue* AluFunc_sum(ALUValue* _pFieldIdentifier)
 {
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -495,7 +502,7 @@ ALUValue* AluFunc_max(ALUValue* _pFieldIdentifier)
 	return pVStats->_max();
 }
 
-ALUValue* AluFunc_avg(ALUValue* _pFieldIdentifier)
+ALUValue* AluFunc_average(ALUValue* _pFieldIdentifier)
 {
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);

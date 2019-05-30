@@ -22,6 +22,8 @@ specs  a: word 1 .  PRINT "'The first word is ' || a" 1
 | Hello there | The first word is Hello |
 | My, it's been a long long time | The first word is My, |
 
+You can test whether a field identifier is assigned using the boolean function `present()`
+
 ### Counters
 Counters are like variables in programming languages. Counters can be assigned in `SET` *spec units* (see below) and read within expressions. Counters are numbered and preceded by a hash sign as in the following example:
 ```

@@ -343,7 +343,7 @@ int main(int argc, char** argv)
 	VERIFY2("w1 1 NUMBER nw", "One\nTwo\nThree", "One          1\nTwo          2\nThree          3"); // Test #96
 
 	// recno and iterno
-	VERIFY2("print 'recno()' 1 print 'iterno()' nw READ w1 nw", "a\nb\nc\nd","1 1 b\n3 2 d"); // Test #97
+	VERIFY2("print 'recno()' 1 print 'number()' nw READ w1 nw", "a\nb\nc\nd","1 1 b\n3 2 d"); // Test #97
 
 	// REDO
 	VERIFY("w3-* 1 REDO w1 1", "brown");     // Test  #98
@@ -361,12 +361,12 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "first record\nsecond line\nlast one", "first record\nsecond first line record\nlast second one line\nlast one"); // Test #101
 
 	// Statistics Pseudo-Functions
-	spec =  "a: WORD 1 .                  " \
-			" EOF                         " \
-			"   /AVG:/  1 PRINT 'avg(a)' N" \
-			"   /SUM:/ NW PRINT 'sum(a)' N" \
-			"   /MIN:/ NW PRINT 'min(a)' N" \
-			"   /MAX:/ NW PRINT 'max(a)' N";
+	spec =  "a: WORD 1 .                      " \
+			" EOF                             " \
+			"   /AVG:/  1 PRINT 'average(a)' N" \
+			"   /SUM:/ NW PRINT 'sum(a)'     N" \
+			"   /MIN:/ NW PRINT 'min(a)'     N" \
+			"   /MAX:/ NW PRINT 'max(a)'     N";
 	VERIFY2(spec, "1\n2\n3\n4\n5", "AVG:3 SUM:15 MIN:1 MAX:5"); // TEST #102
 
 	spec = "a: WORD 1 ." \

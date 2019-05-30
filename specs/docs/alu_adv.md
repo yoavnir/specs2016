@@ -91,8 +91,8 @@
 | `fieldend(n)` | Returns the offset from the start of the record that the *n*-th field ends at. Like other things in **specs**, this is 1-based. | 
 | `fieldindex(n)` | Returns the offset from the start of the record that the *n*-th field starts at. |
 | `fieldlength(n)` | Returns the length of the *n*-th field |
-| `iterno()` | Returns the number of processing cycles we have already gone through. Unless `READ` or `READSTOP` are used, this will be equal to the number of records read so far. |
-| `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `iterno()` |
+| `number()` | Returns the number of processing cycles we have already gone through. Unless `READ` or `READSTOP` are used, this will be equal to the number of records read so far. |
+| `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `number()` |
 | `record()` | Returns the entire input record |
 | `word(n)` | Returns the *n*-th word |
 | `words(n,m)` | Returns the substring from the *n*-th word to the *m*-th word |
@@ -104,10 +104,11 @@
 ## Table of Statistical and Frequency Map Pseudo-Functions
 | Function | Description |
 | -------- | ----------- |
+| `present(a)` | Returns `1` if the *field identifier* `a` is assigned, or `0` otherwise |
 | `sum(a)` | Returns the sum of all values that have been assigned to *field identifier* `a` |
 | `min(a)` | Returns the minimum of all values that have been assigned to *field identifier* `a` |
 | `max(a)` | Returns the maximum of all values that have been assigned to *field identifier* `a` |
-| `avg(a)` | Returns the average (arithmetic mean) of all values that have been assigned to *field identifier* `a` |
+| `average(a)` | Returns the average (arithmetic mean) of all values that have been assigned to *field identifier* `a` |
 | `fmap_nelem(a)` | Returns the number of distinct values of *field identifier* `a` |
 | `fmap_nsamples(a)` | Returns the number of samples collected of *field identifier* `a` |
 | `fmap_common(a)` | Returns the string value with most occurrences of *field identifier* `a`. In case of a tie, one of the values is returned. |

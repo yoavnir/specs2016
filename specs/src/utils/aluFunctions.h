@@ -20,7 +20,7 @@
 	X(len,            1, ALUFUNC_REGULAR,     false)  \
 	X(first,          0, ALUFUNC_REGULAR,     false)  \
 	X(recno,          0, ALUFUNC_REGULAR,      true)  \
-	X(iterno,         0, ALUFUNC_REGULAR,      true)  \
+	X(number,         0, ALUFUNC_REGULAR,      true)  \
 	X(eof,            0, ALUFUNC_REGULAR,     false)  \
 	X(record,         0, ALUFUNC_REGULAR,      true)  \
 	X(wordcount,      0, ALUFUNC_REGULAR,      true)  \
@@ -58,7 +58,8 @@
 	X(sum,            1, ALUFUNC_STATISTICAL, false)  \
 	X(min,            1, ALUFUNC_STATISTICAL, false)  \
 	X(max,            1, ALUFUNC_STATISTICAL, false)  \
-	X(avg,            1, ALUFUNC_STATISTICAL, false)  \
+	X(average,        1, ALUFUNC_STATISTICAL, false)  \
+	X(present,        1, ALUFUNC_REGULAR,     false)  \
 	X(rand,           1, ALUFUNC_REGULAR,     false)  \
 	X(frand,          0, ALUFUNC_REGULAR,     false)  \
 	X(floor,          1, ALUFUNC_REGULAR,     false)  \
@@ -92,7 +93,8 @@
 	X(sum)                           \
 	X(min)                           \
 	X(max)                           \
-	X(avg)                           \
+	X(average)                       \
+	X(present)                       \
 	X(fmap_nelem)                    \
 	X(fmap_nsamples)                 \
 	X(fmap_count)                    \
@@ -170,6 +172,7 @@ public:
 	virtual bool    breakEstablished(char id) = 0;
 	virtual PAluValueStats valueStatistics(char id) = 0;
 	virtual PFrequencyMap  getFrequencyMap(char id) = 0;
+	virtual bool    fieldIdentifierIsSet(char id) = 0;
 };
 
 void setStateQueryAgent(stateQueryAgent* qa);

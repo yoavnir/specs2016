@@ -57,6 +57,7 @@ public:
 	void incrementCycleCounter() { m_CycleCounter++; }
 	void incrementExtraReads()   { m_ExtraReads++; }
 	PSpecString fieldIdentifierGet(char id);
+	bool fieldIdentifierIsSet(char id);
 	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
 	void fieldIdentifierStatsClear();

@@ -410,6 +410,12 @@ PSpecString ProcessingState::fieldIdentifierGet(char id)
 	return ret;
 }
 
+bool ProcessingState::fieldIdentifierIsSet(char id)
+{
+	auto search = m_fieldIdentifiers.find(id);
+	return (search != m_fieldIdentifiers.end());
+}
+
 void ProcessingState::resetBreaks()
 {
 	m_breakLevel = 0;
