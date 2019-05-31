@@ -1750,12 +1750,15 @@ void AluValueStats::initialize()
 {
 	m_intCount = 0;
 	m_floatCount = 0;
+	m_totalCount = 0;
 	m_sumInt = 0;
 	m_sumFloat = 0.0;
 	m_minInt = 0;
 	m_minFloat = 0.0;
 	m_maxInt = 0;
 	m_maxFloat = 0.0;
+	m_runningAverage = 0.0;
+	m_runningSn = 0.0;
 }
 
 AluValueStats::AluValueStats()
@@ -1772,7 +1775,8 @@ AluValueStats::AluValueStats(char id)
 void AluValueStats::AddValue(char id)
 {
 	ALUValue v(g_fieldIdentifierGetter->Get(id));
-	switch (v.getDivinedType()) {
+	auto type = v.getDivinedType();
+	switch (type) {
 	case counterType__Int:
 	{
 		ALUInt value = v.getInt();
@@ -1786,11 +1790,23 @@ void AluValueStats::AddValue(char id)
 			if (value < m_minInt) m_minInt = value;
 			m_sumInt += value;
 		}
-		break;
+		/* intentional fall-through */
 	}
 	case counterType__Float:
 	{
 		ALUFloat value = v.getFloat();
+
+		// Collect running average and variance
+		if (0 == m_totalCount++) {
+			m_runningAverage = value;
+			m_runningSn = 0.0;
+		} else {
+			ALUFloat diffFromPreviousAverage = value - m_runningAverage;
+			m_runningAverage += (diffFromPreviousAverage / m_totalCount);
+			m_runningSn += (diffFromPreviousAverage * (value - m_runningAverage));
+		}
+
+		if (type != counterType__Float) break;
 		m_floatCount++;
 		if (1 == m_floatCount) {
 			m_sumFloat = value;
@@ -1890,12 +1906,29 @@ ALUValue* AluValueStats::maxf()
 	}
 }
 
-ALUValue* AluValueStats::avg()
+ALUValue* AluValueStats::average()
 {
-	if (m_intCount==0 && m_floatCount==0) {
+	if (m_totalCount==0) {
 		return new ALUValue(); /* returns NaN */
 	}
 
-	return new ALUValue((m_sumFloat + m_sumInt)  /  (m_intCount + m_floatCount));
+	return new ALUValue(m_runningAverage);
 }
 
+ALUValue* AluValueStats::variance()
+{
+	if (m_totalCount==0) {
+		return new ALUValue(); /* returns NaN */
+	}
+
+	return new ALUValue(m_runningSn / m_totalCount);
+}
+
+ALUValue* AluValueStats::stddev()
+{
+	if (m_totalCount==0) {
+		return new ALUValue(); /* returns NaN */
+	}
+
+	return new ALUValue(std::sqrt(m_runningSn / m_totalCount));
+}

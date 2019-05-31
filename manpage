@@ -688,6 +688,18 @@ a.
 Returns the average (mathematical mean) of all values in
 .B Field Identifier
 a. 
+.IP "variance(a)" 3
+Returns the 
+.I variance 
+(the expectation of the squared deviation of a random variable from its mean) of the values in
+.B Field Identifier
+a. 
+.IP "stddev(a)" 3
+Returns the 
+.I standard deviation 
+(square root of the variance) of the values in
+.B Field Identifier
+a. 
 .IP "fmap_nelem(a)" 3
 Returns the number of distinct values of
 .B Field Identifier

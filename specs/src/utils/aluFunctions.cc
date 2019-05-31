@@ -506,8 +506,24 @@ ALUValue* AluFunc_average(ALUValue* _pFieldIdentifier)
 {
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "AVG requested for undefined field identifier")
-	return pVStats->avg();
+	MYASSERT_WITH_MSG(pVStats!=NULL, "AVERAGE requested for undefined field identifier")
+	return pVStats->average();
+}
+
+ALUValue* AluFunc_variance(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
+	MYASSERT_WITH_MSG(pVStats!=NULL, "VARIANCE requested for undefined field identifier")
+	return pVStats->variance();
+}
+
+ALUValue* AluFunc_stddev(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
+	MYASSERT_WITH_MSG(pVStats!=NULL, "STDDEV requested for undefined field identifier")
+	return pVStats->stddev();
 }
 
 ALUValue* AluFunc_rand(ALUValue* pLimit)

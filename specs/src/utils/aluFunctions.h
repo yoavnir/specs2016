@@ -59,6 +59,8 @@
 	X(min,            1, ALUFUNC_STATISTICAL, false)  \
 	X(max,            1, ALUFUNC_STATISTICAL, false)  \
 	X(average,        1, ALUFUNC_STATISTICAL, false)  \
+	X(variance,       1, ALUFUNC_STATISTICAL, false)  \
+	X(stddev,         1, ALUFUNC_STATISTICAL, false)  \
 	X(present,        1, ALUFUNC_REGULAR,     false)  \
 	X(rand,           1, ALUFUNC_REGULAR,     false)  \
 	X(frand,          0, ALUFUNC_REGULAR,     false)  \
@@ -94,6 +96,8 @@
 	X(min)                           \
 	X(max)                           \
 	X(average)                       \
+	X(variance)                      \
+	X(stddev)                        \
 	X(present)                       \
 	X(fmap_nelem)                    \
 	X(fmap_nsamples)                 \

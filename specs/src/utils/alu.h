@@ -360,18 +360,23 @@ public:
 	ALUValue*    _max();
 	ALUValue*    maxi();
 	ALUValue*    maxf();
-	ALUValue*    avg();
+	ALUValue*    average();
+	ALUValue*    variance();
+	ALUValue*    stddev();
 
 private:
 	void         initialize();
 	unsigned int m_intCount;
 	unsigned int m_floatCount;
+	unsigned int m_totalCount;
 	ALUInt       m_sumInt;
 	ALUFloat     m_sumFloat;
 	ALUInt       m_minInt;
 	ALUFloat     m_minFloat;
 	ALUInt       m_maxInt;
 	ALUFloat     m_maxFloat;
+	ALUFloat     m_runningAverage;
+	ALUFloat     m_runningSn;  // Sn is the variance multiplied by n
 };
 
 typedef AluValueStats* PAluValueStats;
