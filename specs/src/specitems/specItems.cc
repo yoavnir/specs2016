@@ -512,7 +512,7 @@ ConditionItem::ConditionItem(ConditionItem::predicate _p) : m_counter(0), m_assn
 
 ConditionItem::~ConditionItem()
 {
-	if ((m_pred == PRED_IF) || (m_pred == PRED_ELSEIF) || (m_pred == PRED_WHILE)) {
+	if ((m_pred == PRED_IF) || (m_pred == PRED_ELSEIF) || (m_pred == PRED_WHILE) || (m_pred == PRED_ASSERT)) {
 		for (AluUnit* unit : m_RPNExpression) {
 			delete unit;
 		}
