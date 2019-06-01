@@ -316,17 +316,17 @@ s = "print 'fieldlength(3)' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
 run_case(s,i,"Functions: fieldlength")
 
-s = "print 'iterno()' 1 print 'recno()' nw"
+s = "print 'number()' 1 print 'recno()' nw"
 i = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"
-run_case(s,i,"Functions: iterno & recno (1)")
+run_case(s,i,"Functions: number & recno (1)")
 
-s = "print 'iterno()' 1 print 'recno()' nw READ print 'iterno()' nw print 'recno()' nw"
+s = "print 'number()' 1 print 'recno()' nw READ print 'number()' nw print 'recno()' nw"
 i = "1\n2\n3\n4\n5\n6\n7\n8\n9"
-run_case(s,i,"Functions: iterno & recno (2)")
+run_case(s,i,"Functions: number & recno (2)")
 
-s = "print 'iterno()' 1 print 'recno()' nw READSTOP print 'iterno()' nw print 'recno()' nw"
+s = "print 'number()' 1 print 'recno()' nw READSTOP print 'number()' nw print 'recno()' nw"
 i = "1\n2\n3\n4\n5\n6\n7\n8\n9"
-run_case(s,i,"Functions: iterno & recno (3)")
+run_case(s,i,"Functions: number & recno (3)")
 
 s = "print 'record()' 1"
 i = "1\n\nhello"
