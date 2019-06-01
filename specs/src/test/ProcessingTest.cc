@@ -100,10 +100,8 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			} while (!tRead.endOfSource());
 		}
 	} catch (SpecsException& e) {
-		if (e.isAbend()) {
-			PSpecString pOut = sb.GetStringUnsafe();
-			std::cout << "String at ABEND: " << pOut << std::endl;
-			delete pOut;
+		if (result) {
+			delete result;
 		}
 		result = SpecString::newString(e.what(true));
 		goto end;
