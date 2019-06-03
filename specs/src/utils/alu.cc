@@ -1932,3 +1932,12 @@ ALUValue* AluValueStats::stddev()
 
 	return new ALUValue(std::sqrt(m_runningSn / m_totalCount));
 }
+
+ALUValue* AluValueStats::stderrmean()
+{
+	if (m_totalCount<=1) {
+		return new ALUValue(); /* returns NaN */
+	}
+
+	return new ALUValue(std::sqrt(m_runningSn / m_totalCount) / (m_totalCount-1));
+}

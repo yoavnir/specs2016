@@ -700,6 +700,12 @@ Returns the
 (square root of the variance) of the values in
 .B Field Identifier
 a. 
+.IP "stderrmean(a)" 3
+Returns the 
+.I standard error 
+(standard deviation divided by sample size minus 1) of the values in
+.B Field Identifier
+a. 
 .IP "fmap_nelem(a)" 3
 Returns the number of distinct values of
 .B Field Identifier

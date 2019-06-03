@@ -368,11 +368,12 @@ int main(int argc, char** argv)
 			" EOF                                      " \
 			"   /AVG:/  1 PRINT 'average(a)'          N" \
 			"   /STD:/ NW PRINT 'roundd(stddev(a),7)' N" \
+			"   /ERR:/ NW PRINT 'roundd(stderrmean(a),7)' N" \
 			"   /VAR:/ NW PRINT 'variance(a)'         N" \
 			"   /SUM:/ NW PRINT 'sum(a)'              N" \
 			"   /MIN:/ NW PRINT 'min(a)'              N" \
 			"   /MAX:/ NW PRINT 'max(a)'              N";
-	VERIFY2(spec, "1\n2\n3\n4\n5", "AVG:3 STD:1.4142136 VAR:2 SUM:15 MIN:1 MAX:5"); // TEST #102
+	VERIFY2(spec, "1\n2\n3\n4\n5", "AVG:3 STD:1.4142136 ERR:0.3535534 VAR:2 SUM:15 MIN:1 MAX:5"); // TEST #102
 
 	spec = "a: WORD 1 ." \
 		   " EOF " \

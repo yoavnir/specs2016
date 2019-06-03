@@ -111,6 +111,7 @@
 | `average(a)` | Returns the average (arithmetic mean) of all values that have been assigned to *field identifier* `a` |
 | `variance(a)` | Returns the variance (the expectation of the squared deviation of a random variable from its mean) of the values that have been assigned to *field identifier* `a` |
 | `stddev(a)` | Returns the standard deviation (the square root of the variance) of the values that have been assigned to *field identifier* `a` |
+| `stderrmean(a)` | Returns the [standard error](https://en.wikipedia.org/wiki/Standard_error) (the standard deviation divided by sample size minus 1) of the values that have been assigned to *field identifier* `a` |
 | `fmap_nelem(a)` | Returns the number of distinct values of *field identifier* `a` |
 | `fmap_nsamples(a)` | Returns the number of samples collected of *field identifier* `a` |
 | `fmap_common(a)` | Returns the string value with most occurrences of *field identifier* `a`. In case of a tie, one of the values is returned. |

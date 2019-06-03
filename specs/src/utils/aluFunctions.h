@@ -61,6 +61,7 @@
 	X(average,        1, ALUFUNC_STATISTICAL, false)  \
 	X(variance,       1, ALUFUNC_STATISTICAL, false)  \
 	X(stddev,         1, ALUFUNC_STATISTICAL, false)  \
+	X(stderrmean,     1, ALUFUNC_STATISTICAL, false)  \
 	X(present,        1, ALUFUNC_REGULAR,     false)  \
 	X(rand,           1, ALUFUNC_REGULAR,     false)  \
 	X(frand,          0, ALUFUNC_REGULAR,     false)  \
@@ -98,6 +99,7 @@
 	X(average)                       \
 	X(variance)                      \
 	X(stddev)                        \
+	X(stderrmean)                    \
 	X(present)                       \
 	X(fmap_nelem)                    \
 	X(fmap_nsamples)                 \

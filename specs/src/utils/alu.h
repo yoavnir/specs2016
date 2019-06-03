@@ -363,6 +363,7 @@ public:
 	ALUValue*    average();
 	ALUValue*    variance();
 	ALUValue*    stddev();
+	ALUValue*    stderrmean();
 
 private:
 	void         initialize();

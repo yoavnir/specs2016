@@ -526,6 +526,14 @@ ALUValue* AluFunc_stddev(ALUValue* _pFieldIdentifier)
 	return pVStats->stddev();
 }
 
+ALUValue* AluFunc_stderrmean(ALUValue* _pFieldIdentifier)
+{
+	char fId = (char)(_pFieldIdentifier->getInt());
+	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
+	MYASSERT_WITH_MSG(pVStats!=NULL, "STDERRMEAN requested for undefined field identifier")
+	return pVStats->stderrmean();
+}
+
 ALUValue* AluFunc_rand(ALUValue* pLimit)
 {
 	ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
