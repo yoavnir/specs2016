@@ -507,6 +507,10 @@ return an angle in radians, while
 and
 .B arcdtan 
 return an angle in degrees.
+.IP "string(x)" 3
+Returns the same value as the argument, but forced to be stored as a string. There is nothing preventing this from later evaluating as a number, so
+.I string(3)+2
+will evaluate to 5.
 .IP "sqrt(x)" 3
 The square root function always returns a float.
 .IP "frombin(x)" 3

@@ -392,7 +392,7 @@ int main(int argc, char** argv)
            "   set '#0+=1'                       " \
            "done                                 " \
            "set '#1:=fmap_count(a,7)'            " \
-           "if '#1 > 920 & #1 < 1080' then       " \
+           "if '#1 > 900 & #1 < 1100' then       " \
            "   /OK/ 1                            " \
            "else                                 " \
            "   /NOT OK/ 1                        " \
@@ -406,7 +406,7 @@ int main(int argc, char** argv)
 		   "   endif                             " \
            "   set '#0+=1'                       " \
            "done                                 " \
-           "if '#1 > 920 & #1 < 1080' then       " \
+           "if '#1 > 900 & #1 < 1100' then       " \
            "   /OK/ 1                            " \
            "else                                 " \
            "   /NOT OK/ 1                        " \
@@ -420,7 +420,7 @@ int main(int argc, char** argv)
 		   "   endif                             " \
            "   set '#0+=1'                       " \
            "done                                 " \
-           "if '#1 > 920 & #1 < 1080' then       " \
+           "if '#1 > 900 & #1 < 1100' then       " \
            "   /OK/ 1                            " \
            "else                                 " \
            "   /NOT OK/ 1                        " \

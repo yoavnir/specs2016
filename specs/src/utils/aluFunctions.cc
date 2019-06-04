@@ -634,7 +634,7 @@ ALUValue* AluFunc_arcdtan(ALUValue* pX)
 }
 
 /*
- * FREQUENCE MAP - CLASS AND ALU FUNCTIONS
+ * FREQUENCY MAP - CLASS AND ALU FUNCTIONS
  */
 
 static std::string quotedString(const std::string& s)
@@ -913,3 +913,10 @@ ALUValue* AluFunc_fmap_dump(ALUValue* _pFieldIdentifier, ALUValue* pFormat, ALUV
 
 	return new ALUValue(pfMap->dump(f, o, includePercentage));
 }
+
+
+ALUValue* AluFunc_string(ALUValue* pX)
+{
+	return new ALUValue(pX->getStr());
+}
+

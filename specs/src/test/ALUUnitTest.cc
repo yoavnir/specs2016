@@ -916,6 +916,9 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("roundd(arcdtan(0.5),8)", "26.56505118");
 	VERIFY_EXPR_RES("roundd(arcdtan(-0.2),8)", "-11.30993247");
 
+	VERIFY_EXPR_RES("string(3.0000)", "3.0000");
+	VERIFY_EXPR_RES("string(3.0000+2.0000)", "5");
+
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
