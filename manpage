@@ -513,6 +513,12 @@ Returns the same value as the argument, but forced to be stored as a string. The
 will evaluate to 5.
 .IP "sqrt(x)" 3
 The square root function always returns a float.
+.IP "c2u(x)" 3
+Returns an unsigned decimal number from the binary representation of x.
+.IP "c2d(x)" 3
+Returns a signed decimal number from the binary representation of x.
+.IP "c2f(x)" 3
+Returns a floating point number assuming that x is a binary representation of a floating point number in the native encoding of the platform. On most platforms valid lengths are 4, 8, and 16 bytes (32, 64, and 128 bits).
 .IP "frombin(x)" 3
 Returns a decimal number from the binary representation in x.
 .IP "tobine(x,d)" 3

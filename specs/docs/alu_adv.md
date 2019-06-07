@@ -52,6 +52,9 @@
 | `arcdtan(x)` | Returns the inverse tangent function, returning an angle expressed in degrees |
 | `arcsin(x)` | Returns the inverse sine function, returning an angle expressed in radians |
 | `arctan(x)` | Returns the inverse tangent function, returning an angle expressed in radians |
+| `c2u(x)` | Returns an unsigned decimal value, treating x as a binary representation with length from 1 to 8 bytes. **Note:** In *CMS Pipelines* the value of `x` can be up to 108 bits. Here it is capped at 64 |
+| `c2d(x)` | Returns an signed decimal value, treating x as a binary representation with length from 1 to 8 bytes and negative numbers in 2's complement |
+| `c2f(x)` | Returns a floating-point value, treating x as the platform-native binary representation with the lengths that are valid for the C types `float`, `double`, and `long double` |
 | `ceil(x)` | Returns the smallest integer greater than `x` |
 | `cos(x)` | Returns the cosine function, treating `x` as an angle expressed in radians |
 | `dcos(x)` | Returns the cosine function, treating `x` as an angle expressed in degrees |

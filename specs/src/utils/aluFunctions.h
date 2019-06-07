@@ -14,6 +14,9 @@
 	X(abs,            1, ALUFUNC_REGULAR,     false)  \
 	X(pow,            2, ALUFUNC_REGULAR,     false)  \
 	X(sqrt,           1, ALUFUNC_REGULAR,     false)  \
+	X(c2u,            1, ALUFUNC_REGULAR,     false)  \
+	X(c2f,            1, ALUFUNC_REGULAR,     false)  \
+	X(c2d,            1, ALUFUNC_REGULAR,     false)  \
 	X(frombin,        1, ALUFUNC_REGULAR,     false)  \
 	X(tobine,         2, ALUFUNC_REGULAR,     false)  \
 	X(tobin,          1, ALUFUNC_REGULAR,     false)  \

@@ -919,6 +919,37 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("string(3.0000)", "3.0000");
 	VERIFY_EXPR_RES("string(3.0000+2.0000)", "5");
 
+	VERIFY_EXPR_RES("c2u('A')", "65");
+	VERIFY_EXPR_RES("c2u('AA')", "16705");
+	VERIFY_EXPR_RES("c2u('AAA')", "4276545");
+	VERIFY_EXPR_RES("c2u('AAAA')", "1094795585");
+	VERIFY_EXPR_RES("c2u('AAAAA')", "280267669825");
+	VERIFY_EXPR_RES("c2u('AAAAAA')", "71748523475265");
+	VERIFY_EXPR_RES("c2u('AAAAAAA')", "18367622009667905");
+	VERIFY_EXPR_RES("c2u('AAAAAAAA')", "4702111234474983745");
+	VERIFY_EXPR_RES("c2u('AAAAAAAAA')", "c2u/c2d: Invalid input length: 9");
+	VERIFY_EXPR_RES("c2d('ג')", "-27945");
+	VERIFY_EXPR_RES("c2d('גג')", "-1831365929");
+	VERIFY_EXPR_RES("c2d('גגג')", "161454579225303");
+	VERIFY_EXPR_RES("c2d('גגגג')", "-7865656769600056617");
+	VERIFY_EXPR_RES("c2d('גגגגג')", "c2u/c2d: Invalid input length: 10");
+	VERIFY_EXPR_RES("c2f('A')", "c2f: Invalid floating point length: 1. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AA')", "c2f: Invalid floating point length: 2. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAA')", "c2f: Invalid floating point length: 3. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945557");
+	VERIFY_EXPR_RES("c2f('AAAAA')", "c2f: Invalid floating point length: 5. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAA')", "c2f: Invalid floating point length: 6. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAA')", "c2f: Invalid floating point length: 7. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.509803921");
+	VERIFY_EXPR_RES("c2f('AAAAAAAAA')", "c2f: Invalid floating point length: 9. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAA')", "c2f: Invalid floating point length: 10. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAA')", "c2f: Invalid floating point length: 11. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAA')", "c2f: Invalid floating point length: 12. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAA')", "c2f: Invalid floating point length: 13. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 14. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
+
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";

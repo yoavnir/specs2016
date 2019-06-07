@@ -64,17 +64,21 @@ ALUValue* AluFunc_sqrt(ALUValue* op)
 
 // Both of the following functions assume little-endian architecture
 // The mainframe version and Solaris version will need some work...
-
-ALUValue* AluFunc_frombin(ALUValue* op)
+static uint64_t binary2uint64(ALUValue* op, unsigned char *pNumBits = NULL)
 {
 	std::string str = op->getStr();
 	uint64_t value = 0;
 
 	switch (str.length()) {
-	case 1: value = ALUInt((unsigned char)(str[0])); break;
+	case 1: {
+		value = ALUInt((unsigned char)(str[0]));
+		if (pNumBits) *pNumBits = 1;
+		break;
+	}
 	case 2: {
 		uint16_t* pVal = (uint16_t*)str.c_str();
 		value = *pVal;
+		if (pNumBits) *pNumBits = 2;
 		break;
 	}
 	case 3: {
@@ -86,6 +90,7 @@ ALUValue* AluFunc_frombin(ALUValue* op)
 	case 4: {
 		uint32_t* pVal = (uint32_t*)str.c_str();
 		value = *pVal;
+		if (pNumBits) *pNumBits = 4;
 		break;
 	}
 	case 5:
@@ -99,14 +104,86 @@ ALUValue* AluFunc_frombin(ALUValue* op)
 	case 8: {
 		uint64_t* pVal = (uint64_t*)str.c_str();
 		value = *pVal;
+		if (pNumBits) *pNumBits = 8;
 		break;
 	}
 	default: {
-		std::string err = "Invalid binary field length " + std::to_string(str.length());
+		std::string err = "c2u/c2d: Invalid input length: " + std::to_string(str.length());
 		MYTHROW(err);
 	}
 	}
 
+	return value;
+}
+
+ALUValue* AluFunc_c2u(ALUValue* op)
+{
+	uint64_t value = binary2uint64(op);
+	MYASSERT_WITH_MSG(value <= MAX_ALUInt, "c2u: Binary value exceeds limit");
+	return new ALUValue(ALUInt(value));
+}
+
+ALUValue* AluFunc_c2d(ALUValue* op)
+{
+	unsigned char numBytes;
+	uint64_t uvalue = binary2uint64(op, &numBytes);
+	switch (numBytes) {
+	case 1: {
+		char *pvalue = (char*)(&uvalue);
+		return new ALUValue(ALUInt(*pvalue));
+	}
+	case 2: {
+		int16_t *pvalue = (int16_t*)(&uvalue);
+		return new ALUValue(ALUInt(*pvalue));
+	}
+	case 4: {
+		int32_t *pvalue = (int32_t*)(&uvalue);
+		return new ALUValue(ALUInt(*pvalue));
+	}
+	case 8: {
+		int64_t *pvalue = (int64_t*)(&uvalue);
+		return new ALUValue(ALUInt(*pvalue));
+	}
+	default: {
+		std::string err = "Invalid number of bytes: " + std::to_string(numBytes);
+		MYTHROW(err);
+	}
+	}
+
+	return NULL;
+}
+
+ALUValue* AluFunc_c2f(ALUValue* op)
+{
+	std::string str = op->getStr();
+
+	if (str.length() == sizeof(float)) {
+		float* pf = (float*) str.c_str();
+		return new ALUValue(ALUFloat(*pf));
+	} else if (str.length() == sizeof(double)) {
+		double *pd = (double*) str.c_str();
+		return new ALUValue(ALUFloat(*pd));
+	} else if (str.length() == sizeof(long double)) {
+		long double *pld = (long double*) str.c_str();
+		return new ALUValue(ALUFloat(*pld));
+	} else {
+		std::string err = "c2f: Invalid floating point length: " + std::to_string(str.length()) +
+				". Supported lengths: " + std::to_string(sizeof(float));
+		if (sizeof(float) < sizeof(double)) {
+			err += ", " + std::to_string(sizeof(double));
+		}
+		if (sizeof(double) < sizeof(long double)) {
+			err += ", " + std::to_string(sizeof(long double));
+		}
+		MYTHROW(err);
+	}
+}
+
+
+
+ALUValue* AluFunc_frombin(ALUValue* op)
+{
+	uint64_t value = binary2uint64(op);
 	return new ALUValue(ALUInt(value));
 }
 
