@@ -511,6 +511,20 @@ return an angle in degrees.
 Returns the same value as the argument, but forced to be stored as a string. There is nothing preventing this from later evaluating as a number, so
 .I string(3)+2
 will evaluate to 5.
+.IP "substitute(haystack,needle,subst,max)"
+Returns the string in 
+.I haystack
+where every occurence of 
+.I needle
+is replaced by the string 
+.I subst
+for at most 
+.I max
+times. The special value 
+.B """U"""
+for 
+.I max
+is used to indicate that all occurrences should be replaced.
 .IP "sqrt(x)" 3
 The square root function always returns a float.
 .IP "c2u(x)" 3

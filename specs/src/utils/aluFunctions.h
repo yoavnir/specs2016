@@ -94,6 +94,7 @@
 	X(fmap_sample,    2, ALUFUNC_FREQUENCY,   false)  \
 	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false)  \
 	X(string,         1, ALUFUNC_REGULAR,     false)  \
+	X(substitute,     4, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

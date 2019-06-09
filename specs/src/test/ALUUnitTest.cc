@@ -950,6 +950,14 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15. Supported lengths: 4, 8, 16");
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
 
+	VERIFY_EXPR_RES("substitute('Just the place for a snark','','',1)", "substitute: Search string must not be empty");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','',0)", "Just the place for a snark");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','',1)", "Justthe place for a snark");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','',2)", "Justtheplace for a snark");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','u')", "Just the place for a snark");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','U')", "Justtheplaceforasnark");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','_','U')", "Just_the_place_for_a_snark");
+
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";

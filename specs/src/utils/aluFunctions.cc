@@ -997,3 +997,27 @@ ALUValue* AluFunc_string(ALUValue* pX)
 	return new ALUValue(pX->getStr());
 }
 
+ALUValue* AluFunc_substitute(ALUValue* pSrc, ALUValue* pSearchString, ALUValue* pSubstitute, ALUValue* pMax)
+{
+	std::string res = pSrc->getStr();
+	ALUInt count = pMax->getInt();
+	if (pMax->getStr()=="U") count = MAX_ALUInt;
+
+	size_t findRet = 0;
+
+	if (0 == pSearchString->getStr().length()) {
+		MYTHROW("substitute: Search string must not be empty");
+	}
+
+	while (count > 0) {
+		findRet = res.find(pSearchString->getStr(), findRet);
+		if (findRet == std::string::npos) break;
+
+		res = res.substr(0,findRet) + pSubstitute->getStr() +
+				res.substr(findRet + pSearchString->getStr().length());
+
+		count--;
+	}
+
+	return new ALUValue(res);
+}
