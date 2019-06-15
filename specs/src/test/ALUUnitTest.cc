@@ -958,6 +958,14 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','U')", "Justtheplaceforasnark");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','_','U')", "Just_the_place_for_a_snark");
 
+	VERIFY_EXPR_RES("sfield('Where hae\tya been',0,'')","sfield: Called with count equal to zero");
+	VERIFY_EXPR_RES("sfield('Where hae\tya been',1,'')","Where hae");
+	VERIFY_EXPR_RES("sfield('Where hae\tya been',2,'')","ya been");
+	VERIFY_EXPR_RES("sfield('Where hae\tya been',3,'')","");
+	VERIFY_EXPR_RES("sfield('\tWhere hae\tya been\t',-1,'')","");
+	VERIFY_EXPR_RES("sfield('\tWhere hae\tya been\t',-2,'')","ya been");
+
+
 	// TODO: More
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";

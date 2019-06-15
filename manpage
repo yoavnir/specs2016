@@ -685,6 +685,14 @@ Returns the configured string from either the built-in configured strings such a
 or from the 
 .B $HOME/.specs
 file.
+.IP "sfield(str,n,sep)" 3
+Returns the n-th field of string
+.I str
+counting from the start or end of the string depending on the sign of n. Separator is the first char of 
+.I sep
+if non-empty, or 
+.B tab
+otherwise.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
