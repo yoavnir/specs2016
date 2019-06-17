@@ -1076,3 +1076,60 @@ ALUValue* AluFunc_sfield(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
 		}
 	}
 }
+
+ALUValue* AluFunc_sword(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
+{
+	std::string str = pStr->getStr();
+	ALUInt count = pCount->getInt();
+	char sep = (0 == pSep->getStrPtr()->length()) ? ' ' : pSep->getStr()[0];
+
+	if (0 == count) {
+		MYTHROW("sword: Called with count equal to zero");
+	}
+
+	// The following ensures that the string is not zero-length for the rest of the code
+	// which does make that assumption
+	if (0 == str.length()) {
+		return new ALUValue("");
+	}
+
+
+	if (count > 0) {
+		char* pc = (char*)(str.c_str());
+		while (sep==*pc) pc++;  // The first word may start after 1 or more seps. Not so in sfield
+		while ((count > 1) && (*pc != '\0')) {
+			while ((*pc!='\0') && (*pc!=sep)) pc++;
+			if (sep==*pc) {
+				count--;
+				while (sep==*pc) pc++;
+			}
+		}
+		if (count > 1 || *pc=='\0') {
+			return new ALUValue("");
+		} else {
+			char *pEnd = pc;
+			while ((*pEnd!='\0') && (*pEnd!=sep)) pEnd++;
+			return new ALUValue(pc, (pEnd-pc));
+		}
+	}
+	else {
+		char *pStart = (char*)(str.c_str());
+		char* pc = pStart + str.length();
+		pc--; // that's where the non-zero-length assumption comes in
+		while (sep==*pc) pc--;  // The last word may be followed by word separators
+		while ((count < -1) && (pc > pStart)) {
+			while ((pc>pStart) && (*pc!=sep)) pc--;
+			if (sep==*pc) {
+				count++;
+				while (sep==*pc) pc--;
+			}
+		}
+		if (count < -1 || pc==pStart) {
+			return new ALUValue("");
+		} else {
+			char *pBegin = pc;
+			while ((pBegin>pStart) && (*pBegin!=sep)) pBegin--;
+			return new ALUValue(pBegin+1, (pc-pBegin));
+		}
+	}
+}

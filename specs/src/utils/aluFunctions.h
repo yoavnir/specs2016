@@ -96,6 +96,7 @@
 	X(string,         1, ALUFUNC_REGULAR,     false)  \
 	X(substitute,     4, ALUFUNC_REGULAR,     false)  \
 	X(sfield,         3, ALUFUNC_REGULAR,     false)  \
+	X(sword,          3, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
