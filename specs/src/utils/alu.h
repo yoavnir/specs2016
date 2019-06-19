@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include <climits>
 #include <string>
 #include "utils/platform.h"
 
