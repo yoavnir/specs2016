@@ -76,6 +76,8 @@
 ## Table of String Functions
 | Function | Description |
 | -------- | ----------- |
+| `abbrev(h,n)` | Returns `1` when `n` is equal to the first characters of `h` or `0` otherwise. |
+| `abbrevl(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. |
 | `center(s,n)` or `centre(s,n)` | Returns the `n` center-most characters of the string `s`. The result is padded with spaces on both sides if `n` is greater than the length of `s`. |
 | `includes(haystack,needle)` | Boolean function. Returns `1` if `needle` is a substring of `haystack`, or `0` otherwise |
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s`. |
@@ -87,6 +89,13 @@
 | `rpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack` |
 | `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is an empty string, the separator is the default one: a tab character |
 | `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is an empty string, the separator is the default one: a space character |
+
+## Table of Other REXX-Derived Functions
+| Function | Description |
+| -------- | ----------- |
+| `bitand(x,y)` | Returns the bit-wise AND of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
+| `bitor(x,y)` | Returns the bit-wise OR of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
+| `bitxor(x,y)` | Returns the bit-wise XOR of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
 
 ## Table of Record Access Functions
 | Function | Description |

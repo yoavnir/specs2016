@@ -97,6 +97,11 @@
 	X(substitute,     4, ALUFUNC_REGULAR,     false)  \
 	X(sfield,         3, ALUFUNC_REGULAR,     false)  \
 	X(sword,          3, ALUFUNC_REGULAR,     false)  \
+	X(abbrev,         2, ALUFUNC_REGULAR,     false)  \
+	X(abbrevl,        3, ALUFUNC_REGULAR,     false)  \
+	X(bitand,         2, ALUFUNC_REGULAR,     false)  \
+	X(bitor,          2, ALUFUNC_REGULAR,     false)  \
+	X(bitxor,         2, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

@@ -616,6 +616,28 @@ argument to a floating point or integer number representing the number of second
 Converts a number (integer or float) representing the number of seconds since the UNIX epoch to a printable format.
 
 .SS "Built-In String Functions"
+.IP "abbrev(information, info)" 3
+Returns
+.I 1
+if 
+.B information
+begins with the characters of 
+.B info
+or 
+.I 0 
+otherwise.
+.IP "abbrevl(information, info, len)" 3
+Returns
+.I 1
+if 
+.B information
+begins with the first
+.B len
+characters of 
+.B info
+or 
+.I 0 
+otherwise.
 .IP "substr(bigstring, start, length)" 3
 Returns a substring of 
 .I bigstring
@@ -701,6 +723,32 @@ counting from the start or end of the string depending on the sign of n. Separat
 if non-empty, or 
 .B space
 otherwise.
+
+.SS "Build-In REXX-Derived Functions"
+.IP "bitand(x,y)" 3
+Returns the bit-wise 
+.B AND
+of 
+.I x
+and 
+.I y
+If the length is not equal, the return string has the minimum length.
+.IP "bitor(x,y)" 3
+Returns the bit-wise 
+.B OR
+of 
+.I x
+and 
+.I y
+If the length is not equal, the return string has the minimum length.
+.IP "bitxor(x,y)" 3
+Returns the bit-wise 
+.B XOR
+of 
+.I x
+and 
+.I y
+If the length is not equal, the return string has the minimum length.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

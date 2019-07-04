@@ -972,7 +972,18 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("sword('\tWhere hae\tya been\t',-1,'')","been\t");
 	VERIFY_EXPR_RES("sword('\tWhere hae\tya been\t     ',-2,'')","hae\tya");
 
-	// TODO: More
+	VERIFY_EXPR_RES("abbrev('information','info')", "1");
+	VERIFY_EXPR_RES("abbrev('information','infot')", "0");
+	VERIFY_EXPR_RES("abbrevl('information','infota',4)", "1");
+	VERIFY_EXPR_RES("abbrevl('information','infota',5)", "0");
+	VERIFY_EXPR_RES("abbrevl('information','info',6)", "1");
+
+	VERIFY_EXPR_RES("bitand('information','info')", "info");
+	VERIFY_EXPR_RES("bitand('info','infn')", "infn");
+	VERIFY_EXPR_RES("bitand('info','infp')", "inf`");
+	VERIFY_EXPR_RES("bitor('info','info')", "info");
+	VERIFY_EXPR_RES("bitor('infq','infr')", "infs");
+	VERIFY_EXPR_RES("bitxor('!','B')", "c");
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 

@@ -1133,3 +1133,105 @@ ALUValue* AluFunc_sword(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
 		}
 	}
 }
+
+/* REXX Functions */
+
+ALUValue* AluFunc_abbrevl_do(ALUValue* pInformation, ALUValue* pInfo, size_t len)
+{
+	std::string sBig = pInformation->getStr();
+	std::string sLittle = pInfo->getStr().substr(0,len);
+
+	if (sBig.length() >= sLittle.length()) {
+		if (sLittle == sBig.substr(0,sLittle.length())) {
+			return new ALUValue(ALUInt(1));
+		}
+	}
+
+	return new ALUValue(ALUInt(0));
+}
+
+ALUValue* AluFunc_abbrevl(ALUValue* pInformation, ALUValue* pInfo, ALUValue* pLen)
+{
+	ALUInt len = pLen->getInt();
+	if (len <= 0) {
+		std::string err = "abbrevl: Got non-positive length: " + std::to_string(len);
+		MYTHROW(err);
+	}
+
+	return AluFunc_abbrevl_do(pInformation, pInfo, size_t(len));
+}
+
+ALUValue* AluFunc_abbrev(ALUValue* pInformation, ALUValue* pInfo)
+{
+	return AluFunc_abbrevl_do(pInformation, pInfo, std::string::npos);
+}
+
+ALUValue* AluFunc_bitand(ALUValue* pS1, ALUValue* pS2)
+{
+	std::string s1 = pS1->getStr();
+	std::string s2 = pS2->getStr();
+
+	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
+
+	unsigned char *pBuff = new unsigned char[minlen];
+
+	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
+	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
+
+	for (size_t i = 0 ; i < minlen ; i++) {
+		pBuff[i] = pc1[i] & pc2[i];
+	}
+
+	ALUValue* pRet = new ALUValue((const char*)(pBuff), minlen);
+
+	delete [] pBuff;
+
+	return pRet;
+}
+
+ALUValue* AluFunc_bitor(ALUValue* pS1, ALUValue* pS2)
+{
+	std::string s1 = pS1->getStr();
+	std::string s2 = pS2->getStr();
+
+	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
+
+	unsigned char *pBuff = new unsigned char[minlen];
+
+	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
+	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
+
+	for (size_t i = 0 ; i < minlen ; i++) {
+		pBuff[i] = pc1[i] | pc2[i];
+	}
+
+	ALUValue* pRet = new ALUValue((const char*)(pBuff), minlen);
+
+	delete [] pBuff;
+
+	return pRet;
+}
+
+ALUValue* AluFunc_bitxor(ALUValue* pS1, ALUValue* pS2)
+{
+	std::string s1 = pS1->getStr();
+	std::string s2 = pS2->getStr();
+
+	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
+
+	unsigned char *pBuff = new unsigned char[minlen];
+
+	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
+	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
+
+	for (size_t i = 0 ; i < minlen ; i++) {
+		pBuff[i] = pc1[i] ^ pc2[i];
+	}
+
+	ALUValue* pRet = new ALUValue((const char*)(pBuff), minlen);
+
+	delete [] pBuff;
+
+	return pRet;
+}
+
