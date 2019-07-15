@@ -10,7 +10,7 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-1-Jun-2019: Version 0.4 Alpha is here
+15-Jul-2019: Version 0.4 Beta is here
 -------------------------------------
 What's new:
 * New functions: statistical, trigonometric, random
@@ -18,7 +18,7 @@ What's new:
 * Multiple input and output streams
 * `ASSERT`, `ABEND` ([issue](https://github.com/yoavnir/specs2016/issues/78)), and `NOWRITE` ([issue](https://github.com/yoavnir/specs2016/issues/80)) keywords.
 
-The Beta should come out in mid-July, and the GA in mid-August.
+The GA is planned for mid-August.
 
 
 15-Apr-2019: Version 0.3 is here
