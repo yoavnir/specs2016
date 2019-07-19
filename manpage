@@ -749,6 +749,22 @@ of
 and 
 .I y
 If the length is not equal, the return string has the minimum length.
+.IP "compare(s1,s2)" 3
+Returns the index of the first mis-matched character in strings 
+.I s1
+and
+.I s2
+If the strings are equal, the function returns
+.B zero.
+If the strings are of unequal length, the shorter string is padded with spaces.
+.IP "comparep(s1,s2,pad)" 3
+Returns the index of the first mis-matched character in strings 
+.I s1
+and
+.I s2
+If the strings are equal, the function returns
+.B zero.
+If the strings are of unequal length, the shorter string is padded with the pad character.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
