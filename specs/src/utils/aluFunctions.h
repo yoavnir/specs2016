@@ -104,6 +104,7 @@
 	X(bitxor,         2, ALUFUNC_REGULAR,     false)  \
 	X(compare,        2, ALUFUNC_REGULAR,     false)  \
 	X(comparep,       3, ALUFUNC_REGULAR,     false)  \
+	X(copies,         2, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

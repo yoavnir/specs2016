@@ -994,6 +994,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("comparep('Hello', 'He', 'x')", "3");
 	VERIFY_EXPR_RES("comparep('Hello', 'He', 'l')", "5");
 
+	VERIFY_EXPR_RES("copies('Hello',3)", "HelloHelloHello");
+	VERIFY_EXPR_RES("copies('Hello',0)", "");
+	VERIFY_EXPR_RES("copies('Hello',-1)", "copies: Second argument should be a non-negative integer. Got: -1");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");

@@ -98,6 +98,7 @@
 | `bitxor(x,y)` | Returns the bit-wise XOR of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
 | `compare(s1,s2)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. If they are of unequal length, the shorter string is padded with spaces. |
 | `comparep(s1,s2,pad)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. I they are of unequal length, the shorter string is padded with the pad character. |
+| `copies(string,times)` | Returns the content of `string` repeated `times` times. |
 
 ## Table of Record Access Functions
 | Function | Description |

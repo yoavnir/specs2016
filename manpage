@@ -765,6 +765,12 @@ and
 If the strings are equal, the function returns
 .B zero.
 If the strings are of unequal length, the shorter string is padded with the pad character.
+.IP "copies(string,times)" 3
+Returns the content of
+.I string 
+repeated
+.I times
+times.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

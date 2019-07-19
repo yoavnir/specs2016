@@ -1282,3 +1282,21 @@ ALUValue* AluFunc_comparep(ALUValue* pS1, ALUValue* pS2, ALUValue* pPad)
 	return AluFunc_compare_do(pS1, pS2, sPad[0]);
 }
 
+ALUValue* AluFunc_copies(ALUValue* pString, ALUValue* pTimes)
+{
+	auto theString = pString->getStr();
+	auto theCount = pTimes->getInt();
+
+	if (theCount < 0) {
+		std::string err = "copies: Second argument should be a non-negative integer. Got: "
+				+ std::to_string(theCount);
+		MYTHROW(err);
+	}
+
+	std::string res = "";
+	for (int i=0 ; i < theCount ; i++) {
+		res += theString;
+	}
+
+	return new ALUValue(res);
+}
