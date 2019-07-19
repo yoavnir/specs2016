@@ -985,6 +985,15 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("bitor('infq','infr')", "infs");
 	VERIFY_EXPR_RES("bitxor('!','B')", "c");
 
+	VERIFY_EXPR_RES("compare('Hello','Hello')", "0");
+	VERIFY_EXPR_RES("compare('Hello','Hellp')", "5");
+	VERIFY_EXPR_RES("compare('Hello','hello')", "1");
+	VERIFY_EXPR_RES("compare('Hello','He')", "3");
+	VERIFY_EXPR_RES("compare('Hello','Hellox')", "6");
+	VERIFY_EXPR_RES("compare('Hello','Hello ')", "0");
+	VERIFY_EXPR_RES("comparep('Hello', 'He', 'x')", "3");
+	VERIFY_EXPR_RES("comparep('Hello', 'He', 'l')", "5");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");

@@ -1235,3 +1235,50 @@ ALUValue* AluFunc_bitxor(ALUValue* pS1, ALUValue* pS2)
 	return pRet;
 }
 
+ALUValue* AluFunc_compare_do(ALUValue* pS1, ALUValue* pS2, char pad)
+{
+	auto s1 = pS1->getStr();
+	auto s2 = pS2->getStr();
+	if (s1 == s2) {
+		return new ALUValue(ALUInt(0));
+	}
+	auto s1Len = s1.length();
+	auto s2Len = s2.length();
+
+	auto maxLen = std::max(s1Len, s2Len);
+	auto minLen = std::min(s1Len, s2Len);
+
+	for (ALUInt l = 0 ; l < maxLen ; l++) {
+		char c1 = (l < s1Len) ? s1[l] : pad;
+		char c2 = (l < s2Len) ? s2[l] : pad;
+
+		if (c1 != c2) {
+			return new ALUValue(l+1);
+		}
+	}
+
+	if (s1Len==s2Len) {
+		std::string err = "compare/comparep: different character was not found; s1=<"
+				+ s1 + ">; s2=>" + s2 + ">";
+		MYTHROW(err);
+	}
+
+	// The padding made them equal
+	return new ALUValue(ALUInt(0));
+}
+
+ALUValue* AluFunc_compare(ALUValue* pS1, ALUValue* pS2)
+{
+	return AluFunc_compare_do(pS1, pS2, ' ');
+}
+
+ALUValue* AluFunc_comparep(ALUValue* pS1, ALUValue* pS2, ALUValue* pPad)
+{
+	auto sPad = pPad->getStr();
+	if (sPad.length() != 1) {
+		std::string err = "comparep: Pad argument should be 1 char. Got <" + sPad + ">";
+		MYTHROW(err);
+	}
+	return AluFunc_compare_do(pS1, pS2, sPad[0]);
+}
+
