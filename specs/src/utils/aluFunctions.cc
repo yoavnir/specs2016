@@ -1300,3 +1300,24 @@ ALUValue* AluFunc_copies(ALUValue* pString, ALUValue* pTimes)
 
 	return new ALUValue(res);
 }
+
+ALUValue* AluFunc_delstr(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
+{
+	auto theString = pString->getStr();
+	auto start = pStart->getInt();
+
+	if (start < 1) start = 1;
+
+	// If start is after end of the string, we return the whole string
+	if (start > theString.length()) return new ALUValue(theString);
+
+	std::string res = theString.substr(0,start-1);
+
+	auto length = pLength->getInt();
+	// zero is a special value meaning delete to the end. If the length is greater
+	// than the remainder, also delete to the end.
+	if (0>=length || (length+start) > theString.length()) return new ALUValue(res);
+
+	res += theString.substr(start+length-1);
+	return new ALUValue(res);
+}

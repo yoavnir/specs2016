@@ -771,6 +771,16 @@ Returns the content of
 repeated
 .I times
 times.
+.IP "delstr(string,start,length)" 3
+Deletes the substring of 
+.I string 
+that starts at position 
+.I start 
+for the specified 
+.I length. 
+If 
+.I length 
+is zero, the rest of the string is deleted from position start to the end.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

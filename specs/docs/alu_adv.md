@@ -99,6 +99,7 @@
 | `compare(s1,s2)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. If they are of unequal length, the shorter string is padded with spaces. |
 | `comparep(s1,s2,pad)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. I they are of unequal length, the shorter string is padded with the pad character. |
 | `copies(string,times)` | Returns the content of `string` repeated `times` times. |
+| `delstr(string,start,length)` | Deletes the substring of `string` that starts at position `start` for the specified `length`. If `length` is zero, the rest of the string is deleted from position start to the end. |
 
 ## Table of Record Access Functions
 | Function | Description |
