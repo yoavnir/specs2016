@@ -999,10 +999,17 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("copies('Hello',-1)", "copies: Second argument should be a non-negative integer. Got: -1");
 
 	VERIFY_EXPR_RES("delstr('Hello',3,2)", "Heo");
+	VERIFY_EXPR_RES("delstr('Hello',3,0)", "He");
 	VERIFY_EXPR_RES("delstr('Hello',-3,2)", "llo");
 	VERIFY_EXPR_RES("delstr('Hello',13,2)", "Hello");
 	VERIFY_EXPR_RES("delstr('Hello',3,-2)", "He");
 	VERIFY_EXPR_RES("delstr('Hello',3,12)", "He");
+
+	VERIFY_EXPR_RES("delword('Roses are red',2,0)", "Roses");
+	VERIFY_EXPR_RES("delword('Roses are red',2,1)", "Roses red");
+	VERIFY_EXPR_RES("delword('Roses are red',-2,1)", "are red");
+	VERIFY_EXPR_RES("delword('Roses are red',12,1)", "Roses are red");
+	VERIFY_EXPR_RES("delword('Roses are red',2,11)", "Roses");
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 

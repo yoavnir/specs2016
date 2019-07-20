@@ -1321,3 +1321,42 @@ ALUValue* AluFunc_delstr(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
 	res += theString.substr(start+length-1);
 	return new ALUValue(res);
 }
+
+ALUValue* AluFunc_delword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
+{
+	auto theString = pString->getStr();
+
+	auto start = pStart->getInt();
+	if (start < 1) start = 1;
+
+	auto length = pLength->getInt();
+	if (0>=length) length = MAX_ALUInt - start;
+
+	if (0 == theString.length()) return new ALUValue(theString);
+
+	bool inWhitespace = isspace(theString[0]);
+	unsigned int  wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
+	std::string res = "";
+	for (int i=0; i<theString.length(); i++) {
+		// check if we've moved from non-ws to ws or vice versa
+		if (inWhitespace) {
+			if (!isspace(theString[i])) {
+				inWhitespace = false;
+				wordIndex++;
+			}
+		} else {
+			if (isspace(theString[i])) {
+				inWhitespace = true;
+			}
+		}
+
+		if ((wordIndex < (start-1)) ||
+			((wordIndex == (start-1)) && !inWhitespace) || // remove the whitespace before the first word to be deleted
+			(wordIndex > (start+length-1)) ||
+			((wordIndex == (start+length-1)) && inWhitespace && (start>1))) {
+			res += theString[i];
+		}
+	}
+
+	return new ALUValue(res);
+}
