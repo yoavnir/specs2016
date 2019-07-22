@@ -792,6 +792,15 @@ blank-delimited words. If
 .I length 
 is zero, it defaults to removing the rest of the words in 
 .I string.
+.IP "find(string,phrase)" 3
+Returns the word number of the first occurrence of 
+.I phrase 
+in 
+.I string. 
+Returns 0 if 
+.I phrase 
+is not found. Multiple blanks between words are treated as one in comparisons.
+
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

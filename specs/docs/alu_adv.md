@@ -101,6 +101,7 @@
 | `copies(string,times)` | Returns the content of `string` repeated `times` times. |
 | `delstr(string,start,length)` | Deletes the substring of `string` that starts at position `start` for the specified `length`. If `length` is zero, the rest of the string is deleted from position start to the end. |
 | `delword(string,start,length)` | Deletes the substring of `string` that starts at position `start` and is of length `length` blank-delimited words. If `length` is zero, it defaults to removing the rest of the words in `string`. |
+| `find(string,phrase)` | Returns the word number of the first occurrence of `phrase` in `string`. Returns 0 if `phrase` is not found. Multiple blanks between words are treated as one in comparisons. |
 
 ## Table of Record Access Functions
 | Function | Description |

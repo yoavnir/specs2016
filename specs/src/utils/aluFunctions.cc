@@ -1360,3 +1360,59 @@ ALUValue* AluFunc_delword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength
 
 	return new ALUValue(res);
 }
+
+/*
+ * Returns a vector of the words of s
+ */
+std::vector<std::string> breakIntoWords(std::string s)
+{
+	std::vector<std::string> ret;
+
+	if (0 == s.length()) return ret;
+
+	bool inWhitespace = isspace(s[0]);
+	unsigned int wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
+	int wordStart = (inWhitespace) ? -1 : 0;
+	for (int i=0; i<s.length(); i++) {
+		// check if we've moved from non-ws to ws or vice versa
+		if (inWhitespace) {
+			if (!isspace(s[i])) {
+				inWhitespace = false;
+				wordIndex++;
+				wordStart = i;
+			}
+		} else {
+			if (isspace(s[i])) {
+				inWhitespace = true;
+				ret.push_back(s.substr(wordStart, i-wordStart));
+			} else if (i == s.length()-1) {
+				ret.push_back(s.substr(wordStart));
+			}
+		}
+
+	}
+
+	return ret;
+}
+
+ALUValue* AluFunc_find(ALUValue* string, ALUValue* phrase)
+{
+	auto phraseWords = breakIntoWords(phrase->getStr());
+	auto stringWords = breakIntoWords(string->getStr());
+
+	int phraseWordCount = phraseWords.size();
+	int stringWordCount = stringWords.size();
+
+	for (int i=0 ; i < stringWordCount - phraseWordCount + 1 ; i++)
+	{
+ 		bool foundMismatch = false;
+		for (int j=0; !foundMismatch && j < phraseWordCount; j++)
+		{
+			if (phraseWords[j] != stringWords[i+j]) foundMismatch = true;
+		}
+
+		if (!foundMismatch) return new ALUValue(ALUInt(i+1));
+	}
+
+	return new ALUValue(ALUInt(0));
+}

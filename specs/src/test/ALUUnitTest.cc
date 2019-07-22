@@ -1011,6 +1011,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("delword('Roses are red',12,1)", "Roses are red");
 	VERIFY_EXPR_RES("delword('Roses are red',2,11)", "Roses");
 
+	VERIFY_EXPR_RES("find('now is the time', 'the')", "3");
+	VERIFY_EXPR_RES("find('now is the time', 'xxx')", "0");
+	VERIFY_EXPR_RES("find('now  is   the   time', 'the time')", "3");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");

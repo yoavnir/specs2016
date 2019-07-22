@@ -107,6 +107,7 @@
 	X(copies,         2, ALUFUNC_REGULAR,     false)  \
 	X(delstr,         3, ALUFUNC_REGULAR,     false)  \
 	X(delword,        3, ALUFUNC_REGULAR,     false)  \
+	X(find,           2, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
