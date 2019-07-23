@@ -1015,6 +1015,14 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("find('now is the time', 'xxx')", "0");
 	VERIFY_EXPR_RES("find('now  is   the   time', 'the time')", "3");
 
+	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', 0)", "10");
+	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', 1)", "10");
+	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', 2)", "10");
+	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', -2)", "10");
+	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', 15)", "23");
+	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', 23)", "23");
+	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', 24)", "0");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");

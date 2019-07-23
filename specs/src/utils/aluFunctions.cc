@@ -1416,3 +1416,19 @@ ALUValue* AluFunc_find(ALUValue* string, ALUValue* phrase)
 
 	return new ALUValue(ALUInt(0));
 }
+
+ALUValue* AluFunc_index(ALUValue* _pHaystack, ALUValue* _pNeedle, ALUValue* _pStart)
+{
+	std::string* pNeedle = _pNeedle->getStrPtr();
+	std::string* pHaystack = _pHaystack->getStrPtr();
+	ALUInt start = _pStart->getInt();
+
+	if (start < 1) start = 1;
+
+	size_t pos = pHaystack->find(*pNeedle, (start-1));
+	if (std::string::npos == pos) {
+		return new ALUValue(ALUInt(0));
+	} else {
+		return new ALUValue(ALUInt(pos+1));
+	}
+}

@@ -800,6 +800,21 @@ in
 Returns 0 if 
 .I phrase 
 is not found. Multiple blanks between words are treated as one in comparisons.
+.IP "index(haystack,needle,start)" 3
+Returns the character position of 
+.I needle
+within string
+.I haystack. 
+Returns 0 if 
+.I needle 
+is not found. If positive, 
+.I start tells where in
+.I haystack 
+to initiate the search. It defaults to 1 if not specified. The standard
+.B pos 
+function should be used instead of 
+.B index 
+if possible.
 
 
 .SS "Built-In Statistical Pseudo-Functions" 

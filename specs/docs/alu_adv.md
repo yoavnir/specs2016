@@ -102,6 +102,7 @@
 | `delstr(string,start,length)` | Deletes the substring of `string` that starts at position `start` for the specified `length`. If `length` is zero, the rest of the string is deleted from position start to the end. |
 | `delword(string,start,length)` | Deletes the substring of `string` that starts at position `start` and is of length `length` blank-delimited words. If `length` is zero, it defaults to removing the rest of the words in `string`. |
 | `find(string,phrase)` | Returns the word number of the first occurrence of `phrase` in `string`. Returns 0 if `phrase` is not found. Multiple blanks between words are treated as one in comparisons. |
+| `index(haystack,needle,start)` | Returns the character position of `needle` within string `haystack`. Returns 0 if `needle` is not found. If positive, `start` tells where in `haystack` to initiate the search. It defaults to 1 if not specified. The standard `pos` function should be used instead of index if possible. |
 
 ## Table of Record Access Functions
 | Function | Description |
