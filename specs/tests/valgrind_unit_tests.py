@@ -1,6 +1,6 @@
 import sys, memcheck, argparse
 
-count_ALU_tests = 473
+count_ALU_tests = 486
 count_processing_tests = 109
 count_token_tests = 14
 

@@ -168,6 +168,7 @@ public:
 	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2);
 	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
+	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5);
 	virtual bool            requiresRead() {return false;} // true if this unit requires lines to be read
 };
 
@@ -307,6 +308,7 @@ public:
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2);
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
+	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5);
 	virtual bool                requiresRead()  { return m_reliesOnInput; }
 	std::string&                getName()       { return m_FuncName; }
 	static unsigned char        functionTypes() { return m_flags; }

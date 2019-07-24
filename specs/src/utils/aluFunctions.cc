@@ -1432,3 +1432,70 @@ ALUValue* AluFunc_index(ALUValue* _pHaystack, ALUValue* _pNeedle, ALUValue* _pSt
 		return new ALUValue(ALUInt(pos+1));
 	}
 }
+
+ALUValue* AluFunc_insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
+{
+	std::string paddedStr;
+
+	if (0==len) {
+		paddedStr = str;
+	} else {
+		if (len <= str.length()) {
+			paddedStr = str.substr(0,len);
+		} else {
+			paddedStr = str;
+			while (paddedStr.length() < len) paddedStr += pad;
+		}
+	}
+
+	std::string ret;
+	if (pos > 0) ret = tgt.substr(0,pos);
+
+	ret += paddedStr;
+
+	if (pos < tgt.length()) ret += tgt.substr(pos);
+
+	return new ALUValue(ret);
+}
+
+ALUValue* AluFunc_insert(ALUValue* pString, ALUValue* pTarget, ALUValue* pPosition, ALUValue* pLength)
+{
+	auto theString = pString->getStr();
+	auto theTarget = pTarget->getStr();
+	auto position = pPosition->getInt();
+	if (0 > position) {
+		std::string err = "insert: Invalid negative position value: " + std::to_string(position);
+		MYTHROW(err);
+	}
+	auto length = pLength->getInt();
+	if (0 > length) {
+		std::string err = "insert: Invalid negative length value: " + std::to_string(length);
+		MYTHROW(err);
+	}
+
+	return AluFunc_insert_do(theString, theTarget, position, length, ' ');
+}
+
+ALUValue* AluFunc_insertp(ALUValue* pString, ALUValue* pTarget, ALUValue* pPosition, ALUValue* pLength, ALUValue* pPad)
+{
+	auto theString = pString->getStr();
+	auto theTarget = pTarget->getStr();
+	auto position = pPosition->getInt();
+	if (0 > position) {
+		std::string err = "insertp: Invalid negative position value: " + std::to_string(position);
+		MYTHROW(err);
+	}
+	auto length = pLength->getInt();
+	if (0 > length) {
+		std::string err = "insertp: Invalid negative length value: " + std::to_string(length);
+		MYTHROW(err);
+	}
+	auto padString = pPad->getStr();
+	if (1 != padString.length()) {
+		std::string err = "insertp: Invalid pad argument: <" + padString + ">";
+		MYTHROW(err);
+	}
+
+	char padChar = padString[0];
+	return AluFunc_insert_do(theString, theTarget, position, length, padChar);
+}

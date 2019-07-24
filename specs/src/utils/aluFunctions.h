@@ -109,6 +109,8 @@
 	X(delword,        3, ALUFUNC_REGULAR,     false)  \
 	X(find,           2, ALUFUNC_REGULAR,     false)  \
 	X(index,          3, ALUFUNC_REGULAR,     false)  \
+	X(insert,         4, ALUFUNC_REGULAR,     false)  \
+	X(insertp,        5, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
@@ -135,6 +137,7 @@
 #define ALUFUNC2(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*);
 #define ALUFUNC3(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*);
 #define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*);
+#define ALUFUNC5(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*, ALUValue*);
 
 #define X(fn,argc,flags,rl) ALUFUNC##argc(fn)
 ALU_FUNCTION_LIST
@@ -145,7 +148,9 @@ typedef ALUValue* (*AluFunc1)(ALUValue* op1);
 typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
 typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
 typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
+typedef ALUValue* (*AluFunc5)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5);
 
+#define MAX_FUNC_OPERANDS 5
 
 enum fmap_format {
 	/* Leave a gap because low numbers are the string width */

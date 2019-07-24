@@ -815,6 +815,44 @@ to initiate the search. It defaults to 1 if not specified. The standard
 function should be used instead of 
 .B index 
 if possible.
+.IP "insert(string,target,position,length)" 3 
+Inserts 
+.I string
+into 
+.I target
+at position 
+.I position 
+and truncated or padded with spaces to length 
+.I length. 
+With default zero values, 
+.I position 
+inserts the 
+.I string 
+at the start of 
+.I target, 
+and the length of the 
+.I string
+is kept as is.
+.IP "insertp(string,target,position,length,pad)" 3 
+Inserts 
+.I string
+into 
+.I target
+at position 
+.I position 
+and truncated or padded with 
+.I pad
+characters to length 
+.I length. 
+With default zero values, 
+.I position 
+inserts the 
+.I string 
+at the start of 
+.I target, 
+and the length of the 
+.I string
+is kept as is.
 
 
 .SS "Built-In Statistical Pseudo-Functions" 

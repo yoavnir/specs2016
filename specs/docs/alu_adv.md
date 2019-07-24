@@ -103,6 +103,8 @@
 | `delword(string,start,length)` | Deletes the substring of `string` that starts at position `start` and is of length `length` blank-delimited words. If `length` is zero, it defaults to removing the rest of the words in `string`. |
 | `find(string,phrase)` | Returns the word number of the first occurrence of `phrase` in `string`. Returns 0 if `phrase` is not found. Multiple blanks between words are treated as one in comparisons. |
 | `index(haystack,needle,start)` | Returns the character position of `needle` within string `haystack`. Returns 0 if `needle` is not found. If positive, `start` tells where in `haystack` to initiate the search. It defaults to 1 if not specified. The standard `pos` function should be used instead of index if possible. |
+| `insert(string,target,position,length)` | Inserts `string` into `target` at position `position` and truncated or padded with spaces to length `length`. With default zero values, `position` inserts the string at the start of `target`, and the length of the `string` is kept as is. |
+| `insertp(string,target,position,length,pad)` | Inserts `string` into `target` at position `position` and truncated or padded with `pad` characters to length `length`. With default zero values, `position` inserts the string at the start of `target`, and the length of the `string` is kept as is. |
 
 ## Table of Record Access Functions
 | Function | Description |

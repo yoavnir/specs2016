@@ -1023,6 +1023,20 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', 23)", "23");
 	VERIFY_EXPR_RES("index('How much wood would a wood-chuck chuck', 'wood', 24)", "0");
 
+	VERIFY_EXPR_RES("insert('xy','hello',0,0)", "xyhello");
+	VERIFY_EXPR_RES("insert('xy','hello',1,0)", "hxyello");
+	VERIFY_EXPR_RES("insert('xy','hello',0,1)", "xhello");
+	VERIFY_EXPR_RES("insert('xy','hello',0,4)", "xy  hello");
+	VERIFY_EXPR_RES("insert('xy','hello',4,4)", "hellxy  o");
+	VERIFY_EXPR_RES("insert('xy','hello',5,0)", "helloxy");
+	VERIFY_EXPR_RES("insert('xy','hello',6,0)", "helloxy");
+	VERIFY_EXPR_RES("insert('xy','hello',-1,0)", "insert: Invalid negative position value: -1");
+	VERIFY_EXPR_RES("insert('xy','hello',0,-1)", "insert: Invalid negative length value: -1");
+	VERIFY_EXPR_RES("insertp('xy','hello',0,1,'q')", "xhello");
+	VERIFY_EXPR_RES("insertp('xy','hello',0,4,'q')", "xyqqhello");
+	VERIFY_EXPR_RES("insertp('xy','hello',0,4,'')", "insertp: Invalid pad argument: <>");
+	VERIFY_EXPR_RES("insertp('xy','hello',0,4,'qq')", "insertp: Invalid pad argument: <qq>");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");

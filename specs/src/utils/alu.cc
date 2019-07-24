@@ -196,6 +196,12 @@ ALUValue* AluUnit::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue
 	MYTHROW(err);
 }
 
+ALUValue* AluUnit::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5)
+{
+	std::string err = _identify() + " should not be called with five operands";
+	MYTHROW(err);
+}
+
 
 void AluUnitLiteral::_serialize(std::ostream& os) const
 {
@@ -930,6 +936,12 @@ ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUV
 	return (AluFunc4(mp_Func))(op1,op2,op3,op4);
 }
 
+ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5)
+{
+	if (5 != countOperands()) return AluUnit::compute(op1,op2,op3,op4,op5);
+	return (AluFunc5(mp_Func))(op1,op2,op3,op4,op5);
+}
+
 
 /*
  * Code for parsing expressions and assignments
@@ -1572,6 +1584,7 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	ALUValue* arg2;
 	ALUValue* arg3;
 	ALUValue* arg4;
+	ALUValue* arg5;
 
 #ifdef ALU_DUMP
 	if (g_bDebugAluRun) {
@@ -1616,9 +1629,12 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 			break;
 		case UT_Identifier: {
 			MYASSERT(computeStack.size() >= pUnit->countOperands());
-			MYASSERT(pUnit->countOperands() <= 4);
+			MYASSERT(pUnit->countOperands() <= MAX_FUNC_OPERANDS);
 
 			switch (pUnit->countOperands()) {
+			case 5:
+				arg5 = computeStack.top();
+				computeStack.pop();
 			case 4:
 				arg4 = computeStack.top();
 				computeStack.pop();
@@ -1690,6 +1706,25 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				delete arg2;
 				delete arg3;
 				delete arg4;
+				break;
+			case 5:
+				try {
+					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4, arg5));
+				}
+				catch (const SpecsException& e) {
+					std::cerr << "EXCEPTION: " << e.what() << std::endl;
+					delete arg1;
+					delete arg2;
+					delete arg3;
+					delete arg4;
+					delete arg5;
+					throw;
+				}
+				delete arg1;
+				delete arg2;
+				delete arg3;
+				delete arg4;
+				delete arg5;
 				break;
 			default:
 				break;
