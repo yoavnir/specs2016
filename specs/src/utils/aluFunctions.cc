@@ -1364,7 +1364,7 @@ ALUValue* AluFunc_delword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength
 /*
  * Returns a vector of the words of s
  */
-std::vector<std::string> breakIntoWords(std::string s)
+static std::vector<std::string> breakIntoWords(std::string s)
 {
 	std::vector<std::string> ret;
 
@@ -1433,7 +1433,7 @@ ALUValue* AluFunc_index(ALUValue* _pHaystack, ALUValue* _pNeedle, ALUValue* _pSt
 	}
 }
 
-ALUValue* AluFunc_insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
+static ALUValue* AluFunc_insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
 {
 	std::string paddedStr;
 
@@ -1498,4 +1498,61 @@ ALUValue* AluFunc_insertp(ALUValue* pString, ALUValue* pTarget, ALUValue* pPosit
 
 	char padChar = padString[0];
 	return AluFunc_insert_do(theString, theTarget, position, length, padChar);
+}
+
+static ALUValue* AluFunc_justify_do(std::string& str, size_t len, char pad)
+{
+	auto wordVector = breakIntoWords(str);
+	int numOfSpaces = int(len);
+	for (const auto & word : wordVector) {
+		numOfSpaces -= int(word.length());
+	}
+
+	if (numOfSpaces < 0) numOfSpaces = 0;
+
+	std::string ret = "";
+
+	for (int i=0 ; i < wordVector.size() ; i++) {
+		ret += wordVector[i];
+		auto countGaps = wordVector.size() - i - 1;
+		if (0 < countGaps) {
+			auto spacesThisGap = numOfSpaces / countGaps;
+			for (int j=0 ; j < spacesThisGap ; j++) ret += pad;
+			numOfSpaces -= spacesThisGap;
+		}
+	}
+
+	if (ret.size() > len) ret = ret.substr(0,len);
+	MYASSERT(ret.size() == len);
+
+	return new ALUValue(ret);
+}
+
+ALUValue* AluFunc_justify(ALUValue* pStr, ALUValue* pLen)
+{
+	auto str = pStr->getStr();
+	auto len = pLen->getInt();
+	if (len < 0) {
+		std::string err = "justify: len argument should be non-negative. Got " + std::to_string(len);
+		MYTHROW(err);
+	}
+
+	return AluFunc_justify_do(str,size_t(len), ' ');
+}
+
+ALUValue* AluFunc_justifyp(ALUValue* pStr, ALUValue* pLen, ALUValue* pPad)
+{
+	auto str = pStr->getStr();
+	auto len = pLen->getInt();
+	if (len < 0) {
+		std::string err = "justifyp: len argument should be non-negative. Got " + std::to_string(len);
+		MYTHROW(err);
+	}
+	auto padString = pPad->getStr();
+	if (1 != padString.length()) {
+		std::string err = "justifyp: Invalid pad argument: <" + padString + ">";
+		MYTHROW(err);
+	}
+
+	return AluFunc_justify_do(str,size_t(len), padString[0]);
 }

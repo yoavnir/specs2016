@@ -1037,6 +1037,18 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("insertp('xy','hello',0,4,'')", "insertp: Invalid pad argument: <>");
 	VERIFY_EXPR_RES("insertp('xy','hello',0,4,'qq')", "insertp: Invalid pad argument: <qq>");
 
+	VERIFY_EXPR_RES("justify('this is it',18)", "this     is     it");
+	VERIFY_EXPR_RES("justify('this is it',19)", "this     is      it");
+	VERIFY_EXPR_RES("justify('this is it',9)", "thisis it");
+	VERIFY_EXPR_RES("justify('this is it',3)", "thi");
+	VERIFY_EXPR_RES("justify('this is it',1)", "t");
+	VERIFY_EXPR_RES("justify('this is it',0)", "");
+	VERIFY_EXPR_RES("justify('this is it',-1)", "justify: len argument should be non-negative. Got -1");
+	VERIFY_EXPR_RES("justifyp('this is it',18,'x')", "thisxxxxxisxxxxxit");
+	VERIFY_EXPR_RES("justifyp('     this is it',18,'x')", "thisxxxxxisxxxxxit");
+	VERIFY_EXPR_RES("justifyp('this is it',18,'')", "justifyp: Invalid pad argument: <>");
+	VERIFY_EXPR_RES("justifyp('this is it',18,'qq')", "justifyp: Invalid pad argument: <qq>");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");

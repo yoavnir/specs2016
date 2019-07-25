@@ -105,6 +105,8 @@
 | `index(haystack,needle,start)` | Returns the character position of `needle` within string `haystack`. Returns 0 if `needle` is not found. If positive, `start` tells where in `haystack` to initiate the search. It defaults to 1 if not specified. The standard `pos` function should be used instead of index if possible. |
 | `insert(string,target,position,length)` | Inserts `string` into `target` at position `position` and truncated or padded with spaces to length `length`. With default zero values, `position` inserts the string at the start of `target`, and the length of the `string` is kept as is. |
 | `insertp(string,target,position,length,pad)` | Inserts `string` into `target` at position `position` and truncated or padded with `pad` characters to length `length`. With default zero values, `position` inserts the string at the start of `target`, and the length of the `string` is kept as is. |
+| `justify(string,length)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string. |
+| `justifyp(string,length,pad)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string, while `pad` specifies what padding to insert (if necessary). |
 
 ## Table of Record Access Functions
 | Function | Description |

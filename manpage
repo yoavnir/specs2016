@@ -853,7 +853,20 @@ at the start of
 and the length of the 
 .I string
 is kept as is.
-
+.IP "justify(string,length)" 3
+Evenly justifies words within 
+.I string. 
+The 
+.I length
+specifies the length of the returned string.
+.IP "justifyp(string,length,pad)" 3
+Evenly justifies words within 
+.I string. 
+The 
+.I length
+specifies the length of the returned string, while
+.I pad
+specifies what padding to insert (if necessary).
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
