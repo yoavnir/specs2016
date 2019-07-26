@@ -818,11 +818,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("pos('a ', #9)", "5");
 	VERIFY_EXPR_RES("pos('a ', left(#9,13))", "5");
 
-	VERIFY_EXPR_RES("rpos('g', #9)", "3");
-	VERIFY_EXPR_RES("rpos('a', #9)", "11");
-	VERIFY_EXPR_RES("rpos('x', #9)", "0");
-	VERIFY_EXPR_RES("rpos('a ', #9)", "5");
-	VERIFY_EXPR_RES("rpos('a ', left(#9,13))", "11");
+	VERIFY_EXPR_RES("lastpos('g', #9)", "3");
+	VERIFY_EXPR_RES("lastpos('a', #9)", "11");
+	VERIFY_EXPR_RES("lastpos('x', #9)", "0");
+	VERIFY_EXPR_RES("lastpos('a ', #9)", "5");
+	VERIFY_EXPR_RES("lastpos('a ', left(#9,13))", "11");
 
 	VERIFY_EXPR_RES("includes(#9, 'a')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'x')", "0");

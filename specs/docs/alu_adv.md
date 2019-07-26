@@ -86,7 +86,7 @@
 | `substitute(s,needle,subst,max)` | Returns the string `s` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. |
 | `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |
 | `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack` |
-| `rpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack` |
+| `lastpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack` |
 | `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is an empty string, the separator is the default one: a tab character |
 | `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is an empty string, the separator is the default one: a space character |
 

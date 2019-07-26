@@ -684,7 +684,7 @@ position of
 .I needle
 in 
 .I haystack.
-.IP "rpos(needle, haystack)" 3
+.IP "lastpos(needle, haystack)" 3
 Returns the 1-based index of the 
 .B last 
 position of 

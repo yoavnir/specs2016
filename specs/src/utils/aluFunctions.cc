@@ -462,7 +462,7 @@ ALUValue* AluFunc_pos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 	}
 }
 
-ALUValue* AluFunc_rpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
+ALUValue* AluFunc_lastpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 {
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = _pHaystack->getStrPtr();
