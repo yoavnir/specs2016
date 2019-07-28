@@ -218,7 +218,7 @@ ALUValue* AluFunc_tobin(ALUValue* op)
 	return AluFunc_tobine(op,&bit64);
 }
 
-ALUValue* AluFunc_len(ALUValue* op)
+ALUValue* AluFunc_length(ALUValue* op)
 {
 	return new ALUValue(ALUInt(op->getStr().length()));
 }

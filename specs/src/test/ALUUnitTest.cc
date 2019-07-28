@@ -624,7 +624,7 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	VERIFY_EXPR("37%10", "Number(37);BOP(%);Number(10)");
 
-	VERIFY_EXPR("len(5)", "FUNC(len);(;Number(5);)");
+	VERIFY_EXPR("length(5)", "FUNC(length);(;Number(5);)");
 
 	// TODO: Yeah, a whole bunch of more expressions
 
@@ -702,10 +702,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("37%10","7");
 
 	// length and quoted string
-	VERIFY_EXPR_RES("len(0)", "1");
-	VERIFY_EXPR_RES("len(5)", "1");
-	VERIFY_EXPR_RES("len(512)", "3");
-	VERIFY_EXPR_RES("len('hello')", "5");
+	VERIFY_EXPR_RES("length(0)", "1");
+	VERIFY_EXPR_RES("length(5)", "1");
+	VERIFY_EXPR_RES("length(512)", "3");
+	VERIFY_EXPR_RES("length('hello')", "5");
 
 	VERIFY_EXPR_RES("sqrt(4)||' by '||sqrt(16)", "2 by 4");
 
@@ -725,7 +725,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordlength(2)", "5");
 	VERIFY_EXPR_RES("words(3,4)", "brown fox");
 	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
-	VERIFY_EXPR_RES("len(@@)", "43");
+	VERIFY_EXPR_RES("length(@@)", "43");
 
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");

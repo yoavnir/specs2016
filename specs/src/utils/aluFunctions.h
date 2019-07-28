@@ -20,7 +20,7 @@
 	X(frombin,        1, ALUFUNC_REGULAR,     false)  \
 	X(tobine,         2, ALUFUNC_REGULAR,     false)  \
 	X(tobin,          1, ALUFUNC_REGULAR,     false)  \
-	X(len,            1, ALUFUNC_REGULAR,     false)  \
+	X(length,         1, ALUFUNC_REGULAR,     false)  \
 	X(first,          0, ALUFUNC_REGULAR,     false)  \
 	X(recno,          0, ALUFUNC_REGULAR,      true)  \
 	X(number,         0, ALUFUNC_REGULAR,      true)  \

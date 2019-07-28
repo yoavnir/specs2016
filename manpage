@@ -539,7 +539,7 @@ Returns a decimal number from the binary representation in x.
 Returns a binary representation of the unsigned integer in x with field of length d bits. Valid values for d are 8, 16, 32, and 64.
 .IP "tobin(x)" 3
 Returns a binary representation of the unsigned integer in x. The field length is automatically determined by the value of x, but will be 1, 2, 4, or 8 characters in length.
-.IP "len(x)" 3
+.IP "length(x)" 3
 Returns the length of the argument when viewed as a string. For example, len(37) is 2; len('hello') is 5.
 .IP "first()" 3
 Returns 1 during the 
