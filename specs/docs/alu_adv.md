@@ -107,6 +107,7 @@
 | `insertp(string,target,position,length,pad)` | Inserts `string` into `target` at position `position` and truncated or padded with `pad` characters to length `length`. With default zero values, `position` inserts the string at the start of `target`, and the length of the `string` is kept as is. |
 | `justify(string,length)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string. |
 | `justifyp(string,length,pad)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string, while `pad` specifies what padding to insert (if necessary). |
+| `overlay(string1, string2 ,start ,length ,pad)` | Returns a copy of `string2`, partially or fully overwritten by `string1`. `start` specifies the starting position of the overlay. `length` truncates or pads `string1` prior to the operation, using `pad` as the pad character. |
 
 ## Table of Record Access Functions
 | Function | Description |

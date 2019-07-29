@@ -724,7 +724,7 @@ if non-empty, or
 .B space
 otherwise.
 
-.SS "Build-In REXX-Derived Functions"
+.SS "Built-In REXX-Derived Functions"
 .IP "bitand(x,y)" 3
 Returns the bit-wise 
 .B AND
@@ -867,6 +867,19 @@ The
 specifies the length of the returned string, while
 .I pad
 specifies what padding to insert (if necessary).
+.IP "overlay(string1, string2 ,start ,length ,pad)" 3
+Returns a copy of 
+.I string2, 
+partially or fully overwritten by 
+.I string1. start 
+specifies the starting position of the overlay. 
+.I length 
+truncates or pads 
+.I string1 
+prior to the operation, using 
+.I pad 
+as the pad character.
+
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

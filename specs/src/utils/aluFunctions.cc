@@ -1556,3 +1556,51 @@ ALUValue* AluFunc_justifyp(ALUValue* pStr, ALUValue* pLen, ALUValue* pPad)
 
 	return AluFunc_justify_do(str,size_t(len), padString[0]);
 }
+
+ALUValue* AluFunc_overlay(ALUValue* pString1, ALUValue* pString2, ALUValue* pStart, ALUValue* pLength, ALUValue* pPad)
+{
+	auto str1 = pString1->getStr();
+	auto str2 = pString2->getStr();
+	ALUInt start = pStart ? pStart->getInt() : 1;
+	ALUInt length = pLength ? pLength->getInt() : 0;
+	std::string padStr = pPad ? pPad->getStr() : " ";
+
+	// sanity checks
+	if (0 == str1.length()) return new ALUValue(str2);
+	if (start < 1) {
+		std::string err = "overlay: start argument should be positive. Got: " + std::to_string(start);
+		MYTHROW(err);
+	}
+	if (length < 0) {
+		std::string err = "overlay: length argument should be positive. Got: " + std::to_string(length);
+		MYTHROW(err);
+	}
+	if (length>0 && padStr.length()!=1) {
+		std::string err = "overlay: Invalid pad argument: <" + padStr + ">";
+		MYTHROW(err);
+	}
+
+	char pad = padStr[0];
+
+	// str2 shall serve as return value
+	// first pad if needed to reach start
+	while (str2.length() < (start-1)) {
+		str2 += pad;
+	}
+
+	// now prepare the overwrite string -- re-use str1
+	if (str1.length() > length && length>0) {
+		str1 = str1.substr(0,length);
+	}
+	while (str1.length() < length) {
+		str1 += pad;
+	}
+
+	std::string ret = str2.substr(0,start-1);
+	ret += str1;
+	if ((str1.length() + start - 1) < str2.length()) {
+		ret += str2.substr(str1.length() + start - 1);
+	}
+
+	return new ALUValue(ret);
+}

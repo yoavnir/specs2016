@@ -113,6 +113,7 @@
 	X(insertp,        5, ALUFUNC_REGULAR,     false)  \
 	X(justify,        2, ALUFUNC_REGULAR,     false)  \
 	X(justifyp,       3, ALUFUNC_REGULAR,     false)  \
+	X(overlay,        5, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

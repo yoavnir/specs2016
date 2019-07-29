@@ -1049,6 +1049,12 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("justifyp('this is it',18,'')", "justifyp: Invalid pad argument: <>");
 	VERIFY_EXPR_RES("justifyp('this is it',18,'qq')", "justifyp: Invalid pad argument: <qq>");
 
+	VERIFY_EXPR_RES("overlay('not','this is really right',9,6,'.')", "this is not... right");
+	VERIFY_EXPR_RES("overlay('eous','this is right',14,0,' ')", "this is righteous");
+	VERIFY_EXPR_RES("overlay('eous','this is right',16,0,'X')", "this is rightXXeous");
+	VERIFY_EXPR_RES("overlay('eous','this is right',16,2,'X')", "this is rightXXeo");
+	VERIFY_EXPR_RES("overlay('eous','this is right',16,6,'X')", "this is rightXXeousXX");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
