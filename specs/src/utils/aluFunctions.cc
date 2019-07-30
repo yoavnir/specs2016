@@ -9,6 +9,7 @@
 #include <set>
 #include <sstream>
 #include <iomanip>
+#include <algorithm> // for std::reverse
 
 #define PAD_CHAR ' '
 
@@ -1603,4 +1604,11 @@ ALUValue* AluFunc_overlay(ALUValue* pString1, ALUValue* pString2, ALUValue* pSta
 	}
 
 	return new ALUValue(ret);
+}
+
+ALUValue* AluFunc_reverse(ALUValue* pStr)
+{
+	auto str = pStr->getStr();
+	std::reverse(str.begin(), str.end());
+	return new ALUValue(str);
 }

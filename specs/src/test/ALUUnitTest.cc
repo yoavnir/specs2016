@@ -1055,6 +1055,12 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("overlay('eous','this is right',16,2,'X')", "this is rightXXeo");
 	VERIFY_EXPR_RES("overlay('eous','this is right',16,6,'X')", "this is rightXXeousXX");
 
+	VERIFY_EXPR_RES("reverse('')", "");
+	VERIFY_EXPR_RES("reverse('1')", "1");
+	VERIFY_EXPR_RES("reverse('12')", "21");
+	VERIFY_EXPR_RES("reverse('bird')", "drib");
+	VERIFY_EXPR_RES("reverse('chuck')", "kcuhc");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");

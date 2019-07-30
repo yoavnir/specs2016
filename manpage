@@ -879,7 +879,10 @@ truncates or pads
 prior to the operation, using 
 .I pad 
 as the pad character.
-
+.IP "reverse(string)" 3
+Returns a copy of a 
+.I string 
+with its characters reversed.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
