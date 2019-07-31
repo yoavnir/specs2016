@@ -891,6 +891,30 @@ is positive, 0 if the
 is 0, and -1 if the 
 .I number 
 is negative.
+.IP "space(string,length,pad)" 3
+Formats a 
+.I string 
+by replacing internal blanks with 
+.I length 
+occurrences of the 
+.I pad 
+character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If 
+.I length 
+is 0, all blanks are removed.
+.IP "strip(string,option,char)" 3
+Returns 
+.I string 
+stripped of leading and/or trailing blanks or any other 
+.I char 
+specified. 
+.I Option 
+values determine the action:
+.B L
+for leading, 
+.B T
+for trailing, and
+.B B
+for both.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

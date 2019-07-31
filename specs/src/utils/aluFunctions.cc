@@ -1625,3 +1625,78 @@ ALUValue* AluFunc_sign(ALUValue* pNumber)
 
 	return new ALUValue(ret);
 }
+
+ALUValue* AluFunc_space(ALUValue* pStr, ALUValue* pLength, ALUValue* pPad)
+{
+	auto wordVector = breakIntoWords(pStr->getStr());
+	char pad = ' ';
+	ALUInt len = 1;
+	if (pLength) {
+		len = pLength->getInt();
+		if (len < 0 || len > 1000) {
+			std::string err = "space: Invalid length argument: <" + pLength->getStr() + ">";
+			MYTHROW(err);
+		}
+		if (pPad) {
+			auto padStr = pPad->getStr();
+			if (padStr.length() != 1) {
+				std::string err = "space: Invalid pad argument: <" + padStr + ">";
+				MYTHROW(err);
+			}
+			pad = padStr[0];
+		}
+	}
+
+	std::string ret;
+	for (size_t i = 0; i < wordVector.size(); i++) {
+		if (i > 0) {
+			for (ALUInt j = 0 ; j < len ; j++) ret += pad;
+		}
+		ret += wordVector[i];
+	}
+
+	return new ALUValue(ret);
+}
+
+ALUValue* AluFunc_strip(ALUValue* pString, ALUValue* pOption, ALUValue* pChar)
+{
+	auto str = pString->getStr();
+	char option = 'B';
+	char pad = ' ';
+	if (pOption) {
+		auto optionStr = pOption->getStr();
+		if (1 != optionStr.length()) {
+			std::string err = "strip: Invalid option argument: <"+optionStr+">";
+			MYTHROW(err);
+		}
+		option = toupper(optionStr[0]);
+		if (pChar) {
+			auto padStr = pChar->getStr();
+			if (1 != padStr.length()) {
+				std::string err = "strip: Invalid char argument: <"+optionStr+">";
+				MYTHROW(err);
+			}
+			pad = padStr[0];
+		}
+	}
+
+	std::string ret;
+	auto first = str.find_first_not_of(pad);
+	auto last = str.find_last_not_of(pad);
+	switch (option) {
+	case 'B':
+		ret = str.substr(first, last-first+1);
+		break;
+	case 'L':
+		ret = str.substr(first);
+		break;
+	case 'T':
+		ret = str.substr(0,last+1);
+		break;
+	default:
+		std::string err = "strip: Invalid option argument: <"+pOption->getStr()+">";
+		MYTHROW(err);
+	}
+
+	return new ALUValue(ret);
+}

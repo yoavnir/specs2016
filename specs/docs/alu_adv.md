@@ -110,6 +110,9 @@
 | `overlay(string1, string2 ,start ,length ,pad)` | Returns a copy of `string2`, partially or fully overwritten by `string1`. `start` specifies the starting position of the overlay. `length` truncates or pads `string1` prior to the operation, using `pad` as the pad character. |
 | `reverse(string)` | Returns a copy of a `string` with its characters reversed. |
 | `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
+| `space(string,length,pad)` | Formats a `string` by replacing internal blanks with `length` occurrences of the `pad` character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If `length` is 0, all blanks are removed. |
+| strip(string,option,char) | Returns `string` stripped of leading and/or trailing blanks or any other `char` specified. `Option` values determine the action: *L* for leading, *T* for trailing, and *B* for both. |
+
 
 ## Table of Record Access Functions
 | Function | Description |

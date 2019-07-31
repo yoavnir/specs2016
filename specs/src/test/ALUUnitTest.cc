@@ -1067,6 +1067,13 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("sign(0)", "0");
 	VERIFY_EXPR_RES("sign('hello')", "0");
 
+	VERIFY_EXPR_RES("strip('    abc  ','B',' ')", "abc");
+	VERIFY_EXPR_RES("strip('xxxabcxxx', 'B', 'x')", "abc");
+	VERIFY_EXPR_RES("strip('xxxabcxxx', 't', 'x')", "xxxabc");
+
+	VERIFY_EXPR_RES("space('abc   abc','1',' ')", "abc abc");
+	VERIFY_EXPR_RES("space('abc   abc','1','x')", "abcxabc");
+	VERIFY_EXPR_RES("space('abc   abc','0',' ')", "abcabc");
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
