@@ -1612,3 +1612,16 @@ ALUValue* AluFunc_reverse(ALUValue* pStr)
 	std::reverse(str.begin(), str.end());
 	return new ALUValue(str);
 }
+
+ALUValue* AluFunc_sign(ALUValue* pNumber)
+{
+	auto num = pNumber->getFloat();
+	ALUInt ret = 0;
+	if (num > 0) {
+		ret = 1;
+	} else if (num < 0) {
+		ret = -1;
+	}
+
+	return new ALUValue(ret);
+}

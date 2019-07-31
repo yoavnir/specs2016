@@ -883,6 +883,14 @@ as the pad character.
 Returns a copy of a 
 .I string 
 with its characters reversed.
+.IP "sign(number)" 3
+Returns 1 if the 
+.I number 
+is positive, 0 if the 
+.I number 
+is 0, and -1 if the 
+.I number 
+is negative.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

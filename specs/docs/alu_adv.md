@@ -109,6 +109,7 @@
 | `justifyp(string,length,pad)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string, while `pad` specifies what padding to insert (if necessary). |
 | `overlay(string1, string2 ,start ,length ,pad)` | Returns a copy of `string2`, partially or fully overwritten by `string1`. `start` specifies the starting position of the overlay. `length` truncates or pads `string1` prior to the operation, using `pad` as the pad character. |
 | `reverse(string)` | Returns a copy of a `string` with its characters reversed. |
+| `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
 
 ## Table of Record Access Functions
 | Function | Description |

@@ -1061,6 +1061,13 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("reverse('bird')", "drib");
 	VERIFY_EXPR_RES("reverse('chuck')", "kcuhc");
 
+	VERIFY_EXPR_RES("sign(-88)", "-1");
+	VERIFY_EXPR_RES("sign(88)", "1");
+	VERIFY_EXPR_RES("sign(+0)", "0");
+	VERIFY_EXPR_RES("sign(0)", "0");
+	VERIFY_EXPR_RES("sign('hello')", "0");
+
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
