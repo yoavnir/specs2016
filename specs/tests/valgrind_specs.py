@@ -83,7 +83,7 @@ run_case(s,i,"centre-alignment and substr")
 s = \
 '''
    2.4 c2x b: 
-   if len(b)==8 then
+   if length(b)==8 then
        id b x2d a: 
        set "#0+=a" 
    endif
@@ -274,9 +274,9 @@ s = "a: word 1 . print 'includes(a,\"red\")' 1"
 i = "the\nred\nincredible"
 run_case(s,i,"Functions: includes")
 
-s = "a: word 1 . print 'len(a)' 1"
+s = "a: word 1 . print 'length(a)' 1"
 i = "the\nred\n\nincredible"
-run_case(s,i,"Functions: len")
+run_case(s,i,"Functions: length")
 
 s = "a: word 1 . print 'substr(a,4,3)' 1"
 i = "the\nincredible\n\nhulk"
