@@ -118,6 +118,7 @@
 	X(sign,           1, ALUFUNC_REGULAR,     false)  \
 	X(space,          3, ALUFUNC_REGULAR,     false)  \
 	X(strip,          3, ALUFUNC_REGULAR,     false)  \
+	X(subword,        3, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

@@ -112,6 +112,7 @@
 | `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
 | `space(string,length,pad)` | Formats a `string` by replacing internal blanks with `length` occurrences of the `pad` character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If `length` is 0, all blanks are removed. |
 | strip(string,option,char) | Returns `string` stripped of leading and/or trailing blanks or any other `char` specified. `Option` values determine the action: *L* for leading, *T* for trailing, and *B* for both. |
+| `subword(string,start,length)` | Returns the substring that begins at blank-delimited word `start`. If `length` is omitted, it defaults to the remainder of the string. |
 
 
 ## Table of Record Access Functions

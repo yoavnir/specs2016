@@ -1396,6 +1396,66 @@ static std::vector<std::string> breakIntoWords(std::string s)
 	return ret;
 }
 
+static std::vector<size_t> breakIntoWords_start(std::string s)
+{
+	std::vector<size_t> ret;
+
+	if (0 == s.length()) return ret;
+
+	bool inWhitespace = isspace(s[0]);
+	if (!inWhitespace) ret.push_back(0);
+	unsigned int wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
+	int wordStart = (inWhitespace) ? -1 : 0;
+	for (int i=0; i<s.length(); i++) {
+		// check if we've moved from non-ws to ws or vice versa
+		if (inWhitespace) {
+			if (!isspace(s[i])) {
+				inWhitespace = false;
+				wordIndex++;
+				wordStart = i;
+				ret.push_back(i);
+			}
+		} else {
+			if (isspace(s[i])) {
+				inWhitespace = true;
+			}
+		}
+
+	}
+
+	return ret;
+}
+
+static std::vector<size_t> breakIntoWords_end(std::string s)
+{
+	std::vector<size_t> ret;
+
+	if (0 == s.length()) return ret;
+
+	bool inWhitespace = isspace(s[0]);
+	unsigned int wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
+	int wordStart = (inWhitespace) ? -1 : 0;
+	for (int i=0; i<s.length(); i++) {
+		// check if we've moved from non-ws to ws or vice versa
+		if (inWhitespace) {
+			if (!isspace(s[i])) {
+				inWhitespace = false;
+				wordIndex++;
+				wordStart = i;
+			}
+		} else {
+			if (isspace(s[i])) {
+				inWhitespace = true;
+				ret.push_back(i-1);
+			} else if (i == s.length()-1) {
+				ret.push_back(i);
+			}
+		}
+
+	}
+	return ret;
+}
+
 ALUValue* AluFunc_find(ALUValue* string, ALUValue* phrase)
 {
 	auto phraseWords = breakIntoWords(phrase->getStr());
@@ -1699,4 +1759,46 @@ ALUValue* AluFunc_strip(ALUValue* pString, ALUValue* pOption, ALUValue* pChar)
 	}
 
 	return new ALUValue(ret);
+}
+
+ALUValue* AluFunc_subword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
+{
+	auto str = pString->getStr();
+	auto start = pStart->getInt();
+	ALUInt len = pLength ? pLength->getInt() : 0;
+
+	if (len < 0) {
+		std::string err = "subword: length argument must be non-negative. Got: " + std::to_string(len);
+		MYTHROW(err);
+	}
+
+	if (start < 0) {
+		std::string err = "subword: start argument must be non-negative. Got: " + std::to_string(start);
+		MYTHROW(err);
+	}
+
+	size_t cstart, cend;
+
+	if (start==0) {
+		cstart = 0;
+		start = 1;
+	}
+	else {
+		auto startVec = breakIntoWords_start(str);
+		if (start > startVec.size()) {
+			return new ALUValue("");
+		}
+		cstart = startVec[start-1];
+	}
+
+	if (0 == len) {
+		return new ALUValue(str.substr(cstart));
+	} else {
+		auto endVec = breakIntoWords_end(str);
+		if ((start + len - 1) > endVec.size()) {
+			return new ALUValue(str.substr(cstart));
+		}
+		cend = endVec[start+len-2];
+		return new ALUValue(str.substr(cstart, cend-cstart+1));
+	}
 }

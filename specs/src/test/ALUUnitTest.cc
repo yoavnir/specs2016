@@ -1075,6 +1075,18 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("space('abc   abc','1','x')", "abcxabc");
 	VERIFY_EXPR_RES("space('abc   abc','0',' ')", "abcabc");
 
+	VERIFY_EXPR_RES("subword('There are  those who believe',0,2)", "There are");
+	VERIFY_EXPR_RES("subword('There are  those who believe',1,2)", "There are");
+	VERIFY_EXPR_RES("subword('There are  those who believe',2,2)", "are  those");
+	VERIFY_EXPR_RES("subword('  There are  those who believe',0,2)", "  There are");
+	VERIFY_EXPR_RES("subword('  There are  those who believe',1,2)", "There are");
+	VERIFY_EXPR_RES("subword('  There are  those who believe',2,2)", "are  those");
+	VERIFY_EXPR_RES("subword('There are  those who believe',2,4)", "are  those who believe");
+	VERIFY_EXPR_RES("subword('There are  those who believe',2,5)", "are  those who believe");
+	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,4)", "are  those who believe");
+	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,5)", "are  those who believe  ");
+	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,0)", "are  those who believe  ");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");

@@ -915,6 +915,12 @@ for leading,
 for trailing, and
 .B B
 for both.
+.IP "subword(string,start,length)" 3
+Returns the substring that begins at blank-delimited word 
+.I start. 
+If
+.I length is omitted, it defaults to the remainder of the string.
+
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
