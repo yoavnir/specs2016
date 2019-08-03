@@ -920,6 +920,26 @@ Returns the substring that begins at blank-delimited word
 .I start. 
 If
 .I length is omitted, it defaults to the remainder of the string.
+.IP "translate(string,tableout,tablein,pad)" 3
+Returns a translated copy of 
+.I string. 
+Characters are translated according to the input translation table 
+.I tablein 
+and its output equivalent, 
+.I tableout. 
+If 
+.I tablein 
+and 
+.I tableout 
+are not coded, all characters in 
+.I string 
+are translated to uppercase. If 
+.I tableout 
+is shorter than 
+.I tablein, 
+it is padded with the 
+.I pad 
+character or its default, blanks.
 
 
 .SS "Built-In Statistical Pseudo-Functions" 

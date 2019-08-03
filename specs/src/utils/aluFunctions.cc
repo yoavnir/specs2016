@@ -1802,3 +1802,34 @@ ALUValue* AluFunc_subword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength
 		return new ALUValue(str.substr(cstart, cend-cstart+1));
 	}
 }
+
+ALUValue* AluFunc_translate(ALUValue* pString, ALUValue* pTableOut, ALUValue* pTableIn, ALUValue* pPad)
+{
+	auto str = pString->getStr();
+
+	std::string tableout = pTableOut ? pTableOut->getStr() : "";
+	std::string tablein = pTableIn ? pTableIn->getStr() : "";
+
+	if (0 == tableout.length() && 0 == tablein.length()) {
+		// just uppercase the whole thing
+		for (auto & c : str) c = toupper(c);
+	} else {
+		char pad = ' ';
+		if (pPad) {
+			auto padStr = pPad->getStr();
+			if (padStr.length() > 1) {
+				std::string err = "translate: Invalid pad argument: <" + padStr + ">";
+				MYTHROW(err);
+			}
+			if (padStr.length() == 1) pad = padStr[0];
+		}
+
+		for (int i=0; i<tablein.length(); i++) {
+			char oldValue = tablein[i];
+			char newValue = (tableout.length() <= i) ? pad : tableout[i];
+			std::replace(str.begin(), str.end(), oldValue, newValue);
+		}
+	}
+
+	return new ALUValue(str);
+}

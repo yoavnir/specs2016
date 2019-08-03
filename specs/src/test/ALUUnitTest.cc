@@ -1087,6 +1087,13 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,5)", "are  those who believe  ");
 	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,0)", "are  those who believe  ");
 
+	VERIFY_EXPR_RES("translate('abc')", "Failed assertion: computeStack.size() >= pUnit->countOperands()"); // This will become ABC
+	VERIFY_EXPR_RES("translate('abc','','','')", "ABC");
+	VERIFY_EXPR_RES("translate('abc','xy','ab','$')", "xyc");
+	VERIFY_EXPR_RES("translate('abc','xy','a','$')", "xbc");
+		VERIFY_EXPR_RES("translate('abc','x','ab','$')", "x$c");
+	VERIFY_EXPR_RES("translate('abc','xyz','ab','$')", "xyc");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
