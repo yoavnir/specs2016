@@ -120,6 +120,7 @@
 	X(strip,          3, ALUFUNC_REGULAR,     false)  \
 	X(subword,        3, ALUFUNC_REGULAR,     false)  \
 	X(translate,      4, ALUFUNC_REGULAR,     false)  \
+	X(verify,         4, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

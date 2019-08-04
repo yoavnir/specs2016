@@ -1833,3 +1833,47 @@ ALUValue* AluFunc_translate(ALUValue* pString, ALUValue* pTableOut, ALUValue* pT
 
 	return new ALUValue(str);
 }
+
+ALUValue* AluFunc_verify(ALUValue* pString, ALUValue* pReference, ALUValue* pOption, ALUValue* pStart)
+{
+	auto str = pString->getStr();
+	auto reference = pReference->getStr();
+
+	char option = 'N';
+	if (pOption) {
+		auto optionStr = pOption->getStr();
+		if (0 < optionStr.length()) {
+			option = toupper(optionStr[0]);
+			if ('N' != option && 'M' != option) {
+				std::string err = "verify: bad option argument: <" + optionStr + ">";
+				MYTHROW(err);
+			}
+		}
+	}
+
+	size_t start = 1;
+	if (pStart && "" != pStart->getStr()) {
+		auto _start = pStart->getInt();
+		if (_start < 0) {
+			std::string err = "verify: bad start argument: <" + pStart->getStr() + ">";
+			MYTHROW(err);
+		}
+		start = (0 == _start) ? 1 : _start;
+	}
+
+	ALUInt ret = 0;
+	bool bFound = false;
+	for (size_t i=start-1 ; !bFound && i < str.length() ; i++) {
+		size_t cntMatch=0;
+		for (size_t j=0 ; !cntMatch && j < reference.length() ; j++) {
+			if (str[i] == reference[j]) ++cntMatch;
+		}
+
+		if ((option=='M' && cntMatch>0) || (option=='N' && cntMatch==0)) {
+			bFound = true;
+			ret = i + 1;
+		}
+	}
+
+	return new ALUValue(ret);
+}

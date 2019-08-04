@@ -1091,8 +1091,13 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("translate('abc','','','')", "ABC");
 	VERIFY_EXPR_RES("translate('abc','xy','ab','$')", "xyc");
 	VERIFY_EXPR_RES("translate('abc','xy','a','$')", "xbc");
-		VERIFY_EXPR_RES("translate('abc','x','ab','$')", "x$c");
+	VERIFY_EXPR_RES("translate('abc','x','ab','$')", "x$c");
 	VERIFY_EXPR_RES("translate('abc','xyz','ab','$')", "xyc");
+
+	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh','','')", "3");
+	VERIFY_EXPR_RES("verify('dg','abcdefgh','','')", "0");
+	VERIFY_EXPR_RES("verify('dg','abcdefgh','m','')", "1");
+	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh','',5)", "13");
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 

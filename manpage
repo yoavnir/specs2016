@@ -940,7 +940,31 @@ is shorter than
 it is padded with the 
 .I pad 
 character or its default, blanks.
-
+.IP "verify(string, reference ,option ,start)" 3
+Verifies that all characters in 
+.I string 
+are members of the 
+.I reference 
+string. Returns the position of the first character in 
+.I string t
+hat is not in 
+.I reference, 
+or 0 if all characters in 
+.I string 
+are in 
+.I reference. 
+.P
+.I start 
+specifies where in 
+.I string 
+to start the search, the default is 1. The option may be:
+.RS 3
+.P
+.B N 
+or Nomatch — Default. Works as described earlier.
+.P
+.B M
+or Match — Returns the position of the first character in string that is in reference.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
