@@ -27,7 +27,7 @@
 	X(eof,            0, ALUFUNC_REGULAR,     false)  \
 	X(record,         0, ALUFUNC_REGULAR,      true)  \
 	X(wordcount,      0, ALUFUNC_REGULAR,      true)  \
-	X(wordindex,      1, ALUFUNC_REGULAR,      true)  \
+	X(wordstart,      1, ALUFUNC_REGULAR,      true)  \
 	X(wordlength,     1, ALUFUNC_REGULAR,      true)  \
 	X(wordend,        1, ALUFUNC_REGULAR,      true)  \
 	X(word,           1, ALUFUNC_REGULAR,      true)  \

@@ -713,14 +713,14 @@ int runALUUnitTests(unsigned int onlyTest)
 	g_ps.setString(SpecString::newString());
 	VERIFY_EXPR_RES("wordcount()", "0");
 	VERIFY_EXPR_RES("word(2)", "");
-	VERIFY_EXPR_RES("wordindex(3)", "0");
+	VERIFY_EXPR_RES("wordstart(3)", "0");
 	VERIFY_EXPR_RES("wordend(2)", "0");
 	VERIFY_EXPR_RES("words(3,4)", "");
 
 	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
-	VERIFY_EXPR_RES("wordindex(3)", "11");
+	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("wordlength(2)", "5");
 	VERIFY_EXPR_RES("words(3,4)", "brown fox");
@@ -730,7 +730,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
-	VERIFY_EXPR_RES("wordindex(3)", "11");
+	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("words(3,4)", "brown\tfox");
 	VERIFY_EXPR_RES("fieldcount()", "5");

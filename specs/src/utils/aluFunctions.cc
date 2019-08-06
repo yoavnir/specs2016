@@ -326,7 +326,7 @@ ALUValue* AluFunc_fieldlength(ALUValue* pIdx)
 	return new ALUValue(ALUInt(len));
 }
 
-ALUValue* AluFunc_wordindex(ALUValue* pIdx)
+ALUValue* AluFunc_wordstart(ALUValue* pIdx)
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordStart(pIdx->getInt())));
 }
