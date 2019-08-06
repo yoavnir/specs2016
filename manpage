@@ -965,6 +965,16 @@ or Nomatch — Default. Works as described earlier.
 .P
 .B M
 or Match — Returns the position of the first character in string that is in reference.
+.IP "wordindex(string,wordno)" 3
+Returns the character position of the first character of the blank-delimited word given by word number 
+.I wordno 
+within 
+.I string. 
+Returns 0 if the word numbered 
+.I wordno 
+does not exist in the 
+.I string.
+
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

@@ -1877,3 +1877,23 @@ ALUValue* AluFunc_verify(ALUValue* pString, ALUValue* pReference, ALUValue* pOpt
 
 	return new ALUValue(ret);
 }
+
+ALUValue* AluFunc_wordindex(ALUValue* pString, ALUValue* pIdx)
+{
+	auto str = pString->getStr();
+	ALUInt idx = pIdx->getInt();
+
+	if (idx < 1) {
+		std::string err = "wordindex: wordno argument must be positive. Got: " + std::to_string(idx);
+		MYTHROW(err);
+	}
+
+	auto wordvec = breakIntoWords_start(str);
+
+	ALUInt ret = 0;
+	if (idx-1 < wordvec.size()) {
+		ret = wordvec[idx-1] + 1;
+	}
+
+	return new ALUValue(ret);
+}

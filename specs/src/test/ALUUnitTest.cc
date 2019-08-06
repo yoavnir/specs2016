@@ -1099,6 +1099,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("verify('dg','abcdefgh','m','')", "1");
 	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh','',5)", "13");
 
+	VERIFY_EXPR_RES("wordindex('tis the time', 2)", "5");
+	VERIFY_EXPR_RES("wordindex('tis the time', 4)", "0");
+	VERIFY_EXPR_RES("wordindex('tis the time', 0)", "wordindex: wordno argument must be positive. Got: 0");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
