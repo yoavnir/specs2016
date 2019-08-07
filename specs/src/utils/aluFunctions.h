@@ -28,7 +28,7 @@
 	X(record,         0, ALUFUNC_REGULAR,      true)  \
 	X(wordcount,      0, ALUFUNC_REGULAR,      true)  \
 	X(wordstart,      1, ALUFUNC_REGULAR,      true)  \
-	X(wordlength,     1, ALUFUNC_REGULAR,      true)  \
+	X(wordlen,        1, ALUFUNC_REGULAR,      true)  \
 	X(wordend,        1, ALUFUNC_REGULAR,      true)  \
 	X(word,           1, ALUFUNC_REGULAR,      true)  \
 	X(words,          2, ALUFUNC_REGULAR,      true)  \
@@ -122,6 +122,7 @@
 	X(translate,      4, ALUFUNC_REGULAR,     false)  \
 	X(verify,         4, ALUFUNC_REGULAR,     false)  \
 	X(wordindex,      2, ALUFUNC_REGULAR,     false)  \
+	X(wordlength,     2, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

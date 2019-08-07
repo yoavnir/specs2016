@@ -974,6 +974,15 @@ Returns 0 if the word numbered
 .I wordno 
 does not exist in the 
 .I string.
+.IP "wordlength(string,wordno)" 3
+Returns the length of the blank-delimited word given by word number 
+.I wordno 
+within 
+.I string. 
+Returns 0 if the word numbered 
+.I wordno 
+does not exist in the 
+.I string.
 
 
 .SS "Built-In Statistical Pseudo-Functions" 

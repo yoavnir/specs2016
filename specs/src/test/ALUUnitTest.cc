@@ -722,7 +722,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("word(2)", "quick");
 	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
-	VERIFY_EXPR_RES("wordlength(2)", "5");
+	VERIFY_EXPR_RES("wordlen(2)", "5");
 	VERIFY_EXPR_RES("words(3,4)", "brown fox");
 	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
 	VERIFY_EXPR_RES("length(@@)", "43");
@@ -1102,6 +1102,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordindex('tis the time', 2)", "5");
 	VERIFY_EXPR_RES("wordindex('tis the time', 4)", "0");
 	VERIFY_EXPR_RES("wordindex('tis the time', 0)", "wordindex: wordno argument must be positive. Got: 0");
+
+	VERIFY_EXPR_RES("wordlength('tis the time', 2)", "3");
+	VERIFY_EXPR_RES("wordlength('tis the time', 4)", "0");
+	VERIFY_EXPR_RES("wordlength('tis the time', 0)", "wordlength: wordno argument must be positive. Got: 0");
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 

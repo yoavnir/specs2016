@@ -336,7 +336,7 @@ ALUValue* AluFunc_wordend(ALUValue* pIdx)
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordEnd(pIdx->getInt())));
 }
 
-ALUValue* AluFunc_wordlength(ALUValue* pIdx)
+ALUValue* AluFunc_wordlen(ALUValue* pIdx)
 {
 	auto idx = pIdx->getInt();
 	auto len = g_pStateQueryAgent->getWordEnd(idx) - g_pStateQueryAgent->getWordStart(idx) + 1;
@@ -1893,6 +1893,26 @@ ALUValue* AluFunc_wordindex(ALUValue* pString, ALUValue* pIdx)
 	ALUInt ret = 0;
 	if (idx-1 < wordvec.size()) {
 		ret = wordvec[idx-1] + 1;
+	}
+
+	return new ALUValue(ret);
+}
+
+ALUValue* AluFunc_wordlength(ALUValue* pString, ALUValue* pIdx)
+{
+	auto str = pString->getStr();
+	ALUInt idx = pIdx->getInt();
+
+	if (idx < 1) {
+		std::string err = "wordlength: wordno argument must be positive. Got: " + std::to_string(idx);
+		MYTHROW(err);
+	}
+
+	auto wordvec = breakIntoWords(str);
+
+	ALUInt ret = 0;
+	if (idx-1 < wordvec.size()) {
+		ret = wordvec[idx-1].length();
 	}
 
 	return new ALUValue(ret);

@@ -116,6 +116,7 @@
 | translate(string,tableout,tablein,pad) | Returns a translated copy of `string`. Characters are translated according to the input translation table `tablein` and its output equivalent, `tableout`. If `tablein` and `tableout` are not coded, all characters in `string` are translated to uppercase. If `tableout` is shorter than `tablein`, it is padded with the `pad` character or its default, blanks. |
 | `verify(string, reference ,option ,start)` | Verifies that all characters in `string` are members of the `reference` string. Returns the position of the first character in `string` that is not in `reference`, or 0 if all characters in `string` are in `reference`. <br />`start` specifies where in `string` to start the search, the default is 1. The `option` may be:<ul><li> **N** (Nomatch) — Default. Works as described earlier.</li><li> **M** (Match) — Returns the position of the first character in string that is in reference.</li></ul> |
 | `wordindex(string,wordno)` | Returns the character position of the first character of the blank-delimited word given by word number `wordno` within `string`. Returns 0 if the word numbered `wordno` does not exist in the `string`.|
+| `wordlength(string,wordno)` | Returns the length of the blank-delimited word given by word number `wordno` within `string`. Returns 0 if the word numbered `wordno` does not exist in the `string`.|
 
 
 ## Table of Record Access Functions
@@ -134,8 +135,8 @@
 | `words(n,m)` | Returns the substring from the *n*-th word to the *m*-th word |
 | `wordcount()` | Returns the number of words in the current record |
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
-| `wordindex(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
-| `wordlength(n)` | Returns the length of the *n*-th word |
+| `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
+| `wordlen(n)` | Returns the length of the *n*-th word |
 
 ## Table of Statistical and Frequency Map Pseudo-Functions
 | Function | Description |
