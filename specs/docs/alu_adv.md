@@ -117,6 +117,7 @@
 | `verify(string, reference ,option ,start)` | Verifies that all characters in `string` are members of the `reference` string. Returns the position of the first character in `string` that is not in `reference`, or 0 if all characters in `string` are in `reference`. <br />`start` specifies where in `string` to start the search, the default is 1. The `option` may be:<ul><li> **N** (Nomatch) — Default. Works as described earlier.</li><li> **M** (Match) — Returns the position of the first character in string that is in reference.</li></ul> |
 | `wordindex(string,wordno)` | Returns the character position of the first character of the blank-delimited word given by word number `wordno` within `string`. Returns 0 if the word numbered `wordno` does not exist in the `string`.|
 | `wordlength(string,wordno)` | Returns the length of the blank-delimited word given by word number `wordno` within `string`. Returns 0 if the word numbered `wordno` does not exist in the `string`.|
+| `wordpos(phrase, string [,start])` | If `phrase` is a substring of `string`, returns the word number position at which it begins. Otherwise returns 0. `start` is an optional word number within `string` at which the search starts. It defaults to 1. |
 
 
 ## Table of Record Access Functions

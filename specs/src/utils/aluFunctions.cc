@@ -1917,3 +1917,25 @@ ALUValue* AluFunc_wordlength(ALUValue* pString, ALUValue* pIdx)
 
 	return new ALUValue(ret);
 }
+
+ALUValue* AluFunc_wordpos(ALUValue* pPhrase, ALUValue* pString, ALUValue* pStart)
+{
+	auto phrase = pPhrase->getStr();
+	auto str = pString->getStr();
+	ALUInt start = pStart ? pStart->getInt() : 1;
+
+	if (start < 1) {
+		std::string err = "wordpos: start argument must be positive. Got: " + std::to_string(start);
+		MYTHROW(err);
+	}
+
+	auto startVec = breakIntoWords_start(str);
+
+	for (ALUInt i = start-1 ; i < startVec.size() ; i++) {
+		auto sub = str.substr(startVec[i], phrase.length());
+		if (sub==phrase) return new ALUValue(i+1);
+	}
+
+	return new ALUValue(ALUInt(0));
+}
+

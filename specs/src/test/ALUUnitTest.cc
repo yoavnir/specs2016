@@ -1107,6 +1107,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordlength('tis the time', 4)", "0");
 	VERIFY_EXPR_RES("wordlength('tis the time', 0)", "wordlength: wordno argument must be positive. Got: 0");
 
+	VERIFY_EXPR_RES("wordpos('time of', 'tis the time of the season', 1)", "3");
+	VERIFY_EXPR_RES("wordpos(' time of', 'tis the time of the season', 1)", "0");
+	VERIFY_EXPR_RES("wordpos('time of ', 'tis the time of the season', 1)", "3");
+	VERIFY_EXPR_RES("wordpos('never', 'tis the time of the season', 1)", "0");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
