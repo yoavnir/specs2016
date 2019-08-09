@@ -133,7 +133,7 @@
 | `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `number()` |
 | `record()` | Returns the entire input record |
 | `word(n)` | Returns the *n*-th word |
-| `words(n,m)` | Returns the substring from the *n*-th word to the *m*-th word |
+| `wordrange(n,m)` | Returns the substring from the *n*-th word to the *m*-th word |
 | `wordcount()` | Returns the number of words in the current record |
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |

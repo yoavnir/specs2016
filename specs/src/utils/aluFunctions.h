@@ -31,7 +31,7 @@
 	X(wordlen,        1, ALUFUNC_REGULAR,      true)  \
 	X(wordend,        1, ALUFUNC_REGULAR,      true)  \
 	X(word,           1, ALUFUNC_REGULAR,      true)  \
-	X(words,          2, ALUFUNC_REGULAR,      true)  \
+	X(wordrange,      2, ALUFUNC_REGULAR,      true)  \
 	X(fieldcount,     0, ALUFUNC_REGULAR,      true)  \
 	X(fieldindex,     1, ALUFUNC_REGULAR,      true)  \
 	X(fieldlength,    1, ALUFUNC_REGULAR,      true)  \

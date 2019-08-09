@@ -656,7 +656,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_RPN("a>b & b>c","FI(a);FI(b);BOP(>);FI(b);FI(c);BOP(>);BOP(&)");
 
 	// Issue #37
-	VERIFY_RPN("tf2d(words(1,2),'%d')", "Number(1);Number(2);FUNC(words);Literal(%d);FUNC(tf2d)");
+	VERIFY_RPN("tf2d(wordrange(1,2),'%d')", "Number(1);Number(2);FUNC(wordrange);Literal(%d);FUNC(tf2d)");
 
 	// TODO: More here as well
 
@@ -715,7 +715,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("word(2)", "");
 	VERIFY_EXPR_RES("wordstart(3)", "0");
 	VERIFY_EXPR_RES("wordend(2)", "0");
-	VERIFY_EXPR_RES("words(3,4)", "");
+	VERIFY_EXPR_RES("wordrange(3,4)", "");
 
 	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
@@ -723,7 +723,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("wordlen(2)", "5");
-	VERIFY_EXPR_RES("words(3,4)", "brown fox");
+	VERIFY_EXPR_RES("wordrange(3,4)", "brown fox");
 	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
 	VERIFY_EXPR_RES("length(@@)", "43");
 
@@ -732,7 +732,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("word(2)", "quick");
 	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
-	VERIFY_EXPR_RES("words(3,4)", "brown\tfox");
+	VERIFY_EXPR_RES("wordrange(3,4)", "brown\tfox");
 	VERIFY_EXPR_RES("fieldcount()", "5");
 	VERIFY_EXPR_RES("field(3)", "fox jumps");
 	VERIFY_EXPR_RES("fieldindex(2)", "5");

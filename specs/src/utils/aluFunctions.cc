@@ -295,7 +295,7 @@ ALUValue* AluFunc_field(ALUValue* pIdx)
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_words(ALUValue* pStart, ALUValue* pEnd)
+ALUValue* AluFunc_wordrange(ALUValue* pStart, ALUValue* pEnd)
 {
 	ALUInt start = g_pStateQueryAgent->getWordStart(pStart->getInt());
 	ALUInt end = g_pStateQueryAgent->getWordEnd(pEnd->getInt());

@@ -580,7 +580,7 @@ Returns the ending position of the i-th word in the input record.
 is equivalent to 
 .I word(i)
 but less efficient.
-.IP "words(s,e)" 3
+.IP "wordrange(s,e)" 3
 Returns the string from the start of the 
 .B s-th
 word to the end of the 
