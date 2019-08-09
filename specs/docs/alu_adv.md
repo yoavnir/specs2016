@@ -138,6 +138,7 @@
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
 | `wordlen(n)` | Returns the length of the *n*-th word |
+| `words(string)` | Returns the number of blank-delimited words within the `string`.|
 
 ## Table of Statistical and Frequency Map Pseudo-Functions
 | Function | Description |

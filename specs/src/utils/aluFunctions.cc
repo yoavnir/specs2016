@@ -1939,3 +1939,11 @@ ALUValue* AluFunc_wordpos(ALUValue* pPhrase, ALUValue* pString, ALUValue* pStart
 	return new ALUValue(ALUInt(0));
 }
 
+ALUValue* AluFunc_words(ALUValue* pStr)
+{
+	auto str = pStr->getStr();
+	auto startVec = breakIntoWords(str);
+	ALUInt ret = startVec.size();
+	return new ALUValue(ret);
+}
+
