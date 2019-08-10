@@ -996,6 +996,17 @@ at which the search starts. It defaults to 1.
 .IP "words(string)" 3
 Returns the number of blank-delimited words within the 
 .I string.
+.IP "xrange(start,end)" 3
+Returns a string composed of all the characters between 
+.I start 
+and 
+.I end 
+inclusive. 
+.I start 
+defaults to 0x00, and 
+.I end
+defaults to 0xff.
+
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.

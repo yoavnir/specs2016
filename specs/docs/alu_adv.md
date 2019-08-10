@@ -118,7 +118,8 @@
 | `wordindex(string,wordno)` | Returns the character position of the first character of the blank-delimited word given by word number `wordno` within `string`. Returns 0 if the word numbered `wordno` does not exist in the `string`.|
 | `wordlength(string,wordno)` | Returns the length of the blank-delimited word given by word number `wordno` within `string`. Returns 0 if the word numbered `wordno` does not exist in the `string`.|
 | `wordpos(phrase, string [,start])` | If `phrase` is a substring of `string`, returns the word number position at which it begins. Otherwise returns 0. `start` is an optional word number within `string` at which the search starts. It defaults to 1. |
-
+| `words(string)` | Returns the number of blank-delimited words within the `string`.|
+| `xrange(start,end)` | Returns a string composed of all the characters between `start` and `end` inclusive. `start` defaults to 0x00, and `end` defaults to 0xff. |
 
 ## Table of Record Access Functions
 | Function | Description |
@@ -138,7 +139,6 @@
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
 | `wordlen(n)` | Returns the length of the *n*-th word |
-| `words(string)` | Returns the number of blank-delimited words within the `string`.|
 
 ## Table of Statistical and Frequency Map Pseudo-Functions
 | Function | Description |

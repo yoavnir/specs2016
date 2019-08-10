@@ -1947,3 +1947,21 @@ ALUValue* AluFunc_words(ALUValue* pStr)
 	return new ALUValue(ret);
 }
 
+ALUValue* AluFunc_xrange(ALUValue* pStart, ALUValue* pEnd)
+{
+	std::string startStr = pStart ? pStart->getStr() : "";
+	std::string endStr = pEnd ? pEnd->getStr() : "";
+
+	int start = (startStr.length() > 0) ? startStr[0] : 0;
+	int end = (endStr.length() > 0) ? endStr[0] : 0xff;
+
+	while (start < 0) start += 256;
+	while (end < 0) end += 256;
+
+	if (end < start) return new ALUValue(std::string(""));
+
+	std::string ret;
+	for (int i = start ; i <= end ; i++) ret += char(i);
+
+	return new ALUValue(ret);
+}

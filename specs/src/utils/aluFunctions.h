@@ -125,6 +125,7 @@
 	X(wordlength,     2, ALUFUNC_REGULAR,     false)  \
 	X(wordpos,        3, ALUFUNC_REGULAR,     false)  \
 	X(words,          1, ALUFUNC_REGULAR,     false)  \
+	X(xrange,         2, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \

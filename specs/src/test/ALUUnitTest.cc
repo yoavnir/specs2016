@@ -1116,6 +1116,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("words('tis   the   time  of    the season   for  love')", "8");
 	VERIFY_EXPR_RES("words('')", "0");
 
+	VERIFY_EXPR_RES("xrange('a','d')", "abcd");
+	VERIFY_EXPR_RES("length(xrange('a',''))", "159");
+	VERIFY_EXPR_RES("substr(xrange('a',''),1,29)", "abcdefghijklmnopqrstuvwxyz{|}");
+
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
