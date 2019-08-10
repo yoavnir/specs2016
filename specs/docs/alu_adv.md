@@ -120,6 +120,7 @@
 | `wordpos(phrase, string [,start])` | If `phrase` is a substring of `string`, returns the word number position at which it begins. Otherwise returns 0. `start` is an optional word number within `string` at which the search starts. It defaults to 1. |
 | `words(string)` | Returns the number of blank-delimited words within the `string`.|
 | `xrange(start,end)` | Returns a string composed of all the characters between `start` and `end` inclusive. `start` defaults to 0x00, and `end` defaults to 0xff. |
+| `x2d(string,length)` | Returns the value in `string` converted to decimal. If `length` is missing or non-positive, the resulting decimal is signed, otherwise it is unsigned. |
 
 ## Table of Record Access Functions
 | Function | Description |

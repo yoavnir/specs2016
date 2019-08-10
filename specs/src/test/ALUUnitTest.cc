@@ -832,11 +832,15 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
 
 	// Conversion-equivalent functions
-	VERIFY_EXPR_RES("x2d('A')", "10");
-	VERIFY_EXPR_RES("x2d('1234567890abcdef')", "1311768467294899695");
-	VERIFY_EXPR_RES("x2d('1234567890abCdEf')", "1311768467294899695");
-	VERIFY_EXPR_RES("x2d('1234567890abcdefg')", "1311768467294899695");
-	VERIFY_EXPR_RES("x2d('1234567890abcdeff')", "Cannot convert <1234567890abcdeff> from format <Hex> to format <Decimal>: out of range");
+	VERIFY_EXPR_RES("x2d('A',0)", "10");
+	VERIFY_EXPR_RES("x2d('A',1)", "-6");
+	VERIFY_EXPR_RES("x2d('A',2)", "-6");
+	VERIFY_EXPR_RES("x2d('1234567890abcdef',0)", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abcdef',4)", "4660");
+	VERIFY_EXPR_RES("x2d('fedcba',4)", "-292");
+	VERIFY_EXPR_RES("x2d('1234567890abCdEf',0)", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abcdefg',0)", "1311768467294899695");
+	VERIFY_EXPR_RES("x2d('1234567890abcdeff',0)", "Cannot convert <1234567890abcdeff> from format <Hex> to format <Decimal>: out of range");
 
 	VERIFY_EXPR_RES("d2x('153')", "99");
 	VERIFY_EXPR_RES("d2x('18446744073709551615')", "ffffffffffffffff");

@@ -50,7 +50,7 @@
 	X(center,         2, ALUFUNC_REGULAR,     false)  \
 	X(centre,         2, ALUFUNC_REGULAR,     false)  \
 	X(conf,           1, ALUFUNC_REGULAR,     false)  \
-	X(x2d,            1, ALUFUNC_REGULAR,     false)  \
+	X(x2d,            2, ALUFUNC_REGULAR,     false)  \
 	X(d2x,            1, ALUFUNC_REGULAR,     false)  \
 	X(x2ch,           1, ALUFUNC_REGULAR,     false)  \
 	X(c2x,            1, ALUFUNC_REGULAR,     false)  \

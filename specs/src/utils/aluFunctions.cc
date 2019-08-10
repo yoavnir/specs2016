@@ -501,10 +501,45 @@ ALUValue* AluFunc_d2x(ALUValue* _pDecValue)
 }
 
 extern std::string conv_X2D(std::string& s);
-ALUValue* AluFunc_x2d(ALUValue* _pHexValue)
+static size_t SZLL = 2 * sizeof(long long int);
+ALUValue* AluFunc_x2d(ALUValue* _pHexValue, ALUValue* pLength)
 {
-	std::string hex = _pHexValue->getStr();
-	return new ALUValue(conv_X2D(hex));
+	static std::string zeropad = "0000000000000000";
+	static std::string ffffpad = "FFFFFFFFFFFFFFFF";
+	auto hex = _pHexValue->getStr();
+	ALUInt len = pLength ? pLength->getInt() : 0;
+
+	if (len < 1) {
+		return new ALUValue(conv_X2D(hex));
+	}
+
+	if (len > SZLL) len = SZLL;
+	while (len > hex.length()) len--;
+
+	if (hex.length()==0) return new ALUValue(ALUInt(0));
+
+	MYASSERT(zeropad.length() >= SZLL);
+
+	auto firstDigit = hex[0];
+	if (firstDigit >= '0' && firstDigit <= '7') {
+		hex = zeropad.substr(0,(SZLL-len)) + hex.substr(0,len);
+	} else {
+		hex = ffffpad.substr(0,(SZLL-len)) + hex.substr(0,len);
+	}
+
+	long long int value;
+	try {
+		try {
+			unsigned long long int uvalue = std::stoull(hex, NULL, 16);
+			value = (long long int) uvalue;
+		} catch (std::invalid_argument) {
+			CONVERSION_EXCEPTION(hex, "Hex", "Decimal");
+		}
+	} catch (std::out_of_range) {
+		CONVERSION_EXCEPTION_EX(hex, "Hex", "Decimal", "out of range")
+	}
+
+	return new ALUValue(ALUInt(value));
 }
 
 extern std::string conv_C2X(std::string& s);
