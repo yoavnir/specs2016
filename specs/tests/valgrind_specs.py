@@ -286,9 +286,9 @@ s = "a: word 1 . print 'pos(\"red\",a)' 1"
 i = "the\nred\nincredible"
 run_case(s,i,"Functions: pos")
 
-s = "a: word 1 . print 'rpos(\"red\",a)' 1"
+s = "a: word 1 . print 'lastpos(\"red\",a)' 1"
 i = "the\nred\nincredible"
-run_case(s,i,"Functions: rpos")
+run_case(s,i,"Functions: lastpos")
 
 # Record Access Functions
 
@@ -336,9 +336,9 @@ s = "print 'word(3)' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
 run_case(s,i,"Functions: word")
 
-s = "print 'words(2,3)' 1"
+s = "print 'wordrange(2,3)' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
-run_case(s,i,"Functions: words")
+run_case(s,i,"Functions: wordrange")
 
 s = "print 'wordcount()' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
@@ -348,13 +348,13 @@ s = "print 'wordend(3)' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
 run_case(s,i,"Functions: wordend")
 
-s = "print 'wordindex(3)' 1"
+s = "print 'wordstart(3)' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
-run_case(s,i,"Functions: wordindex")
+run_case(s,i,"Functions: wordstart")
 
-s = "print 'wordlength(3)' 1"
+s = "print 'wordlen(3)' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
-run_case(s,i,"Functions: wordlength")
+run_case(s,i,"Functions: wordlen")
 
 # Special functions
 

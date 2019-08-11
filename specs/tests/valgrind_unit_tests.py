@@ -12,8 +12,11 @@ args = parser.parse_args()
 if args.nvg==True:
 	memcheck.no_valgrind = True
 
-tests_that_may_fail = [43,48,61,63,353,355,365,367]
+tests_to_skip = [529]
+tests_that_may_fail = [43,48,61,63,357,359,369,371]
 for i in range(count_ALU_tests):
+    if (i+1) in tests_to_skip:
+        continue
     cmd = "../exe/ALUUnitTest {}".format(i+1)
     (rc,info) = memcheck.leak_check(cmd)
     if rc==memcheck.RetCode_SUCCESS:
