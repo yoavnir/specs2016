@@ -937,21 +937,28 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2d('גגג')", "161454579225303");
 	VERIFY_EXPR_RES("c2d('גגגג')", "-7865656769600056617");
 	VERIFY_EXPR_RES("c2d('גגגגג')", "c2u/c2d: Invalid input length: 10");
-	VERIFY_EXPR_RES("c2f('A')", "c2f: Invalid floating point length: 1. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AA')", "c2f: Invalid floating point length: 2. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAA')", "c2f: Invalid floating point length: 3. Supported lengths: 4, 8, 16");
+
+#ifdef VISUAL_STUDIO
+#define C2FERR ". Supported lengths: 4, 8"
+#else
+#define C2FERR ". Supported lengths: 4, 8, 16"
+#endif
+
+	VERIFY_EXPR_RES("c2f('A')", "c2f: Invalid floating point length: 1" C2FERR)
+	VERIFY_EXPR_RES("c2f('AA')", "c2f: Invalid floating point length: 2" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAA')", "c2f: Invalid floating point length: 3" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945557");
-	VERIFY_EXPR_RES("c2f('AAAAA')", "c2f: Invalid floating point length: 5. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAAAAA')", "c2f: Invalid floating point length: 6. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAAAAAA')", "c2f: Invalid floating point length: 7. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAA')", "c2f: Invalid floating point length: 5" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAAAAA')", "c2f: Invalid floating point length: 6" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAAAAAA')", "c2f: Invalid floating point length: 7" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.509803921");
-	VERIFY_EXPR_RES("c2f('AAAAAAAAA')", "c2f: Invalid floating point length: 9. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAAAAAAAAA')", "c2f: Invalid floating point length: 10. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAAAAAAAAAA')", "c2f: Invalid floating point length: 11. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAA')", "c2f: Invalid floating point length: 12. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAA')", "c2f: Invalid floating point length: 13. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 14. Supported lengths: 4, 8, 16");
-	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15. Supported lengths: 4, 8, 16");
+	VERIFY_EXPR_RES("c2f('AAAAAAAAA')", "c2f: Invalid floating point length: 9" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAA')", "c2f: Invalid floating point length: 10" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAA')", "c2f: Invalid floating point length: 11" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAA')", "c2f: Invalid floating point length: 12" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAA')", "c2f: Invalid floating point length: 13" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 14" C2FERR)
+	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15" C2FERR)
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
 
 	VERIFY_EXPR_RES("substitute('Just the place for a snark','','',1)", "substitute: Search string must not be empty");
