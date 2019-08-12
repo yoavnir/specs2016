@@ -18,6 +18,7 @@ int setenv(const char *name, const char *value, int overwrite);
 	#define strcasecmp _stricmp
 	#define ALUFloatPrecision  15
 	#define VISUAL_STUDIO
+	#define NOMINMAX 1
 #else
 	#define ALUFloatPrecision 16
 #endif
@@ -40,7 +41,6 @@ int setenv(const char *name, const char *value, int overwrite);
 #endif
 
 #ifdef ALURAND_wincrypt
-  #define NOMINMAX
   #include <windows.h>
   #include <wincrypt.h>
   #define AluRandContext    HCRYPTPROV
