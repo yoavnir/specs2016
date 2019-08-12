@@ -34,7 +34,7 @@ public:
 	char    getWSChar()  { return m_wordSeparator;  }
 	char    getFSChar()  { return m_fieldSeparator; }
 
-	void    setString(PSpecString ps);
+	void    setString(PSpecString ps, bool bResetState = true);
 	void    setStringInPlace(PSpecString ps);
 
 	// The stateQueryAgent interface

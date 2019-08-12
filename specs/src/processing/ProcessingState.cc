@@ -104,7 +104,7 @@ ProcessingState::~ProcessingState()
 	}
 }
 
-void ProcessingState::setString(PSpecString ps)
+void ProcessingState::setString(PSpecString ps, bool bResetState)
 {
 	if (m_ps && ps!=m_ps) {
 		if (m_prevPs) delete m_prevPs;
@@ -116,8 +116,10 @@ void ProcessingState::setString(PSpecString ps)
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
-	fieldIdentifierClear();
-	resetBreaks();
+	if (bResetState) {
+		fieldIdentifierClear();
+		resetBreaks();
+	}
 }
 
 void ProcessingState::setStringInPlace(PSpecString ps)

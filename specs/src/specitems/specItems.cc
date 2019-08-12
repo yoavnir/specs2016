@@ -264,7 +264,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			} else {
 				ps = SpecString::newString();
 			}
-			pState.setString(ps);
+			pState.setString(ps, false);
 			pState.setFirst();
 			break;
 		case ApplyRet__Read:
@@ -280,7 +280,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			} else {
 				pState.incrementExtraReads();
 			}
-			pState.setString(ps);
+			pState.setString(ps, false);
 			break;
 		case ApplyRet__EnterLoop:
 			pState.pushLoop(i);

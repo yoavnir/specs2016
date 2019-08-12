@@ -437,6 +437,9 @@ int main(int argc, char** argv)
 	spec = "a: word 1 1 if 'a>4' then abend 'too big' endif";
 	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "ABEND: too big");  // TEST #109
 
+	spec = "a: word 1 1 READ '+' N b: word 1 N '=' N print 'a+b' N";
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "1+2=3\n3+4=7\n5+6=11");
+
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
