@@ -149,6 +149,7 @@ enum AluUnitType {
 	UT_BinaryOp,
 	UT_AssignmentOp,
 	UT_InputRecord,
+	UT_Null,
 };
 
 unsigned int getCountOperands(AluUnitType t);
@@ -183,6 +184,16 @@ public:
 private:
 	ALUValue	m_literal;
 	bool        m_hintNumerical;
+};
+
+class AluUnitNull : public AluUnit {
+public:
+	AluUnitNull() {}
+	~AluUnitNull()             {}
+	virtual void				_serialize(std::ostream& os) const;
+	virtual std::string			_identify();
+	virtual AluUnitType			type()			{return UT_Null;}
+	virtual ALUValue*			evaluate();
 };
 
 class AluUnitCounter : public AluUnit {

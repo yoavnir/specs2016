@@ -224,6 +224,21 @@ ALUValue* AluUnitLiteral::evaluate()
 	return ret;
 }
 
+void AluUnitNull::_serialize(std::ostream& os) const
+{
+	os << "dummy";
+}
+
+std::string AluUnitNull::_identify()
+{
+	return std::string("Dummy");
+}
+
+ALUValue* AluUnitNull::evaluate()
+{
+	return NULL;
+}
+
 
 void AluUnitCounter::_serialize(std::ostream& os) const
 {
@@ -1470,6 +1485,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 #endif
 
 	int stepNumber = 0;
+	bool     bExpectNullArgument = false;
 
 	for (AluUnit* pUnit : source) {
 #ifdef ALU_DUMP
@@ -1482,13 +1498,18 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 #endif
 		switch (pUnit->type()) {
 		case UT_Comma:
+			if (bExpectNullArgument) {
+				dest.push_back(new AluUnitNull);
+			}
 			if (clearSource) delete pUnit;
+			bExpectNullArgument = true;
 			break;
 		case UT_AssignmentOp:
 			MYTHROW("Assignment operator used in expression");
 			break;
 		case UT_None:
 		case UT_Invalid:
+		case UT_Null:
 			MYTHROW("None or Invalid - internal logic error");
 		case UT_LiteralNumber:
 		case UT_Counter:
@@ -1496,9 +1517,11 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		case UT_InputRecord:
 			dest.push_back(pUnit);
 			availableOperands++;
+			bExpectNullArgument = false;
 			break;
 		case UT_Identifier: 	// a function
 			operatorStack.push(pUnit);
+			bExpectNullArgument = false;
 			break;
 		case UT_UnaryOp: { // Unary operator - higher precedence than any binary but not a function
 			AluUnitType topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
@@ -1510,6 +1533,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 				topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
 			}
 			operatorStack.push(pUnit);
+			bExpectNullArgument = false;
 			break;
 		}
 		case UT_BinaryOp: { // Binary operator - lower than unary and an interesting rank among them
@@ -1523,12 +1547,17 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 				topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
 			}
 			operatorStack.push(pUnit);
+			bExpectNullArgument = false;
 			break;
 		}
 		case UT_OpenParenthesis:
 			operatorStack.push(pUnit);
+			bExpectNullArgument = true;
 			break;
 		case UT_ClosingParenthesis:
+			if (bExpectNullArgument) {
+				dest.push_back(new AluUnitNull);
+			}
 			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
 				MYASSERT_WITH_MSG(operatorStack.top()->countOperands() <= availableOperands, "Not enough operands for operator (3)");
 				availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
@@ -1550,6 +1579,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 					operatorStack.pop();
 				}
 			}
+			bExpectNullArgument = false;
 		}
 	}
 
@@ -1606,6 +1636,7 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 		case UT_LiteralNumber:
 		case UT_FieldIdentifier:
 		case UT_InputRecord:
+		case UT_Null:
 			computeStack.push(pUnit->evaluate());
 			break;
 		case UT_Counter: {
@@ -1731,7 +1762,8 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 			}
 			break;
 			default:
-				MYTHROW("Logic error, should not have gotten this type of Unit");
+				std::string err = "Logic error, should not have gotten this type of Unit: " + pUnit->_identify();
+				MYTHROW(err);
 			}
 		}
 	}
