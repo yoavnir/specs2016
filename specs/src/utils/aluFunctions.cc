@@ -22,6 +22,35 @@ void setStateQueryAgent(stateQueryAgent* qa)
 	g_pStateQueryAgent = qa;
 }
 
+static void throw_argument_issue(const char* _funcName, unsigned int argIdx, const char* argName, const char* message)
+{
+	std::string err(_funcName);
+
+	// Remove the AluFunc_ prefix
+	err = err.substr(8) + ": " + message;
+
+	if (argIdx>0) {
+		err += ": #" + std::to_string(argIdx);
+		if (argName) {
+			err = err + " (" + argName + ")";
+		}
+	}
+
+	MYTHROW(err);
+}
+
+#define ASSERT_NOT_ELIDED(arg,idx,name)     \
+	if (NULL == (arg)) { throw_argument_issue(__func__,idx,#name,"Argument must not be elided"); }
+
+#define THROW_ARG_ISSUE(idx,name,msg)       \
+		throw_argument_issue(__func__,idx,#name,msg.c_str());
+
+#define ARG_INT_WITH_DEFAULT(arg,def)       \
+		((NULL == (arg)) ? def : (arg)->getInt())
+
+#define ARG_STR_WITH_DEFAULT(arg,def)       \
+		((NULL == (arg)) ? def : (arg)->getStr())
+
 /*
  *
  *
@@ -33,6 +62,7 @@ void setStateQueryAgent(stateQueryAgent* qa)
 
 ALUValue* AluFunc_abs(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
 	if (op->getType()==counterType__Int) {
 		ALUInt i = op->getInt();
 		if (i<0) i = -i;
@@ -46,6 +76,8 @@ ALUValue* AluFunc_abs(ALUValue* op)
 
 ALUValue* AluFunc_pow(ALUValue* op1, ALUValue* op2)
 {
+	ASSERT_NOT_ELIDED(op1,1,base);
+	ASSERT_NOT_ELIDED(op2,2,exponent);
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
 		return new ALUValue(std::pow(op1->getFloat(), op2->getFloat()));
 	}
@@ -401,7 +433,9 @@ static ALUValue* AluFunc_substring_do(ALUValue* pBigString, ALUInt start, ALUInt
 
 ALUValue* AluFunc_substr(ALUValue* pBigString, ALUValue* pStart, ALUValue* pLength)
 {
-	return AluFunc_substring_do(pBigString, pStart->getInt(), pLength->getInt());
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
+	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
+	return AluFunc_substring_do(pBigString, start, length);
 }
 
 ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
@@ -1955,13 +1989,15 @@ ALUValue* AluFunc_wordlength(ALUValue* pString, ALUValue* pIdx)
 
 ALUValue* AluFunc_wordpos(ALUValue* pPhrase, ALUValue* pString, ALUValue* pStart)
 {
+	ASSERT_NOT_ELIDED(pPhrase,1,phrase);
+	ASSERT_NOT_ELIDED(pString,2,string);
 	auto phrase = pPhrase->getStr();
 	auto str = pString->getStr();
-	ALUInt start = pStart ? pStart->getInt() : 1;
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 
 	if (start < 1) {
-		std::string err = "wordpos: start argument must be positive. Got: " + std::to_string(start);
-		MYTHROW(err);
+		std::string err = "Argument must be positive, but got " + std::to_string(start);
+		THROW_ARG_ISSUE(3,start,err);
 	}
 
 	auto startVec = breakIntoWords_start(str);
@@ -1984,8 +2020,8 @@ ALUValue* AluFunc_words(ALUValue* pStr)
 
 ALUValue* AluFunc_xrange(ALUValue* pStart, ALUValue* pEnd)
 {
-	std::string startStr = pStart ? pStart->getStr() : "";
-	std::string endStr = pEnd ? pEnd->getStr() : "";
+	std::string startStr = ARG_STR_WITH_DEFAULT(pStart,"");
+	std::string endStr = ARG_STR_WITH_DEFAULT(pEnd,"");
 
 	int start = (startStr.length() > 0) ? startStr[0] : 0;
 	int end = (endStr.length() > 0) ? endStr[0] : 0xff;
