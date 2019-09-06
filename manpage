@@ -1110,6 +1110,19 @@ Causes output to be translated into ASCII if it's outside the range.
 Forces specs to read every input line even if none of the spec units use it. By default it won't.
 .IP "--specFile or -f" 3
 Makes the program read the specification from a file rather than the command line. This is useful both for reusing specifications and for long specifications. It also relieves the plumber from having to escape a lot of characters in the specification to avoid creative interpretation by the Unix shell.
+You can specify the full path of the files, or 
+.B specs 
+will search the 
+.I SPECSPATH 
+for them. The 
+.I SPECSPATH 
+can be set from either the environment variable 
+.B SPECSPATH 
+or the configuration string 
+.B SPECSPATH. 
+In both cases the syntax is just like the OS 
+.B PATH: 
+a list of directories separated by colons.
 .IP "--verbose or -v" 3
 Outputs more information when something goes wrong.
 .IP "--stats"
