@@ -911,6 +911,9 @@ AluFunction::AluFunction(std::string& _s)
 	std::string s(_s);
 	std::transform(s.begin(), s.end(),s.begin(), ::tolower);
 	ALU_FUNCTION_LIST
+#ifdef DEBUG
+	ALU_DEBUG_FUNCTION_LIST
+#endif
 	std::string err = "Unrecognized function "+_s;
 	MYTHROW(err);
 }
@@ -1026,7 +1029,7 @@ void dumpAluStack(const char* title, std::stack<ALUValue*>& stk)
 	while (!stk.empty()) {
 		ALUValue* v = stk.top();
 		stk.pop();
-		std::cerr << "   > " << v->getStr() << std::endl;
+		std::cerr << "   > " << (v ? v->getStr() : "(nil)") << std::endl;
 		tmp.push(v);
 	}
 	std::cerr << std::endl;
@@ -1406,6 +1409,44 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 	return true;
 }
 
+#define X(fn,argc,flags,rl) if (s==##fn) { argCount = argc; return; }
+struct functionArgcountPair {
+	functionArgcountPair(std::string& s, unsigned int argc, unsigned int avail) {
+		funcName = s;
+		argCount = argc;
+		availableOperands = avail;
+	}
+	std::string  funcName;
+	unsigned int argCount;
+	unsigned int availableOperands;
+};
+#undef X
+
+class functionNestingStack {
+public:
+	functionNestingStack()  {}
+	~functionNestingStack() {
+		// MYASSERT_WITH_MSG(m_stack.empty(), "Function nesting stack not empty");
+	}
+	void   push(std::string& s, unsigned int argc, unsigned int availableOperands) {
+		m_stack.push(functionArgcountPair(s,argc,availableOperands));
+	}
+	void   pop() {
+		m_stack.pop();
+	}
+	std::string fname() {
+		return m_stack.top().funcName;
+	}
+	unsigned int argc() {
+		return m_stack.top().argCount;
+	}
+	unsigned int availBefore() {
+		return m_stack.top().availableOperands;
+	}
+private:
+	std::stack<functionArgcountPair> m_stack;
+};
+
 bool isPseudoFunctionName(std::string& fn)
 {
 #define X(nm) if (#nm==fn) return true;
@@ -1486,6 +1527,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 
 	int stepNumber = 0;
 	bool     bExpectNullArgument = false;
+	functionNestingStack fstack;
 
 	for (AluUnit* pUnit : source) {
 #ifdef ALU_DUMP
@@ -1500,6 +1542,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		case UT_Comma:
 			if (bExpectNullArgument) {
 				dest.push_back(new AluUnitNull);
+				availableOperands++;
 			}
 			if (clearSource) delete pUnit;
 			bExpectNullArgument = true;
@@ -1519,10 +1562,13 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			availableOperands++;
 			bExpectNullArgument = false;
 			break;
-		case UT_Identifier: 	// a function
+		case UT_Identifier: {	// a function
+			AluFunction* pFunc = dynamic_cast<AluFunction*>(pUnit);
 			operatorStack.push(pUnit);
+			fstack.push(pFunc->getName(), pFunc->countOperands(), availableOperands);
 			bExpectNullArgument = false;
 			break;
+		}
 		case UT_UnaryOp: { // Unary operator - higher precedence than any binary but not a function
 			AluUnitType topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
 			while (topType==UT_Identifier) {
@@ -1555,9 +1601,6 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			bExpectNullArgument = true;
 			break;
 		case UT_ClosingParenthesis:
-			if (bExpectNullArgument) {
-				dest.push_back(new AluUnitNull);
-			}
 			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
 				MYASSERT_WITH_MSG(operatorStack.top()->countOperands() <= availableOperands, "Not enough operands for operator (3)");
 				availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
@@ -1574,9 +1617,21 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 				operatorStack.pop(); // Pop off the opening parenthesis
 				// issue #37 - if what remains is a function, it should also go
 				if (!operatorStack.empty() && UT_Identifier==operatorStack.top()->type()) {
+					if ((availableOperands) > (fstack.availBefore() + fstack.argc())) {
+						std::string err = "Too many operands (" +
+								std::to_string(availableOperands - fstack.availBefore()) +
+								") for function " + fstack.fname() + " (accepts " +
+								std::to_string(fstack.argc()) + ")";
+						MYTHROW(err);
+					}
+					while (availableOperands < (fstack.availBefore() + fstack.argc())) {
+						dest.push_back(new AluUnitNull);
+						availableOperands++;
+					}
 					availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
 					dest.push_back(operatorStack.top());
 					operatorStack.pop();
+					fstack.pop();
 				}
 			}
 			bExpectNullArgument = false;

@@ -127,6 +127,9 @@
 	X(words,          1, ALUFUNC_REGULAR,     false)  \
 	X(xrange,         2, ALUFUNC_REGULAR,     false)  \
 
+#define ALU_DEBUG_FUNCTION_LIST                       \
+	X(testfunc,       4, ALUFUNC_REGULAR,     false)  \
+
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
 	X(sum)                           \
@@ -156,6 +159,9 @@
 
 #define X(fn,argc,flags,rl) ALUFUNC##argc(fn)
 ALU_FUNCTION_LIST
+#ifdef DEBUG
+ALU_DEBUG_FUNCTION_LIST
+#endif
 #undef X
 
 typedef ALUValue* (*AluFunc0)();

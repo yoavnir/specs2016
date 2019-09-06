@@ -2000,3 +2000,17 @@ ALUValue* AluFunc_xrange(ALUValue* pStart, ALUValue* pEnd)
 
 	return new ALUValue(ret);
 }
+
+#ifdef DEBUG
+ALUValue* AluFunc_testfunc(ALUValue* pArg1, ALUValue* pArg2, ALUValue* pArg3, ALUValue* pArg4)
+{
+	std::string str1 = pArg1 ? pArg1->getStr() : "(nil)";
+	std::string str2 = pArg2 ? pArg2->getStr() : "(nil)";
+	std::string str3 = pArg3 ? pArg3->getStr() : "(nil)";
+	std::string str4 = pArg4 ? pArg4->getStr() : "(nil)";
+
+	std::string res = str1 + "," + str2 + "," + str3 + "," + str4;
+
+	return new ALUValue(res);
+}
+#endif

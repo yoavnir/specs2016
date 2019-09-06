@@ -1098,7 +1098,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,5)", "are  those who believe  ");
 	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,0)", "are  those who believe  ");
 
-	VERIFY_EXPR_RES("translate('abc')", "Failed assertion: computeStack.size() >= pUnit->countOperands()"); // This will become ABC
+	VERIFY_EXPR_RES("translate('abc')", "ABC");
 	VERIFY_EXPR_RES("translate('abc','','','')", "ABC");
 	VERIFY_EXPR_RES("translate('abc','xy','ab','$')", "xyc");
 	VERIFY_EXPR_RES("translate('abc','xy','a','$')", "xbc");
@@ -1130,6 +1130,17 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("xrange('a','d')", "abcd");
 	VERIFY_EXPR_RES("length(xrange('a',''))", "159");
 	VERIFY_EXPR_RES("substr(xrange('a',''),1,29)", "abcdefghijklmnopqrstuvwxyz{|}");
+
+#ifdef DEBUG
+	// Keep these tests at the end. All real functions should go first
+	VERIFY_EXPR_RES("testfunc(1,2,3,4)", "1,2,3,4");
+	VERIFY_EXPR_RES("testfunc(1,,3,4)", "1,(nil),3,4");
+	VERIFY_EXPR_RES("testfunc(,,3,4)", "(nil),(nil),3,4");
+	VERIFY_EXPR_RES("testfunc(,2,3)", "(nil),2,3,(nil)");
+	VERIFY_EXPR_RES("testfunc(1,2,)", "1,2,(nil),(nil)");
+	VERIFY_EXPR_RES("testfunc(1,2)", "1,2,(nil),(nil)");
+	VERIFY_EXPR_RES("testfunc()", "(nil),(nil),(nil),(nil)");
+#endif
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
