@@ -1131,6 +1131,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("length(xrange('a',''))", "159");
 	VERIFY_EXPR_RES("substr(xrange('a',''),1,29)", "abcdefghijklmnopqrstuvwxyz{|}");
 
+	// Issue #94
+	VERIFY_EXPR_RES("pow(2+3,4)", "625");
+	VERIFY_EXPR_RES("subword(substr('There are those who believe',3-2,4+4*4),(4-2)/(1+1),2)","There are");
+
 #ifdef DEBUG
 	// Keep these tests at the end. All real functions should go first
 	VERIFY_EXPR_RES("testfunc(1,2,3,4)", "1,2,3,4");

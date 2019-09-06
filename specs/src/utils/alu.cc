@@ -1540,6 +1540,12 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 #endif
 		switch (pUnit->type()) {
 		case UT_Comma:
+			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
+				MYASSERT_WITH_MSG(operatorStack.top()->countOperands() <= availableOperands, "Not enough operands for operator (3)");
+				availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
+				dest.push_back(operatorStack.top());
+				operatorStack.pop();
+			}
 			if (bExpectNullArgument) {
 				dest.push_back(new AluUnitNull);
 				availableOperands++;
