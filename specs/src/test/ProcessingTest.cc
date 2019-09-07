@@ -49,6 +49,23 @@ extern ALUCounters g_counters;
 		}                                       \
 } while (0);
 
+#define VERIFYCMD(cmd,res) do {                 \
+	std::string actual_res("");                 \
+	testCount++;                                \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
+	try { cmd; }                                \
+	catch(SpecsException& e) {                  \
+		actual_res = e.what(true);              \
+	}                                           \
+	if (res==actual_res) {                      \
+		std::cout << "***** OK *****: <" << actual_res << ">\n"; \
+	} else {                                    \
+		errorCount++;                           \
+		std::cout << "*** NOT OK ***:\n\tGot <" << actual_res << ">\n\tExp <" << res << ">\n"; \
+	}                                           \
+} while (0);
+
+
 PSpecString runTestOnExample(const char* _specList, const char* _example)
 {
 	ProcessingState ps;
@@ -438,8 +455,14 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "ABEND: too big");  // TEST #109
 
 	spec = "a: word 1 1 READ '+' N b: word 1 N '=' N print 'a+b' N";
-	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "1+2=3\n3+4=7\n5+6=11");
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "1+2=3\n3+4=7\n5+6=11"); // TEST #110
 
+	// locales
+	VERIFYCMD(specTimeSetLocale("kuku"),"Invalid locale <kuku>");  // TEST #111
+	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112
+	VERIFY("/1545407296.548900/ d2tf '%c' 1", "vie 21 dic 17:48:16 2018");  // TEST #113
+	VERIFYCMD(specTimeSetLocale(""),"");  // TEST #114
+	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // TEST #115
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

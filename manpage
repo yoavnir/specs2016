@@ -1153,9 +1153,16 @@ Changes the timezone from the default which is the current timezone to the value
 reads a configuration file by default from 
 .B $HOME/.specs
 .P 
-This file contains some configuration options. For now, it only allows you to set user-predefined labels and the timezone configuration option. For example, an entry such as this:
+This file contains some configuration options. For now, it only allows you to set user-predefined labels and three specific configuration options: 
+.B timezone, 
+.B locale, 
+and 
+.B SPECSPATH. 
+For example, an entry such as this:
 .P
     timezone: "Europe/Belfast"
+    locale: es_ES
+    SPECSPATH: /home/myself/specs:/Library/specs
     myCA: "Honest Abe's Used Cars & Certificates"
 .P
 allows you to issue a 
@@ -1167,7 +1174,9 @@ command like this:
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
-This returns the version of specs, for example "v0.3"
+This returns the version of 
+.B specs, 
+for example "v0.5"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 

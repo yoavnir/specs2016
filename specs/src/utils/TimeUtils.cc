@@ -3,7 +3,9 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <locale>
 #include <stdlib.h> // defines setenv
+#include "utils/ErrorReporting.h"
 #include "platform.h"  // For put_time and get_time vs strftime and strptime
 #include "TimeUtils.h"
 
@@ -11,6 +13,8 @@ using TimeResolution = std::chrono::microseconds;
 
 using Clock = std::chrono::system_clock;
 using TimePoint = std::chrono::time_point<Clock>;
+
+static std::locale g_locale;
 
 clockValue specTimeGetTOD()
 {
@@ -41,6 +45,7 @@ PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 	}
 
 #ifdef PUT_TIME__SUPPORTED
+	oss.imbue(g_locale);
 	oss << std::put_time(&bt, format.c_str());
 #else
 	char timeFormatterString[256];
@@ -80,7 +85,7 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 
 #ifdef PUT_TIME__SUPPORTED
 	std::istringstream ss(printable);
-	// ss.imbue(std::locale("de_DE.utf-8"));  TODO: handle locale as preference
+	ss.imbue(g_locale);
 	ss >> std::get_time(&t, format.c_str());
 	if (ss.fail()) {
 		return 0;
@@ -131,5 +136,15 @@ void specTimeSetTimeZone(const std::string& tzname)
 {
 	static const char sTZ[] = "TZ";
 	setenv(sTZ, tzname.data(), 1);
+}
+
+void specTimeSetLocale(const std::string& _locale)
+{
+	try {
+		g_locale = std::locale(_locale);
+	} catch(std::runtime_error& e) {
+		std::string err = "Invalid locale <" + _locale + ">";
+		MYTHROW(err);
+	}
 }
 

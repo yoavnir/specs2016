@@ -44,6 +44,7 @@ pi: 3.14159265
 favoriteAnimal: cat
 billion: 1000000000
 timezone: Asia/Bangkok
+locale: en_US
 Motto: "memento mori"
 ```
 So let's use them in a specification:
@@ -96,7 +97,7 @@ specs @version 1
 
 Additionally, the `@@` string stands for the entire input record.
 
-**Note:** The timezone used in the date conversion can also be set in the configuration file with a timezone entry. That does not produce a configured literal.
+**Note:** The timezone used in the date conversion can also be set in the configuration file with a `timezone` entry. Similarly, the locale used can be set with a `locale` entry.
 
 ### Operators
 The ALU supports many of the operators available in the *REXX* programming languages. This includes addition, subtraction, logical comparisons, and string concatenation. 

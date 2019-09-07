@@ -27,6 +27,8 @@ static void useKeyValue(std::string& key, std::string& value)
 		key = key.substr(0,key.length() - 1);
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
+		} else if (key == "locale") {
+			specTimeSetLocale(value);
 		}
 		ExternalLiterals[key] = value;
 	}
