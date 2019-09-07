@@ -4,6 +4,7 @@
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
 #include "tokens.h"
