@@ -141,11 +141,11 @@ std::string removeComment(std::string& st)
 #define PATHSEP "/"
 #endif
 
-static std::ifstream openSpecFile(std::string& fileName)
+static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 {
 	static std::string pathConfigString("SPECSPATH");
-	std::ifstream theFile(fileName);
-	if (theFile.is_open()) return theFile;
+	theFile.open(fileName);
+	if (theFile.is_open()) return;
 
 	// No?  Try the path list in the environment variable
 	char* envpath = getenv(pathConfigString.c_str());
@@ -154,7 +154,7 @@ static std::ifstream openSpecFile(std::string& fileName)
 		while (onePath) {
 			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
 			theFile.open(fullpath);
-			if (theFile.is_open()) return theFile;
+			if (theFile.is_open()) return;
 			onePath = strtok(NULL,":");
 		}
 	}
@@ -166,18 +166,17 @@ static std::ifstream openSpecFile(std::string& fileName)
 		while (onePath) {
 			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
 			theFile.open(fullpath);
-			if (theFile.is_open()) return theFile;
+			if (theFile.is_open()) return;
 			onePath = strtok(NULL,":");
 		}
 		free(configPath);
 	}
-
-	return theFile;
 }
 
 std::vector<Token> parseTokensFile(std::string& fileName)
 {
-	std::ifstream specFile = openSpecFile(fileName);
+	std::ifstream specFile;
+	openSpecFile(specFile, fileName);
 	if (specFile.is_open()) {
 		std::string spec;
 		std::string line;
