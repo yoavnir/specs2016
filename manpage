@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 Jun 2019" "0.4-alpha" "specs man page"
+.TH man 1 "1 Oct 2019" "0.5-alpha" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -483,6 +483,30 @@ decimal places closest to
 , 
 .IP "frand()" 3
 The floating-point random function returns a random value no smaller than 0.0 and smaller than 1.0.
+.IP "fmt(value,format,digits,decimal,separator)" 3
+The
+.B fmt
+function formats a floating-point
+.B value
+as a string. The 
+.B format 
+argument can be omitted, or it can begin with 
+.I f
+for a 
+.I fixed 
+number of 
+.B digits
+after the decimal point, or
+.I s
+for 
+.I scientific
+notation. When omitted, the 
+.B digits
+argument sets the total number of digits displayed. The 
+.B decimal
+argument sets the character used for the decimal point (default is a period), while the 
+.B separator
+argument sets the character used as thousands separator (default is none).
 .IP "pow(x,y)" 3
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
 .IP "rand(x)" 3

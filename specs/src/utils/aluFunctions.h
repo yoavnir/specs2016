@@ -126,6 +126,7 @@
 	X(wordpos,        3, ALUFUNC_REGULAR,     false)  \
 	X(words,          1, ALUFUNC_REGULAR,     false)  \
 	X(xrange,         2, ALUFUNC_REGULAR,     false)  \
+	X(fmt,            5, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false)  \

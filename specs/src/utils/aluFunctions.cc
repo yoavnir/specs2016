@@ -2037,6 +2037,79 @@ ALUValue* AluFunc_xrange(ALUValue* pStart, ALUValue* pEnd)
 	return new ALUValue(ret);
 }
 
+class my_punct : public std::numpunct<char>
+{
+public:
+	my_punct() : m_sep('\0'),m_dec('.') {}
+	void set_sep(char c)	{m_sep = c;}
+	void set_dec(char c)	{m_dec = c;}
+protected:
+	virtual char do_thousands_sep() const
+	{
+		return m_sep;
+	}
+	virtual char do_decimal_point() const
+	{
+		return m_dec;
+	}
+	virtual std::string do_grouping() const
+	{
+		return m_sep ? "\03" : "";
+	}
+private:
+	char m_sep;
+	char m_dec;
+};
+
+ALUValue* AluFunc_fmt(ALUValue* pVal, ALUValue* pFormat, ALUValue* pDigits, ALUValue* pDecimal, ALUValue* pSep)
+{
+	std::ostringstream oss;
+	std::locale *pMyLocale = NULL;
+	ASSERT_NOT_ELIDED(pVal,1,value);
+
+	if (pDigits) {
+		oss.precision(pDigits->getInt());
+	}
+
+	if (pFormat) {
+		std::string format = pFormat->getStr();
+		switch (format[0]) {
+		case 'f':
+		case 'F':
+			oss.setf( std::ios::fixed, std:: ios::floatfield );
+			break;
+		case 's':
+		case 'S':
+		case 'e':
+		case 'E':
+			oss.setf( std::ios::scientific, std:: ios::floatfield );
+			break;
+		default: {
+			std::string err = "fmt: #2 (format): Invalid format value: <" + format + ">";
+			MYTHROW(err);
+		}
+		}
+	}
+
+	if (pDecimal || pSep) {
+		static std::locale myStaticLocale;
+		my_punct pct;
+		if (pDecimal) pct.set_dec(pDecimal->getStr().c_str()[0]);
+		if (pSep) pct.set_sep(pSep->getStr().c_str()[0]);
+
+		if (pMyLocale) delete pMyLocale;
+		pMyLocale = new std::locale(myStaticLocale, &pct);
+		oss.imbue(*pMyLocale);
+		oss << pVal->getFloat();
+		return new ALUValue(oss.str());
+	}
+
+	oss << pVal->getFloat();
+
+	return new ALUValue(oss.str());
+}
+
+
 #ifdef DEBUG
 ALUValue* AluFunc_testfunc(ALUValue* pArg1, ALUValue* pArg2, ALUValue* pArg3, ALUValue* pArg4)
 {
