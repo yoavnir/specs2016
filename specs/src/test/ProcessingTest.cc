@@ -461,12 +461,12 @@ int main(int argc, char** argv)
 	VERIFYCMD(specTimeSetLocale("kuku"),"Invalid locale <kuku>");  // TEST #111
 	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112
 #ifdef PUT_TIME__SUPPORTED
-	VERIFY("/1545407296.548900/ d2tf '%c' 1", "vie 21 dic 17:48:16 2018");  // TEST #113
+	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #113
 #else
-	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // TEST #113
+	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #113
 #endif
 	VERIFYCMD(specTimeSetLocale(""),"");  // TEST #114
-	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // TEST #115
+	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
