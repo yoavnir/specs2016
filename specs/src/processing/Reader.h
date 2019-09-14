@@ -21,6 +21,12 @@ public:
 	unsigned long 		countRead() { return m_countRead; }
 	unsigned long 		countUsed() { return m_countUsed; }
 	bool                hasRunDry() { return m_bRanDry;   }
+	virtual void        setFormatFixed(unsigned int lrecl, bool blocked) {
+		MYTHROW("Reader::setFormatFixed: should not be called");
+	}
+	virtual void        setLineDelimiter(char c) {
+		MYTHROW("Reader::setLineDelimiter: should not be called");
+	}
 protected:
 	StringQueue m_queue;
 	std::thread *mp_thread;
@@ -47,8 +53,11 @@ private:
 	size_t       m_MaxCount;
 };
 
-#define STANDARD_READER_BUFFER_SIZE 65536  /* This is also the max size for an input record */
-
+enum recordFormat {
+	RECFM_DELIMITED,
+	RECFM_FIXED,
+	RECFM_FIXED_DELIMITED
+};
 class StandardReader : public Reader {
 public:
 	StandardReader();	      /* simple constructor - stdin becomes the source */
@@ -57,11 +66,16 @@ public:
 	virtual ~StandardReader();
 	virtual bool endOfSource();
 	virtual PSpecString getNextRecord();
+	virtual void setFormatFixed(unsigned int lrecl, bool blocked);
+	virtual void setLineDelimiter(char c);
 private:
 	std::istream* m_File;
     char* m_buffer;
 	bool  m_EOF;
 	bool  m_NeedToClose;
+	recordFormat m_recfm;
+	unsigned int m_lrecl;
+	char         m_lineDelimiter;
 };
 
 #define MAX_INPUT_STREAMS  8

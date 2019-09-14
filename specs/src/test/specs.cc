@@ -41,6 +41,28 @@ CONTINUE:
 		argc--; argv++;
 	}
 
+	// saniry checks
+	if (g_recfm!="") {
+		if (g_recfm=="d" || g_recfm=="D" || g_recfm=="delimited" || g_recfm=="DELIMITED") {
+			g_recfm = "";
+		} else if (g_recfm=="f" || g_recfm=="F" || g_recfm=="fixed" || g_recfm=="FIXED") {
+			g_recfm = "F";
+			if (g_lrecl <= 0) {
+				std::cerr << "For the 'fixed' record format, lrecl must be set to a positive value\n";
+				return false;
+			}
+		} else if (g_recfm=="fd" || g_recfm=="FD"){
+			g_recfm = "FD";
+			if (g_lrecl <= 0) {
+				std::cerr << "For the 'fix-delimited' record format, lrecl must be set to a positive value\n";
+				return false;
+			}
+		} else {
+			std::cerr << "Invalid record format: <" << g_recfm << ">\n";
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -151,6 +173,16 @@ int main (int argc, char** argv)
 			pRd = new StandardReader();
 		} else {
 			pRd = new StandardReader(g_inputFile);
+		}
+
+		if (g_recfm=="F") {
+			pRd->setFormatFixed(g_lrecl,false);
+		} else if (g_recfm=="FD") {
+			pRd->setFormatFixed(g_lrecl,true);
+		}
+
+		if (g_linedel!="") {
+			pRd->setLineDelimiter(g_linedel[0]);
 		}
 
 		if (anyNonPrimaryInputStreamDefined()) {

@@ -52,4 +52,17 @@ CPU Time: 69.1277526 seconds.
 * `--os6` **filename** -- sets output stream number 6 to write to the specified file.
 * `--os7` **filename** -- sets output stream number 7 to write to the specified file.
 * `--os8` **filename** -- sets output stream number 8 to write to the specified file.
+* `--recfm` **format** -- sets the format of the primary input stream. See below table for supported formats.
+* `--lrecl` **record-length** -- sets the length of each record. Relevant to *fixed* and *fixed-delimited* records.
+* `--linedel` **delimiter** -- sets the line delimiter for input records on the primary stream.
+
+## Table of record formats
+
+|recfm|nickname|lrecl|linedel|comment|
+|-----|--------|-----|-------|-------|
+| `D` | delimited | *n/a* | *optional* | This is the default. Records are delimited by the OS line separator if *linedel* is not specified. |
+| `F` | fixed | *required* | *n/a* | **specs** will read exactly *lrecl* characters from the input stream regardless of what those characters may be. |
+| `FD` | fixed-delimited | *required* | *optional* | **specs** will read one line at a time delimited by the OS line separator if *linedel* is not specified. Lines that are longer than *lrecl* will be truncated; lines that are shorter will be padded by spaces. |
+
+
 

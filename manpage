@@ -1171,6 +1171,28 @@ Changes the configuration file from the default
 to whatever the parameter says
 .IP "--timezone" 3
 Changes the timezone from the default which is the current timezone to the value specified.
+.IP "--recfm" 3
+Sets the record format for the primary input stream. Supported options are 
+.B D (delimited)
+for records delimited by a character in the input stream (this is the default); 
+.B F (fixed)
+for records or a fixed length (see --lrecl); 
+.B FD (fixed-delimited)
+for records delimited as in 
+.B fixed,
+but truncated or padded to a fixed length.
+.IP "--lrecl" 3
+Sets the record length for 
+.B fixed
+and
+.B fixed-delimited
+records.
+.IP "--linedel" 3
+For 
+.B delimited
+and
+.B fixed-delimited
+records, sets the character that delimits the string. The OS-specific delimiter (CR+LF for Unix-like) is used if this is not specified.
 
 .SH CONFIGURATION FILE
 .B specs

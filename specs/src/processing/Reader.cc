@@ -86,7 +86,9 @@ StandardReader::StandardReader() {
 	m_File = &std::cin;
 	m_NeedToClose = false;
 	m_EOF = false;
-	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = NULL;
+	m_recfm = RECFM_DELIMITED;
+	m_lineDelimiter = 0;
 }
 
 StandardReader::StandardReader(std::istream* f) {
@@ -97,7 +99,9 @@ StandardReader::StandardReader(std::istream* f) {
 	}
 	m_File = f;
 	m_NeedToClose = false;
-	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = NULL;
+	m_recfm = RECFM_DELIMITED;
+	m_lineDelimiter = 0;
 }
 
 StandardReader::StandardReader(std::string& fn) {
@@ -109,7 +113,9 @@ StandardReader::StandardReader(std::string& fn) {
 	}
 	m_NeedToClose = true;
 	m_EOF = false;
-	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = NULL;
+	m_recfm = RECFM_DELIMITED;
+	m_lineDelimiter = 0;
 }
 
 StandardReader::~StandardReader() {
@@ -118,7 +124,23 @@ StandardReader::~StandardReader() {
 		pInputFile->close();
 		delete pInputFile;
 	}
-	free(m_buffer);
+	if (m_buffer) {
+		free(m_buffer);
+	}
+}
+
+void StandardReader::setFormatFixed(unsigned int lrecl, bool delimited)
+{
+	m_recfm = delimited ? RECFM_FIXED_DELIMITED : RECFM_FIXED;
+	m_lrecl = lrecl;
+	if (!delimited) {
+		m_buffer = (char*)malloc(lrecl);
+	}
+}
+
+void StandardReader::setLineDelimiter(char c)
+{
+	m_lineDelimiter = c;
 }
 
 bool StandardReader::endOfSource() {
@@ -127,15 +149,57 @@ bool StandardReader::endOfSource() {
 
 PSpecString StandardReader::getNextRecord() {
 	std::string line;
-	if (!std::getline(*m_File, line)) {
-		m_EOF = true;
-		return NULL;
-	} else {
-		// strip trailing newline if any
-		if (line.back() == '\n') {
-			line.pop_back();
+	switch (m_recfm) {
+	case RECFM_DELIMITED: {
+		if (0 != m_lineDelimiter) {
+			std::getline(*m_File, line, m_lineDelimiter);
+		} else {
+			std::getline(*m_File, line);
 		}
-		return SpecString::newString(line);
+		if (m_File->eof()) {
+			m_EOF = true;
+			return NULL;
+		} else {
+			// strip trailing newline if any
+			if (line.back() == '\n') {
+				line.pop_back();
+			}
+			return SpecString::newString(line);
+		}
+	}
+	case RECFM_FIXED: {
+		m_File->read(m_buffer, m_lrecl);
+		if (m_File->gcount() < m_lrecl) {
+			m_EOF = true;
+			return NULL;
+		} else {
+			return SpecString::newString(m_buffer, m_lrecl);
+		}
+	}
+	case RECFM_FIXED_DELIMITED: {
+		if (0 != m_lineDelimiter) {
+			std::getline(*m_File, line, m_lineDelimiter);
+		} else {
+			std::getline(*m_File, line);
+		}
+		if (m_File->eof()) {
+			m_EOF = true;
+			return NULL;
+		} else {
+			// strip trailing newline if any
+			if (line.back() == '\n') {
+				line.pop_back();
+			}
+			if (line.length() > m_lrecl) {
+				line = line.substr(0,m_lrecl);
+			} else {
+				while (line.length() < m_lrecl) {
+					line += " ";
+				}
+			}
+			return SpecString::newString(line);
+		}
+	}
 	}
 }
 
