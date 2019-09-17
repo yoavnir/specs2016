@@ -752,13 +752,9 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	// Issue #62
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.98531','%d/%m %H:%M:%S.%6f')", "1547097241985310");    // only 5 digits in the subsecond
-#ifdef VISUAL_STUDIO
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241.98532");   // Unfortunately, VS requires truncating the fraction
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241.98532");  // Unfortunately, VS requires truncating the fraction
-#else
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241985317");   // proper 6 digits in the subsecond
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241985317");  // 7 digits in the subsecond
-#endif
+
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.','%d/%m %H:%M:%S.%6f')", "1547097241000000");         // no subsecond digits at all
 #ifdef PUT_TIME__SUPPORTED
   #ifdef VISUAL_STUDIO
@@ -947,11 +943,19 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('A')", "c2f: Invalid floating point length: 1" C2FERR)
 	VERIFY_EXPR_RES("c2f('AA')", "c2f: Invalid floating point length: 2" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAA')", "c2f: Invalid floating point length: 3" C2FERR)
+#ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("c2f('AAAA')", "12.0784311294556");
+#else
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945557");
+#endif
 	VERIFY_EXPR_RES("c2f('AAAAA')", "c2f: Invalid floating point length: 5" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAA')", "c2f: Invalid floating point length: 6" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAA')", "c2f: Invalid floating point length: 7" C2FERR)
+#ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392");
+#else
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.509803921");
+#endif
 	VERIFY_EXPR_RES("c2f('AAAAAAAAA')", "c2f: Invalid floating point length: 9" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAA')", "c2f: Invalid floating point length: 10" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAA')", "c2f: Invalid floating point length: 11" C2FERR)
@@ -959,7 +963,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAA')", "c2f: Invalid floating point length: 13" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 14" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15" C2FERR)
+#ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "c2f: Invalid floating point length: 16" C2FERR)
+#else
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
+#endif
 
 	VERIFY_EXPR_RES("substitute('Just the place for a snark','','',1)", "substitute: Search string must not be empty");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','',0)", "Just the place for a snark");
