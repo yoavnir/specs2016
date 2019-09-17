@@ -378,18 +378,12 @@ ALUValue* AluFunc_wordlen(ALUValue* pIdx)
 ALUValue* AluFunc_tf2d(ALUValue* pTimeFormatted, ALUValue* pFormat)
 {
 	int64_t tm = specTimeConvertFromPrintable(pTimeFormatted->getStr(), pFormat->getStr());
-	long double seconds;
-	if (0 == (tm % MICROSECONDS_PER_SECOND)) {
-		seconds = (long double)(tm / MICROSECONDS_PER_SECOND);
-	} else {
-		seconds = ((long double)tm) / MICROSECONDS_PER_SECOND;
-	}
-	return new ALUValue(seconds);
+	return new ALUValue(ALUInt(tm));
 }
 
 ALUValue* AluFunc_d2tf(ALUValue* pValue, ALUValue* pFormat)
 {
-	int64_t microseconds = ALUInt(((pValue->getFloat()) * MICROSECONDS_PER_SECOND) + 0.5);
+	int64_t microseconds = pValue->getInt();
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
 	ALUValue* ret = new ALUValue(printable->data(), printable->length());
 	delete printable;

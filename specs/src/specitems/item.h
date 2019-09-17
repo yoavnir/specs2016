@@ -82,7 +82,7 @@ private:
 };
 
 #define NUMBER_PART_FIELD_LEN  10
-#define CLOCKDIFF_PART_FIELD_LEN 8
+#define CLOCKDIFF_PART_FIELD_LEN 12
 class NumberPart : public InputPart {
 public:
 	NumberPart() {m_Num = 0;}

@@ -47,7 +47,7 @@ The **InputPart** argument may be any of the following:
 * **TODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch.
 * **DTODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** - A record counter as a 10-digit decimal number.
-* **TIMEDIFF** - an 8-char decimal number indicating the number of seconds since the invocation of the program.
+* **TIMEDIFF** - a 12-char decimal number indicating the number of microseconds since the invocation of the program.
 * An **ID** keyword followed by a previously defined **FieldIdentifier**.
 * The **NUMBER** keyword used as a counter for processed records.
 * The **PRINT** keyword followed by a calculated expression

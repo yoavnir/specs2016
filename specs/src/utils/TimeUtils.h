@@ -7,7 +7,7 @@
 
 #define MICROSECONDS_PER_SECOND 1000000
 
-typedef long double clockValue;
+typedef int64_t clockValue;
 
 clockValue specTimeGetTOD();
 

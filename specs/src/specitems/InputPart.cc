@@ -181,8 +181,8 @@ PSpecString ClockPart::getStr(ProcessingState& pState)
 		break;
 	case ClockType__Diff:
 		{
-			clockValue diff = trunc(specTimeGetTOD() - m_StaticClock);
-			std::string s = std::to_string(ALUInt(diff));
+			clockValue diff = specTimeGetTOD() - m_StaticClock;
+			std::string s = std::to_string(diff);
 			s = std::string(CLOCKDIFF_PART_FIELD_LEN - s.length(), ' ') + s;
 			return SpecString::newString(s);
 		}

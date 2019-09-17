@@ -21,7 +21,7 @@ clockValue specTimeGetTOD()
 	auto currentTime = std::chrono::system_clock::now();
 	auto sinceEpoch = currentTime.time_since_epoch();
 	int64_t microseconds = std::chrono::duration_cast<TimeResolution>(sinceEpoch).count();
-	return (clockValue(microseconds) / MICROSECONDS_PER_SECOND);
+	return (clockValue(microseconds));
 }
 
 

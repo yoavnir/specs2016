@@ -73,7 +73,7 @@ begun, while DTODclock gives the time of producing the current record.
 -- A record counter as a 10-digit decimal number.
 .P
 .B TIMEDIFF
--- An 8-digit decimal number indicating the number of seconds since the invocation of the program.
+-- A 12-digit decimal number indicating the number of microseconds since the invocation of the program.
 .P
 The 
 .B ID
