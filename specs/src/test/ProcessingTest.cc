@@ -465,7 +465,7 @@ int main(int argc, char** argv)
 #else
 	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #113
 #endif
-	VERIFYCMD(specTimeSetLocale(""),"");  // TEST #114
+	VERIFYCMD(specTimeSetLocale("C"),"");  // TEST #114
 	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
 
 	if (errorCount) {
