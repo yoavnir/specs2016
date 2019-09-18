@@ -459,11 +459,14 @@ int main(int argc, char** argv)
 
 	// locales
 	VERIFYCMD(specTimeSetLocale("kuku"),"Invalid locale <kuku>");  // TEST #111
+
+#ifndef SPANISH_LOCALE_SUPPORTED
 	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112
 #ifdef PUT_TIME__SUPPORTED
 	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #113
 #else
 	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #113
+#endif
 #endif
 	VERIFYCMD(specTimeSetLocale("C"),"");  // TEST #114
 	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
