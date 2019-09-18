@@ -150,22 +150,34 @@ bool StandardReader::endOfSource() {
 PSpecString StandardReader::getNextRecord() {
 	std::string line;
 	switch (m_recfm) {
+	case RECFM_FIXED_DELIMITED:
 	case RECFM_DELIMITED: {
 		if (0 != m_lineDelimiter) {
-			std::getline(*m_File, line, m_lineDelimiter);
-		} else {
-			std::getline(*m_File, line);
-		}
-		if (m_File->eof()) {
-			m_EOF = true;
-			return NULL;
-		} else {
-			// strip trailing newline if any
-			if (line.back() == '\n') {
-				line.pop_back();
+			if (!std::getline(*m_File, line, m_lineDelimiter)) {
+				m_EOF = true;
+				return NULL;
 			}
-			return SpecString::newString(line);
+		} else {
+			if (!std::getline(*m_File, line)) {
+				m_EOF = true;
+				return NULL;
+			}
 		}
+		// strip trailing newline if any
+		if (line.back() == '\n') {
+			line.pop_back();
+		}
+		
+		if (RECFM_FIXED_DELIMITED == m_recfm) {
+			if (line.length() > m_lrecl) {
+				line = line.substr(0,m_lrecl);
+			} else {
+				while (line.length() < m_lrecl) {
+					line += " ";
+				}
+			}
+		}
+		return SpecString::newString(line);
 	}
 	case RECFM_FIXED: {
 		m_File->read(m_buffer, m_lrecl);
@@ -176,30 +188,8 @@ PSpecString StandardReader::getNextRecord() {
 			return SpecString::newString(m_buffer, m_lrecl);
 		}
 	}
-	case RECFM_FIXED_DELIMITED: {
-		if (0 != m_lineDelimiter) {
-			std::getline(*m_File, line, m_lineDelimiter);
-		} else {
-			std::getline(*m_File, line);
-		}
-		if (m_File->eof()) {
-			m_EOF = true;
-			return NULL;
-		} else {
-			// strip trailing newline if any
-			if (line.back() == '\n') {
-				line.pop_back();
-			}
-			if (line.length() > m_lrecl) {
-				line = line.substr(0,m_lrecl);
-			} else {
-				while (line.length() < m_lrecl) {
-					line += " ";
-				}
-			}
-			return SpecString::newString(line);
-		}
-	}
+	default:
+		return NULL;	
 	}
 }
 
