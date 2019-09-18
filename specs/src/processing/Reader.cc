@@ -200,6 +200,8 @@ PSpecString StandardReader::getNextRecord() {
 			return SpecString::newString(line);
 		}
 	}
+	default:
+		return NULL;	
 	}
 }
 
