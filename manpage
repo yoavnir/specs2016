@@ -1227,6 +1227,13 @@ for example "v0.5"
 To find out the version of specs that you are using, use the following command:
 .P 
     specs @version 1
+.IP "cols" 3
+contains the number of columns in the display. You can override this in the configuration file. For example, the following prints a right-justified string. 
+.P
+    specs /hello/ (1,@cols,'R')
+.IP "rows" 3
+contains the number of rows in the display. This can also be overridden in the configuration file.
+
     
 .SH EXAMPLES
 `ls -l` yields this:

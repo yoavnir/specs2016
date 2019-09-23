@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <sys/ioctl.h>
+#include <unistd.h>
 #include "utils/platform.h"
 #include "utils/TimeUtils.h"
 #include "Config.h"
@@ -66,6 +68,40 @@ static void alertInvalidLine(std::string& ln, unsigned int lineNum, const char* 
 			" -- " << err << ":\n\t" << ln << "\n";
 }
 
+static std::string getTerminalRowsAndColumns(bool bGetRows)
+{
+	static bool alreadyRan = false;
+	static struct winsize w;
+
+	if (!alreadyRan) {
+		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+		/* sanity */
+
+		if (w.ws_row < 10) {
+			w.ws_row = 10;
+		} else if (w.ws_row > 120) {
+			w.ws_row = 120;
+		}
+
+		if (w.ws_col < 40) {
+			w.ws_col = 40;
+		} else if (w.ws_col > 480) {
+			w.ws_col = 480;
+		}
+
+
+		alreadyRan = true;
+	}
+
+	if (bGetRows) {
+		return std::to_string(w.ws_row);
+	} else {
+		return std::to_string(w.ws_col);
+	}
+
+}
+
 void readConfigurationFile()
 {
 	std::string line;
@@ -121,6 +157,12 @@ void readConfigurationFile()
 #ifdef GITTAG
 	ExternalLiterals["version"] = STRINGIFY(GITTAG);
 #endif
+	if (0==ExternalLiterals.count("cols")) {
+		ExternalLiterals["cols"] = getTerminalRowsAndColumns(false);
+	}
+	if (0==ExternalLiterals.count("rows")) {
+		ExternalLiterals["rows"] = getTerminalRowsAndColumns(true);
+	}
 }
 
 bool configSpecLiteralExists(std::string& key)
