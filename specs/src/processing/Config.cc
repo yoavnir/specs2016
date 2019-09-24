@@ -7,8 +7,12 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#ifdef WIN64
+#include <windows.h>
+#else
 #include <sys/ioctl.h>
 #include <unistd.h>
+#endif
 #include "utils/platform.h"
 #include "utils/TimeUtils.h"
 #include "Config.h"
@@ -71,9 +75,18 @@ static void alertInvalidLine(std::string& ln, unsigned int lineNum, const char* 
 static std::string getTerminalRowsAndColumns(bool bGetRows)
 {
 	static bool alreadyRan = false;
-	static struct winsize w;
+	static size_t rows = 0;
+	static size_t cols = 0;
 
 	if (!alreadyRan) {
+#ifdef WIN64
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+
+		rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+		cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+#else
+		struct winsize w;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
 		/* sanity */
@@ -90,14 +103,16 @@ static std::string getTerminalRowsAndColumns(bool bGetRows)
 			w.ws_col = 480;
 		}
 
-
+		rows = w.ws_row;
+		cols = w.ws_col;
+#endif
 		alreadyRan = true;
 	}
 
 	if (bGetRows) {
-		return std::to_string(w.ws_row);
+		return std::to_string(rows);
 	} else {
-		return std::to_string(w.ws_col);
+		return std::to_string(cols);
 	}
 
 }
