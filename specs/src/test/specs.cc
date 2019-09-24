@@ -106,6 +106,7 @@ int main (int argc, char** argv)
 	SimpleWriter *pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
+	setPositionGetter(&sb);
 
 	memset(pWrtrs, 0, sizeof(void*) * (1 + MAX_INPUT_STREAMS));
 

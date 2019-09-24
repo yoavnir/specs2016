@@ -16,10 +16,16 @@
 #define PERCENTS (ALUFloat(100.0))
 
 stateQueryAgent* g_pStateQueryAgent = NULL;
+positionGetter* g_PositionGetter = NULL;
 
 void setStateQueryAgent(stateQueryAgent* qa)
 {
 	g_pStateQueryAgent = qa;
+}
+
+void setPositionGetter(positionGetter* pGetter)
+{
+	g_PositionGetter = pGetter;
 }
 
 static void throw_argument_issue(const char* _funcName, unsigned int argIdx, const char* argName, const char* message)
@@ -2101,6 +2107,12 @@ ALUValue* AluFunc_fmt(ALUValue* pVal, ALUValue* pFormat, ALUValue* pDigits, ALUV
 	oss << pVal->getFloat();
 
 	return new ALUValue(oss.str());
+}
+
+ALUValue* AluFunc_next()
+{
+	if (!g_PositionGetter) return new ALUValue(ALUInt(1));
+	return new ALUValue(ALUInt(g_PositionGetter->pos()));
 }
 
 

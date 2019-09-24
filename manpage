@@ -643,6 +643,12 @@ Returns the value in
 .I string
 converted to decimal. If 
 .I length is missing or non-positive, the resulting decimal is signed, otherwise it is unsigned.
+.IP "next()" 3
+Returns the column of the next character to print if a
+.I spec unit
+specifies the 
+.B NEXT
+position.
 
 .SS "Built-In String Functions"
 .IP "abbrev(information, info)" 3

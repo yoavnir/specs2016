@@ -187,6 +187,7 @@ The parameters for the `fmap_dump` functions are as follows:
 | `tf2d(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is seconds since the UNIX epoch with up to 6 decimal places. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
 | `d2tf(x,f)` | Returns the string representation of the number `x` treated as the internal time format and formatted according to the string in `f`. |
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |
+| `next()` | Returns the index of the print position. `w1 "(next())"` should do the same as `w1 next`. |
 
 
 

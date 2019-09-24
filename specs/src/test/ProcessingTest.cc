@@ -93,6 +93,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	ig.Compile(vec,index);
 
 	StringBuilder sb;
+	setPositionGetter(&sb);
 
 	PSpecString result = NULL;
 	try {

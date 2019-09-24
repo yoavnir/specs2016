@@ -4,7 +4,7 @@
 #include "utils/SpecString.h"
 #include "ProcessingState.h"
 
-class StringBuilder {
+class StringBuilder : public positionGetter {
 public:
 	StringBuilder();
 	~StringBuilder();
@@ -16,6 +16,7 @@ public:
 	void           insertNextWord(PSpecString str);
 	void           insertNextField(PSpecString str);
 	void           setPadChar(char c)     {m_pad = c;}
+	size_t         pos()                  {return m_pos;}
 private:
 	PSpecString     mp_str;
 	size_t          m_pos; // for Next, NextWord, NextField
