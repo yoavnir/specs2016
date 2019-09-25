@@ -471,6 +471,8 @@ int main(int argc, char** argv)
 #endif
 	VERIFYCMD(specTimeSetLocale("C"),"");  // TEST #114
 	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
+	
+	VERIFY("print 'next()' 1 /next/ n print 'next()' n", "1next6");  // TEST #116
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
