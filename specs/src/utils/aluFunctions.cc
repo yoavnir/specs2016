@@ -2115,6 +2115,14 @@ ALUValue* AluFunc_next()
 	return new ALUValue(ALUInt(g_PositionGetter->pos()));
 }
 
+ALUValue* AluFunc_rest()
+{
+	static std::string sName("cols");
+	static std::string sCols = configSpecLiteralGet(sName);
+	static ALUInt cols = std::stoul(sCols);
+	return new ALUValue(ALUInt(cols - g_PositionGetter->pos() + 1));
+}
+
 
 #ifdef DEBUG
 ALUValue* AluFunc_testfunc(ALUValue* pArg1, ALUValue* pArg2, ALUValue* pArg3, ALUValue* pArg4)
