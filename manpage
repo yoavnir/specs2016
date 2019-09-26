@@ -136,7 +136,20 @@ The
 .B OutputPart
 argument can also be specified as a 
 .B Composed Output Placement
-argument. It is enclosed in non-optional parenthesis and includes 1, 2, or 3 comma-separated expressions. Those expressions are evaluated at each cycle to produce the starting column, the field width, and the alignment of the field.  If the parenthesis include only one expression, that expression is the starting column. If it contains two expressions, those expressions are the starting column and the width. A width of zero is a special value denoting the normal width of the output. If all three expressions are present, the last one is evaluated as a string, and the alignment will be centered in the value begins with a capital or lower-case 'c', right-aligned if the value begins with a capital or lower-case 'r', and left-aligned in all other cases.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.
+argument. It is enclosed in non-optional parenthesis and includes 1, 2, or 3 comma-separated expressions. Those expressions are evaluated at each cycle to produce the starting column, the field width, and the alignment of the field.  If the parenthesis include only one expression, that expression is the starting column. If it contains two expressions, those expressions are the starting column and the width. A width of zero is a special value denoting the normal width of the output. If all three expressions are present, the last one is evaluated as a string, and the alignment will be determined by the value. It will be centered if the argument begins with a capital or lower-case 'c', right-aligned if the value begins with a capital or lower-case 'r', and left-aligned in all other cases.  If the alignment field is two characters in length, the second character is a digit between
+.I 1-5,
+and the content is longer than the output field, the truncation will use an ellipsis as follows: For a value of
+.I 1, 
+.B specs 
+will output an ellipsis followed by the suffix of the content; for
+.I 5,
+.B specs
+will output a prefix followed by an ellipsis; for 
+.I 2, 3, 
+and
+.I 4,
+.B specs
+will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.
 
 The conversion argument can specify any of the following conversions:
 .IP "rot13" 3

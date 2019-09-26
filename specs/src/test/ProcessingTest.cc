@@ -474,6 +474,14 @@ int main(int argc, char** argv)
 	
 	VERIFY("print 'next()' 1 /next/ n print 'next()' n", "1next6");  // TEST #116
 
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'R0')", "qrstuvwxyz"); // TEST #117
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'L1')", "...tuvwxyz"); // TEST #118
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'c2')", "ab...vwxyz"); // TEST #119
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'R3')", "abc...wxyz"); // TEST #120
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'l4')", "abcde...yz"); // TEST #121
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'C5')", "abcdefg..."); // TEST #122
+	VERIFY("/hello/ (1,10,'r3')", "     hello"); // TEST #123
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {

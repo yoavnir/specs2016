@@ -465,18 +465,43 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (outputWidth>0 && pInput->length()!=outputWidth) {
 		if (m_alignment != outputAlignmentComposed) {
-			pInput->Resize(outputWidth, pState.getPadChar(), m_alignment);
+			pInput->Resize(outputWidth, pState.getPadChar(), m_alignment, ellipsisSpecNone);
 		} else {
 			outputAlignment al = outputAlignmentLeft;
+			ellipsisSpec es = ellipsisSpecNone;
 			ALUValue* res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
 			std::string s = res->getStr();
 			delete res;
+
 			if (s[0]=='c' || s[0]=='C') {
 				al = outputAlignmentCenter;
 			} else if (s[0]=='r' || s[0]=='R') {
 				al = outputAlignmentRight;
 			}
-			pInput->Resize(outputWidth, pState.getPadChar(), al);
+
+			if (s.length() == 2) {
+				switch (s[1]) {
+				case '1':
+					es = ellipsisSpecLeft;
+					break;
+				case '2':
+					es = ellipsisSpecThird;
+					break;
+				case '3':
+					es = ellipsisSpecHalf;
+					break;
+				case '4':
+					es = ellipsisSpecTwoThirds;
+					break;
+				case '5':
+					es = ellipsisSpecRight;
+					break;
+				default:
+					break;
+				}
+			}
+
+			pInput->Resize(outputWidth, pState.getPadChar(), al, es);
 		}
 	}
 

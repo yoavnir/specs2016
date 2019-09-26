@@ -141,7 +141,7 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 	size_t endPos = offset + psss->length();
 	if (mp_str->length() < endPos) {
 		MYASSERT(m_pad!=0);
-		mp_str->Resize(endPos, m_pad, outputAlignmentLeft);
+		mp_str->Resize(endPos, m_pad, outputAlignmentLeft, ellipsisSpecNone);
 	}
 	memcpy((void*)(mp_str->data()+offset), (void*)(s->data()), s->length());
 	m_pos = endPos + 1;

@@ -14,6 +14,15 @@ enum outputAlignment {
 	outputAlignmentComposed
 };
 
+enum ellipsisSpec {
+	ellipsisSpecNone,
+	ellipsisSpecLeft,
+	ellipsisSpecThird,
+	ellipsisSpecHalf,
+	ellipsisSpecTwoThirds,
+	ellipsisSpecRight
+};
+
 class SpecString;
 
 typedef SpecString* PSpecString;
@@ -36,8 +45,8 @@ public:
 	virtual size_t length() = 0;
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar) = 0;
 	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar) = 0;
-	virtual void Resize(size_t newSize, void* pPadChar, outputAlignment oa) = 0;
-	virtual void Resize(size_t newSize, char padChar, outputAlignment oa) = 0;
+	virtual void Resize(size_t newSize, void* pPadChar, outputAlignment oa, ellipsisSpec es) = 0;
+	virtual void Resize(size_t newSize, char padChar, outputAlignment oa, ellipsisSpec es) = 0;
 	virtual int  Compare(const char* pstrz) = 0;
 	virtual int  Compare(std::string& str) = 0;
 };
@@ -54,8 +63,8 @@ public:
 	virtual size_t length() {return m_str.length();}
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar);
 	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar);
-	virtual void Resize(size_t newSize, void* pPadChar, outputAlignment oa);
-	virtual void Resize(size_t newSize, char padChar, outputAlignment oa);
+	virtual void Resize(size_t newSize, void* pPadChar, outputAlignment oa, ellipsisSpec es);
+	virtual void Resize(size_t newSize, char padChar, outputAlignment oa, ellipsisSpec es);
 	virtual void _serialize(std::ostream& os) const;
 	const std::string* getStdString() const {return &m_str;}
 	virtual int  Compare(const char* pstrz) {return m_str.compare(pstrz);}
