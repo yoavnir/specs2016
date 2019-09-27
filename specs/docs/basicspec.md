@@ -100,6 +100,8 @@ Examples:
 * `specs /hello/ (1,10,"R2")` - `     hello`
 * `specs /abcdefghijklmnopqrstuvwxyz/ (1,10,"R2")` - `ab...vwxyz`
 
+The first arguments in a composed output placement can be elided, as in `(,,'R')`. If that is done, the default for the output start is the next place, equivalent to the function `next()`, while the default for the second argument is the `rest()` function if
+
 
 Conversions
 ===========

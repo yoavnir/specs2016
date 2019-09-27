@@ -149,7 +149,13 @@ will output a prefix followed by an ellipsis; for
 and
 .I 4,
 .B specs
-will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.
+will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.  The first arguments in a composed output placement can be elided, as in 
+.I (,,'R'). 
+If that is done, the default for the output start is the next place, equivalent to the function 
+.I next(), 
+while the default for the second argument is the rest of the line, based on the 
+.I @cols
+label.
 
 The conversion argument can specify any of the following conversions:
 .IP "rot13" 3

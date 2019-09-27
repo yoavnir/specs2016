@@ -39,7 +39,7 @@ void StdSpecString::Resize(size_t newSize, void* pPadChar, outputAlignment oa, e
 
 void StdSpecString::Resize(size_t newSize, char padChar, outputAlignment oa, ellipsisSpec es)
 {
-	if ((ellipsisSpecNone != es) && (newSize < m_str.size())) {
+	if ((ellipsisSpecNone != es) && (newSize < m_str.size()) && (newSize >= 3)) {
 		size_t totalLength, prefixLength, suffixLength;
 
 		totalLength = newSize - 3;
