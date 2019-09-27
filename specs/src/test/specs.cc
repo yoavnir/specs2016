@@ -276,7 +276,8 @@ int main (int argc, char** argv)
 		if (readLines!=usedLines) {
 			std::cerr << " " << writtenLines << "were written out.";
 		}
-		clockValue runTimeSeconds = timeAtEnd - timeAtStart;
+		clockValue runTimeMicroSeconds = timeAtEnd - timeAtStart;
+		ALUFloat runTimeSeconds = ALUFloat(runTimeMicroSeconds) / ALUFloat(1000000.0);
 		std::cerr << "\nRun Time: " << runTimeSeconds << " seconds.\n";
 
 		ALUFloat duration = (ALUFloat(1) * (clockAtEnd-clockAtStart)) / CLOCKS_PER_SEC;
