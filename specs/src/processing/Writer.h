@@ -5,6 +5,7 @@
 #include <thread>
 #include <fstream>
 #include "utils/StringQueue.h"
+#include "utils/TimeUtils.h"
 
 #define WRITER_STDERR "::stderr::";
 
@@ -19,12 +20,17 @@ public:
 	bool         Done();
 	unsigned long 		countGenerated() { return m_countGenerated; }
 	unsigned long 		countWritten()   { return m_countWritten; }
+	void                startProcessing() { m_Timer.changeClass(timeClassProcessing); }
+	void                startDraining() { m_Timer.changeClass(timeClassDraining); }
+	void                endCollectingTimeData() { m_Timer.changeClass(timeClassLast); }
+	void                dumpTimeData()  { m_Timer.dump("Writer Thread"); }
 protected:
 	unsigned long m_countGenerated;
 	unsigned long m_countWritten;
 	bool  m_ended;
 	StringQueue m_queue;
 	std::thread *mp_thread;
+	classifyingTimer m_Timer;
 };
 
 typedef class Writer *PWriter;

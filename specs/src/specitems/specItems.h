@@ -16,8 +16,8 @@ public:
 	itemGroup();
 	~itemGroup();
 	void Compile(std::vector<Token> &tokenVec, unsigned int& index);
-	bool processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd);
-	void process(StringBuilder& sb, ProcessingState& pState, Reader& rd);
+	bool processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, classifyingTimer& tmr);
+	void process(StringBuilder& sb, ProcessingState& pState, Reader& rd, classifyingTimer& tmr);
 	void setRegularRunAtEOF()  { bFoundSelectSecond = true; bNeedRunoutCycle = true; }
 	bool needRunoutCycle()     { return bNeedRunoutCycle;   }
 	std::string Debug();

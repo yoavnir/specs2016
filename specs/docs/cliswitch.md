@@ -26,10 +26,28 @@ You can specify the full path of the files, or `specs` will search the **SPECSPA
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
 The resulting stats look something like this:
 ```
-Read  1891715 lines.
-Wrote 1891715 lines.
-Run Time: 46.811 seconds.
-CPU Time: 69.1277526 seconds.
+Read  608913 lines.
+Wrote 608913 lines.
+Run Time: 11.5247 seconds.
+CPU Time: 20.1237872 seconds.
+Main Thread:
+	Initializing: 3.144 ms (0.027%)
+	Processing: 10.000 seconds (86.767%)
+	Waiting on input queue: 203.551 ms (1.766%)
+	Waiting on output queue: 1.318 seconds (11.439%)
+	Draining: 111.065 us (0.001%)
+Reader Thread:
+	Initializing: 84.135 us (0.001%)
+	Processing: 334.285 ms (2.901%)
+	Waiting on IO: 1.549 seconds (13.442%)
+	Waiting on output queue: 9.634 seconds (83.612%)
+	Draining: 5.036 ms (0.044%)
+Writer Thread:
+	Initializing: 2.514 ms (0.022%)
+	Processing: 748.592 ms (6.496%)
+	Waiting on IO: 4.794 seconds (41.602%)
+	Waiting on input queue: 5.979 seconds (51.880%)
+	Draining: 48.686 us (0.000%)
 ```
 * `--inFile` **filename** or `-i` **filename** -- get the input records from a file rather than standard input.
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.

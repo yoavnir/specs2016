@@ -72,6 +72,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
 	setFieldIdentifierGetter(&fiGetter);
 	setStateQueryAgent(&ps);
+	classifyingTimer tmr;
 
 	g_counters.clearAll();
 
@@ -103,7 +104,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.setString(pFirstLine);
 				ps.setFirst();
 				ps.incrementCycleCounter();
-				ig.processDo(sb, ps, &tRead);
+				ig.processDo(sb, ps, &tRead, tmr);
 				PSpecString pOut = sb.GetStringUnsafe();
 				if (ps.shouldWrite()) {
 					if (result) {
@@ -132,7 +133,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		ps.setString(NULL);
 		ps.setFirst();
 		try {
-			ig.processDo(sb, ps, NULL);
+			ig.processDo(sb, ps, NULL, tmr);
 			PSpecString pOut = sb.GetStringUnsafe();
 			if (result) {
 				result->add(pOut);

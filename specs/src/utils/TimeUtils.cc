@@ -148,3 +148,61 @@ void specTimeSetLocale(const std::string& _locale)
 	}
 }
 
+classifyingTimer::classifyingTimer()
+{
+	m_lastTimePoint = std::chrono::high_resolution_clock::now();
+	m_currentClass = timeClassInitializing;
+	for (int i = timeClassInitializing ; i < timeClassLast ; i++) {
+		m_nanoseconds[i] = 0;
+	}
+}
+
+void classifyingTimer::changeClass(timeClasses _class)
+{
+	if (_class == m_currentClass) return;
+	MYASSERT(m_currentClass != timeClassLast);
+	auto now = std::chrono::high_resolution_clock::now();
+	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastTimePoint).count();
+	m_nanoseconds[m_currentClass] += duration;
+	m_currentClass = _class;
+	m_lastTimePoint = now;
+}
+
+void classifyingTimer::dump(std::string title)
+{
+	static const std::string classTitles[] = {
+			"Initializing",
+			"Processing",
+			"Waiting on IO",
+			"Waiting on input queue",
+			"Waiting on output queue",
+			"Draining",
+			"Last"
+	};
+
+	uint64_t totalDuration = 0;
+	for (int i = timeClassInitializing ; i < timeClassLast ; i++) {
+		totalDuration += m_nanoseconds[i];
+	}
+
+	std::ostringstream oss;
+	oss.setf( std::ios::fixed, std:: ios::floatfield );
+	oss << title << ":\n";
+	for (int i = timeClassInitializing ; i < timeClassLast ; i++) {
+		if (m_nanoseconds[i] > 0) {
+			oss.precision(3);
+			double percentage = double(100 * m_nanoseconds[i]) / double(totalDuration);
+			oss << "\t" << classTitles[i] << ": ";
+			if (m_nanoseconds[i] > NANOSECONDS_PER_SECOND) {
+				oss << getSeconds(timeClasses(i)) << " seconds";
+			} else if (m_nanoseconds[i] > NANOSECONDS_PER_MILLISECOND) {
+				oss << getMilliSeconds(timeClasses(i)) << " ms";
+			} else {
+				oss << getMicroSeconds(timeClasses(i)) << " us";
+			}
+
+			oss << " (" << percentage << "%)\n";
+		}
+	}
+	std::cerr << oss.str();
+}
