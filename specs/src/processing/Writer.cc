@@ -4,9 +4,11 @@
 
 void WriteAllRecords(Writer *pw)
 {
+	pw->startProcessing();
 	while (!pw->Done()) {
 		pw->WriteOut();
 	}
+	pw->startDraining();
 }
 
 Writer::Writer()
@@ -84,9 +86,15 @@ SimpleWriter::~SimpleWriter() {
 void SimpleWriter::WriteOut()
 {
 	PSpecString ps;
-	if (m_queue.wait_and_pop(ps)) {
+	m_Timer.changeClass(timeClassInputQueue);
+	bool res = m_queue.wait_and_pop(ps);
+	if (res) {
+		m_Timer.changeClass(timeClassIO);
 		*m_File << *ps << std::endl;
+		m_Timer.changeClass(timeClassProcessing);
 		m_countWritten++;
 		delete ps;
+	} else {
+		m_Timer.changeClass(timeClassProcessing);
 	}
 }

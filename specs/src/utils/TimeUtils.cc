@@ -3,7 +3,9 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <locale>
 #include <stdlib.h> // defines setenv
+#include "utils/ErrorReporting.h"
 #include "platform.h"  // For put_time and get_time vs strftime and strptime
 #include "TimeUtils.h"
 
@@ -12,12 +14,14 @@ using TimeResolution = std::chrono::microseconds;
 using Clock = std::chrono::system_clock;
 using TimePoint = std::chrono::time_point<Clock>;
 
+static std::locale g_locale;
+
 clockValue specTimeGetTOD()
 {
 	auto currentTime = std::chrono::system_clock::now();
 	auto sinceEpoch = currentTime.time_since_epoch();
 	int64_t microseconds = std::chrono::duration_cast<TimeResolution>(sinceEpoch).count();
-	return (clockValue(microseconds) / MICROSECONDS_PER_SECOND);
+	return (clockValue(microseconds));
 }
 
 
@@ -41,6 +45,7 @@ PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 	}
 
 #ifdef PUT_TIME__SUPPORTED
+	oss.imbue(g_locale);
 	oss << std::put_time(&bt, format.c_str());
 #else
 	char timeFormatterString[256];
@@ -80,7 +85,7 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 
 #ifdef PUT_TIME__SUPPORTED
 	std::istringstream ss(printable);
-	// ss.imbue(std::locale("de_DE.utf-8"));  TODO: handle locale as preference
+	ss.imbue(g_locale);
 	ss >> std::get_time(&t, format.c_str());
 	if (ss.fail()) {
 		return 0;
@@ -133,3 +138,71 @@ void specTimeSetTimeZone(const std::string& tzname)
 	setenv(sTZ, tzname.data(), 1);
 }
 
+void specTimeSetLocale(const std::string& _locale)
+{
+	try {
+		g_locale = std::locale(_locale.c_str());
+	} catch(std::runtime_error& e) {
+		std::string err = "Invalid locale <" + _locale + ">";
+		MYTHROW(err);
+	}
+}
+
+classifyingTimer::classifyingTimer()
+{
+	m_lastTimePoint = std::chrono::high_resolution_clock::now();
+	m_currentClass = timeClassInitializing;
+	for (int i = timeClassInitializing ; i < timeClassLast ; i++) {
+		m_nanoseconds[i] = 0;
+	}
+}
+
+void classifyingTimer::changeClass(timeClasses _class)
+{
+	if (_class == m_currentClass) return;
+	MYASSERT(m_currentClass != timeClassLast);
+	auto now = std::chrono::high_resolution_clock::now();
+	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastTimePoint).count();
+	m_nanoseconds[m_currentClass] += duration;
+	m_currentClass = _class;
+	m_lastTimePoint = now;
+}
+
+void classifyingTimer::dump(std::string title)
+{
+	static const std::string classTitles[] = {
+			"Initializing",
+			"Processing",
+			"Waiting on IO",
+			"Waiting on input queue",
+			"Waiting on output queue",
+			"Draining",
+			"Last"
+	};
+
+	uint64_t totalDuration = 0;
+	for (int i = timeClassInitializing ; i < timeClassLast ; i++) {
+		totalDuration += m_nanoseconds[i];
+	}
+
+	std::ostringstream oss;
+	oss.setf( std::ios::fixed, std:: ios::floatfield );
+	oss << title << ":\n";
+	for (int i = timeClassInitializing ; i < timeClassLast ; i++) {
+		if (m_nanoseconds[i] > 0) {
+			oss.precision(3);
+			double percentage = double(100 * m_nanoseconds[i]) / double(totalDuration);
+			oss << "\t" << classTitles[i] << ": ";
+			if (m_nanoseconds[i] > NANOSECONDS_PER_SECOND) {
+				oss << getSeconds(timeClasses(i)) << " seconds";
+			} else if (m_nanoseconds[i] > NANOSECONDS_PER_MILLISECOND) {
+				oss << getMilliSeconds(timeClasses(i)) << " ms";
+			} else {
+				oss << getMicroSeconds(timeClasses(i)) << " us";
+			}
+
+			oss << " (" << percentage << "%)\n";
+		}
+	}
+	std::cerr << oss.str();
+}

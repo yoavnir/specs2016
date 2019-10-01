@@ -7,6 +7,12 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#ifdef WIN64
+#include <windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
 #include "utils/platform.h"
 #include "utils/TimeUtils.h"
 #include "Config.h"
@@ -27,9 +33,10 @@ static void useKeyValue(std::string& key, std::string& value)
 		key = key.substr(0,key.length() - 1);
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
-		} else {
-			ExternalLiterals[key] = value;
+		} else if (key == "locale") {
+			specTimeSetLocale(value);
 		}
+		ExternalLiterals[key] = value;
 	}
 }
 
@@ -63,6 +70,51 @@ static void alertInvalidLine(std::string& ln, unsigned int lineNum, const char* 
 {
 	std::cerr << "Invalid configuration file line at line #" << lineNum <<
 			" -- " << err << ":\n\t" << ln << "\n";
+}
+
+static std::string getTerminalRowsAndColumns(bool bGetRows)
+{
+	static bool alreadyRan = false;
+	static size_t rows = 0;
+	static size_t cols = 0;
+
+	if (!alreadyRan) {
+#ifdef WIN64
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+
+		rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+		cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+#else
+		struct winsize w;
+		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+		/* sanity */
+
+		if (w.ws_row < 10) {
+			w.ws_row = 10;
+		} else if (w.ws_row > 120) {
+			w.ws_row = 120;
+		}
+
+		if (w.ws_col < 40) {
+			w.ws_col = 40;
+		} else if (w.ws_col > 480) {
+			w.ws_col = 480;
+		}
+
+		rows = w.ws_row;
+		cols = w.ws_col;
+#endif
+		alreadyRan = true;
+	}
+
+	if (bGetRows) {
+		return std::to_string(rows);
+	} else {
+		return std::to_string(cols);
+	}
+
 }
 
 void readConfigurationFile()
@@ -120,6 +172,12 @@ void readConfigurationFile()
 #ifdef GITTAG
 	ExternalLiterals["version"] = STRINGIFY(GITTAG);
 #endif
+	if (0==ExternalLiterals.count("cols")) {
+		ExternalLiterals["cols"] = getTerminalRowsAndColumns(false);
+	}
+	if (0==ExternalLiterals.count("rows")) {
+		ExternalLiterals["rows"] = getTerminalRowsAndColumns(true);
+	}
 }
 
 bool configSpecLiteralExists(std::string& key)

@@ -62,6 +62,7 @@
 | `dtan(x)` | Returns the tangent function, treating `x` as an angle expressed in degrees |
 | `floor(x)` | Returns the largest integer smaller than `x` |
 | `frand()` | Returns a random value between 0.0 up to and not including 1.0 |
+| `fmt(value,format,digits,decimal,separator)` | formats a floating-point `value` as a string. The `format` argument can be omitted, or it can begin with **f** for a **fixed** number of `digits` after the decimal point, or **s** for **scientific** notation. When omitted, the `digits` argument sets the total number of digits displayed. The `decimal` argument sets the character used for the decimal point (default is a period), while the `separator` argument sets the character used as thousands separator (default is none). |
 | `frombin(x)` | Returns the decimal value of the binary `x`. For example, if `x` is "A", the function returns 65; if `x` is "AB" the function returns 16961. Binary values are assumed to be in little-endian order. |
 | `pow(x,y)` | Returns `x` raised to the power of `y` |
 | `rand(x)` | Returns a random value up to and not including the integer x |
@@ -186,6 +187,7 @@ The parameters for the `fmap_dump` functions are as follows:
 | `tf2d(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is seconds since the UNIX epoch with up to 6 decimal places. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
 | `d2tf(x,f)` | Returns the string representation of the number `x` treated as the internal time format and formatted according to the string in `f`. |
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |
+| `next()` | Returns the index of the print position. `w1 "(next())"` should do the same as `w1 next`. |
 
 
 

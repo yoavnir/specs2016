@@ -49,12 +49,30 @@ extern ALUCounters g_counters;
 		}                                       \
 } while (0);
 
+#define VERIFYCMD(cmd,res) do {                 \
+	std::string actual_res("");                 \
+	testCount++;                                \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
+	try { cmd; }                                \
+	catch(SpecsException& e) {                  \
+		actual_res = e.what(true);              \
+	}                                           \
+	if (res==actual_res) {                      \
+		std::cout << "***** OK *****: <" << actual_res << ">\n"; \
+	} else {                                    \
+		errorCount++;                           \
+		std::cout << "*** NOT OK ***:\n\tGot <" << actual_res << ">\n\tExp <" << res << ">\n"; \
+	}                                           \
+} while (0);
+
+
 PSpecString runTestOnExample(const char* _specList, const char* _example)
 {
 	ProcessingState ps;
 	ProcessingStateFieldIdentifierGetter fiGetter(&ps);
 	setFieldIdentifierGetter(&fiGetter);
 	setStateQueryAgent(&ps);
+	classifyingTimer tmr;
 
 	g_counters.clearAll();
 
@@ -76,6 +94,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	ig.Compile(vec,index);
 
 	StringBuilder sb;
+	setPositionGetter(&sb);
 
 	PSpecString result = NULL;
 	try {
@@ -85,7 +104,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.setString(pFirstLine);
 				ps.setFirst();
 				ps.incrementCycleCounter();
-				ig.processDo(sb, ps, &tRead);
+				ig.processDo(sb, ps, &tRead, tmr);
 				PSpecString pOut = sb.GetStringUnsafe();
 				if (ps.shouldWrite()) {
 					if (result) {
@@ -114,7 +133,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		ps.setString(NULL);
 		ps.setFirst();
 		try {
-			ig.processDo(sb, ps, NULL);
+			ig.processDo(sb, ps, NULL, tmr);
 			PSpecString pOut = sb.GetStringUnsafe();
 			if (result) {
 				result->add(pOut);
@@ -438,8 +457,31 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "ABEND: too big");  // TEST #109
 
 	spec = "a: word 1 1 READ '+' N b: word 1 N '=' N print 'a+b' N";
-	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "1+2=3\n3+4=7\n5+6=11");
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "1+2=3\n3+4=7\n5+6=11"); // TEST #110
 
+	// locales
+	VERIFYCMD(specTimeSetLocale("kuku"),"Invalid locale <kuku>");  // TEST #111
+
+#ifdef SPANISH_LOCALE_SUPPORTED
+	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112
+#ifdef PUT_TIME__SUPPORTED
+	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #113
+#else
+	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #113
+#endif
+#endif
+	VERIFYCMD(specTimeSetLocale("C"),"");  // TEST #114
+	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
+	
+	VERIFY("print 'next()' 1 /next/ n print 'next()' n", "1next6");  // TEST #116
+
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'R0')", "qrstuvwxyz"); // TEST #117
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'L1')", "...tuvwxyz"); // TEST #118
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'c2')", "ab...vwxyz"); // TEST #119
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'R3')", "abc...wxyz"); // TEST #120
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'l4')", "abcde...yz"); // TEST #121
+	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'C5')", "abcdefg..."); // TEST #122
+	VERIFY("/hello/ (1,10,'r3')", "     hello"); // TEST #123
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

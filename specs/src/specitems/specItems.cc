@@ -201,7 +201,7 @@ std::string itemGroup::Debug()
 	return ret;
 }
 
-bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd)
+bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, classifyingTimer& tmr)
 {
 	bool bSomethingWasDone = false;
 	int i = 0;
@@ -270,7 +270,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
 			MYASSERT_WITH_MSG(pState.getActiveInputStation() != STATION_SECOND, "Cannot READ or READSTOP during SELECT SECOND");
-			ps = pRd->get();
+			ps = pRd->get(tmr);
 			if (!ps) {
 				if (aRet==ApplyRet__Read) {
 					ps = SpecString::newString();
@@ -309,19 +309,21 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 	return bSomethingWasDone;
 }
 
-void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd)
+void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, classifyingTimer& tmr)
 {
 	PSpecString ps;
 
-	while ((ps=rd.get())) {
+	while ((ps=rd.get(tmr))) {
 		pState.setString(ps);
 		pState.setFirst();
 		pState.incrementCycleCounter();
 
-		if (processDo(sb,pState, &rd)) {
+		if (processDo(sb,pState, &rd, tmr)) {
 			PSpecString pOutString = sb.GetString();
 			if (pState.shouldWrite()) {
+				tmr.changeClass(timeClassOutputQueue);
 				pState.getCurrentWriter()->Write(pOutString);
+				tmr.changeClass(timeClassProcessing);
 			} else {
 				delete pOutString;
 				pState.resetNoWrite();
@@ -335,15 +337,18 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd)
 	}
 
 	if (!bNeedRunoutCycle) {
+		tmr.changeClass(timeClassDraining);
 		return;
 	}
 
 	// run-out cycle
 	pState.setString(NULL);
 	pState.setFirst();
-	if (processDo(sb, pState, &rd)) {
+	if (processDo(sb, pState, &rd, tmr)) {
 		pState.getCurrentWriter()->Write(sb.GetString());
 	}
+
+	tmr.changeClass(timeClassDraining);
 }
 
 bool itemGroup::readsLines()

@@ -666,7 +666,7 @@ s = "a: WORD 1 1 ASSERT 'a<5'"
 i = '1\n2\n1\n2'
 run_case(s,i,"an assertion that always succeeds")
 
-i = '1\n2\n3\n4\n5'
+i = '1\n2\n3\n4\n5\n6\n7'
 run_case(s,i,"an assertion that fails",expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
 s = "a: WORD 1 1 if 'a>=5' then abend 'oops' endif"

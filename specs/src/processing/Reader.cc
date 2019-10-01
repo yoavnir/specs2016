@@ -5,9 +5,11 @@
 
 void ReadAllRecordsIntoReaderQueue(Reader* r)
 {
+	r->startProcessing();
 	while (!r->endOfSource()) {
 		r->readIntoQueue();
 	}
+	r->startDraining();
 }
 
 Reader::~Reader()
@@ -37,7 +39,7 @@ void Reader::End()
 	mp_thread = NULL;
 }
 
-PSpecString Reader::get()
+PSpecString Reader::get(classifyingTimer& tmr)
 {
 	PSpecString ret;
 	if (m_pUnreadString) {
@@ -49,7 +51,10 @@ PSpecString Reader::get()
 		m_bRanDry = true;
 		return NULL;
 	}
-	if (m_queue.wait_and_pop(ret)) {
+	tmr.changeClass(timeClassInputQueue);
+	bool res = m_queue.wait_and_pop(ret);
+	tmr.changeClass(timeClassProcessing);
+	if (res) {
 		m_countUsed++;
 		return ret;
 	} else {
@@ -69,7 +74,9 @@ void Reader::readIntoQueue()
 	if (!endOfSource()) {
 		PSpecString nextRecord = getNextRecord();
 		if (nextRecord) {
+			m_Timer.changeClass(timeClassOutputQueue);
 			m_queue.push(nextRecord);
+			m_Timer.changeClass(timeClassProcessing);
 			m_countRead++;
 		} else {
 			m_queue.Done();
@@ -86,7 +93,9 @@ StandardReader::StandardReader() {
 	m_File = &std::cin;
 	m_NeedToClose = false;
 	m_EOF = false;
-	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = NULL;
+	m_recfm = RECFM_DELIMITED;
+	m_lineDelimiter = 0;
 }
 
 StandardReader::StandardReader(std::istream* f) {
@@ -97,7 +106,9 @@ StandardReader::StandardReader(std::istream* f) {
 	}
 	m_File = f;
 	m_NeedToClose = false;
-	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = NULL;
+	m_recfm = RECFM_DELIMITED;
+	m_lineDelimiter = 0;
 }
 
 StandardReader::StandardReader(std::string& fn) {
@@ -109,7 +120,9 @@ StandardReader::StandardReader(std::string& fn) {
 	}
 	m_NeedToClose = true;
 	m_EOF = false;
-	m_buffer = (char*)malloc(STANDARD_READER_BUFFER_SIZE);
+	m_buffer = NULL;
+	m_recfm = RECFM_DELIMITED;
+	m_lineDelimiter = 0;
 }
 
 StandardReader::~StandardReader() {
@@ -118,7 +131,23 @@ StandardReader::~StandardReader() {
 		pInputFile->close();
 		delete pInputFile;
 	}
-	free(m_buffer);
+	if (m_buffer) {
+		free(m_buffer);
+	}
+}
+
+void StandardReader::setFormatFixed(unsigned int lrecl, bool delimited)
+{
+	m_recfm = delimited ? RECFM_FIXED_DELIMITED : RECFM_FIXED;
+	m_lrecl = lrecl;
+	if (!delimited) {
+		m_buffer = (char*)malloc(lrecl);
+	}
+}
+
+void StandardReader::setLineDelimiter(char c)
+{
+	m_lineDelimiter = c;
 }
 
 bool StandardReader::endOfSource() {
@@ -127,15 +156,55 @@ bool StandardReader::endOfSource() {
 
 PSpecString StandardReader::getNextRecord() {
 	std::string line;
-	if (!std::getline(*m_File, line)) {
-		m_EOF = true;
-		return NULL;
-	} else {
+	switch (m_recfm) {
+	case RECFM_FIXED_DELIMITED:
+	case RECFM_DELIMITED: {
+		if (0 != m_lineDelimiter) {
+			m_Timer.changeClass(timeClassIO);
+			bool ok = std::getline(*m_File, line, m_lineDelimiter) ? true : false;
+			m_Timer.changeClass(timeClassProcessing);
+			if (!ok) {
+				m_EOF = true;
+				return NULL;
+			}
+		} else {
+			m_Timer.changeClass(timeClassIO);
+			bool ok = std::getline(*m_File, line) ? true : false;
+			m_Timer.changeClass(timeClassProcessing);
+			if (!ok) {
+				m_EOF = true;
+				return NULL;
+			}
+		}
 		// strip trailing newline if any
 		if (line.back() == '\n') {
 			line.pop_back();
 		}
+		
+		if (RECFM_FIXED_DELIMITED == m_recfm) {
+			if (line.length() > m_lrecl) {
+				line = line.substr(0,m_lrecl);
+			} else {
+				while (line.length() < m_lrecl) {
+					line += " ";
+				}
+			}
+		}
 		return SpecString::newString(line);
+	}
+	case RECFM_FIXED: {
+		m_Timer.changeClass(timeClassIO);
+		m_File->read(m_buffer, m_lrecl);
+		m_Timer.changeClass(timeClassProcessing);
+		if (m_File->gcount() < m_lrecl) {
+			m_EOF = true;
+			return NULL;
+		} else {
+			return SpecString::newString(m_buffer, m_lrecl);
+		}
+	}
+	default:
+		return NULL;	
 	}
 }
 
@@ -250,16 +319,16 @@ void multiReader::Begin()
 	ITERATE_VALID_STREAMS_END
 }
 
-PSpecString multiReader::get()
+PSpecString multiReader::get(classifyingTimer& tmr)
 {
-	PSpecString ret = readerArray[readerIdx]->get();
+	PSpecString ret = readerArray[readerIdx]->get(tmr);
 	if (!ret) return NULL;
 
 	ITERATE_VALID_STREAMS(idx)
 		if (stringArray[idx]) {
 			MYASSERT(idx!=readerIdx);
 			delete stringArray[idx];
-			stringArray[idx] = readerArray[idx]->get();
+			stringArray[idx] = readerArray[idx]->get(tmr);
 			if (!stringArray[idx]) {
 				delete ret;
 				std::string err = "Input stream " + std::to_string(idx+1) + " ran dry while active stream ("
@@ -270,7 +339,7 @@ PSpecString multiReader::get()
 			MYASSERT(idx==readerIdx || bFirstGet);
 			/* ret has already been read, and the stringArray slot remains NULL */
 			if (bFirstGet && idx!=readerIdx) {
-				stringArray[idx] = readerArray[idx]->get();
+				stringArray[idx] = readerArray[idx]->get(tmr);
 				if (!stringArray[idx]) {
 					std::string err = "Input stream " + std::to_string(idx+1) + " ran dry at the first record"
 							" while active stream (" + std::to_string(readerIdx+1) + ") still has records";

@@ -224,6 +224,21 @@ ALUValue* AluUnitLiteral::evaluate()
 	return ret;
 }
 
+void AluUnitNull::_serialize(std::ostream& os) const
+{
+	os << "dummy";
+}
+
+std::string AluUnitNull::_identify()
+{
+	return std::string("Dummy");
+}
+
+ALUValue* AluUnitNull::evaluate()
+{
+	return NULL;
+}
+
 
 void AluUnitCounter::_serialize(std::ostream& os) const
 {
@@ -896,6 +911,9 @@ AluFunction::AluFunction(std::string& _s)
 	std::string s(_s);
 	std::transform(s.begin(), s.end(),s.begin(), ::tolower);
 	ALU_FUNCTION_LIST
+#ifdef DEBUG
+	ALU_DEBUG_FUNCTION_LIST
+#endif
 	std::string err = "Unrecognized function "+_s;
 	MYTHROW(err);
 }
@@ -1011,7 +1029,7 @@ void dumpAluStack(const char* title, std::stack<ALUValue*>& stk)
 	while (!stk.empty()) {
 		ALUValue* v = stk.top();
 		stk.pop();
-		std::cerr << "   > " << v->getStr() << std::endl;
+		std::cerr << "   > " << (v ? v->getStr() : "(nil)") << std::endl;
 		tmp.push(v);
 	}
 	std::cerr << std::endl;
@@ -1391,6 +1409,44 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 	return true;
 }
 
+#define X(fn,argc,flags,rl) if (s==##fn) { argCount = argc; return; }
+struct functionArgcountPair {
+	functionArgcountPair(std::string& s, unsigned int argc, unsigned int avail) {
+		funcName = s;
+		argCount = argc;
+		availableOperands = avail;
+	}
+	std::string  funcName;
+	unsigned int argCount;
+	unsigned int availableOperands;
+};
+#undef X
+
+class functionNestingStack {
+public:
+	functionNestingStack()  {}
+	~functionNestingStack() {
+		// MYASSERT_WITH_MSG(m_stack.empty(), "Function nesting stack not empty");
+	}
+	void   push(std::string& s, unsigned int argc, unsigned int availableOperands) {
+		m_stack.push(functionArgcountPair(s,argc,availableOperands));
+	}
+	void   pop() {
+		m_stack.pop();
+	}
+	std::string fname() {
+		return m_stack.top().funcName;
+	}
+	unsigned int argc() {
+		return m_stack.top().argCount;
+	}
+	unsigned int availBefore() {
+		return m_stack.top().availableOperands;
+	}
+private:
+	std::stack<functionArgcountPair> m_stack;
+};
+
 bool isPseudoFunctionName(std::string& fn)
 {
 #define X(nm) if (#nm==fn) return true;
@@ -1470,6 +1526,8 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 #endif
 
 	int stepNumber = 0;
+	bool     bExpectNullArgument = false;
+	functionNestingStack fstack;
 
 	for (AluUnit* pUnit : source) {
 #ifdef ALU_DUMP
@@ -1482,13 +1540,25 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 #endif
 		switch (pUnit->type()) {
 		case UT_Comma:
+			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
+				MYASSERT_WITH_MSG(operatorStack.top()->countOperands() <= availableOperands, "Not enough operands for operator (3)");
+				availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
+				dest.push_back(operatorStack.top());
+				operatorStack.pop();
+			}
+			if (bExpectNullArgument) {
+				dest.push_back(new AluUnitNull);
+				availableOperands++;
+			}
 			if (clearSource) delete pUnit;
+			bExpectNullArgument = true;
 			break;
 		case UT_AssignmentOp:
 			MYTHROW("Assignment operator used in expression");
 			break;
 		case UT_None:
 		case UT_Invalid:
+		case UT_Null:
 			MYTHROW("None or Invalid - internal logic error");
 		case UT_LiteralNumber:
 		case UT_Counter:
@@ -1496,10 +1566,15 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		case UT_InputRecord:
 			dest.push_back(pUnit);
 			availableOperands++;
+			bExpectNullArgument = false;
 			break;
-		case UT_Identifier: 	// a function
+		case UT_Identifier: {	// a function
+			AluFunction* pFunc = dynamic_cast<AluFunction*>(pUnit);
 			operatorStack.push(pUnit);
+			fstack.push(pFunc->getName(), pFunc->countOperands(), availableOperands);
+			bExpectNullArgument = false;
 			break;
+		}
 		case UT_UnaryOp: { // Unary operator - higher precedence than any binary but not a function
 			AluUnitType topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
 			while (topType==UT_Identifier) {
@@ -1510,6 +1585,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 				topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
 			}
 			operatorStack.push(pUnit);
+			bExpectNullArgument = false;
 			break;
 		}
 		case UT_BinaryOp: { // Binary operator - lower than unary and an interesting rank among them
@@ -1523,10 +1599,12 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 				topType = operatorStack.empty() ? UT_None : operatorStack.top()->type();
 			}
 			operatorStack.push(pUnit);
+			bExpectNullArgument = false;
 			break;
 		}
 		case UT_OpenParenthesis:
 			operatorStack.push(pUnit);
+			bExpectNullArgument = true;
 			break;
 		case UT_ClosingParenthesis:
 			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
@@ -1545,11 +1623,24 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 				operatorStack.pop(); // Pop off the opening parenthesis
 				// issue #37 - if what remains is a function, it should also go
 				if (!operatorStack.empty() && UT_Identifier==operatorStack.top()->type()) {
+					if ((availableOperands) > (fstack.availBefore() + fstack.argc())) {
+						std::string err = "Too many operands (" +
+								std::to_string(availableOperands - fstack.availBefore()) +
+								") for function " + fstack.fname() + " (accepts " +
+								std::to_string(fstack.argc()) + ")";
+						MYTHROW(err);
+					}
+					while (availableOperands < (fstack.availBefore() + fstack.argc())) {
+						dest.push_back(new AluUnitNull);
+						availableOperands++;
+					}
 					availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
 					dest.push_back(operatorStack.top());
 					operatorStack.pop();
+					fstack.pop();
 				}
 			}
+			bExpectNullArgument = false;
 		}
 	}
 
@@ -1606,6 +1697,7 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 		case UT_LiteralNumber:
 		case UT_FieldIdentifier:
 		case UT_InputRecord:
+		case UT_Null:
 			computeStack.push(pUnit->evaluate());
 			break;
 		case UT_Counter: {
@@ -1731,7 +1823,8 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 			}
 			break;
 			default:
-				MYTHROW("Logic error, should not have gotten this type of Unit");
+				std::string err = "Logic error, should not have gotten this type of Unit: " + pUnit->_identify();
+				MYTHROW(err);
 			}
 		}
 	}

@@ -40,7 +40,7 @@ The **InputSource** argument may be any of the following:
 * **TODclock** - a floating point number, accurate to microseconds and giving seconds since the Unix epoch.
 * **DTODclock** - a floating point number, accurate to microseconds and giving seconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** - A record counter as a 10-digit decimal number.  Read more about expressions on the [Arithmetic-Logical Unit](alu.md) page.
-* **TIMEDIFF** - an 8-char decimal number indicating the number of seconds since the invocation of the program.
+* **TIMEDIFF** - a 12-char decimal number indicating the number of microseconds since the invocation of the program.
 * An **ID** keyword followed by a previously defined **FieldIdentifier**.
 * The **PRINT** keyword followed by a calculated expression
 * A string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the Unix command line requires you to enclose them in double quotes.
@@ -90,11 +90,18 @@ The **OutputPlacement** and the **Alignment** arguments can be replaced by a **c
 
 If the parenthesis include only one expression, that expression is the starting column. If it contains two expressions, those expressions are the starting column and the width. A width of zero is a special value denoting the normal width of the output. If all three expressions are present, the last one is evaluated as a string, and the alignment will be centered in the value begins with a capital or lower-case 'c', right-aligned if the value begins with a capital or lower-case 'r', and left-aligned in all other cases.
 
+If the alignment field is exactly two characters in length, the second character is a digit between *1-5*, and the content is longer than the output field, the truncation will use an ellipsis as follows: For a value of *1*, **specs** will output an ellipsis followed by the suffix of the content; for *5*, **specs** will output a prefix followed by an ellipsis; for *2*, *3*, and *4*, **specs** will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively. 
+
 If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.
 
 Examples:
 * `specs w1 (20-len(word(1)))` - a silly way to right align a word in a 20-character output field
 * `specs /##########/ (recno()%5 + 1, 2*(6 - recno()%5 - 1))` - pretty triangles
+* `specs /hello/ (1,10,"R2")` - `     hello`
+* `specs /abcdefghijklmnopqrstuvwxyz/ (1,10,"R2")` - `ab...vwxyz`
+
+The first arguments in a composed output placement can be elided, as in `(,,'R')`. If that is done, the default for the output start is the next place, equivalent to the function `next()`, while the default for the second argument is the `rest()` function if
+
 
 Conversions
 ===========

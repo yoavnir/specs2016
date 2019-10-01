@@ -41,11 +41,34 @@ CONTINUE:
 		argc--; argv++;
 	}
 
+	// saniry checks
+	if (g_recfm!="") {
+		if (g_recfm=="d" || g_recfm=="D" || g_recfm=="delimited" || g_recfm=="DELIMITED") {
+			g_recfm = "";
+		} else if (g_recfm=="f" || g_recfm=="F" || g_recfm=="fixed" || g_recfm=="FIXED") {
+			g_recfm = "F";
+			if (g_lrecl <= 0) {
+				std::cerr << "For the 'fixed' record format, lrecl must be set to a positive value\n";
+				return false;
+			}
+		} else if (g_recfm=="fd" || g_recfm=="FD"){
+			g_recfm = "FD";
+			if (g_lrecl <= 0) {
+				std::cerr << "For the 'fix-delimited' record format, lrecl must be set to a positive value\n";
+				return false;
+			}
+		} else {
+			std::cerr << "Invalid record format: <" << g_recfm << ">\n";
+			return false;
+		}
+	}
+
 	return true;
 }
 
 int main (int argc, char** argv)
 {
+	classifyingTimer timer;
 	static const std::string _stderr = WRITER_STDERR;
 	bool conciseExceptions = true;
 
@@ -84,6 +107,7 @@ int main (int argc, char** argv)
 	SimpleWriter *pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
+	setPositionGetter(&sb);
 
 	memset(pWrtrs, 0, sizeof(void*) * (1 + MAX_INPUT_STREAMS));
 
@@ -153,6 +177,16 @@ int main (int argc, char** argv)
 			pRd = new StandardReader(g_inputFile);
 		}
 
+		if (g_recfm=="F") {
+			pRd->setFormatFixed(g_lrecl,false);
+		} else if (g_recfm=="FD") {
+			pRd->setFormatFixed(g_lrecl,true);
+		}
+
+		if (g_linedel!="") {
+			pRd->setLineDelimiter(g_linedel[0]);
+		}
+
 		if (anyNonPrimaryInputStreamDefined()) {
 			multiReader* pmRd = new multiReader(pRd);
 			if (g_inputStream2 != "") pmRd->addStream(2, g_inputStream2);
@@ -168,8 +202,10 @@ int main (int argc, char** argv)
 
 		pRd->Begin();
 
+		timer.changeClass(timeClassProcessing);
+
 		try {
-			ig.process(sb, ps, *pRd);
+			ig.process(sb, ps, *pRd, timer);
 		} catch (const SpecsException& e) {
 			if (!e.isAbend()) {
 				std::cerr << "Runtime error after reading " << pRd->countRead() << " lines and using " << pRd->countUsed() <<".\n";
@@ -194,13 +230,18 @@ int main (int argc, char** argv)
 		usedLines = pRd->countUsed();
 		generatedLines = 0;
 		writtenLines = 0;
-		delete pRd;
+		if (!g_bPrintStats) {
+			delete pRd;
+			pRd = NULL;
+		} else {
+			pRd->endCollectingTimeData();
+		}
 	} else {
 		TestReader tRead(5);
 
 		try {
 			ig.setRegularRunAtEOF();
-			ig.processDo(sb, ps, &tRead);
+			ig.processDo(sb, ps, &tRead, timer);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
@@ -228,10 +269,16 @@ int main (int argc, char** argv)
 			pWrtrs[i]->End();
 			generatedLines += pWrtrs[i]->countGenerated();
 			writtenLines = pWrtrs[i]->countWritten();
-			delete pWrtrs[i];
-			pWrtrs[i] = NULL;
+			if (g_bPrintStats) {
+				pWrtrs[i]->endCollectingTimeData();
+			} else {
+				delete pWrtrs[i];
+				pWrtrs[i] = NULL;
+			}
 		}
 	}
+
+	timer.changeClass(timeClassLast);
 
 	if (g_bPrintStats) {
 		std::cerr << "\n";
@@ -243,13 +290,28 @@ int main (int argc, char** argv)
 		if (readLines!=usedLines) {
 			std::cerr << " " << writtenLines << "were written out.";
 		}
-		clockValue runTimeSeconds = timeAtEnd - timeAtStart;
+		clockValue runTimeMicroSeconds = timeAtEnd - timeAtStart;
+		ALUFloat runTimeSeconds = ALUFloat(runTimeMicroSeconds) / ALUFloat(MICROSECONDS_PER_SECOND);
 		std::cerr << "\nRun Time: " << runTimeSeconds << " seconds.\n";
 
 		ALUFloat duration = (ALUFloat(1) * (clockAtEnd-clockAtStart)) / CLOCKS_PER_SEC;
 		std::cerr << "CPU Time: " << std::floor(duration) << "." <<
 				std::setfill('0') << std::setw(6) <<
 				u_int64_t((duration-std::floor(duration)+0.5) * 1000000) << " seconds.\n";
+		timer.dump("Main Thread");
+		if (pRd) {
+			pRd->dumpTimeData();
+			delete pRd;
+		}
+		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
+			if (pWrtrs[i]) {
+				if (1 == i) {
+					pWrtrs[i]->dumpTimeData();
+				}
+				delete pWrtrs[i];
+				pWrtrs[i] = NULL;
+			}
+		}
 	}
 
 	return 0;

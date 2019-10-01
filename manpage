@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 Jun 2019" "0.4-alpha" "specs man page"
+.TH man 1 "1 Oct 2019" "0.5-alpha" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -73,7 +73,7 @@ begun, while DTODclock gives the time of producing the current record.
 -- A record counter as a 10-digit decimal number.
 .P
 .B TIMEDIFF
--- An 8-digit decimal number indicating the number of seconds since the invocation of the program.
+-- A 12-digit decimal number indicating the number of microseconds since the invocation of the program.
 .P
 The 
 .B ID
@@ -136,7 +136,26 @@ The
 .B OutputPart
 argument can also be specified as a 
 .B Composed Output Placement
-argument. It is enclosed in non-optional parenthesis and includes 1, 2, or 3 comma-separated expressions. Those expressions are evaluated at each cycle to produce the starting column, the field width, and the alignment of the field.  If the parenthesis include only one expression, that expression is the starting column. If it contains two expressions, those expressions are the starting column and the width. A width of zero is a special value denoting the normal width of the output. If all three expressions are present, the last one is evaluated as a string, and the alignment will be centered in the value begins with a capital or lower-case 'c', right-aligned if the value begins with a capital or lower-case 'r', and left-aligned in all other cases.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.
+argument. It is enclosed in non-optional parenthesis and includes 1, 2, or 3 comma-separated expressions. Those expressions are evaluated at each cycle to produce the starting column, the field width, and the alignment of the field.  If the parenthesis include only one expression, that expression is the starting column. If it contains two expressions, those expressions are the starting column and the width. A width of zero is a special value denoting the normal width of the output. If all three expressions are present, the last one is evaluated as a string, and the alignment will be determined by the value. It will be centered if the argument begins with a capital or lower-case 'c', right-aligned if the value begins with a capital or lower-case 'r', and left-aligned in all other cases.  If the alignment field is two characters in length, the second character is a digit between
+.I 1-5,
+and the content is longer than the output field, the truncation will use an ellipsis as follows: For a value of
+.I 1, 
+.B specs 
+will output an ellipsis followed by the suffix of the content; for
+.I 5,
+.B specs
+will output a prefix followed by an ellipsis; for 
+.I 2, 3, 
+and
+.I 4,
+.B specs
+will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.  The first arguments in a composed output placement can be elided, as in 
+.I (,,'R'). 
+If that is done, the default for the output start is the next place, equivalent to the function 
+.I next(), 
+while the default for the second argument is the rest of the line, based on the 
+.I @cols
+label.
 
 The conversion argument can specify any of the following conversions:
 .IP "rot13" 3
@@ -483,6 +502,30 @@ decimal places closest to
 , 
 .IP "frand()" 3
 The floating-point random function returns a random value no smaller than 0.0 and smaller than 1.0.
+.IP "fmt(value,format,digits,decimal,separator)" 3
+The
+.B fmt
+function formats a floating-point
+.B value
+as a string. The 
+.B format 
+argument can be omitted, or it can begin with 
+.I f
+for a 
+.I fixed 
+number of 
+.B digits
+after the decimal point, or
+.I s
+for 
+.I scientific
+notation. When omitted, the 
+.B digits
+argument sets the total number of digits displayed. The 
+.B decimal
+argument sets the character used for the decimal point (default is a period), while the 
+.B separator
+argument sets the character used as thousands separator (default is none).
 .IP "pow(x,y)" 3
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
 .IP "rand(x)" 3
@@ -619,6 +662,12 @@ Returns the value in
 .I string
 converted to decimal. If 
 .I length is missing or non-positive, the resulting decimal is signed, otherwise it is unsigned.
+.IP "next()" 3
+Returns the column of the next character to print if a
+.I spec unit
+specifies the 
+.B NEXT
+position.
 
 .SS "Built-In String Functions"
 .IP "abbrev(information, info)" 3
@@ -1110,6 +1159,19 @@ Causes output to be translated into ASCII if it's outside the range.
 Forces specs to read every input line even if none of the spec units use it. By default it won't.
 .IP "--specFile or -f" 3
 Makes the program read the specification from a file rather than the command line. This is useful both for reusing specifications and for long specifications. It also relieves the plumber from having to escape a lot of characters in the specification to avoid creative interpretation by the Unix shell.
+You can specify the full path of the files, or 
+.B specs 
+will search the 
+.I SPECSPATH 
+for them. The 
+.I SPECSPATH 
+can be set from either the environment variable 
+.B SPECSPATH 
+or the configuration string 
+.B SPECSPATH. 
+In both cases the syntax is just like the OS 
+.B PATH: 
+a list of directories separated by colons.
 .IP "--verbose or -v" 3
 Outputs more information when something goes wrong.
 .IP "--stats"
@@ -1134,15 +1196,44 @@ Changes the configuration file from the default
 to whatever the parameter says
 .IP "--timezone" 3
 Changes the timezone from the default which is the current timezone to the value specified.
+.IP "--recfm" 3
+Sets the record format for the primary input stream. Supported options are 
+.B D (delimited)
+for records delimited by a character in the input stream (this is the default); 
+.B F (fixed)
+for records or a fixed length (see --lrecl); 
+.B FD (fixed-delimited)
+for records delimited as in 
+.B fixed,
+but truncated or padded to a fixed length.
+.IP "--lrecl" 3
+Sets the record length for 
+.B fixed
+and
+.B fixed-delimited
+records.
+.IP "--linedel" 3
+For 
+.B delimited
+and
+.B fixed-delimited
+records, sets the character that delimits the string. The OS-specific delimiter (CR+LF for Unix-like) is used if this is not specified.
 
 .SH CONFIGURATION FILE
 .B specs
 reads a configuration file by default from 
 .B $HOME/.specs
 .P 
-This file contains some configuration options. For now, it only allows you to set user-predefined labels and the timezone configuration option. For example, an entry such as this:
+This file contains some configuration options. For now, it only allows you to set user-predefined labels and three specific configuration options: 
+.B timezone, 
+.B locale, 
+and 
+.B SPECSPATH. 
+For example, an entry such as this:
 .P
     timezone: "Europe/Belfast"
+    locale: es_ES
+    SPECSPATH: /home/myself/specs:/Library/specs
     myCA: "Honest Abe's Used Cars & Certificates"
 .P
 allows you to issue a 
@@ -1154,11 +1245,20 @@ command like this:
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
-This returns the version of specs, for example "v0.3"
+This returns the version of 
+.B specs, 
+for example "v0.5"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 
     specs @version 1
+.IP "cols" 3
+contains the number of columns in the display. You can override this in the configuration file. For example, the following prints a right-justified string. 
+.P
+    specs /hello/ (1,@cols,'R')
+.IP "rows" 3
+contains the number of rows in the display. This can also be overridden in the configuration file.
+
     
 .SH EXAMPLES
 `ls -l` yields this:

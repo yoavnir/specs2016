@@ -19,16 +19,35 @@ Using files allows you to write some very sophisticated specifications, and to a
        print #1 strip nextword
        /records./     nextword
 ``` 
-**Version 0.3 Note:** The above is not yet supported, as neither `printonly eof` not multiple assignments in a single **set** are supported in this version.
+**Version 0.5 Note:** The above is not yet supported, as neither `printonly eof` not multiple assignments in a single **set** are supported in this version.
 Using files also allows you to include comments. The rules for comments are that either the line begins with a hash mark and a space, and then the entire line is a comment; or the last occurrence of a hash mark and a space is also preceded by a space, and that is where the comment starts. 
+You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by colons.
 * `--verbose` or `-v` -- outputs more information when something goes wrong.
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
 The resulting stats look something like this:
 ```
-Read  1891715 lines.
-Wrote 1891715 lines.
-Run Time: 46.811 seconds.
-CPU Time: 69.1277526 seconds.
+Read  608913 lines.
+Wrote 608913 lines.
+Run Time: 11.5247 seconds.
+CPU Time: 20.1237872 seconds.
+Main Thread:
+	Initializing: 3.144 ms (0.027%)
+	Processing: 10.000 seconds (86.767%)
+	Waiting on input queue: 203.551 ms (1.766%)
+	Waiting on output queue: 1.318 seconds (11.439%)
+	Draining: 111.065 us (0.001%)
+Reader Thread:
+	Initializing: 84.135 us (0.001%)
+	Processing: 334.285 ms (2.901%)
+	Waiting on IO: 1.549 seconds (13.442%)
+	Waiting on output queue: 9.634 seconds (83.612%)
+	Draining: 5.036 ms (0.044%)
+Writer Thread:
+	Initializing: 2.514 ms (0.022%)
+	Processing: 748.592 ms (6.496%)
+	Waiting on IO: 4.794 seconds (41.602%)
+	Waiting on input queue: 5.979 seconds (51.880%)
+	Draining: 48.686 us (0.000%)
 ```
 * `--inFile` **filename** or `-i` **filename** -- get the input records from a file rather than standard input.
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.
@@ -51,4 +70,17 @@ CPU Time: 69.1277526 seconds.
 * `--os6` **filename** -- sets output stream number 6 to write to the specified file.
 * `--os7` **filename** -- sets output stream number 7 to write to the specified file.
 * `--os8` **filename** -- sets output stream number 8 to write to the specified file.
+* `--recfm` **format** -- sets the format of the primary input stream. See below table for supported formats.
+* `--lrecl` **record-length** -- sets the length of each record. Relevant to *fixed* and *fixed-delimited* records.
+* `--linedel` **delimiter** -- sets the line delimiter for input records on the primary stream.
+
+## Table of record formats
+
+|recfm|nickname|lrecl|linedel|comment|
+|-----|--------|-----|-------|-------|
+| `D` | delimited | *n/a* | *optional* | This is the default. Records are delimited by the OS line separator if *linedel* is not specified. |
+| `F` | fixed | *required* | *n/a* | **specs** will read exactly *lrecl* characters from the input stream regardless of what those characters may be. |
+| `FD` | fixed-delimited | *required* | *optional* | **specs** will read one line at a time delimited by the OS line separator if *linedel* is not specified. Lines that are longer than *lrecl* will be truncated; lines that are shorter will be padded by spaces. |
+
+
 

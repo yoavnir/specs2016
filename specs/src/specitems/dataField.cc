@@ -428,6 +428,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	int _from, _to;
 	bool bWritingWasDone = false;
+	ALUValue* pComposedStartingPosition = NULL;
 	PSpecString pInput = m_InputPart->getStr(pState);
 	size_t outputWidth = m_maxLength;
 
@@ -456,7 +457,27 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	// truncate or expand if necessary
 
 	if (outputWidth==POS_SPECIAL_VALUE_COMPOSED) {
-		ALUValue* res = evaluateExpression(m_outputWidthExpression, &g_counters);
+		ALUValue* res;
+		if (m_outputWidthExpression.size() > 0) {
+			res = evaluateExpression(m_outputWidthExpression, &g_counters);
+		} else if (m_outputStartExpression.size() > 0) {
+			static std::string sName("cols");
+			static std::string sCols = configSpecLiteralGet(sName);
+			static ALUInt cols = std::stoul(sCols);
+			pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
+			ALUInt start = pComposedStartingPosition->getInt();
+			if (cols >= start) {
+				res = new ALUValue(cols - start + 1);
+			} else {
+				std::string err = "Composed starting position (" + std::to_string(start) +
+						") is beyond screen width (" + std::to_string(cols) + ")";
+				MYTHROW(err);
+			}
+		} else {
+			/* when both are omitted, the width is the rest of the line */
+			res = AluFunc_rest();
+		}
+
 		outputWidth = res->getInt();
 		delete res;
 	} else if (outputWidth > MAX_OUTPUT_POSITION) {
@@ -465,18 +486,43 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (outputWidth>0 && pInput->length()!=outputWidth) {
 		if (m_alignment != outputAlignmentComposed) {
-			pInput->Resize(outputWidth, pState.getPadChar(), m_alignment);
+			pInput->Resize(outputWidth, pState.getPadChar(), m_alignment, ellipsisSpecNone);
 		} else {
 			outputAlignment al = outputAlignmentLeft;
+			ellipsisSpec es = ellipsisSpecNone;
 			ALUValue* res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
 			std::string s = res->getStr();
 			delete res;
+
 			if (s[0]=='c' || s[0]=='C') {
 				al = outputAlignmentCenter;
 			} else if (s[0]=='r' || s[0]=='R') {
 				al = outputAlignmentRight;
 			}
-			pInput->Resize(outputWidth, pState.getPadChar(), al);
+
+			if (s.length() == 2) {
+				switch (s[1]) {
+				case '1':
+					es = ellipsisSpecLeft;
+					break;
+				case '2':
+					es = ellipsisSpecThird;
+					break;
+				case '3':
+					es = ellipsisSpecHalf;
+					break;
+				case '4':
+					es = ellipsisSpecTwoThirds;
+					break;
+				case '5':
+					es = ellipsisSpecRight;
+					break;
+				default:
+					break;
+				}
+			}
+
+			pInput->Resize(outputWidth, pState.getPadChar(), al, es);
 		}
 	}
 
@@ -497,7 +543,15 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTFIELD) {
 		pSB->insertNextField(pInput);
 	} else if (m_outStart==POS_SPECIAL_VALUE_COMPOSED) {
-		ALUValue* res = evaluateExpression(m_outputStartExpression, &g_counters);
+		ALUValue* res;
+		if (m_outputStartExpression.size() > 0) {
+			if (NULL == pComposedStartingPosition) {
+				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
+			}
+			res = pComposedStartingPosition;
+		} else {
+			res = AluFunc_next();
+		}
 		pSB->insert(pInput, res->getInt());
 		delete res;
 	} else if (m_outStart <= MAX_OUTPUT_POSITION) {

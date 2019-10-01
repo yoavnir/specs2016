@@ -126,6 +126,12 @@
 	X(wordpos,        3, ALUFUNC_REGULAR,     false)  \
 	X(words,          1, ALUFUNC_REGULAR,     false)  \
 	X(xrange,         2, ALUFUNC_REGULAR,     false)  \
+	X(fmt,            5, ALUFUNC_REGULAR,     false)  \
+	X(next,           0, ALUFUNC_REGULAR,     false)  \
+	X(rest,           0, ALUFUNC_REGULAR,     false)  \
+
+#define ALU_DEBUG_FUNCTION_LIST                       \
+	X(testfunc,       4, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
@@ -156,6 +162,9 @@
 
 #define X(fn,argc,flags,rl) ALUFUNC##argc(fn)
 ALU_FUNCTION_LIST
+#ifdef DEBUG
+ALU_DEBUG_FUNCTION_LIST
+#endif
 #undef X
 
 typedef ALUValue* (*AluFunc0)();
@@ -220,6 +229,12 @@ public:
 	virtual bool    fieldIdentifierIsSet(char id) = 0;
 };
 
+class positionGetter {
+public:
+	virtual size_t pos() = 0;
+};
+
 void setStateQueryAgent(stateQueryAgent* qa);
+void setPositionGetter(positionGetter* pGetter);
 
 #endif

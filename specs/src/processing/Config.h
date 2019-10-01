@@ -19,6 +19,9 @@
 	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
 	X(configurationFile,            std::string,  "",     c,config,             NEXTARG)    \
 	X(timeZone,                     std::string,  "",     0,timezone,           NEXTARG)    \
+	X(recfm,                        std::string,  "",     0,recfm,              NEXTARG)    \
+	X(lrecl,                        int,          0,      0,lrecl,   std::stoi(NEXTARG))    \
+	X(linedel,                      std::string,  "",     0,linedel,            NEXTARG)    \
 	X(inputStream2,                 std::string,  "",     0,is2,                NEXTARG)    \
 	X(inputStream3,                 std::string,  "",     0,is3,                NEXTARG)    \
 	X(inputStream4,                 std::string,  "",     0,is4,                NEXTARG)    \

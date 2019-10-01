@@ -747,24 +747,20 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("record()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 
 	// time reformat
-	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
-	VERIFY_EXPR_RES("d2tf(1546550663,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
+	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603000000");
+	VERIFY_EXPR_RES("d2tf(1546550663000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
 	// Issue #62
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.98531','%d/%m %H:%M:%S.%6f')", "1547097241.98531");     // only 5 digits in the subsecond
-#ifdef VISUAL_STUDIO
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241.98532");   // Unfortunately, VS requires truncating the fraction
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241.98532");  // Unfortunately, VS requires truncating the fraction
-#else
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241.985317");   // proper 6 digits in the subsecond
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241.985317");  // 7 digits in the subsecond
-#endif
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.','%d/%m %H:%M:%S.%6f')", "1547097241");                // no subsecond digits at all
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.98531','%d/%m %H:%M:%S.%6f')", "1547097241985310");    // only 5 digits in the subsecond
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241985317");   // proper 6 digits in the subsecond
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241985317");  // 7 digits in the subsecond
+
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.','%d/%m %H:%M:%S.%6f')", "1547097241000000");         // no subsecond digits at all
 #ifdef PUT_TIME__SUPPORTED
   #ifdef VISUAL_STUDIO
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
   #else
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "1547097241");                 // no subsecond digits and a missing dot!
+	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "1547097241000000");                 // no subsecond digits and a missing dot!
   #endif
 #else
 	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
@@ -947,11 +943,19 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('A')", "c2f: Invalid floating point length: 1" C2FERR)
 	VERIFY_EXPR_RES("c2f('AA')", "c2f: Invalid floating point length: 2" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAA')", "c2f: Invalid floating point length: 3" C2FERR)
+#ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("c2f('AAAA')", "12.0784311294556");
+#else
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945557");
+#endif
 	VERIFY_EXPR_RES("c2f('AAAAA')", "c2f: Invalid floating point length: 5" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAA')", "c2f: Invalid floating point length: 6" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAA')", "c2f: Invalid floating point length: 7" C2FERR)
+#ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392");
+#else
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.509803921");
+#endif
 	VERIFY_EXPR_RES("c2f('AAAAAAAAA')", "c2f: Invalid floating point length: 9" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAA')", "c2f: Invalid floating point length: 10" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAA')", "c2f: Invalid floating point length: 11" C2FERR)
@@ -959,7 +963,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAA')", "c2f: Invalid floating point length: 13" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 14" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15" C2FERR)
+#ifdef VISUAL_STUDIO
+	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "c2f: Invalid floating point length: 16" C2FERR)
+#else
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
+#endif
 
 	VERIFY_EXPR_RES("substitute('Just the place for a snark','','',1)", "substitute: Search string must not be empty");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','',0)", "Just the place for a snark");
@@ -1098,7 +1106,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,5)", "are  those who believe  ");
 	VERIFY_EXPR_RES("subword('There are  those who believe  ',2,0)", "are  those who believe  ");
 
-	VERIFY_EXPR_RES("translate('abc')", "Failed assertion: computeStack.size() >= pUnit->countOperands()"); // This will become ABC
+	VERIFY_EXPR_RES("translate('abc')", "ABC");
 	VERIFY_EXPR_RES("translate('abc','','','')", "ABC");
 	VERIFY_EXPR_RES("translate('abc','xy','ab','$')", "xyc");
 	VERIFY_EXPR_RES("translate('abc','xy','a','$')", "xbc");
@@ -1130,6 +1138,30 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("xrange('a','d')", "abcd");
 	VERIFY_EXPR_RES("length(xrange('a',''))", "159");
 	VERIFY_EXPR_RES("substr(xrange('a',''),1,29)", "abcdefghijklmnopqrstuvwxyz{|}");
+
+	// Issue #94
+	VERIFY_EXPR_RES("pow(2+3,4)", "625");
+	VERIFY_EXPR_RES("subword(substr('There are those who believe',3-2,4+4*4),(4-2)/(1+1),2)","There are");
+
+	tg.set('p', "10003.14159265359");
+	VERIFY_EXPR_RES("fmt(p)","10003.1");
+	VERIFY_EXPR_RES("fmt(p,,12)","10003.1415927");
+	VERIFY_EXPR_RES("fmt(p,'f',4)","10003.1416");
+	VERIFY_EXPR_RES("fmt(p,'s')","1.000314e+04");
+	VERIFY_EXPR_RES("fmt(p,'s',12)","1.000314159265e+04");
+	VERIFY_EXPR_RES("fmt(p,,12,'$')","10003$1415927");
+	VERIFY_EXPR_RES("fmt(p,,12,,'$')","10$003.1415927");
+
+#ifdef DEBUG
+	// Keep these tests at the end. All real functions should go first
+	VERIFY_EXPR_RES("testfunc(1,2,3,4)", "1,2,3,4");
+	VERIFY_EXPR_RES("testfunc(1,,3,4)", "1,(nil),3,4");
+	VERIFY_EXPR_RES("testfunc(,,3,4)", "(nil),(nil),3,4");
+	VERIFY_EXPR_RES("testfunc(,2,3)", "(nil),2,3,(nil)");
+	VERIFY_EXPR_RES("testfunc(1,2,)", "1,2,(nil),(nil)");
+	VERIFY_EXPR_RES("testfunc(1,2)", "1,2,(nil),(nil)");
+	VERIFY_EXPR_RES("testfunc()", "(nil),(nil),(nil),(nil)");
+#endif
 
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 

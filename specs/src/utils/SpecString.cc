@@ -31,14 +31,47 @@ void StdSpecString::Overlay(SpecString& ss, size_t offset, void* pPadChar)
 	Overlay(&ss, offset, pPadChar);
 }
 
-void StdSpecString::Resize(size_t newSize, void* pPadChar, outputAlignment oa)
+void StdSpecString::Resize(size_t newSize, void* pPadChar, outputAlignment oa, ellipsisSpec es)
 {
 	char padChar = *((char*)pPadChar);
-	Resize(newSize, padChar, oa);
+	Resize(newSize, padChar, oa, es);
 }
 
-void StdSpecString::Resize(size_t newSize, char padChar, outputAlignment oa)
+void StdSpecString::Resize(size_t newSize, char padChar, outputAlignment oa, ellipsisSpec es)
 {
+	if ((ellipsisSpecNone != es) && (newSize < m_str.size()) && (newSize >= 3)) {
+		size_t totalLength, prefixLength, suffixLength;
+
+		totalLength = newSize - 3;
+
+		switch (es) {
+		case ellipsisSpecLeft:
+			prefixLength = 0;
+			suffixLength = totalLength;
+			break;
+		case ellipsisSpecThird:
+			prefixLength = totalLength / 3;
+			suffixLength = totalLength - prefixLength;
+			break;
+		case ellipsisSpecHalf:
+			prefixLength = totalLength / 2;
+			suffixLength = totalLength - prefixLength;
+			break;
+		case ellipsisSpecTwoThirds:
+			suffixLength = totalLength / 3;
+			prefixLength = totalLength - suffixLength;
+			break;
+		case ellipsisSpecRight:
+			prefixLength = totalLength;
+			suffixLength = 0;
+			break;
+		default:
+			MYTHROW("Internal Error");
+		}
+
+		m_str = m_str.substr(0,prefixLength) + "..." + m_str.substr(m_str.length() - suffixLength);
+	}
+
 	if (oa!=outputAlignmentLeft) {
 		int diffSize = ((int)newSize - (int)m_str.size());
 		if (diffSize == 0) return;

@@ -268,6 +268,28 @@ if platform=="NT":
 else:
 	os.system("/bin/rm xx.cc xx.o {}".format(errs))
 	
+# Test if the environment supports a Spanish locale
+test_spanish_locale_cmd = "{} {} -o xx.exe xx.cc {}".format(cxx,cppflags_test,errs)
+with open("xx.cc", "w") as testfile:
+	testfile.write('#include <locale>\nint main(int argc, char** argv){std::locale l("es_ES"); return 0;}')
+sys.stdout.write("Testing Spanish locale (for unit tests)...")
+if 0==os.system(test_spanish_locale_cmd):
+	sys.stdout.write("Compiled...")
+	test_spanish_locale_cmd = "./xx.exe" if platform!="NT" else "xx.exe"
+	if 0==os.system(test_spanish_locale_cmd):
+		sys.stdout.write("Supported\n")
+		CFG_spanish_locale = True
+	else:
+		sys.stdout.write("Not supported\n")
+		CFG_spanish_locale = False
+else:
+	sys.stdout.write("Internal error.\n")
+	exit(-4)
+if platform=="NT":
+	os.system("del xx.cc xx.exe")
+else:
+	os.system("/bin/rm xx.cc xx.exe {}".format(errs))
+	
 # Test if the environment contains a random number generator
 found_random_source = False
 rand_source = "rand"
@@ -323,6 +345,9 @@ else:
 	
 if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
+	
+if CFG_spanish_locale:
+	condcomp = condcomp + "{}SPANISH_LOCALE_SUPPORTED".format(def_prefix)
 	
 if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)

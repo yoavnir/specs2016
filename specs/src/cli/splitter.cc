@@ -2,7 +2,11 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "utils/ErrorReporting.h"
+#include "processing/Config.h"
 #include "tokens.h"
 
 void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx);
@@ -131,9 +135,48 @@ std::string removeComment(std::string& st)
 	return st.substr(0,found);
 }
 
+#ifdef WIN64
+#define PATHSEP "\\"
+#else
+#define PATHSEP "/"
+#endif
+
+static void openSpecFile(std::ifstream& theFile, std::string& fileName)
+{
+	static std::string pathConfigString("SPECSPATH");
+	theFile.open(fileName);
+	if (theFile.is_open()) return;
+
+	// No?  Try the path list in the environment variable
+	char* envpath = getenv(pathConfigString.c_str());
+	if (envpath && envpath[0]) {
+		char* onePath = strtok(envpath,":");
+		while (onePath) {
+			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
+			theFile.open(fullpath);
+			if (theFile.is_open()) return;
+			onePath = strtok(NULL,":");
+		}
+	}
+
+	// Still no?  Try the path in the config variable
+	if (configSpecLiteralExists(pathConfigString)) {
+		char* configPath = strdup(configSpecLiteralGet(pathConfigString).c_str());
+		char* onePath = strtok(configPath,":");
+		while (onePath) {
+			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
+			theFile.open(fullpath);
+			if (theFile.is_open()) return;
+			onePath = strtok(NULL,":");
+		}
+		free(configPath);
+	}
+}
+
 std::vector<Token> parseTokensFile(std::string& fileName)
 {
-	std::ifstream specFile(fileName);
+	std::ifstream specFile;
+	openSpecFile(specFile, fileName);
 	if (specFile.is_open()) {
 		std::string spec;
 		std::string line;

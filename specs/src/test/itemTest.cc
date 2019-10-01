@@ -84,6 +84,7 @@ StdSpecString Jabberwocky[] = {
 int main(int argc, char** argv)
 {
 	std::vector<Token> vec = parseTokens(argc-1, argv+1); // skipping the program name
+	classifyingTimer tmr;
 	normalizeTokenList(&vec);
 	itemGroup ig;
 	StringBuilder sb;
@@ -108,7 +109,7 @@ int main(int argc, char** argv)
 	pRd->Begin();
 	pWr->Begin();
 
-	ig.process(sb, ps, *pRd);
+	ig.process(sb, ps, *pRd, tmr);
 
 	delete pRd;
 	pWr->End();

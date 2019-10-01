@@ -16,11 +16,46 @@
 #define PERCENTS (ALUFloat(100.0))
 
 stateQueryAgent* g_pStateQueryAgent = NULL;
+positionGetter* g_PositionGetter = NULL;
 
 void setStateQueryAgent(stateQueryAgent* qa)
 {
 	g_pStateQueryAgent = qa;
 }
+
+void setPositionGetter(positionGetter* pGetter)
+{
+	g_PositionGetter = pGetter;
+}
+
+static void throw_argument_issue(const char* _funcName, unsigned int argIdx, const char* argName, const char* message)
+{
+	std::string err(_funcName);
+
+	// Remove the AluFunc_ prefix
+	err = err.substr(8) + ": " + message;
+
+	if (argIdx>0) {
+		err += ": #" + std::to_string(argIdx);
+		if (argName) {
+			err = err + " (" + argName + ")";
+		}
+	}
+
+	MYTHROW(err);
+}
+
+#define ASSERT_NOT_ELIDED(arg,idx,name)     \
+	if (NULL == (arg)) { throw_argument_issue(__func__,idx,#name,"Argument must not be elided"); }
+
+#define THROW_ARG_ISSUE(idx,name,msg)       \
+		throw_argument_issue(__func__,idx,#name,msg.c_str());
+
+#define ARG_INT_WITH_DEFAULT(arg,def)       \
+		((NULL == (arg)) ? def : (arg)->getInt())
+
+#define ARG_STR_WITH_DEFAULT(arg,def)       \
+		((NULL == (arg)) ? def : (arg)->getStr())
 
 /*
  *
@@ -33,6 +68,7 @@ void setStateQueryAgent(stateQueryAgent* qa)
 
 ALUValue* AluFunc_abs(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
 	if (op->getType()==counterType__Int) {
 		ALUInt i = op->getInt();
 		if (i<0) i = -i;
@@ -46,6 +82,8 @@ ALUValue* AluFunc_abs(ALUValue* op)
 
 ALUValue* AluFunc_pow(ALUValue* op1, ALUValue* op2)
 {
+	ASSERT_NOT_ELIDED(op1,1,base);
+	ASSERT_NOT_ELIDED(op2,2,exponent);
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
 		return new ALUValue(std::pow(op1->getFloat(), op2->getFloat()));
 	}
@@ -346,18 +384,12 @@ ALUValue* AluFunc_wordlen(ALUValue* pIdx)
 ALUValue* AluFunc_tf2d(ALUValue* pTimeFormatted, ALUValue* pFormat)
 {
 	int64_t tm = specTimeConvertFromPrintable(pTimeFormatted->getStr(), pFormat->getStr());
-	long double seconds;
-	if (0 == (tm % MICROSECONDS_PER_SECOND)) {
-		seconds = (long double)(tm / MICROSECONDS_PER_SECOND);
-	} else {
-		seconds = ((long double)tm) / MICROSECONDS_PER_SECOND;
-	}
-	return new ALUValue(seconds);
+	return new ALUValue(ALUInt(tm));
 }
 
 ALUValue* AluFunc_d2tf(ALUValue* pValue, ALUValue* pFormat)
 {
-	int64_t microseconds = ALUInt(((pValue->getFloat()) * MICROSECONDS_PER_SECOND) + 0.5);
+	int64_t microseconds = pValue->getInt();
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
 	ALUValue* ret = new ALUValue(printable->data(), printable->length());
 	delete printable;
@@ -401,7 +433,9 @@ static ALUValue* AluFunc_substring_do(ALUValue* pBigString, ALUInt start, ALUInt
 
 ALUValue* AluFunc_substr(ALUValue* pBigString, ALUValue* pStart, ALUValue* pLength)
 {
-	return AluFunc_substring_do(pBigString, pStart->getInt(), pLength->getInt());
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
+	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
+	return AluFunc_substring_do(pBigString, start, length);
 }
 
 ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
@@ -1955,13 +1989,15 @@ ALUValue* AluFunc_wordlength(ALUValue* pString, ALUValue* pIdx)
 
 ALUValue* AluFunc_wordpos(ALUValue* pPhrase, ALUValue* pString, ALUValue* pStart)
 {
+	ASSERT_NOT_ELIDED(pPhrase,1,phrase);
+	ASSERT_NOT_ELIDED(pString,2,string);
 	auto phrase = pPhrase->getStr();
 	auto str = pString->getStr();
-	ALUInt start = pStart ? pStart->getInt() : 1;
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 
 	if (start < 1) {
-		std::string err = "wordpos: start argument must be positive. Got: " + std::to_string(start);
-		MYTHROW(err);
+		std::string err = "Argument must be positive, but got " + std::to_string(start);
+		THROW_ARG_ISSUE(3,start,err);
 	}
 
 	auto startVec = breakIntoWords_start(str);
@@ -1984,8 +2020,8 @@ ALUValue* AluFunc_words(ALUValue* pStr)
 
 ALUValue* AluFunc_xrange(ALUValue* pStart, ALUValue* pEnd)
 {
-	std::string startStr = pStart ? pStart->getStr() : "";
-	std::string endStr = pEnd ? pEnd->getStr() : "";
+	std::string startStr = ARG_STR_WITH_DEFAULT(pStart,"");
+	std::string endStr = ARG_STR_WITH_DEFAULT(pEnd,"");
 
 	int start = (startStr.length() > 0) ? startStr[0] : 0;
 	int end = (endStr.length() > 0) ? endStr[0] : 0xff;
@@ -2000,3 +2036,104 @@ ALUValue* AluFunc_xrange(ALUValue* pStart, ALUValue* pEnd)
 
 	return new ALUValue(ret);
 }
+
+class my_punct : public std::numpunct<char>
+{
+public:
+	my_punct() : m_sep('\0'),m_dec('.') {}
+	void set_sep(char c)	{m_sep = c;}
+	void set_dec(char c)	{m_dec = c;}
+protected:
+	virtual char do_thousands_sep() const
+	{
+		return m_sep;
+	}
+	virtual char do_decimal_point() const
+	{
+		return m_dec;
+	}
+	virtual std::string do_grouping() const
+	{
+		return m_sep ? "\03" : "";
+	}
+private:
+	char m_sep;
+	char m_dec;
+};
+
+ALUValue* AluFunc_fmt(ALUValue* pVal, ALUValue* pFormat, ALUValue* pDigits, ALUValue* pDecimal, ALUValue* pSep)
+{
+	std::ostringstream oss;
+	std::locale *pMyLocale = NULL;
+	ASSERT_NOT_ELIDED(pVal,1,value);
+
+	if (pDigits) {
+		oss.precision(pDigits->getInt());
+	}
+
+	if (pFormat) {
+		std::string format = pFormat->getStr();
+		switch (format[0]) {
+		case 'f':
+		case 'F':
+			oss.setf( std::ios::fixed, std:: ios::floatfield );
+			break;
+		case 's':
+		case 'S':
+		case 'e':
+		case 'E':
+			oss.setf( std::ios::scientific, std:: ios::floatfield );
+			break;
+		default: {
+			std::string err = "fmt: #2 (format): Invalid format value: <" + format + ">";
+			MYTHROW(err);
+		}
+		}
+	}
+
+	if (pDecimal || pSep) {
+		static std::locale myStaticLocale;
+		my_punct pct;
+		if (pDecimal) pct.set_dec(pDecimal->getStr().c_str()[0]);
+		if (pSep) pct.set_sep(pSep->getStr().c_str()[0]);
+
+		if (pMyLocale) delete pMyLocale;
+		pMyLocale = new std::locale(myStaticLocale, &pct);
+		oss.imbue(*pMyLocale);
+		oss << pVal->getFloat();
+		return new ALUValue(oss.str());
+	}
+
+	oss << pVal->getFloat();
+
+	return new ALUValue(oss.str());
+}
+
+ALUValue* AluFunc_next()
+{
+	if (!g_PositionGetter) return new ALUValue(ALUInt(1));
+	return new ALUValue(ALUInt(g_PositionGetter->pos()));
+}
+
+ALUValue* AluFunc_rest()
+{
+	static std::string sName("cols");
+	static std::string sCols = configSpecLiteralGet(sName);
+	static ALUInt cols = std::stoul(sCols);
+	return new ALUValue(ALUInt(cols - g_PositionGetter->pos() + 1));
+}
+
+
+#ifdef DEBUG
+ALUValue* AluFunc_testfunc(ALUValue* pArg1, ALUValue* pArg2, ALUValue* pArg3, ALUValue* pArg4)
+{
+	std::string str1 = pArg1 ? pArg1->getStr() : "(nil)";
+	std::string str2 = pArg2 ? pArg2->getStr() : "(nil)";
+	std::string str3 = pArg3 ? pArg3->getStr() : "(nil)";
+	std::string str4 = pArg4 ? pArg4->getStr() : "(nil)";
+
+	std::string res = str1 + "," + str2 + "," + str3 + "," + str4;
+
+	return new ALUValue(res);
+}
+#endif

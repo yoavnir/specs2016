@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include "utils/StringQueue.h"
+#include "utils/TimeUtils.h"
 
 class Reader {
 public:
@@ -11,7 +12,7 @@ public:
 	virtual void        selectStream(unsigned char idx);
 	virtual bool        endOfSource() = 0;
 	virtual PSpecString getNextRecord() = 0;
-	virtual PSpecString get();
+	virtual PSpecString get(classifyingTimer& tmr);
 	void                pushBack(PSpecString ps);
 	virtual void        readIntoQueue();
 	virtual void        Begin();
@@ -21,6 +22,16 @@ public:
 	unsigned long 		countRead() { return m_countRead; }
 	unsigned long 		countUsed() { return m_countUsed; }
 	bool                hasRunDry() { return m_bRanDry;   }
+	void                startProcessing() { m_Timer.changeClass(timeClassProcessing); }
+	void                startDraining() { m_Timer.changeClass(timeClassDraining); }
+	void                endCollectingTimeData() { m_Timer.changeClass(timeClassLast); }
+	void                dumpTimeData()  { m_Timer.dump("Reader Thread"); }
+	virtual void        setFormatFixed(unsigned int lrecl, bool blocked) {
+		MYTHROW("Reader::setFormatFixed: should not be called");
+	}
+	virtual void        setLineDelimiter(char c) {
+		MYTHROW("Reader::setLineDelimiter: should not be called");
+	}
 protected:
 	StringQueue m_queue;
 	std::thread *mp_thread;
@@ -29,6 +40,7 @@ protected:
 	unsigned long m_countUsed;
 	bool          m_bAbort;
 	bool          m_bRanDry;    // true *after* the reader returned NULL once
+	classifyingTimer m_Timer;
 };
 
 class TestReader : public Reader {
@@ -39,7 +51,7 @@ public:
 	void    InsertString(PSpecString ps);
 	virtual bool endOfSource() {return m_bAbort || (m_idx >= m_count); }
 	virtual PSpecString getNextRecord() {return SpecStringCopy(mp_arr[m_idx++]);}
-	virtual PSpecString get() {return getNextRecord();}
+	virtual PSpecString get(classifyingTimer& tmr) {return getNextRecord();}
 private:
 	PSpecString  *mp_arr;
 	size_t       m_count;
@@ -47,8 +59,11 @@ private:
 	size_t       m_MaxCount;
 };
 
-#define STANDARD_READER_BUFFER_SIZE 65536  /* This is also the max size for an input record */
-
+enum recordFormat {
+	RECFM_DELIMITED,
+	RECFM_FIXED,
+	RECFM_FIXED_DELIMITED
+};
 class StandardReader : public Reader {
 public:
 	StandardReader();	      /* simple constructor - stdin becomes the source */
@@ -57,11 +72,16 @@ public:
 	virtual ~StandardReader();
 	virtual bool endOfSource();
 	virtual PSpecString getNextRecord();
+	virtual void setFormatFixed(unsigned int lrecl, bool blocked);
+	virtual void setLineDelimiter(char c);
 private:
 	std::istream* m_File;
     char* m_buffer;
 	bool  m_EOF;
 	bool  m_NeedToClose;
+	recordFormat m_recfm;
+	unsigned int m_lrecl;
+	char         m_lineDelimiter;
 };
 
 #define MAX_INPUT_STREAMS  8
@@ -76,7 +96,7 @@ public:
 	virtual void selectStream(unsigned char idx, PSpecString* ppRecord);
 	virtual bool        endOfSource();
 	virtual PSpecString getNextRecord();
-	virtual PSpecString get();
+	virtual PSpecString get(classifyingTimer& tmr);
 	virtual void        Begin();
 	void                End();
 	unsigned int        getReaderIdx()  { return readerIdx+1; }
