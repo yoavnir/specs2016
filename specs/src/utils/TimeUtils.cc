@@ -1,4 +1,3 @@
-#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -11,14 +10,11 @@
 
 using TimeResolution = std::chrono::microseconds;
 
-using Clock = std::chrono::system_clock;
-using TimePoint = std::chrono::time_point<Clock>;
-
 static std::locale g_locale;
 
 clockValue specTimeGetTOD()
 {
-	auto currentTime = std::chrono::system_clock::now();
+	auto currentTime = SClock::now();
 	auto sinceEpoch = currentTime.time_since_epoch();
 	int64_t microseconds = std::chrono::duration_cast<TimeResolution>(sinceEpoch).count();
 	return (clockValue(microseconds));
@@ -27,9 +23,9 @@ clockValue specTimeGetTOD()
 
 PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 {
-	Clock::duration dur = std::chrono::microseconds(sinceEpoch);
-	TimePoint tp(dur);
-	auto tmc = Clock::to_time_t(tp);
+	SClock::duration dur = std::chrono::microseconds(sinceEpoch);
+	STimePoint tp(dur);
+	auto tmc = SClock::to_time_t(tp);
 	std::tm bt = *std::localtime(&tmc);
 	unsigned int fractionalSecond = (unsigned int)(sinceEpoch % MICROSECONDS_PER_SECOND);
 	std::ostringstream oss;
@@ -150,7 +146,7 @@ void specTimeSetLocale(const std::string& _locale)
 
 classifyingTimer::classifyingTimer()
 {
-	m_lastTimePoint = std::chrono::high_resolution_clock::now();
+	m_lastTimePoint = HClock::now();
 	m_currentClass = timeClassInitializing;
 	for (int i = timeClassInitializing ; i < timeClassLast ; i++) {
 		m_nanoseconds[i] = 0;
@@ -161,7 +157,7 @@ void classifyingTimer::changeClass(timeClasses _class)
 {
 	if (_class == m_currentClass) return;
 	MYASSERT(m_currentClass != timeClassLast);
-	auto now = std::chrono::high_resolution_clock::now();
+	auto now = HClock::now();
 	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastTimePoint).count();
 	m_nanoseconds[m_currentClass] += duration;
 	m_currentClass = _class;
