@@ -2061,15 +2061,6 @@ private:
 	char m_dec;
 };
 
-static std::locale *pMyLocale = NULL;
-
-void clearMyLocale()
-{
-	if (pMyLocale) {
-		delete pMyLocale;
-		pMyLocale = NULL;
-	}
-}
 
 ALUValue* AluFunc_fmt(ALUValue* pVal, ALUValue* pFormat, ALUValue* pDigits, ALUValue* pDecimal, ALUValue* pSep)
 {
@@ -2102,13 +2093,11 @@ ALUValue* AluFunc_fmt(ALUValue* pVal, ALUValue* pFormat, ALUValue* pDigits, ALUV
 
 	if (pDecimal || pSep) {
 		static std::locale myStaticLocale;
-		my_punct pct;
-		if (pDecimal) pct.set_dec(pDecimal->getStr().c_str()[0]);
-		if (pSep) pct.set_sep(pSep->getStr().c_str()[0]);
+		my_punct *pct = new my_punct;
+		if (pDecimal) pct->set_dec(pDecimal->getStr().c_str()[0]);
+		if (pSep) pct->set_sep(pSep->getStr().c_str()[0]);
 
-		if (pMyLocale) delete pMyLocale;
-		pMyLocale = new std::locale(myStaticLocale, &pct);
-		oss.imbue(*pMyLocale);
+		oss.imbue(std::locale(oss.getloc(), pct));
 		oss << pVal->getFloat();
 		return new ALUValue(oss.str());
 	}
