@@ -34,6 +34,9 @@ DataField::DataField()
 
 DataField::~DataField() {
 	if (m_InputPart) delete m_InputPart;
+	cleanAluVec(m_outputStartExpression);
+	cleanAluVec(m_outputWidthExpression);
+	cleanAluVec(m_outputAlignmentExpression);
 }
 
 /*

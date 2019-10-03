@@ -2061,10 +2061,19 @@ private:
 	char m_dec;
 };
 
+static std::locale *pMyLocale = NULL;
+
+void clearMyLocale()
+{
+	if (pMyLocale) {
+		delete pMyLocale;
+		pMyLocale = NULL;
+	}
+}
+
 ALUValue* AluFunc_fmt(ALUValue* pVal, ALUValue* pFormat, ALUValue* pDigits, ALUValue* pDecimal, ALUValue* pSep)
 {
 	std::ostringstream oss;
-	std::locale *pMyLocale = NULL;
 	ASSERT_NOT_ELIDED(pVal,1,value);
 
 	if (pDigits) {
