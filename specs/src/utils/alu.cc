@@ -1394,7 +1394,6 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 
 		if (foundComma) {
 			delete pUnit;
-			std::cerr << "deleting" << std::endl;
 			break;
 		}
 		else {
