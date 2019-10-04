@@ -608,9 +608,9 @@ Returns the entire input record. Equivalent to
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s
-to 
+(default first) to 
 .B e 
-from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
+(default last) from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
 .IP "wordcount()" 3
 Returns the count of words in the input record.
 .IP "word(i)" 3

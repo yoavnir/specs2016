@@ -98,6 +98,7 @@ ALUValue* AluFunc_pow(ALUValue* op1, ALUValue* op2)
 
 ALUValue* AluFunc_sqrt(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,square);
 	return new ALUValue(std::sqrt(op->getFloat()));
 }
 
@@ -157,6 +158,7 @@ static uint64_t binary2uint64(ALUValue* op, unsigned char *pNumBits = NULL)
 
 ALUValue* AluFunc_c2u(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
 	uint64_t value = binary2uint64(op);
 	MYASSERT_WITH_MSG(value <= MAX_ALUInt, "c2u: Binary value exceeds limit");
 	return new ALUValue(ALUInt(value));
@@ -164,6 +166,7 @@ ALUValue* AluFunc_c2u(ALUValue* op)
 
 ALUValue* AluFunc_c2d(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
 	unsigned char numBytes;
 	uint64_t uvalue = binary2uint64(op, &numBytes);
 	switch (numBytes) {
@@ -194,6 +197,7 @@ ALUValue* AluFunc_c2d(ALUValue* op)
 
 ALUValue* AluFunc_c2f(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
 	std::string str = op->getStr();
 
 	if (str.length() == sizeof(float)) {
@@ -222,12 +226,15 @@ ALUValue* AluFunc_c2f(ALUValue* op)
 
 ALUValue* AluFunc_frombin(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
 	uint64_t value = binary2uint64(op);
 	return new ALUValue(ALUInt(value));
 }
 
 ALUValue* AluFunc_tobine(ALUValue* op, ALUValue* _bits)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
+	ASSERT_NOT_ELIDED(_bits,2,bits);
 	ALUInt value = op->getInt();
 	ALUInt bits = _bits->getInt();
 	switch (bits) {
@@ -245,6 +252,7 @@ ALUValue* AluFunc_tobine(ALUValue* op, ALUValue* _bits)
 
 ALUValue* AluFunc_tobin(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
 	static ALUValue bit8(ALUInt(8));
 	static ALUValue bit16(ALUInt(16));
 	static ALUValue bit32(ALUInt(32));
@@ -259,6 +267,7 @@ ALUValue* AluFunc_tobin(ALUValue* op)
 
 ALUValue* AluFunc_length(ALUValue* op)
 {
+	ASSERT_NOT_ELIDED(op,1,op);
 	return new ALUValue(ALUInt(op->getStr().length()));
 }
 
@@ -314,11 +323,14 @@ ALUValue* AluFunc_record()
 
 ALUValue* AluFunc_range(ALUValue* pStart, ALUValue* pEnd)
 {
-	return AluFunc_range(pStart->getInt(), pEnd->getInt());
+	ALUInt start = pStart ? pStart->getInt() : 1;
+	ALUInt end = pEnd ? pEnd->getInt() : -1;
+	return AluFunc_range(start, end);
 }
 
 ALUValue* AluFunc_word(ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pIdx,1,index);
 	ALUInt idx = pIdx->getInt();
 	ALUInt start = g_pStateQueryAgent->getWordStart(idx);
 	ALUInt end = g_pStateQueryAgent->getWordEnd(idx);

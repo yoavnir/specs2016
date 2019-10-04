@@ -133,6 +133,7 @@
 | `fieldindex(n)` | Returns the offset from the start of the record that the *n*-th field starts at. |
 | `fieldlength(n)` | Returns the length of the *n*-th field |
 | `number()` | Returns the number of processing cycles we have already gone through. Unless `READ` or `READSTOP` are used, this will be equal to the number of records read so far. |
+| `range(n,m)` | Returns the substring from the *n*-th character (default first) to the *m*-th character (default last) |
 | `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `number()` |
 | `record()` | Returns the entire input record |
 | `word(n)` | Returns the *n*-th word |
