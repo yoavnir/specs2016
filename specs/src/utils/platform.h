@@ -69,4 +69,12 @@ int setenv(const char *name, const char *value, int overwrite);
   #error "No random number generator defined"
 #endif
 
+#ifdef DEBUG
+#define QUEUE_HIGH_WM 10
+#define QUEUE_LOW_WM  8
+#else
+#define QUEUE_HIGH_WM 5000
+#define QUEUE_LOW_WM  4500
+#endif
+
 #endif

@@ -6,14 +6,8 @@
 #include <thread>
 #include <queue>
 #include <condition_variable>
-
-#ifdef DEBUG
-#define QUEUE_HIGH_WM 5
-#define QUEUE_LOW_WM  2
-#else
-#define QUEUE_HIGH_WM 500
-#define QUEUE_LOW_WM  200
-#endif
+#include "utils/platform.h"
+#include "utils/TimeUtils.h"
 
 // until we have C++17 and std::scoped_lock...
 class scopedLock {
@@ -33,6 +27,7 @@ private:
     mutable std::mutex m_Mutex;
     std::condition_variable cv_QueueEmpty;
     std::condition_variable cv_QueueFull;
+    queueTimer m_timer;
     bool m_Done;
 public:
     StringQueue() {m_Done = false;}
@@ -44,6 +39,7 @@ public:
         	cv_QueueFull.wait(lock.ulock());
         }
         m_Queue.push(data);
+        m_timer.increment();
         lock.unlock();
         cv_QueueEmpty.notify_one();
     }
@@ -67,6 +63,7 @@ public:
         popped_value=m_Queue.front();
         m_Queue.pop();
         size_t queueSize = m_Queue.size();
+        m_timer.decrement();
         lock.unlock();
         if (queueSize < QUEUE_LOW_WM) {
         	cv_QueueFull.notify_one();
@@ -76,7 +73,12 @@ public:
 
     void Done() {
     	m_Done = true;
+    	m_timer.drain();
     	cv_QueueEmpty.notify_one();
+    }
+
+    void DumpStats(std::string title) {
+    	m_timer.dump(title);
     }
 
 };

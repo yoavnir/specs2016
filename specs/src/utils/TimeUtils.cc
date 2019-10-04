@@ -202,3 +202,92 @@ void classifyingTimer::dump(std::string title)
 	}
 	std::cerr << oss.str();
 }
+
+queueTimer::queueTimer()
+{
+	m_lastIncDec = m_lastTimePoint = HClock::now();
+	m_elements = 0;
+	m_ns_elems = 0;
+	m_currentClass = queueTimeClassEmpty;
+	for (int i = queueTimeClassEmpty ; i < timeClassLast ; i++) {
+		m_nanoseconds[i] = 0;
+	}
+}
+
+void queueTimer::changeClass(queueTimeClasses _class, std::chrono::time_point<HClock> now)
+{
+	if (_class == m_currentClass) return;
+	MYASSERT(m_currentClass != queueTimeclassLast);
+	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastTimePoint).count();
+	m_nanoseconds[m_currentClass] += duration;
+	m_currentClass = _class;
+	m_lastTimePoint = now;
+}
+
+void queueTimer::dump(std::string title)
+{
+	uint64_t totalDuration = 0;
+	for (int i = queueTimeClassEmpty ; i < timeClassLast ; i++) {
+		totalDuration += m_nanoseconds[i];
+	}
+
+	std::ostringstream oss;
+	oss.setf( std::ios::fixed, std:: ios::floatfield );
+	oss.precision(3);
+
+	oss << title << ":\n";
+
+	// empty
+	double percentage = double(100 * m_nanoseconds[queueTimeClassEmpty]) / double(totalDuration);
+	oss << "\tEmpty: " << getMilliSeconds(queueTimeClassEmpty) << " ms ("<<
+			percentage << "%)\n";
+
+	// full
+	percentage = double(100 * m_nanoseconds[queueTimeClassFull]) / double(totalDuration);
+	oss << "\tFull: " << getMilliSeconds(queueTimeClassFull) << " ms ("<<
+			percentage << "%)\n";
+
+	// average
+	double averageFill = double(m_ns_elems) / double(totalDuration);
+	oss << "\tAverage: " << averageFill << " (capacity = " << QUEUE_HIGH_WM << ")\n";
+
+	std::cerr << oss.str();
+}
+
+void queueTimer::increment()
+{
+	auto now = HClock::now();
+	if (m_elements == 1 && m_currentClass == queueTimeClassEmpty) {
+		changeClass(queueTimeClassOther, now);
+	} else if (m_elements == (QUEUE_HIGH_WM-1) && m_currentClass == queueTimeClassOther) {
+		changeClass(queueTimeClassFull, now);
+	}
+
+	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastIncDec).count();
+
+	m_ns_elems += (duration * m_elements);
+	m_elements++;
+	m_lastIncDec = now;
+}
+
+void queueTimer::decrement()
+{
+	auto now = HClock::now();
+	MYASSERT(m_elements > 0);
+	if (m_elements == 1 && m_currentClass == queueTimeClassOther) {
+		changeClass(queueTimeClassEmpty, now);
+	} else if (m_elements == (QUEUE_HIGH_WM-1) && m_currentClass == queueTimeClassFull) {
+		changeClass(queueTimeClassOther, now);
+	}
+
+	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastIncDec).count();
+
+	m_ns_elems += (duration * m_elements);
+	m_elements--;
+	m_lastIncDec = now;
+}
+
+void queueTimer::drain()
+{
+	changeClass(queueTimeclassLast, HClock::now());
+}

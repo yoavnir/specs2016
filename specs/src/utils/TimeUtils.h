@@ -53,4 +53,33 @@ private:
 	double   getMicroSeconds(timeClasses _class) { return double(m_nanoseconds[_class]) / NANOSECONDS_PER_MICROSECOND; }
 };
 
+enum queueTimeClasses {
+	queueTimeClassEmpty,
+	queueTimeClassOther,
+	queueTimeClassFull,
+	queueTimeclassLast
+};
+
+// A timer for queue performance. MUST be incremented/decremented under lock
+class queueTimer {
+public:
+	queueTimer();
+	void     increment();
+	void     decrement();
+	void     drain();
+	void     dump(std::string title);
+private:
+	size_t   m_elements;
+	std::chrono::time_point<HClock> m_lastTimePoint;
+	std::chrono::time_point<HClock> m_lastIncDec;
+	queueTimeClasses m_currentClass;
+	uint64_t m_nanoseconds[queueTimeclassLast];
+	uint64_t m_ns_elems;
+	uint64_t getNanoSeconds(queueTimeClasses _class) { return m_nanoseconds[_class]; }
+	double   getSeconds(queueTimeClasses _class) { return double(m_nanoseconds[_class]) / NANOSECONDS_PER_SECOND; }
+	double   getMilliSeconds(queueTimeClasses _class) { return double(m_nanoseconds[_class]) / NANOSECONDS_PER_MILLISECOND; }
+	double   getMicroSeconds(queueTimeClasses _class) { return double(m_nanoseconds[_class]) / NANOSECONDS_PER_MICROSECOND; }
+	void     changeClass(queueTimeClasses _class, std::chrono::time_point<HClock> now);
+};
+
 #endif
