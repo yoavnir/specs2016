@@ -127,7 +127,7 @@
 | Function | Description |
 | -------- | ----------- |
 | `field(n)` | Returns the *n*-th field |
-| `fields(n,m)` | Returns the substring from the *n*-th field to the *m*-th field |
+| `fieldrange(n,m)` | Returns the substring from the *n*-th field (default first) to the *m*-th field (default last) |
 | `fieldcount()` | Returns the number of fields in the current record |
 | `fieldend(n)` | Returns the offset from the start of the record that the *n*-th field ends at. Like other things in **specs**, this is 1-based. | 
 | `fieldindex(n)` | Returns the offset from the start of the record that the *n*-th field starts at. |
@@ -137,7 +137,7 @@
 | `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `number()` |
 | `record()` | Returns the entire input record |
 | `word(n)` | Returns the *n*-th word |
-| `wordrange(n,m)` | Returns the substring from the *n*-th word to the *m*-th word |
+| `wordrange(n,m)` | Returns the substring from the *n*-th word (default first) to the *m*-th word (default last) |
 | `wordcount()` | Returns the number of words in the current record |
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |

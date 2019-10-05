@@ -339,6 +339,7 @@ ALUValue* AluFunc_word(ALUValue* pIdx)
 
 ALUValue* AluFunc_field(ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pIdx,1,index);
 	ALUInt idx = pIdx->getInt();
 	ALUInt start = g_pStateQueryAgent->getFieldStart(idx);
 	ALUInt end = g_pStateQueryAgent->getFieldEnd(idx);
@@ -347,30 +348,37 @@ ALUValue* AluFunc_field(ALUValue* pIdx)
 
 ALUValue* AluFunc_wordrange(ALUValue* pStart, ALUValue* pEnd)
 {
-	ALUInt start = g_pStateQueryAgent->getWordStart(pStart->getInt());
-	ALUInt end = g_pStateQueryAgent->getWordEnd(pEnd->getInt());
+	ALUInt startIdx = pStart ? pStart->getInt() : 1;
+	ALUInt endIdx = pEnd ? pEnd->getInt() : -11;
+	ALUInt start = g_pStateQueryAgent->getWordStart(startIdx);
+	ALUInt end = g_pStateQueryAgent->getWordEnd(endIdx);
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_fields(ALUValue* pStart, ALUValue* pEnd)
+ALUValue* AluFunc_fieldrange(ALUValue* pStart, ALUValue* pEnd)
 {
-	ALUInt start = g_pStateQueryAgent->getFieldStart(pStart->getInt());
-	ALUInt end = g_pStateQueryAgent->getFieldEnd(pEnd->getInt());
+	ALUInt startIdx = pStart ? pStart->getInt() : 1;
+	ALUInt endIdx = pEnd ? pEnd->getInt() : -11;
+	ALUInt start = g_pStateQueryAgent->getFieldStart(startIdx);
+	ALUInt end = g_pStateQueryAgent->getFieldEnd(endIdx);
 	return AluFunc_range(start, end);
 }
 
 ALUValue* AluFunc_fieldindex(ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pIdx,1,index);
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldStart(pIdx->getInt())));
 }
 
 ALUValue* AluFunc_fieldend(ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pIdx,1,index);
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldEnd(pIdx->getInt())));
 }
 
 ALUValue* AluFunc_fieldlength(ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pIdx,1,index);
 	auto idx = pIdx->getInt();
 	auto len = g_pStateQueryAgent->getFieldEnd(idx) - g_pStateQueryAgent->getFieldStart(idx) + 1;
 	return new ALUValue(ALUInt(len));
@@ -378,16 +386,19 @@ ALUValue* AluFunc_fieldlength(ALUValue* pIdx)
 
 ALUValue* AluFunc_wordstart(ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pIdx,1,index);
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordStart(pIdx->getInt())));
 }
 
 ALUValue* AluFunc_wordend(ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pIdx,1,index);
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordEnd(pIdx->getInt())));
 }
 
 ALUValue* AluFunc_wordlen(ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pIdx,1,index);
 	auto idx = pIdx->getInt();
 	auto len = g_pStateQueryAgent->getWordEnd(idx) - g_pStateQueryAgent->getWordStart(idx) + 1;
 	return new ALUValue(ALUInt(len));
@@ -395,12 +406,16 @@ ALUValue* AluFunc_wordlen(ALUValue* pIdx)
 
 ALUValue* AluFunc_tf2d(ALUValue* pTimeFormatted, ALUValue* pFormat)
 {
+	ASSERT_NOT_ELIDED(pTimeFormatted,1,formatted_time);
+	ASSERT_NOT_ELIDED(pFormat,2,format);
 	int64_t tm = specTimeConvertFromPrintable(pTimeFormatted->getStr(), pFormat->getStr());
 	return new ALUValue(ALUInt(tm));
 }
 
 ALUValue* AluFunc_d2tf(ALUValue* pValue, ALUValue* pFormat)
 {
+	ASSERT_NOT_ELIDED(pValue,1,time_value);
+	ASSERT_NOT_ELIDED(pFormat,2,format);
 	int64_t microseconds = pValue->getInt();
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
 	ALUValue* ret = new ALUValue(printable->data(), printable->length());

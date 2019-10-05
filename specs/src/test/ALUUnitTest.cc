@@ -738,7 +738,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fieldindex(2)", "5");
 	VERIFY_EXPR_RES("fieldend(3)", "25");
 	VERIFY_EXPR_RES("fieldlength(2)", "11"); // length of "quick brown"
-	VERIFY_EXPR_RES("fields(2,3)", "quick brown\tfox jumps");
+	VERIFY_EXPR_RES("fieldrange(2,3)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");

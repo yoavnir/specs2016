@@ -626,9 +626,9 @@ but less efficient.
 .IP "wordrange(s,e)" 3
 Returns the string from the start of the 
 .B s-th
-word to the end of the 
+word (default first) to the end of the 
 .B e-th 
-word. It is also equivalent to 
+word (default last). It is also equivalent to 
 .I range(wordstart(s),wordend(e))
 but less efficient.
 .IP "fieldcount()" 3
@@ -643,12 +643,12 @@ Returns the ending position of the i-th field in the input record.
 is equivalent to 
 .I field(i)
 but less efficient.
-.IP "fields(s,e)" 3
+.IP "fieldrange(s,e)" 3
 Returns the string from the start of the 
 .B s-th
-field to the end of the 
+field (default first) to the end of the 
 .B e-th 
-field. It is also equivalent to 
+field (default last). It is also equivalent to 
 .I range(fieldstart(s),fieldend(e))
 but less efficient.
 .IP "tf2d(string,format)" 3

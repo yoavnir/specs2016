@@ -37,7 +37,7 @@
 	X(fieldlength,    1, ALUFUNC_REGULAR,      true)  \
 	X(fieldend,       1, ALUFUNC_REGULAR,      true)  \
 	X(field,          1, ALUFUNC_REGULAR,      true)  \
-	X(fields,         2, ALUFUNC_REGULAR,      true)  \
+	X(fieldrange,     2, ALUFUNC_REGULAR,      true)  \
 	X(range,          2, ALUFUNC_REGULAR,      true)  \
 	X(tf2d,           2, ALUFUNC_REGULAR,     false)  \
 	X(d2tf,           2, ALUFUNC_REGULAR,     false)  \
