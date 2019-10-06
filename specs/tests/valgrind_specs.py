@@ -296,7 +296,7 @@ s = "print 'field(3)' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
 run_case(s,i,"Functions: field")
 
-s = "print 'fields(2,3)' 1"
+s = "print 'fieldrange(2,3)' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
 run_case(s,i,"Functions: fields")
 
