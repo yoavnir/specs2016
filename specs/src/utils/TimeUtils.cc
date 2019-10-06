@@ -209,7 +209,7 @@ queueTimer::queueTimer()
 	m_elements = 0;
 	m_ns_elems = 0;
 	m_currentClass = queueTimeClassEmpty;
-	for (int i = queueTimeClassEmpty ; i < timeClassLast ; i++) {
+	for (int i = queueTimeClassEmpty ; i < queueTimeclassLast ; i++) {
 		m_nanoseconds[i] = 0;
 	}
 }
@@ -227,7 +227,7 @@ void queueTimer::changeClass(queueTimeClasses _class, std::chrono::time_point<HC
 void queueTimer::dump(std::string title)
 {
 	uint64_t totalDuration = 0;
-	for (int i = queueTimeClassEmpty ; i < timeClassLast ; i++) {
+	for (int i = queueTimeClassEmpty ; i < queueTimeclassLast ; i++) {
 		totalDuration += m_nanoseconds[i];
 	}
 
