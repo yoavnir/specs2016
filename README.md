@@ -10,10 +10,11 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-01-Oct-2019: Version 0.5 alpha is here
---------------------------------------
+01-Oct-2019: Version 0.5 beta is coming in late November
+--------------------------------------------------------
 What's new:
 * Functions with elided arguments and variable number of arguments
+* Some functions reformed because of this.
 * Specification path
 * Support record formats and locales
 * New functions: fmt for formatting numbers. next and rest for formatting records. @cols and @rows.
