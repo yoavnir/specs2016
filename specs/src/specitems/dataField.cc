@@ -308,7 +308,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 			GET_NEXT_TOKEN;
 		}
 		MYASSERT_WITH_MSG(token.Type()==TokenListType__GROUPEND, "Unterminated composed output placement");
-		index++;
+		// index++;
 		interpretComposedOutputPlacement(composedOutputPlacement);
 		return;
 	}
