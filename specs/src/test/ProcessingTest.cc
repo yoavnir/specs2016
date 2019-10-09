@@ -483,6 +483,8 @@ int main(int argc, char** argv)
 	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'C5')", "abcdefg..."); // TEST #122
 	VERIFY("/hello/ (1,10,'r3')", "     hello"); // TEST #123
 
+	VERIFY("w1 1 w2 (,5) w3 n", "Thequickbrown") // TEST #124 - Issue #103
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {
