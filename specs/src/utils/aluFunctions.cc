@@ -323,8 +323,8 @@ ALUValue* AluFunc_record()
 
 ALUValue* AluFunc_range(ALUValue* pStart, ALUValue* pEnd)
 {
-	ALUInt start = pStart ? pStart->getInt() : 1;
-	ALUInt end = pEnd ? pEnd->getInt() : -1;
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
+	ALUInt end = ARG_INT_WITH_DEFAULT(pEnd, -1);
 	return AluFunc_range(start, end);
 }
 
@@ -348,8 +348,8 @@ ALUValue* AluFunc_field(ALUValue* pIdx)
 
 ALUValue* AluFunc_wordrange(ALUValue* pStart, ALUValue* pEnd)
 {
-	ALUInt startIdx = pStart ? pStart->getInt() : 1;
-	ALUInt endIdx = pEnd ? pEnd->getInt() : -11;
+	ALUInt startIdx = ARG_INT_WITH_DEFAULT(pStart, 1);
+	ALUInt endIdx = ARG_INT_WITH_DEFAULT(pEnd, -1);
 	ALUInt start = g_pStateQueryAgent->getWordStart(startIdx);
 	ALUInt end = g_pStateQueryAgent->getWordEnd(endIdx);
 	return AluFunc_range(start, end);
@@ -357,8 +357,8 @@ ALUValue* AluFunc_wordrange(ALUValue* pStart, ALUValue* pEnd)
 
 ALUValue* AluFunc_fieldrange(ALUValue* pStart, ALUValue* pEnd)
 {
-	ALUInt startIdx = pStart ? pStart->getInt() : 1;
-	ALUInt endIdx = pEnd ? pEnd->getInt() : -11;
+	ALUInt startIdx = ARG_INT_WITH_DEFAULT(pStart, 1);
+	ALUInt endIdx = ARG_INT_WITH_DEFAULT(pEnd, -1);
 	ALUInt start = g_pStateQueryAgent->getFieldStart(startIdx);
 	ALUInt end = g_pStateQueryAgent->getFieldEnd(endIdx);
 	return AluFunc_range(start, end);
@@ -467,6 +467,8 @@ ALUValue* AluFunc_substr(ALUValue* pBigString, ALUValue* pStart, ALUValue* pLeng
 
 ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
 {
+	ASSERT_NOT_ELIDED(pBigString,1,bigString);
+	ASSERT_NOT_ELIDED(pLength,2,length);
 	auto bigLength = pBigString->getStrPtr()->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
@@ -480,6 +482,8 @@ ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
 
 ALUValue* AluFunc_right(ALUValue* pBigString, ALUValue* pLength)
 {
+	ASSERT_NOT_ELIDED(pBigString,1,bigString);
+	ASSERT_NOT_ELIDED(pLength,2,length);
 	auto bigLength = pBigString->getStrPtr()->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
@@ -493,6 +497,8 @@ ALUValue* AluFunc_right(ALUValue* pBigString, ALUValue* pLength)
 
 ALUValue* AluFunc_center(ALUValue* pBigString, ALUValue* pLength)
 {
+	ASSERT_NOT_ELIDED(pBigString,1,bigString);
+	ASSERT_NOT_ELIDED(pLength,2,length);
 	auto bigLength = pBigString->getStrPtr()->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
@@ -514,6 +520,8 @@ ALUValue* AluFunc_centre(ALUValue* pBigString, ALUValue* pLength)
 
 ALUValue* AluFunc_pos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 {
+	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
+	ASSERT_NOT_ELIDED(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = _pHaystack->getStrPtr();
 	size_t pos = pHaystack->find(*pNeedle);
@@ -526,6 +534,8 @@ ALUValue* AluFunc_pos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 
 ALUValue* AluFunc_lastpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 {
+	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
+	ASSERT_NOT_ELIDED(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = _pHaystack->getStrPtr();
 	size_t pos = pHaystack->rfind(*pNeedle);
@@ -538,6 +548,8 @@ ALUValue* AluFunc_lastpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 
 ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle)
 {
+	ASSERT_NOT_ELIDED(_pNeedle,2,needle);
+	ASSERT_NOT_ELIDED(_pHaystack,1,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = _pHaystack->getStrPtr();
 	bool bIsIncluded = (std::string::npos != pHaystack->find(*pNeedle));
@@ -546,6 +558,7 @@ ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle)
 
 ALUValue* AluFunc_conf(ALUValue* _pKey)
 {
+	ASSERT_NOT_ELIDED(_pKey,1,key);
 	std::string key = _pKey->getStr();
 	if (configSpecLiteralExists(key)) {
 		return new ALUValue(configSpecLiteralGet(key));
@@ -557,6 +570,7 @@ ALUValue* AluFunc_conf(ALUValue* _pKey)
 extern std::string conv_D2X(std::string& s);
 ALUValue* AluFunc_d2x(ALUValue* _pDecValue)
 {
+	ASSERT_NOT_ELIDED(_pDecValue,1,decValue);
 	std::string dec = _pDecValue->getStr();
 	return new ALUValue(conv_D2X(dec));
 }
@@ -567,8 +581,9 @@ ALUValue* AluFunc_x2d(ALUValue* _pHexValue, ALUValue* pLength)
 {
 	static std::string zeropad = "0000000000000000";
 	static std::string ffffpad = "FFFFFFFFFFFFFFFF";
+	ASSERT_NOT_ELIDED(_pHexValue,1,hexValue);
 	auto hex = _pHexValue->getStr();
-	ALUInt len = pLength ? pLength->getInt() : 0;
+	ALUInt len = ARG_INT_WITH_DEFAULT(pLength, 0);
 
 	if (len < 1) {
 		return new ALUValue(conv_X2D(hex));
@@ -606,6 +621,7 @@ ALUValue* AluFunc_x2d(ALUValue* _pHexValue, ALUValue* pLength)
 extern std::string conv_C2X(std::string& s);
 ALUValue* AluFunc_c2x(ALUValue* _pCharValue)
 {
+	ASSERT_NOT_ELIDED(_pCharValue,1,charValue);
 	std::string cv = _pCharValue->getStr();
 	return new ALUValue(conv_C2X(cv));
 }
@@ -613,6 +629,7 @@ ALUValue* AluFunc_c2x(ALUValue* _pCharValue)
 std::string conv_X2CH(std::string& s);
 ALUValue* AluFunc_x2ch(ALUValue* _pHexValue)
 {
+	ASSERT_NOT_ELIDED(_pHexValue,1,hexValue);
 	std::string hex = _pHexValue->getStr();
 	return new ALUValue(conv_X2CH(hex));
 }
@@ -620,6 +637,7 @@ ALUValue* AluFunc_x2ch(ALUValue* _pHexValue)
 extern std::string conv_UCASE(std::string& s);
 ALUValue* AluFunc_ucase(ALUValue* _pString)
 {
+	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
 	return new ALUValue(conv_UCASE(st));
 }
@@ -627,6 +645,7 @@ ALUValue* AluFunc_ucase(ALUValue* _pString)
 extern std::string conv_LCASE(std::string& s);
 ALUValue* AluFunc_lcase(ALUValue* _pString)
 {
+	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
 	return new ALUValue(conv_LCASE(st));
 }
@@ -634,12 +653,14 @@ ALUValue* AluFunc_lcase(ALUValue* _pString)
 extern std::string conv_BSWAP(std::string& s);
 ALUValue* AluFunc_bswap(ALUValue* _pString)
 {
+	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
 	return new ALUValue(conv_BSWAP(st));
 }
 
 ALUValue* AluFunc_break(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	bool bIsBreakEstablished = g_pStateQueryAgent->breakEstablished(fId);
 	return new ALUValue(ALUInt(bIsBreakEstablished ? 1 : 0));
@@ -647,6 +668,7 @@ ALUValue* AluFunc_break(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_present(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	bool bIsSet = g_pStateQueryAgent->fieldIdentifierIsSet(fId);
 	return new ALUValue(ALUInt(bIsSet ? 1 : 0));
@@ -654,6 +676,7 @@ ALUValue* AluFunc_present(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_sum(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "SUM requested for undefined field identifier")
@@ -662,6 +685,7 @@ ALUValue* AluFunc_sum(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_min(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "MIN requested for undefined field identifier")
@@ -670,6 +694,7 @@ ALUValue* AluFunc_min(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_max(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "MAX requested for undefined field identifier")
@@ -678,6 +703,7 @@ ALUValue* AluFunc_max(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_average(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "AVERAGE requested for undefined field identifier")
@@ -686,6 +712,7 @@ ALUValue* AluFunc_average(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_variance(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "VARIANCE requested for undefined field identifier")
@@ -694,6 +721,7 @@ ALUValue* AluFunc_variance(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_stddev(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "STDDEV requested for undefined field identifier")
@@ -702,6 +730,7 @@ ALUValue* AluFunc_stddev(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_stderrmean(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
 	MYASSERT_WITH_MSG(pVStats!=NULL, "STDERRMEAN requested for undefined field identifier")
