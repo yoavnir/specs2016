@@ -61,13 +61,11 @@
 | `dsin(x)` | Returns the sine function, treating `x` as an angle expressed in degrees |
 | `dtan(x)` | Returns the tangent function, treating `x` as an angle expressed in degrees |
 | `floor(x)` | Returns the largest integer smaller than `x` |
-| `frand()` | Returns a random value between 0.0 up to and not including 1.0 |
 | `fmt(value,format,digits,decimal,separator)` | formats a floating-point `value` as a string. The `format` argument can be omitted, or it can begin with **f** for a **fixed** number of `digits` after the decimal point, or **s** for **scientific** notation. When omitted, the `digits` argument sets the total number of digits displayed. The `decimal` argument sets the character used for the decimal point (default is a period), while the `separator` argument sets the character used as thousands separator (default is none). |
 | `frombin(x)` | Returns the decimal value of the binary `x`. For example, if `x` is "A", the function returns 65; if `x` is "AB" the function returns 16961. Binary values are assumed to be in little-endian order. |
 | `pow(x,y)` | Returns `x` raised to the power of `y` |
-| `rand(x)` | Returns a random value up to and not including the integer x |
-| `round(x)` | Returns the closest integer to `x` |
-| `roundd(x,d)` | Returns the closest number to `x` that has `d` decimal places |
+| `rand(x)` | Returns a random value up to and not including the integer `x`. If `x` is omitted, returns a random **real** value between 0.0 up to and not including 1.0 |
+| `round(x,d)` | Returns the closest number to `x` that has `d` decimal places. If `d` is omitted, returns the closest integer |
 | `sin(x)` | Returns the sine function, treating `x` as an angle expressed in radians |
 | `sqrt(x)` | Returns the square root of `x` |
 | `tan(x)` | Returns the tangent function, treating `x` as an angle expressed in radians |
@@ -84,12 +82,12 @@
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s`. |
 | `length(s)` | Returns the length (in characters) of the string `s` |
 | `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |
-| `substitute(s,needle,subst,max)` | Returns the string `s` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. |
+| `substitute(haystack,needle,subst,max)` | Returns the string `haystack` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. The default for `max` is 1 |
 | `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |
 | `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack` |
 | `lastpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack` |
-| `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is an empty string, the separator is the default one: a tab character |
-| `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is an empty string, the separator is the default one: a space character |
+| `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a tab character |
+| `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a space character |
 
 ## Table of Other REXX-Derived Functions
 | Function | Description |
@@ -166,17 +164,17 @@
 
 The parameters for the `fmap_dump` functions are as follows:
 * *format*. Possible values:
-  * *txt* or *0* or empty string: textual representation of string and count, with the field width adjusted to fit the largest value of the field.
+  * *txt* or *0* or empty string: textual representation of string and count, with the field width adjusted to fit the largest value of the field. This is the default.
   * *lin*: same as *txt*, but surrounded by lines.
   * Integer value: same as *txt*, but the width of the string field is fixed.
   * *csv*: a Commad Seperated Value dataset.
   * *json*: a JavaScript Object Notation dataset.
 * *sortOrder*. Possible values:
-  * *s*, *sa*, or empty string: Sort by ascending alphabetical order of the string key.
+  * *s*, *sa*, or empty string: Sort by ascending alphabetical order of the string key. This is the default.
   * *sd*: Sort by descending alphabetical order of the key.
   * *c* or *ca*: Sort by ascending count numbers -- from least common to most common.
   * *cd*: Sort by descending count numbers -- from most common to rarest.
-* *showPct* - evaluated as boolean. If *true* causes the textual formats to print out a percentage. Causes the CSV and JSON formats to add a fraction.
+* *showPct* - evaluated as boolean. If *true* causes the textual formats to print out a percentage. Causes the CSV and JSON formats to add a fraction. Default is *false*.
 
 
 ## Table of Special Functions

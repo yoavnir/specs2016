@@ -67,10 +67,8 @@
 	X(stderrmean,     1, ALUFUNC_STATISTICAL, false)  \
 	X(present,        1, ALUFUNC_REGULAR,     false)  \
 	X(rand,           1, ALUFUNC_REGULAR,     false)  \
-	X(frand,          0, ALUFUNC_REGULAR,     false)  \
 	X(floor,          1, ALUFUNC_REGULAR,     false)  \
-	X(round,          1, ALUFUNC_REGULAR,     false)  \
-	X(roundd,         2, ALUFUNC_REGULAR,     false)  \
+	X(round,          2, ALUFUNC_REGULAR,     false)  \
 	X(ceil,           1, ALUFUNC_REGULAR,     false)  \
 	X(sin,            1, ALUFUNC_REGULAR,     false)  \
 	X(cos,            1, ALUFUNC_REGULAR,     false)  \

@@ -386,8 +386,8 @@ int main(int argc, char** argv)
 	spec =  "a: WORD 1 .                               " \
 			" EOF                                      " \
 			"   /AVG:/  1 PRINT 'average(a)'          N" \
-			"   /STD:/ NW PRINT 'roundd(stddev(a),7)' N" \
-			"   /ERR:/ NW PRINT 'roundd(stderrmean(a),7)' N" \
+			"   /STD:/ NW PRINT 'round(stddev(a),7)'  N" \
+			"   /ERR:/ NW PRINT 'round(stderrmean(a),7)' N" \
 			"   /VAR:/ NW PRINT 'variance(a)'         N" \
 			"   /SUM:/ NW PRINT 'sum(a)'              N" \
 			"   /MIN:/ NW PRINT 'min(a)'              N" \
@@ -401,8 +401,8 @@ int main(int argc, char** argv)
 		   "   print 'fmap_common(a)'             NW " \
 		   "   print 'fmap_rare(a)'               NW " \
 		   "   print 'fmap_count(a,3)'            NW " \
-		   "   print 'roundd(fmap_frac(a,3),4)'   NW " \
-		   "   print 'roundd(fmap_pct(a,3),3)'    NW /%/ N";
+		   "   print 'round(fmap_frac(a,3),4)'    NW " \
+		   "   print 'round(fmap_pct(a,3),3)'     NW /%/ N";
 	VERIFY2(spec, "1\n2\n3\n4\n1\n5\n2\n3\n4\n3\n3", "5 11 3 5 4 0.3636 36.364%"); // TEST #103
 
 	// random and statistics
@@ -419,7 +419,7 @@ int main(int argc, char** argv)
 	VERIFY(spec, "OK");  // TEST #104
 
 	spec = "while '#0<10000' do                  " \
-		   "   set '#2:=frand()'                 " \
+		   "   set '#2:=rand()'                  " \
 		   "   if '#2 >= 0.7 & #2 < 0.8' then    " \
 		   "      set '#1+=1'                    " \
 		   "   endif                             " \

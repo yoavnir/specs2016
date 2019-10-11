@@ -739,67 +739,77 @@ ALUValue* AluFunc_stderrmean(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_rand(ALUValue* pLimit)
 {
-	ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
-	return new ALUValue(res);
-}
-
-ALUValue* AluFunc_frand()
-{
-	static ALUInt decimalLimit = 100000000000000000;
-	ALUInt randomDecimal = AluRandGetIntUpTo(decimalLimit);
-	std::ostringstream str;
-	str << "0." << std::setw(17) << std::setfill('0') << randomDecimal;
-	return new ALUValue(str.str());
+	if (pLimit) {
+		ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
+		return new ALUValue(res);
+	} else {
+		static ALUInt decimalLimit = 100000000000000000;
+		ALUInt randomDecimal = AluRandGetIntUpTo(decimalLimit);
+		std::ostringstream str;
+		str << "0." << std::setw(17) << std::setfill('0') << randomDecimal;
+		return new ALUValue(str.str());
+	}
 }
 
 ALUValue* AluFunc_floor(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(floor(pX->getFloat())));
 }
 
-ALUValue* AluFunc_round(ALUValue* pX)
+ALUValue* AluFunc_round(ALUValue* pX, ALUValue* pDecimals)
 {
-	return new ALUValue(ALUFloat(round(pX->getFloat())));
-}
-
-ALUValue* AluFunc_roundd(ALUValue* pX, ALUValue* pDecimals)
-{
-	ALUFloat scale = pow(((ALUFloat)(10.0)), pDecimals->getInt());
-	return new ALUValue(ALUFloat((round(scale * pX->getFloat())) / scale));
+	ASSERT_NOT_ELIDED(pX,1,x);
+	if (pDecimals) {
+		if (pDecimals->getInt() < 0) {
+			MYTHROW("round: value for 'decimals' must not be negative");
+		}
+		ALUFloat scale = pow(((ALUFloat)(10.0)), pDecimals->getInt());
+		return new ALUValue(ALUFloat((round(scale * pX->getFloat())) / scale));
+	} else {
+		return new ALUValue(ALUFloat(round(pX->getFloat())));
+	}
 }
 
 ALUValue* AluFunc_ceil(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(ceil(pX->getFloat())));
 }
 
 ALUValue* AluFunc_sin(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(sin(pX->getFloat())));
 }
 
 ALUValue* AluFunc_cos(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(cos(pX->getFloat())));
 }
 
 ALUValue* AluFunc_tan(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(tan(pX->getFloat())));
 }
 
 ALUValue* AluFunc_arcsin(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(asin(pX->getFloat())));
 }
 
 ALUValue* AluFunc_arccos(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(acos(pX->getFloat())));
 }
 
 ALUValue* AluFunc_arctan(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(atan(pX->getFloat())));
 }
 
@@ -808,31 +818,37 @@ static ALUFloat radians_to_degrees = 57.29577951308232;
 
 ALUValue* AluFunc_dsin(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(sin(degrees_to_radians*pX->getFloat())));
 }
 
 ALUValue* AluFunc_dcos(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(cos(degrees_to_radians*pX->getFloat())));
 }
 
 ALUValue* AluFunc_dtan(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(tan(degrees_to_radians*pX->getFloat())));
 }
 
 ALUValue* AluFunc_arcdsin(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(radians_to_degrees*asin(pX->getFloat())));
 }
 
 ALUValue* AluFunc_arcdcos(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(radians_to_degrees*acos(pX->getFloat())));
 }
 
 ALUValue* AluFunc_arcdtan(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(radians_to_degrees*atan(pX->getFloat())));
 }
 
@@ -1020,6 +1036,7 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 
 ALUValue* AluFunc_fmap_nelem(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	return new ALUValue(pfMap->nelem());
@@ -1027,6 +1044,7 @@ ALUValue* AluFunc_fmap_nelem(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_fmap_nsamples(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	return new ALUValue(pfMap->count());
@@ -1034,6 +1052,8 @@ ALUValue* AluFunc_fmap_nsamples(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_fmap_count(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
+	ASSERT_NOT_ELIDED(pVal,2,s);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
@@ -1042,6 +1062,8 @@ ALUValue* AluFunc_fmap_count(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 
 ALUValue* AluFunc_fmap_frac(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
+	ASSERT_NOT_ELIDED(pVal,2,s);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
@@ -1051,6 +1073,8 @@ ALUValue* AluFunc_fmap_frac(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 
 ALUValue* AluFunc_fmap_pct(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
+	ASSERT_NOT_ELIDED(pVal,2,s);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
@@ -1060,6 +1084,7 @@ ALUValue* AluFunc_fmap_pct(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 
 ALUValue* AluFunc_fmap_common(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	return new ALUValue(pfMap->mostCommon());
@@ -1067,6 +1092,7 @@ ALUValue* AluFunc_fmap_common(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_fmap_rare(ALUValue* _pFieldIdentifier)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	return new ALUValue(pfMap->leastCommon());
@@ -1074,6 +1100,8 @@ ALUValue* AluFunc_fmap_rare(ALUValue* _pFieldIdentifier)
 
 ALUValue* AluFunc_fmap_sample(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
+	ASSERT_NOT_ELIDED(pVal,2,s);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
@@ -1083,12 +1111,13 @@ ALUValue* AluFunc_fmap_sample(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 
 ALUValue* AluFunc_fmap_dump(ALUValue* _pFieldIdentifier, ALUValue* pFormat, ALUValue* pOrder, ALUValue* pPct)
 {
+	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	std::string s;
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 
 	fmap_format f;
-	s = pFormat->getStr();
+	s = ARG_STR_WITH_DEFAULT(pFormat, "txt");
 	if (s=="" || s=="txt" || s=="0") f = fmap_format__textualJustified;
 	else if (s=="lin") f = fmap_format__textualJustifiedLines;
 	else if (s=="csv") f = fmap_format__csv;
@@ -1102,7 +1131,7 @@ ALUValue* AluFunc_fmap_dump(ALUValue* _pFieldIdentifier, ALUValue* pFormat, ALUV
 	}
 
 	fmap_sortOrder o;
-	s = pOrder->getStr();
+	s = ARG_STR_WITH_DEFAULT(pOrder,"sa");
 	if (s=="" || s=="s" || s=="sa") o = fmap_sortOrder__byStringAscending;
 	else if (s=="sd") o = fmap_sortOrder__byStringDescending;
 	else if (s=="c" || s=="ca") o = fmap_sortOrder__byCountAscending;
@@ -1112,7 +1141,7 @@ ALUValue* AluFunc_fmap_dump(ALUValue* _pFieldIdentifier, ALUValue* pFormat, ALUV
 		MYTHROW(err);
 	}
 
-	bool includePercentage = pPct->getBool();
+	bool includePercentage = pPct ? pPct->getBool() : false;
 
 	return new ALUValue(pfMap->dump(f, o, includePercentage));
 }
@@ -1120,13 +1149,17 @@ ALUValue* AluFunc_fmap_dump(ALUValue* _pFieldIdentifier, ALUValue* pFormat, ALUV
 
 ALUValue* AluFunc_string(ALUValue* pX)
 {
+	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(pX->getStr());
 }
 
 ALUValue* AluFunc_substitute(ALUValue* pSrc, ALUValue* pSearchString, ALUValue* pSubstitute, ALUValue* pMax)
 {
+	ASSERT_NOT_ELIDED(pSrc,1,haystack);
+	ASSERT_NOT_ELIDED(pSearchString,2,needle);
+	ASSERT_NOT_ELIDED(pSubstitute,3,subst);
 	std::string res = pSrc->getStr();
-	ALUInt count = pMax->getInt();
+	ALUInt count = ARG_INT_WITH_DEFAULT(pMax,1);
 	if (pMax->getStr()=="U") count = MAX_ALUInt;
 
 	size_t findRet = 0;
@@ -1150,9 +1183,16 @@ ALUValue* AluFunc_substitute(ALUValue* pSrc, ALUValue* pSearchString, ALUValue* 
 
 ALUValue* AluFunc_sfield(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
 {
+	ASSERT_NOT_ELIDED(pStr,1,str);
+	ASSERT_NOT_ELIDED(pCount,2,count);
 	std::string str = pStr->getStr();
 	ALUInt count = pCount->getInt();
-	char sep = (0 == pSep->getStrPtr()->length()) ? '\t' : pSep->getStr()[0];
+	char sep;
+	if (pSep && pSep->getStrPtr()->length() > 0) {
+		sep = pSep->getStr()[0];
+	} else {
+		sep = '\t';
+	}
 
 	if (0 == count) {
 		MYTHROW("sfield: Called with count equal to zero");
@@ -1205,9 +1245,16 @@ ALUValue* AluFunc_sfield(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
 
 ALUValue* AluFunc_sword(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
 {
+	ASSERT_NOT_ELIDED(pStr,1,str);
+	ASSERT_NOT_ELIDED(pCount,2,count);
 	std::string str = pStr->getStr();
 	ALUInt count = pCount->getInt();
-	char sep = (0 == pSep->getStrPtr()->length()) ? ' ' : pSep->getStr()[0];
+	char sep;
+	if (pSep && pSep->getStrPtr()->length() > 0) {
+		sep = pSep->getStr()[0];
+	} else {
+		sep = ' ';
+	}
 
 	if (0 == count) {
 		MYTHROW("sword: Called with count equal to zero");
