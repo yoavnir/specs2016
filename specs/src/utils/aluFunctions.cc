@@ -1309,7 +1309,7 @@ ALUValue* AluFunc_sword(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
 
 /* REXX Functions */
 
-ALUValue* AluFunc_abbrevl_do(ALUValue* pInformation, ALUValue* pInfo, size_t len)
+ALUValue* AluFunc_abbrev_do(ALUValue* pInformation, ALUValue* pInfo, size_t len)
 {
 	std::string sBig = pInformation->getStr();
 	std::string sLittle = pInfo->getStr().substr(0,len);
@@ -1323,24 +1323,23 @@ ALUValue* AluFunc_abbrevl_do(ALUValue* pInformation, ALUValue* pInfo, size_t len
 	return new ALUValue(ALUInt(0));
 }
 
-ALUValue* AluFunc_abbrevl(ALUValue* pInformation, ALUValue* pInfo, ALUValue* pLen)
+ALUValue* AluFunc_abbrev(ALUValue* pInformation, ALUValue* pInfo, ALUValue* pLen)
 {
-	ALUInt len = pLen->getInt();
+	ASSERT_NOT_ELIDED(pInformation,1,information);
+	ASSERT_NOT_ELIDED(pInfo,2,info);
+	ALUInt len = ARG_INT_WITH_DEFAULT(pLen, uint32_t(std::string::npos));
 	if (len <= 0) {
-		std::string err = "abbrevl: Got non-positive length: " + std::to_string(len);
+		std::string err = "abbrev: Got non-positive length: " + std::to_string(len);
 		MYTHROW(err);
 	}
 
-	return AluFunc_abbrevl_do(pInformation, pInfo, size_t(len));
-}
-
-ALUValue* AluFunc_abbrev(ALUValue* pInformation, ALUValue* pInfo)
-{
-	return AluFunc_abbrevl_do(pInformation, pInfo, std::string::npos);
+	return AluFunc_abbrev_do(pInformation, pInfo, size_t(len));
 }
 
 ALUValue* AluFunc_bitand(ALUValue* pS1, ALUValue* pS2)
 {
+	ASSERT_NOT_ELIDED(pS1,1,s1);
+	ASSERT_NOT_ELIDED(pS2,2,s2);
 	std::string s1 = pS1->getStr();
 	std::string s2 = pS2->getStr();
 
@@ -1364,6 +1363,8 @@ ALUValue* AluFunc_bitand(ALUValue* pS1, ALUValue* pS2)
 
 ALUValue* AluFunc_bitor(ALUValue* pS1, ALUValue* pS2)
 {
+	ASSERT_NOT_ELIDED(pS1,1,s1);
+	ASSERT_NOT_ELIDED(pS2,2,s2);
 	std::string s1 = pS1->getStr();
 	std::string s2 = pS2->getStr();
 
@@ -1387,6 +1388,8 @@ ALUValue* AluFunc_bitor(ALUValue* pS1, ALUValue* pS2)
 
 ALUValue* AluFunc_bitxor(ALUValue* pS1, ALUValue* pS2)
 {
+	ASSERT_NOT_ELIDED(pS1,1,s1);
+	ASSERT_NOT_ELIDED(pS2,2,s2);
 	std::string s1 = pS1->getStr();
 	std::string s2 = pS2->getStr();
 
@@ -1440,16 +1443,13 @@ ALUValue* AluFunc_compare_do(ALUValue* pS1, ALUValue* pS2, char pad)
 	return new ALUValue(ALUInt(0));
 }
 
-ALUValue* AluFunc_compare(ALUValue* pS1, ALUValue* pS2)
+ALUValue* AluFunc_compare(ALUValue* pS1, ALUValue* pS2, ALUValue* pPad)
 {
-	return AluFunc_compare_do(pS1, pS2, ' ');
-}
-
-ALUValue* AluFunc_comparep(ALUValue* pS1, ALUValue* pS2, ALUValue* pPad)
-{
-	auto sPad = pPad->getStr();
+	ASSERT_NOT_ELIDED(pS1,1,s1);
+	ASSERT_NOT_ELIDED(pS2,2,s2);
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
 	if (sPad.length() != 1) {
-		std::string err = "comparep: Pad argument should be 1 char. Got <" + sPad + ">";
+		std::string err = "compare: Pad argument should be 1 char. Got <" + sPad + ">";
 		MYTHROW(err);
 	}
 	return AluFunc_compare_do(pS1, pS2, sPad[0]);
@@ -1457,6 +1457,8 @@ ALUValue* AluFunc_comparep(ALUValue* pS1, ALUValue* pS2, ALUValue* pPad)
 
 ALUValue* AluFunc_copies(ALUValue* pString, ALUValue* pTimes)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
+	ASSERT_NOT_ELIDED(pTimes,2,times);
 	auto theString = pString->getStr();
 	auto theCount = pTimes->getInt();
 
@@ -1476,6 +1478,8 @@ ALUValue* AluFunc_copies(ALUValue* pString, ALUValue* pTimes)
 
 ALUValue* AluFunc_delstr(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
+	ASSERT_NOT_ELIDED(pStart,2,start);
 	auto theString = pString->getStr();
 	auto start = pStart->getInt();
 
@@ -1486,7 +1490,7 @@ ALUValue* AluFunc_delstr(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
 
 	std::string res = theString.substr(0,start-1);
 
-	auto length = pLength->getInt();
+	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
 	// zero is a special value meaning delete to the end. If the length is greater
 	// than the remainder, also delete to the end.
 	if (0>=length || (length+start) > theString.length()) return new ALUValue(res);
@@ -1497,6 +1501,9 @@ ALUValue* AluFunc_delstr(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
 
 ALUValue* AluFunc_delword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
+	ASSERT_NOT_ELIDED(pStart,2,start);
+	ASSERT_NOT_ELIDED(pLength,3,length);
 	auto theString = pString->getStr();
 
 	auto start = pStart->getInt();

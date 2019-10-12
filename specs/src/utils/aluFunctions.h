@@ -95,13 +95,11 @@
 	X(substitute,     4, ALUFUNC_REGULAR,     false)  \
 	X(sfield,         3, ALUFUNC_REGULAR,     false)  \
 	X(sword,          3, ALUFUNC_REGULAR,     false)  \
-	X(abbrev,         2, ALUFUNC_REGULAR,     false)  \
-	X(abbrevl,        3, ALUFUNC_REGULAR,     false)  \
+	X(abbrev,         3, ALUFUNC_REGULAR,     false)  \
 	X(bitand,         2, ALUFUNC_REGULAR,     false)  \
 	X(bitor,          2, ALUFUNC_REGULAR,     false)  \
 	X(bitxor,         2, ALUFUNC_REGULAR,     false)  \
-	X(compare,        2, ALUFUNC_REGULAR,     false)  \
-	X(comparep,       3, ALUFUNC_REGULAR,     false)  \
+	X(compare,        3, ALUFUNC_REGULAR,     false)  \
 	X(copies,         2, ALUFUNC_REGULAR,     false)  \
 	X(delstr,         3, ALUFUNC_REGULAR,     false)  \
 	X(delword,        3, ALUFUNC_REGULAR,     false)  \

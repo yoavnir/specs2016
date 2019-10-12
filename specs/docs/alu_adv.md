@@ -75,8 +75,7 @@
 ## Table of String Functions
 | Function | Description |
 | -------- | ----------- |
-| `abbrev(h,n)` | Returns `1` when `n` is equal to the first characters of `h` or `0` otherwise. |
-| `abbrevl(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. |
+| `abbrev(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. If `l` is omitted, all of 'n' is considered. |
 | `center(s,n)` or `centre(s,n)` | Returns the `n` center-most characters of the string `s`. The result is padded with spaces on both sides if `n` is greater than the length of `s`. |
 | `includes(haystack,needle)` | Boolean function. Returns `1` if `needle` is a substring of `haystack`, or `0` otherwise |
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s`. |
@@ -95,8 +94,7 @@
 | `bitand(x,y)` | Returns the bit-wise AND of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
 | `bitor(x,y)` | Returns the bit-wise OR of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
 | `bitxor(x,y)` | Returns the bit-wise XOR of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
-| `compare(s1,s2)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. If they are of unequal length, the shorter string is padded with spaces. |
-| `comparep(s1,s2,pad)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. I they are of unequal length, the shorter string is padded with the pad character. |
+| `compare(s1,s2,pad)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. If they are of unequal length, the shorter string is padded with the pad character (by default - a space). |
 | `copies(string,times)` | Returns the content of `string` repeated `times` times. |
 | `delstr(string,start,length)` | Deletes the substring of `string` that starts at position `start` for the specified `length`. If `length` is zero, the rest of the string is deleted from position start to the end. |
 | `delword(string,start,length)` | Deletes the substring of `string` that starts at position `start` and is of length `length` blank-delimited words. If `length` is zero, it defaults to removing the rest of the words in `string`. |

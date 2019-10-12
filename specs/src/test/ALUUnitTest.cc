@@ -993,9 +993,9 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	VERIFY_EXPR_RES("abbrev('information','info')", "1");
 	VERIFY_EXPR_RES("abbrev('information','infot')", "0");
-	VERIFY_EXPR_RES("abbrevl('information','infota',4)", "1");
-	VERIFY_EXPR_RES("abbrevl('information','infota',5)", "0");
-	VERIFY_EXPR_RES("abbrevl('information','info',6)", "1");
+	VERIFY_EXPR_RES("abbrev('information','infota',4)", "1");
+	VERIFY_EXPR_RES("abbrev('information','infota',5)", "0");
+	VERIFY_EXPR_RES("abbrev('information','info',6)", "1");
 
 	VERIFY_EXPR_RES("bitand('information','info')", "info");
 	VERIFY_EXPR_RES("bitand('info','infn')", "infn");
@@ -1010,8 +1010,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("compare('Hello','He')", "3");
 	VERIFY_EXPR_RES("compare('Hello','Hellox')", "6");
 	VERIFY_EXPR_RES("compare('Hello','Hello ')", "0");
-	VERIFY_EXPR_RES("comparep('Hello', 'He', 'x')", "3");
-	VERIFY_EXPR_RES("comparep('Hello', 'He', 'l')", "5");
+	VERIFY_EXPR_RES("compare('Hello', 'He', 'x')", "3");
+	VERIFY_EXPR_RES("compare('Hello', 'He', 'l')", "5");
 
 	VERIFY_EXPR_RES("copies('Hello',3)", "HelloHelloHello");
 	VERIFY_EXPR_RES("copies('Hello',0)", "");

@@ -673,17 +673,7 @@ specifies the
 position.
 
 .SS "Built-In String Functions"
-.IP "abbrev(information, info)" 3
-Returns
-.I 1
-if 
-.B information
-begins with the characters of 
-.B info
-or 
-.I 0 
-otherwise.
-.IP "abbrevl(information, info, len)" 3
+.IP "abbrev(information, info, len)" 3
 Returns
 .I 1
 if 
@@ -694,7 +684,11 @@ characters of
 .B info
 or 
 .I 0 
-otherwise.
+otherwise. If
+.B len
+is omitted, all of 
+.B info 
+is considered.
 .IP "substr(bigstring, start, length)" 3
 Returns a substring of 
 .I bigstring
@@ -806,22 +800,14 @@ of
 and 
 .I y
 If the length is not equal, the return string has the minimum length.
-.IP "compare(s1,s2)" 3
+.IP "compare(s1,s2,pad)" 3
 Returns the index of the first mis-matched character in strings 
 .I s1
 and
-.I s2
+.I s2.
 If the strings are equal, the function returns
 .B zero.
-If the strings are of unequal length, the shorter string is padded with spaces.
-.IP "comparep(s1,s2,pad)" 3
-Returns the index of the first mis-matched character in strings 
-.I s1
-and
-.I s2
-If the strings are equal, the function returns
-.B zero.
-If the strings are of unequal length, the shorter string is padded with the pad character.
+If the strings are of unequal length, the shorter string is padded with the pad character (by default - space).
 .IP "copies(string,times)" 3
 Returns the content of
 .I string 
