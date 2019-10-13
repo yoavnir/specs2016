@@ -858,25 +858,7 @@ to initiate the search. It defaults to 1 if not specified. The standard
 function should be used instead of 
 .B index 
 if possible.
-.IP "insert(string,target,position,length)" 3 
-Inserts 
-.I string
-into 
-.I target
-at position 
-.I position 
-and truncated or padded with spaces to length 
-.I length. 
-With default zero values, 
-.I position 
-inserts the 
-.I string 
-at the start of 
-.I target, 
-and the length of the 
-.I string
-is kept as is.
-.IP "insertp(string,target,position,length,pad)" 3 
+.IP "insert(string,target,position,length,pad)" 3 
 Inserts 
 .I string
 into 
@@ -887,7 +869,7 @@ and truncated or padded with
 .I pad
 characters to length 
 .I length. 
-With default zero values, 
+With default or zero values, 
 .I position 
 inserts the 
 .I string 
@@ -895,21 +877,17 @@ at the start of
 .I target, 
 and the length of the 
 .I string
-is kept as is.
-.IP "justify(string,length)" 3
-Evenly justifies words within 
-.I string. 
-The 
-.I length
-specifies the length of the returned string.
-.IP "justifyp(string,length,pad)" 3
+is kept as is. The 
+.I pad
+defaults to a space.
+.IP "justify(string,length,pad)" 3
 Evenly justifies words within 
 .I string. 
 The 
 .I length
 specifies the length of the returned string, while
 .I pad
-specifies what padding to insert (if necessary).
+specifies what padding (by default a space) to insert (if necessary).
 .IP "overlay(string1, string2 ,start ,length ,pad)" 3
 Returns a copy of 
 .I string2, 

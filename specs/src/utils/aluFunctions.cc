@@ -1637,6 +1637,8 @@ static std::vector<size_t> breakIntoWords_end(std::string s)
 
 ALUValue* AluFunc_find(ALUValue* string, ALUValue* phrase)
 {
+	ASSERT_NOT_ELIDED(string,1,string);
+	ASSERT_NOT_ELIDED(phrase,2,phrase);
 	auto phraseWords = breakIntoWords(phrase->getStr());
 	auto stringWords = breakIntoWords(string->getStr());
 
@@ -1659,9 +1661,11 @@ ALUValue* AluFunc_find(ALUValue* string, ALUValue* phrase)
 
 ALUValue* AluFunc_index(ALUValue* _pHaystack, ALUValue* _pNeedle, ALUValue* _pStart)
 {
+	ASSERT_NOT_ELIDED(_pHaystack,1,haystack);
+	ASSERT_NOT_ELIDED(_pNeedle,2,needle);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = _pHaystack->getStrPtr();
-	ALUInt start = _pStart->getInt();
+	ALUInt start = ARG_INT_WITH_DEFAULT(_pStart, 1);
 
 	if (start < 1) start = 1;
 
@@ -1673,7 +1677,7 @@ ALUValue* AluFunc_index(ALUValue* _pHaystack, ALUValue* _pNeedle, ALUValue* _pSt
 	}
 }
 
-static ALUValue* AluFunc_insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
+static ALUValue* insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
 {
 	std::string paddedStr;
 
@@ -1698,49 +1702,32 @@ static ALUValue* AluFunc_insert_do(std::string& str, std::string& tgt, size_t po
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_insert(ALUValue* pString, ALUValue* pTarget, ALUValue* pPosition, ALUValue* pLength)
+ALUValue* AluFunc_insert(ALUValue* pString, ALUValue* pTarget, ALUValue* pPosition, ALUValue* pLength, ALUValue* pPad)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
+	ASSERT_NOT_ELIDED(pTarget,2,target);
 	auto theString = pString->getStr();
 	auto theTarget = pTarget->getStr();
-	auto position = pPosition->getInt();
+	auto position = ARG_INT_WITH_DEFAULT(pPosition,0);
 	if (0 > position) {
 		std::string err = "insert: Invalid negative position value: " + std::to_string(position);
 		MYTHROW(err);
 	}
-	auto length = pLength->getInt();
+	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
 	if (0 > length) {
 		std::string err = "insert: Invalid negative length value: " + std::to_string(length);
 		MYTHROW(err);
 	}
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
+	if (1 != sPad.length()) {
+		std::string err = "insert: Invalid pad argument: <" + sPad + ">";
+		MYTHROW(err);
+	}
 
-	return AluFunc_insert_do(theString, theTarget, position, length, ' ');
+	return insert_do(theString, theTarget, position, length, sPad[0]);
 }
 
-ALUValue* AluFunc_insertp(ALUValue* pString, ALUValue* pTarget, ALUValue* pPosition, ALUValue* pLength, ALUValue* pPad)
-{
-	auto theString = pString->getStr();
-	auto theTarget = pTarget->getStr();
-	auto position = pPosition->getInt();
-	if (0 > position) {
-		std::string err = "insertp: Invalid negative position value: " + std::to_string(position);
-		MYTHROW(err);
-	}
-	auto length = pLength->getInt();
-	if (0 > length) {
-		std::string err = "insertp: Invalid negative length value: " + std::to_string(length);
-		MYTHROW(err);
-	}
-	auto padString = pPad->getStr();
-	if (1 != padString.length()) {
-		std::string err = "insertp: Invalid pad argument: <" + padString + ">";
-		MYTHROW(err);
-	}
-
-	char padChar = padString[0];
-	return AluFunc_insert_do(theString, theTarget, position, length, padChar);
-}
-
-static ALUValue* AluFunc_justify_do(std::string& str, size_t len, char pad)
+static ALUValue* justify_do(std::string& str, size_t len, char pad)
 {
 	auto wordVector = breakIntoWords(str);
 	int numOfSpaces = int(len);
@@ -1768,42 +1755,34 @@ static ALUValue* AluFunc_justify_do(std::string& str, size_t len, char pad)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_justify(ALUValue* pStr, ALUValue* pLen)
+ALUValue* AluFunc_justify(ALUValue* pStr, ALUValue* pLen, ALUValue* pPad)
 {
+	ASSERT_NOT_ELIDED(pStr,1,string);
+	ASSERT_NOT_ELIDED(pLen,2,length);
 	auto str = pStr->getStr();
 	auto len = pLen->getInt();
 	if (len < 0) {
 		std::string err = "justify: len argument should be non-negative. Got " + std::to_string(len);
 		MYTHROW(err);
 	}
-
-	return AluFunc_justify_do(str,size_t(len), ' ');
-}
-
-ALUValue* AluFunc_justifyp(ALUValue* pStr, ALUValue* pLen, ALUValue* pPad)
-{
-	auto str = pStr->getStr();
-	auto len = pLen->getInt();
-	if (len < 0) {
-		std::string err = "justifyp: len argument should be non-negative. Got " + std::to_string(len);
-		MYTHROW(err);
-	}
-	auto padString = pPad->getStr();
-	if (1 != padString.length()) {
-		std::string err = "justifyp: Invalid pad argument: <" + padString + ">";
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
+	if (1 != sPad.length()) {
+		std::string err = "justify: Invalid pad argument: <" + sPad + ">";
 		MYTHROW(err);
 	}
 
-	return AluFunc_justify_do(str,size_t(len), padString[0]);
+	return justify_do(str,size_t(len), sPad[0]);
 }
 
 ALUValue* AluFunc_overlay(ALUValue* pString1, ALUValue* pString2, ALUValue* pStart, ALUValue* pLength, ALUValue* pPad)
 {
+	ASSERT_NOT_ELIDED(pString1,1,string1);
+	ASSERT_NOT_ELIDED(pString2,2,string1);
 	auto str1 = pString1->getStr();
 	auto str2 = pString2->getStr();
-	ALUInt start = pStart ? pStart->getInt() : 1;
-	ALUInt length = pLength ? pLength->getInt() : 0;
-	std::string padStr = pPad ? pPad->getStr() : " ";
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart, 1);
+	ALUInt length = ARG_INT_WITH_DEFAULT(pLength, 0);
+	std::string padStr = ARG_STR_WITH_DEFAULT(pPad, " ");
 
 	// sanity checks
 	if (0 == str1.length()) return new ALUValue(str2);
@@ -1847,6 +1826,7 @@ ALUValue* AluFunc_overlay(ALUValue* pString1, ALUValue* pString2, ALUValue* pSta
 
 ALUValue* AluFunc_reverse(ALUValue* pStr)
 {
+	ASSERT_NOT_ELIDED(pStr,1,str);
 	auto str = pStr->getStr();
 	std::reverse(str.begin(), str.end());
 	return new ALUValue(str);
@@ -1854,6 +1834,7 @@ ALUValue* AluFunc_reverse(ALUValue* pStr)
 
 ALUValue* AluFunc_sign(ALUValue* pNumber)
 {
+	ASSERT_NOT_ELIDED(pNumber,1,number);
 	auto num = pNumber->getFloat();
 	ALUInt ret = 0;
 	if (num > 0) {

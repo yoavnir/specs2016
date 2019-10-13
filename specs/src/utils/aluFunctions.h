@@ -105,10 +105,8 @@
 	X(delword,        3, ALUFUNC_REGULAR,     false)  \
 	X(find,           2, ALUFUNC_REGULAR,     false)  \
 	X(index,          3, ALUFUNC_REGULAR,     false)  \
-	X(insert,         4, ALUFUNC_REGULAR,     false)  \
-	X(insertp,        5, ALUFUNC_REGULAR,     false)  \
-	X(justify,        2, ALUFUNC_REGULAR,     false)  \
-	X(justifyp,       3, ALUFUNC_REGULAR,     false)  \
+	X(insert,         5, ALUFUNC_REGULAR,     false)  \
+	X(justify,        3, ALUFUNC_REGULAR,     false)  \
 	X(overlay,        5, ALUFUNC_REGULAR,     false)  \
 	X(reverse,        1, ALUFUNC_REGULAR,     false)  \
 	X(sign,           1, ALUFUNC_REGULAR,     false)  \
