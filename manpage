@@ -935,7 +935,7 @@ for leading,
 .B T
 for trailing, and
 .B B
-for both.
+for both (the default).
 .IP "subword(string,start,length)" 3
 Returns the substring that begins at blank-delimited word 
 .I start. 

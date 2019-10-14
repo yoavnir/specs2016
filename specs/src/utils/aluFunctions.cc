@@ -1848,23 +1848,18 @@ ALUValue* AluFunc_sign(ALUValue* pNumber)
 
 ALUValue* AluFunc_space(ALUValue* pStr, ALUValue* pLength, ALUValue* pPad)
 {
+	ASSERT_NOT_ELIDED(pStr,1,string);
 	auto wordVector = breakIntoWords(pStr->getStr());
-	char pad = ' ';
-	ALUInt len = 1;
-	if (pLength) {
-		len = pLength->getInt();
-		if (len < 0 || len > 1000) {
-			std::string err = "space: Invalid length argument: <" + pLength->getStr() + ">";
-			MYTHROW(err);
-		}
-		if (pPad) {
-			auto padStr = pPad->getStr();
-			if (padStr.length() != 1) {
-				std::string err = "space: Invalid pad argument: <" + padStr + ">";
-				MYTHROW(err);
-			}
-			pad = padStr[0];
-		}
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
+	if (sPad.length() != 1) {
+		std::string err = "space: Pad argument should be 1 char. Got <" + sPad + ">";
+		MYTHROW(err);
+	}
+	char pad = sPad[0];
+	ALUInt len = ARG_INT_WITH_DEFAULT(pLength, 1);
+	if (len < 0 || len > 1000) {
+		std::string err = "space: Invalid length argument: <" + pLength->getStr() + ">";
+		MYTHROW(err);
 	}
 
 	std::string ret;
@@ -1878,27 +1873,24 @@ ALUValue* AluFunc_space(ALUValue* pStr, ALUValue* pLength, ALUValue* pPad)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_strip(ALUValue* pString, ALUValue* pOption, ALUValue* pChar)
+ALUValue* AluFunc_strip(ALUValue* pString, ALUValue* pOption, ALUValue* pPad)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
 	auto str = pString->getStr();
-	char option = 'B';
-	char pad = ' ';
-	if (pOption) {
-		auto optionStr = pOption->getStr();
-		if (1 != optionStr.length()) {
-			std::string err = "strip: Invalid option argument: <"+optionStr+">";
-			MYTHROW(err);
-		}
-		option = toupper(optionStr[0]);
-		if (pChar) {
-			auto padStr = pChar->getStr();
-			if (1 != padStr.length()) {
-				std::string err = "strip: Invalid char argument: <"+optionStr+">";
-				MYTHROW(err);
-			}
-			pad = padStr[0];
-		}
+
+	std::string sOpt = ARG_STR_WITH_DEFAULT(pOption, "B");
+	if (sOpt.length() != 1) {
+		std::string err = "strip: Option argument should be 1 char. Got <" + sOpt + ">";
+		MYTHROW(err);
 	}
+	char option = toupper(sOpt[0]);
+
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
+	if (sPad.length() != 1) {
+		std::string err = "strip: Pad argument should be 1 char. Got <" + sPad + ">";
+		MYTHROW(err);
+	}
+	char pad = sPad[0];
 
 	std::string ret;
 	auto first = str.find_first_not_of(pad);
