@@ -1915,9 +1915,11 @@ ALUValue* AluFunc_strip(ALUValue* pString, ALUValue* pOption, ALUValue* pPad)
 
 ALUValue* AluFunc_subword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
+	ASSERT_NOT_ELIDED(pStart,2,start);
 	auto str = pString->getStr();
 	auto start = pStart->getInt();
-	ALUInt len = pLength ? pLength->getInt() : 0;
+	ALUInt len = ARG_INT_WITH_DEFAULT(pLength, 0);
 
 	if (len < 0) {
 		std::string err = "subword: length argument must be non-negative. Got: " + std::to_string(len);
@@ -1957,7 +1959,13 @@ ALUValue* AluFunc_subword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength
 
 ALUValue* AluFunc_translate(ALUValue* pString, ALUValue* pTableOut, ALUValue* pTableIn, ALUValue* pPad)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
 	auto str = pString->getStr();
+
+	if ((pTableIn && !pTableOut) || (!pTableIn && pTableOut)) {
+		static const std::string err = "Either both tableout and tablein should be specified, or neither.";
+		THROW_ARG_ISSUE(0,"",err);
+	}
 
 	std::string tableout = pTableOut ? pTableOut->getStr() : "";
 	std::string tablein = pTableIn ? pTableIn->getStr() : "";
@@ -1966,15 +1974,12 @@ ALUValue* AluFunc_translate(ALUValue* pString, ALUValue* pTableOut, ALUValue* pT
 		// just uppercase the whole thing
 		for (auto & c : str) c = toupper(c);
 	} else {
-		char pad = ' ';
-		if (pPad) {
-			auto padStr = pPad->getStr();
-			if (padStr.length() > 1) {
-				std::string err = "translate: Invalid pad argument: <" + padStr + ">";
-				MYTHROW(err);
-			}
-			if (padStr.length() == 1) pad = padStr[0];
+		std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
+		if (sPad.length() != 1) {
+			std::string err = "translate: Pad argument should be 1 char. Got <" + sPad + ">";
+			MYTHROW(err);
 		}
+		char pad = sPad[0];
 
 		for (int i=0; i<tablein.length(); i++) {
 			char oldValue = tablein[i];
@@ -1988,29 +1993,26 @@ ALUValue* AluFunc_translate(ALUValue* pString, ALUValue* pTableOut, ALUValue* pT
 
 ALUValue* AluFunc_verify(ALUValue* pString, ALUValue* pReference, ALUValue* pOption, ALUValue* pStart)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
+	ASSERT_NOT_ELIDED(pReference,1,reference);
 	auto str = pString->getStr();
 	auto reference = pReference->getStr();
 
-	char option = 'N';
-	if (pOption) {
-		auto optionStr = pOption->getStr();
-		if (0 < optionStr.length()) {
-			option = toupper(optionStr[0]);
-			if ('N' != option && 'M' != option) {
-				std::string err = "verify: bad option argument: <" + optionStr + ">";
-				MYTHROW(err);
-			}
-		}
+	std::string sOpt = ARG_STR_WITH_DEFAULT(pOption, "N");
+	if (sOpt.length() != 1) {
+		std::string err = "verify: Option argument should be 'M' or 'N'. Got <" + sOpt + ">";
+		MYTHROW(err);
+	}
+	char option = toupper(sOpt[0]);
+	if ('N' != option && 'M' != option) {
+		std::string err = "verify: bad option argument: <" + sOpt + ">";
+		MYTHROW(err);
 	}
 
-	size_t start = 1;
-	if (pStart && "" != pStart->getStr()) {
-		auto _start = pStart->getInt();
-		if (_start < 0) {
-			std::string err = "verify: bad start argument: <" + pStart->getStr() + ">";
-			MYTHROW(err);
-		}
-		start = (0 == _start) ? 1 : _start;
+	size_t start = ARG_INT_WITH_DEFAULT(pStart,1);
+	if (start < 1) {
+		std::string err = "verify: bad start argument: <" + pStart->getStr() + ">";
+		MYTHROW(err);
 	}
 
 	ALUInt ret = 0;

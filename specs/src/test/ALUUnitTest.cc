@@ -1114,10 +1114,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("translate('abc','x','ab','$')", "x$c");
 	VERIFY_EXPR_RES("translate('abc','xyz','ab','$')", "xyc");
 
-	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh','','')", "3");
-	VERIFY_EXPR_RES("verify('dg','abcdefgh','','')", "0");
-	VERIFY_EXPR_RES("verify('dg','abcdefgh','m','')", "1");
-	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh','',5)", "13");
+	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh')", "3");
+	VERIFY_EXPR_RES("verify('dg','abcdefgh')", "0");
+	VERIFY_EXPR_RES("verify('dg','abcdefgh','m')", "1");
+	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh',,5)", "13");
 
 	VERIFY_EXPR_RES("wordindex('tis the time', 2)", "5");
 	VERIFY_EXPR_RES("wordindex('tis the time', 4)", "0");
