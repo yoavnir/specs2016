@@ -2034,6 +2034,8 @@ ALUValue* AluFunc_verify(ALUValue* pString, ALUValue* pReference, ALUValue* pOpt
 
 ALUValue* AluFunc_wordindex(ALUValue* pString, ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
+	ASSERT_NOT_ELIDED(pIdx,2,wordno);
 	auto str = pString->getStr();
 	ALUInt idx = pIdx->getInt();
 
@@ -2054,6 +2056,8 @@ ALUValue* AluFunc_wordindex(ALUValue* pString, ALUValue* pIdx)
 
 ALUValue* AluFunc_wordlength(ALUValue* pString, ALUValue* pIdx)
 {
+	ASSERT_NOT_ELIDED(pString,1,string);
+	ASSERT_NOT_ELIDED(pIdx,2,wordno);
 	auto str = pString->getStr();
 	ALUInt idx = pIdx->getInt();
 
@@ -2097,6 +2101,7 @@ ALUValue* AluFunc_wordpos(ALUValue* pPhrase, ALUValue* pString, ALUValue* pStart
 
 ALUValue* AluFunc_words(ALUValue* pStr)
 {
+	ASSERT_NOT_ELIDED(pStr,1,string);
 	auto str = pStr->getStr();
 	auto startVec = breakIntoWords(str);
 	ALUInt ret = startVec.size();
