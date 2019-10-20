@@ -91,7 +91,11 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	itemGroup ig;
 
 	unsigned int index = 0;
-	ig.Compile(vec,index);
+	try {
+		ig.Compile(vec,index);
+	} catch (const SpecsException& e) {
+		return SpecString::newString(e.what(true));
+	}
 
 	StringBuilder sb;
 	setPositionGetter(&sb);
@@ -241,7 +245,7 @@ int main(int argc, char** argv)
 	VERIFY2("fs : field 1-* 1", "a:b", "a:b");  // Test #51
 
 	// if...then...else...endif
-	spec = "a: w1 . if 0=a%2 then even 1 else odd 1";
+	spec = "a: w1 . if 0=a%2 then even 1 else odd 1 endif";
 	VERIFY2(spec, "2",     "even");    // Test #52
 	VERIFY2(spec, "hello", "even");    // Test #53
 	VERIFY2(spec, "7",     "odd");     // Test #54
@@ -484,6 +488,19 @@ int main(int argc, char** argv)
 	VERIFY("/hello/ (1,10,'r3')", "     hello"); // TEST #123
 
 	VERIFY("w1 1 w2 (,5) w3 n", "Thequickbrown") // TEST #124 - Issue #103
+
+	// Issue #34
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1' done", "4...."); // TEST #125
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' /./ n set '#0-=1' done", "Missing DO after WHILE at index 6 with condition \"#0>0\""); // TEST #126
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1'", "Predicate WHILE (#0>0) at index 6 is not terminated"); // TEST #127
+	VERIFY("/4/ 1 done","DONE without WHILE at index 3"); // TEST #128
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1' endif", "Mismatched predicates: ENDIF at index 13 does not match WHILE (#0>0) at index 6"); // TEST #129
+	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw endif", "4 (natural)"); // TEST #130
+	VERIFY("a: /4/ 1 if 'a>=0' /(natural)/ nw else /(non-natural)/ nw endif", "Missing THEN after IF at index 4 with condition \"a>=0\""); // TEST #131
+	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "Predicate IF (a>=0) at index 4 is not terminated"); // TEST #132
+	VERIFY("a: /-4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "Predicate IF (a>=0) at index 4 is not terminated"); // TEST #133
+	VERIFY("/4/ 1 endif","ENDIF without IF at index 3"); // TEST #134
+	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw done", "Mismatched predicates: DONE at index 12 does not match IF (a>=0) at index 4"); // TEST #135
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
