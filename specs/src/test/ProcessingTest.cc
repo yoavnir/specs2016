@@ -90,17 +90,18 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	normalizeTokenList(&vec);
 	itemGroup ig;
 
+	PSpecString result = NULL;
+	StringBuilder sb;
+	setPositionGetter(&sb);
+
 	unsigned int index = 0;
 	try {
 		ig.Compile(vec,index);
 	} catch (const SpecsException& e) {
-		return SpecString::newString(e.what(true));
+		result = SpecString::newString(e.what(true));
+		goto end;
 	}
 
-	StringBuilder sb;
-	setPositionGetter(&sb);
-
-	PSpecString result = NULL;
 	try {
 		if (ig.readsLines() || !ig.needRunoutCycle()) {
 			do {
