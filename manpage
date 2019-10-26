@@ -752,12 +752,23 @@ includes the string
 as a substring, or 
 .B FALSE
 (0) otherwise.
-.IP "conf(key)" 3
+.IP "conf(key,default)" 3
 Returns the configured string from either the built-in configured strings such as 
 .I version
 or from the 
 .B $HOME/.specs
-file.
+file. If the string is not defined, returns the
+.I default
+value. If that is not defined, returns
+.B NaN.
+.IP "defined(key)" 3
+Returns 
+.B TRUE
+(1) if the configured string 
+.I key
+is defined, or 
+.B FALSE
+(0) otherwise.
 .IP "sfield(str,n,sep)" 3
 Returns the n-th field of string
 .I str

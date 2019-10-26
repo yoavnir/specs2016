@@ -49,7 +49,7 @@
 	X(right,          2, ALUFUNC_REGULAR,     false)  \
 	X(center,         2, ALUFUNC_REGULAR,     false)  \
 	X(centre,         2, ALUFUNC_REGULAR,     false)  \
-	X(conf,           1, ALUFUNC_REGULAR,     false)  \
+	X(conf,           2, ALUFUNC_REGULAR,     false)  \
 	X(x2d,            2, ALUFUNC_REGULAR,     false)  \
 	X(d2x,            1, ALUFUNC_REGULAR,     false)  \
 	X(x2ch,           1, ALUFUNC_REGULAR,     false)  \
@@ -123,6 +123,7 @@
 	X(fmt,            5, ALUFUNC_REGULAR,     false)  \
 	X(next,           0, ALUFUNC_REGULAR,     false)  \
 	X(rest,           0, ALUFUNC_REGULAR,     false)  \
+	X(defined,        1, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false)  \

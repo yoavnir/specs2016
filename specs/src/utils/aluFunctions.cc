@@ -556,12 +556,14 @@ ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle)
 	return new ALUValue(ALUInt(bIsIncluded ? 1 : 0));
 }
 
-ALUValue* AluFunc_conf(ALUValue* _pKey)
+ALUValue* AluFunc_conf(ALUValue* _pKey, ALUValue* _pDefault)
 {
 	ASSERT_NOT_ELIDED(_pKey,1,key);
 	std::string key = _pKey->getStr();
 	if (configSpecLiteralExists(key)) {
 		return new ALUValue(configSpecLiteralGet(key));
+	} else if (_pDefault) {
+		return new ALUValue(*_pDefault);
 	} else {
 		return new ALUValue();
 	}
@@ -2209,6 +2211,17 @@ ALUValue* AluFunc_rest()
 	static std::string sCols = configSpecLiteralGet(sName);
 	static ALUInt cols = std::stoul(sCols);
 	return new ALUValue(ALUInt(cols - g_PositionGetter->pos() + 1));
+}
+
+ALUValue* AluFunc_defined(ALUValue* pName)
+{
+	ASSERT_NOT_ELIDED(pName,1,confString);
+	auto name = pName->getStr();
+	if (configSpecLiteralExists(name)) {
+		return new ALUValue(ALUInt(1));
+	} else {
+		return new ALUValue(ALUInt(0));
+	}
 }
 
 
