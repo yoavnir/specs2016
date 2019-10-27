@@ -38,10 +38,21 @@ bool parseSwitches(int& argc, char**& argv)
 		CONFIG_PARAMS
 
 CONTINUE:
+		if (g_configuredString != "") {
+			auto equalsPos = g_configuredString.find('=');
+			if (std::string::npos == equalsPos || 1 == equalsPos) {
+				std::string err = "Malformed parameter for 'set': " + g_configuredString;
+				MYTHROW(err);
+			}
+			auto key = g_configuredString.substr(0,equalsPos);
+			auto value = g_configuredString.substr(equalsPos+1);
+			configSpecLiteralSet(key,value);
+			g_configuredString = "";
+		}
 		argc--; argv++;
 	}
 
-	// saniry checks
+	// sanity checks
 	if (g_recfm!="") {
 		if (g_recfm=="d" || g_recfm=="D" || g_recfm=="delimited" || g_recfm=="DELIMITED") {
 			g_recfm = "";
