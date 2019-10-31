@@ -1172,6 +1172,13 @@ Prints out detailed step-by-step information about the evaluation of expressions
 Changes the configuration file from the default 
 .I ~/.specs
 to whatever the parameter says
+.IP "--set" or "-s" 3
+The following argument sets a configured string. For example: 
+.B specs --set hello=goodbye
+will set the configured string
+.B hello
+to the value
+.B goodbye
 .IP "--timezone" 3
 Changes the timezone from the default which is the current timezone to the value specified.
 .IP "--recfm" 3

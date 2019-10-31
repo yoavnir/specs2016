@@ -47,8 +47,10 @@ timezone: Asia/Bangkok
 locale: en_US
 Motto: "memento mori"
 ```
+Configured literals can also be set using the command-line switches `--set` or `-s`.
 So let's use them in a specification:
 ```
+REQUIRES pi
 specs r: word 1 .
          /Tau is/ 1
          PRINT "@pi*2" nextword
@@ -100,6 +102,8 @@ Others are `@cols`, which contains the number of columns in the terminal screen,
 Additionally, the `@@` string stands for the entire input record.
 
 **Note:** The timezone used in the date conversion can also be set in the configuration file with a `timezone` entry. Similarly, the locale used can be set with a `locale` entry.
+
+**Note:** Some *specifications* as shown above may depend of a specific configured literal being defined. It may be prudent to have such specifications fail quickly by using the `REQUIRES` keyword as shown above. 
 
 ### Operators
 The ALU supports many of the operators available in the *REXX* programming languages. This includes addition, subtraction, logical comparisons, and string concatenation. 

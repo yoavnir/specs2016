@@ -235,6 +235,15 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			addItem(pItem);
 			break;
 		}
+		case TokenListType__REQUIRES:
+		{
+			if (!configSpecLiteralExists(tokenVec[index].Literal())) {
+				std::string err = "Missing required configured literal <" + tokenVec[index].Literal() + ">";
+				MYTHROW(err);
+			}
+			index++;
+			break;
+		}
 		default:
 			std::string err = std::string("Unhandled token type ")
 				+ TokenListType__2str(tokenVec[index].Type())

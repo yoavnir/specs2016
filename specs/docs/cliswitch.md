@@ -56,6 +56,7 @@ Writer Thread:
 * `--debug-alu-run` -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
 * `--timezone` **name** -- convert to and from time-formatted strings using the selected timezone. Valid values are from the TZ database and look like `Africa/Dakar`, `America/Chicago`, `Asia/Calcutta`, `Australia/Sydney`, or `Europe/Berlin`.  A full list of such timezones is available on [Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).  Note that the same timezones can also be configured in the config
 * `--config` **filename** or `-c` **filename** -- overrides the default configuration file which is `~/.specs` on POSIX-based operating systems (Mac OS and Linux) or `%HOME%\specs.cfg` on Windows.
+* `--set` **name=value** or `-s` **name=value** -- sets the named string *name* to the value *value*.
 * `--is2` **filename** -- sets input stream number 2 to read from the specified file. 
 * `--is3` **filename** -- sets input stream number 3 to read from the specified file. 
 * `--is4` **filename** -- sets input stream number 4 to read from the specified file. 
