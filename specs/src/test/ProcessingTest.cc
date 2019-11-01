@@ -503,6 +503,9 @@ int main(int argc, char** argv)
 	VERIFY("/4/ 1 endif","ENDIF without IF at index 3"); // TEST #134
 	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw done", "Mismatched predicates: DONE at index 12 does not match IF (a>=0) at index 4"); // TEST #135
 
+	VERIFY("requires version /4/ 1", "4");  // TEST #136
+	VERIFY("requires hello /4/ 1", "Missing required configured literal <hello>"); // TEST #137
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {
