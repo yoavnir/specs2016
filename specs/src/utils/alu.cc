@@ -1371,7 +1371,7 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 	bool foundComma = false;
 
 	if (!dest.empty()){
-		MYTHROW("Entered with non-empty destinatin vec.");
+		MYTHROW("Entered with non-empty destination vec.");
 	}
 
 
@@ -1393,6 +1393,7 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 		}
 
 		if (foundComma) {
+			delete pUnit;
 			break;
 		}
 		else {

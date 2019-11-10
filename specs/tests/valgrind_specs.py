@@ -296,7 +296,7 @@ s = "print 'field(3)' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
 run_case(s,i,"Functions: field")
 
-s = "print 'fields(2,3)' 1"
+s = "print 'fieldrange(2,3)' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
 run_case(s,i,"Functions: fields")
 
@@ -675,3 +675,8 @@ run_case(s,i,"an abend that is never reached")
 
 i = '1\n2\n3\n4\n5'
 run_case(s,i,"an abend that is reached",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+
+# output formatting
+s = "print \"fmt(sqrt(2),,10,',',':')\" 1"
+run_case(s,i,"a formatted number")
+

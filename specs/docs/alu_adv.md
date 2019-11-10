@@ -61,13 +61,11 @@
 | `dsin(x)` | Returns the sine function, treating `x` as an angle expressed in degrees |
 | `dtan(x)` | Returns the tangent function, treating `x` as an angle expressed in degrees |
 | `floor(x)` | Returns the largest integer smaller than `x` |
-| `frand()` | Returns a random value between 0.0 up to and not including 1.0 |
 | `fmt(value,format,digits,decimal,separator)` | formats a floating-point `value` as a string. The `format` argument can be omitted, or it can begin with **f** for a **fixed** number of `digits` after the decimal point, or **s** for **scientific** notation. When omitted, the `digits` argument sets the total number of digits displayed. The `decimal` argument sets the character used for the decimal point (default is a period), while the `separator` argument sets the character used as thousands separator (default is none). |
 | `frombin(x)` | Returns the decimal value of the binary `x`. For example, if `x` is "A", the function returns 65; if `x` is "AB" the function returns 16961. Binary values are assumed to be in little-endian order. |
 | `pow(x,y)` | Returns `x` raised to the power of `y` |
-| `rand(x)` | Returns a random value up to and not including the integer x |
-| `round(x)` | Returns the closest integer to `x` |
-| `roundd(x,d)` | Returns the closest number to `x` that has `d` decimal places |
+| `rand(x)` | Returns a random value up to and not including the integer `x`. If `x` is omitted, returns a random **real** value between 0.0 up to and not including 1.0 |
+| `round(x,d)` | Returns the closest number to `x` that has `d` decimal places. If `d` is omitted, returns the closest integer |
 | `sin(x)` | Returns the sine function, treating `x` as an angle expressed in radians |
 | `sqrt(x)` | Returns the square root of `x` |
 | `tan(x)` | Returns the tangent function, treating `x` as an angle expressed in radians |
@@ -77,19 +75,18 @@
 ## Table of String Functions
 | Function | Description |
 | -------- | ----------- |
-| `abbrev(h,n)` | Returns `1` when `n` is equal to the first characters of `h` or `0` otherwise. |
-| `abbrevl(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. |
+| `abbrev(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. If `l` is omitted, all of 'n' is considered. |
 | `center(s,n)` or `centre(s,n)` | Returns the `n` center-most characters of the string `s`. The result is padded with spaces on both sides if `n` is greater than the length of `s`. |
 | `includes(haystack,needle)` | Boolean function. Returns `1` if `needle` is a substring of `haystack`, or `0` otherwise |
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s`. |
 | `length(s)` | Returns the length (in characters) of the string `s` |
 | `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |
-| `substitute(s,needle,subst,max)` | Returns the string `s` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. |
+| `substitute(haystack,needle,subst,max)` | Returns the string `haystack` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. The default for `max` is 1 |
 | `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |
 | `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack` |
 | `lastpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack` |
-| `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is an empty string, the separator is the default one: a tab character |
-| `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is an empty string, the separator is the default one: a space character |
+| `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a tab character |
+| `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a space character |
 
 ## Table of Other REXX-Derived Functions
 | Function | Description |
@@ -97,22 +94,19 @@
 | `bitand(x,y)` | Returns the bit-wise AND of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
 | `bitor(x,y)` | Returns the bit-wise OR of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
 | `bitxor(x,y)` | Returns the bit-wise XOR of strings `x` and `y`. If they are not of equal length, the length returned is the minimum. |
-| `compare(s1,s2)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. If they are of unequal length, the shorter string is padded with spaces. |
-| `comparep(s1,s2,pad)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. I they are of unequal length, the shorter string is padded with the pad character. |
+| `compare(s1,s2,pad)` | Returns the index of the first mis-matched character, or zero if `s1` and `s2` are equal. If they are of unequal length, the shorter string is padded with the pad character (by default - a space). |
 | `copies(string,times)` | Returns the content of `string` repeated `times` times. |
 | `delstr(string,start,length)` | Deletes the substring of `string` that starts at position `start` for the specified `length`. If `length` is zero, the rest of the string is deleted from position start to the end. |
 | `delword(string,start,length)` | Deletes the substring of `string` that starts at position `start` and is of length `length` blank-delimited words. If `length` is zero, it defaults to removing the rest of the words in `string`. |
 | `find(string,phrase)` | Returns the word number of the first occurrence of `phrase` in `string`. Returns 0 if `phrase` is not found. Multiple blanks between words are treated as one in comparisons. |
 | `index(haystack,needle,start)` | Returns the character position of `needle` within string `haystack`. Returns 0 if `needle` is not found. If positive, `start` tells where in `haystack` to initiate the search. It defaults to 1 if not specified. The standard `pos` function should be used instead of index if possible. |
-| `insert(string,target,position,length)` | Inserts `string` into `target` at position `position` and truncated or padded with spaces to length `length`. With default zero values, `position` inserts the string at the start of `target`, and the length of the `string` is kept as is. |
-| `insertp(string,target,position,length,pad)` | Inserts `string` into `target` at position `position` and truncated or padded with `pad` characters to length `length`. With default zero values, `position` inserts the string at the start of `target`, and the length of the `string` is kept as is. |
-| `justify(string,length)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string. |
-| `justifyp(string,length,pad)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string, while `pad` specifies what padding to insert (if necessary). |
+| `insert(string,target,position,length,pad)` | Inserts `string` into `target` at position `position` and truncated or padded with `pad` characters to length `length`. With default or zero values, `position` inserts the string at the start of `target`, and the length of the `string` is kept as is. The pad character defaults to space |
+| `justify(string,length,pad)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string, while `pad` specifies what padding (by default a space) to insert (if necessary). |
 | `overlay(string1, string2 ,start ,length ,pad)` | Returns a copy of `string2`, partially or fully overwritten by `string1`. `start` specifies the starting position of the overlay. `length` truncates or pads `string1` prior to the operation, using `pad` as the pad character. |
 | `reverse(string)` | Returns a copy of a `string` with its characters reversed. |
 | `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
 | `space(string,length,pad)` | Formats a `string` by replacing internal blanks with `length` occurrences of the `pad` character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If `length` is 0, all blanks are removed. |
-| strip(string,option,char) | Returns `string` stripped of leading and/or trailing blanks or any other `char` specified. `Option` values determine the action: *L* for leading, *T* for trailing, and *B* for both. |
+| strip(string,option,char) | Returns `string` stripped of leading and/or trailing blanks or any other `char` specified. `Option` values determine the action: *L* for leading, *T* for trailing, and *B* for both (the default) |
 | `subword(string,start,length)` | Returns the substring that begins at blank-delimited word `start`. If `length` is omitted, it defaults to the remainder of the string. |
 | translate(string,tableout,tablein,pad) | Returns a translated copy of `string`. Characters are translated according to the input translation table `tablein` and its output equivalent, `tableout`. If `tablein` and `tableout` are not coded, all characters in `string` are translated to uppercase. If `tableout` is shorter than `tablein`, it is padded with the `pad` character or its default, blanks. |
 | `verify(string, reference ,option ,start)` | Verifies that all characters in `string` are members of the `reference` string. Returns the position of the first character in `string` that is not in `reference`, or 0 if all characters in `string` are in `reference`. <br />`start` specifies where in `string` to start the search, the default is 1. The `option` may be:<ul><li> **N** (Nomatch) — Default. Works as described earlier.</li><li> **M** (Match) — Returns the position of the first character in string that is in reference.</li></ul> |
@@ -127,16 +121,17 @@
 | Function | Description |
 | -------- | ----------- |
 | `field(n)` | Returns the *n*-th field |
-| `fields(n,m)` | Returns the substring from the *n*-th field to the *m*-th field |
+| `fieldrange(n,m)` | Returns the substring from the *n*-th field (default first) to the *m*-th field (default last) |
 | `fieldcount()` | Returns the number of fields in the current record |
 | `fieldend(n)` | Returns the offset from the start of the record that the *n*-th field ends at. Like other things in **specs**, this is 1-based. | 
 | `fieldindex(n)` | Returns the offset from the start of the record that the *n*-th field starts at. |
 | `fieldlength(n)` | Returns the length of the *n*-th field |
 | `number()` | Returns the number of processing cycles we have already gone through. Unless `READ` or `READSTOP` are used, this will be equal to the number of records read so far. |
+| `range(n,m)` | Returns the substring from the *n*-th character (default first) to the *m*-th character (default last) |
 | `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `number()` |
 | `record()` | Returns the entire input record |
 | `word(n)` | Returns the *n*-th word |
-| `wordrange(n,m)` | Returns the substring from the *n*-th word to the *m*-th word |
+| `wordrange(n,m)` | Returns the substring from the *n*-th word (default first) to the *m*-th word (default last) |
 | `wordcount()` | Returns the number of words in the current record |
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
@@ -165,17 +160,17 @@
 
 The parameters for the `fmap_dump` functions are as follows:
 * *format*. Possible values:
-  * *txt* or *0* or empty string: textual representation of string and count, with the field width adjusted to fit the largest value of the field.
+  * *txt* or *0* or empty string: textual representation of string and count, with the field width adjusted to fit the largest value of the field. This is the default.
   * *lin*: same as *txt*, but surrounded by lines.
   * Integer value: same as *txt*, but the width of the string field is fixed.
   * *csv*: a Commad Seperated Value dataset.
   * *json*: a JavaScript Object Notation dataset.
 * *sortOrder*. Possible values:
-  * *s*, *sa*, or empty string: Sort by ascending alphabetical order of the string key.
+  * *s*, *sa*, or empty string: Sort by ascending alphabetical order of the string key. This is the default.
   * *sd*: Sort by descending alphabetical order of the key.
   * *c* or *ca*: Sort by ascending count numbers -- from least common to most common.
   * *cd*: Sort by descending count numbers -- from most common to rarest.
-* *showPct* - evaluated as boolean. If *true* causes the textual formats to print out a percentage. Causes the CSV and JSON formats to add a fraction.
+* *showPct* - evaluated as boolean. If *true* causes the textual formats to print out a percentage. Causes the CSV and JSON formats to add a fraction. Default is *false*.
 
 
 ## Table of Special Functions
@@ -183,7 +178,8 @@ The parameters for the `fmap_dump` functions are as follows:
 | -------- | ----------- |
 | `first()` | Returns `1` in the run-in phase, or `0` otherwise |
 | `eof()` | Returns `1` in the run-out phase, or `0` otherwise |
-| `conf(s)` | Returns the configured string `s` if it exists |
+| `conf(key,default)` | Returns the configured string `key` if it exists, the value `default` if it doesn't, and **NaN** if `default` is omitted |
+| `defined(key)` | Returns `1` if the configured string `key` is defined, or `0` if it isn't |
 | `tf2d(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is seconds since the UNIX epoch with up to 6 decimal places. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
 | `d2tf(x,f)` | Returns the string representation of the number `x` treated as the internal time format and formatted according to the string in `f`. |
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |

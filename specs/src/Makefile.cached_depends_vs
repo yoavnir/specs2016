@@ -1,24 +1,28 @@
-cli/splitter.obj: cli/splitter.cc utils/ErrorReporting.h cli/tokens.h
+cli/splitter.obj: cli/splitter.cc utils/ErrorReporting.h \
+  processing/Config.h cli/tokens.h
 cli/tokens.obj: cli/tokens.cc utils/platform.h cli/tokens.h \
   utils/ErrorReporting.h processing/Config.h processing/conversions.h \
   processing/Reader.h utils/StringQueue.h utils/SpecString.h \
-  processing/ProcessingState.h processing/Writer.h utils/alu.h \
-  utils/aluFunctions.h
+  utils/TimeUtils.h processing/ProcessingState.h processing/Writer.h \
+  utils/alu.h utils/aluFunctions.h
 processing/Config.obj: processing/Config.cc utils/platform.h \
   utils/TimeUtils.h utils/SpecString.h processing/Config.h
 processing/ProcessingState.obj: processing/ProcessingState.cc \
   processing/Config.h utils/ErrorReporting.h processing/Reader.h \
-  utils/StringQueue.h utils/SpecString.h processing/ProcessingState.h \
-  processing/Writer.h utils/alu.h utils/platform.h utils/aluFunctions.h
+  utils/StringQueue.h utils/SpecString.h utils/platform.h \
+  utils/TimeUtils.h processing/ProcessingState.h processing/Writer.h \
+  utils/alu.h utils/aluFunctions.h
 processing/Reader.obj: processing/Reader.cc utils/ErrorReporting.h \
-  processing/Reader.h utils/StringQueue.h utils/SpecString.h
+  processing/Reader.h utils/StringQueue.h utils/SpecString.h \
+  utils/platform.h utils/TimeUtils.h
 processing/StringBuilder.obj: processing/StringBuilder.cc \
   processing/Config.h utils/ErrorReporting.h \
   processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
-  utils/SpecString.h utils/alu.h utils/platform.h utils/aluFunctions.h \
-  processing/StringBuilder.h
+  utils/SpecString.h utils/platform.h utils/TimeUtils.h utils/alu.h \
+  utils/aluFunctions.h processing/StringBuilder.h
 processing/Writer.obj: processing/Writer.cc utils/ErrorReporting.h \
-  processing/Writer.h utils/StringQueue.h utils/SpecString.h
+  processing/Writer.h utils/StringQueue.h utils/SpecString.h \
+  utils/platform.h utils/TimeUtils.h
 processing/conversions.obj: processing/conversions.cc utils/platform.h \
   utils/ErrorReporting.h processing/conversions.h utils/SpecString.h \
   utils/TimeUtils.h
@@ -26,19 +30,19 @@ specitems/InputPart.obj: specitems/InputPart.cc processing/Config.h \
   utils/TimeUtils.h utils/SpecString.h utils/ErrorReporting.h \
   specitems/item.h cli/tokens.h processing/conversions.h \
   processing/StringBuilder.h processing/ProcessingState.h \
-  processing/Writer.h utils/StringQueue.h utils/alu.h utils/platform.h \
+  processing/Writer.h utils/StringQueue.h utils/platform.h utils/alu.h \
   utils/aluFunctions.h
 specitems/dataField.obj: specitems/dataField.cc utils/ErrorReporting.h \
   processing/Config.h specitems/item.h cli/tokens.h \
   processing/conversions.h processing/StringBuilder.h utils/SpecString.h \
   processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
-  utils/alu.h utils/platform.h utils/aluFunctions.h utils/TimeUtils.h
+  utils/platform.h utils/TimeUtils.h utils/alu.h utils/aluFunctions.h
 specitems/specItems.obj: specitems/specItems.cc utils/ErrorReporting.h \
   processing/Config.h specitems/specItems.h specitems/item.h \
   cli/tokens.h processing/conversions.h processing/StringBuilder.h \
   utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
-  utils/StringQueue.h utils/alu.h utils/platform.h utils/aluFunctions.h \
-  utils/TimeUtils.h processing/Reader.h
+  utils/StringQueue.h utils/platform.h utils/TimeUtils.h utils/alu.h \
+  utils/aluFunctions.h processing/Reader.h
 test/ALUUnitTest.obj: test/ALUUnitTest.cc utils/platform.h \
   utils/ErrorReporting.h utils/alu.h utils/TimeUtils.h \
   utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
@@ -47,32 +51,32 @@ test/ProcessingTest.obj: test/ProcessingTest.cc utils/platform.h \
   cli/tokens.h utils/ErrorReporting.h specitems/specItems.h \
   specitems/item.h processing/conversions.h processing/StringBuilder.h \
   utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
-  utils/StringQueue.h utils/alu.h utils/aluFunctions.h utils/TimeUtils.h \
+  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/aluFunctions.h \
   processing/Reader.h processing/Config.h
 test/TokenTest.obj: test/TokenTest.cc cli/tokens.h utils/ErrorReporting.h
 test/itemTest.obj: test/itemTest.cc cli/tokens.h utils/ErrorReporting.h \
   specitems/specItems.h specitems/item.h processing/conversions.h \
   processing/StringBuilder.h utils/SpecString.h \
   processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
-  utils/alu.h utils/platform.h utils/aluFunctions.h utils/TimeUtils.h \
+  utils/platform.h utils/TimeUtils.h utils/alu.h utils/aluFunctions.h \
   processing/Reader.h
 test/readWriteTest.obj: test/readWriteTest.cc utils/ErrorReporting.h \
   processing/Reader.h utils/StringQueue.h utils/SpecString.h \
-  processing/Writer.h processing/StringBuilder.h \
-  processing/ProcessingState.h utils/alu.h utils/platform.h \
+  utils/platform.h utils/TimeUtils.h processing/Writer.h \
+  processing/StringBuilder.h processing/ProcessingState.h utils/alu.h \
   utils/aluFunctions.h
 test/specs.obj: test/specs.cc utils/platform.h cli/tokens.h \
   utils/ErrorReporting.h processing/Config.h specitems/specItems.h \
   specitems/item.h processing/conversions.h processing/StringBuilder.h \
   utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
-  utils/StringQueue.h utils/alu.h utils/aluFunctions.h utils/TimeUtils.h \
+  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/aluFunctions.h \
   processing/Reader.h
 test/timeTest.obj: test/timeTest.cc utils/TimeUtils.h utils/SpecString.h
 utils/ErrorReporting.obj: utils/ErrorReporting.cc utils/ErrorReporting.h
 utils/SpecString.obj: utils/SpecString.cc processing/Config.h \
   utils/ErrorReporting.h utils/SpecString.h
-utils/TimeUtils.obj: utils/TimeUtils.cc utils/platform.h utils/TimeUtils.h \
-  utils/SpecString.h
+utils/TimeUtils.obj: utils/TimeUtils.cc utils/ErrorReporting.h \
+  utils/platform.h utils/TimeUtils.h utils/SpecString.h
 utils/alu.obj: utils/alu.cc utils/ErrorReporting.h utils/alu.h \
   utils/platform.h utils/aluFunctions.h utils/SpecString.h \
   processing/Config.h

@@ -25,7 +25,7 @@ public:
 	void                startProcessing() { m_Timer.changeClass(timeClassProcessing); }
 	void                startDraining() { m_Timer.changeClass(timeClassDraining); }
 	void                endCollectingTimeData() { m_Timer.changeClass(timeClassLast); }
-	void                dumpTimeData()  { m_Timer.dump("Reader Thread"); }
+	void                dumpTimeData()  { m_Timer.dump("Reader Thread"); m_queue.DumpStats("Reader Queue");}
 	virtual void        setFormatFixed(unsigned int lrecl, bool blocked) {
 		MYTHROW("Reader::setFormatFixed: should not be called");
 	}

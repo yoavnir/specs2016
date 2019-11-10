@@ -22,6 +22,7 @@
 	X(recfm,                        std::string,  "",     0,recfm,              NEXTARG)    \
 	X(lrecl,                        int,          0,      0,lrecl,   std::stoi(NEXTARG))    \
 	X(linedel,                      std::string,  "",     0,linedel,            NEXTARG)    \
+	X(configuredString,             std::string,  "",     s,set,                NEXTARG)    \
 	X(inputStream2,                 std::string,  "",     0,is2,                NEXTARG)    \
 	X(inputStream3,                 std::string,  "",     0,is3,                NEXTARG)    \
 	X(inputStream4,                 std::string,  "",     0,is4,                NEXTARG)    \
@@ -46,6 +47,8 @@ void readConfigurationFile();
 bool configSpecLiteralExists(std::string& key);
 
 std::string& configSpecLiteralGet(std::string& key);
+
+void configSpecLiteralSet(std::string& key, std::string& value);
 
 bool anyNonPrimaryInputStreamDefined();
 

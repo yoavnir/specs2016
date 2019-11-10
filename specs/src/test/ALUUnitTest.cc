@@ -738,7 +738,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fieldindex(2)", "5");
 	VERIFY_EXPR_RES("fieldend(3)", "25");
 	VERIFY_EXPR_RES("fieldlength(2)", "11"); // length of "quick brown"
-	VERIFY_EXPR_RES("fields(2,3)", "quick brown\tfox jumps");
+	VERIFY_EXPR_RES("fieldrange(2,3)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
@@ -883,38 +883,38 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("ceil(-3.4)", "-3");
 	VERIFY_EXPR_RES("round(3.4)", "3");
 	VERIFY_EXPR_RES("round(-3.4)", "-3");
-	VERIFY_EXPR_RES("roundd(3.14159265, 0)", "3");
-	VERIFY_EXPR_RES("roundd(3.14159265, 1)", "3.1");
-	VERIFY_EXPR_RES("roundd(3.14159265, 2)", "3.14");
-	VERIFY_EXPR_RES("roundd(3.14159265, 3)", "3.142");
-	VERIFY_EXPR_RES("roundd(3.14159265, 4)", "3.1416");
+	VERIFY_EXPR_RES("round(3.14159265, 0)", "3");
+	VERIFY_EXPR_RES("round(3.14159265, 1)", "3.1");
+	VERIFY_EXPR_RES("round(3.14159265, 2)", "3.14");
+	VERIFY_EXPR_RES("round(3.14159265, 3)", "3.142");
+	VERIFY_EXPR_RES("round(3.14159265, 4)", "3.1416");
 
 	// trig
-	VERIFY_EXPR_RES("roundd(sin(\"0.523598775\"),8)", "0.5");
-	VERIFY_EXPR_RES("roundd(sin(3.14159265),8)", "0");
-	VERIFY_EXPR_RES("roundd(cos(\"0.523598775\"),8)", "0.8660254");
-	VERIFY_EXPR_RES("roundd(cos(3.14159265),8)", "-1");
-	VERIFY_EXPR_RES("roundd(tan(\"0.523598775\"),8)", "0.57735027");
-	VERIFY_EXPR_RES("roundd(tan(3.14159265),8)", "-0");
-	VERIFY_EXPR_RES("roundd(arcsin(0.5),8)", "0.52359878");
-	VERIFY_EXPR_RES("roundd(arcsin(-0.2),8)", "-0.20135792");
-	VERIFY_EXPR_RES("roundd(arccos(0.5),8)", "1.04719755");
-	VERIFY_EXPR_RES("roundd(arccos(-0.2),8)", "1.77215425");
-	VERIFY_EXPR_RES("roundd(arctan(0.5),8)", "0.46364761");
-	VERIFY_EXPR_RES("roundd(arctan(-0.2),8)", "-0.19739556");
+	VERIFY_EXPR_RES("round(sin(\"0.523598775\"),8)", "0.5");
+	VERIFY_EXPR_RES("round(sin(3.14159265),8)", "0");
+	VERIFY_EXPR_RES("round(cos(\"0.523598775\"),8)", "0.8660254");
+	VERIFY_EXPR_RES("round(cos(3.14159265),8)", "-1");
+	VERIFY_EXPR_RES("round(tan(\"0.523598775\"),8)", "0.57735027");
+	VERIFY_EXPR_RES("round(tan(3.14159265),8)", "-0");
+	VERIFY_EXPR_RES("round(arcsin(0.5),8)", "0.52359878");
+	VERIFY_EXPR_RES("round(arcsin(-0.2),8)", "-0.20135792");
+	VERIFY_EXPR_RES("round(arccos(0.5),8)", "1.04719755");
+	VERIFY_EXPR_RES("round(arccos(-0.2),8)", "1.77215425");
+	VERIFY_EXPR_RES("round(arctan(0.5),8)", "0.46364761");
+	VERIFY_EXPR_RES("round(arctan(-0.2),8)", "-0.19739556");
 
-	VERIFY_EXPR_RES("roundd(dsin(30),8)", "0.5");
-	VERIFY_EXPR_RES("roundd(dsin(180),8)", "-0");
-	VERIFY_EXPR_RES("roundd(dcos(30),8)", "0.8660254");
-	VERIFY_EXPR_RES("roundd(dcos(180),8)", "-1");
-	VERIFY_EXPR_RES("roundd(dtan(30),8)", "0.57735027");
-	VERIFY_EXPR_RES("roundd(dtan(180),8)", "0");
-	VERIFY_EXPR_RES("roundd(arcdsin(0.5),8)", "30");
-	VERIFY_EXPR_RES("roundd(arcdsin(-0.2),8)", "-11.53695903");
-	VERIFY_EXPR_RES("roundd(arcdcos(0.5),8)", "60");
-	VERIFY_EXPR_RES("roundd(arcdcos(-0.2),8)", "101.53695903");
-	VERIFY_EXPR_RES("roundd(arcdtan(0.5),8)", "26.56505118");
-	VERIFY_EXPR_RES("roundd(arcdtan(-0.2),8)", "-11.30993247");
+	VERIFY_EXPR_RES("round(dsin(30),8)", "0.5");
+	VERIFY_EXPR_RES("round(dsin(180),8)", "-0");
+	VERIFY_EXPR_RES("round(dcos(30),8)", "0.8660254");
+	VERIFY_EXPR_RES("round(dcos(180),8)", "-1");
+	VERIFY_EXPR_RES("round(dtan(30),8)", "0.57735027");
+	VERIFY_EXPR_RES("round(dtan(180),8)", "0");
+	VERIFY_EXPR_RES("round(arcdsin(0.5),8)", "30");
+	VERIFY_EXPR_RES("round(arcdsin(-0.2),8)", "-11.53695903");
+	VERIFY_EXPR_RES("round(arcdcos(0.5),8)", "60");
+	VERIFY_EXPR_RES("round(arcdcos(-0.2),8)", "101.53695903");
+	VERIFY_EXPR_RES("round(arcdtan(0.5),8)", "26.56505118");
+	VERIFY_EXPR_RES("round(arcdtan(-0.2),8)", "-11.30993247");
 
 	VERIFY_EXPR_RES("string(3.0000)", "3.0000");
 	VERIFY_EXPR_RES("string(3.0000+2.0000)", "5");
@@ -993,9 +993,9 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	VERIFY_EXPR_RES("abbrev('information','info')", "1");
 	VERIFY_EXPR_RES("abbrev('information','infot')", "0");
-	VERIFY_EXPR_RES("abbrevl('information','infota',4)", "1");
-	VERIFY_EXPR_RES("abbrevl('information','infota',5)", "0");
-	VERIFY_EXPR_RES("abbrevl('information','info',6)", "1");
+	VERIFY_EXPR_RES("abbrev('information','infota',4)", "1");
+	VERIFY_EXPR_RES("abbrev('information','infota',5)", "0");
+	VERIFY_EXPR_RES("abbrev('information','info',6)", "1");
 
 	VERIFY_EXPR_RES("bitand('information','info')", "info");
 	VERIFY_EXPR_RES("bitand('info','infn')", "infn");
@@ -1010,8 +1010,8 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("compare('Hello','He')", "3");
 	VERIFY_EXPR_RES("compare('Hello','Hellox')", "6");
 	VERIFY_EXPR_RES("compare('Hello','Hello ')", "0");
-	VERIFY_EXPR_RES("comparep('Hello', 'He', 'x')", "3");
-	VERIFY_EXPR_RES("comparep('Hello', 'He', 'l')", "5");
+	VERIFY_EXPR_RES("compare('Hello', 'He', 'x')", "3");
+	VERIFY_EXPR_RES("compare('Hello', 'He', 'l')", "5");
 
 	VERIFY_EXPR_RES("copies('Hello',3)", "HelloHelloHello");
 	VERIFY_EXPR_RES("copies('Hello',0)", "");
@@ -1051,10 +1051,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("insert('xy','hello',6,0)", "helloxy");
 	VERIFY_EXPR_RES("insert('xy','hello',-1,0)", "insert: Invalid negative position value: -1");
 	VERIFY_EXPR_RES("insert('xy','hello',0,-1)", "insert: Invalid negative length value: -1");
-	VERIFY_EXPR_RES("insertp('xy','hello',0,1,'q')", "xhello");
-	VERIFY_EXPR_RES("insertp('xy','hello',0,4,'q')", "xyqqhello");
-	VERIFY_EXPR_RES("insertp('xy','hello',0,4,'')", "insertp: Invalid pad argument: <>");
-	VERIFY_EXPR_RES("insertp('xy','hello',0,4,'qq')", "insertp: Invalid pad argument: <qq>");
+	VERIFY_EXPR_RES("insert('xy','hello',0,1,'q')", "xhello");
+	VERIFY_EXPR_RES("insert('xy','hello',0,4,'q')", "xyqqhello");
+	VERIFY_EXPR_RES("insert('xy','hello',0,4,'')", "insert: Invalid pad argument: <>");
+	VERIFY_EXPR_RES("insert('xy','hello',0,4,'qq')", "insert: Invalid pad argument: <qq>");
 
 	VERIFY_EXPR_RES("justify('this is it',18)", "this     is     it");
 	VERIFY_EXPR_RES("justify('this is it',19)", "this     is      it");
@@ -1063,10 +1063,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("justify('this is it',1)", "t");
 	VERIFY_EXPR_RES("justify('this is it',0)", "");
 	VERIFY_EXPR_RES("justify('this is it',-1)", "justify: len argument should be non-negative. Got -1");
-	VERIFY_EXPR_RES("justifyp('this is it',18,'x')", "thisxxxxxisxxxxxit");
-	VERIFY_EXPR_RES("justifyp('     this is it',18,'x')", "thisxxxxxisxxxxxit");
-	VERIFY_EXPR_RES("justifyp('this is it',18,'')", "justifyp: Invalid pad argument: <>");
-	VERIFY_EXPR_RES("justifyp('this is it',18,'qq')", "justifyp: Invalid pad argument: <qq>");
+	VERIFY_EXPR_RES("justify('this is it',18,'x')", "thisxxxxxisxxxxxit");
+	VERIFY_EXPR_RES("justify('     this is it',18,'x')", "thisxxxxxisxxxxxit");
+	VERIFY_EXPR_RES("justify('this is it',18,'')", "justify: Invalid pad argument: <>");
+	VERIFY_EXPR_RES("justify('this is it',18,'qq')", "justify: Invalid pad argument: <qq>");
 
 	VERIFY_EXPR_RES("overlay('not','this is really right',9,6,'.')", "this is not... right");
 	VERIFY_EXPR_RES("overlay('eous','this is right',14,0,' ')", "this is righteous");
@@ -1088,6 +1088,7 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	VERIFY_EXPR_RES("strip('    abc  ','B',' ')", "abc");
 	VERIFY_EXPR_RES("strip('xxxabcxxx', 'B', 'x')", "abc");
+	VERIFY_EXPR_RES("strip('xxxabcxxx', , 'x')", "abc");
 	VERIFY_EXPR_RES("strip('xxxabcxxx', 't', 'x')", "xxxabc");
 
 	VERIFY_EXPR_RES("space('abc   abc','1',' ')", "abc abc");
@@ -1113,10 +1114,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("translate('abc','x','ab','$')", "x$c");
 	VERIFY_EXPR_RES("translate('abc','xyz','ab','$')", "xyc");
 
-	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh','','')", "3");
-	VERIFY_EXPR_RES("verify('dg','abcdefgh','','')", "0");
-	VERIFY_EXPR_RES("verify('dg','abcdefgh','m','')", "1");
-	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh','',5)", "13");
+	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh')", "3");
+	VERIFY_EXPR_RES("verify('dg','abcdefgh')", "0");
+	VERIFY_EXPR_RES("verify('dg','abcdefgh','m')", "1");
+	VERIFY_EXPR_RES("verify('ab12deadbeef8','abcdefgh',,5)", "13");
 
 	VERIFY_EXPR_RES("wordindex('tis the time', 2)", "5");
 	VERIFY_EXPR_RES("wordindex('tis the time', 4)", "0");

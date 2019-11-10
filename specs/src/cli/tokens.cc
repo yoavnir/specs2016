@@ -1,5 +1,6 @@
 #include <string.h>
 #include <regex>
+#include <cctype>
 #include "utils/platform.h"
 #include "tokens.h"
 #include "processing/Config.h"
@@ -346,6 +347,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(second, SECOND);
 	SIMPLETOKEN(outstream, OUTSTREAM);
 	SIMPLETOKEN(stderr, STDERR);
+	SIMPLETOKEN(requires, REQUIRES);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
@@ -549,6 +551,27 @@ static bool mayBeFieldIdentifier(Token& tok)
 	return (tok.Orig().length()==1);
 }
 
+// Looking for one word (no character below '0') and starting with a letter or underscore
+static bool mayBeNamedString(std::string& s)
+{
+	// need to have characters
+	if (0 == s.length()) return false;
+
+	// first should be letter or underscore
+	if (s[0]!='_' && !isalpha(s[0])) {
+		return false;
+	}
+
+	// other chars should be underscore or alphanumeric
+	for (auto c : s) {
+		if (c!='_' && !isalnum(c)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 std::string getLiteral(Token& tok)
 {
 	if (TokenListType__LITERAL==tok.Type()) {
@@ -746,6 +769,27 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		{
 			std::string err = "Invalid token of type " + TokenListType__2str(tok.Type());
 			MYTHROW(err);
+			break;
+		}
+		case TokenListType__REQUIRES:
+		{
+			if (nextTok.Literal().length() == 0) {
+				if (mayBeNamedString(nextTok.Orig())) {
+					tok.setLiteral(nextTok.Orig());
+					tokList->erase(tokList->begin()+(i+1));
+				} else {
+					std::string err = "Bad name <"+nextTok.Orig()+"> follows REQUIRES at index "+std::to_string(nextTok.argIndex());
+					MYTHROW(err);
+				}
+			} else { // literal exists
+				if (mayBeNamedString(nextTok.Literal())) {
+					tok.setLiteral(nextTok.Literal());
+					tokList->erase(tokList->begin()+(i+1));
+				} else {
+					std::string err = "Bad name <"+nextTok.Orig()+"> follows REQUIRES at index "+std::to_string(nextTok.argIndex());
+					MYTHROW(err);
+				}
+			}
 			break;
 		}
 		default:

@@ -477,7 +477,7 @@ The at-sign allows the inclusion of user-defined and system-defined labels as st
 .SS "Built-In Functions"
 .IP "abs(x)" 3
 The absolute function returns the absolute value of the number passed to it. Will return an integer if the parameter is integer, or float otherwise.
-.IP "ceil(x), floor(x), round(x), roundd(x,d)" 3
+.IP "ceil(x), floor(x), round(x,d)" 3
 These function return the closest numbers to 
 .I x
 :
@@ -490,18 +490,15 @@ returns a whole number no greater than
 .I x
 ;
 .B round
-returns a whole number closest to 
+returns a the number closest to 
 .I x
-; 
-and
-.B roundd
-returns a number with up to
+with up to
 .I d
-decimal places closest to 
-.I x
-, 
-.IP "frand()" 3
-The floating-point random function returns a random value no smaller than 0.0 and smaller than 1.0.
+decimal places. If 
+.I d
+is omitted, 
+.B round 
+returns the closest whole number.
 .IP "fmt(value,format,digits,decimal,separator)" 3
 The
 .B fmt
@@ -529,7 +526,13 @@ argument sets the character used as thousands separator (default is none).
 .IP "pow(x,y)" 3
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
 .IP "rand(x)" 3
-The random function returns a random integer value between 0 up to and not including x.
+The random function returns a random integer value between 0 up to and not including 
+.B x.
+If 
+.B x
+is omitted, returns a random
+.I real
+value no smaller than 0.0 and smaller than 1.0.
 .IP "sin(x), cos(x), tan(x), dsin(x), dcos(x), dtan(x)" 3
 These trigonometric functions return the sine, cosine and tangent of an angle.
 .B sin, cos,
@@ -557,13 +560,13 @@ will evaluate to 5.
 .IP "substitute(haystack,needle,subst,max)"
 Returns the string in 
 .I haystack
-where every occurence of 
+where occurences of 
 .I needle
-is replaced by the string 
+are replaced by the string 
 .I subst
 for at most 
 .I max
-times. The special value 
+(by defualt: 1) times. The special value 
 .B """U"""
 for 
 .I max
@@ -608,9 +611,9 @@ Returns the entire input record. Equivalent to
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s
-to 
+(default first) to 
 .B e 
-from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
+(default last) from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
 .IP "wordcount()" 3
 Returns the count of words in the input record.
 .IP "word(i)" 3
@@ -626,9 +629,9 @@ but less efficient.
 .IP "wordrange(s,e)" 3
 Returns the string from the start of the 
 .B s-th
-word to the end of the 
+word (default first) to the end of the 
 .B e-th 
-word. It is also equivalent to 
+word (default last). It is also equivalent to 
 .I range(wordstart(s),wordend(e))
 but less efficient.
 .IP "fieldcount()" 3
@@ -643,12 +646,12 @@ Returns the ending position of the i-th field in the input record.
 is equivalent to 
 .I field(i)
 but less efficient.
-.IP "fields(s,e)" 3
+.IP "fieldrange(s,e)" 3
 Returns the string from the start of the 
 .B s-th
-field to the end of the 
+field (default first) to the end of the 
 .B e-th 
-field. It is also equivalent to 
+field (default last). It is also equivalent to 
 .I range(fieldstart(s),fieldend(e))
 but less efficient.
 .IP "tf2d(string,format)" 3
@@ -670,17 +673,7 @@ specifies the
 position.
 
 .SS "Built-In String Functions"
-.IP "abbrev(information, info)" 3
-Returns
-.I 1
-if 
-.B information
-begins with the characters of 
-.B info
-or 
-.I 0 
-otherwise.
-.IP "abbrevl(information, info, len)" 3
+.IP "abbrev(information, info, len)" 3
 Returns
 .I 1
 if 
@@ -691,7 +684,11 @@ characters of
 .B info
 or 
 .I 0 
-otherwise.
+otherwise. If
+.B len
+is omitted, all of 
+.B info 
+is considered.
 .IP "substr(bigstring, start, length)" 3
 Returns a substring of 
 .I bigstring
@@ -755,18 +752,29 @@ includes the string
 as a substring, or 
 .B FALSE
 (0) otherwise.
-.IP "conf(key)" 3
+.IP "conf(key,default)" 3
 Returns the configured string from either the built-in configured strings such as 
 .I version
 or from the 
 .B $HOME/.specs
-file.
+file. If the string is not defined, returns the
+.I default
+value. If that is not defined, returns
+.B NaN.
+.IP "defined(key)" 3
+Returns 
+.B TRUE
+(1) if the configured string 
+.I key
+is defined, or 
+.B FALSE
+(0) otherwise.
 .IP "sfield(str,n,sep)" 3
 Returns the n-th field of string
 .I str
 counting from the start or end of the string depending on the sign of n. Separator is the first char of 
 .I sep
-if non-empty, or 
+if specified and non-empty, or 
 .B tab
 otherwise.
 .IP "sword(str,n,sep)" 3
@@ -774,7 +782,7 @@ Returns the n-th word of string
 .I str
 counting from the start or end of the string depending on the sign of n. Separator is the first char of 
 .I sep
-if non-empty, or 
+if specified and non-empty, or 
 .B space
 otherwise.
 
@@ -803,22 +811,14 @@ of
 and 
 .I y
 If the length is not equal, the return string has the minimum length.
-.IP "compare(s1,s2)" 3
+.IP "compare(s1,s2,pad)" 3
 Returns the index of the first mis-matched character in strings 
 .I s1
 and
-.I s2
+.I s2.
 If the strings are equal, the function returns
 .B zero.
-If the strings are of unequal length, the shorter string is padded with spaces.
-.IP "comparep(s1,s2,pad)" 3
-Returns the index of the first mis-matched character in strings 
-.I s1
-and
-.I s2
-If the strings are equal, the function returns
-.B zero.
-If the strings are of unequal length, the shorter string is padded with the pad character.
+If the strings are of unequal length, the shorter string is padded with the pad character (by default - space).
 .IP "copies(string,times)" 3
 Returns the content of
 .I string 
@@ -869,25 +869,7 @@ to initiate the search. It defaults to 1 if not specified. The standard
 function should be used instead of 
 .B index 
 if possible.
-.IP "insert(string,target,position,length)" 3 
-Inserts 
-.I string
-into 
-.I target
-at position 
-.I position 
-and truncated or padded with spaces to length 
-.I length. 
-With default zero values, 
-.I position 
-inserts the 
-.I string 
-at the start of 
-.I target, 
-and the length of the 
-.I string
-is kept as is.
-.IP "insertp(string,target,position,length,pad)" 3 
+.IP "insert(string,target,position,length,pad)" 3 
 Inserts 
 .I string
 into 
@@ -898,7 +880,7 @@ and truncated or padded with
 .I pad
 characters to length 
 .I length. 
-With default zero values, 
+With default or zero values, 
 .I position 
 inserts the 
 .I string 
@@ -906,21 +888,17 @@ at the start of
 .I target, 
 and the length of the 
 .I string
-is kept as is.
-.IP "justify(string,length)" 3
-Evenly justifies words within 
-.I string. 
-The 
-.I length
-specifies the length of the returned string.
-.IP "justifyp(string,length,pad)" 3
+is kept as is. The 
+.I pad
+defaults to a space.
+.IP "justify(string,length,pad)" 3
 Evenly justifies words within 
 .I string. 
 The 
 .I length
 specifies the length of the returned string, while
 .I pad
-specifies what padding to insert (if necessary).
+specifies what padding (by default a space) to insert (if necessary).
 .IP "overlay(string1, string2 ,start ,length ,pad)" 3
 Returns a copy of 
 .I string2, 
@@ -968,7 +946,7 @@ for leading,
 .B T
 for trailing, and
 .B B
-for both.
+for both (the default).
 .IP "subword(string,start,length)" 3
 Returns the substring that begins at blank-delimited word 
 .I start. 
@@ -1194,6 +1172,13 @@ Prints out detailed step-by-step information about the evaluation of expressions
 Changes the configuration file from the default 
 .I ~/.specs
 to whatever the parameter says
+.IP "--set" or "-s" 3
+The following argument sets a configured string. For example: 
+.B specs --set hello=goodbye
+will set the configured string
+.B hello
+to the value
+.B goodbye
 .IP "--timezone" 3
 Changes the timezone from the default which is the current timezone to the value specified.
 .IP "--recfm" 3

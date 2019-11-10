@@ -1,4 +1,3 @@
-#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -11,14 +10,11 @@
 
 using TimeResolution = std::chrono::microseconds;
 
-using Clock = std::chrono::system_clock;
-using TimePoint = std::chrono::time_point<Clock>;
-
 static std::locale g_locale;
 
 clockValue specTimeGetTOD()
 {
-	auto currentTime = std::chrono::system_clock::now();
+	auto currentTime = SClock::now();
 	auto sinceEpoch = currentTime.time_since_epoch();
 	int64_t microseconds = std::chrono::duration_cast<TimeResolution>(sinceEpoch).count();
 	return (clockValue(microseconds));
@@ -27,9 +23,9 @@ clockValue specTimeGetTOD()
 
 PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 {
-	Clock::duration dur = std::chrono::microseconds(sinceEpoch);
-	TimePoint tp(dur);
-	auto tmc = Clock::to_time_t(tp);
+	SClock::duration dur = std::chrono::microseconds(sinceEpoch);
+	STimePoint tp(dur);
+	auto tmc = SClock::to_time_t(tp);
 	std::tm bt = *std::localtime(&tmc);
 	unsigned int fractionalSecond = (unsigned int)(sinceEpoch % MICROSECONDS_PER_SECOND);
 	std::ostringstream oss;
@@ -150,7 +146,7 @@ void specTimeSetLocale(const std::string& _locale)
 
 classifyingTimer::classifyingTimer()
 {
-	m_lastTimePoint = std::chrono::high_resolution_clock::now();
+	m_lastTimePoint = HClock::now();
 	m_currentClass = timeClassInitializing;
 	for (int i = timeClassInitializing ; i < timeClassLast ; i++) {
 		m_nanoseconds[i] = 0;
@@ -161,7 +157,7 @@ void classifyingTimer::changeClass(timeClasses _class)
 {
 	if (_class == m_currentClass) return;
 	MYASSERT(m_currentClass != timeClassLast);
-	auto now = std::chrono::high_resolution_clock::now();
+	auto now = HClock::now();
 	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastTimePoint).count();
 	m_nanoseconds[m_currentClass] += duration;
 	m_currentClass = _class;
@@ -205,4 +201,93 @@ void classifyingTimer::dump(std::string title)
 		}
 	}
 	std::cerr << oss.str();
+}
+
+queueTimer::queueTimer()
+{
+	m_lastIncDec = m_lastTimePoint = HClock::now();
+	m_elements = 0;
+	m_ns_elems = 0;
+	m_currentClass = queueTimeClassEmpty;
+	for (int i = queueTimeClassEmpty ; i < queueTimeclassLast ; i++) {
+		m_nanoseconds[i] = 0;
+	}
+}
+
+void queueTimer::changeClass(queueTimeClasses _class, std::chrono::time_point<HClock> now)
+{
+	if (_class == m_currentClass) return;
+	MYASSERT(m_currentClass != queueTimeclassLast);
+	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastTimePoint).count();
+	m_nanoseconds[m_currentClass] += duration;
+	m_currentClass = _class;
+	m_lastTimePoint = now;
+}
+
+void queueTimer::dump(std::string title)
+{
+	uint64_t totalDuration = 0;
+	for (int i = queueTimeClassEmpty ; i < queueTimeclassLast ; i++) {
+		totalDuration += m_nanoseconds[i];
+	}
+
+	std::ostringstream oss;
+	oss.setf( std::ios::fixed, std:: ios::floatfield );
+	oss.precision(3);
+
+	oss << title << ":\n";
+
+	// empty
+	double percentage = double(100 * m_nanoseconds[queueTimeClassEmpty]) / double(totalDuration);
+	oss << "\tEmpty: " << getMilliSeconds(queueTimeClassEmpty) << " ms ("<<
+			percentage << "%)\n";
+
+	// full
+	percentage = double(100 * m_nanoseconds[queueTimeClassFull]) / double(totalDuration);
+	oss << "\tFull: " << getMilliSeconds(queueTimeClassFull) << " ms ("<<
+			percentage << "%)\n";
+
+	// average
+	double averageFill = double(m_ns_elems) / double(totalDuration);
+	oss << "\tAverage: " << averageFill << " (capacity = " << QUEUE_HIGH_WM << ")\n";
+
+	std::cerr << oss.str();
+}
+
+void queueTimer::increment()
+{
+	auto now = HClock::now();
+	if (m_elements == 1 && m_currentClass == queueTimeClassEmpty) {
+		changeClass(queueTimeClassOther, now);
+	} else if (m_elements == (QUEUE_HIGH_WM-1) && m_currentClass == queueTimeClassOther) {
+		changeClass(queueTimeClassFull, now);
+	}
+
+	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastIncDec).count();
+
+	m_ns_elems += (duration * m_elements);
+	m_elements++;
+	m_lastIncDec = now;
+}
+
+void queueTimer::decrement()
+{
+	auto now = HClock::now();
+	MYASSERT(m_elements > 0);
+	if (m_elements == 1 && m_currentClass == queueTimeClassOther) {
+		changeClass(queueTimeClassEmpty, now);
+	} else if (m_elements == (QUEUE_HIGH_WM-1) && m_currentClass == queueTimeClassFull) {
+		changeClass(queueTimeClassOther, now);
+	}
+
+	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastIncDec).count();
+
+	m_ns_elems += (duration * m_elements);
+	m_elements--;
+	m_lastIncDec = now;
+}
+
+void queueTimer::drain()
+{
+	changeClass(queueTimeclassLast, HClock::now());
 }

@@ -37,7 +37,7 @@
 	X(fieldlength,    1, ALUFUNC_REGULAR,      true)  \
 	X(fieldend,       1, ALUFUNC_REGULAR,      true)  \
 	X(field,          1, ALUFUNC_REGULAR,      true)  \
-	X(fields,         2, ALUFUNC_REGULAR,      true)  \
+	X(fieldrange,     2, ALUFUNC_REGULAR,      true)  \
 	X(range,          2, ALUFUNC_REGULAR,      true)  \
 	X(tf2d,           2, ALUFUNC_REGULAR,     false)  \
 	X(d2tf,           2, ALUFUNC_REGULAR,     false)  \
@@ -49,7 +49,7 @@
 	X(right,          2, ALUFUNC_REGULAR,     false)  \
 	X(center,         2, ALUFUNC_REGULAR,     false)  \
 	X(centre,         2, ALUFUNC_REGULAR,     false)  \
-	X(conf,           1, ALUFUNC_REGULAR,     false)  \
+	X(conf,           2, ALUFUNC_REGULAR,     false)  \
 	X(x2d,            2, ALUFUNC_REGULAR,     false)  \
 	X(d2x,            1, ALUFUNC_REGULAR,     false)  \
 	X(x2ch,           1, ALUFUNC_REGULAR,     false)  \
@@ -67,10 +67,8 @@
 	X(stderrmean,     1, ALUFUNC_STATISTICAL, false)  \
 	X(present,        1, ALUFUNC_REGULAR,     false)  \
 	X(rand,           1, ALUFUNC_REGULAR,     false)  \
-	X(frand,          0, ALUFUNC_REGULAR,     false)  \
 	X(floor,          1, ALUFUNC_REGULAR,     false)  \
-	X(round,          1, ALUFUNC_REGULAR,     false)  \
-	X(roundd,         2, ALUFUNC_REGULAR,     false)  \
+	X(round,          2, ALUFUNC_REGULAR,     false)  \
 	X(ceil,           1, ALUFUNC_REGULAR,     false)  \
 	X(sin,            1, ALUFUNC_REGULAR,     false)  \
 	X(cos,            1, ALUFUNC_REGULAR,     false)  \
@@ -97,22 +95,18 @@
 	X(substitute,     4, ALUFUNC_REGULAR,     false)  \
 	X(sfield,         3, ALUFUNC_REGULAR,     false)  \
 	X(sword,          3, ALUFUNC_REGULAR,     false)  \
-	X(abbrev,         2, ALUFUNC_REGULAR,     false)  \
-	X(abbrevl,        3, ALUFUNC_REGULAR,     false)  \
+	X(abbrev,         3, ALUFUNC_REGULAR,     false)  \
 	X(bitand,         2, ALUFUNC_REGULAR,     false)  \
 	X(bitor,          2, ALUFUNC_REGULAR,     false)  \
 	X(bitxor,         2, ALUFUNC_REGULAR,     false)  \
-	X(compare,        2, ALUFUNC_REGULAR,     false)  \
-	X(comparep,       3, ALUFUNC_REGULAR,     false)  \
+	X(compare,        3, ALUFUNC_REGULAR,     false)  \
 	X(copies,         2, ALUFUNC_REGULAR,     false)  \
 	X(delstr,         3, ALUFUNC_REGULAR,     false)  \
 	X(delword,        3, ALUFUNC_REGULAR,     false)  \
 	X(find,           2, ALUFUNC_REGULAR,     false)  \
 	X(index,          3, ALUFUNC_REGULAR,     false)  \
-	X(insert,         4, ALUFUNC_REGULAR,     false)  \
-	X(insertp,        5, ALUFUNC_REGULAR,     false)  \
-	X(justify,        2, ALUFUNC_REGULAR,     false)  \
-	X(justifyp,       3, ALUFUNC_REGULAR,     false)  \
+	X(insert,         5, ALUFUNC_REGULAR,     false)  \
+	X(justify,        3, ALUFUNC_REGULAR,     false)  \
 	X(overlay,        5, ALUFUNC_REGULAR,     false)  \
 	X(reverse,        1, ALUFUNC_REGULAR,     false)  \
 	X(sign,           1, ALUFUNC_REGULAR,     false)  \
@@ -129,6 +123,7 @@
 	X(fmt,            5, ALUFUNC_REGULAR,     false)  \
 	X(next,           0, ALUFUNC_REGULAR,     false)  \
 	X(rest,           0, ALUFUNC_REGULAR,     false)  \
+	X(defined,        1, ALUFUNC_REGULAR,     false)  \
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false)  \

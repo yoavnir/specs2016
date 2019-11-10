@@ -90,13 +90,18 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	normalizeTokenList(&vec);
 	itemGroup ig;
 
-	unsigned int index = 0;
-	ig.Compile(vec,index);
-
+	PSpecString result = NULL;
 	StringBuilder sb;
 	setPositionGetter(&sb);
 
-	PSpecString result = NULL;
+	unsigned int index = 0;
+	try {
+		ig.Compile(vec,index);
+	} catch (const SpecsException& e) {
+		result = SpecString::newString(e.what(true));
+		goto end;
+	}
+
 	try {
 		if (ig.readsLines() || !ig.needRunoutCycle()) {
 			do {
@@ -241,7 +246,7 @@ int main(int argc, char** argv)
 	VERIFY2("fs : field 1-* 1", "a:b", "a:b");  // Test #51
 
 	// if...then...else...endif
-	spec = "a: w1 . if 0=a%2 then even 1 else odd 1";
+	spec = "a: w1 . if 0=a%2 then even 1 else odd 1 endif";
 	VERIFY2(spec, "2",     "even");    // Test #52
 	VERIFY2(spec, "hello", "even");    // Test #53
 	VERIFY2(spec, "7",     "odd");     // Test #54
@@ -386,8 +391,8 @@ int main(int argc, char** argv)
 	spec =  "a: WORD 1 .                               " \
 			" EOF                                      " \
 			"   /AVG:/  1 PRINT 'average(a)'          N" \
-			"   /STD:/ NW PRINT 'roundd(stddev(a),7)' N" \
-			"   /ERR:/ NW PRINT 'roundd(stderrmean(a),7)' N" \
+			"   /STD:/ NW PRINT 'round(stddev(a),7)'  N" \
+			"   /ERR:/ NW PRINT 'round(stderrmean(a),7)' N" \
 			"   /VAR:/ NW PRINT 'variance(a)'         N" \
 			"   /SUM:/ NW PRINT 'sum(a)'              N" \
 			"   /MIN:/ NW PRINT 'min(a)'              N" \
@@ -401,8 +406,8 @@ int main(int argc, char** argv)
 		   "   print 'fmap_common(a)'             NW " \
 		   "   print 'fmap_rare(a)'               NW " \
 		   "   print 'fmap_count(a,3)'            NW " \
-		   "   print 'roundd(fmap_frac(a,3),4)'   NW " \
-		   "   print 'roundd(fmap_pct(a,3),3)'    NW /%/ N";
+		   "   print 'round(fmap_frac(a,3),4)'    NW " \
+		   "   print 'round(fmap_pct(a,3),3)'     NW /%/ N";
 	VERIFY2(spec, "1\n2\n3\n4\n1\n5\n2\n3\n4\n3\n3", "5 11 3 5 4 0.3636 36.364%"); // TEST #103
 
 	// random and statistics
@@ -419,7 +424,7 @@ int main(int argc, char** argv)
 	VERIFY(spec, "OK");  // TEST #104
 
 	spec = "while '#0<10000' do                  " \
-		   "   set '#2:=frand()'                 " \
+		   "   set '#2:=rand()'                  " \
 		   "   if '#2 >= 0.7 & #2 < 0.8' then    " \
 		   "      set '#1+=1'                    " \
 		   "   endif                             " \
@@ -482,6 +487,24 @@ int main(int argc, char** argv)
 	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'l4')", "abcde...yz"); // TEST #121
 	VERIFY("/abcdefghijklmnopqrstuvwxyz/ (1,10,'C5')", "abcdefg..."); // TEST #122
 	VERIFY("/hello/ (1,10,'r3')", "     hello"); // TEST #123
+
+	VERIFY("w1 1 w2 (,5) w3 n", "Thequickbrown") // TEST #124 - Issue #103
+
+	// Issue #34
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1' done", "4...."); // TEST #125
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' /./ n set '#0-=1' done", "Missing DO after WHILE at index 6 with condition \"#0>0\""); // TEST #126
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1'", "Predicate WHILE (#0>0) at index 6 is not terminated"); // TEST #127
+	VERIFY("/4/ 1 done","DONE without WHILE at index 3"); // TEST #128
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1' endif", "Mismatched predicates: ENDIF at index 13 does not match WHILE (#0>0) at index 6"); // TEST #129
+	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw endif", "4 (natural)"); // TEST #130
+	VERIFY("a: /4/ 1 if 'a>=0' /(natural)/ nw else /(non-natural)/ nw endif", "Missing THEN after IF at index 4 with condition \"a>=0\""); // TEST #131
+	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "Predicate IF (a>=0) at index 4 is not terminated"); // TEST #132
+	VERIFY("a: /-4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "Predicate IF (a>=0) at index 4 is not terminated"); // TEST #133
+	VERIFY("/4/ 1 endif","ENDIF without IF at index 3"); // TEST #134
+	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw done", "Mismatched predicates: DONE at index 12 does not match IF (a>=0) at index 4"); // TEST #135
+
+	VERIFY("requires version /4/ 1", "4");  // TEST #136
+	VERIFY("requires hello /4/ 1", "Missing required configured literal <hello>"); // TEST #137
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

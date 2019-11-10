@@ -122,13 +122,13 @@ std::vector<Token> parseTokensSplit(const char* arg)
 }
 
 // A comment is defined as starting with the last hash mark + space  ("# ") sequence 
-// on the line, preceded by a space unless it's at the start of the line.
+// on the line, preceded by whitespace unless it's at the start of the line.
 std::string removeComment(std::string& st)
 {
 	std::size_t found = st.rfind("# ");
 	if (found==std::string::npos) return st;
 
-	if (found>0 && st[found-1]!=' ') return st;
+	if (found>0 && !is_whitespace(st[found-1])) return st;
 
 	if (found==0) return std::string("");
 

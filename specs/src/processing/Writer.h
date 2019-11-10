@@ -23,7 +23,7 @@ public:
 	void                startProcessing() { m_Timer.changeClass(timeClassProcessing); }
 	void                startDraining() { m_Timer.changeClass(timeClassDraining); }
 	void                endCollectingTimeData() { m_Timer.changeClass(timeClassLast); }
-	void                dumpTimeData()  { m_Timer.dump("Writer Thread"); }
+	void                dumpTimeData()  { m_Timer.dump("Writer Thread"); m_queue.DumpStats("Writer Queue");}
 protected:
 	unsigned long m_countGenerated;
 	unsigned long m_countWritten;

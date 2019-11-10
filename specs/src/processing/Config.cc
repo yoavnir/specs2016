@@ -190,6 +190,11 @@ std::string& configSpecLiteralGet(std::string& key)
 	return ExternalLiterals[key];
 }
 
+void configSpecLiteralSet(std::string& key, std::string& value)
+{
+	ExternalLiterals[key] = value;
+}
+
 bool anyNonPrimaryInputStreamDefined()
 {
 	static bool ret = false;

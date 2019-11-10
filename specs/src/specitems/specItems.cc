@@ -3,6 +3,12 @@
 #include "specItems.h"
 
 ALUCounters g_counters;
+
+struct predicateStackItem {
+	ConditionItem* pred;
+	unsigned int   argIndex;
+};
+
 itemGroup::itemGroup()
 {
 	m_items.clear();
@@ -27,6 +33,9 @@ void itemGroup::addItem(PItem pItem)
 
 void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
+	predicateStackItem predicateStack[MAX_DEPTH_CONDITION_STATEMENTS];
+	unsigned int predicateStackIdx = 0;
+
 	while (index < tokenVec.size()) {
 		switch (tokenVec[index].Type()) {
 		case TokenListType__EOF:
@@ -91,17 +100,39 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			MYASSERT(index < tokenVec.size());
 			if (TokenListType__WHILE == tokenVec[index].Type()) {
-				MYASSERT(TokenListType__DO == tokenVec[index+1].Type());
+				if (TokenListType__DO != tokenVec[index+1].Type()) {
+					std::string err = "Missing DO after WHILE at index " + std::to_string(tokenVec[index].argIndex());
+					if (tokenVec[index].Literal().length() > 0) {
+						err += " with condition \"" + tokenVec[index].Literal() + "\"";
+					}
+					MYTHROW(err);
+				}
 			} else if (TokenListType__ASSERT != tokenVec[index].Type()) {
-				MYASSERT(TokenListType__THEN == tokenVec[index+1].Type());
+				if (TokenListType__THEN != tokenVec[index+1].Type()) {
+					std::string err = "Missing THEN after IF at index " + std::to_string(tokenVec[index].argIndex());
+					if (tokenVec[index].Literal().length() > 0) {
+						err += " with condition \"" + tokenVec[index].Literal() + "\"";
+					}
+					MYTHROW(err);
+				}
 			}
 			try {
 				ConditionItem* pItem = new ConditionItem(tokenVec[index].Literal());
-				if (TokenListType__ELSEIF == tokenVec[index].Type()) {
+				if (TokenListType__IF == tokenVec[index].Type()) {
+					MYASSERT_WITH_MSG((predicateStackIdx+1)<MAX_DEPTH_CONDITION_STATEMENTS, "Too many nested conditions");
+					predicateStack[predicateStackIdx].pred = pItem;
+					predicateStack[predicateStackIdx].argIndex = tokenVec[index].argIndex();
+					predicateStackIdx++;
+				}
+				else if (TokenListType__ELSEIF == tokenVec[index].Type()) {
 					pItem->setElseIf();
 				}
 				else if (TokenListType__WHILE == tokenVec[index].Type()) {
 					pItem->setWhile();
+					MYASSERT_WITH_MSG((predicateStackIdx+1)<MAX_DEPTH_CONDITION_STATEMENTS, "Too many nested conditions");
+					predicateStack[predicateStackIdx].pred = pItem;
+					predicateStack[predicateStackIdx].argIndex = tokenVec[index].argIndex();
+					predicateStackIdx++;
 				}
 				else if (TokenListType__ASSERT == tokenVec[index].Type()) {
 					pItem->setAssert();
@@ -137,6 +168,19 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__ENDIF:
 		{
+			if (0 == predicateStackIdx) {
+				std::string err = "ENDIF without IF at index " + std::to_string(tokenVec[index].argIndex());
+				MYTHROW(err);
+			}
+			// Pop a value from the predicate stack. Should be an IF
+			predicateStackIdx--;
+			if (ConditionItem::PRED_IF != predicateStack[predicateStackIdx].pred->pred()) {
+				std::string err = "Mismatched predicates: ENDIF at index " +
+						std::to_string(tokenVec[index].argIndex()) +
+						" does not match " + predicateStack[predicateStackIdx].pred->Debug() +
+						" at index " + std::to_string(predicateStack[predicateStackIdx].argIndex);
+				MYTHROW(err);
+			}
 			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_ENDIF);
 			index++;
 			addItem(pItem);
@@ -151,6 +195,19 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__DONE:
 		{
+			if (0 == predicateStackIdx) {
+				std::string err = "DONE without WHILE at index " + std::to_string(tokenVec[index].argIndex());
+				MYTHROW(err);
+			}
+			// Pop a value from the predicate stack. Should be an IF
+			predicateStackIdx--;
+			if (ConditionItem::PRED_WHILE != predicateStack[predicateStackIdx].pred->pred()) {
+				std::string err = "Mismatched predicates: DONE at index " +
+						std::to_string(tokenVec[index].argIndex()) +
+						" does not match " + predicateStack[predicateStackIdx].pred->Debug() +
+						" at index " + std::to_string(predicateStack[predicateStackIdx].argIndex);
+				MYTHROW(err);
+			}
 			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_DONE);
 			index++;
 			addItem(pItem);
@@ -178,12 +235,29 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			addItem(pItem);
 			break;
 		}
+		case TokenListType__REQUIRES:
+		{
+			if (!configSpecLiteralExists(tokenVec[index].Literal())) {
+				std::string err = "Missing required configured literal <" + tokenVec[index].Literal() + ">";
+				MYTHROW(err);
+			}
+			index++;
+			break;
+		}
 		default:
 			std::string err = std::string("Unhandled token type ")
 				+ TokenListType__2str(tokenVec[index].Type())
 				+ " at argument " + std::to_string(tokenVec[index].argIndex());
 			MYTHROW(err);
 		}
+	}
+
+	if (predicateStackIdx > 0) {
+		predicateStackIdx--;
+		std::string err = "Predicate " + predicateStack[predicateStackIdx].pred->Debug() +
+				" at index " + std::to_string(predicateStack[predicateStackIdx].argIndex) +
+				" is not terminated";
+		MYTHROW(err);
 	}
 }
 
@@ -547,15 +621,15 @@ std::string ConditionItem::Debug()
 	case PRED_DONE:
 		return sDone;
 	case PRED_IF: {
-		std::string ret = "IF(" + m_rawExpression + ")";
+		std::string ret = "IF (" + m_rawExpression + ")";
 		return ret;
 	}
 	case PRED_ELSEIF: {
-		std::string ret = "ELSEIF(" + m_rawExpression + ")";
+		std::string ret = "ELSEIF (" + m_rawExpression + ")";
 		return ret;
 	}
 	case PRED_WHILE: {
-		std::string ret = "WHILE(" + m_rawExpression + ")";
+		std::string ret = "WHILE (" + m_rawExpression + ")";
 		return ret;
 	}
 	case PRED_ASSERT: {
