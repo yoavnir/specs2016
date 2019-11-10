@@ -10,8 +10,8 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-01-Oct-2019: Version 0.5 beta is coming in late November
---------------------------------------------------------
+10-Nov-2019: Version 0.5 beta is here
+-------------------------------------
 What's new:
 * Functions with elided arguments and variable number of arguments
 * Some functions reformed because of this.
@@ -70,7 +70,7 @@ Anyone can contribute. So far, I have written all of the code, but if you want t
 Documentation
 =============
 The documentation for *specs2016* exists in two places:
-* In the *manpage* installed with the utility
+* In the *manpage* installed with the utility on Linux and Mac OS.
 * In the [docs](specs/docs/TOC.md) directory.
 
 License
