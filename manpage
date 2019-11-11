@@ -1232,7 +1232,7 @@ The system also defines some labels:
 .IP "version" 3
 This returns the version of 
 .B specs, 
-for example "v0.5"
+for example "v0.6"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 
