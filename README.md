@@ -10,6 +10,12 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+xx-XXX-2020: Version 0.6 - dates TBD
+------------------------------------
+Planned features:
+* Python functions
+* MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
+
 10-Nov-2019: Version 0.5 beta is here
 -------------------------------------
 What's new:
@@ -19,19 +25,6 @@ What's new:
 * Support record formats and locales
 * New functions: fmt for formatting numbers. next and rest for formatting records. @cols and @rows.
 * Bug fixes
-
-15-Aug-2019: Version 0.4 is here
---------------------------------
-What's new:
-* New functions: statistical, trigonometric, random
-* All the REXX-based functions from CMS Pipelines specs.
-* Composed output position ([issue](https://github.com/yoavnir/specs2016/issues/47))
-* Multiple input and output streams
-* The `ASSERT`, `ABEND` ([issue](https://github.com/yoavnir/specs2016/issues/78)), and `NOWRITE` ([issue](https://github.com/yoavnir/specs2016/issues/80)) keywords.
-* Updated [documentation](specs/docs/TOC.md).
-
-**Known Bug** Some unit tests related to the C2F() function fail on Windows.
-
 
 Sources
 =======
