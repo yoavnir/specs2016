@@ -450,7 +450,7 @@ static ALUValue* AluFunc_substring_do(ALUValue* pBigString, ALUInt start, ALUInt
 			return new ALUValue("",0);
 		}
 	}
-	if ((start + length - 1) > pStr->length()) {
+	if (size_t(start + length - 1) > pStr->length()) {
 		length = pStr->length() - start + 1;
 	}
 
@@ -473,7 +473,7 @@ ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
 	if (len < 0) len = len + bigLength + 1;
-	if (len > bigLength) {
+	if (size_t(len) > bigLength) {
 		return new ALUValue(*pBigString->getStrPtr()
 				+ std::string(len-bigLength, PAD_CHAR));
 	}
@@ -488,7 +488,7 @@ ALUValue* AluFunc_right(ALUValue* pBigString, ALUValue* pLength)
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
 	if (len < 0) len = len + bigLength + 1;
-	if (len > bigLength) {
+	if (size_t(len) > bigLength) {
 		return new ALUValue(std::string(len-bigLength, PAD_CHAR)
 				+ *pBigString->getStrPtr());
 	}
@@ -503,7 +503,7 @@ ALUValue* AluFunc_center(ALUValue* pBigString, ALUValue* pLength)
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
 	if (len < 0) len = len + bigLength + 1;
-	if (len > bigLength) {
+	if (size_t(len) > bigLength) {
 		size_t smallHalf = (len-bigLength) / 2;
 		size_t bigHalf = (len-bigLength) - smallHalf;
 		return new ALUValue(std::string(smallHalf, PAD_CHAR)
@@ -578,7 +578,7 @@ ALUValue* AluFunc_d2x(ALUValue* _pDecValue)
 }
 
 extern std::string conv_X2D(std::string& s);
-static size_t SZLL = 2 * sizeof(long long int);
+static ALUInt SZLL = ALUInt(2 * sizeof(long long int));
 ALUValue* AluFunc_x2d(ALUValue* _pHexValue, ALUValue* pLength)
 {
 	static std::string zeropad = "0000000000000000";
@@ -592,11 +592,11 @@ ALUValue* AluFunc_x2d(ALUValue* _pHexValue, ALUValue* pLength)
 	}
 
 	if (len > SZLL) len = SZLL;
-	while (len > hex.length()) len--;
+	while (size_t(len) > hex.length()) len--;
 
 	if (hex.length()==0) return new ALUValue(ALUInt(0));
 
-	MYASSERT(zeropad.length() >= SZLL);
+	MYASSERT(zeropad.length() >= size_t(SZLL));
 
 	auto firstDigit = hex[0];
 	if (firstDigit >= '0' && firstDigit <= '7') {
@@ -1424,14 +1424,13 @@ ALUValue* AluFunc_compare_do(ALUValue* pS1, ALUValue* pS2, char pad)
 	auto s2Len = s2.length();
 
 	auto maxLen = std::max(s1Len, s2Len);
-	auto minLen = std::min(s1Len, s2Len);
 
-	for (ALUInt l = 0 ; l < maxLen ; l++) {
+	for (size_t l = 0 ; l < maxLen ; l++) {
 		char c1 = (l < s1Len) ? s1[l] : pad;
 		char c2 = (l < s2Len) ? s2[l] : pad;
 
 		if (c1 != c2) {
-			return new ALUValue(l+1);
+			return new ALUValue(ALUInt(l)+1);
 		}
 	}
 
@@ -1488,14 +1487,14 @@ ALUValue* AluFunc_delstr(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
 	if (start < 1) start = 1;
 
 	// If start is after end of the string, we return the whole string
-	if (start > theString.length()) return new ALUValue(theString);
+	if (size_t(start) > theString.length()) return new ALUValue(theString);
 
 	std::string res = theString.substr(0,start-1);
 
 	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
 	// zero is a special value meaning delete to the end. If the length is greater
 	// than the remainder, also delete to the end.
-	if (0>=length || (length+start) > theString.length()) return new ALUValue(res);
+	if (0>=length || size_t(length+start) > theString.length()) return new ALUValue(res);
 
 	res += theString.substr(start+length-1);
 	return new ALUValue(res);
@@ -1519,7 +1518,7 @@ ALUValue* AluFunc_delword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength
 	bool inWhitespace = isspace(theString[0]);
 	unsigned int  wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
 	std::string res = "";
-	for (int i=0; i<theString.length(); i++) {
+	for (size_t i=0; i<theString.length(); i++) {
 		// check if we've moved from non-ws to ws or vice versa
 		if (inWhitespace) {
 			if (!isspace(theString[i])) {
@@ -1555,7 +1554,7 @@ static std::vector<std::string> breakIntoWords(std::string s)
 	bool inWhitespace = isspace(s[0]);
 	unsigned int wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
 	int wordStart = (inWhitespace) ? -1 : 0;
-	for (int i=0; i<s.length(); i++) {
+	for (size_t i=0; i<s.length(); i++) {
 		// check if we've moved from non-ws to ws or vice versa
 		if (inWhitespace) {
 			if (!isspace(s[i])) {
@@ -1587,7 +1586,7 @@ static std::vector<size_t> breakIntoWords_start(std::string s)
 	if (!inWhitespace) ret.push_back(0);
 	unsigned int wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
 	int wordStart = (inWhitespace) ? -1 : 0;
-	for (int i=0; i<s.length(); i++) {
+	for (size_t i=0; i<s.length(); i++) {
 		// check if we've moved from non-ws to ws or vice versa
 		if (inWhitespace) {
 			if (!isspace(s[i])) {
@@ -1616,7 +1615,7 @@ static std::vector<size_t> breakIntoWords_end(std::string s)
 	bool inWhitespace = isspace(s[0]);
 	unsigned int wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
 	int wordStart = (inWhitespace) ? -1 : 0;
-	for (int i=0; i<s.length(); i++) {
+	for (size_t i=0; i<s.length(); i++) {
 		// check if we've moved from non-ws to ws or vice versa
 		if (inWhitespace) {
 			if (!isspace(s[i])) {
@@ -1741,12 +1740,12 @@ static ALUValue* justify_do(std::string& str, size_t len, char pad)
 
 	std::string ret = "";
 
-	for (int i=0 ; i < wordVector.size() ; i++) {
+	for (size_t i=0 ; i < wordVector.size() ; i++) {
 		ret += wordVector[i];
 		auto countGaps = wordVector.size() - i - 1;
 		if (0 < countGaps) {
 			auto spacesThisGap = numOfSpaces / countGaps;
-			for (int j=0 ; j < spacesThisGap ; j++) ret += pad;
+			for (size_t j=0 ; j < spacesThisGap ; j++) ret += pad;
 			numOfSpaces -= spacesThisGap;
 		}
 	}
@@ -1805,15 +1804,15 @@ ALUValue* AluFunc_overlay(ALUValue* pString1, ALUValue* pString2, ALUValue* pSta
 
 	// str2 shall serve as return value
 	// first pad if needed to reach start
-	while (str2.length() < (start-1)) {
+	while (str2.length() < (size_t(start)-1)) {
 		str2 += pad;
 	}
 
 	// now prepare the overwrite string -- re-use str1
-	if (str1.length() > length && length>0) {
+	if (str1.length() > size_t(length) && length>0) {
 		str1 = str1.substr(0,length);
 	}
-	while (str1.length() < length) {
+	while (str1.length() < size_t(length)) {
 		str1 += pad;
 	}
 
@@ -1941,7 +1940,7 @@ ALUValue* AluFunc_subword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength
 	}
 	else {
 		auto startVec = breakIntoWords_start(str);
-		if (start > startVec.size()) {
+		if (size_t(start) > startVec.size()) {
 			return new ALUValue("");
 		}
 		cstart = startVec[start-1];
@@ -1951,7 +1950,7 @@ ALUValue* AluFunc_subword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength
 		return new ALUValue(str.substr(cstart));
 	} else {
 		auto endVec = breakIntoWords_end(str);
-		if ((start + len - 1) > endVec.size()) {
+		if (size_t(start + len - 1) > endVec.size()) {
 			return new ALUValue(str.substr(cstart));
 		}
 		cend = endVec[start+len-2];
@@ -1983,7 +1982,7 @@ ALUValue* AluFunc_translate(ALUValue* pString, ALUValue* pTableOut, ALUValue* pT
 		}
 		char pad = sPad[0];
 
-		for (int i=0; i<tablein.length(); i++) {
+		for (size_t i=0; i<tablein.length(); i++) {
 			char oldValue = tablein[i];
 			char newValue = (tableout.length() <= i) ? pad : tableout[i];
 			std::replace(str.begin(), str.end(), oldValue, newValue);
@@ -2049,7 +2048,7 @@ ALUValue* AluFunc_wordindex(ALUValue* pString, ALUValue* pIdx)
 	auto wordvec = breakIntoWords_start(str);
 
 	ALUInt ret = 0;
-	if (idx-1 < wordvec.size()) {
+	if (size_t(idx-1) < wordvec.size()) {
 		ret = wordvec[idx-1] + 1;
 	}
 
@@ -2071,7 +2070,7 @@ ALUValue* AluFunc_wordlength(ALUValue* pString, ALUValue* pIdx)
 	auto wordvec = breakIntoWords(str);
 
 	ALUInt ret = 0;
-	if (idx-1 < wordvec.size()) {
+	if (size_t(idx-1) < wordvec.size()) {
 		ret = wordvec[idx-1].length();
 	}
 
@@ -2093,9 +2092,9 @@ ALUValue* AluFunc_wordpos(ALUValue* pPhrase, ALUValue* pString, ALUValue* pStart
 
 	auto startVec = breakIntoWords_start(str);
 
-	for (ALUInt i = start-1 ; i < startVec.size() ; i++) {
+	for (size_t i = start-1 ; i < startVec.size() ; i++) {
 		auto sub = str.substr(startVec[i], phrase.length());
-		if (sub==phrase) return new ALUValue(i+1);
+		if (sub==phrase) return new ALUValue(ALUInt(i+1));
 	}
 
 	return new ALUValue(ALUInt(0));

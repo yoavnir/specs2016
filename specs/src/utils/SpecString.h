@@ -73,12 +73,7 @@ private:
 	std::string m_str;
 };
 
-static std::ostream& operator << (std::ostream& os, const SpecString &str)
-{
-    str._serialize(os);
-
-    return os;
-}
+std::ostream& operator<< (std::ostream& os, const SpecString &str);
 
 PSpecString SpecStringCopy(PSpecString pss);
 

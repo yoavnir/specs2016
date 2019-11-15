@@ -224,7 +224,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 #define VERIFY_EXPR(s,e) do {					\
 	INC_TEST_INDEX;								\
 	std::string _expr(s);						\
-	bool _res = parseAluExpression(_expr,vec);	\
+	parseAluExpression(_expr,vec);				\
 	std::string _dump = dumpAluVec(vec, true);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": <"<< s << "> ==> \"" << e << "\": "; 	\

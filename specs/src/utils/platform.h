@@ -12,6 +12,8 @@ typedef unsigned long long int u_int64_t;
 int setenv(const char *name, const char *value, int overwrite);
 #endif
 
+#define SUPPRESS_UNUSED_FUNCTION_WARNING(a) (void)a
+
 #ifdef _MSC_VER 
 	//not #if defined(_WIN32) || defined(_WIN64) because we have strncasecmp in mingw
 	#define strncasecmp _strnicmp

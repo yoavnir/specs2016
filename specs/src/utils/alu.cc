@@ -1300,7 +1300,7 @@ std::string dumpAluVec(AluVec& vec, bool deleteUnits)
 			delete pUnit;
 		}
 	} else {
-		for (int i=0; i<vec.size(); i++) {
+		for (size_t i=0; i<vec.size(); i++) {
 			if (!ret.empty()) ret += ";";
 			ret += vec[i]->_identify();
 		}
@@ -1534,11 +1534,12 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 #ifdef ALU_DUMP
 		if (g_bDebugAluCompile && g_bVerbose) {
 			std::cerr << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
-			dumpAluVec("Source", source, stepNumber++);
+			dumpAluVec("Source", source, stepNumber);
 			dumpAluVec("Dest", dest);
 			dumpAluStack("operator stack",operatorStack);
 		}
 #endif
+		stepNumber++;
 		switch (pUnit->type()) {
 		case UT_Comma:
 			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
@@ -1657,7 +1658,6 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 
 	if (clearSource) {
 		while (!source.empty()) {
-			AluUnit* pUnit = source[0];
 			source.erase(source.begin());
 		}
 	}
@@ -1805,7 +1805,6 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4, arg5));
 				}
 				catch (const SpecsException& e) {
-					std::cerr << "EXCEPTION: " << e.what() << std::endl;
 					delete arg1;
 					delete arg2;
 					delete arg3;
@@ -1869,7 +1868,7 @@ bool expressionForcesRunoutCycle(AluVec& vec)
 			return ("eof" == pFunction->getName());
 		}
 		default:
-			return false;
+			break;
 		}
 	}
 	return false;
@@ -2070,3 +2069,17 @@ ALUValue* AluValueStats::stderrmean()
 
 	return new ALUValue(std::sqrt(m_runningSn / m_totalCount) / (m_totalCount-1));
 }
+
+std::ostream& operator<< (std::ostream& os, const ALUValue &c)
+{
+	os << c.getStr();
+    return os;
+}
+
+std::ostream& operator<< (std::ostream& os, const AluUnit &u)
+{
+    u._serialize(os);
+
+    return os;
+}
+

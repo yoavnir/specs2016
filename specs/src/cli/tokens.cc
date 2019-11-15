@@ -61,7 +61,7 @@ public:
 	void         Add(TokenFieldRange *rng);
 	virtual std::string Debug();
 private:
-	int m_idx;
+	size_t m_idx;
 	std::vector<TokenFieldRange*> rangeVec;
 };
 
@@ -112,7 +112,7 @@ void TokenFieldRangeComplex::setDone()
 std::string TokenFieldRangeComplex::Debug()
 {
 	std::string ret = "C:(";
-	for (int i=0; i<rangeVec.size(); i++) {
+	for (size_t i=0; i<rangeVec.size(); i++) {
 		if (i>0) {
 			ret += " ";
 		}
@@ -507,7 +507,7 @@ static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int 
 		std::string err = "Too many items in ranges group at index " + std::to_string(argidx);
 		MYTHROW(err);
 	}
-	for (int i=0; i<idx; i++) {
+	for (unsigned int i=0; i<idx; i++) {
 		parseSingleToken(pVec, std::string(itemPtrs[i]), argidx);
 	}
 
@@ -587,7 +587,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 {
 	if (tokList->size()==0) return;
 
-	for (int i=0; i<tokList->size()-1; i++) {
+	for (size_t i=0; i<tokList->size()-1; i++) {
 		Token& tok = tokList->at(i);
 		Token& nextTok = tokList->at(i+1);
 		switch (tok.Type()) {

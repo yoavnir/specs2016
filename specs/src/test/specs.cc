@@ -139,7 +139,7 @@ int main (int argc, char** argv)
 	}
 
 	// After the compilation, the token vector contents are no longer necessary
-	for (int i=0; i<vec.size(); i++) vec[i].deallocDynamic();
+	for (size_t i=0; i<vec.size(); i++) vec[i].deallocDynamic();
 	vec.clear();
 
 #ifdef DEBUG

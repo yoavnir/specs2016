@@ -13,7 +13,7 @@ std::string callParseTokens(int argc, char** argv)
 	
 	std::string ret;
 
-	for (int i=0; i<vec.size(); i++) {
+	for (size_t i=0; i<vec.size(); i++) {
 		ret += vec[i].Debug(0);
 		if (vec.size()>1 && i<vec.size()-1) {
 			ret += '|';

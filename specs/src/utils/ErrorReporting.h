@@ -6,9 +6,10 @@
 class SpecsException : public std::exception {
 public:
 	explicit SpecsException(const char* _fn, unsigned int _ln, const char* _msg, bool _abend = false):
-		fn(_fn), ln(_ln), msg(_msg), bIsAbend(_abend) {}
+		fn(_fn), msg(_msg), ln(_ln), bIsAbend(_abend) {}
 	explicit SpecsException(const char* _fn, unsigned int _ln, std::string& _msg, bool _abend = false):
-		fn(_fn), ln(_ln), msg(_msg), bIsAbend(_abend) {}
+		fn(_fn), msg(_msg), ln(_ln), bIsAbend(_abend) {}
+	using std::exception::what;  // avoid warning about overloading
 	virtual const char* what(bool concise = false) const throw ();
 	virtual const bool  isAbend() const throw();
 protected:

@@ -1,3 +1,4 @@
+#include "utils/platform.h"
 #include <iostream>
 #include "cli/tokens.h"
 #include "specitems/specItems.h"
@@ -100,7 +101,7 @@ int main(int argc, char** argv)
 	std::cout << ig.Debug();
 
 	pRd = new TestReader(100);
-	for (int i=0; i<sizeof(Jabberwocky)/sizeof(StdSpecString); i++) {
+	for (size_t i=0; i<sizeof(Jabberwocky)/sizeof(StdSpecString); i++) {
 		pRd->InsertString(&Jabberwocky[i]);
 	}
 

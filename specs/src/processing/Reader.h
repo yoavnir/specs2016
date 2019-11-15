@@ -93,6 +93,7 @@ public:
 	virtual ~multiReader();
 	void addStream(unsigned char idx, std::istream* f);
 	void addStream(unsigned char idx, std::string& fn);
+	using Reader::selectStream;  // prevent a warning about overloading
 	virtual void selectStream(unsigned char idx, PSpecString* ppRecord);
 	virtual bool        endOfSource();
 	virtual PSpecString getNextRecord();

@@ -47,8 +47,9 @@ static inline std::string& StringConversion__2str(StringConversions tok) {
 }
 
 #define Y(c) case StringConversion__##c: return true;
-static bool isParametrizedConversion(StringConversions conv)
+static inline bool isParametrizedConversion(StringConversions conv)
 {
+	SUPPRESS_UNUSED_FUNCTION_WARNING(isParametrizedConversion);
 	switch(conv) {
 	PARAMETRIZED_CONVERSIONS_LIST
 	default:

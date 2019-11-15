@@ -1,3 +1,4 @@
+#include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
 #include "specItems.h"
@@ -278,7 +279,7 @@ std::string itemGroup::Debug()
 bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, classifyingTimer& tmr)
 {
 	bool bSomethingWasDone = false;
-	int i = 0;
+	size_t i = 0;
 	bool isEOFCycle = false;
 	PSpecString ps; // Used for processing READ and READSTOP tokens
 	bool processingContinue = true;
@@ -296,7 +297,6 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		isEOFCycle = true;
 	}
 
-	itemLoop:
 	processingContinue = true;
 	for ( ; processingContinue && i<m_items.size(); i++) {
 		if (pState.inputStreamHasChanged()) {
@@ -820,3 +820,11 @@ ApplyRet SelectItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	}
 	return ApplyRet__Continue;
 }
+
+std::ostream& operator<< (std::ostream& os, const SpecString &str)
+{
+    str._serialize(os);
+
+    return os;
+}
+

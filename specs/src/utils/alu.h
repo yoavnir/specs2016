@@ -30,7 +30,7 @@ static std::string ALUCounterType2Str[] = {
 
 class ALUValue {
 public:
-	ALUValue():m_type(counterType__None), m_value("") {}
+	ALUValue():m_value(""), m_type(counterType__None) {}
 	ALUValue(std::string& s) {set(s);}
 	ALUValue(const std::string& s) {set(s);}
 	ALUValue(ALUInt i)       {set(i);}
@@ -62,12 +62,7 @@ private:
 	ALUCounterType m_type;
 };
 
-static std::ostream& operator<< (std::ostream& os, const ALUValue &c)
-{
-	os << c.getStr();
-    return os;
-}
-
+std::ostream& operator<< (std::ostream& os, const ALUValue &c);
 
 typedef unsigned int ALUCounterKey;
 
@@ -203,6 +198,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_Counter;}
+	using AluUnit::compute;  // prevent a warning about overloading
 	virtual ALUValue*			compute(ALUCounters* pCtrs);
 	ALUCounterKey				getKey()		{return m_ctrNumber;}
 private:
@@ -354,12 +350,7 @@ private:
 };
 
 
-static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
-{
-    u._serialize(os);
-
-    return os;
-}
+std::ostream& operator<< (std::ostream& os, const AluUnit &u);
 
 class AluValueStats {
 public:
