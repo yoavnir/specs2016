@@ -291,7 +291,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		INC_TEST_INDEX;										\
 		std::string _expr(s);								\
 		AluVec rpnVec;										\
-		bool _res, _res2;									\
+		bool _res, _res2 = true;							\
 		ALUValue* _result = NULL;							\
 		_res = parseAluExpression(_expr,vec);				\
 		if (_res) {                                         \

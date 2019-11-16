@@ -280,7 +280,6 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 {
 	bool bSomethingWasDone = false;
 	size_t i = 0;
-	bool isEOFCycle = false;
 	PSpecString ps; // Used for processing READ and READSTOP tokens
 	bool processingContinue = true;
 	bool suspendUntilBreak = false;
@@ -294,7 +293,6 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				break;
 			}
 		}
-		isEOFCycle = true;
 	}
 
 	processingContinue = true;

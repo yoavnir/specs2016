@@ -114,7 +114,7 @@ int main (int argc, char** argv)
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
-	Reader *pRd;
+	Reader *pRd = NULL;
 	SimpleWriter *pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
@@ -130,7 +130,7 @@ int main (int argc, char** argv)
 		if (g_bVerbose) {
 			std::cerr << "\nProcessing stopped at index " << index
 					<< '/' << vec.size() << ":\n";
-			for (int i=0; i<vec.size(); i++) {
+			for (size_t i=0; i<vec.size(); i++) {
 				std::cerr << i+1 << ". " << vec[i].Debug() << "\n";
 			}
 			std::cerr << "\n" << ig.Debug();

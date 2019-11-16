@@ -14,7 +14,7 @@ void ReadAllRecordsIntoReaderQueue(Reader* r)
 
 Reader::~Reader()
 {
-	PSpecString ps;
+	PSpecString ps = NULL;
 	End();
 	while (!m_queue.empty()) {
 		m_queue.wait_and_pop(ps);

@@ -1585,14 +1585,12 @@ static std::vector<size_t> breakIntoWords_start(std::string s)
 	bool inWhitespace = isspace(s[0]);
 	if (!inWhitespace) ret.push_back(0);
 	unsigned int wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
-	int wordStart = (inWhitespace) ? -1 : 0;
 	for (size_t i=0; i<s.length(); i++) {
 		// check if we've moved from non-ws to ws or vice versa
 		if (inWhitespace) {
 			if (!isspace(s[i])) {
 				inWhitespace = false;
 				wordIndex++;
-				wordStart = i;
 				ret.push_back(i);
 			}
 		} else {
@@ -1614,14 +1612,12 @@ static std::vector<size_t> breakIntoWords_end(std::string s)
 
 	bool inWhitespace = isspace(s[0]);
 	unsigned int wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
-	int wordStart = (inWhitespace) ? -1 : 0;
 	for (size_t i=0; i<s.length(); i++) {
 		// check if we've moved from non-ws to ws or vice versa
 		if (inWhitespace) {
 			if (!isspace(s[i])) {
 				inWhitespace = false;
 				wordIndex++;
-				wordStart = i;
 			}
 		} else {
 			if (isspace(s[i])) {
