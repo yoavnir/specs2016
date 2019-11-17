@@ -85,7 +85,7 @@ SimpleWriter::~SimpleWriter() {
 
 void SimpleWriter::WriteOut()
 {
-	PSpecString ps;
+	PSpecString ps = NULL;
 	m_Timer.changeClass(timeClassInputQueue);
 	bool res = m_queue.wait_and_pop(ps);
 	if (res) {

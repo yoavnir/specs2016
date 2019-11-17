@@ -35,7 +35,7 @@ std::vector<Token> parseTokensSplit(const char* arg)
 
 	const char* ptr = arg;
 	std::string sarg;
-	char delimiter;
+	char delimiter = '\0';
 
 	while (*ptr) {
 		switch (st) {
