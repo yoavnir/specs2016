@@ -101,6 +101,8 @@ Others are `@cols`, which contains the number of columns in the terminal screen,
 
 Additionally, the `@@` string stands for the entire input record.
 
+`@python` contains either "Enabled" or "Disabled" depending on whether python function support is enabled.
+
 **Note:** The timezone used in the date conversion can also be set in the configuration file with a `timezone` entry. Similarly, the locale used can be set with a `locale` entry.
 
 **Note:** Some *specifications* as shown above may depend of a specific configured literal being defined. It may be prudent to have such specifications fail quickly by using the `REQUIRES` keyword as shown above. 

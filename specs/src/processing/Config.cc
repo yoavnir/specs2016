@@ -15,6 +15,7 @@
 #endif
 #include "utils/platform.h"
 #include "utils/TimeUtils.h"
+#include "utils/PythonIntf.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -172,6 +173,7 @@ void readConfigurationFile()
 #ifdef GITTAG
 	ExternalLiterals["version"] = STRINGIFY(GITTAG);
 #endif
+	ExternalLiterals["python"] = pythonInterfaceEnabled() ? "Enabled" : "Disabled";
 	if (0==ExternalLiterals.count("cols")) {
 		ExternalLiterals["cols"] = getTerminalRowsAndColumns(false);
 	}

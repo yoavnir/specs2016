@@ -1243,6 +1243,12 @@ contains the number of columns in the display. You can override this in the conf
     specs /hello/ (1,@cols,'R')
 .IP "rows" 3
 contains the number of rows in the display. This can also be overridden in the configuration file.
+.IP "python" 3
+contains either 
+.B Enabled
+or
+.B Disabled
+depending on whether support for python function is available.
 
     
 .SH EXAMPLES
