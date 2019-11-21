@@ -4,7 +4,7 @@ python_cflags=""
 python_ldflags=""
 
 def python_search(arg):
-	global python_cflags,pyton_ldflags,variation
+	global python_cflags,python_ldflags,variation
 	sys.stdout.write("Testing if python support is available...")
 	
 	# Get the result of python-config --cflags
