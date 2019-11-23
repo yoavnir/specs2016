@@ -29,6 +29,10 @@ protected:
 	} \
 	}
 
+#define MYASSERT_NOT_NULL(ptr) { if (NULL==ptr) { \
+	std::string _assert_err = std::string(#ptr) + " is not set"; \
+	MYTHROW(_assert_err); } }
+
 #define MYASSERT_WITH_MSG(cond,s) { if (!(cond)) {MYTHROW(s); } }
 
 class ConversionException : public SpecsException {

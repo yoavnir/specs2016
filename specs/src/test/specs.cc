@@ -11,6 +11,7 @@
 #include "processing/Writer.h"
 #include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
+#include "utils/PythonIntf.h"
 
 std::string getNextArg(int& argc, char**& argv)
 {
@@ -95,6 +96,10 @@ int main (int argc, char** argv)
 
 #ifdef DEBUG
 	conciseExceptions = !g_bVerbose;
+#endif
+
+#ifndef SPECS_NO_PYTHON
+	p_gExternalFunctions->Initialize();
 #endif
 
 	std::vector<Token> vec;

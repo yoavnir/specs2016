@@ -1,8 +1,9 @@
-#include "PythonIntf.h"
 
 #ifndef SPECS_NO_PYTHON
 
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "PythonIntf.h"
 #include "ErrorReporting.h"
 #include <vector>
 
@@ -107,16 +108,47 @@ private:
 };
 
 
+class PythonFunctionCollection : public ExternalFunctionCollection {
+public:
+	PythonFunctionCollection() : m_Initialized(false) {}
+	virtual void  Initialize() {
+		Py_Initialize();
+		PyObject* pInspectMod = PyImport_ImportModule("inspect");
+		MYASSERT_NOT_NULL(pInspectMod);
+
+		PyObject* pSignatureFunc = PyObject_GetAttrString(pInspectMod,"signature");
+		MYASSERT_NOT_NULL(pSignatureFunc);
+
+		m_Initialized = true;
+	}
+	virtual bool IsInitialized() {
+		return m_Initialized;
+	}
+	virtual size_t CountFunctions() {
+		return m_Functions.size();
+	}
+	virtual ExternalFunctionRec* GetFunctionByName(std::string fname) {
+		return m_Functions[fname];
+	}
+
+private:
+	std::map<std::string,PythonFuncRec*> m_Functions;
+	bool                                 m_Initialized;
+};
+
 bool pythonInterfaceEnabled()
 {
 	PythonFuncRec rec(NULL);
 	return true;
 }
 
-ExternalFunctionCollection* p_gExternalFunctions = NULL;
+static PythonFunctionCollection gFunctionCollection;
+
+ExternalFunctionCollection* p_gExternalFunctions = &gFunctionCollection;
+
 
 #else  // SPECS_NO_PYTHON
-
+#include "PythonIntf.h"
 
 bool pythonInterfaceEnabled()
 {
