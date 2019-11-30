@@ -10,7 +10,7 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-10-Nov-2019: Version 0.5 beta is here
+30-Nov-2019: Version 0.5 GA is here
 -------------------------------------
 What's new:
 * Functions with elided arguments and variable number of arguments
