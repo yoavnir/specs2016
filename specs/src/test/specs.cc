@@ -99,7 +99,15 @@ int main (int argc, char** argv)
 #endif
 
 #ifndef SPECS_NO_PYTHON
-	p_gExternalFunctions->Initialize();
+	try {
+		p_gExternalFunctions->Initialize(getFullSpecPath());
+	} catch (const SpecsException& e) {
+		std::cerr << "Error initializing python interface: " << e.what(conciseExceptions) << "\n";
+		exit(0);
+	}
+#ifdef DEBUG
+	p_gExternalFunctions->Debug();
+#endif
 #endif
 
 	std::vector<Token> vec;

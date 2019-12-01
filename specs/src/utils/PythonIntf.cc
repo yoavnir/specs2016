@@ -5,8 +5,20 @@
 #include <Python.h>
 #include "PythonIntf.h"
 #include "ErrorReporting.h"
+#include "aluFunctions.h"
 #include <vector>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
+// Some defines for compatibility
+#ifdef PYTHON_VER_3
+static const char emptyString[]="";
+#define PyInt_Check(x)         false
+#define PyInt_AsLong(x)           0L
+#define PyString_Check(x)      false
+#define PyString_AS_STRING(x) ((char*)(emptyString))
+#endif
 
 class PythonFuncArg {
 public:
@@ -39,7 +51,7 @@ private:
 
 class PythonFuncRec : public ExternalFunctionRec {
 public:
-	PythonFuncRec(PyObject* _pFunc) : m_pFuncPtr(_pFunc), m_pTuple(NULL) {}
+	PythonFuncRec(std::string& _name, PyObject* _pFunc) : m_name(_name), m_pFuncPtr(_pFunc), m_pTuple(NULL) {}
 
 	void addArg(char* name) {
 		m_args.push_back(PythonFuncArg(name));
@@ -59,6 +71,10 @@ public:
 
 	size_t GetArgCount() {
 		return m_args.size();
+	}
+
+	PyObject* GetFuncPtr() {
+		return m_pFuncPtr;
 	}
 
 	void ResetArgs() {
@@ -94,14 +110,22 @@ public:
 	}
 
 	std::string getStr() {
-		std::string res = "func@" + std::to_string(long(m_pFuncPtr)) + "(";
+		std::ostringstream strm;
+		strm << m_name << " @ " << std::hex << m_pFuncPtr << " (";
+		bool first = true;
 		for (auto& arg : m_args) {
-			res += arg.getStr();
+			if (first) {
+				first = false;
+			} else {
+				strm << ", ";
+			}
+			strm << arg.getStr();
 		}
-		res += ")";
-		return res;
+		strm << ")";
+		return strm.str();
 	}
 private:
+	std::string                m_name;
 	PyObject*                  m_pFuncPtr;
 	std::vector<PythonFuncArg> m_args;
 	PyObject*                  m_pTuple;
@@ -111,13 +135,132 @@ private:
 class PythonFunctionCollection : public ExternalFunctionCollection {
 public:
 	PythonFunctionCollection() : m_Initialized(false) {}
-	virtual void  Initialize() {
-		Py_Initialize();
+	virtual void  Initialize(const char* _path) {
+
+		// update the python path
+		if (_path && _path[0]) {
+#ifdef PYTHON_VER_3
+			std::wstring wpath(strlen(_path)+1, L'#');
+			mbstowcs(&wpath[0],_path,strlen(_path));
+			wpath.erase(wpath.length()-1);
+			std::wstring newPath = std::wstring(Py_GetPath()) + std::wstring(L":") + wpath;
+			Py_SetPath(newPath.data());
+			Py_Initialize();
+#else
+			Py_Initialize();
+			std::string newPath = std::string(Py_GetPath()) + ":" + std::string(_path);
+			PySys_SetPath((char*)newPath.c_str());
+#endif
+		}
+
+		// Get the argument parsing function getfullargspec/getargspec
 		PyObject* pInspectMod = PyImport_ImportModule("inspect");
 		MYASSERT_NOT_NULL(pInspectMod);
 
-		PyObject* pSignatureFunc = PyObject_GetAttrString(pInspectMod,"signature");
-		MYASSERT_NOT_NULL(pSignatureFunc);
+		// load the local functions at localfuncs.py
+		m_LocalMod = PyImport_ImportModule("localfuncs");
+		if (!m_LocalMod) {
+			// TODO: When we support only 3.6+, PyExc_ModuleNotFoundError is a more specialized error
+			if (PyErr_GivenExceptionMatches(PyErr_Occurred(), PyExc_ImportError)) {
+#ifdef DEBUG
+				std::cerr << "Local python functions not found" << std::endl;
+#endif
+				m_Initialized = true;
+				return;
+			}
+		}
+		MYASSERT_NOT_NULL(m_LocalMod);
+
+		PyObject* pArgSpecFunc = PyObject_GetAttrString(pInspectMod,"getfullargspec");
+		if (!pArgSpecFunc) {
+#ifdef DEBUG
+			PyErr_Print();
+#else
+			PyErr_Clear();
+#endif
+			pArgSpecFunc = PyObject_GetAttrString(pInspectMod,"getargspec");
+		}
+		MYASSERT_NOT_NULL(pArgSpecFunc);
+
+		// Get a dictionary of all the module's functions
+		PyObject* pModuleDictionary = PyModule_GetDict(m_LocalMod);
+		MYASSERT_NOT_NULL(pModuleDictionary);
+
+		PyObject* pModuleKeyList = PyDict_Keys(pModuleDictionary);
+		MYASSERT_NOT_NULL(pModuleKeyList);
+		auto keyListSize = PyList_Size(pModuleKeyList);
+
+		for (Py_ssize_t i = 0 ; i < keyListSize ; i++) {
+			PyObject* pKey = PyList_GetItem(pModuleKeyList, i);
+			PyObject* pRepr = PyObject_Repr(pKey);
+#ifdef PYTHON_VER_2
+			const char *pKeyName = PyString_AS_STRING(pRepr);
+#else
+			PyObject* pStr = PyUnicode_AsEncodedString(pRepr, "utf-8", "~E~");
+			const char *pKeyName = PyBytes_AS_STRING(pStr);
+#endif
+
+			if (0==strncmp("'pyspecfunc_", pKeyName, 11)) {
+				std::string funcName = std::string((char*)pKeyName + 12);
+				funcName.resize(funcName.size()-1);
+				PyObject *pFunc = PyDict_GetItem(pModuleDictionary, pKey);
+				MYASSERT_NOT_NULL(pFunc);
+				MYASSERT(PyCallable_Check(pFunc));
+
+				// Set up arguments for the getargspec function
+				PyObject *pTuple = PyTuple_New(1);
+				PyTuple_SetItem(pTuple, 0, pFunc);
+
+				PyObject* pArgSpec = PyObject_CallObject(pArgSpecFunc, pTuple);
+				MYASSERT_NOT_NULL_WITH_DESC(pArgSpec,funcName);
+
+				PyObject* pArgList = PyObject_GetAttrString(pArgSpec, "args");
+				MYASSERT_NOT_NULL(pArgList);
+
+				PyObject* pDefaultList = PyObject_GetAttrString(pArgSpec, "defaults");
+				Py_ssize_t firstWithDefault = (Py_None==pDefaultList) ? MAX_FUNC_OPERANDS :
+						PyObject_Length(pArgList) - PyObject_Length(pDefaultList);
+
+				PythonFuncRec* pFuncRec = new PythonFuncRec(funcName, pFunc);
+
+				for (Py_ssize_t i = 0 ; i < PyObject_Length(pArgList) ; i++) {
+					char* pArgName;
+					PyObject* pArg = PyList_GetItem(pArgList,i);
+					PyObject* pRepr = PyObject_Repr(pArg);
+#ifdef PYTHON_VER_2
+					pArgName = PyString_AS_STRING(pRepr);
+#else
+					PyObject* pUnicode = PyUnicode_AsEncodedString(pRepr, "utf-8", "~E~");
+					pArgName = PyBytes_AS_STRING(pUnicode);
+#endif
+
+					if (i>=firstWithDefault) {
+						PyObject* pDef = PyTuple_GetItem(pDefaultList, i-firstWithDefault);
+						if (PyLong_Check(pDef)) {
+							pFuncRec->addArg(pArgName, PyLong_AsLong(pDef));
+						} else if (PyInt_Check(pDef)) {
+							pFuncRec->addArg(pArgName, PyInt_AsLong(pDef));
+						} else if (PyFloat_Check(pDef)) {
+							pFuncRec->addArg(pArgName, PyFloat_AsDouble(pDef));
+						} else if (PyUnicode_Check(pDef)) {
+							PyObject* pDefBytes = PyUnicode_AsASCIIString(pDef);
+							pFuncRec->addArg(pArgName, PyBytes_AS_STRING(pDefBytes));
+						} else if (PyString_Check(pDef)) {
+							pFuncRec->addArg(pArgName, PyString_AS_STRING(pDef));
+						} else {
+							std::string err = std::string("Invalid default argument ") +
+									std::string(pArgName) +
+									" for function " + funcName;
+							MYTHROW(err);
+						}
+					} else {
+						pFuncRec->addArg(pArgName);
+					}
+				m_Functions[funcName] = pFuncRec;
+				}
+			}
+		}
+
 
 		m_Initialized = true;
 	}
@@ -131,14 +274,28 @@ public:
 		return m_Functions[fname];
 	}
 
+	virtual void Debug() {
+		MYASSERT(m_Initialized);
+		if (m_Functions.empty()) {
+			std::cerr << "Python Interface: No Python functions loaded." << std::endl;
+			return;
+		}
+
+		std::cerr << "Python Interface: " << m_Functions.size() << " functions loaded:\n";
+		for (auto it = m_Functions.begin() ; it != m_Functions.end() ; it++) {
+			std::cerr << "\t" << it->second->getStr() << "\n";
+		}
+		std::cerr << std::endl;
+	}
+
 private:
 	std::map<std::string,PythonFuncRec*> m_Functions;
 	bool                                 m_Initialized;
+	PyObject*                            m_LocalMod;
 };
 
 bool pythonInterfaceEnabled()
 {
-	PythonFuncRec rec(NULL);
 	return true;
 }
 

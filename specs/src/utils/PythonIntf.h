@@ -16,7 +16,8 @@ public:
 class ExternalFunctionCollection {
 public:
 	virtual bool                 IsInitialized() = 0;
-	virtual void                 Initialize() = 0;
+	virtual void                 Initialize(const char* _path) = 0;
+	virtual void                 Debug() = 0;
 	virtual size_t               CountFunctions() = 0;
 	virtual ExternalFunctionRec* GetFunctionByName(std::string fname) = 0;
 };

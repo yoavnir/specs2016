@@ -2,10 +2,34 @@ import os,sys,argparse
 
 python_cflags=""
 python_ldflags=""
+python_version=0
 
 def python_search(arg):
-	global python_cflags,python_ldflags,variation
+	global python_cflags,python_ldflags,python_version,variation
 	sys.stdout.write("Testing if python support is available...")
+	
+	# Get python version
+	script = '''
+import platform
+with open("xx.txt","w") as v:
+	v.write(platform.python_version())
+'''
+	with open("test_script.py","w") as scriptf:
+		scriptf.write(script)
+	cmd = "{} test_script.py".format(arg)
+	rc = os.system(cmd)
+	if rc!=0:
+		sys.stdout.write("No -- could not get python version from {}.\n".format(arg))
+		return False
+	with open("xx.txt", "r") as vers:
+		version_string = vers.read().strip()
+		if version_string[0]=="2":
+			python_version=2
+		elif version_string[0]=="3":
+			python_version=3
+		else:
+			sys.stdout.write("No -- {} is an unrecognized Python version.\n".format(version_string))
+			return False
 	
 	# Get the result of python-config --cflags
 	cmd = "{}-config --cflags > xx.txt".format(arg)
@@ -19,7 +43,7 @@ def python_search(arg):
 		cflags=flags.read().strip().split()
 		filter = filtered_flags_debug if variation=="DEBUG" else filtered_flags
 		filtered_cflags = [f for f in cflags if f not in filter]
-		python_cflags = " ".join(filtered_cflags)
+		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register"
 	
 	# Get the result of python-config --cflags
 	cmd = "{}-config --ldflags > xx.txt".format(arg)
@@ -416,7 +440,7 @@ if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
 	
 if CFG_python:
-	condcomp = condcomp + " " + python_cflags
+	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version)
 	condlink = condlink + " " + python_ldflags
 else:
 	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix)

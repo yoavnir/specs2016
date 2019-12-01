@@ -52,4 +52,6 @@ void configSpecLiteralSet(std::string& key, std::string& value);
 
 bool anyNonPrimaryInputStreamDefined();
 
+const char* getFullSpecPath();
+
 #endif

@@ -214,3 +214,40 @@ bool anyNonPrimaryInputStreamDefined()
 
 	return ret;
 }
+
+const char* getFullSpecPath()
+{
+	static std::string res("");
+	static bool ran_once = false;
+
+	if (!ran_once) {
+		static std::string pathConfigString("SPECSPATH");
+
+		// add the path from the environment variable
+		char* envpath = getenv(pathConfigString.c_str());
+		if (envpath && envpath[0]) {
+			char* onePath = strtok(envpath,":");
+			while (onePath) {
+				if (res.length()>0) res += ":";
+				res += onePath;
+				onePath = strtok(NULL,":");
+			}
+		}
+
+		// Also add from the configuration string
+		if (configSpecLiteralExists(pathConfigString)) {
+			char* configPath = strdup(configSpecLiteralGet(pathConfigString).c_str());
+			char* onePath = strtok(configPath,":");
+			while (onePath) {
+				if (res.length()>0) res += ":";
+				res += onePath;
+				onePath = strtok(NULL,":");
+			}
+			free(configPath);
+		}
+
+		ran_once = true;
+	}
+
+	return res.c_str();
+}

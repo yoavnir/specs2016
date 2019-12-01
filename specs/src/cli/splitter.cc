@@ -143,34 +143,24 @@ std::string removeComment(std::string& st)
 
 static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 {
-	static std::string pathConfigString("SPECSPATH");
 	theFile.open(fileName);
 	if (theFile.is_open()) return;
 
-	// No?  Try the path list in the environment variable
-	char* envpath = getenv(pathConfigString.c_str());
-	if (envpath && envpath[0]) {
-		char* onePath = strtok(envpath,":");
+	// No?  Try the path
+	char* spath = strdup(getFullSpecPath());
+	if (spath && spath[0]) {
+		char* onePath = strtok(spath,":");
 		while (onePath) {
 			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
 			theFile.open(fullpath);
-			if (theFile.is_open()) return;
+			if (theFile.is_open()) {
+				free(spath);
+				return;
+			}
 			onePath = strtok(NULL,":");
 		}
 	}
-
-	// Still no?  Try the path in the config variable
-	if (configSpecLiteralExists(pathConfigString)) {
-		char* configPath = strdup(configSpecLiteralGet(pathConfigString).c_str());
-		char* onePath = strtok(configPath,":");
-		while (onePath) {
-			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
-			theFile.open(fullpath);
-			if (theFile.is_open()) return;
-			onePath = strtok(NULL,":");
-		}
-		free(configPath);
-	}
+	if (spath) free(spath);
 }
 
 std::vector<Token> parseTokensFile(std::string& fileName)
