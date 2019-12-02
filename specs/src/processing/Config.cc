@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <string.h>
 #ifdef WIN64
 #include <windows.h>
 #else

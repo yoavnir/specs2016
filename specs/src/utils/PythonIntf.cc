@@ -31,14 +31,14 @@ public:
 		m_name(name),m_default(counterType__Float),m_defFloat(def) {}
 	std::string     getStr() {
 		switch (m_default) {
-		case counterType__None:
-			return m_name;
 		case counterType__Str:
 			return m_name + "='" + m_defStr + "'";
 		case counterType__Int:
 			return m_name + "=" + std::to_string(m_defInt);
 		case counterType__Float:
 			return m_name + "=" + std::to_string(m_defFloat);
+		default:
+			return m_name;
 		}
 	}
 private:
@@ -256,8 +256,8 @@ public:
 					} else {
 						pFuncRec->addArg(pArgName);
 					}
-				m_Functions[funcName] = pFuncRec;
 				}
+				m_Functions[funcName] = pFuncRec;
 			}
 		}
 
