@@ -112,7 +112,7 @@ $(EXE_DIR):
 	$(MKDIR_C) $@
 	
 $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
-	$(CXX) $(CONDLINK) {}$@ {} $^
+	$(CXX) {}$@ {} $^ $(CONDLINK)
 		
 install_unix: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/

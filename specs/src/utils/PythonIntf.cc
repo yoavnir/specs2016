@@ -151,6 +151,8 @@ public:
 			std::string newPath = std::string(Py_GetPath()) + ":" + std::string(_path);
 			PySys_SetPath((char*)newPath.c_str());
 #endif
+		} else {
+			Py_Initialize();
 		}
 
 		// Get the argument parsing function getfullargspec/getargspec
