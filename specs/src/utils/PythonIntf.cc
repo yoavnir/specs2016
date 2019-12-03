@@ -6,6 +6,7 @@
 #include "PythonIntf.h"
 #include "ErrorReporting.h"
 #include "aluFunctions.h"
+#include "processing/Config.h"
 #include <vector>
 #include <iomanip>
 #include <iostream>
@@ -135,6 +136,16 @@ private:
 class PythonFunctionCollection : public ExternalFunctionCollection {
 public:
 	PythonFunctionCollection() : m_Initialized(false) {}
+
+	~PythonFunctionCollection() {
+		if (Py_IsInitialized()) {
+			Py_Finalize();
+			if (g_bVerbose) {
+				std::cerr << "Python Interface: Unloaded" << std::endl;
+			}
+		}
+	}
+
 	virtual void  Initialize(const char* _path) {
 
 		// update the python path
@@ -164,25 +175,26 @@ public:
 		if (!m_LocalMod) {
 			// TODO: When we support only 3.6+, PyExc_ModuleNotFoundError is a more specialized error
 			if (PyErr_GivenExceptionMatches(PyErr_Occurred(), PyExc_ImportError)) {
-#ifdef DEBUG
-				std::cerr << "Local python functions not found" << std::endl;
-#endif
+				if (g_bVerbose) {
+					std::cerr << "Python Interface: Local functions not found" << std::endl;
+				}
 				m_Initialized = true;
 				return;
 			}
 		}
-		MYASSERT_NOT_NULL(m_LocalMod);
 
 		PyObject* pArgSpecFunc = PyObject_GetAttrString(pInspectMod,"getfullargspec");
 		if (!pArgSpecFunc) {
-#ifdef DEBUG
-			PyErr_Print();
-#else
-			PyErr_Clear();
-#endif
+			if (g_bVerbose) {
+				std::cerr << "Python Interface: ";
+				PyErr_Print();
+			} else {
+				PyErr_Clear();
+			}
+
 			pArgSpecFunc = PyObject_GetAttrString(pInspectMod,"getargspec");
+			MYASSERT_NOT_NULL(pArgSpecFunc);
 		}
-		MYASSERT_NOT_NULL(pArgSpecFunc);
 
 		// Get a dictionary of all the module's functions
 		PyObject* pModuleDictionary = PyModule_GetDict(m_LocalMod);
@@ -260,11 +272,24 @@ public:
 					}
 				}
 				m_Functions[funcName] = pFuncRec;
+				Py_DECREF(pTuple);
 			}
+			Py_DECREF(pRepr);
+#ifdef PYTHON_VER_3
+			Py_DECREF(pStr);
+#endif
+		}
+		Py_DECREF(pModuleKeyList);
+
+		if (g_bVerbose) {
+			std::cerr << "Python Interface: Loaded" << std::endl;
 		}
 
-
 		m_Initialized = true;
+
+		// release the functions from inspect module
+		Py_DECREF(pArgSpecFunc);
+		Py_DECREF(pInspectMod);
 	}
 	virtual bool IsInitialized() {
 		return m_Initialized;

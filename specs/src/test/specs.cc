@@ -102,7 +102,7 @@ int main (int argc, char** argv)
 	try {
 		p_gExternalFunctions->Initialize(getFullSpecPath());
 	} catch (const SpecsException& e) {
-		std::cerr << "Error initializing python interface: " << e.what(conciseExceptions) << "\n";
+		std::cerr << "Python Interface: " << e.what(conciseExceptions) << "\n";
 		exit(0);
 	}
 #ifdef DEBUG
