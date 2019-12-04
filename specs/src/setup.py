@@ -43,7 +43,7 @@ with open("xx.txt","w") as v:
 		cflags=flags.read().strip().split()
 		filter = filtered_flags_debug if variation=="DEBUG" else filtered_flags
 		filtered_cflags = [f for f in cflags if f not in filter]
-		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register"
+		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
 	
 	# Get the result of python-config --cflags
 	cmd = "{}-config --ldflags > xx.txt".format(arg)
