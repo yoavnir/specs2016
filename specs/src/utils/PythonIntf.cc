@@ -53,6 +53,11 @@ private:
 class PythonFuncRec : public ExternalFunctionRec {
 public:
 	PythonFuncRec(std::string& _name, PyObject* _pFunc) : m_name(_name), m_pFuncPtr(_pFunc), m_pTuple(NULL) {}
+	
+	virtual ~PythonFuncRec() {
+		Py_DECREF(m_pFuncPtr);
+		if (m_pTuple) Py_DECREF(m_pTuple);
+	}
 
 	void addArg(char* name) {
 		m_args.push_back(PythonFuncArg(name));
@@ -139,6 +144,10 @@ public:
 
 	~PythonFunctionCollection() {
 		if (Py_IsInitialized()) {
+		for (auto it = m_Functions.begin() ; it != m_Functions.end() ; it++) {
+			delete it->second;
+		}
+
 			Py_Finalize();
 			if (g_bVerbose) {
 				std::cerr << "Python Interface: Unloaded" << std::endl;
@@ -270,6 +279,10 @@ public:
 					} else {
 						pFuncRec->addArg(pArgName);
 					}
+					Py_DECREF(pRepr);
+#ifdef PYTHON_VER_3
+					Py_DECREF(pUnicode);
+#endif
 				}
 				m_Functions[funcName] = pFuncRec;
 				Py_DECREF(pTuple);
