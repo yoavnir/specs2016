@@ -8,6 +8,7 @@
 #define ALUFUNC_REGULAR      0x00
 #define ALUFUNC_STATISTICAL  0x01
 #define ALUFUNC_FREQUENCY    0x02
+#define ALUFUNC_EXTERNAL     0x80
 
 // function name, number of arguments, whether it needs lines from input
 #define ALU_FUNCTION_LIST            \

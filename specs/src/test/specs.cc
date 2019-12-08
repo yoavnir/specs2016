@@ -98,18 +98,6 @@ int main (int argc, char** argv)
 	conciseExceptions = !g_bVerbose;
 #endif
 
-#ifndef SPECS_NO_PYTHON
-	try {
-		p_gExternalFunctions->Initialize(getFullSpecPath());
-	} catch (const SpecsException& e) {
-		std::cerr << "Python Interface: " << e.what(conciseExceptions) << "\n";
-		exit(0);
-	}
-#ifdef DEBUG
-	p_gExternalFunctions->Debug();
-#endif
-#endif
-
 	std::vector<Token> vec;
 
 	try {

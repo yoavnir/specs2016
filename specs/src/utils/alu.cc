@@ -914,8 +914,31 @@ AluFunction::AluFunction(std::string& _s)
 #ifdef DEBUG
 	ALU_DEBUG_FUNCTION_LIST
 #endif
-	std::string err = "Unrecognized function "+_s;
-	MYTHROW(err);
+	// Internal function not found - try external
+	if (!p_gExternalFunctions->IsInitialized()) {
+#ifndef SPECS_NO_PYTHON
+		try {
+			p_gExternalFunctions->Initialize(getFullSpecPath());
+		} catch (const SpecsException& e) {
+			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+			exit(0);
+		}
+#ifdef DEBUG
+		p_gExternalFunctions->Debug();
+#endif
+#endif
+	}
+	MYASSERT(p_gExternalFunctions->IsInitialized());
+	m_pExternalFunc = p_gExternalFunctions->GetFunctionByName(_s);
+	if (!m_pExternalFunc) {
+		std::string err = "Unrecognized function "+_s;
+		MYTHROW(err);
+	}
+	m_FuncName = _s;
+	m_ArgCount = m_pExternalFunc->GetArgCount();
+	m_reliesOnInput = false;
+	mp_Func = NULL;
+	m_flags = ALUFUNC_EXTERNAL;
 }
 #undef X
 
@@ -927,36 +950,75 @@ void AluFunction::_serialize(std::ostream& os) const
 ALUValue* AluFunction::evaluate()
 {
 	if (0 != countOperands()) return AluUnit::evaluate();
+	if (m_flags & ALUFUNC_EXTERNAL) {
+		m_pExternalFunc->ResetArgs();
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc0(mp_Func))();
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1)
 {
 	if (1 != countOperands()) return AluUnit::compute(op1);
+	if (m_flags & ALUFUNC_EXTERNAL) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc1(mp_Func))(op1);
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2)
 {
 	if (2 != countOperands()) return AluUnit::compute(op1,op2);
+	if (m_flags & ALUFUNC_EXTERNAL) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		m_pExternalFunc->setArgValue(1,op2);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc2(mp_Func))(op1,op2);
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3)
 {
 	if (3 != countOperands()) return AluUnit::compute(op1,op2,op3);
+	if (m_flags & ALUFUNC_EXTERNAL) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		m_pExternalFunc->setArgValue(1,op2);
+		m_pExternalFunc->setArgValue(2,op3);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc3(mp_Func))(op1,op2,op3);
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4)
 {
 	if (4 != countOperands()) return AluUnit::compute(op1,op2,op3,op4);
+	if (m_flags & ALUFUNC_EXTERNAL) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		m_pExternalFunc->setArgValue(1,op2);
+		m_pExternalFunc->setArgValue(2,op3);
+		m_pExternalFunc->setArgValue(3,op4);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc4(mp_Func))(op1,op2,op3,op4);
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5)
 {
 	if (5 != countOperands()) return AluUnit::compute(op1,op2,op3,op4,op5);
+	if (m_flags & ALUFUNC_EXTERNAL) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		m_pExternalFunc->setArgValue(1,op2);
+		m_pExternalFunc->setArgValue(2,op3);
+		m_pExternalFunc->setArgValue(3,op4);
+		m_pExternalFunc->setArgValue(4,op5);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc5(mp_Func))(op1,op2,op3,op4,op5);
 }
 

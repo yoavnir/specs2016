@@ -1,7 +1,7 @@
 #ifndef SPECS2016__PYTHON__INTF__H
 #define SPECS2016__PYTHON__INTF__H
 
-#include "utils/alu.h"
+#include "utils/aluValue.h"
 
 bool pythonInterfaceEnabled();
 
