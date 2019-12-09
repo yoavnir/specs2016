@@ -42,7 +42,8 @@ public:
 			return m_name;
 		}
 	}
-private:
+
+	// It's all left public because it's all used only here
 	std::string     m_name;
 	ALUCounterType  m_default;
 	std::string     m_defStr;
@@ -97,6 +98,17 @@ public:
 		MYASSERT(idx < argCount);
 
 		if (!m_pTuple) m_pTuple = PyTuple_New(GetArgCount());
+
+		if (!pValue) {   // NULL passed - use default or None
+			PythonFuncArg& arg = m_args[idx];
+			if (counterType__None == arg.m_default) {
+				// no default - send the None object
+				pValObj = Py_None;
+			} else {
+				// leave NULL so the default is used
+			}
+			return;
+		}
 
 		switch (pValue->getType()) {
 		case counterType__Int:
