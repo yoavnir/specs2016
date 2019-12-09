@@ -56,7 +56,7 @@ public:
 	
 	virtual ~PythonFuncRec() {
 		Py_DECREF(m_pFuncPtr);
-		if (m_pTuple) Py_DECREF(m_pTuple);
+		ResetArgs();
 	}
 
 	void addArg(char* name) {
@@ -84,7 +84,10 @@ public:
 	}
 
 	void ResetArgs() {
-		m_pTuple = NULL;   // Yeah, that requires something more elaborate
+		if (m_pTuple) {
+			Py_DECREF(m_pTuple);
+		}
+		m_pTuple = NULL;
 	}
 
 	void setArgValue(size_t idx, ALUValue *pValue) {
