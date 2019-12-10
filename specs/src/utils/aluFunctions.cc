@@ -423,6 +423,28 @@ ALUValue* AluFunc_d2tf(ALUValue* pValue, ALUValue* pFormat)
 	return ret;
 }
 
+ALUValue* AluFunc_tf2s(ALUValue* pTimeFormatted, ALUValue* pFormat)
+{
+	ASSERT_NOT_ELIDED(pTimeFormatted,1,formatted_time);
+	ASSERT_NOT_ELIDED(pFormat,2,format);
+	int64_t tm = specTimeConvertFromPrintable(pTimeFormatted->getStr(), pFormat->getStr());
+        ALUFloat seconds = (tm/MICROSECONDS_PER_SECOND);
+        ALUFloat microseconds = (ALUFloat)(tm%MICROSECONDS_PER_SECOND)/MICROSECONDS_PER_SECOND;
+        return new ALUValue(ALUFloat(seconds+microseconds));
+}
+
+ALUValue* AluFunc_s2tf(ALUValue* pValue, ALUValue* pFormat)
+{
+	ASSERT_NOT_ELIDED(pValue,1,time_value);
+	ASSERT_NOT_ELIDED(pFormat,2,format);
+        ALUFloat seconds = pValue->getFloat();
+        int64_t microseconds = seconds * MICROSECONDS_PER_SECOND;
+	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
+	ALUValue* ret = new ALUValue(printable->data(), printable->length());
+	delete printable;
+	return ret;
+}
+
 
 // Substring functions
 

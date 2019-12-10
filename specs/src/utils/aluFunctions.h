@@ -42,6 +42,8 @@
 	X(range,          2, ALUFUNC_REGULAR,      true)  \
 	X(tf2d,           2, ALUFUNC_REGULAR,     false)  \
 	X(d2tf,           2, ALUFUNC_REGULAR,     false)  \
+	X(tf2s,           2, ALUFUNC_REGULAR,     false)  \
+	X(s2tf,           2, ALUFUNC_REGULAR,     false)  \
 	X(substr,         3, ALUFUNC_REGULAR,     false)  \
 	X(pos,            2, ALUFUNC_REGULAR,     false)  \
 	X(lastpos,        2, ALUFUNC_REGULAR,     false)  \
