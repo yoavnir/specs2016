@@ -72,7 +72,7 @@ specs   IF "first()" THEN
            PRINT "#4"                1
            WORD 2             NEXTWORD
            READ
-           WORD 2-6 tf2d "%c" NEXTWORD
+           WORD 2-6 tf2s "%c" NEXTWORD
            WHILE "word(1)!='commit'" DO
               READSTOP
            DONE
@@ -97,7 +97,7 @@ specs WORD 2                    1
       READSTOP
       WORD 2             NEXTWORD
       READSTOP
-      WORD 2-6 tf2d "%c" NEXTWORD
+      WORD 2-6 tf2s "%c" NEXTWORD
       WHILE "word(1)!='commit'" DO
           READSTOP
       DONE
