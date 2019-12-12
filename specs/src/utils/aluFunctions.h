@@ -40,8 +40,8 @@
 	X(field,          1, ALUFUNC_REGULAR,      true)  \
 	X(fieldrange,     2, ALUFUNC_REGULAR,      true)  \
 	X(range,          2, ALUFUNC_REGULAR,      true)  \
-	X(tf2d,           2, ALUFUNC_REGULAR,     false)  \
-	X(d2tf,           2, ALUFUNC_REGULAR,     false)  \
+	X(tf2mcs,         2, ALUFUNC_REGULAR,     false)  \
+	X(mcs2tf,         2, ALUFUNC_REGULAR,     false)  \
 	X(tf2s,           2, ALUFUNC_REGULAR,     false)  \
 	X(s2tf,           2, ALUFUNC_REGULAR,     false)  \
 	X(substr,         3, ALUFUNC_REGULAR,     false)  \

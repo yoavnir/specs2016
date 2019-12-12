@@ -179,7 +179,7 @@ static std::string conv_tf2i(std::string& s, std::string& parm)
 	return std::string(((char*)(&ret)), sizeof(int64_t));
 }
 
-static std::string conv_d2tf(std::string& s, std::string& parm)
+static std::string conv_s2tf(std::string& s, std::string& parm)
 {
 	int64_t internal = int64_t(std::stold(s) * MICROSECONDS_PER_SECOND + 0.5);
 	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
@@ -188,7 +188,7 @@ static std::string conv_d2tf(std::string& s, std::string& parm)
 	return ret;
 }
 
-static std::string conv_tf2d(std::string& s, std::string& parm)
+static std::string conv_tf2s(std::string& s, std::string& parm)
 {
 	int64_t tm = specTimeConvertFromPrintable(s,parm);
 	long double seconds;
@@ -199,6 +199,22 @@ static std::string conv_tf2d(std::string& s, std::string& parm)
 	}
 	return std::to_string(seconds);
 }
+
+static std::string conv_mcs2tf(std::string& s, std::string& parm)
+{
+	int64_t internal = int64_t(std::stold(s) + 0.5);
+	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
+	std::string ret = std::string(pRet->data());
+	delete pRet;
+	return ret;
+}
+
+static std::string conv_tf2mcs(std::string& s, std::string& parm)
+{
+	int64_t tm = specTimeConvertFromPrintable(s,parm);
+	return std::to_string(tm);
+}
+
 
 #define X(c) if (0==strcasecmp(s.c_str(),#c)) return StringConversion__##c;
 #define Y(c) if (0==strcasecmp(s.c_str(),#c)) return StringConversion__##c;

@@ -404,7 +404,7 @@ ALUValue* AluFunc_wordlen(ALUValue* pIdx)
 	return new ALUValue(ALUInt(len));
 }
 
-ALUValue* AluFunc_tf2d(ALUValue* pTimeFormatted, ALUValue* pFormat)
+ALUValue* AluFunc_tf2mcs(ALUValue* pTimeFormatted, ALUValue* pFormat)
 {
 	ASSERT_NOT_ELIDED(pTimeFormatted,1,formatted_time);
 	ASSERT_NOT_ELIDED(pFormat,2,format);
@@ -412,7 +412,7 @@ ALUValue* AluFunc_tf2d(ALUValue* pTimeFormatted, ALUValue* pFormat)
 	return new ALUValue(ALUInt(tm));
 }
 
-ALUValue* AluFunc_d2tf(ALUValue* pValue, ALUValue* pFormat)
+ALUValue* AluFunc_mcs2tf(ALUValue* pValue, ALUValue* pFormat)
 {
 	ASSERT_NOT_ELIDED(pValue,1,time_value);
 	ASSERT_NOT_ELIDED(pFormat,2,format);

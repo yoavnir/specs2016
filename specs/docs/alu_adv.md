@@ -180,8 +180,8 @@ The parameters for the `fmap_dump` functions are as follows:
 | `eof()` | Returns `1` in the run-out phase, or `0` otherwise |
 | `conf(key,default)` | Returns the configured string `key` if it exists, the value `default` if it doesn't, and **NaN** if `default` is omitted |
 | `defined(key)` | Returns `1` if the configured string `key` is defined, or `0` if it isn't |
-| `tf2d(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is microseconds since the UNIX epoch. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
-| `d2tf(x,f)` | Returns the string representation of the number `x` treated as the internal time format and formatted according to the string in `f`. |
+| `tf2mcs(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is microseconds since the UNIX epoch. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
+| `mcs2tf(x,f)` | Returns the string representation of the number `x` treated as the internal time format and formatted according to the string in `f`. |
 | `tf2s(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to seconds since the UNIX epoch. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
 | `s2tf(x,f)` | Returns the string representation of the number `x` treated as seconds since the UNIX epoch and formatted according to the string in `f`. |
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |

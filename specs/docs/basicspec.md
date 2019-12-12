@@ -120,8 +120,10 @@ The _conversion_ argument can specify any of the following conversions:
 * **BSWAP** - byte swap. reverses the order of bytes: "AB" --> "BA"
 * **ti2f format** - convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * **tf2i format** - convert printable time format to the internal 8-byte representation. 
-* **d2tf format** - convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
-* **tf2d format** - convert printable time format to a decimal number, representing seconds since the epoch. 
+* **s2tf format** - convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2s format** - convert printable time format to a decimal number, representing seconds since the epoch. 
+* **mcs2tf format** - convert a number, representing microseconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2mcs format** - convert printable time format to a number, representing microseconds since the epoch. 
 
 Words vs Fields
 ===============
@@ -145,7 +147,7 @@ Let's use the output of ls we used earlier again:
 ```
 Let's arrange the line so that the filename is centered in the first 35 columns, and convert the date (in words 6-8) to seconds since the epoch:
 ```
-    specs substr fs / field -1 of word -1 1.35 center    w6-8 tf2d "%b %d %H:%M" nw
+    specs substr fs / field -1 of word -1 1.35 center    w6-8 tf2s "%b %d %H:%M" nw
 ```
 This *specification* contains two data fields which I've separated using multiple space characters. The result comes out something like this:
 ```

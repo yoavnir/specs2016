@@ -350,14 +350,14 @@ int main(int argc, char** argv)
 	VERIFY2("ws / / { 1 w1 n } n",     "  \tword", "{\tword}");  // Test #89
 	VERIFY2("ws default { 1 w1 n } n", "  \tword", "{word}");    // Test #90
 
-	// tf2d and d2tf
-	VERIFY2("1-* tf2d %Y-%m-%dT%H:%M:%S.%6f a: ID a d2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #91
+	// tf2s and s2tf
+	VERIFY2("1-* tf2s %Y-%m-%dT%H:%M:%S.%6f a: ID a s2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #91
 #ifdef WIN64
-	VERIFY("/1545407296.548900/ d2tf '%c' 1", "12/21/18 17:48:16");  // Test #92
-	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "12/21/18 18:48:16");  // Test #93
+	VERIFY("/1545407296.548900/ s2tf '%c' 1", "12/21/18 17:48:16");  // Test #92
+	VERIFY("a: /1545407296.548900/ . print 'a+3600' s2tf '%c' 1", "12/21/18 18:48:16");  // Test #93
 #else
-	VERIFY("/1545407296.548900/ d2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #92
-	VERIFY("a: /1545407296.548900/ . print 'a+3600' d2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #93
+	VERIFY("/1545407296.548900/ s2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #92
+	VERIFY("a: /1545407296.548900/ . print 'a+3600' s2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #93
 #endif
 
 	// Issue #43
@@ -470,13 +470,13 @@ int main(int argc, char** argv)
 #ifdef SPANISH_LOCALE_SUPPORTED
 	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112
 #ifdef PUT_TIME__SUPPORTED
-	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #113
+	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #113
 #else
-	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #113
+	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #113
 #endif
 #endif
 	VERIFYCMD(specTimeSetLocale("C"),"");  // TEST #114
-	VERIFY("/1545407296.548900/ d2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
+	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
 	
 	VERIFY("print 'next()' 1 /next/ n print 'next()' n", "1next6");  // TEST #116
 
@@ -505,6 +505,25 @@ int main(int argc, char** argv)
 
 	VERIFY("requires version /4/ 1", "4");  // TEST #136
 	VERIFY("requires hello /4/ 1", "Missing required configured literal <hello>"); // TEST #137
+
+	// tf2mcs and mcs2tf
+	VERIFY2("1-* tf2mcs %Y-%m-%dT%H:%M:%S.%6f a: ID a mcs2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #138
+#ifdef WIN64
+	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "12/21/18 17:48:16");  // Test #139
+	VERIFY("a: /1545407296548900/ . print 'a+3600' mcs2tf '%c' 1", "12/21/18 18:48:16");  // Test #140
+#else
+	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #139
+	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #140
+#endif
+
+#ifdef SPANISH_LOCALE_SUPPORTED
+#ifdef PUT_TIME__SUPPORTED
+	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #141
+#else
+	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #141
+#endif
+#endif
+	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #142
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
