@@ -53,7 +53,9 @@ public:
 
 class PythonFuncRec : public ExternalFunctionRec {
 public:
-	PythonFuncRec(std::string& _name, PyObject* _pFunc) : m_name(_name), m_pFuncPtr(_pFunc), m_pTuple(NULL) {}
+	PythonFuncRec(std::string& _name, PyObject* _pFunc) : m_name(_name), m_pFuncPtr(_pFunc), m_pTuple(NULL) {
+		Py_INCREF(m_pFuncPtr);
+	}
 	
 	virtual ~PythonFuncRec() {
 		Py_DECREF(m_pFuncPtr);
@@ -87,8 +89,8 @@ public:
 	void ResetArgs() {
 		if (m_pTuple) {
 			Py_DECREF(m_pTuple);
+			m_pTuple = NULL;
 		}
-		m_pTuple = NULL;
 	}
 
 	void setArgValue(size_t idx, ALUValue *pValue) {
@@ -97,17 +99,28 @@ public:
 
 		MYASSERT(idx < argCount);
 
-		if (!m_pTuple) m_pTuple = PyTuple_New(GetArgCount());
+		if (!m_pTuple) {
+			m_pTuple = PyTuple_New(argCount);
+		}
 
 		if (!pValue) {   // NULL passed - use default or None
+			static ALUValue pStatic;
+			pValue = &pStatic;
 			PythonFuncArg& arg = m_args[idx];
-			if (counterType__None == arg.m_default) {
-				// no default - send the None object
-				pValObj = Py_None;
-			} else {
-				// leave NULL so the default is used
+			switch (arg.m_default) {
+			case counterType__None:
+				pStatic.set();
+				break;
+			case counterType__Str:
+				pStatic.set(arg.m_defStr);
+				break;
+			case counterType__Int:
+				pStatic.set(ALUInt(arg.m_defInt));
+				break;
+			case counterType__Float:
+				pStatic.set(ALUFloat(arg.m_defFloat));
+				break;
 			}
-			return;
 		}
 
 		switch (pValue->getType()) {
@@ -122,12 +135,50 @@ public:
 			break;
 		default:
 			pValObj = Py_None;
+			Py_INCREF(Py_None);
 		}
+
 		PyTuple_SetItem(m_pTuple, idx, pValObj);
 	}
 
 	ALUValue* Call() {
-		return new ALUValue();  // maybe we want to do it a little better, no?
+		ALUValue* pRet = NULL;
+
+		// Check that all values were passed, complete those that haven't
+		for (size_t i=0 ; i<GetArgCount() ; i++) {
+			if (NULL==PyTuple_GetItem(m_pTuple, i)) {
+				setArgValue(i, NULL);
+			}
+		}
+
+		PyObject* pResult = PyObject_CallObject(m_pFuncPtr, m_pTuple);
+		if (pResult) {
+			if (PyLong_Check(pResult)) {
+				pRet = new ALUValue(ALUInt(PyLong_AsLong(pResult)));
+			} else if (PyInt_Check(pResult)) {
+				pRet = new ALUValue(ALUInt(PyInt_AsLong(pResult)));
+			} else if (PyFloat_Check(pResult)) {
+				pRet = new ALUValue(ALUFloat(PyFloat_AsDouble(pResult)));
+			} else if (PyUnicode_Check(pResult)) {
+				PyObject* pDefBytes = PyUnicode_AsASCIIString(pResult);
+				pRet = new ALUValue(PyBytes_AS_STRING(pDefBytes));
+			} else if (PyString_Check(pResult)) {
+				pRet = new ALUValue(PyString_AS_STRING(pResult));
+			} else if (Py_None == pResult){
+				pRet = new ALUValue;  // NaN
+			} else {
+				PyObject* pRepr = PyObject_Repr(pResult);
+				std::string err = "Invalid return type from function ";
+				err += m_name + ": ";
+				err += PyString_AS_STRING(pRepr);
+				Py_DECREF(pRepr);
+				Py_DECREF(pResult);
+				MYTHROW(err);
+			}
+			Py_DECREF(pResult);
+		}
+
+		return pRet;
 	}
 
 	std::string getStr() {
@@ -204,6 +255,10 @@ public:
 				}
 				m_Initialized = true;
 				return;
+			} else {
+				std::cerr << "Python Interface: Error loading local functions: ";
+				PyErr_Print();
+				MYTHROW("Error loading local functions");
 			}
 		}
 
