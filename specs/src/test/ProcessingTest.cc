@@ -518,7 +518,9 @@ int main(int argc, char** argv)
 
 #ifdef SPANISH_LOCALE_SUPPORTED
 #ifdef PUT_TIME__SUPPORTED
+	specTimeSetLocale("es_ES");
 	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #141
+	specTimeSetLocale("C");
 #else
 	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #141
 #endif
