@@ -302,13 +302,19 @@ public:
 			PyObject* pStr = PyUnicode_AsEncodedString(pRepr, "utf-8", "~E~");
 			const char *pKeyName = PyBytes_AS_STRING(pStr);
 #endif
+			std::string funcName = pKeyName+1; // get rid of first quote
+			funcName.resize(funcName.size()-1);
 
-			if (0==strncmp("'pyspecfunc_", pKeyName, 11)) {
-				std::string funcName = std::string((char*)pKeyName + 12);
-				funcName.resize(funcName.size()-1);
+			if (funcName[0]!='_') {
 				PyObject *pFunc = PyDict_GetItem(pModuleDictionary, pKey);
 				MYASSERT_NOT_NULL(pFunc);
-				MYASSERT(PyCallable_Check(pFunc));
+				if (!PyCallable_Check(pFunc)) {
+					Py_DECREF(pRepr);
+#ifdef PYTHON_VER_3
+					Py_DECREF(pStr);
+#endif
+					continue;
+				}
 
 				// Set up arguments for the getargspec function
 				PyObject *pTuple = PyTuple_New(1);
