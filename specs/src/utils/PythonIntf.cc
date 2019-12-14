@@ -176,6 +176,14 @@ public:
 				MYTHROW(err);
 			}
 			Py_DECREF(pResult);
+		} else {
+			if (PyErr_Occurred()) {
+				if (g_bVerbose) {
+					PyErr_Print();
+				}
+				MYTHROW("Error in external function")
+			}
+			pRet = new ALUValue; // NaN
 		}
 
 		return pRet;
@@ -256,8 +264,10 @@ public:
 				m_Initialized = true;
 				return;
 			} else {
-				std::cerr << "Python Interface: Error loading local functions: ";
-				PyErr_Print();
+				if (g_bVerbose) {
+					std::cerr << "Python Interface: Error loading local functions:\n";
+					PyErr_Print();
+				}
 				MYTHROW("Error loading local functions");
 			}
 		}
