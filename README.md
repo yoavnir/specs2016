@@ -10,21 +10,11 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-xx-XXX-2020: Version 0.6 - dates TBD
-------------------------------------
+31-Jan-2020: Version 0.6 Alpha is here
+--------------------------------------
 Planned features:
 * Python functions
 * MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
-
-10-Nov-2019: Version 0.5 beta is here
--------------------------------------
-What's new:
-* Functions with elided arguments and variable number of arguments
-* Some functions reformed because of this.
-* Specification path
-* Support record formats and locales
-* New functions: fmt for formatting numbers. next and rest for formatting records. @cols and @rows.
-* Bug fixes
 
 Sources
 =======
@@ -34,9 +24,9 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.4:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.5:
 ```
-git checkout v0.4
+git checkout v0.5
 ```
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 
@@ -59,6 +49,11 @@ Anyone can contribute. So far, I have written all of the code, but if you want t
 * Submit bug reports or feature requests at the [Issue Tracker](https://github.com/yoavnir/specs2016/issues).
 * Help solve some existing issue.
 * Submit pull requests
+
+Contributors
+============
+* Yoav Nir ([yoavnir](https://github.com/yoavnir))
+* Jean-Baptiste Jouband ([Gawesomer](https://github.com/Gawesomer))
 
 Documentation
 =============
