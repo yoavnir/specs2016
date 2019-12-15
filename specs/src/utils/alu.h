@@ -267,6 +267,8 @@ public:
 	std::string&                getName()       { return m_FuncName; }
 	static unsigned char        functionTypes() { return m_flags; }
 private:
+	// m_flags is static because it's a bitstring that describes all of the functions
+	// used in a particular specification.
 	static unsigned char m_flags;
 	std::string		     m_FuncName;
 	void*			     mp_Func;

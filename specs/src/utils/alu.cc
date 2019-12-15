@@ -910,6 +910,10 @@ AluFunction::AluFunction(std::string& _s)
 {
 	std::string s(_s);
 	std::transform(s.begin(), s.end(),s.begin(), ::tolower);
+
+	mp_Func = NULL;
+	m_pExternalFunc = NULL;
+
 	ALU_FUNCTION_LIST
 #ifdef DEBUG
 	ALU_DEBUG_FUNCTION_LIST
@@ -938,7 +942,7 @@ AluFunction::AluFunction(std::string& _s)
 	m_ArgCount = m_pExternalFunc->GetArgCount();
 	m_reliesOnInput = false;
 	mp_Func = NULL;
-	m_flags = ALUFUNC_EXTERNAL;
+	m_flags |= ALUFUNC_EXTERNAL;
 }
 #undef X
 
@@ -950,7 +954,7 @@ void AluFunction::_serialize(std::ostream& os) const
 ALUValue* AluFunction::evaluate()
 {
 	if (0 != countOperands()) return AluUnit::evaluate();
-	if (m_flags & ALUFUNC_EXTERNAL) {
+	if (NULL != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		return m_pExternalFunc->Call();
 	}
@@ -960,7 +964,7 @@ ALUValue* AluFunction::evaluate()
 ALUValue* AluFunction::compute(ALUValue* op1)
 {
 	if (1 != countOperands()) return AluUnit::compute(op1);
-	if (m_flags & ALUFUNC_EXTERNAL) {
+	if (NULL != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		return m_pExternalFunc->Call();
@@ -971,7 +975,7 @@ ALUValue* AluFunction::compute(ALUValue* op1)
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2)
 {
 	if (2 != countOperands()) return AluUnit::compute(op1,op2);
-	if (m_flags & ALUFUNC_EXTERNAL) {
+	if (NULL != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		m_pExternalFunc->setArgValue(1,op2);
@@ -983,7 +987,7 @@ ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2)
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3)
 {
 	if (3 != countOperands()) return AluUnit::compute(op1,op2,op3);
-	if (m_flags & ALUFUNC_EXTERNAL) {
+	if (NULL != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		m_pExternalFunc->setArgValue(1,op2);
@@ -996,7 +1000,7 @@ ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3)
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4)
 {
 	if (4 != countOperands()) return AluUnit::compute(op1,op2,op3,op4);
-	if (m_flags & ALUFUNC_EXTERNAL) {
+	if (NULL != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		m_pExternalFunc->setArgValue(1,op2);
@@ -1010,7 +1014,7 @@ ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUV
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5)
 {
 	if (5 != countOperands()) return AluUnit::compute(op1,op2,op3,op4,op5);
-	if (m_flags & ALUFUNC_EXTERNAL) {
+	if (NULL != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		m_pExternalFunc->setArgValue(1,op2);
