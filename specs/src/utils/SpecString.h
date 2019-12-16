@@ -40,6 +40,7 @@ public:
 	static PSpecString newString(std::string& st);
 	virtual ~SpecString() {}
 	virtual void add(PSpecString ps) = 0;
+	virtual void append(PSpecString ps) = 0;
 	virtual void _serialize(std::ostream& os) const = 0;
 	virtual const char* data() = 0;
 	virtual size_t length() = 0;
@@ -59,6 +60,7 @@ public:
 	StdSpecString(const StdSpecString &sps) {m_str = *(sps.getStdString());}
 	virtual ~StdSpecString() {}
 	virtual void add(PSpecString ps);
+	virtual void append(PSpecString ps);
 	virtual const char* data() {return m_str.c_str();}
 	virtual size_t length() {return m_str.length();}
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar);

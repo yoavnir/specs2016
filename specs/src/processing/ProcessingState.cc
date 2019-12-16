@@ -219,10 +219,15 @@ void ProcessingState::identifyFields()
 	int i = 0;
 
 	while (pc[i]!=0) {
+		bool bFieldHasContent = true;
 		m_fieldCount++;
 		m_fieldStart.insert(m_fieldStart.end(), i+1);
-		while (pc[i]!=m_fieldSeparator && pc[i]!=0) i++;
-		m_fieldEnd.insert(m_fieldEnd.end(), (i==0) ? EMPTY_FIELD_MARKER : i);
+		if (pc[i]==m_fieldSeparator) {
+			bFieldHasContent = false;
+		} else {
+			while (pc[i]!=m_fieldSeparator && pc[i]!=0) i++;
+		}
+		m_fieldEnd.insert(m_fieldEnd.end(), bFieldHasContent ? i : EMPTY_FIELD_MARKER);
 		if (pc[i]==m_fieldSeparator) i++;
 	}
 }
@@ -304,6 +309,7 @@ int ProcessingState::getWordEnd(int idx) {
 // Convention: returns NULL for an empty string
 // Convention: from=0 means from the start (same as 1)
 // Convention: to=0 means to the end
+// Convention: from=0 and to=0 -- empty string.
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
 	if (m_inputStation != STATION_SECOND) {
@@ -311,7 +317,9 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	}
 	int slen = (int)(currRecord()->length());
 
-	if (from==1 && to==EMPTY_FIELD_MARKER) return SpecString::newString();
+	if (0==from && 0==to) return SpecString::newString();
+
+	if (to==EMPTY_FIELD_MARKER) return SpecString::newString();
 
 	// conventions
 	if (from==0) from=1;
@@ -331,8 +339,12 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	if (from>slen) return NULL;
 	if (to>slen) to = slen;
 
-	// to < from ==> empty string
-	if (to<from) return NULL;
+	// to < from ==> wrap-around
+	if (to<from) {
+		PSpecString pRet = SpecString::newString(currRecord(), from-1, slen-from+1);
+		pRet->append(SpecString::newString(currRecord(), 0, to));
+		return pRet;
+	}
 
 	return SpecString::newString(currRecord(), from-1, to-from+1);
 }
