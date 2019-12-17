@@ -38,7 +38,7 @@ def leak_check(cmd, test_id="0"):
 
     no_definitely_lost = False
     no_indirectly_lost = False
-    no_possibly_lost = False
+    no_possibly_lost = True
 
     for line in lines:
         if line.find("in use at exit: 0 bytes") >= 0:
@@ -47,8 +47,8 @@ def leak_check(cmd, test_id="0"):
             no_definitely_lost = True
         if line.find("indirectly lost: 0 bytes") >=0:
             no_indirectly_lost = True
-        if line.find("possibly lost: 0 bytes") >=0:
-            no_possibly_lost = True
+        # if line.find("possibly lost: 0 bytes") >=0:
+        #     no_possibly_lost = True
 
     if no_definitely_lost and no_indirectly_lost and no_possibly_lost:
         return good_return
