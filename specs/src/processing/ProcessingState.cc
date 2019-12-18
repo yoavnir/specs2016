@@ -342,7 +342,9 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	// to < from ==> wrap-around
 	if (to<from) {
 		PSpecString pRet = SpecString::newString(currRecord(), from-1, slen-from+1);
-		pRet->append(SpecString::newString(currRecord(), 0, to));
+		PSpecString pWrappedAroundPart = SpecString::newString(currRecord(), 0, to);
+		pRet->append(pWrappedAroundPart);
+		delete pWrappedAroundPart;
 		return pRet;
 	}
 
