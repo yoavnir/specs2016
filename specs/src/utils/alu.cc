@@ -918,9 +918,10 @@ AluFunction::AluFunction(std::string& _s)
 #ifdef DEBUG
 	ALU_DEBUG_FUNCTION_LIST
 #endif
+
+#ifndef SPECS_NO_PYTHON
 	// Internal function not found - try external
 	if (!p_gExternalFunctions->IsInitialized()) {
-#ifndef SPECS_NO_PYTHON
 		try {
 			p_gExternalFunctions->Initialize(getFullSpecPath());
 		} catch (const SpecsException& e) {
@@ -930,10 +931,11 @@ AluFunction::AluFunction(std::string& _s)
 #ifdef DEBUG
 		p_gExternalFunctions->Debug();
 #endif
-#endif
 	}
 	MYASSERT(p_gExternalFunctions->IsInitialized());
 	m_pExternalFunc = p_gExternalFunctions->GetFunctionByName(_s);
+#endif
+	
 	if (!m_pExternalFunc) {
 		std::string err = "Unrecognized function "+_s;
 		MYTHROW(err);
