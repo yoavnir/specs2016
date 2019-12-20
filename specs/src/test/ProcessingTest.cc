@@ -510,7 +510,7 @@ int main(int argc, char** argv)
 	VERIFY2("1-* tf2mcs %Y-%m-%dT%H:%M:%S.%6f a: ID a mcs2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #138
 #ifdef WIN64
 	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "12/21/18 17:48:16");  // Test #139
-	VERIFY("a: /1545407296548900/ . print 'a+3600' mcs2tf '%c' 1", "12/21/18 18:48:16");  // Test #140
+	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "12/21/18 18:48:16");  // Test #140
 #else
 	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #139
 	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #140

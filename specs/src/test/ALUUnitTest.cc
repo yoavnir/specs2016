@@ -751,7 +751,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("mcs2tf(1546550663000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
 	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
+#ifdef VISUAL_STUDIO  // TODO: check whether this needs to be VS or WIN64
+	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23:123456','%Y-%m-%d %H:%M:%S:%6f')", "1546550603.12346");
+#else
 	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23:123456','%Y-%m-%d %H:%M:%S:%6f')", "1546550603.123456");
+#endif
 	VERIFY_EXPR_RES("s2tf(1546550663.000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
 	// Issue #62
