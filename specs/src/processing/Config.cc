@@ -216,6 +216,22 @@ bool anyNonPrimaryInputStreamDefined()
 	return ret;
 }
 
+bool inputStreamIsDefined(int i)
+{
+	switch (i) {
+	case 1: return true;
+	case 2: return (g_inputStream2!="");
+	case 3: return (g_inputStream3!="");
+	case 4: return (g_inputStream4!="");
+	case 5: return (g_inputStream5!="");
+	case 6: return (g_inputStream6!="");
+	case 7: return (g_inputStream7!="");
+	case 8: return (g_inputStream8!="");
+	default:
+		return false;
+	}
+}
+
 const char* getFullSpecPath()
 {
 	static std::string res("");

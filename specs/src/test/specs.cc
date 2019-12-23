@@ -13,6 +13,8 @@
 #include "utils/ErrorReporting.h"
 #include "utils/PythonIntf.h"
 
+extern int g_stop_stream;
+
 std::string getNextArg(int& argc, char**& argv)
 {
 	argc--; argv++;
@@ -208,6 +210,7 @@ int main (int argc, char** argv)
 			if (g_inputStream6 != "") pmRd->addStream(6, g_inputStream6);
 			if (g_inputStream7 != "") pmRd->addStream(7, g_inputStream7);
 			if (g_inputStream8 != "") pmRd->addStream(8, g_inputStream8);
+			pmRd->setStopReader(g_stop_stream);
 			pRd = pmRd;
 		}
 

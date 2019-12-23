@@ -5,6 +5,11 @@
 #include "utils/StringQueue.h"
 #include "utils/TimeUtils.h"
 
+#define STOP_STREAM_ALL     97
+#define STOP_STREAM_ANY     98
+#define STOP_STREAM_INVALID 99
+#define IS_SPECIFIC_STREAM(x)  ((x)<STOP_STREAM_ALL)
+
 class Reader {
 public:
 	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0; m_pUnreadString = NULL; m_bAbort = false; m_bRanDry = false;}
@@ -12,7 +17,7 @@ public:
 	virtual void        selectStream(unsigned char idx);
 	virtual bool        endOfSource() = 0;
 	virtual PSpecString getNextRecord() = 0;
-	virtual PSpecString get(classifyingTimer& tmr);
+	virtual PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter);
 	void                pushBack(PSpecString ps);
 	virtual void        readIntoQueue();
 	virtual void        Begin();
@@ -51,7 +56,7 @@ public:
 	void    InsertString(PSpecString ps);
 	virtual bool endOfSource() {return m_bAbort || (m_idx >= m_count); }
 	virtual PSpecString getNextRecord() {return SpecStringCopy(mp_arr[m_idx++]);}
-	virtual PSpecString get(classifyingTimer& tmr) {return getNextRecord();}
+	virtual PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter) {return getNextRecord();}
 private:
 	PSpecString  *mp_arr;
 	size_t       m_count;
@@ -97,16 +102,19 @@ public:
 	virtual void selectStream(unsigned char idx, PSpecString* ppRecord);
 	virtual bool        endOfSource();
 	virtual PSpecString getNextRecord();
-	virtual PSpecString get(classifyingTimer& tmr);
+	virtual PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter);
 	virtual void        Begin();
 	void                End();
 	unsigned int        getReaderIdx()  { return readerIdx+1; }
+	void                setStopReader(int idx) { stopReaderIdx = idx; }
 private:
 	Reader*             readerArray[MAX_INPUT_STREAMS];
 	PSpecString         stringArray[MAX_INPUT_STREAMS];
 	unsigned int        readerIdx;
 	unsigned int        maxReaderIdx;
 	bool                bFirstGet;
+	unsigned int        stopReaderIdx;
+	unsigned int        readerCounter;
 };
 
 

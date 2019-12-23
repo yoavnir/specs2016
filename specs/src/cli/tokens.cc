@@ -551,6 +551,13 @@ static bool mayBeFieldIdentifier(Token& tok)
 	return (tok.Orig().length()==1);
 }
 
+static bool isStreamIdentifier(Token& tok)
+{
+	return (TokenListType__Range == tok.Type()) &&
+			(tok.Range()->isSingleNumber()) &&
+			(tok.Range()->getSingleNumber() > 0);
+}
+
 // Looking for one word (no character below '0') and starting with a letter or underscore
 static bool mayBeNamedString(std::string& s)
 {
@@ -761,6 +768,23 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for BREAK at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
 				}
+			}
+			break;
+		}
+		case TokenListType__STOP:  // followed by ALLEOF, ANYEOF, or a number indicating an input stream
+		{
+			if (tok.Literal()=="") {
+				if (TokenListType__ALLEOF==nextTok.Type()) {
+					tok.setLiteral("all");
+				} else if (TokenListType__ANYEOF==nextTok.Type()) {
+					tok.setLiteral("any");
+				} else if (isStreamIdentifier(nextTok)) {
+					tok.setLiteral(std::to_string(nextTok.Range()->getSingleNumber()));
+				} else {
+					std::string err = "Invalid STOP condition <" + nextTok.Orig()+"> at index " + std::to_string(nextTok.argIndex());
+					MYTHROW(err);
+				}
+				tokList->erase(tokList->begin()+(i+1));
 			}
 			break;
 		}

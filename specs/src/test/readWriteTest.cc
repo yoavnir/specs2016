@@ -7,6 +7,7 @@ int main(int argc, char** argv)
 {
 	classifyingTimer tmr;
 	StringBuilder sb;
+	unsigned int readerCount = 1;
 	Reader* pRead = new StandardReader();
 	Writer* pWrite = new SimpleWriter();
 
@@ -14,7 +15,7 @@ int main(int argc, char** argv)
 	pWrite->Begin();
 
 	while (!pRead->eof()) {
-		PSpecString p = pRead->get(tmr);
+		PSpecString p = pRead->get(tmr, readerCount);
 		sb.insert(p,1);
 		delete p;
 		pWrite->Write(sb.GetString());

@@ -5,6 +5,8 @@
 
 ALUCounters g_counters;
 
+int g_stop_stream = STOP_STREAM_ALL;
+
 struct predicateStackItem {
 	ConditionItem* pred;
 	unsigned int   argIndex;
@@ -245,6 +247,21 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			index++;
 			break;
 		}
+		case TokenListType__STOP:
+		{
+			MYASSERT_WITH_MSG(index==0,"STOP condition is only valid as the first token in the specification");
+			if (tokenVec[index].Literal()=="all") {
+				g_stop_stream = STOP_STREAM_ALL;
+			} else if (tokenVec[index].Literal()=="any") {
+				g_stop_stream = STOP_STREAM_ANY;
+			} else {
+				g_stop_stream = std::stol(tokenVec[index].Literal());
+				std::string err = "Input stream "+tokenVec[index].Literal()+" from STOP condition is not defined";
+				MYASSERT_WITH_MSG(inputStreamIsDefined(g_stop_stream), err);
+			}
+			index++;
+			break;
+		}
 		default:
 			std::string err = std::string("Unhandled token type ")
 				+ TokenListType__2str(tokenVec[index].Type())
@@ -341,8 +358,10 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			break;
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
+		{
+			static unsigned int reReaderCounter = 1;
 			MYASSERT_WITH_MSG(pState.getActiveInputStation() != STATION_SECOND, "Cannot READ or READSTOP during SELECT SECOND");
-			ps = pRd->get(tmr);
+			ps = pRd->get(tmr, reReaderCounter);
 			if (!ps) {
 				if (aRet==ApplyRet__Read) {
 					ps = SpecString::newString();
@@ -354,6 +373,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			}
 			pState.setString(ps, false);
 			break;
+		}
 		case ApplyRet__EnterLoop:
 			pState.pushLoop(i);
 			break;
@@ -384,8 +404,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, classifyingTimer& tmr)
 {
 	PSpecString ps;
+	unsigned int readerCounter = 1;  // we only got 1.
 
-	while ((ps=rd.get(tmr))) {
+	while ((ps=rd.get(tmr, readerCounter))) {
 		pState.setString(ps);
 		pState.setFirst();
 		pState.incrementCycleCounter();
@@ -407,6 +428,8 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		}
 		pState.setActiveWriter(1);
 	}
+
+	MYASSERT(readerCounter==0);
 
 	if (!bNeedRunoutCycle) {
 		tmr.changeClass(timeClassDraining);
