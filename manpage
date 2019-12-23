@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 Oct 2019" "0.5-alpha" "specs man page"
+.TH man 1 "31 Jan 2020" "0.6-alpha" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -231,6 +231,19 @@ to make all whitespace defined by the locale work as a word separator.
 Causes the current output line to become the new input line.
 .IP "SET" 3
 Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
+
+.SS "MainOptions"
+These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
+.IP "STOP" 3
+This option is followed by either the keyword
+.B ALLEOF,
+the keyword
+.B ANYEOF,
+or a number indicating an input stream. This indicates when the specification stops. The default is
+.B ALLEOF
+which means that the specification terminates when every input stream is exhausted. When some but not all of the streams are exhausted, those that are get treated as if they emit empty records. With 
+.B ANYEOF
+the specification terminates when any of the streams is exhausted. With a numeric value the specification terminates when the specified stream is exhausted. Other streams, if exhausted are treated as if they emit empty records.
 
 .SS "Conditions and Loops"
 A specification can include conditions and loops. 

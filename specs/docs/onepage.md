@@ -97,6 +97,11 @@ There are also other spec units, that may be used:
 to make all whitespace defined by the locale work as a word separator. 
 * **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
 
+MainOptions
+===========
+These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
+* **STOP** - This option is followed by either the keyword `ALLEOF`, the keyword `ANYEOF`, or a number indicating an input stream. This indicates when the specification stops. The default is `ALLEOF` which means that the specification terminates when every input stream is exhausted. When some but not all of the streams are exhausted, those that are get treated as if they emit empty records. With `ANYEOF` the specification terminates when *any* of the streams is exhausted. With a numeric value the specification terminates when the specified stream is exhausted. Other streams, if exhausted are treated as if they emit empty records.
+
 Conditions and Loops
 ====================
 **specs** also supports conditions and loops. 
