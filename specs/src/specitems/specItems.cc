@@ -5,7 +5,11 @@
 
 ALUCounters g_counters;
 
+#define PRINTONLY_PRINTALL  '\0'
+#define PRINTONLY_EOF       '_'
+
 int g_stop_stream = STOP_STREAM_ALL;
+char g_printonly_rule = PRINTONLY_PRINTALL;
 
 struct predicateStackItem {
 	ConditionItem* pred;
@@ -255,9 +259,30 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			} else if (tokenVec[index].Literal()=="any") {
 				g_stop_stream = STOP_STREAM_ANY;
 			} else {
-				g_stop_stream = std::stol(tokenVec[index].Literal());
+				try {
+					g_stop_stream = std::stol(tokenVec[index].Literal());
+				} catch (std::invalid_argument& e) {
+					std::string err = "STOP condition requires a parameter: ANYEOF, ALLEOF, or a valid input stream. Got <" +
+							tokenVec[index].Literal() + ">";
+					MYTHROW(err);
+				}
 				std::string err = "Input stream "+tokenVec[index].Literal()+" from STOP condition is not defined";
 				MYASSERT_WITH_MSG(inputStreamIsDefined(g_stop_stream), err);
+			}
+			index++;
+			break;
+		}
+		case TokenListType__PRINTONLY:
+		{
+			MYASSERT_WITH_MSG(index==0 || (index==1 && tokenVec[0].Type()==TokenListType__STOP), \
+					"PRINTONLY instruction is only valid as the first token or following a STOP");
+			if (tokenVec[index].Literal()=="EOF") {
+				g_printonly_rule = PRINTONLY_EOF;
+			} else {
+				char c = tokenVec[index].Literal()[0];
+				MYASSERT_WITH_MSG((c>='a' && c<='z') || (c>='A' && c<='Z'), \
+						"PRINTONLY instruction must specify EOF or a valid break level - an uppercase or lowercase letter");
+				g_printonly_rule = c;
 			}
 			index++;
 			break;

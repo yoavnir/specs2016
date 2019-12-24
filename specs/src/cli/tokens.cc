@@ -548,12 +548,17 @@ static bool mayBeLiteral(Token& tok)
 static bool mayBeFieldIdentifier(Token& tok)
 {
 	// doesn't matter how we parsed it.  As long as it's one character
-	return (tok.Orig().length()==1);
+	if (tok.Orig().length()==1) {
+		char ch = tok.Orig()[0];
+		if ((ch>='A' && ch<='Z') || (ch>='a' && ch<='z')) return true;
+	}
+
+	return false;
 }
 
 static bool isStreamIdentifier(Token& tok)
 {
-	return (TokenListType__Range == tok.Type()) &&
+	return (TokenListType__RANGE == tok.Type()) &&
 			(tok.Range()->isSingleNumber()) &&
 			(tok.Range()->getSingleNumber() > 0);
 }
@@ -648,14 +653,19 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				}
 			}
 			break;
+		case TokenListType__PRINTONLY:
 		case TokenListType__ID:
 		{
 			if (tok.Literal()=="") {
 				if (mayBeFieldIdentifier(nextTok)) {
 					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
+				} else if (TokenListType__PRINTONLY == tok.Type() && TokenListType__EOF == nextTok.Type()) {
+					tok.setLiteral("EOF");
+					tokList->erase(tokList->begin()+(i+1));
 				} else {
-					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for ID at index "+std::to_string(nextTok.argIndex());
+					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for <" +
+							tok.Orig() + "> at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
 				}
 			}

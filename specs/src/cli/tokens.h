@@ -18,7 +18,7 @@
 	X(ALLEOF,         false, false) \
 	X(ANYEOF,         false, false) \
 	X(COUNTERS,       false, false) \
-	X(PRINTONLY,      false, false) \
+	X(PRINTONLY,      false, true)  \
 	X(EOF,            false, false) \
 	X(KEEP,           false, false) \
 	X(READ,           false, false) \
