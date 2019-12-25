@@ -41,7 +41,7 @@ void Reader::End()
 
 PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 {
-	PSpecString ret;
+	PSpecString ret = NULL;
 	if (m_pUnreadString) {
 		ret = m_pUnreadString;
 		m_pUnreadString = NULL;
