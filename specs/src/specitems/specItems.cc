@@ -5,9 +5,6 @@
 
 ALUCounters g_counters;
 
-#define PRINTONLY_PRINTALL  '\0'
-#define PRINTONLY_EOF       '_'
-
 int g_stop_stream = STOP_STREAM_ALL;
 char g_printonly_rule = PRINTONLY_PRINTALL;
 
@@ -365,10 +362,12 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__Continue:
 			break;
 		case ApplyRet__Write:
-			if (bSomethingWasDone) {
-				pState.getCurrentWriter()->Write(sb.GetString());
-			} else {
-				pState.getCurrentWriter()->Write(SpecString::newString());
+			if (pState.shouldWrite(g_printonly_rule)) {
+				if (bSomethingWasDone) {
+					pState.getCurrentWriter()->Write(sb.GetString());
+				} else {
+					pState.getCurrentWriter()->Write(SpecString::newString());
+				}
 			}
 			bSomethingWasDone = false;
 			break;
@@ -438,7 +437,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 		if (processDo(sb,pState, &rd, tmr)) {
 			PSpecString pOutString = sb.GetString();
-			if (pState.shouldWrite()) {
+			if (pState.shouldWrite(g_printonly_rule)) {
 				tmr.changeClass(timeClassOutputQueue);
 				pState.getCurrentWriter()->Write(pOutString);
 				tmr.changeClass(timeClassProcessing);
@@ -455,6 +454,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	}
 
 	MYASSERT(readerCounter==0);
+	pState.setEOF();
 
 	if (!bNeedRunoutCycle) {
 		tmr.changeClass(timeClassDraining);

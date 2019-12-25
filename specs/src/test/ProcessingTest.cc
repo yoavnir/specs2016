@@ -111,7 +111,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.incrementCycleCounter();
 				ig.processDo(sb, ps, &tRead, tmr);
 				PSpecString pOut = sb.GetStringUnsafe();
-				if (ps.shouldWrite()) {
+				if (ps.shouldWrite(PRINTONLY_PRINTALL)) {
 					if (result) {
 						result->add(pOut);
 						delete pOut;

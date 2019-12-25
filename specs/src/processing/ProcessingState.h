@@ -19,6 +19,9 @@
 
 #define LOOP_CONDITION_FALSE (-5)
 
+#define PRINTONLY_PRINTALL  '\0'
+#define PRINTONLY_EOF       '_'
+
 class ProcessingState : public stateQueryAgent {
 public:
 	ProcessingState();
@@ -88,7 +91,8 @@ public:
 	Writer* getCurrentWriter();
 	void setNoWrite()            { m_bNoWrite = true;  }
 	void resetNoWrite()          { m_bNoWrite = false; }
-	bool shouldWrite()           { return !m_bNoWrite; }
+	bool shouldWrite(char printRule);
+	void setEOF()                { m_bEOF = true;      }
 private:
 	enum extremeBool {
 		bFalse,
@@ -123,6 +127,7 @@ private:
 	PWriter         *m_Writers;
 	int             m_outputIndex;
 	bool            m_bNoWrite;
+	bool            m_bEOF;
 };
 
 

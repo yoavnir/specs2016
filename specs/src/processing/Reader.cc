@@ -62,6 +62,8 @@ PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 		m_countUsed++;
 		return ret;
 	} else {
+		MYASSERT(_readerCounter>0);
+		_readerCounter--;
 		m_bRanDry = true;
 		return NULL;
 	}

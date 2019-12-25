@@ -53,6 +53,9 @@ ProcessingState::ProcessingState()
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
 	m_bNoWrite = false;
+	m_bEOF = false;
+	m_outputIndex = 1;
+	m_Writers = NULL;
 }
 
 ProcessingState::ProcessingState(ProcessingState& ps)
@@ -71,6 +74,9 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
 	m_bNoWrite = false;
+	m_bEOF = false;
+	m_outputIndex = 1;
+	m_Writers = NULL;
 }
 
 ProcessingState::ProcessingState(ProcessingState* pPS)
@@ -89,6 +95,9 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
 	m_bNoWrite = false;
+	m_bEOF = false;
+	m_outputIndex = 1;
+	m_Writers = NULL;
 }
 
 ProcessingState::~ProcessingState()
@@ -539,6 +548,17 @@ void ProcessingState::observeEndIf()
 	if (runningOutLoop()) return;
 	MYASSERT(!m_Conditions.empty());
 	m_Conditions.pop();
+}
+
+bool ProcessingState::shouldWrite(char printRule)
+{
+	if (m_bNoWrite) return false;
+
+	switch (printRule) {
+	case PRINTONLY_PRINTALL:  return true;
+	case PRINTONLY_EOF:       return m_bEOF;
+	default:                  return breakEstablished(printRule);
+	}
 }
 
 

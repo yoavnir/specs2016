@@ -14,6 +14,7 @@
 #include "utils/PythonIntf.h"
 
 extern int g_stop_stream;
+extern char g_printonly_rule;
 
 std::string getNextArg(int& argc, char**& argv)
 {
@@ -263,7 +264,7 @@ int main (int argc, char** argv)
 			return -4;
 		}
 		PSpecString pstr = sb.GetString();
-		if (ps.shouldWrite()) {
+		if (ps.shouldWrite(g_printonly_rule)) {
 			SimpleWriter* pSW = (SimpleWriter*)(ps.getCurrentWriter());
 			*pSW->getStream() << *pstr << std::endl;
 		} else {
