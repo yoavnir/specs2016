@@ -77,6 +77,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	g_counters.clearAll();
 
 	TestReader tRead(20);
+	unsigned int readerCounter = 1;
 	char* example = strdup(_example);
 	char* ln = strtok(example, "\n");
 	while (ln) {
@@ -109,7 +110,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.setString(pFirstLine);
 				ps.setFirst();
 				ps.incrementCycleCounter();
-				ig.processDo(sb, ps, &tRead, tmr);
+				ig.processDo(sb, ps, &tRead, tmr, readerCounter);
 				PSpecString pOut = sb.GetStringUnsafe();
 				if (ps.shouldWrite(PRINTONLY_PRINTALL)) {
 					if (result) {
@@ -138,7 +139,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		ps.setString(NULL);
 		ps.setFirst();
 		try {
-			ig.processDo(sb, ps, NULL, tmr);
+			ig.processDo(sb, ps, NULL, tmr, readerCounter);
 			PSpecString pOut = sb.GetStringUnsafe();
 			if (result) {
 				result->add(pOut);

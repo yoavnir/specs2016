@@ -315,7 +315,7 @@ std::string itemGroup::Debug()
 	return ret;
 }
 
-bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, classifyingTimer& tmr)
+bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, classifyingTimer& tmr, unsigned int& rdrCounter)
 {
 	bool bSomethingWasDone = false;
 	size_t i = 0;
@@ -383,9 +383,8 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
 		{
-			static unsigned int reReaderCounter = 1;
 			MYASSERT_WITH_MSG(pState.getActiveInputStation() != STATION_SECOND, "Cannot READ or READSTOP during SELECT SECOND");
-			ps = pRd->get(tmr, reReaderCounter);
+			ps = pRd->get(tmr, rdrCounter);
 			if (!ps) {
 				if (aRet==ApplyRet__Read) {
 					ps = SpecString::newString();
@@ -435,7 +434,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		pState.setFirst();
 		pState.incrementCycleCounter();
 
-		if (processDo(sb,pState, &rd, tmr)) {
+		if (processDo(sb,pState, &rd, tmr, readerCounter)) {
 			PSpecString pOutString = sb.GetString();
 			if (pState.shouldWrite(g_printonly_rule)) {
 				tmr.changeClass(timeClassOutputQueue);
@@ -464,7 +463,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	// run-out cycle
 	pState.setString(NULL);
 	pState.setFirst();
-	if (processDo(sb, pState, &rd, tmr)) {
+	if (processDo(sb, pState, &rd, tmr, readerCounter)) {
 		pState.getCurrentWriter()->Write(sb.GetString());
 	}
 
