@@ -265,7 +265,7 @@ int main (int argc, char** argv)
 			return -4;
 		}
 		PSpecString pstr = sb.GetString();
-		if (ps.shouldWrite(g_printonly_rule)) {
+		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 			SimpleWriter* pSW = (SimpleWriter*)(ps.getCurrentWriter());
 			*pSW->getStream() << *pstr << std::endl;
 		} else {

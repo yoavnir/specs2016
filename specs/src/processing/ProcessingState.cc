@@ -550,17 +550,14 @@ void ProcessingState::observeEndIf()
 	m_Conditions.pop();
 }
 
-bool ProcessingState::shouldWrite(char printRule)
+bool ProcessingState::printSuppressed(char printRule)
 {
-	if (m_bNoWrite) return false;
-
 	switch (printRule) {
-	case PRINTONLY_PRINTALL:  return true;
-	case PRINTONLY_EOF:       return m_bEOF;
-	default:                  return breakEstablished(printRule);
+	case PRINTONLY_PRINTALL:  return false;
+	case PRINTONLY_EOF:       return !m_bEOF;
+	default:                  return !breakEstablished(printRule);
 	}
 }
-
 
 // Helper class for the ALU
 std::string ProcessingStateFieldIdentifierGetter::Get(char id)

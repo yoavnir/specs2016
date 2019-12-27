@@ -7,6 +7,7 @@ ALUCounters g_counters;
 
 int g_stop_stream = STOP_STREAM_ALL;
 char g_printonly_rule = PRINTONLY_PRINTALL;
+bool g_keep_suppressed_record = false;
 
 struct predicateStackItem {
 	ConditionItem* pred;
@@ -284,6 +285,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			index++;
 			break;
 		}
+		case TokenListType__KEEP:
+		{
+			MYASSERT_WITH_MSG(index>0 && tokenVec[index-1].Type()==TokenListType__PRINTONLY, \
+					"KEEP must follow a PRINTONLY unit");
+			g_keep_suppressed_record = true;
+			index++;
+			break;
+		}
 		default:
 			std::string err = std::string("Unhandled token type ")
 				+ TokenListType__2str(tokenVec[index].Type())
@@ -362,7 +371,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__Continue:
 			break;
 		case ApplyRet__Write:
-			if (pState.shouldWrite(g_printonly_rule)) {
+			if (pState.shouldWrite() && !pState.printSuppressed(g_printonly_rule)) {
 				if (bSomethingWasDone) {
 					pState.getCurrentWriter()->Write(sb.GetString());
 				} else {
@@ -435,14 +444,19 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		pState.incrementCycleCounter();
 
 		if (processDo(sb,pState, &rd, tmr, readerCounter)) {
-			PSpecString pOutString = sb.GetString();
-			if (pState.shouldWrite(g_printonly_rule)) {
-				tmr.changeClass(timeClassOutputQueue);
-				pState.getCurrentWriter()->Write(pOutString);
-				tmr.changeClass(timeClassProcessing);
-			} else {
-				delete pOutString;
+			bool bPrintSuppressed = pState.printSuppressed(g_printonly_rule);
+			if (bPrintSuppressed && g_keep_suppressed_record) {
 				pState.resetNoWrite();
+			} else {
+				PSpecString pOutString = sb.GetString();
+				if (!bPrintSuppressed && pState.shouldWrite()) {
+					tmr.changeClass(timeClassOutputQueue);
+					pState.getCurrentWriter()->Write(pOutString);
+					tmr.changeClass(timeClassProcessing);
+				} else {
+					delete pOutString;
+					pState.resetNoWrite();
+				}
 			}
 		}
 

@@ -91,7 +91,8 @@ public:
 	Writer* getCurrentWriter();
 	void setNoWrite()            { m_bNoWrite = true;  }
 	void resetNoWrite()          { m_bNoWrite = false; }
-	bool shouldWrite(char printRule);
+	bool shouldWrite()           { return !m_bNoWrite; }
+	bool printSuppressed(char printRule);
 	void setEOF()                { m_bEOF = true;      }
 private:
 	enum extremeBool {
