@@ -244,6 +244,22 @@ or a number indicating an input stream. This indicates when the specification st
 which means that the specification terminates when every input stream is exhausted. When some but not all of the streams are exhausted, those that are get treated as if they emit empty records. With 
 .B ANYEOF
 the specification terminates when any of the streams is exhausted. With a numeric value the specification terminates when the specified stream is exhausted. Other streams, if exhausted are treated as if they emit empty records.
+.IP "PRINTONLY" 3
+This option instructs 
+.B specs
+to suppress output records unless a specified
+.I break level
+is established. The break level is either a field identifier (case matters) or it can be the keyword
+.B EOF 
+which specifies records are suppressed until the input is exhausted or the condition specified with 
+.B STOP 
+is satisfied.
+.IP "KEEP" 3
+This option, always following 
+.B PRINTONLY
+instructs
+.B specs
+not to reset the output buffer when a record in not output due to break level not being established. This allows the content from several records to be aggregated into a single output record.
 
 .SS "Conditions and Loops"
 A specification can include conditions and loops. 
