@@ -90,6 +90,8 @@ int main(int argc, char** argv)
 	TESTNS("numBER NUMbe numBERa", "NUMBER|LITERAL; /NUMbe/|LITERAL; /numBERa/");
 	TESTNS("reAd wrIte ReadStop", "READ|WRITE|READSTOP");
 	TESTNS("a: w1 . ID a 1", "RANGELABEL; /a/|WORDRANGE; S:1|PERIOD|ID; /a/|RANGE; S:1");
+	TESTNS("stop anyeof printonly eof w1 1", "STOP; /any/|PRINTONLY; /EOF/|WORDRANGE; S:1|RANGE; S:1");
+	TESTNS("stop 1 printonly a keep a: w1 . w2 nw", "STOP; /1/|PRINTONLY; /a/|KEEP|RANGELABEL; /a/|WORDRANGE; S:1|PERIOD|WORDRANGE; S:2|NEXTWORD");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";

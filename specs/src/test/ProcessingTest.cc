@@ -10,6 +10,8 @@
 #include "processing/StringBuilder.h"
 
 extern ALUCounters g_counters;
+extern char        g_printonly_rule;
+extern bool        g_keep_suppressed_record;
 
 #define VERIFY(sp,ex) do {          \
 		testCount++;                            \
@@ -111,8 +113,11 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.setFirst();
 				ps.incrementCycleCounter();
 				ig.processDo(sb, ps, &tRead, tmr, readerCounter);
+				if (ps.printSuppressed(g_printonly_rule) && g_keep_suppressed_record) {
+					continue;
+				}
 				PSpecString pOut = sb.GetStringUnsafe();
-				if (ps.shouldWrite()) {
+				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 					if (result) {
 						result->add(pOut);
 						delete pOut;
@@ -527,6 +532,15 @@ int main(int argc, char** argv)
 #endif
 #endif
 	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #142
+
+	spec = "printonly eof  a: w1 1 set '#0+=a' eof print '#0' 1";
+	VERIFY2(spec, "1\n2\n3\n4\n5", "15");                                            // TEST #143
+
+	spec = "printonly a  a: w1 . w2 1 set '#0+=a' eof print '#0' 1";
+	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n4\n7");                             // TEST #144
+
+	spec = "printonly a keep a: w1 . w2 nw set '#0+=a' eof print '#0' 1";
+	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n2 3 4\n7");                             // TEST #145
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
