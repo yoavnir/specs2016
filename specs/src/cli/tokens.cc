@@ -794,6 +794,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					std::string err = "Invalid STOP condition <" + nextTok.Orig()+"> at index " + std::to_string(nextTok.argIndex());
 					MYTHROW(err);
 				}
+				nextTok.deallocateDynamic();
 				tokList->erase(tokList->begin()+(i+1));
 			}
 			break;
