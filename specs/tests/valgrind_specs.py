@@ -643,7 +643,19 @@ run_case(s,i,"dual input stream missing secondary",expected_rc=memcheck.RetCode_
 
 # Dual stream with mismatched streams
 i2 = input_samples.ls_out_inodes_mismatched
-run_case(s,i,"dual input stream with mismatched secondary",expected_rc=memcheck.RetCode_COMMAND_FAILED,inp2=i2)
+run_case(s,i,"dual input stream with mismatched secondary",inp2=i2)
+
+# Dual stream with mismatched streams - STOP ALLEOF
+i2 = input_samples.ls_out_inodes_mismatched
+run_case("STOP ALLEOF "+s,i,"dual input stream with mismatched secondary - STOP ALLEOF",inp2=i2)
+
+# Dual stream with mismatched streams - STOP ANYEOF
+i2 = input_samples.ls_out_inodes_mismatched
+run_case("STOP ANYEOF "+s,i,"dual input stream with mismatched secondary - STOP ANYEOF",inp2=i2)
+
+# Dual stream with mismatched streams - STOP 2
+i2 = input_samples.ls_out_inodes_mismatched
+run_case("STOP 2 "+s,i,"dual input stream with mismatched secondary - STOP 2",inp2=i2)
 
 # Dual output stream 
 i = input_samples.ls_out_inodes
