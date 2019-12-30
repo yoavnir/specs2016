@@ -79,4 +79,14 @@ int setenv(const char *name, const char *value, int overwrite);
 #define QUEUE_LOW_WM  4500
 #endif
 
+#ifdef WIN64
+#define PATHSEP "\\"
+#define PATH_LIST_SEPARATOR ";"
+#define PATH_LIST_WSEPARATOR L";"
+#else
+#define PATHSEP "/"
+#define PATH_LIST_SEPARATOR ":"
+#define PATH_LIST_WSEPARATOR L":"
+#endif
+
 #endif

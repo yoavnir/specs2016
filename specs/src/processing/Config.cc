@@ -243,22 +243,22 @@ const char* getFullSpecPath()
 		// add the path from the environment variable
 		char* envpath = getenv(pathConfigString.c_str());
 		if (envpath && envpath[0]) {
-			char* onePath = strtok(envpath,":");
+			char* onePath = strtok(envpath, PATH_LIST_SEPARATOR);
 			while (onePath) {
-				if (res.length()>0) res += ":";
+				if (res.length()>0) res += PATH_LIST_SEPARATOR;
 				res += onePath;
-				onePath = strtok(NULL,":");
+				onePath = strtok(NULL, PATH_LIST_SEPARATOR);
 			}
 		}
 
 		// Also add from the configuration string
 		if (configSpecLiteralExists(pathConfigString)) {
 			char* configPath = strdup(configSpecLiteralGet(pathConfigString).c_str());
-			char* onePath = strtok(configPath,":");
+			char* onePath = strtok(configPath, PATH_LIST_SEPARATOR);
 			while (onePath) {
-				if (res.length()>0) res += ":";
+				if (res.length()>0) res += PATH_LIST_SEPARATOR;
 				res += onePath;
-				onePath = strtok(NULL,":");
+				onePath = strtok(NULL, PATH_LIST_SEPARATOR);
 			}
 			free(configPath);
 		}

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
 #include "tokens.h"
@@ -135,12 +136,6 @@ std::string removeComment(std::string& st)
 	return st.substr(0,found);
 }
 
-#ifdef WIN64
-#define PATHSEP "\\"
-#else
-#define PATHSEP "/"
-#endif
-
 static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 {
 	theFile.open(fileName);
@@ -149,7 +144,7 @@ static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 	// No?  Try the path
 	char* spath = strdup(getFullSpecPath());
 	if (spath && spath[0]) {
-		char* onePath = strtok(spath,":");
+		char* onePath = strtok(spath, PATH_LIST_SEPARATOR);
 		while (onePath) {
 			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
 			theFile.open(fullpath);
@@ -157,7 +152,7 @@ static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 				free(spath);
 				return;
 			}
-			onePath = strtok(NULL,":");
+			onePath = strtok(NULL, PATH_LIST_SEPARATOR);
 		}
 	}
 	if (spath) free(spath);

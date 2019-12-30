@@ -237,12 +237,12 @@ public:
 			std::wstring wpath(strlen(_path)+1, L'#');
 			mbstowcs(&wpath[0],_path,strlen(_path));
 			wpath.erase(wpath.length()-1);
-			std::wstring newPath = std::wstring(Py_GetPath()) + std::wstring(L":") + wpath;
+			std::wstring newPath = std::wstring(Py_GetPath()) + std::wstring(PATH_LIST_WSEPARATOR) + wpath;
 			Py_SetPath(newPath.data());
 			Py_Initialize();
 #else
 			Py_Initialize();
-			std::string newPath = std::string(Py_GetPath()) + ":" + std::string(_path);
+			std::string newPath = std::string(Py_GetPath()) + PATH_LIST_SEPARATOR + std::string(_path);
 			PySys_SetPath((char*)newPath.c_str());
 #endif
 		} else {
