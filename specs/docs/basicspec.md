@@ -66,7 +66,8 @@ We only want the file name, but there are two issues here. First, the file name 
 ```
      SUBSTRING FIELDSEP / FIELD -1 OF WORD -1
 ```
-    
+**NOTE**: All of the ranges described above, can be specified as a starting position and length separated with a dot. For example, `w8.5` means 5 words starting at the eighth word. Alternatively, then can be specified as a starting and ending position, both inclusive, separated by either a hyphen (`-`), a semicolon (`:`), or a colon (`:`). So `w8-12`, `w8;12`, and `w8:12` all mean the substring of the input record that includes the eighth to twelfth words inclusive. A hyphen is usually the most intuitive. The colon makes it more readable if the ending position is specified as negative. The semicolon is included for compatibility with *CMS Pipelines*.
+
 The **OutputPlacement** argument specifies where to put the source:
 
 * absolute position (such as `1`)
