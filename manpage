@@ -1188,7 +1188,7 @@ or the configuration string
 .B SPECSPATH. 
 In both cases the syntax is just like the OS 
 .B PATH: 
-a list of directories separated by colons.
+a list of directories separated by colons on Linux and Mac OS, or semicolons on Windows.
 .IP "--verbose or -v" 3
 Outputs more information when something goes wrong.
 .IP "--stats"
