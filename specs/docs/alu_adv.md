@@ -77,7 +77,7 @@
 | -------- | ----------- |
 | `abbrev(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. If `l` is omitted, all of 'n' is considered. |
 | `center(s,n)` or `centre(s,n)` | Returns the `n` center-most characters of the string `s`. The result is padded with spaces on both sides if `n` is greater than the length of `s`. |
-| `includes(haystack,needle)` | Boolean function. Returns `1` if `needle` is a substring of `haystack`, or `0` otherwise |
+| `includes(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **any** of `needle1`, `needle2`, `needle3`, or `needle4` is a substring of `haystack`, or `0` otherwise |
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s`. |
 | `length(s)` | Returns the length (in characters) of the string `s` |
 | `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |

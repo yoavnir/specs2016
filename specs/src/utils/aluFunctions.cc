@@ -568,14 +568,24 @@ ALUValue* AluFunc_lastpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 	}
 }
 
-ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle)
+ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* _pNeedle2, ALUValue* _pNeedle3, ALUValue* _pNeedle4)
 {
-	ASSERT_NOT_ELIDED(_pNeedle,2,needle);
+	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
 	ASSERT_NOT_ELIDED(_pHaystack,1,haystack);
-	std::string* pNeedle = _pNeedle->getStrPtr();
+
 	std::string* pHaystack = _pHaystack->getStrPtr();
-	bool bIsIncluded = (std::string::npos != pHaystack->find(*pNeedle));
-	return new ALUValue(ALUInt(bIsIncluded ? 1 : 0));
+
+	if (std::string::npos != pHaystack->find(*_pNeedle1->getStrPtr())) {
+		return new ALUValue(ALUInt(1));
+	} else if (_pNeedle2 && (std::string::npos != pHaystack->find(*_pNeedle2->getStrPtr()))) {
+		return new ALUValue(ALUInt(1));
+	} else if (_pNeedle3 && (std::string::npos != pHaystack->find(*_pNeedle3->getStrPtr()))) {
+		return new ALUValue(ALUInt(1));
+	} else if (_pNeedle4 && (std::string::npos != pHaystack->find(*_pNeedle4->getStrPtr()))) {
+		return new ALUValue(ALUInt(1));
+	}
+
+	return new ALUValue(ALUInt(0));
 }
 
 ALUValue* AluFunc_conf(ALUValue* _pKey, ALUValue* _pDefault)

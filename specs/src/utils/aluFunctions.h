@@ -47,7 +47,7 @@
 	X(substr,         3, ALUFUNC_REGULAR,     false)  \
 	X(pos,            2, ALUFUNC_REGULAR,     false)  \
 	X(lastpos,        2, ALUFUNC_REGULAR,     false)  \
-	X(includes,       2, ALUFUNC_REGULAR,     false)  \
+	X(includes,       5, ALUFUNC_REGULAR,     false)  \
 	X(left,           2, ALUFUNC_REGULAR,     false)  \
 	X(right,          2, ALUFUNC_REGULAR,     false)  \
 	X(center,         2, ALUFUNC_REGULAR,     false)  \

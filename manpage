@@ -781,16 +781,22 @@ position of
 .I needle
 in 
 .I haystack.
-.IP "includes(haystack, needle)" 3
+.IP "includes(haystack, needle1 [,needle2, needle3, needle4])" 3
 Returns
 .B TRUE
 (1) if the string 
 .I haystack
 includes the string
-.I needle
+.I needle1
+or one of the other optional 
+.I needle2, needle3,
+or
+.I needle4
 as a substring, or 
 .B FALSE
-(0) otherwise.
+(0) otherwise. To clarify, the function returns true if
+.B any
+of the needles match.
 .IP "conf(key,default)" 3
 Returns the configured string from either the built-in configured strings such as 
 .I version
