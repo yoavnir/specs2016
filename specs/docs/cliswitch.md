@@ -11,7 +11,8 @@ Using files allows you to write some very sophisticated specifications, and to a
 # This counts and adds up a list of numbers
     printonly eof
     a: word 1
-       set (#0+=a; #1+=1) # Counter #0 is an accumulator; #1 is a counter
+       set "#0+=a" # Counter #0 is an accumulator
+       set "#1+=1" # Counter #1 is a counter
     eof
        /Total:/   1
        print #0 strip nextword
@@ -19,9 +20,8 @@ Using files allows you to write some very sophisticated specifications, and to a
        print #1 strip nextword
        /records./     nextword
 ``` 
-**Version 0.5 Note:** The above is not yet supported, as neither `printonly eof` not multiple assignments in a single **set** are supported in this version.
 Using files also allows you to include comments. The rules for comments are that either the line begins with a hash mark and a space, and then the entire line is a comment; or the last occurrence of a hash mark and a space is also preceded by a space, and that is where the comment starts. 
-You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by OS-specific path separator character. On Linux and Mac OS this is a colon. On Windows this is a semicolon.
+You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by OS-specific path separator character. On Linux and Mac OS this is a colon (`:`). On Windows this is a semicolon (`;`).
 * `--verbose` or `-v` -- outputs more information when something goes wrong.
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
 The resulting stats look something like this:
