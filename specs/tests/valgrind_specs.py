@@ -274,6 +274,18 @@ s = "a: word 1 . print 'includes(a,\"red\")' 1"
 i = "the\nred\nincredible"
 run_case(s,i,"Functions: includes")
 
+s = "a: word 1 . print 'includes(a,\"red\",\"incredible\")' 1"
+i = "the\nred\nincredible\nthe incredible red"
+run_case(s,i,"Functions: includes (multiple needles)")
+
+s = "a: word 1 . print 'includesall(a,\"red\")' 1"
+i = "the\nred\nincredible"
+run_case(s,i,"Functions: includesall")
+
+s = "a: word 1 . print 'includesall(a,\"red\",\"incredible\")' 1"
+i = "the\nred\nincredible\nthe incredible red"
+run_case(s,i,"Functions: includesall (multiple needles)")
+
 s = "a: word 1 . print 'length(a)' 1"
 i = "the\nred\n\nincredible"
 run_case(s,i,"Functions: length")

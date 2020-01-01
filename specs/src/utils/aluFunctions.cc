@@ -588,6 +588,26 @@ ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* 
 	return new ALUValue(ALUInt(0));
 }
 
+ALUValue* AluFunc_includesall(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* _pNeedle2, ALUValue* _pNeedle3, ALUValue* _pNeedle4)
+{
+	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
+	ASSERT_NOT_ELIDED(_pHaystack,1,haystack);
+
+	std::string* pHaystack = _pHaystack->getStrPtr();
+
+	if (std::string::npos == pHaystack->find(*_pNeedle1->getStrPtr())) {
+		return new ALUValue(ALUInt(0));
+	} else if (_pNeedle2 && (std::string::npos == pHaystack->find(*_pNeedle2->getStrPtr()))) {
+		return new ALUValue(ALUInt(0));
+	} else if (_pNeedle3 && (std::string::npos == pHaystack->find(*_pNeedle3->getStrPtr()))) {
+		return new ALUValue(ALUInt(0));
+	} else if (_pNeedle4 && (std::string::npos == pHaystack->find(*_pNeedle4->getStrPtr()))) {
+		return new ALUValue(ALUInt(0));
+	}
+
+	return new ALUValue(ALUInt(1));
+}
+
 ALUValue* AluFunc_conf(ALUValue* _pKey, ALUValue* _pDefault)
 {
 	ASSERT_NOT_ELIDED(_pKey,1,key);

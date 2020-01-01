@@ -837,6 +837,15 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includes(#9, 'gn', 'a')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'x', 'rt ')", "0");
 
+	VERIFY_EXPR_RES("includesall(#9, 'a')", "1");
+	VERIFY_EXPR_RES("includesall(#9, 'x')", "0");
+	VERIFY_EXPR_RES("includesall(#9, 'gn')", "1");
+	VERIFY_EXPR_RES("includesall(#9, 'rt ')", "0");
+	VERIFY_EXPR_RES("includesall(#9, 'a', 'x')", "0");
+	VERIFY_EXPR_RES("includesall(#9, 'x', 'a')", "0");
+	VERIFY_EXPR_RES("includesall(#9, 'gn', 'a')", "1");
+	VERIFY_EXPR_RES("includesall(#9, 'x', 'rt ')", "0");
+
 	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
 
 	// Conversion-equivalent functions
