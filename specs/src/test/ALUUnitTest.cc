@@ -759,21 +759,21 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("s2tf(1546550663.000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
 	// Issue #62
-	VERIFY_EXPR_RES("tf2mcs('10/01 07:14:01.98531','%d/%m %H:%M:%S.%6f')", "1547097241985310");    // only 5 digits in the subsecond
-	VERIFY_EXPR_RES("tf2mcs('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241985317");   // proper 6 digits in the subsecond
-	VERIFY_EXPR_RES("tf2mcs('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241985317");  // 7 digits in the subsecond
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.98531','%Y/%d/%m %H:%M:%S.%6f')", "1547097241985310");    // only 5 digits in the subsecond
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.985317','%Y/%d/%m %H:%M:%S.%6f')", "1547097241985317");   // proper 6 digits in the subsecond
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.9853177','%Y/%d/%m %H:%M:%S.%6f')", "1547097241985317");  // 7 digits in the subsecond
 
-	VERIFY_EXPR_RES("tf2mcs('10/01 07:14:01.','%d/%m %H:%M:%S.%6f')", "1547097241000000");         // no subsecond digits at all
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.','%Y/%d/%m %H:%M:%S.%6f')", "1547097241000000");         // no subsecond digits at all
 #ifdef PUT_TIME__SUPPORTED
   #ifdef VISUAL_STUDIO
-	VERIFY_EXPR_RES("tf2mcs('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
   #else
-	VERIFY_EXPR_RES("tf2mcs('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "1547097241000000");                 // no subsecond digits and a missing dot!
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "1547097241000000");                 // no subsecond digits and a missing dot!
   #endif
 #else
-	VERIFY_EXPR_RES("tf2mcs('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
 #endif
-	VERIFY_EXPR_RES("tf2mcs('10/01 07:14:0153','%d/%m %H:%M:%S.%6f')", "0");                        // This is just weird
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:0153','%Y/%d/%m %H:%M:%S.%6f')", "0");                        // This is just weird
 
 	// Issue #38
 	VERIFY_EXPR_RES("2-2", "0");
