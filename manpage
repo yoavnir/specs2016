@@ -797,6 +797,22 @@ as a substring, or
 (0) otherwise. To clarify, the function returns true if
 .B any
 of the needles match.
+.IP "includesall(haystack, needle1 [,needle2, needle3, needle4])" 3
+Returns
+.B TRUE
+(1) if the string 
+.I haystack
+includes the string
+.I needle1
+and all of the other defined optional
+.I needle2, needle3,
+or
+.I needle4
+as substrings, or 
+.B FALSE
+(0) otherwise. To clarify, the function returns true if
+.B all
+of the needles match.
 .IP "conf(key,default)" 3
 Returns the configured string from either the built-in configured strings such as 
 .I version
