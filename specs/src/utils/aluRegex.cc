@@ -11,6 +11,7 @@ uint64_t regexCacheSets = 0;
 uint64_t matchFlagsCacheSets = 0;
 
 static std::regex_constants::syntax_option_type g_regexType = std::regex_constants::ECMAScript;
+static std::string gs_regexType = "";
 
 lruCache<std::string, std::regex> g_regexCache(100,150);
 
@@ -39,6 +40,7 @@ void dumpRegexStats() {
 
 void setRegexType(std::string& s) {
 	g_regexType = std::regex_constants::ECMAScript;
+	gs_regexType = s;
 	char* st = strdup(s.c_str());
 	char* p = strtok(st,",");
 	while (p) {
@@ -76,7 +78,15 @@ std::regex* regexCalculator(std::string& s)
 	regexCacheSearches++;
 	std::regex* pRet = g_regexCache.get(s);
 	if (!pRet) {
-		pRet = new std::regex(s,g_regexType);
+		try {
+			pRet = new std::regex(s,g_regexType);
+		} catch (std::regex_error& e) {
+			std::string err = "Invalid regular expression <" + s + "> : " + e.what();
+			if (e.code()==std::regex_constants::__re_err_grammar && gs_regexType.size() > 0) {
+				err += " (" + gs_regexType + ")";
+			}
+			MYTHROW(err);
+		}
 		g_regexCache.set(s,pRet);
 		regexCacheSets++;
 	}
@@ -146,7 +156,14 @@ bool regexMatch(ALUValue* pStr, ALUValue* pExp, std::string* pFlags)
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
 
-	return std::regex_match(sStr, *pRE, getMatchFlags(pFlags));
+	try {
+		return std::regex_match(sStr, *pRE, getMatchFlags(pFlags));
+	} catch (std::regex_error& e) {
+		auto err = std::string("Error running regular expression match : ") + e.what()
+				+ "\nString: " + sStr + "\nExpression: " + sExp;
+		if (pFlags) err += "\nFlags: " + *pFlags;
+		MYTHROW(err);
+	}
 }
 
 bool regexSearch(ALUValue* pStr, ALUValue* pExp, std::string* pFlags)
@@ -154,14 +171,30 @@ bool regexSearch(ALUValue* pStr, ALUValue* pExp, std::string* pFlags)
 	std::string sStr = pStr->getStr();
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
-	return std::regex_search(sStr, *pRE, getMatchFlags(pFlags));
+	try {
+		return std::regex_search(sStr, *pRE, getMatchFlags(pFlags));
+	} catch (std::regex_error& e) {
+		auto err = std::string("Error running regular expression search : ") + e.what()
+				+ "\nString: " + sStr + "\nExpression: " + sExp;
+		if (pFlags) err += "\nFlags: " + *pFlags;
+		MYTHROW(err);
+	}
+
 }
 
-std::string regexReplace(ALUValue* pStr, ALUValue* pExp, std::string& pFmt, std::string* pFlags)
+std::string regexReplace(ALUValue* pStr, ALUValue* pExp, std::string& fmt, std::string* pFlags)
 {
 	std::string sStr = pStr->getStr();
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
-	return std::regex_replace(sStr, *pRE, pFmt, getMatchFlags(pFlags));
+	try {
+		return std::regex_replace(sStr, *pRE, fmt, getMatchFlags(pFlags));
+	} catch (std::regex_error& e) {
+		auto err = std::string("Error running regular expression replace : ") + e.what()
+				+ "\nString: " + sStr + "\nExpression: " + sExp + "\nFormat: " + fmt;
+		if (pFlags) err += "\nFlags: " + *pFlags;
+		MYTHROW(err);
+	}
+
 
 }
