@@ -12,6 +12,7 @@
 #include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
 #include "utils/PythonIntf.h"
+#include "utils/aluRegex.h"
 
 extern int g_stop_stream;
 extern char g_printonly_rule;
@@ -100,6 +101,15 @@ int main (int argc, char** argv)
 #ifdef DEBUG
 	conciseExceptions = !g_bVerbose;
 #endif
+
+	try {
+		if (g_regexSyntaxType != "") {
+			setRegexType(g_regexSyntaxType);
+		}
+	} catch (const SpecsException& e) {
+		std::cerr << "Error: " << e.what(conciseExceptions) << std::endl;
+		exit(0);
+	}
 
 	std::vector<Token> vec;
 
@@ -329,6 +339,8 @@ int main (int argc, char** argv)
 				pWrtrs[i] = NULL;
 			}
 		}
+
+		dumpRegexStats();
 	}
 
 	return 0;

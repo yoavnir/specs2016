@@ -1174,6 +1174,17 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fmt(p,,12,'$')","10003$1415927");
 	VERIFY_EXPR_RES("fmt(p,,12,,'$')","10$003.1415927");
 
+	/* regular expressions */
+	tg.set('s', "There is a subsequence in the string");
+	VERIFY_EXPR_RES("rmatch('subject','(sub)(.*)')", "1");
+	VERIFY_EXPR_RES("rmatch('object','(sub)(.*)')", "0");
+	VERIFY_EXPR_RES("rmatch('nonsubjective','(sub)(.*)')", "0");
+	VERIFY_EXPR_RES("rsearch('subject','(sub)(.*)')", "1");
+	VERIFY_EXPR_RES("rsearch('object','(sub)(.*)')", "0");
+	VERIFY_EXPR_RES("rsearch('nonsubjective','(sub)(.*)')", "1");
+	VERIFY_EXPR_RES("rreplace(s,'\\\\b(sub)([^ ]*)','sub-$2')","There is a sub-sequence in the string");
+	VERIFY_EXPR_RES("rreplace(s,'\\\\b(sub)([^ ]*)','$2')","There is a sequence in the string");
+
 #ifdef DEBUG
 	// Keep these tests at the end. All real functions should go first
 	VERIFY_EXPR_RES("testfunc(1,2,3,4)", "1,2,3,4");

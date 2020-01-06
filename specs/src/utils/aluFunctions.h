@@ -49,6 +49,9 @@
 	X(lastpos,        2, ALUFUNC_REGULAR,     false)  \
 	X(includes,       5, ALUFUNC_REGULAR,     false)  \
 	X(includesall,    5, ALUFUNC_REGULAR,     false)  \
+	X(rmatch,         3, ALUFUNC_REGULAR,     false)  \
+	X(rsearch,        3, ALUFUNC_REGULAR,     false)  \
+	X(rreplace,       4, ALUFUNC_REGULAR,     false)  \
 	X(left,           2, ALUFUNC_REGULAR,     false)  \
 	X(right,          2, ALUFUNC_REGULAR,     false)  \
 	X(center,         2, ALUFUNC_REGULAR,     false)  \

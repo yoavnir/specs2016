@@ -23,6 +23,7 @@
 	X(lrecl,                        int,          0,      0,lrecl,   std::stoi(NEXTARG))    \
 	X(linedel,                      std::string,  "",     0,linedel,            NEXTARG)    \
 	X(configuredString,             std::string,  "",     s,set,                NEXTARG)    \
+	X(regexSyntaxType,              std::string,  "",     0,regexType,          NEXTARG)    \
 	X(inputStream2,                 std::string,  "",     0,is2,                NEXTARG)    \
 	X(inputStream3,                 std::string,  "",     0,is3,                NEXTARG)    \
 	X(inputStream4,                 std::string,  "",     0,is4,                NEXTARG)    \

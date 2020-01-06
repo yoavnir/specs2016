@@ -2,6 +2,7 @@
 #include "utils/aluFunctions.h"
 #include "utils/TimeUtils.h"
 #include "utils/aluRand.h"
+#include "utils/aluRegex.h"
 #include "processing/Config.h"
 #include <string.h>
 #include <cmath>
@@ -606,6 +607,42 @@ ALUValue* AluFunc_includesall(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValu
 	}
 
 	return new ALUValue(ALUInt(1));
+}
+
+ALUValue* AluFunc_rmatch(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFlags)
+{
+	ASSERT_NOT_ELIDED(_pExp,2,regExp);
+	ASSERT_NOT_ELIDED(_pHaystack,1,string);
+
+	if (_pFlags) {
+		return new ALUValue(ALUInt(regexMatch(_pHaystack, _pExp, _pFlags->getStrPtr())));
+	}
+	return new ALUValue(ALUInt(regexMatch(_pHaystack, _pExp)));
+}
+
+ALUValue* AluFunc_rsearch(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFlags)
+{
+	ASSERT_NOT_ELIDED(_pExp,2,regExp);
+	ASSERT_NOT_ELIDED(_pHaystack,1,string);
+
+	if (_pFlags) {
+		return new ALUValue(ALUInt(regexSearch(_pHaystack, _pExp, _pFlags->getStrPtr())));
+	}
+	return new ALUValue(ALUInt(regexSearch(_pHaystack, _pExp)));
+}
+
+ALUValue* AluFunc_rreplace(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFmt, ALUValue* _pFlags)
+{
+	ASSERT_NOT_ELIDED(_pExp,2,regExp);
+	ASSERT_NOT_ELIDED(_pHaystack,1,string);
+	ASSERT_NOT_ELIDED(_pFmt,3,format);
+
+	std::string sFmt = _pFmt->getStr();
+
+	if (_pFlags) {
+		return new ALUValue(regexReplace(_pHaystack, _pExp, sFmt, _pFlags->getStrPtr()));
+	}
+	return new ALUValue(regexReplace(_pHaystack, _pExp, sFmt));
 }
 
 ALUValue* AluFunc_conf(ALUValue* _pKey, ALUValue* _pDefault)
