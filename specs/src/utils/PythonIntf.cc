@@ -31,15 +31,16 @@ public:
 	PythonFuncArg(char* name, double def) :
 		m_name(name),m_default(counterType__Float),m_defFloat(def) {}
 	std::string     getStr() {
+		std::string dequoted_name = m_name.substr(1,m_name.size()-2);
 		switch (m_default) {
 		case counterType__Str:
-			return m_name + "='" + m_defStr + "'";
+			return dequoted_name + "='" + m_defStr + "'";
 		case counterType__Int:
-			return m_name + "=" + std::to_string(m_defInt);
+			return dequoted_name + "=" + std::to_string(m_defInt);
 		case counterType__Float:
-			return m_name + "=" + std::to_string(m_defFloat);
+			return dequoted_name + "=" + std::to_string(m_defFloat);
 		default:
-			return m_name;
+			return dequoted_name;
 		}
 	}
 
