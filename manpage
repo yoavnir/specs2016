@@ -773,7 +773,9 @@ Returns the 1-based index of the
 position of 
 .I needle
 in 
-.I haystack.
+.I haystack. Note that if the 
+.I haystack
+argument is omitted, it defaults to the entire input line.
 .IP "lastpos(needle, haystack)" 3
 Returns the 1-based index of the 
 .B last 
@@ -781,6 +783,9 @@ position of
 .I needle
 in 
 .I haystack.
+Note that if the 
+.I haystack
+argument is omitted, it defaults to the entire input line.
 .IP "includes(haystack, needle1 [,needle2, needle3, needle4])" 3
 Returns
 .B TRUE
@@ -796,7 +801,9 @@ as a substring, or
 .B FALSE
 (0) otherwise. To clarify, the function returns true if
 .B any
-of the needles match.
+of the needles match. Note that if the 
+.I haystack
+argument is omitted, it defaults to the entire input line.
 .IP "includesall(haystack, needle1 [,needle2, needle3, needle4])" 3
 Returns
 .B TRUE
@@ -812,7 +819,43 @@ as substrings, or
 .B FALSE
 (0) otherwise. To clarify, the function returns true if
 .B all
-of the needles match.
+of the needles match. Note that if the 
+.I haystack
+argument is omitted, it defaults to the entire input line.
+.IP "rmatch(string, regEx [,matchFlags])" 3
+Returns 
+.B TRUE
+(1) if the regular expression
+.I regEx
+matches the string
+.I string,
+or 
+.B FALSE
+(0) otherwise. See the special section below for more info on regular expressions. Note that if the 
+.I string
+argument is omitted, it defaults to the entire input line.
+.IP "rsearch(string, regEx [,matchFlags])" 3
+Returns 
+.B TRUE
+(1) if the regular expression
+.I regEx
+matches some substring of the string
+.I string,
+or 
+.B FALSE
+(0) otherwise. See the special section below for more info on regular expressions. Note that if the 
+.I string
+argument is omitted, it defaults to the entire input line.
+.IP "rreplace(string, regEx, fmt [,matchFlags])" 3
+Returns the string 
+.I string,
+with all matches of the regular expression 
+.I regEx
+replaced by what's in
+.I fmt.
+See the special section below for more info on regular expressions. Note that if the 
+.I string
+argument is omitted, it defaults to the entire input line.
 .IP "conf(key,default)" 3
 Returns the configured string from either the built-in configured strings such as 
 .I version
@@ -1190,6 +1233,79 @@ Returns a string containing a dump of the frequency map for
 .B Field Identifier
 a.
 
+.SH Regular Expressions
+Regular expressions can be used with the 
+.I rmatch, rsearch,
+and
+.I rreplace
+functions. You use the 
+.B --regexType
+command line switch to select from a list of syntax options. The supported options are:
+.IP "icase" 3
+.B Case insensitive
+.IP "nosubs" 3
+.B No sub-expressions:
+Not meaningful, but included here for completeness.
+.IP "optimize" 3
+.B Optimize matching:
+Matching efficiency is preferred over efficiency constructing regex objects.
+.IP "collate" 3
+.B Locale sensitiveness:
+Character ranges like 
+.I [a-b] are affected by locale
+.IP "ECMAScript" 3
+.B ECMAScript grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "basic" 3
+.B Basic POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "extended" 3
+.B Extended POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "awk" 3
+.B Awk POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "grep" 3
+.B Grep POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "egrep" 3
+.B Egrep POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.P
+.RE 3
+The last parameter in all three functions is 
+.I matchFlags.
+This optional parameter is also a comma-separated list of flags. The supported flags are:
+.IP "not_bol" 3
+Not beginning of line
+.IP "not_eol" 3
+Not end of line
+.IP "not_bow" 3
+Not beginning of word
+.IP "not_eow" 3
+Not end of word
+.IP "any" 3
+Any match is acceptable if more than one is possible
+.IP "not_null" 3
+An empty 
+.I string
+does not match
+.IP "continuous" 3
+The expression must match a sub-sequence that begins at the first character. Sub-sequences must begin at the first character to match.
+.IP "prev_avail" 3
+Previous Available - One or more characters exist before the first one
+.IP "sed" 3
+.B (for rreplace only) 
+Replaces using the same rules as the 
+.B sed
+POSIX utility
+.IP "no_copy" 3
+.B (for rreplace only) 
+Sections that do not match are not copied
+.IP "first_only" 3
+.B (for rreplace only) 
+Only the first occurrence is matched.
+
 .SH OPTIONS
 specs supports the following switches:
 .IP "--toASCII" 3
@@ -1264,6 +1380,10 @@ For
 and
 .B fixed-delimited
 records, sets the character that delimits the string. The OS-specific delimiter (CR+LF for Unix-like) is used if this is not specified.
+.IP "--regexType" 3
+Sets the syntax option for regular expressions. The parameter is a comma-separated list of syntax options. See the 
+.B Regular Expressions
+section for a list of valid syntax options.
 
 .SH CONFIGURATION FILE
 .B specs

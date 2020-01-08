@@ -74,6 +74,7 @@ Writer Thread:
 * `--recfm` **format** -- sets the format of the primary input stream. See below table for supported formats.
 * `--lrecl` **record-length** -- sets the length of each record. Relevant to *fixed* and *fixed-delimited* records.
 * `--linedel` **delimiter** -- sets the line delimiter for input records on the primary stream.
+* `--regexType` **syntaxOptionList** -- Sets the syntax option for regular expressions. The parameter is a comma-separated list of syntax options. See the table below for a list of valid syntax options.
 
 ## Table of record formats
 
@@ -83,5 +84,18 @@ Writer Thread:
 | `F` | fixed | *required* | *n/a* | **specs** will read exactly *lrecl* characters from the input stream regardless of what those characters may be. |
 | `FD` | fixed-delimited | *required* | *optional* | **specs** will read one line at a time delimited by the OS line separator if *linedel* is not specified. Lines that are longer than *lrecl* will be truncated; lines that are shorter will be padded by spaces. |
 
+## Table of syntax options
 
+|option|effects on syntax|Notes|
+|------|-----------------|-----|
+| `icase` | Case Insensitive | Regular expression matches do not regard case |
+| `nosubs` | No sub-expressions | Not relevant here -- included for completeness |
+| `optimize` | Optimize matching | Matching efficiency is preferred over construction efficiency |
+| `collate` | Locale sensitiveness | Character ranges like `[a-b]` are affected by locale |
+| `ECMAScript` | ECMAScript grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `basic` | Basic POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `extended` | Extended POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `awk` | Awk POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `grep` | Grep POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `egrep` | Egrep POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
 

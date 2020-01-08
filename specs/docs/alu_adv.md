@@ -77,17 +77,37 @@
 | -------- | ----------- |
 | `abbrev(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. If `l` is omitted, all of 'n' is considered. |
 | `center(s,n)` or `centre(s,n)` | Returns the `n` center-most characters of the string `s`. The result is padded with spaces on both sides if `n` is greater than the length of `s`. |
-| `includes(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **any** of `needle1`, `needle2`, `needle3`, or `needle4` is a substring of `haystack`, or `0` otherwise |
-| `includesall(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **all** of `needle1`, `needle2`, `needle3`, or `needle4` are substrings of `haystack`, or `0` otherwise |
+| `includes(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **any** of `needle1`, `needle2`, `needle3`, or `needle4` is a substring of `haystack`, or `0` otherwise. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
+| `includesall(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **all** of `needle1`, `needle2`, `needle3`, or `needle4` are substrings of `haystack`, or `0` otherwise. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
+| `rmatch(string,exp, [matchFlags])` | Returns `1` if the regular expression `regEx` matches `string`, or `0` otherwise. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
+| `rsearch(string,exp, [matchFlags])` | Returns `1` if the regular expression `regEx` matches any substring of `string`, or `0` otherwise. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
+| `rreplace(string,exp,fmt [matchFlags])` | Returns the string `string`, with all matches of the regular expression `regEx` replaced by what's in `fmt`. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s` |
 | `length(s)` | Returns the length (in characters) of the string `s` |
 | `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |
 | `substitute(haystack,needle,subst,max)` | Returns the string `haystack` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. The default for `max` is 1 |
 | `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |
-| `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack` |
-| `lastpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack` |
+| `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack`. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
+| `lastpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack`. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a tab character |
 | `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a space character |
+
+## matchFlags for regular expressions
+All three regular expression functions have an argument called `matchFlags`. This is a comma-separated list of matching flags. The flags are given in the following table:
+| Flag | Effects | Notes |
+|------|---------|-------|
+| `not_bol` | Not beginning of line | The first character is not considered a beginning of line. `^` does not match |
+| `not_eol` | Not end of line | The last character is not considered an end of line. `$` does not match |
+| `not_bow` | Not beginning of word | `\b` does not match as a beginning of word |
+| `not_eow` | Not end of word | `\b` does not match as an end of word |
+| `any` | Any match | Any match is acceptable |
+| `not_null` | Not null | An empty string does not match |
+| `continuous` | Continuous | The expression must match a sub-sequence that begins at the first character. Sub-sequences must begin at the first character to match |
+| `prev_avail` | Previous Available | One or more characters exist before the first one. (`not_bol` and `not_bow` are ignored) |
+| `sed` | sed formatting | For `rreplace` only |
+| `no_copy` | No copy | for `rreplace` only - sections that do not match are not copied |
+| `first_only` | First only | Only the first occurrence is replaced |
+
 
 ## Table of Other REXX-Derived Functions
 | Function | Description |
