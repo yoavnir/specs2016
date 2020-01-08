@@ -93,7 +93,9 @@
 | `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a space character |
 
 ## matchFlags for regular expressions
+
 All three regular expression functions have an argument called `matchFlags`. This is a comma-separated list of matching flags. The flags are given in the following table:
+
 | Flag | Effects | Notes |
 |------|---------|-------|
 | `not_bol` | Not beginning of line | The first character is not considered a beginning of line. `^` does not match |
