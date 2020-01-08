@@ -46,6 +46,13 @@ public:
 		m_counter = 0;
 	}
 
+	~lruCache() {
+		for (const auto &pair : m_map) {
+			delete pair.second;
+		}
+		m_map.clear();
+	}
+
 	T* get(S& s) {
 		auto it = m_map.find(s);
 		if (it!=m_map.end()) {
