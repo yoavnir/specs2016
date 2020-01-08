@@ -82,9 +82,6 @@ std::regex* regexCalculator(std::string& s)
 			pRet = new std::regex(s,g_regexType);
 		} catch (std::regex_error& e) {
 			std::string err = "Invalid regular expression <" + s + "> : " + e.what();
-			if (e.code()==std::regex_constants::__re_err_grammar && gs_regexType.size() > 0) {
-				err += " (" + gs_regexType + ")";
-			}
 			MYTHROW(err);
 		}
 		g_regexCache.set(s,pRet);
