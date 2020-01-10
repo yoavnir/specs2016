@@ -544,9 +544,8 @@ ALUValue* AluFunc_centre(ALUValue* pBigString, ALUValue* pLength)
 ALUValue* AluFunc_pos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
-	ASSERT_NOT_ELIDED(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
-	std::string* pHaystack = _pHaystack->getStrPtr();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	size_t pos = pHaystack->find(*pNeedle);
 	if (std::string::npos == pos) {
 		return new ALUValue(ALUInt(0));
@@ -558,9 +557,8 @@ ALUValue* AluFunc_pos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 ALUValue* AluFunc_lastpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
-	ASSERT_NOT_ELIDED(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
-	std::string* pHaystack = _pHaystack->getStrPtr();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	size_t pos = pHaystack->rfind(*pNeedle);
 	if (std::string::npos == pos) {
 		return new ALUValue(ALUInt(0));
@@ -572,9 +570,8 @@ ALUValue* AluFunc_lastpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* _pNeedle2, ALUValue* _pNeedle3, ALUValue* _pNeedle4)
 {
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
-	ASSERT_NOT_ELIDED(_pHaystack,1,haystack);
 
-	std::string* pHaystack = _pHaystack->getStrPtr();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 
 	if (std::string::npos != pHaystack->find(*_pNeedle1->getStrPtr())) {
 		return new ALUValue(ALUInt(1));
@@ -592,9 +589,8 @@ ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* 
 ALUValue* AluFunc_includesall(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* _pNeedle2, ALUValue* _pNeedle3, ALUValue* _pNeedle4)
 {
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
-	ASSERT_NOT_ELIDED(_pHaystack,1,haystack);
 
-	std::string* pHaystack = _pHaystack->getStrPtr();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 
 	if (std::string::npos == pHaystack->find(*_pNeedle1->getStrPtr())) {
 		return new ALUValue(ALUInt(0));
@@ -612,37 +608,37 @@ ALUValue* AluFunc_includesall(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValu
 ALUValue* AluFunc_rmatch(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
-	ASSERT_NOT_ELIDED(_pHaystack,1,string);
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 
 	if (_pFlags) {
-		return new ALUValue(ALUInt(regexMatch(_pHaystack, _pExp, _pFlags->getStrPtr())));
+		return new ALUValue(ALUInt(regexMatch(pHaystack, _pExp, _pFlags->getStrPtr())));
 	}
-	return new ALUValue(ALUInt(regexMatch(_pHaystack, _pExp)));
+	return new ALUValue(ALUInt(regexMatch(pHaystack, _pExp)));
 }
 
 ALUValue* AluFunc_rsearch(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
-	ASSERT_NOT_ELIDED(_pHaystack,1,string);
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 
 	if (_pFlags) {
-		return new ALUValue(ALUInt(regexSearch(_pHaystack, _pExp, _pFlags->getStrPtr())));
+		return new ALUValue(ALUInt(regexSearch(pHaystack, _pExp, _pFlags->getStrPtr())));
 	}
-	return new ALUValue(ALUInt(regexSearch(_pHaystack, _pExp)));
+	return new ALUValue(ALUInt(regexSearch(pHaystack, _pExp)));
 }
 
 ALUValue* AluFunc_rreplace(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFmt, ALUValue* _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
-	ASSERT_NOT_ELIDED(_pHaystack,1,string);
 	ASSERT_NOT_ELIDED(_pFmt,3,format);
 
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	std::string sFmt = _pFmt->getStr();
 
 	if (_pFlags) {
-		return new ALUValue(regexReplace(_pHaystack, _pExp, sFmt, _pFlags->getStrPtr()));
+		return new ALUValue(regexReplace(pHaystack, _pExp, sFmt, _pFlags->getStrPtr()));
 	}
-	return new ALUValue(regexReplace(_pHaystack, _pExp, sFmt));
+	return new ALUValue(regexReplace(pHaystack, _pExp, sFmt));
 }
 
 ALUValue* AluFunc_conf(ALUValue* _pKey, ALUValue* _pDefault)

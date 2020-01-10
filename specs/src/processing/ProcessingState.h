@@ -81,7 +81,7 @@ public:
 	void setSecond();
 	void setStream(int i);
 	int  getActiveInputStation() { return m_inputStation; }
-	PSpecString currRecord() { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
+	virtual PSpecString currRecord() { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
 	bool recordNotAvailable() { return NULL==currRecord(); }
 	bool inputStreamHasChanged() { return m_inputStreamChanged; }
 	void resetInputStreamFlag() { m_inputStreamChanged = false; }

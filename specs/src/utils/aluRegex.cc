@@ -148,48 +148,45 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 	}
 }
 
-bool regexMatch(ALUValue* pStr, ALUValue* pExp, std::string* pFlags)
+bool regexMatch(std::string* pStr, ALUValue* pExp, std::string* pFlags)
 {
-	std::string sStr = pStr->getStr();
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
 
 	try {
-		return std::regex_match(sStr, *pRE, getMatchFlags(pFlags));
+		return std::regex_match(*pStr, *pRE, getMatchFlags(pFlags));
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression match : ") + e.what()
-				+ "\nString: " + sStr + "\nExpression: " + sExp;
+				+ "\nString: " + *pStr + "\nExpression: " + sExp;
 		if (pFlags) err += "\nFlags: " + *pFlags;
 		MYTHROW(err);
 	}
 }
 
-bool regexSearch(ALUValue* pStr, ALUValue* pExp, std::string* pFlags)
+bool regexSearch(std::string* pStr, ALUValue* pExp, std::string* pFlags)
 {
-	std::string sStr = pStr->getStr();
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
 	try {
-		return std::regex_search(sStr, *pRE, getMatchFlags(pFlags));
+		return std::regex_search(*pStr, *pRE, getMatchFlags(pFlags));
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression search : ") + e.what()
-				+ "\nString: " + sStr + "\nExpression: " + sExp;
+				+ "\nString: " + *pStr + "\nExpression: " + sExp;
 		if (pFlags) err += "\nFlags: " + *pFlags;
 		MYTHROW(err);
 	}
 
 }
 
-std::string regexReplace(ALUValue* pStr, ALUValue* pExp, std::string& fmt, std::string* pFlags)
+std::string regexReplace(std::string* pStr, ALUValue* pExp, std::string& fmt, std::string* pFlags)
 {
-	std::string sStr = pStr->getStr();
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
 	try {
-		return std::regex_replace(sStr, *pRE, fmt, getMatchFlags(pFlags));
+		return std::regex_replace(*pStr, *pRE, fmt, getMatchFlags(pFlags));
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression replace : ") + e.what()
-				+ "\nString: " + sStr + "\nExpression: " + sExp + "\nFormat: " + fmt;
+				+ "\nString: " + *pStr + "\nExpression: " + sExp + "\nFormat: " + fmt;
 		if (pFlags) err += "\nFlags: " + *pFlags;
 		MYTHROW(err);
 	}

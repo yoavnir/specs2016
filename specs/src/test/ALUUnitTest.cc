@@ -821,12 +821,14 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("pos('x', #9)", "0");
 	VERIFY_EXPR_RES("pos('a ', #9)", "5");
 	VERIFY_EXPR_RES("pos('a ', left(#9,13))", "5");
+	VERIFY_EXPR_RES("pos('a')", "37");
 
 	VERIFY_EXPR_RES("lastpos('g', #9)", "3");
 	VERIFY_EXPR_RES("lastpos('a', #9)", "11");
 	VERIFY_EXPR_RES("lastpos('x', #9)", "0");
 	VERIFY_EXPR_RES("lastpos('a ', #9)", "5");
 	VERIFY_EXPR_RES("lastpos('a ', left(#9,13))", "11");
+	VERIFY_EXPR_RES("lastpos('e')", "34");
 
 	VERIFY_EXPR_RES("includes(#9, 'a')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'x')", "0");
@@ -836,6 +838,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includes(#9, 'x', 'a')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'gn', 'a')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'x', 'rt ')", "0");
+	VERIFY_EXPR_RES("includes(,'quick','fox')", "1");
+	VERIFY_EXPR_RES("includes(,'fast','fox')", "1");
+	VERIFY_EXPR_RES("includes(,'quick','goose')", "1");
+	VERIFY_EXPR_RES("includes(,'fast','goose')", "0");
 
 	VERIFY_EXPR_RES("includesall(#9, 'a')", "1");
 	VERIFY_EXPR_RES("includesall(#9, 'x')", "0");
@@ -845,6 +851,10 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includesall(#9, 'x', 'a')", "0");
 	VERIFY_EXPR_RES("includesall(#9, 'gn', 'a')", "1");
 	VERIFY_EXPR_RES("includesall(#9, 'x', 'rt ')", "0");
+	VERIFY_EXPR_RES("includesall(,'quick','fox')", "1");
+	VERIFY_EXPR_RES("includesall(,'fast','fox')", "0");
+	VERIFY_EXPR_RES("includesall(,'quick','goose')", "0");
+	VERIFY_EXPR_RES("includesall(,'fast','goose')", "0");
 
 	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
 
@@ -1179,9 +1189,13 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("rmatch('subject','(sub)(.*)')", "1");
 	VERIFY_EXPR_RES("rmatch('object','(sub)(.*)')", "0");
 	VERIFY_EXPR_RES("rmatch('nonsubjective','(sub)(.*)')", "0");
+	VERIFY_EXPR_RES("rmatch(,'.*brown.*')", "1");
+	VERIFY_EXPR_RES("rmatch(,'.*black.*')", "0");
 	VERIFY_EXPR_RES("rsearch('subject','(sub)(.*)')", "1");
 	VERIFY_EXPR_RES("rsearch('object','(sub)(.*)')", "0");
 	VERIFY_EXPR_RES("rsearch('nonsubjective','(sub)(.*)')", "1");
+	VERIFY_EXPR_RES("rsearch(,'brown')", "1");
+	VERIFY_EXPR_RES("rsearch(,'black')", "0");
 	VERIFY_EXPR_RES("rreplace(s,'\\\\b(sub)([^ ]*)','sub-$2')","There is a sub-sequence in the string");
 	VERIFY_EXPR_RES("rreplace(s,'\\\\b(sub)([^ ]*)','$2')","There is a sequence in the string");
 

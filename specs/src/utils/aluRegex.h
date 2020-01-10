@@ -8,10 +8,10 @@ void dumpRegexStats();
 
 void setRegexType(std::string& s);
 
-bool regexMatch(ALUValue* pStr, ALUValue* pExp, std::string* pFlags = NULL);
+bool regexMatch(std::string* pStr, ALUValue* pExp, std::string* pFlags = NULL);
 
-bool regexSearch(ALUValue* pStr, ALUValue* pExp, std::string* pFlags = NULL);
+bool regexSearch(std::string* pStr, ALUValue* pExp, std::string* pFlags = NULL);
 
-std::string regexReplace(ALUValue* pStr, ALUValue* pExp, std::string& fmt, std::string* pFlags = NULL);
+std::string regexReplace(std::string* pStr, ALUValue* pExp, std::string& fmt, std::string* pFlags = NULL);
 
 #endif
