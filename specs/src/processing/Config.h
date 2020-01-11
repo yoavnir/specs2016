@@ -24,6 +24,7 @@
 	X(linedel,                      std::string,  "",     0,linedel,            NEXTARG)    \
 	X(configuredString,             std::string,  "",     s,set,                NEXTARG)    \
 	X(regexSyntaxType,              std::string,  "",     0,regexType,          NEXTARG)    \
+	X(pythonFuncs,                  std::string,  "auto", 0,pythonFuncs,        NEXTARG)    \
 	X(inputStream2,                 std::string,  "",     0,is2,                NEXTARG)    \
 	X(inputStream3,                 std::string,  "",     0,is3,                NEXTARG)    \
 	X(inputStream4,                 std::string,  "",     0,is4,                NEXTARG)    \
@@ -43,11 +44,17 @@
 CONFIG_PARAMS
 #undef X
 
+#define EXTERNAL_FUNC_AUTO  "auto"
+#define EXTERNAL_FUNC_ON    "on"
+#define EXTERNAL_FUNC_OFF   "off"
+
 void readConfigurationFile();
 
 bool configSpecLiteralExists(std::string& key);
 
 std::string& configSpecLiteralGet(std::string& key);
+
+std::string& configSpecLiteralGetWithDefault(std::string& key, std::string& _default);
 
 void configSpecLiteralSet(std::string& key, std::string& value);
 

@@ -111,6 +111,18 @@ int main (int argc, char** argv)
 		exit(0);
 	}
 
+	if (EXTERNAL_FUNC_ON == g_pythonFuncs) {
+		try {
+			p_gExternalFunctions->Initialize(getFullSpecPath());
+		} catch (const SpecsException& e) {
+			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+			exit(0);
+		}
+#ifdef DEBUG
+		p_gExternalFunctions->Debug();
+#endif
+	}
+
 	std::vector<Token> vec;
 
 	try {

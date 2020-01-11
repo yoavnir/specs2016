@@ -920,22 +920,23 @@ AluFunction::AluFunction(std::string& _s)
 #endif
 
 #ifndef SPECS_NO_PYTHON
-	// Internal function not found - try external
-	if (!p_gExternalFunctions->IsInitialized()) {
-		try {
-			p_gExternalFunctions->Initialize(getFullSpecPath());
-		} catch (const SpecsException& e) {
-			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-			exit(0);
-		}
+	// Internal function not found - try external unless they're disabled
+	if (EXTERNAL_FUNC_OFF != g_pythonFuncs) {
+		if (!p_gExternalFunctions->IsInitialized()) {
+			try {
+				p_gExternalFunctions->Initialize(getFullSpecPath());
+			} catch (const SpecsException& e) {
+				std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+				exit(0);
+			}
 #ifdef DEBUG
-		p_gExternalFunctions->Debug();
+			p_gExternalFunctions->Debug();
+#endif
+		}
+		MYASSERT(p_gExternalFunctions->IsInitialized());
+		m_pExternalFunc = p_gExternalFunctions->GetFunctionByName(_s);
 #endif
 	}
-	MYASSERT(p_gExternalFunctions->IsInitialized());
-	m_pExternalFunc = p_gExternalFunctions->GetFunctionByName(_s);
-#endif
-	
 	if (!m_pExternalFunc) {
 		std::string err = "Unrecognized function "+_s;
 		MYTHROW(err);

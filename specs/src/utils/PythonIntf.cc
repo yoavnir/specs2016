@@ -231,7 +231,12 @@ public:
 	}
 
 	virtual void  Initialize(const char* _path) {
-
+		static std::string disableOption = "pythonDisable";
+		static std::string zero = "0";
+		if ("1" == configSpecLiteralGetWithDefault(disableOption, zero)) {
+			m_Initialized = true;
+			return;
+		}
 		// update the python path
 		if (_path && _path[0]) {
 #ifdef PYTHON_VER_3

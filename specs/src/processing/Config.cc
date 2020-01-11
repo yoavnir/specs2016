@@ -196,6 +196,11 @@ std::string& configSpecLiteralGet(std::string& key)
 	return ExternalLiterals[key];
 }
 
+std::string& configSpecLiteralGetWithDefault(std::string& key, std::string& _default)
+{
+	return ExternalLiterals[key].empty() ? _default : ExternalLiterals[key];
+}
+
 void configSpecLiteralSet(std::string& key, std::string& value)
 {
 	ExternalLiterals[key] = value;
