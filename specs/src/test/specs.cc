@@ -111,6 +111,15 @@ int main (int argc, char** argv)
 		exit(0);
 	}
 
+	if ("" != g_pythonErr) {
+		try {
+			p_gExternalFunctions->SetErrorHandling(g_pythonErr);
+		} catch (const SpecsException& e) {
+			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+			exit(0);
+		}
+	}
+
 	if (EXTERNAL_FUNC_ON == g_pythonFuncs) {
 		try {
 			p_gExternalFunctions->Initialize(getFullSpecPath());

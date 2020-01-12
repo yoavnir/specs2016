@@ -20,6 +20,7 @@ public:
 	virtual void                 Debug() = 0;
 	virtual size_t               CountFunctions() = 0;
 	virtual ExternalFunctionRec* GetFunctionByName(std::string fname) = 0;
+	virtual void                 SetErrorHandling(std::string& smethod) = 0;
 };
 
 extern ExternalFunctionCollection* p_gExternalFunctions;

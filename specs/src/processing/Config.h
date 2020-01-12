@@ -25,6 +25,7 @@
 	X(configuredString,             std::string,  "",     s,set,                NEXTARG)    \
 	X(regexSyntaxType,              std::string,  "",     0,regexType,          NEXTARG)    \
 	X(pythonFuncs,                  std::string,  "auto", 0,pythonFuncs,        NEXTARG)    \
+	X(pythonErr,                    std::string,  "",     0,pythonErr,          NEXTARG)    \
 	X(inputStream2,                 std::string,  "",     0,is2,                NEXTARG)    \
 	X(inputStream3,                 std::string,  "",     0,is3,                NEXTARG)    \
 	X(inputStream4,                 std::string,  "",     0,is4,                NEXTARG)    \
@@ -47,6 +48,11 @@ CONFIG_PARAMS
 #define EXTERNAL_FUNC_AUTO  "auto"
 #define EXTERNAL_FUNC_ON    "on"
 #define EXTERNAL_FUNC_OFF   "off"
+
+#define EXTERNAL_FUNC_ERR_THROW   "throw"
+#define EXTERNAL_FUNC_ERR_NAN     "nan"
+#define EXTERNAL_FUNC_ERR_ZERO    "zero"
+#define EXTERNAL_FUNC_ERR_NULLSTR "nullstr"
 
 void readConfigurationFile();
 

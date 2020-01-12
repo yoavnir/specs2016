@@ -1396,6 +1396,18 @@ which is the default, and signifies that Python functions are loaded only when t
 configured literal to 
 .B 1 
 will disable Python functions and cannot be overridden from the command line.
+.IP "--pythonErr" 3
+Determines what happens when a called Python function throws an exception. The default, 
+.B throw 
+is for 
+.I specs 
+to throw its own exception and terminate. The alternatives, 
+.B NaN, zero, 
+and
+.B nullstr 
+make 
+.I specs
+behave as if the function returned, NaN, the integer zero, or an empty string respectively.
 
 .SH CONFIGURATION FILE
 .B specs

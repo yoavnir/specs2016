@@ -3,6 +3,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <utils/platform.h>
 #include "PythonIntf.h"
 #include "ErrorReporting.h"
 #include "aluFunctions.h"
@@ -20,6 +21,15 @@ static const char emptyString[]="";
 #define PyString_Check(x)      false
 #define PyString_AS_STRING(x) ((char*)(emptyString))
 #endif
+
+enum externalFunctionErrorHandling {
+	externalFunctionError__Throw,
+	externalFunctionError__NaN,
+	externalFunctionError__Zero,
+	externalFunctionError__NullStr
+};
+
+externalFunctionErrorHandling g_errorHandling = externalFunctionError__Throw;
 
 class PythonFuncArg {
 public:
@@ -179,12 +189,24 @@ public:
 			Py_DECREF(pResult);
 		} else {
 			if (PyErr_Occurred()) {
-				if (g_bVerbose) {
-					PyErr_Print();
+				switch (g_errorHandling) {
+				case externalFunctionError__NaN:
+					pRet = new ALUValue;
+					break;
+				case externalFunctionError__NullStr:
+					pRet = new ALUValue("");
+					break;
+				case externalFunctionError__Zero:
+					pRet = new ALUValue(ALUInt(0));
+					break;
+				default:
+					if (g_bVerbose) {
+						PyErr_Print();
+					}
+					MYTHROW("Error in external function");
 				}
-				MYTHROW("Error in external function")
 			}
-			pRet = new ALUValue; // NaN
+			else pRet = new ALUValue; // NaN
 		}
 
 		return pRet;
@@ -395,6 +417,20 @@ public:
 		// release the functions from inspect module
 		Py_DECREF(pArgSpecFunc);
 		Py_DECREF(pInspectMod);
+	}
+	virtual void SetErrorHandling(std::string& smethod) {
+		if (0 == strcasecmp(smethod.c_str(), EXTERNAL_FUNC_ERR_THROW)) {
+			g_errorHandling = externalFunctionError__Throw;
+		} else if (0 == strcasecmp(smethod.c_str(), EXTERNAL_FUNC_ERR_NAN)) {
+			g_errorHandling = externalFunctionError__NaN;
+		} else if (0 == strcasecmp(smethod.c_str(), EXTERNAL_FUNC_ERR_ZERO)) {
+			g_errorHandling = externalFunctionError__Zero;
+		} else if (0 == strcasecmp(smethod.c_str(), EXTERNAL_FUNC_ERR_NULLSTR)) {
+			g_errorHandling = externalFunctionError__NullStr;
+		} else {
+			std::string err = "Invalid error handling directive: " + smethod;
+			MYTHROW(err);
+		}
 	}
 	virtual bool IsInitialized() {
 		return m_Initialized;
