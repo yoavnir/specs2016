@@ -41,7 +41,9 @@ static void useKeyValue(std::string& key, std::string& value)
 		} else if (key == "regexType") {
 			setRegexType(value);
 		}
-		ExternalLiterals[key] = value;
+		if (ExternalLiterals.find(key) == ExternalLiterals.end()) {
+			ExternalLiterals[key] = value;
+		}
 	}
 }
 
