@@ -293,7 +293,7 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
-			return -4;
+			exit(8);
 		}
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
