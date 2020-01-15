@@ -46,8 +46,11 @@ with open("xx.txt","w") as v:
 		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
 	
 	# Get the result of python-config --cflags
-	cmd = "{}-config --ldflags > xx.txt".format(arg)
-	rc = os.system(cmd)
+        cmd = "{}-config --ldflags --embed > xx.txt".format(arg)  # first try with --embed needed for python 3.8
+        rc = os.system(cmd)
+        if rc!=0:
+	    cmd = "{}-config --ldflags > xx.txt".format(arg)
+	    rc = os.system(cmd)
 	if rc!=0:
 		sys.stdout.write("No -- could not get ldflags from {}-config.\n".format(arg))
 		return False
