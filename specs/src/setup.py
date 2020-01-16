@@ -1,4 +1,4 @@
-import os,sys,argparse
+import os,sys,argparse,subprocess
 
 python_cflags=""
 python_ldflags=""
@@ -46,8 +46,9 @@ with open("xx.txt","w") as v:
 		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
 	
 	# Get the result of python-config --cflags
-	cmd = "{}-config --ldflags --embed &> xx.txt".format(arg)  # first try with --embed needed for python 3.8
-	rc = os.system(cmd)
+	with open("xx.txt","w") as o:
+		cmd = "{}-config --ldflags --embed > xx.txt".format(arg)  # first try with --embed needed for python 3.8
+		rc = subprocess.call(cmd,shell=True,stdout=o.fileno(), stderr=o.fileno())
 	if rc!=0:
 		cmd = "{}-config --ldflags > xx.txt".format(arg)
 		rc = os.system(cmd)
