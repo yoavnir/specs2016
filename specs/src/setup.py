@@ -1,4 +1,4 @@
-import os,sys,argparse,subprocess
+import os,sys,argparse,subprocess,sysconfig
 
 python_cflags=""
 python_ldflags=""
@@ -201,8 +201,12 @@ if use_cached_depends is None:
 		
 if compiler=="VS":
 	def_prefix = " /D"
+	inc_prefix = " /I"
+	lp_prefix = " /LIBPATH "
 else:
 	def_prefix = " -D"
+	inc_prefix = " -I "
+	lp_prefix = " -L "
 
 if compiler not in valid_compilers:
 	sys.stderr.write("compiler {} is not a valid compiler for specs.\nValid compilers are: {}\n".format(compiler, ", ".join(valid_compilers)))
@@ -407,31 +411,40 @@ else:
 	os.system("/bin/rm xx.cc xx.o {}".format(errs))
 	
 #
-# Python support	
-if python_prefix=="": # default: python is optional and prefix is 'python'
-	CFG_python = python_search("python")
-	if platform=="NT":
-		os.system("del xx.txt")
+# Python support
+sys.stdout.write("Python support...")	
+if platform=="NT":
+	if python_prefix=="no":
+		sys.stdout.write("Python support configured off.\n")
+		CFG_Python = False
 	else:
-		os.system("/bin/rm xx.txt {}".format(errs))
-
-elif python_prefix=="no":
-	sys.stdout.write("Python support configured off.\n")
-	CFG_python = False
-else:
-	if python_prefix=="yes":
-		python_prefix = "python"
-
-	rc = python_search(python_prefix)
-	if platform=="NT":
-		os.system("del xx.txt")
-	else:
-		os.system("/bin/rm xx.txt {}".format(errs))
-	if rc:
+		cv = sysconfig.get_config_vars()
+		python_prefix = cv['prefix']
+		python_ver = cv['py_version_nodot']
+		python_version = int(python_ver[0])
+		python_cflags = "{}{}\\include".format(inc_prefix,python_prefix)
+		python_ldflags = "{}{}\\libs -lpython{}".format(lp_prefix,python_prefix,python_ver)
+		sys.stdout.write("configured for Python version {}.\n".format(cv['py_version']))
 		CFG_python = True
+else:
+	if python_prefix=="": # default: python is optional and prefix is 'python'
+		CFG_python = python_search("python")
+		os.system("/bin/rm xx.txt {}".format(errs))
+
+	elif python_prefix=="no":
+		sys.stdout.write("Python support configured off.\n")
+		CFG_python = False
 	else:
-		sys.stdout.write("\nFailed to make Makefile. Python support is not properly configured.\n")
-		exit(-4)
+		if python_prefix=="yes":
+			python_prefix = "python"
+
+		rc = python_search(python_prefix)
+		os.system("/bin/rm xx.txt {}".format(errs))
+		if rc:
+			CFG_python = True
+		else:
+			sys.stdout.write("\nFailed to make Makefile. Python support is not properly configured.\n")
+			exit(-4)
 
 	
 if CFG_put_time:
