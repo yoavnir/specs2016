@@ -201,12 +201,12 @@ if use_cached_depends is None:
 		
 if compiler=="VS":
 	def_prefix = " /D"
-	inc_prefix = " /I"
-	lp_prefix = " /LIBPATH "
+	inc_prefix = "/I"
+	lp_prefix = "/LIBPATH"
 else:
 	def_prefix = " -D"
-	inc_prefix = " -I "
-	lp_prefix = " -L "
+	inc_prefix = "-I"
+	lp_prefix = "-L"
 
 if compiler not in valid_compilers:
 	sys.stderr.write("compiler {} is not a valid compiler for specs.\nValid compilers are: {}\n".format(compiler, ", ".join(valid_compilers)))
@@ -422,8 +422,8 @@ if platform=="NT":
 		python_prefix = cv['prefix']
 		python_ver = cv['py_version_nodot']
 		python_version = int(python_ver[0])
-		python_cflags = "{}{}\\include".format(inc_prefix,python_prefix)
-		python_ldflags = "{}{}\\libs -lpython{}".format(lp_prefix,python_prefix,python_ver)
+		python_cflags = '{} "{}\\include"'.format(inc_prefix,python_prefix)
+		python_ldflags = '{} "{}\\libs" -lpython{}'.format(lp_prefix,python_prefix,python_ver)
 		sys.stdout.write("configured for Python version {}.\n".format(cv['py_version']))
 		CFG_python = True
 else:
