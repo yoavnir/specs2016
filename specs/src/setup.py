@@ -6,7 +6,6 @@ python_version=0
 
 def python_search(arg):
 	global python_cflags,python_ldflags,python_version,variation
-	sys.stdout.write("Testing if python support is available...")
 	
 	# Get python version
 	script = '''
@@ -412,7 +411,7 @@ else:
 	
 #
 # Python support
-sys.stdout.write("Python support...")	
+sys.stdout.write("Testing if python support is available...")	
 if platform=="NT":
 	if python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
