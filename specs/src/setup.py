@@ -423,7 +423,7 @@ if platform=="NT":
 		python_ver = cv['py_version_nodot']
 		python_version = int(python_ver[0])
 		python_cflags = '{} "{}\\include"'.format(inc_prefix,python_prefix)
-		python_ldflags = '{} "{}\\libs" -lpython{}'.format(lp_prefix,python_prefix,python_ver)
+		python_ldflags = '"{}\\libs\\python{}.lib"'.format(python_prefix,python_ver)
 		sys.stdout.write("configured for Python version {}.\n".format(cv['py_version']))
 		CFG_python = True
 else:
