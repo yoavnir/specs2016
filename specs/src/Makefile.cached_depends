@@ -1,0 +1,176 @@
+cli/splitter.o: cli/splitter.cc utils/platform.h utils/ErrorReporting.h \
+  processing/Config.h cli/tokens.h
+cli/tokens.o: cli/tokens.cc utils/platform.h cli/tokens.h \
+  utils/ErrorReporting.h processing/Config.h processing/conversions.h \
+  processing/Reader.h utils/StringQueue.h utils/SpecString.h \
+  utils/TimeUtils.h processing/ProcessingState.h processing/Writer.h \
+  utils/alu.h utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
+processing/Config.o: processing/Config.cc utils/platform.h \
+  utils/TimeUtils.h utils/SpecString.h utils/PythonIntf.h \
+  utils/aluValue.h utils/aluRegex.h processing/Config.h
+processing/ProcessingState.o: processing/ProcessingState.cc \
+  processing/Config.h utils/ErrorReporting.h processing/Reader.h \
+  utils/StringQueue.h utils/SpecString.h utils/platform.h \
+  utils/TimeUtils.h processing/ProcessingState.h processing/Writer.h \
+  utils/alu.h utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
+processing/Reader.o: processing/Reader.cc utils/ErrorReporting.h \
+  processing/Reader.h utils/StringQueue.h utils/SpecString.h \
+  utils/platform.h utils/TimeUtils.h
+processing/StringBuilder.o: processing/StringBuilder.cc \
+  processing/Config.h utils/ErrorReporting.h \
+  processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
+  utils/SpecString.h utils/platform.h utils/TimeUtils.h utils/alu.h \
+  utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h \
+  processing/StringBuilder.h
+processing/Writer.o: processing/Writer.cc utils/ErrorReporting.h \
+  processing/Writer.h utils/StringQueue.h utils/SpecString.h \
+  utils/platform.h utils/TimeUtils.h
+processing/conversions.o: processing/conversions.cc utils/platform.h \
+  utils/ErrorReporting.h processing/conversions.h utils/SpecString.h \
+  utils/TimeUtils.h
+specitems/InputPart.o: specitems/InputPart.cc utils/platform.h \
+  processing/Config.h utils/TimeUtils.h utils/SpecString.h \
+  utils/ErrorReporting.h specitems/item.h cli/tokens.h \
+  processing/conversions.h processing/StringBuilder.h \
+  processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
+  utils/alu.h utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
+specitems/dataField.o: specitems/dataField.cc utils/platform.h \
+  utils/ErrorReporting.h processing/Config.h specitems/item.h \
+  cli/tokens.h processing/conversions.h processing/StringBuilder.h \
+  utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
+  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/PythonIntf.h \
+  utils/aluValue.h utils/aluFunctions.h
+specitems/specItems.o: specitems/specItems.cc utils/platform.h \
+  utils/ErrorReporting.h processing/Config.h specitems/specItems.h \
+  specitems/item.h cli/tokens.h processing/conversions.h \
+  processing/StringBuilder.h utils/SpecString.h \
+  processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
+  utils/TimeUtils.h utils/alu.h utils/PythonIntf.h utils/aluValue.h \
+  utils/aluFunctions.h processing/Reader.h
+test/ALUUnitTest.o: test/ALUUnitTest.cc utils/platform.h \
+  utils/ErrorReporting.h utils/alu.h utils/PythonIntf.h utils/aluValue.h \
+  utils/TimeUtils.h utils/SpecString.h processing/ProcessingState.h \
+  processing/Writer.h utils/StringQueue.h utils/aluFunctions.h
+test/ProcessingTest.o: test/ProcessingTest.cc utils/platform.h \
+  cli/tokens.h utils/ErrorReporting.h specitems/specItems.h \
+  specitems/item.h processing/conversions.h processing/StringBuilder.h \
+  utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
+  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/PythonIntf.h \
+  utils/aluValue.h utils/aluFunctions.h processing/Reader.h \
+  processing/Config.h
+test/TokenTest.o: test/TokenTest.cc cli/tokens.h utils/ErrorReporting.h
+test/cacheTest.o: test/cacheTest.cc utils/lruCache.h \
+  utils/ErrorReporting.h
+test/itemTest.o: test/itemTest.cc utils/platform.h cli/tokens.h \
+  utils/ErrorReporting.h specitems/specItems.h specitems/item.h \
+  processing/conversions.h processing/StringBuilder.h utils/SpecString.h \
+  processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
+  utils/TimeUtils.h utils/alu.h utils/PythonIntf.h utils/aluValue.h \
+  utils/aluFunctions.h processing/Reader.h
+test/readWriteTest.o: test/readWriteTest.cc utils/ErrorReporting.h \
+  processing/Reader.h utils/StringQueue.h utils/SpecString.h \
+  utils/platform.h utils/TimeUtils.h processing/Writer.h \
+  processing/StringBuilder.h processing/ProcessingState.h utils/alu.h \
+  utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
+test/specs.o: test/specs.cc utils/platform.h cli/tokens.h \
+  utils/ErrorReporting.h processing/Config.h specitems/specItems.h \
+  specitems/item.h processing/conversions.h processing/StringBuilder.h \
+  utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
+  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/PythonIntf.h \
+  utils/aluValue.h utils/aluFunctions.h processing/Reader.h \
+  utils/aluRegex.h
+test/timeTest.o: test/timeTest.cc utils/TimeUtils.h utils/SpecString.h
+utils/ErrorReporting.o: utils/ErrorReporting.cc utils/ErrorReporting.h
+utils/PythonIntf.o: utils/PythonIntf.cc \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/Python.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/patchlevel.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pyconfig.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pymacconfig.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pyport.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pymacro.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pyatomic.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pymath.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pytime.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/object.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pymem.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/objimpl.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/typeslots.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pyhash.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pydebug.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/bytearrayobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/bytesobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/unicodeobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/longobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/longintrepr.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/boolobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/floatobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/complexobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/rangeobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/memoryobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/tupleobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/listobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/dictobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/odictobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/enumobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/setobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/methodobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/moduleobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/funcobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/classobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/fileobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pycapsule.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/traceback.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pystate.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pythread.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/sliceobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/cellobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/iterobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/genobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/descrobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/warnings.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/weakrefobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/structseq.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/namespaceobject.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/codecs.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pyerrors.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/context.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pyarena.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/modsupport.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/compile.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/code.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pythonrun.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pylifecycle.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/ceval.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/sysmodule.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/osmodule.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/intrcheck.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/import.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/abstract.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/bltinmodule.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/eval.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pyctype.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pystrtod.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pystrcmp.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/dtoa.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/fileutils.h \
+  /Users/synp/.pyenv/versions/3.7.3/include/python3.7m/pyfpe.h \
+  utils/platform.h utils/PythonIntf.h utils/aluValue.h \
+  utils/ErrorReporting.h utils/aluFunctions.h utils/SpecString.h \
+  utils/alu.h processing/Config.h
+utils/SpecString.o: utils/SpecString.cc processing/Config.h \
+  utils/ErrorReporting.h utils/SpecString.h
+utils/TimeUtils.o: utils/TimeUtils.cc utils/ErrorReporting.h \
+  utils/platform.h utils/TimeUtils.h utils/SpecString.h
+utils/alu.o: utils/alu.cc utils/ErrorReporting.h utils/alu.h \
+  utils/platform.h utils/PythonIntf.h utils/aluValue.h \
+  utils/aluFunctions.h utils/SpecString.h processing/Config.h
+utils/aluFunctions.o: utils/aluFunctions.cc utils/ErrorReporting.h \
+  utils/aluFunctions.h utils/SpecString.h utils/alu.h utils/platform.h \
+  utils/PythonIntf.h utils/aluValue.h utils/TimeUtils.h utils/aluRand.h \
+  utils/aluRegex.h processing/Config.h
+utils/aluRand.o: utils/aluRand.cc utils/aluRand.h utils/alu.h \
+  utils/platform.h utils/PythonIntf.h utils/aluValue.h \
+  utils/ErrorReporting.h
+utils/aluRegex.o: utils/aluRegex.cc utils/platform.h utils/aluRegex.h \
+  utils/aluValue.h utils/lruCache.h utils/ErrorReporting.h
+utils/platform.o: utils/platform.cc
