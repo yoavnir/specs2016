@@ -43,6 +43,11 @@ After that, _cd_ to the specs/src directory, and run the following three command
 
 Note: Windows does not need `sudo`
 
+Known Issues
+============
+* On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier some Python unit tests fail. Also, importing Python native functions doesn't work.
+* On Windows with Python support the appropriate dll (like `python38.dll`) must be in the path.
+
 Contributing
 ============
 Anyone can contribute. So far, I have written all of the code, but if you want to help, I'll be very happy. Feel free to:
