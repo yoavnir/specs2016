@@ -89,4 +89,12 @@ int setenv(const char *name, const char *value, int overwrite);
 #define PATH_LIST_WSEPARATOR L":"
 #endif
 
+#ifdef WIN64
+#define DEFAULT_SPECS_PARENT_DIR "APPDATA"
+#define FALLBACK_SPECS_PARENT_DIR  "C:"
+#else
+#define DEFAULT_SPECS_PARENT_DIR "HOME"
+#define FALLBACK_SPECS_PARENT_DIR  "/etc"
+#endif
+
 #endif

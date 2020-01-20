@@ -273,6 +273,18 @@ const char* getFullSpecPath()
 			free(configPath);
 		}
 
+		// Use the default if all else fails
+		if (res.empty()) {
+			char* parentPath = getenv(DEFAULT_SPECS_PARENT_DIR);
+			if (parentPath && parentPath[0]) {
+				res += parentPath;
+			} else {
+				res += FALLBACK_SPECS_PARENT_DIR;
+			}
+			res += PATHSEP;
+			res += "specs";
+		}
+
 		ran_once = true;
 	}
 
