@@ -5,6 +5,7 @@
 #include "utils/platform.h"  // For put_time and get_time vs strftime and strptime
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
+#include "utils/aluRegex.h"
 #include "utils/TimeUtils.h"
 #include "processing/ProcessingState.h"
 
@@ -12,6 +13,8 @@ ALUCounters counters;
 ProcessingState g_ps;
 
 std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
+
+extern void setRegexType(std::string& s);
 
 #define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
 
@@ -352,6 +355,12 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			else std::cout << "#" << k << " == " << counters.getStr(k) << "\n";	\
 		}														\
 	} while(0);
+
+void setRegexType(const char* str)
+{
+	std::string s = str;
+	setRegexType(s);
+}
 
 class testGetter : public fieldIdentifierGetter {
 public:
@@ -1185,6 +1194,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fmt(p,,12,,'$')","10$003.1415927");
 
 	/* regular expressions */
+	disableRegexCache();
 	tg.set('s', "There is a subsequence in the string");
 	VERIFY_EXPR_RES("rmatch('subject','(sub)(.*)')", "1");
 	VERIFY_EXPR_RES("rmatch('object','(sub)(.*)')", "0");
@@ -1198,6 +1208,29 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("rsearch(,'black')", "0");
 	VERIFY_EXPR_RES("rreplace(s,'\\\\b(sub)([^ ]*)','sub-$2')","There is a sub-sequence in the string");
 	VERIFY_EXPR_RES("rreplace(s,'\\\\b(sub)([^ ]*)','$2')","There is a sequence in the string");
+
+	/* regular expression variations */
+	tg.set('t', "It's just a jump to the left\nAnd then a step to the right\n");
+	setRegexType("");
+	VERIFY_EXPR_RES("rsearch(t,'JUMP')", "0");
+	setRegexType("icase");
+	VERIFY_EXPR_RES("rsearch(t,'JUMP')", "1");
+
+	tg.set('z', "zzxayyzz");
+	setRegexType("");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("basic");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("extended");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+	setRegexType("awk");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+	setRegexType("grep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("egrep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+
+	setRegexType("");
 
 #ifdef DEBUG
 	// Keep these tests at the end. All real functions should go first

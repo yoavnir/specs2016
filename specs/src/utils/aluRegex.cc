@@ -10,11 +10,16 @@
 uint64_t regexCacheSearches = 0;
 uint64_t regexCacheSets = 0;
 uint64_t matchFlagsCacheSets = 0;
+bool     g_RegexCacheDisabled = false;
 
 static std::regex_constants::syntax_option_type g_regexType = std::regex_constants::ECMAScript;
 static std::string gs_regexType = "";
 
 lruCache<std::string, std::regex> g_regexCache(100,150);
+
+void disableRegexCache() {
+	g_RegexCacheDisabled = true;
+}
 
 void dumpRegexStats() {
 	if (regexCacheSearches > 0) {
@@ -77,7 +82,7 @@ void setRegexType(std::string& s) {
 std::regex* regexCalculator(std::string& s)
 {
 	regexCacheSearches++;
-	std::regex* pRet = g_regexCache.get(s);
+	std::regex* pRet = g_RegexCacheDisabled ? NULL : g_regexCache.get(s);
 	if (!pRet) {
 		try {
 			pRet = new std::regex(s,g_regexType);
@@ -85,8 +90,10 @@ std::regex* regexCalculator(std::string& s)
 			std::string err = "Invalid regular expression <" + s + "> : " + e.what();
 			MYTHROW(err);
 		}
-		g_regexCache.set(s,pRet);
-		regexCacheSets++;
+		if (!g_RegexCacheDisabled) {
+			g_regexCache.set(s,pRet);
+			regexCacheSets++;
+		}
 	}
 
 	return pRet;

@@ -6,6 +6,8 @@
 
 void dumpRegexStats();
 
+void disableRegexCache();
+
 void setRegexType(std::string& s);
 
 bool regexMatch(std::string* pStr, ALUValue* pExp, std::string* pFlags = NULL);
