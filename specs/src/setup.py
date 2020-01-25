@@ -445,6 +445,8 @@ else:
 			sys.stdout.write("\nFailed to make Makefile. Python support is not properly configured.\n")
 			exit(-4)
 
+# RegEx different grammars
+CFG_regex_grammars = (sys.platform=="darwin")
 	
 if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
@@ -460,6 +462,9 @@ if CFG_python:
 	condlink = condlink + " " + python_ldflags
 else:
 	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix)
+	
+if CFG_regex_grammars:
+	condcomp = condcomp + "{}REGEX_GRAMMARS".format(def_prefix)
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))

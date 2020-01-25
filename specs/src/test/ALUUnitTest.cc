@@ -1217,6 +1217,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("rsearch(t,'JUMP')", "1");
 
 	tg.set('z', "zzxayyzz");
+#ifdef REGEX_GRAMMARS
 	setRegexType("");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
 	setRegexType("basic");
@@ -1229,6 +1230,20 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
 	setRegexType("egrep");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+#else
+	setRegexType("");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("basic");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("extended");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("awk");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("grep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("egrep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+#endif
 
 	setRegexType("");
 
