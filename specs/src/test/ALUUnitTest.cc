@@ -1231,6 +1231,20 @@ int runALUUnitTests(unsigned int onlyTest)
 	setRegexType("egrep");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
 #else
+#ifdef VISUAL_STUDIO
+	setRegexType("");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+	setRegexType("basic");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("extended");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("awk");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("grep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("egrep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+#else
 	setRegexType("");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
 	setRegexType("basic");
