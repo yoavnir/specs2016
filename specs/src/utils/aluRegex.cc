@@ -44,7 +44,14 @@ void dumpRegexStats() {
 	}
 }
 
+#ifdef REGEX_GRAMMARS
+#define OTHER_GRAMMAR_UNSUPPORTED false
+#else
+#define OTHER_GRAMMAR_UNSUPPORTED true
+#endif
+
 void setRegexType(std::string& s) {
+	bool bWarnUnsupportedGrammarOption = false;
 	g_regexType = std::regex_constants::ECMAScript;
 	gs_regexType = s;
 	char* st = strdup(s.c_str());
@@ -54,6 +61,7 @@ void setRegexType(std::string& s) {
 			g_regexType |= std::regex_constants::icase;
 		} else if (0 == strcasecmp(p,"nosubs")) {
 			g_regexType |= std::regex_constants::nosubs;
+			bWarnUnsupportedGrammarOption = true;
 		} else if (0 == strcasecmp(p,"optimize")) {
 			g_regexType |= std::regex_constants::optimize;
 		} else if (0 == strcasecmp(p,"collate")) {
@@ -62,17 +70,25 @@ void setRegexType(std::string& s) {
 			g_regexType |= std::regex_constants::ECMAScript;
 		} else if (0 == strcasecmp(p,"basic")) {
 			g_regexType |= std::regex_constants::basic;
+			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else if (0 == strcasecmp(p,"extended")) {
 			g_regexType |= std::regex_constants::extended;
+			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else if (0 == strcasecmp(p,"awk")) {
 			g_regexType |= std::regex_constants::awk;
+			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else if (0 == strcasecmp(p,"grep")) {
 			g_regexType |= std::regex_constants::grep;
+			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else if (0 == strcasecmp(p,"egrep")) {
 			g_regexType |= std::regex_constants::egrep;
+			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else {
 			std::string err = "Invalid regular expression syntax option type: " + std::string(p);
 			MYTHROW(err);
+		}
+		if (bWarnUnsupportedGrammarOption) {
+			std::cerr << "\nWarning: syntax option '" << p << "' is not supported on this platform\n";
 		}
 		p = strtok(NULL, ",");
 	}
