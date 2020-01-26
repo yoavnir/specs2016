@@ -1258,6 +1258,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	setRegexType("egrep");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
 #endif
+#endif
 
 	setRegexType("");
 
