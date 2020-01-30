@@ -10,11 +10,12 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-Version 0.6 Alpha will be here on 31-Jan-2020
----------------------------------------------
-Planned features:
+31-Jan-2020: Version 0.6 Alpha is here 
+--------------------------------------
+New features:
 * Python functions
 * MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
+* Regular expressions
 
 Sources
 =======
@@ -46,6 +47,8 @@ Note: Windows does not need `sudo`
 Known Issues
 ============
 * On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier some Python unit tests fail. Also, importing Python native functions doesn't work.
+* Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
+* On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier `rsearch` does not work reliably.
 * On Windows with Python support the appropriate dll (like `python38.dll`) must be in the path.
 
 Contributing
