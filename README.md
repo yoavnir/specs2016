@@ -27,7 +27,7 @@ Building
 ========
 If you have downloaded a git repository, first make sure to check out a stable tag such as v0.5:
 ```
-git checkout v0.5
+git checkout v0.6
 ```
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 
