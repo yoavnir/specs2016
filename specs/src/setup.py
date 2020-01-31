@@ -1,4 +1,64 @@
-import os,sys,argparse
+import os,sys,argparse,subprocess,sysconfig
+
+python_cflags=""
+python_ldflags=""
+python_version=0
+
+def python_search(arg):
+	global python_cflags,python_ldflags,python_version,variation
+	
+	# Get python version
+	script = '''
+import platform
+with open("xx.txt","w") as v:
+	v.write(platform.python_version())
+'''
+	with open("test_script.py","w") as scriptf:
+		scriptf.write(script)
+	cmd = "{} test_script.py".format(arg)
+	rc = os.system(cmd)
+	if rc!=0:
+		sys.stdout.write("No -- could not get python version from {}.\n".format(arg))
+		return False
+	with open("xx.txt", "r") as vers:
+		version_string = vers.read().strip()
+		if version_string[0]=="2":
+			python_version=2
+		elif version_string[0]=="3":
+			python_version=3
+		else:
+			sys.stdout.write("No -- {} is an unrecognized Python version.\n".format(version_string))
+			return False
+	
+	# Get the result of python-config --cflags
+	cmd = "{}-config --cflags > xx.txt".format(arg)
+	rc = os.system(cmd)
+	if rc!=0:
+		sys.stdout.write("No -- could not get cflags from {}-config.\n".format(arg))
+		return False
+	with open("xx.txt", "r") as flags:
+		filtered_flags = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes']
+		filtered_flags_debug = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes', '-Wp,-D_FORTIFY_SOURCE=2']
+		cflags=flags.read().strip().split()
+		filter = filtered_flags_debug if variation=="DEBUG" else filtered_flags
+		filtered_cflags = [f for f in cflags if f not in filter]
+		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
+	
+	# Get the result of python-config --cflags
+	with open("xx.txt","w") as o:
+		cmd = "{}-config --ldflags --embed > xx.txt".format(arg)  # first try with --embed needed for python 3.8
+		rc = subprocess.call(cmd,shell=True,stdout=o.fileno(), stderr=o.fileno())
+	if rc!=0:
+		cmd = "{}-config --ldflags > xx.txt".format(arg)
+		rc = os.system(cmd)
+	if rc!=0:
+		sys.stdout.write("No -- could not get ldflags from {}-config.\n".format(arg))
+		return False
+	with open("xx.txt", "r") as flags:
+		python_ldflags=flags.read().strip()
+	
+	sys.stdout.write("Yes.\n")
+	return True
 
 cppflags_gcc = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
 cppflags_clang = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++11 -I ."
@@ -55,7 +115,7 @@ $(EXE_DIR):
 	$(MKDIR_C) $@
 	
 $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
-	$(CXX) $(CONDLINK) {}$@ {} $^
+	$(CXX) {}$@ {} $^ $(CONDLINK)
 		
 install_unix: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
@@ -120,6 +180,8 @@ parser.add_argument("--use_cached_depends", dest="ucd", action="store_true", def
 					help="Use Cached Depends rather than re-calculating. Necessary for VS")
 parser.add_argument("--fast_random", dest="nocrypt", action="store_true", default=None,
 					help="Avoid cryptographic random number generators")
+parser.add_argument("--python", dest="pyprefix", action="store", default="",
+                    help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
@@ -127,6 +189,7 @@ variation = args.variation.upper()
 platform = args.platform.upper()
 use_cached_depends = args.ucd
 avoid_cryptographic_random = args.nocrypt
+python_prefix = args.pyprefix
 
 # default for use_cached_depends depends on the choice of compiler
 if use_cached_depends is None:
@@ -137,8 +200,12 @@ if use_cached_depends is None:
 		
 if compiler=="VS":
 	def_prefix = " /D"
+	inc_prefix = "/I"
+	lp_prefix = "/LIBPATH"
 else:
 	def_prefix = " -D"
+	inc_prefix = "-I"
+	lp_prefix = "-L"
 
 if compiler not in valid_compilers:
 	sys.stderr.write("compiler {} is not a valid compiler for specs.\nValid compilers are: {}\n".format(compiler, ", ".join(valid_compilers)))
@@ -341,7 +408,45 @@ if platform=="NT":
 	os.system("del xx.cc xx.o")
 else:
 	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+	
+#
+# Python support
+sys.stdout.write("Testing if python support is available...")	
+if platform=="NT":
+	if python_prefix=="no":
+		sys.stdout.write("Python support configured off.\n")
+		CFG_Python = False
+	else:
+		cv = sysconfig.get_config_vars()
+		python_prefix = cv['prefix']
+		python_ver = cv['py_version_nodot']
+		python_version = int(python_ver[0])
+		python_cflags = '{} "{}\\include"'.format(inc_prefix,python_prefix)
+		python_ldflags = '"{}\\libs\\python{}.lib"'.format(python_prefix,python_ver)
+		sys.stdout.write("configured for Python version {}.\n".format(cv['py_version']))
+		CFG_python = True
+else:
+	if python_prefix=="": # default: python is optional and prefix is 'python'
+		CFG_python = python_search("python")
+		os.system("/bin/rm xx.txt {}".format(errs))
 
+	elif python_prefix=="no":
+		sys.stdout.write("Python support configured off.\n")
+		CFG_python = False
+	else:
+		if python_prefix=="yes":
+			python_prefix = "python"
+
+		rc = python_search(python_prefix)
+		os.system("/bin/rm xx.txt {}".format(errs))
+		if rc:
+			CFG_python = True
+		else:
+			sys.stdout.write("\nFailed to make Makefile. Python support is not properly configured.\n")
+			exit(-4)
+
+# RegEx different grammars
+CFG_regex_grammars = (sys.platform=="darwin")
 	
 if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
@@ -351,6 +456,15 @@ if CFG_spanish_locale:
 	
 if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
+	
+if CFG_python:
+	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version)
+	condlink = condlink + " " + python_ldflags
+else:
+	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix)
+	
+if CFG_regex_grammars:
+	condcomp = condcomp + "{}REGEX_GRAMMARS".format(def_prefix)
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))

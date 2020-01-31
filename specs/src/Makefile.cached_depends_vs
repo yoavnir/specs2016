@@ -1,17 +1,18 @@
-cli/splitter.obj: cli/splitter.cc utils/ErrorReporting.h \
+cli/splitter.obj: cli/splitter.cc utils/platform.h utils/ErrorReporting.h \
   processing/Config.h cli/tokens.h
 cli/tokens.obj: cli/tokens.cc utils/platform.h cli/tokens.h \
   utils/ErrorReporting.h processing/Config.h processing/conversions.h \
   processing/Reader.h utils/StringQueue.h utils/SpecString.h \
   utils/TimeUtils.h processing/ProcessingState.h processing/Writer.h \
-  utils/alu.h utils/aluFunctions.h
+  utils/alu.h utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
 processing/Config.obj: processing/Config.cc utils/platform.h \
-  utils/TimeUtils.h utils/SpecString.h processing/Config.h
+  utils/TimeUtils.h utils/SpecString.h utils/PythonIntf.h \
+  utils/aluValue.h utils/aluRegex.h processing/Config.h
 processing/ProcessingState.obj: processing/ProcessingState.cc \
   processing/Config.h utils/ErrorReporting.h processing/Reader.h \
   utils/StringQueue.h utils/SpecString.h utils/platform.h \
   utils/TimeUtils.h processing/ProcessingState.h processing/Writer.h \
-  utils/alu.h utils/aluFunctions.h
+  utils/alu.h utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
 processing/Reader.obj: processing/Reader.cc utils/ErrorReporting.h \
   processing/Reader.h utils/StringQueue.h utils/SpecString.h \
   utils/platform.h utils/TimeUtils.h
@@ -19,70 +20,85 @@ processing/StringBuilder.obj: processing/StringBuilder.cc \
   processing/Config.h utils/ErrorReporting.h \
   processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
   utils/SpecString.h utils/platform.h utils/TimeUtils.h utils/alu.h \
-  utils/aluFunctions.h processing/StringBuilder.h
+  utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h \
+  processing/StringBuilder.h
 processing/Writer.obj: processing/Writer.cc utils/ErrorReporting.h \
   processing/Writer.h utils/StringQueue.h utils/SpecString.h \
   utils/platform.h utils/TimeUtils.h
 processing/conversions.obj: processing/conversions.cc utils/platform.h \
   utils/ErrorReporting.h processing/conversions.h utils/SpecString.h \
   utils/TimeUtils.h
-specitems/InputPart.obj: specitems/InputPart.cc processing/Config.h \
-  utils/TimeUtils.h utils/SpecString.h utils/ErrorReporting.h \
-  specitems/item.h cli/tokens.h processing/conversions.h \
-  processing/StringBuilder.h processing/ProcessingState.h \
-  processing/Writer.h utils/StringQueue.h utils/platform.h utils/alu.h \
-  utils/aluFunctions.h
-specitems/dataField.obj: specitems/dataField.cc utils/ErrorReporting.h \
-  processing/Config.h specitems/item.h cli/tokens.h \
-  processing/conversions.h processing/StringBuilder.h utils/SpecString.h \
+specitems/InputPart.obj: specitems/InputPart.cc utils/platform.h \
+  processing/Config.h utils/TimeUtils.h utils/SpecString.h \
+  utils/ErrorReporting.h specitems/item.h cli/tokens.h \
+  processing/conversions.h processing/StringBuilder.h \
   processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
-  utils/platform.h utils/TimeUtils.h utils/alu.h utils/aluFunctions.h
-specitems/specItems.obj: specitems/specItems.cc utils/ErrorReporting.h \
-  processing/Config.h specitems/specItems.h specitems/item.h \
+  utils/alu.h utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
+specitems/dataField.obj: specitems/dataField.cc utils/platform.h \
+  utils/ErrorReporting.h processing/Config.h specitems/item.h \
   cli/tokens.h processing/conversions.h processing/StringBuilder.h \
   utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
-  utils/StringQueue.h utils/platform.h utils/TimeUtils.h utils/alu.h \
+  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/PythonIntf.h \
+  utils/aluValue.h utils/aluFunctions.h
+specitems/specItems.obj: specitems/specItems.cc utils/platform.h \
+  utils/ErrorReporting.h processing/Config.h specitems/specItems.h \
+  specitems/item.h cli/tokens.h processing/conversions.h \
+  processing/StringBuilder.h utils/SpecString.h \
+  processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
+  utils/TimeUtils.h utils/alu.h utils/PythonIntf.h utils/aluValue.h \
   utils/aluFunctions.h processing/Reader.h
 test/ALUUnitTest.obj: test/ALUUnitTest.cc utils/platform.h \
-  utils/ErrorReporting.h utils/alu.h utils/TimeUtils.h \
-  utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
-  utils/StringQueue.h utils/aluFunctions.h
+  utils/ErrorReporting.h utils/alu.h utils/PythonIntf.h utils/aluValue.h \
+  utils/TimeUtils.h utils/SpecString.h processing/ProcessingState.h \
+  processing/Writer.h utils/StringQueue.h utils/aluFunctions.h
 test/ProcessingTest.obj: test/ProcessingTest.cc utils/platform.h \
   cli/tokens.h utils/ErrorReporting.h specitems/specItems.h \
   specitems/item.h processing/conversions.h processing/StringBuilder.h \
   utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
-  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/aluFunctions.h \
-  processing/Reader.h processing/Config.h
+  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/PythonIntf.h \
+  utils/aluValue.h utils/aluFunctions.h processing/Reader.h \
+  processing/Config.h
 test/TokenTest.obj: test/TokenTest.cc cli/tokens.h utils/ErrorReporting.h
-test/itemTest.obj: test/itemTest.cc cli/tokens.h utils/ErrorReporting.h \
-  specitems/specItems.h specitems/item.h processing/conversions.h \
-  processing/StringBuilder.h utils/SpecString.h \
+test/cacheTest.obj: test/cacheTest.cc utils/lruCache.h \
+  utils/ErrorReporting.h
+test/itemTest.obj: test/itemTest.cc utils/platform.h cli/tokens.h \
+  utils/ErrorReporting.h specitems/specItems.h specitems/item.h \
+  processing/conversions.h processing/StringBuilder.h utils/SpecString.h \
   processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
-  utils/platform.h utils/TimeUtils.h utils/alu.h utils/aluFunctions.h \
-  processing/Reader.h
+  utils/TimeUtils.h utils/alu.h utils/PythonIntf.h utils/aluValue.h \
+  utils/aluFunctions.h processing/Reader.h
 test/readWriteTest.obj: test/readWriteTest.cc utils/ErrorReporting.h \
   processing/Reader.h utils/StringQueue.h utils/SpecString.h \
   utils/platform.h utils/TimeUtils.h processing/Writer.h \
   processing/StringBuilder.h processing/ProcessingState.h utils/alu.h \
-  utils/aluFunctions.h
+  utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
 test/specs.obj: test/specs.cc utils/platform.h cli/tokens.h \
   utils/ErrorReporting.h processing/Config.h specitems/specItems.h \
   specitems/item.h processing/conversions.h processing/StringBuilder.h \
   utils/SpecString.h processing/ProcessingState.h processing/Writer.h \
-  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/aluFunctions.h \
-  processing/Reader.h
+  utils/StringQueue.h utils/TimeUtils.h utils/alu.h utils/PythonIntf.h \
+  utils/aluValue.h utils/aluFunctions.h processing/Reader.h \
+  utils/aluRegex.h
 test/timeTest.obj: test/timeTest.cc utils/TimeUtils.h utils/SpecString.h
 utils/ErrorReporting.obj: utils/ErrorReporting.cc utils/ErrorReporting.h
+utils/PythonIntf.obj: utils/PythonIntf.cc \
+  utils/platform.h utils/PythonIntf.h utils/aluValue.h \
+  utils/ErrorReporting.h utils/aluFunctions.h utils/SpecString.h \
+  utils/alu.h processing/Config.h
 utils/SpecString.obj: utils/SpecString.cc processing/Config.h \
   utils/ErrorReporting.h utils/SpecString.h
 utils/TimeUtils.obj: utils/TimeUtils.cc utils/ErrorReporting.h \
   utils/platform.h utils/TimeUtils.h utils/SpecString.h
 utils/alu.obj: utils/alu.cc utils/ErrorReporting.h utils/alu.h \
-  utils/platform.h utils/aluFunctions.h utils/SpecString.h \
-  processing/Config.h
+  utils/platform.h utils/PythonIntf.h utils/aluValue.h \
+  utils/aluFunctions.h utils/SpecString.h processing/Config.h
 utils/aluFunctions.obj: utils/aluFunctions.cc utils/ErrorReporting.h \
   utils/aluFunctions.h utils/SpecString.h utils/alu.h utils/platform.h \
-  utils/TimeUtils.h utils/aluRand.h processing/Config.h
+  utils/PythonIntf.h utils/aluValue.h utils/TimeUtils.h utils/aluRand.h \
+  utils/aluRegex.h processing/Config.h
 utils/aluRand.obj: utils/aluRand.cc utils/aluRand.h utils/alu.h \
-  utils/platform.h utils/ErrorReporting.h
+  utils/platform.h utils/PythonIntf.h utils/aluValue.h \
+  utils/ErrorReporting.h
+utils/aluRegex.obj: utils/aluRegex.cc utils/platform.h utils/aluRegex.h \
+  utils/aluValue.h utils/lruCache.h utils/ErrorReporting.h
 utils/platform.obj: utils/platform.cc

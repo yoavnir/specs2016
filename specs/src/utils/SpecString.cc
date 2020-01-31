@@ -26,6 +26,13 @@ void StdSpecString::add(PSpecString ps) {
 	}
 }
 
+void StdSpecString::append(PSpecString ps) {
+	StdSpecString* pStringToAdd = dynamic_cast<StdSpecString*>(ps);
+	if (pStringToAdd) {
+		m_str += *pStringToAdd->getStdString();
+	}
+}
+
 void StdSpecString::Overlay(SpecString& ss, size_t offset, void* pPadChar)
 {
 	Overlay(&ss, offset, pPadChar);

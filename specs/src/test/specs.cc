@@ -11,6 +11,11 @@
 #include "processing/Writer.h"
 #include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
+#include "utils/PythonIntf.h"
+#include "utils/aluRegex.h"
+
+extern int g_stop_stream;
+extern char g_printonly_rule;
 
 std::string getNextArg(int& argc, char**& argv)
 {
@@ -97,6 +102,36 @@ int main (int argc, char** argv)
 	conciseExceptions = !g_bVerbose;
 #endif
 
+	try {
+		if (g_regexSyntaxType != "") {
+			setRegexType(g_regexSyntaxType);
+		}
+	} catch (const SpecsException& e) {
+		std::cerr << "Error: " << e.what(conciseExceptions) << std::endl;
+		exit(0);
+	}
+
+	if ("" != g_pythonErr) {
+		try {
+			p_gExternalFunctions->SetErrorHandling(g_pythonErr);
+		} catch (const SpecsException& e) {
+			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+			exit(0);
+		}
+	}
+
+	if (EXTERNAL_FUNC_ON == g_pythonFuncs) {
+		try {
+			p_gExternalFunctions->Initialize(getFullSpecPath());
+		} catch (const SpecsException& e) {
+			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+			exit(0);
+		}
+#ifdef DEBUG
+		p_gExternalFunctions->Debug();
+#endif
+	}
+
 	std::vector<Token> vec;
 
 	try {
@@ -114,7 +149,7 @@ int main (int argc, char** argv)
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
-	Reader *pRd;
+	Reader *pRd = NULL;
 	SimpleWriter *pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
@@ -130,7 +165,7 @@ int main (int argc, char** argv)
 		if (g_bVerbose) {
 			std::cerr << "\nProcessing stopped at index " << index
 					<< '/' << vec.size() << ":\n";
-			for (int i=0; i<vec.size(); i++) {
+			for (size_t i=0; i<vec.size(); i++) {
 				std::cerr << i+1 << ". " << vec[i].Debug() << "\n";
 			}
 			std::cerr << "\n" << ig.Debug();
@@ -139,7 +174,7 @@ int main (int argc, char** argv)
 	}
 
 	// After the compilation, the token vector contents are no longer necessary
-	for (int i=0; i<vec.size(); i++) vec[i].deallocDynamic();
+	for (size_t i=0; i<vec.size(); i++) vec[i].deallocDynamic();
 	vec.clear();
 
 #ifdef DEBUG
@@ -207,6 +242,7 @@ int main (int argc, char** argv)
 			if (g_inputStream6 != "") pmRd->addStream(6, g_inputStream6);
 			if (g_inputStream7 != "") pmRd->addStream(7, g_inputStream7);
 			if (g_inputStream8 != "") pmRd->addStream(8, g_inputStream8);
+			pmRd->setStopReader(g_stop_stream);
 			pRd = pmRd;
 		}
 
@@ -251,15 +287,16 @@ int main (int argc, char** argv)
 		TestReader tRead(5);
 
 		try {
+			unsigned int readerCount = 0;
 			ig.setRegularRunAtEOF();
-			ig.processDo(sb, ps, &tRead, timer);
+			ig.processDo(sb, ps, &tRead, timer, readerCount);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
-			return -4;
+			exit(8);
 		}
 		PSpecString pstr = sb.GetString();
-		if (ps.shouldWrite()) {
+		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 			SimpleWriter* pSW = (SimpleWriter*)(ps.getCurrentWriter());
 			*pSW->getStream() << *pstr << std::endl;
 		} else {
@@ -323,6 +360,8 @@ int main (int argc, char** argv)
 				pWrtrs[i] = NULL;
 			}
 		}
+
+		dumpRegexStats();
 	}
 
 	return 0;

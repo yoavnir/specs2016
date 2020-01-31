@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "30 Nov 2019" "0.5" "specs man page"
+.TH man 1 "31 Jan 2020" "0.6-alpha" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -184,10 +184,14 @@ Byte Swap. reverses the order of bytes. "AB" --> "BA"
 Convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 .IP "tf2i" 3
 Convert printable time format to the internal 8-byte representation. 
-.IP "d2tf" 3
+.IP "s2tf" 3
 Convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
-.IP "tf2d" 3
+.IP "tf2s" 3
 Convert printable time format to a decimal number, representing seconds since the epoch. 
+.IP "mcs2tf" 3
+Convert a number, representing microseconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+.IP "tf2mcs" 3
+Convert printable time format to a number, representing microseconds since the epoch. 
 
 .SS "Other Spec Units"
 There are also other spec units, that may be used:
@@ -227,6 +231,35 @@ to make all whitespace defined by the locale work as a word separator.
 Causes the current output line to become the new input line.
 .IP "SET" 3
 Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
+
+.SS "MainOptions"
+These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
+.IP "STOP" 3
+This option is followed by either the keyword
+.B ALLEOF,
+the keyword
+.B ANYEOF,
+or a number indicating an input stream. This indicates when the specification stops. The default is
+.B ALLEOF
+which means that the specification terminates when every input stream is exhausted. When some but not all of the streams are exhausted, those that are get treated as if they emit empty records. With 
+.B ANYEOF
+the specification terminates when any of the streams is exhausted. With a numeric value the specification terminates when the specified stream is exhausted. Other streams, if exhausted are treated as if they emit empty records.
+.IP "PRINTONLY" 3
+This option instructs 
+.B specs
+to suppress output records unless a specified
+.I break level
+is established. The break level is either a field identifier (case matters) or it can be the keyword
+.B EOF 
+which specifies records are suppressed until the input is exhausted or the condition specified with 
+.B STOP 
+is satisfied.
+.IP "KEEP" 3
+This option, always following 
+.B PRINTONLY
+instructs
+.B specs
+not to reset the output buffer when a record in not output due to break level not being established. This allows the content from several records to be aggregated into a single output record.
 
 .SS "Conditions and Loops"
 A specification can include conditions and loops. 
@@ -654,11 +687,17 @@ field (default first) to the end of the
 field (default last). It is also equivalent to 
 .I range(fieldstart(s),fieldend(e))
 but less efficient.
-.IP "tf2d(string,format)" 3
+.IP "tf2mcs(string,format)" 3
 Converts a string containing a date and time representation using the format specified in the 
 .I format
-argument to a floating point or integer number representing the number of seconds since the UNIX epoch. Formatting is as described for the similarly named conversion.
-.IP "d2tf(seconds,format)" 3
+argument to a floating point or integer number representing the number of microseconds since the UNIX epoch. Formatting is as described for the similarly named conversion.
+.IP "mcs2tf(microseconds,format)" 3
+Converts a number (integer or float) representing the number of microseconds since the UNIX epoch to a printable format.
+.IP "tf2s(string,format)" 3
+Converts a string containing a date and time representation using the format specified in the 
+.I format
+argument to a floating point or integer number representing the number of seconds since the UNIX epoch. Formatting is as that of tf2mcs.
+.IP "s2tf(seconds,format)" 3
 Converts a number (integer or float) representing the number of seconds since the UNIX epoch to a printable format.
 .IP "x2d(string,length)" 3
 Returns the value in 
@@ -734,7 +773,9 @@ Returns the 1-based index of the
 position of 
 .I needle
 in 
-.I haystack.
+.I haystack. Note that if the 
+.I haystack
+argument is omitted, it defaults to the entire input line.
 .IP "lastpos(needle, haystack)" 3
 Returns the 1-based index of the 
 .B last 
@@ -742,16 +783,79 @@ position of
 .I needle
 in 
 .I haystack.
-.IP "includes(haystack, needle)" 3
+Note that if the 
+.I haystack
+argument is omitted, it defaults to the entire input line.
+.IP "includes(haystack, needle1 [,needle2, needle3, needle4])" 3
 Returns
 .B TRUE
 (1) if the string 
 .I haystack
 includes the string
-.I needle
+.I needle1
+or one of the other optional 
+.I needle2, needle3,
+or
+.I needle4
 as a substring, or 
 .B FALSE
-(0) otherwise.
+(0) otherwise. To clarify, the function returns true if
+.B any
+of the needles match. Note that if the 
+.I haystack
+argument is omitted, it defaults to the entire input line.
+.IP "includesall(haystack, needle1 [,needle2, needle3, needle4])" 3
+Returns
+.B TRUE
+(1) if the string 
+.I haystack
+includes the string
+.I needle1
+and all of the other defined optional
+.I needle2, needle3,
+or
+.I needle4
+as substrings, or 
+.B FALSE
+(0) otherwise. To clarify, the function returns true if
+.B all
+of the needles match. Note that if the 
+.I haystack
+argument is omitted, it defaults to the entire input line.
+.IP "rmatch(string, regEx [,matchFlags])" 3
+Returns 
+.B TRUE
+(1) if the regular expression
+.I regEx
+matches the string
+.I string,
+or 
+.B FALSE
+(0) otherwise. See the special section below for more info on regular expressions. Note that if the 
+.I string
+argument is omitted, it defaults to the entire input line.
+.IP "rsearch(string, regEx [,matchFlags])" 3
+Returns 
+.B TRUE
+(1) if the regular expression
+.I regEx
+matches some substring of the string
+.I string,
+or 
+.B FALSE
+(0) otherwise. See the special section below for more info on regular expressions. Note that if the 
+.I string
+argument is omitted, it defaults to the entire input line.
+.IP "rreplace(string, regEx, fmt [,matchFlags])" 3
+Returns the string 
+.I string,
+with all matches of the regular expression 
+.I regEx
+replaced by what's in
+.I fmt.
+See the special section below for more info on regular expressions. Note that if the 
+.I string
+argument is omitted, it defaults to the entire input line.
 .IP "conf(key,default)" 3
 Returns the configured string from either the built-in configured strings such as 
 .I version
@@ -1129,6 +1233,79 @@ Returns a string containing a dump of the frequency map for
 .B Field Identifier
 a.
 
+.SH Regular Expressions
+Regular expressions can be used with the 
+.I rmatch, rsearch,
+and
+.I rreplace
+functions. You use the 
+.B --regexType
+command line switch to select from a list of syntax options. The supported options are:
+.IP "icase" 3
+.B Case insensitive
+.IP "nosubs" 3
+.B No sub-expressions:
+Not meaningful, but included here for completeness.
+.IP "optimize" 3
+.B Optimize matching:
+Matching efficiency is preferred over efficiency constructing regex objects.
+.IP "collate" 3
+.B Locale sensitiveness:
+Character ranges like 
+.I [a-b] are affected by locale
+.IP "ECMAScript" 3
+.B ECMAScript grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "basic" 3
+.B Basic POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "extended" 3
+.B Extended POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "awk" 3
+.B Awk POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "grep" 3
+.B Grep POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.IP "egrep" 3
+.B Egrep POSIX grammar
+The regular expression follows this grammar. Do not specify more than one of these.
+.P
+.RE 3
+The last parameter in all three functions is 
+.I matchFlags.
+This optional parameter is also a comma-separated list of flags. The supported flags are:
+.IP "not_bol" 3
+Not beginning of line
+.IP "not_eol" 3
+Not end of line
+.IP "not_bow" 3
+Not beginning of word
+.IP "not_eow" 3
+Not end of word
+.IP "any" 3
+Any match is acceptable if more than one is possible
+.IP "not_null" 3
+An empty 
+.I string
+does not match
+.IP "continuous" 3
+The expression must match a sub-sequence that begins at the first character. Sub-sequences must begin at the first character to match.
+.IP "prev_avail" 3
+Previous Available - One or more characters exist before the first one
+.IP "sed" 3
+.B (for rreplace only) 
+Replaces using the same rules as the 
+.B sed
+POSIX utility
+.IP "no_copy" 3
+.B (for rreplace only) 
+Sections that do not match are not copied
+.IP "first_only" 3
+.B (for rreplace only) 
+Only the first occurrence is matched.
+
 .SH OPTIONS
 specs supports the following switches:
 .IP "--toASCII" 3
@@ -1149,7 +1326,10 @@ or the configuration string
 .B SPECSPATH. 
 In both cases the syntax is just like the OS 
 .B PATH: 
-a list of directories separated by colons.
+a list of directories separated by colons on Linux and Mac OS, or semicolons on Windows. When neither the environment variable nor the configuration string are set, the 
+.I SPECSPATH
+defaults to 
+.B $HOME/specs
 .IP "--verbose or -v" 3
 Outputs more information when something goes wrong.
 .IP "--stats"
@@ -1203,6 +1383,34 @@ For
 and
 .B fixed-delimited
 records, sets the character that delimits the string. The OS-specific delimiter (CR+LF for Unix-like) is used if this is not specified.
+.IP "--regexType" 3
+Sets the syntax option for regular expressions. The parameter is a comma-separated list of syntax options. See the 
+.B Regular Expressions
+section for a list of valid syntax options.
+.IP "--pythonFuncs" 3
+Disables or enables the use of Python functions. The parameter can be: 
+.B on
+to force the loading of Python functions,
+.B off
+to disable Python functions, or
+.B auto,
+which is the default, and signifies that Python functions are loaded only when the parser encounters an unknown function. Note that setting the 
+.I pythonDisabled 
+configured literal to 
+.B 1 
+will disable Python functions and cannot be overridden from the command line.
+.IP "--pythonErr" 3
+Determines what happens when a called Python function throws an exception. The default, 
+.B throw 
+is for 
+.I specs 
+to throw its own exception and terminate. The alternatives, 
+.B NaN, zero, 
+and
+.B nullstr 
+make 
+.I specs
+behave as if the function returned, NaN, the integer zero, or an empty string respectively.
 
 .SH CONFIGURATION FILE
 .B specs
@@ -1232,7 +1440,7 @@ The system also defines some labels:
 .IP "version" 3
 This returns the version of 
 .B specs, 
-for example "v0.5"
+for example "v0.6"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 
@@ -1243,6 +1451,12 @@ contains the number of columns in the display. You can override this in the conf
     specs /hello/ (1,@cols,'R')
 .IP "rows" 3
 contains the number of rows in the display. This can also be overridden in the configuration file.
+.IP "python" 3
+contains either 
+.B Enabled
+or
+.B Disabled
+depending on whether support for python function is available.
 
     
 .SH EXAMPLES

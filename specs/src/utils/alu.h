@@ -6,68 +6,10 @@
 #include <climits>
 #include <string>
 #include "utils/platform.h"
+#include "utils/PythonIntf.h"
+#include "utils/aluValue.h"
 
-typedef long long int ALUInt;
-typedef long double   ALUFloat;
-
-#define MAX_ALUInt LLONG_MAX
-
-#define ALUInt_SZ sizeof(ALUInt)
-
-enum ALUCounterType {
-	counterType__None,
-	counterType__Str,
-	counterType__Int,
-	counterType__Float
-};
-
-static std::string ALUCounterType2Str[] = {
-		"NaN",
-		"Str",
-		"Int",
-		"Float"
-};
-
-class ALUValue {
-public:
-	ALUValue():m_type(counterType__None), m_value("") {}
-	ALUValue(std::string& s) {set(s);}
-	ALUValue(const std::string& s) {set(s);}
-	ALUValue(ALUInt i)       {set(i);}
-	ALUValue(ALUFloat f)     {set(f);}
-	ALUValue(const char* c, int bytes) {
-		std::string s(c,bytes);
-		set(s);
-	}
-	ALUCounterType getType()   {return m_type;}
-	ALUCounterType getDivinedType() const;
-	void           divineType()		{m_type = getDivinedType();}
-	std::string    getStr()  const  {return (m_type==counterType__None) ? std::string("NaN") : m_value;}
-	std::string*   getStrPtr()      {return (m_type==counterType__None) ? NULL : &m_value;}
-	ALUInt         getInt() const;
-	ALUInt         getHex() const;
-	ALUFloat       getFloat() const;
-	bool           getBool() const;
-	void           set(std::string& s);
-	void           set(const std::string& s);
-	void           set(const char* st);
-	void           set(ALUInt i);
-	void           set(ALUFloat f);
-	void           set();
-	bool           isWholeNumber() const;
-	bool           isFloat() const;
-	bool           isNumeric() const;
-private:
-	std::string    m_value;
-	ALUCounterType m_type;
-};
-
-static std::ostream& operator<< (std::ostream& os, const ALUValue &c)
-{
-	os << c.getStr();
-    return os;
-}
-
+std::ostream& operator<< (std::ostream& os, const ALUValue &c);
 
 typedef unsigned int ALUCounterKey;
 
@@ -203,6 +145,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_Counter;}
+	using AluUnit::compute;  // prevent a warning about overloading
 	virtual ALUValue*			compute(ALUCounters* pCtrs);
 	ALUCounterKey				getKey()		{return m_ctrNumber;}
 private:
@@ -324,11 +267,14 @@ public:
 	std::string&                getName()       { return m_FuncName; }
 	static unsigned char        functionTypes() { return m_flags; }
 private:
+	// m_flags is static because it's a bitstring that describes all of the functions
+	// used in a particular specification.
 	static unsigned char m_flags;
 	std::string		     m_FuncName;
 	void*			     mp_Func;
 	unsigned int	     m_ArgCount;
 	bool                 m_reliesOnInput;
+	ExternalFunctionRec* m_pExternalFunc;
 };
 
 class AluInputRecord : public AluUnit {
@@ -354,12 +300,7 @@ private:
 };
 
 
-static std::ostream& operator<< (std::ostream& os, const AluUnit &u)
-{
-    u._serialize(os);
-
-    return os;
-}
+std::ostream& operator<< (std::ostream& os, const AluUnit &u);
 
 class AluValueStats {
 public:

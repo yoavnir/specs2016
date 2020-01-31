@@ -1,8 +1,13 @@
+#include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
 #include "specItems.h"
 
 ALUCounters g_counters;
+
+int g_stop_stream = STOP_STREAM_ALL;
+char g_printonly_rule = PRINTONLY_PRINTALL;
+bool g_keep_suppressed_record = false;
 
 struct predicateStackItem {
 	ConditionItem* pred;
@@ -244,6 +249,50 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			index++;
 			break;
 		}
+		case TokenListType__STOP:
+		{
+			MYASSERT_WITH_MSG(index==0,"STOP condition is only valid as the first token in the specification");
+			if (tokenVec[index].Literal()=="all") {
+				g_stop_stream = STOP_STREAM_ALL;
+			} else if (tokenVec[index].Literal()=="any") {
+				g_stop_stream = STOP_STREAM_ANY;
+			} else {
+				try {
+					g_stop_stream = std::stol(tokenVec[index].Literal());
+				} catch (std::invalid_argument& e) {
+					std::string err = "STOP condition requires a parameter: ANYEOF, ALLEOF, or a valid input stream. Got <" +
+							tokenVec[index].Literal() + ">";
+					MYTHROW(err);
+				}
+				std::string err = "Input stream "+tokenVec[index].Literal()+" from STOP condition is not defined";
+				MYASSERT_WITH_MSG(inputStreamIsDefined(g_stop_stream), err);
+			}
+			index++;
+			break;
+		}
+		case TokenListType__PRINTONLY:
+		{
+			MYASSERT_WITH_MSG(index==0 || (index==1 && tokenVec[0].Type()==TokenListType__STOP), \
+					"PRINTONLY instruction is only valid as the first token or following a STOP");
+			if (tokenVec[index].Literal()=="EOF") {
+				g_printonly_rule = PRINTONLY_EOF;
+			} else {
+				char c = tokenVec[index].Literal()[0];
+				MYASSERT_WITH_MSG((c>='a' && c<='z') || (c>='A' && c<='Z'), \
+						"PRINTONLY instruction must specify EOF or a valid break level - an uppercase or lowercase letter");
+				g_printonly_rule = c;
+			}
+			index++;
+			break;
+		}
+		case TokenListType__KEEP:
+		{
+			MYASSERT_WITH_MSG(index>0 && tokenVec[index-1].Type()==TokenListType__PRINTONLY, \
+					"KEEP must follow a PRINTONLY unit");
+			g_keep_suppressed_record = true;
+			index++;
+			break;
+		}
 		default:
 			std::string err = std::string("Unhandled token type ")
 				+ TokenListType__2str(tokenVec[index].Type())
@@ -275,11 +324,10 @@ std::string itemGroup::Debug()
 	return ret;
 }
 
-bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, classifyingTimer& tmr)
+bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pRd, classifyingTimer& tmr, unsigned int& rdrCounter)
 {
 	bool bSomethingWasDone = false;
-	int i = 0;
-	bool isEOFCycle = false;
+	size_t i = 0;
 	PSpecString ps; // Used for processing READ and READSTOP tokens
 	bool processingContinue = true;
 	bool suspendUntilBreak = false;
@@ -293,10 +341,8 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				break;
 			}
 		}
-		isEOFCycle = true;
 	}
 
-	itemLoop:
 	processingContinue = true;
 	for ( ; processingContinue && i<m_items.size(); i++) {
 		if (pState.inputStreamHasChanged()) {
@@ -325,10 +371,12 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__Continue:
 			break;
 		case ApplyRet__Write:
-			if (bSomethingWasDone) {
-				pState.getCurrentWriter()->Write(sb.GetString());
-			} else {
-				pState.getCurrentWriter()->Write(SpecString::newString());
+			if (pState.shouldWrite() && !pState.printSuppressed(g_printonly_rule)) {
+				if (bSomethingWasDone) {
+					pState.getCurrentWriter()->Write(sb.GetString());
+				} else {
+					pState.getCurrentWriter()->Write(SpecString::newString());
+				}
 			}
 			bSomethingWasDone = false;
 			break;
@@ -343,8 +391,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			break;
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
+		{
 			MYASSERT_WITH_MSG(pState.getActiveInputStation() != STATION_SECOND, "Cannot READ or READSTOP during SELECT SECOND");
-			ps = pRd->get(tmr);
+			ps = pRd->get(tmr, rdrCounter);
 			if (!ps) {
 				if (aRet==ApplyRet__Read) {
 					ps = SpecString::newString();
@@ -356,6 +405,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			}
 			pState.setString(ps, false);
 			break;
+		}
 		case ApplyRet__EnterLoop:
 			pState.pushLoop(i);
 			break;
@@ -386,21 +436,27 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, classifyingTimer& tmr)
 {
 	PSpecString ps;
+	unsigned int readerCounter = 1;  // we only got 1.
 
-	while ((ps=rd.get(tmr))) {
+	while ((ps=rd.get(tmr, readerCounter))) {
 		pState.setString(ps);
 		pState.setFirst();
 		pState.incrementCycleCounter();
 
-		if (processDo(sb,pState, &rd, tmr)) {
-			PSpecString pOutString = sb.GetString();
-			if (pState.shouldWrite()) {
-				tmr.changeClass(timeClassOutputQueue);
-				pState.getCurrentWriter()->Write(pOutString);
-				tmr.changeClass(timeClassProcessing);
-			} else {
-				delete pOutString;
+		if (processDo(sb,pState, &rd, tmr, readerCounter)) {
+			bool bPrintSuppressed = pState.printSuppressed(g_printonly_rule);
+			if (bPrintSuppressed && g_keep_suppressed_record) {
 				pState.resetNoWrite();
+			} else {
+				PSpecString pOutString = sb.GetString();
+				if (!bPrintSuppressed && pState.shouldWrite()) {
+					tmr.changeClass(timeClassOutputQueue);
+					pState.getCurrentWriter()->Write(pOutString);
+					tmr.changeClass(timeClassProcessing);
+				} else {
+					delete pOutString;
+					pState.resetNoWrite();
+				}
 			}
 		}
 
@@ -410,6 +466,9 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		pState.setActiveWriter(1);
 	}
 
+	MYASSERT(readerCounter==0);
+	pState.setEOF();
+
 	if (!bNeedRunoutCycle) {
 		tmr.changeClass(timeClassDraining);
 		return;
@@ -418,7 +477,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	// run-out cycle
 	pState.setString(NULL);
 	pState.setFirst();
-	if (processDo(sb, pState, &rd, tmr)) {
+	if (processDo(sb, pState, &rd, tmr, readerCounter)) {
 		pState.getCurrentWriter()->Write(sb.GetString());
 	}
 
@@ -820,3 +879,11 @@ ApplyRet SelectItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	}
 	return ApplyRet__Continue;
 }
+
+std::ostream& operator<< (std::ostream& os, const SpecString &str)
+{
+    str._serialize(os);
+
+    return os;
+}
+

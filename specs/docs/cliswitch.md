@@ -11,7 +11,8 @@ Using files allows you to write some very sophisticated specifications, and to a
 # This counts and adds up a list of numbers
     printonly eof
     a: word 1
-       set (#0+=a; #1+=1) # Counter #0 is an accumulator; #1 is a counter
+       set "#0+=a" # Counter #0 is an accumulator
+       set "#1+=1" # Counter #1 is a counter
     eof
        /Total:/   1
        print #0 strip nextword
@@ -19,9 +20,8 @@ Using files allows you to write some very sophisticated specifications, and to a
        print #1 strip nextword
        /records./     nextword
 ``` 
-**Version 0.5 Note:** The above is not yet supported, as neither `printonly eof` not multiple assignments in a single **set** are supported in this version.
 Using files also allows you to include comments. The rules for comments are that either the line begins with a hash mark and a space, and then the entire line is a comment; or the last occurrence of a hash mark and a space is also preceded by a space, and that is where the comment starts. 
-You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by colons.
+You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by OS-specific path separator character. On Linux and Mac OS this is a colon (`:`). On Windows this is a semicolon (`;`).  If neither the environment variable nor the configuration string are set, the **SPECSPATH** defaults to `$HOME/specs` on Linux and Mac OS, and to `%APPDATA%\specs` on Windows.
 * `--verbose` or `-v` -- outputs more information when something goes wrong.
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
 The resulting stats look something like this:
@@ -74,6 +74,9 @@ Writer Thread:
 * `--recfm` **format** -- sets the format of the primary input stream. See below table for supported formats.
 * `--lrecl` **record-length** -- sets the length of each record. Relevant to *fixed* and *fixed-delimited* records.
 * `--linedel` **delimiter** -- sets the line delimiter for input records on the primary stream.
+* `--regexType` **syntaxOptionList** -- Sets the syntax option for regular expressions. The parameter is a comma-separated list of syntax options. See the table below for a list of valid syntax options.
+* `--pythonFuncs` **on/off/auto** -- Enables of disables the loading of Python functions. **auto**, which is the default signifies that Python functions are loaded only when the parser encounters an unknown function. Note that setting the `pythonDisabled` configured literal to `1` will disable Python functions and cannot be overridden from the command line.
+* `--pythonErr` **throw/NaN/zero/nullstr** -- determines what happens when a called Python function throws an exception. The default, `throw` is for **specs** to throw its own exception and terminate. The alternatives, `NaN`, `zero`, and `nullstr` make **specs** behave as if the function returned, NaN, the integer zero, or an empty string respectively.
 
 ## Table of record formats
 
@@ -83,5 +86,18 @@ Writer Thread:
 | `F` | fixed | *required* | *n/a* | **specs** will read exactly *lrecl* characters from the input stream regardless of what those characters may be. |
 | `FD` | fixed-delimited | *required* | *optional* | **specs** will read one line at a time delimited by the OS line separator if *linedel* is not specified. Lines that are longer than *lrecl* will be truncated; lines that are shorter will be padded by spaces. |
 
+## Table of syntax options
 
+|option|effects on syntax|Notes|
+|------|-----------------|-----|
+| `icase` | Case Insensitive | Regular expression matches do not regard case |
+| `nosubs` | No sub-expressions | Not relevant here -- included for completeness |
+| `optimize` | Optimize matching | Matching efficiency is preferred over construction efficiency |
+| `collate` | Locale sensitiveness | Character ranges like `[a-b]` are affected by locale |
+| `ECMAScript` | ECMAScript grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `basic` | Basic POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `extended` | Extended POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `awk` | Awk POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `grep` | Grep POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
+| `egrep` | Egrep POSIX grammar | The regular expression follows this grammar. Do not specify more than one of these |
 

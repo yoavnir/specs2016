@@ -1,3 +1,4 @@
+#include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
 #include "item.h"
@@ -429,7 +430,6 @@ void DataField::stripString(PSpecString &pOrig)
 
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
-	int _from, _to;
 	bool bWritingWasDone = false;
 	ALUValue* pComposedStartingPosition = NULL;
 	PSpecString pInput = m_InputPart->getStr(pState);

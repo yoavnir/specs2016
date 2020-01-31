@@ -19,6 +19,9 @@
 
 #define LOOP_CONDITION_FALSE (-5)
 
+#define PRINTONLY_PRINTALL  '\0'
+#define PRINTONLY_EOF       '_'
+
 class ProcessingState : public stateQueryAgent {
 public:
 	ProcessingState();
@@ -78,7 +81,7 @@ public:
 	void setSecond();
 	void setStream(int i);
 	int  getActiveInputStation() { return m_inputStation; }
-	PSpecString currRecord() { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
+	virtual PSpecString currRecord() { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
 	bool recordNotAvailable() { return NULL==currRecord(); }
 	bool inputStreamHasChanged() { return m_inputStreamChanged; }
 	void resetInputStreamFlag() { m_inputStreamChanged = false; }
@@ -89,6 +92,8 @@ public:
 	void setNoWrite()            { m_bNoWrite = true;  }
 	void resetNoWrite()          { m_bNoWrite = false; }
 	bool shouldWrite()           { return !m_bNoWrite; }
+	bool printSuppressed(char printRule);
+	void setEOF()                { m_bEOF = true;      }
 private:
 	enum extremeBool {
 		bFalse,
@@ -123,6 +128,7 @@ private:
 	PWriter         *m_Writers;
 	int             m_outputIndex;
 	bool            m_bNoWrite;
+	bool            m_bEOF;
 };
 
 

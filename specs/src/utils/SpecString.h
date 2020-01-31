@@ -40,8 +40,10 @@ public:
 	static PSpecString newString(std::string& st);
 	virtual ~SpecString() {}
 	virtual void add(PSpecString ps) = 0;
+	virtual void append(PSpecString ps) = 0;
 	virtual void _serialize(std::ostream& os) const = 0;
 	virtual const char* data() = 0;
+	virtual std::string* sdata() = 0;
 	virtual size_t length() = 0;
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar) = 0;
 	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar) = 0;
@@ -59,7 +61,9 @@ public:
 	StdSpecString(const StdSpecString &sps) {m_str = *(sps.getStdString());}
 	virtual ~StdSpecString() {}
 	virtual void add(PSpecString ps);
+	virtual void append(PSpecString ps);
 	virtual const char* data() {return m_str.c_str();}
+	virtual std::string* sdata() {return &m_str;}
 	virtual size_t length() {return m_str.length();}
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar);
 	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar);
@@ -73,12 +77,7 @@ private:
 	std::string m_str;
 };
 
-static std::ostream& operator << (std::ostream& os, const SpecString &str)
-{
-    str._serialize(os);
-
-    return os;
-}
+std::ostream& operator<< (std::ostream& os, const SpecString &str);
 
 PSpecString SpecStringCopy(PSpecString pss);
 

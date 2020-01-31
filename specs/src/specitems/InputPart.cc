@@ -1,3 +1,4 @@
+#include "utils/platform.h"
 #include "processing/Config.h"
 #include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
@@ -53,7 +54,7 @@ std::string WordRangePart::Debug()
 PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
 	if (pState.recordNotAvailable()) return SpecString::newString();
-	char keepSeparator;
+	char keepSeparator = DEFAULT_WORDSEPARATOR;
 	if (m_WordSep) {
 		keepSeparator = pState.getWSChar();
 		pState.setWSChar(m_WordSep);  // as a side-effect, invalidates the current word list
@@ -86,7 +87,7 @@ std::string FieldRangePart::Debug()
 PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
 	if (pState.recordNotAvailable()) return SpecString::newString();
-	char keepSeparator;
+	char keepSeparator = DEFAULT_FIELDSEPARATOR;
 	if (m_FieldSep) {
 		keepSeparator = pState.getFSChar();
 		pState.setFSChar(m_FieldSep);  // as a side-effect, invalidates the current field list

@@ -6,9 +6,10 @@
 class SpecsException : public std::exception {
 public:
 	explicit SpecsException(const char* _fn, unsigned int _ln, const char* _msg, bool _abend = false):
-		fn(_fn), ln(_ln), msg(_msg), bIsAbend(_abend) {}
+		fn(_fn), msg(_msg), ln(_ln), bIsAbend(_abend) {}
 	explicit SpecsException(const char* _fn, unsigned int _ln, std::string& _msg, bool _abend = false):
-		fn(_fn), ln(_ln), msg(_msg), bIsAbend(_abend) {}
+		fn(_fn), msg(_msg), ln(_ln), bIsAbend(_abend) {}
+	using std::exception::what;  // avoid warning about overloading
 	virtual const char* what(bool concise = false) const throw ();
 	virtual const bool  isAbend() const throw();
 protected:
@@ -27,6 +28,14 @@ protected:
 	MYTHROW(_assert_err); \
 	} \
 	}
+
+#define MYASSERT_NOT_NULL_WITH_DESC(ptr,desc) { if (NULL==ptr) { \
+	std::string _assert_err = std::string(#ptr) + " is not set for " + desc; \
+	MYTHROW(_assert_err); } }
+
+#define MYASSERT_NOT_NULL(ptr) { if (NULL==ptr) { \
+	std::string _assert_err = std::string(#ptr) + " is not set"; \
+	MYTHROW(_assert_err); } }
 
 #define MYASSERT_WITH_MSG(cond,s) { if (!(cond)) {MYTHROW(s); } }
 

@@ -10,28 +10,12 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-30-Nov-2019: Version 0.5 GA is here
--------------------------------------
-What's new:
-* Functions with elided arguments and variable number of arguments
-* Some functions reformed because of this.
-* Specification path
-* Support record formats and locales
-* New functions: fmt for formatting numbers. next and rest for formatting records. @cols and @rows.
-* Bug fixes
-
-15-Aug-2019: Version 0.4 is here
---------------------------------
-What's new:
-* New functions: statistical, trigonometric, random
-* All the REXX-based functions from CMS Pipelines specs.
-* Composed output position ([issue](https://github.com/yoavnir/specs2016/issues/47))
-* Multiple input and output streams
-* The `ASSERT`, `ABEND` ([issue](https://github.com/yoavnir/specs2016/issues/78)), and `NOWRITE` ([issue](https://github.com/yoavnir/specs2016/issues/80)) keywords.
-* Updated [documentation](specs/docs/TOC.md).
-
-**Known Bug** Some unit tests related to the C2F() function fail on Windows.
-
+31-Jan-2020: Version 0.6 Alpha is here 
+--------------------------------------
+New features:
+* Python functions
+* MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
+* Regular expressions
 
 Sources
 =======
@@ -41,9 +25,9 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.4:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.5:
 ```
-git checkout v0.4
+git checkout v0.6
 ```
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 
@@ -60,12 +44,24 @@ After that, _cd_ to the specs/src directory, and run the following three command
 
 Note: Windows does not need `sudo`
 
+Known Issues
+============
+* On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier some Python unit tests fail. Also, importing Python native functions doesn't work.
+* Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
+* On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier `rsearch` does not work reliably.
+* On Windows with Python support the appropriate dll (like `python38.dll`) must be in the path.
+
 Contributing
 ============
 Anyone can contribute. So far, I have written all of the code, but if you want to help, I'll be very happy. Feel free to:
 * Submit bug reports or feature requests at the [Issue Tracker](https://github.com/yoavnir/specs2016/issues).
 * Help solve some existing issue.
 * Submit pull requests
+
+Contributors
+============
+* Yoav Nir ([yoavnir](https://github.com/yoavnir))
+* Jean-Baptiste Jouband ([Gawesomer](https://github.com/Gawesomer))
 
 Documentation
 =============

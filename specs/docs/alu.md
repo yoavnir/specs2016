@@ -101,6 +101,8 @@ Others are `@cols`, which contains the number of columns in the terminal screen,
 
 Additionally, the `@@` string stands for the entire input record.
 
+`@python` contains either "Enabled" or "Disabled" depending on whether python function support is enabled.
+
 **Note:** The timezone used in the date conversion can also be set in the configuration file with a `timezone` entry. Similarly, the locale used can be set with a `locale` entry.
 
 **Note:** Some *specifications* as shown above may depend of a specific configured literal being defined. It may be prudent to have such specifications fail quickly by using the `REQUIRES` keyword as shown above. 
@@ -124,13 +126,13 @@ The specs ALU has a bunch of built-in functions. The full list is available at [
 * len(x) - returns the length of x considered as a string
 * record() - returns the entire input record
 * words(start, count) - returns a substring of the input record, similar to what `words start.count` would yield in a data field.
-* tf2d(s,f) and d2tf(x,f) - convert a formatted date string to the internal representation, which is measured in seconds since the Unix epoch (1-Jan-1970 at midnight), and convert the other way.  The format is similar to that of the C function strftime(), plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* tf2mcs(s,f) and mcs2tf(x,f) - convert a formatted date string to the internal representation, which is measured in microseconds since the Unix epoch (1-Jan-1970 at midnight), and convert the other way.  The format is similar to that of the C function strftime(), plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * pos(needle,haystack)
 * includes(hatstack,needle)
 
 Examples:
 ```
-tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S') ==> 1546550603
+tf2mcs('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S') ==> 1546550603000000
 len(743) ==> 3
 left(743,2) ==> 74
 ```

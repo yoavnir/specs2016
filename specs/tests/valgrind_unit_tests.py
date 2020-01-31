@@ -1,8 +1,8 @@
 import sys, memcheck, argparse
 
-count_ALU_tests = 576
-count_processing_tests = 137
-count_token_tests = 14
+count_ALU_tests = 606
+count_processing_tests = 145
+count_token_tests = 16
 
 # Parse the one command line options
 parser = argparse.ArgumentParser()
@@ -12,8 +12,8 @@ args = parser.parse_args()
 if args.nvg==True:
 	memcheck.no_valgrind = True
 
-tests_to_skip = [529]
-tests_that_may_fail = [43,48,61,63,357,359,369,371]
+tests_to_skip = []
+tests_that_may_fail = [43,48,61,63,382,384,394,396]
 for i in range(count_ALU_tests):
     if (i+1) in tests_to_skip:
         continue

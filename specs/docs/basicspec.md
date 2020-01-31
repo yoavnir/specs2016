@@ -66,7 +66,8 @@ We only want the file name, but there are two issues here. First, the file name 
 ```
      SUBSTRING FIELDSEP / FIELD -1 OF WORD -1
 ```
-    
+**NOTE**: All of the ranges described above can be specified as a starting position and length separated with a dot. For example, `w8.5` means 5 words starting at the eighth word. Alternatively, they can be specified as a starting and ending position, both inclusive, separated by either a hyphen (`-`), a semicolon (`:`), or a colon (`:`). So `w8-12`, `w8;12`, and `w8:12` all mean the substring of the input record that includes the eighth to twelfth words inclusive. A hyphen is usually the most intuitive. The colon makes it more readable if the ending position is specified as negative. The semicolon is included for compatibility with *CMS Pipelines*.
+
 The **OutputPlacement** argument specifies where to put the source:
 
 * absolute position (such as `1`)
@@ -120,8 +121,10 @@ The _conversion_ argument can specify any of the following conversions:
 * **BSWAP** - byte swap. reverses the order of bytes: "AB" --> "BA"
 * **ti2f format** - convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * **tf2i format** - convert printable time format to the internal 8-byte representation. 
-* **d2tf format** - convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
-* **tf2d format** - convert printable time format to a decimal number, representing seconds since the epoch. 
+* **s2tf format** - convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2s format** - convert printable time format to a decimal number, representing seconds since the epoch. 
+* **mcs2tf format** - convert a number, representing microseconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2mcs format** - convert printable time format to a number, representing microseconds since the epoch. 
 
 Words vs Fields
 ===============
@@ -143,9 +146,9 @@ Let's use the output of ls we used earlier again:
 -rw-r--r--  1 root  wheel  2396 Oct 30 09:46 /Applications/Safari.app/Contents/Resources/en.lproj/WebProcessCrashErrorPage.html
 -rw-r--r--  1 root  wheel  6958 Oct 30 09:46 /Applications/Safari.app/Contents/Resources/en.lproj/localizedStrings.js
 ```
-Let's arrange the line so that the filename is centered in the first 35 columns, and convert the date (in words 6-8) to the internal format (seconds since the epoch):
+Let's arrange the line so that the filename is centered in the first 35 columns, and convert the date (in words 6-8) to seconds since the epoch:
 ```
-    specs substr fs / field -1 of word -1 1.35 center    w6-8 tf2d "%b %d %H:%M" nw
+    specs substr fs / field -1 of word -1 1.35 center    w6-8 tf2s "%b %d %H:%M" nw
 ```
 This *specification* contains two data fields which I've separated using multiple space characters. The result comes out something like this:
 ```
@@ -182,3 +185,10 @@ This will produce the output `<bye><>` from this input record:
 ```
 Good,bye,old,,paint
 ```
+
+MainOptions
+===========
+These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
+* **STOP** - This option is followed by either the keyword `ALLEOF`, the keyword `ANYEOF`, or a number indicating an input stream. This indicates when the specification stops. The default is `ALLEOF` which means that the specification terminates when every input stream is exhausted. When some but not all of the streams are exhausted, those that are get treated as if they emit empty records. With `ANYEOF` the specification terminates when *any* of the streams is exhausted. With a numeric value the specification terminates when the specified stream is exhausted. Other streams, if exhausted are treated as if they emit empty records.
+* **PRINTONLY** - This option instructs *specs* to suppress output records unless a specified *break level* is established. The break level is either a field identifier (case matters) or it can be the keyword `EOF`, which specifies records are suppressed until the input is exhausted or the condition specified with `STOP` is satisfied.
+* **KEEP** - This option, always following `PRINTONLY`instructs *specs* not to reset the output buffer when a record in not output due to break level not being established. This allows the content from several records to be aggregated into a single output record.

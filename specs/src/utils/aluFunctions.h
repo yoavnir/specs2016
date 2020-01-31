@@ -8,6 +8,7 @@
 #define ALUFUNC_REGULAR      0x00
 #define ALUFUNC_STATISTICAL  0x01
 #define ALUFUNC_FREQUENCY    0x02
+#define ALUFUNC_EXTERNAL     0x80
 
 // function name, number of arguments, whether it needs lines from input
 #define ALU_FUNCTION_LIST            \
@@ -39,12 +40,18 @@
 	X(field,          1, ALUFUNC_REGULAR,      true)  \
 	X(fieldrange,     2, ALUFUNC_REGULAR,      true)  \
 	X(range,          2, ALUFUNC_REGULAR,      true)  \
-	X(tf2d,           2, ALUFUNC_REGULAR,     false)  \
-	X(d2tf,           2, ALUFUNC_REGULAR,     false)  \
+	X(tf2mcs,         2, ALUFUNC_REGULAR,     false)  \
+	X(mcs2tf,         2, ALUFUNC_REGULAR,     false)  \
+	X(tf2s,           2, ALUFUNC_REGULAR,     false)  \
+	X(s2tf,           2, ALUFUNC_REGULAR,     false)  \
 	X(substr,         3, ALUFUNC_REGULAR,     false)  \
 	X(pos,            2, ALUFUNC_REGULAR,     false)  \
 	X(lastpos,        2, ALUFUNC_REGULAR,     false)  \
-	X(includes,       2, ALUFUNC_REGULAR,     false)  \
+	X(includes,       5, ALUFUNC_REGULAR,     false)  \
+	X(includesall,    5, ALUFUNC_REGULAR,     false)  \
+	X(rmatch,         3, ALUFUNC_REGULAR,     false)  \
+	X(rsearch,        3, ALUFUNC_REGULAR,     false)  \
+	X(rreplace,       4, ALUFUNC_REGULAR,     false)  \
 	X(left,           2, ALUFUNC_REGULAR,     false)  \
 	X(right,          2, ALUFUNC_REGULAR,     false)  \
 	X(center,         2, ALUFUNC_REGULAR,     false)  \
@@ -214,6 +221,7 @@ public:
 	virtual int     getFieldStart(int idx) = 0;
 	virtual int     getFieldEnd(int idx) = 0;
 	virtual PSpecString getFromTo(int from, int to) = 0;
+	virtual PSpecString currRecord() = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;
 	virtual ALUInt  getRecordCount() = 0;

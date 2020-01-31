@@ -14,11 +14,11 @@
 //     l = token contains a literal
 #define TOKEN_TYPE_LIST   \
 	/* The MainOptions */    \
-	X(STOP,           false, false) \
+	X(STOP,           false, true)  \
 	X(ALLEOF,         false, false) \
 	X(ANYEOF,         false, false) \
 	X(COUNTERS,       false, false) \
-	X(PRINTONLY,      false, false) \
+	X(PRINTONLY,      false, true)  \
 	X(EOF,            false, false) \
 	X(KEEP,           false, false) \
 	X(READ,           false, false) \

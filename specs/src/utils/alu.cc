@@ -910,12 +910,42 @@ AluFunction::AluFunction(std::string& _s)
 {
 	std::string s(_s);
 	std::transform(s.begin(), s.end(),s.begin(), ::tolower);
+
+	mp_Func = NULL;
+	m_pExternalFunc = NULL;
+
 	ALU_FUNCTION_LIST
 #ifdef DEBUG
 	ALU_DEBUG_FUNCTION_LIST
 #endif
-	std::string err = "Unrecognized function "+_s;
-	MYTHROW(err);
+
+#ifndef SPECS_NO_PYTHON
+	// Internal function not found - try external unless they're disabled
+	if (EXTERNAL_FUNC_OFF != g_pythonFuncs) {
+		if (!p_gExternalFunctions->IsInitialized()) {
+			try {
+				p_gExternalFunctions->Initialize(getFullSpecPath());
+			} catch (const SpecsException& e) {
+				std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+				exit(0);
+			}
+#ifdef DEBUG
+			p_gExternalFunctions->Debug();
+#endif
+		}
+		MYASSERT(p_gExternalFunctions->IsInitialized());
+		m_pExternalFunc = p_gExternalFunctions->GetFunctionByName(_s);
+#endif
+	}
+	if (!m_pExternalFunc) {
+		std::string err = "Unrecognized function "+_s;
+		MYTHROW(err);
+	}
+	m_FuncName = _s;
+	m_ArgCount = m_pExternalFunc->GetArgCount();
+	m_reliesOnInput = false;
+	mp_Func = NULL;
+	m_flags |= ALUFUNC_EXTERNAL;
 }
 #undef X
 
@@ -927,36 +957,75 @@ void AluFunction::_serialize(std::ostream& os) const
 ALUValue* AluFunction::evaluate()
 {
 	if (0 != countOperands()) return AluUnit::evaluate();
+	if (NULL != m_pExternalFunc) {
+		m_pExternalFunc->ResetArgs();
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc0(mp_Func))();
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1)
 {
 	if (1 != countOperands()) return AluUnit::compute(op1);
+	if (NULL != m_pExternalFunc) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc1(mp_Func))(op1);
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2)
 {
 	if (2 != countOperands()) return AluUnit::compute(op1,op2);
+	if (NULL != m_pExternalFunc) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		m_pExternalFunc->setArgValue(1,op2);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc2(mp_Func))(op1,op2);
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3)
 {
 	if (3 != countOperands()) return AluUnit::compute(op1,op2,op3);
+	if (NULL != m_pExternalFunc) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		m_pExternalFunc->setArgValue(1,op2);
+		m_pExternalFunc->setArgValue(2,op3);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc3(mp_Func))(op1,op2,op3);
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4)
 {
 	if (4 != countOperands()) return AluUnit::compute(op1,op2,op3,op4);
+	if (NULL != m_pExternalFunc) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		m_pExternalFunc->setArgValue(1,op2);
+		m_pExternalFunc->setArgValue(2,op3);
+		m_pExternalFunc->setArgValue(3,op4);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc4(mp_Func))(op1,op2,op3,op4);
 }
 
 ALUValue* AluFunction::compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5)
 {
 	if (5 != countOperands()) return AluUnit::compute(op1,op2,op3,op4,op5);
+	if (NULL != m_pExternalFunc) {
+		m_pExternalFunc->ResetArgs();
+		m_pExternalFunc->setArgValue(0,op1);
+		m_pExternalFunc->setArgValue(1,op2);
+		m_pExternalFunc->setArgValue(2,op3);
+		m_pExternalFunc->setArgValue(3,op4);
+		m_pExternalFunc->setArgValue(4,op5);
+		return m_pExternalFunc->Call();
+	}
 	return (AluFunc5(mp_Func))(op1,op2,op3,op4,op5);
 }
 
@@ -1300,7 +1369,7 @@ std::string dumpAluVec(AluVec& vec, bool deleteUnits)
 			delete pUnit;
 		}
 	} else {
-		for (int i=0; i<vec.size(); i++) {
+		for (size_t i=0; i<vec.size(); i++) {
 			if (!ret.empty()) ret += ";";
 			ret += vec[i]->_identify();
 		}
@@ -1534,11 +1603,12 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 #ifdef ALU_DUMP
 		if (g_bDebugAluCompile && g_bVerbose) {
 			std::cerr << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
-			dumpAluVec("Source", source, stepNumber++);
+			dumpAluVec("Source", source, stepNumber);
 			dumpAluVec("Dest", dest);
 			dumpAluStack("operator stack",operatorStack);
 		}
 #endif
+		stepNumber++;
 		switch (pUnit->type()) {
 		case UT_Comma:
 			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
@@ -1657,7 +1727,6 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 
 	if (clearSource) {
 		while (!source.empty()) {
-			AluUnit* pUnit = source[0];
 			source.erase(source.begin());
 		}
 	}
@@ -1805,7 +1874,6 @@ ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4, arg5));
 				}
 				catch (const SpecsException& e) {
-					std::cerr << "EXCEPTION: " << e.what() << std::endl;
 					delete arg1;
 					delete arg2;
 					delete arg3;
@@ -1869,7 +1937,7 @@ bool expressionForcesRunoutCycle(AluVec& vec)
 			return ("eof" == pFunction->getName());
 		}
 		default:
-			return false;
+			break;
 		}
 	}
 	return false;
@@ -2070,3 +2138,17 @@ ALUValue* AluValueStats::stderrmean()
 
 	return new ALUValue(std::sqrt(m_runningSn / m_totalCount) / (m_totalCount-1));
 }
+
+std::ostream& operator<< (std::ostream& os, const ALUValue &c)
+{
+	os << c.getStr();
+    return os;
+}
+
+std::ostream& operator<< (std::ostream& os, const AluUnit &u)
+{
+    u._serialize(os);
+
+    return os;
+}
+

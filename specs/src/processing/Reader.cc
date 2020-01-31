@@ -14,7 +14,7 @@ void ReadAllRecordsIntoReaderQueue(Reader* r)
 
 Reader::~Reader()
 {
-	PSpecString ps;
+	PSpecString ps = NULL;
 	End();
 	while (!m_queue.empty()) {
 		m_queue.wait_and_pop(ps);
@@ -39,15 +39,19 @@ void Reader::End()
 	mp_thread = NULL;
 }
 
-PSpecString Reader::get(classifyingTimer& tmr)
+PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 {
-	PSpecString ret;
+	PSpecString ret = NULL;
 	if (m_pUnreadString) {
 		ret = m_pUnreadString;
 		m_pUnreadString = NULL;
 		return ret;
 	}
 	if (eof()) {
+		if (!m_bRanDry) {
+			MYASSERT(_readerCounter>0);
+			_readerCounter--;
+		}
 		m_bRanDry = true;
 		return NULL;
 	}
@@ -58,6 +62,8 @@ PSpecString Reader::get(classifyingTimer& tmr)
 		m_countUsed++;
 		return ret;
 	} else {
+		MYASSERT(_readerCounter>0);
+		_readerCounter--;
 		m_bRanDry = true;
 		return NULL;
 	}
@@ -263,6 +269,8 @@ multiReader::multiReader(Reader* pDefaultReader)
 	maxReaderIdx = readerIdx;
 	readerArray[readerIdx] = pDefaultReader;
 	bFirstGet = true;
+	stopReaderIdx = STOP_STREAM_INVALID;
+	readerCounter = 1;
 }
 
 
@@ -274,6 +282,7 @@ multiReader::~multiReader()
 		if (stringArray[idx]) {
 			delete stringArray[idx];
 		}
+		readerCounter--;
 	ITERATE_VALID_STREAMS_END
 }
 
@@ -285,6 +294,7 @@ void multiReader::addStream(unsigned char idx, std::istream* f)
 
 	readerArray[idx] = new StandardReader(f);
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
+	readerCounter++;
 }
 
 void multiReader::addStream(unsigned char idx, std::string& fn)
@@ -295,6 +305,7 @@ void multiReader::addStream(unsigned char idx, std::string& fn)
 
 	readerArray[idx] = new StandardReader(fn);
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
+	readerCounter++;
 }
 
 void multiReader::selectStream(unsigned char idx, PSpecString* ppRecord)
@@ -317,33 +328,47 @@ void multiReader::Begin()
 	ITERATE_VALID_STREAMS(idx)
 		readerArray[idx]->Begin();
 	ITERATE_VALID_STREAMS_END
+	MYASSERT(stopReaderIdx != STOP_STREAM_INVALID);
 }
 
-PSpecString multiReader::get(classifyingTimer& tmr)
+PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 {
-	PSpecString ret = readerArray[readerIdx]->get(tmr);
-	if (!ret) return NULL;
+	PSpecString ret = readerArray[readerIdx]->get(tmr, readerCounter);
+	if (!ret) {
+		/* The current stream ran dry. But is is time to stop? */
+		if (STOP_STREAM_ANY==stopReaderIdx || readerIdx==(stopReaderIdx-1) || 0==readerCounter) {
+			/* Yes, time to exit */
+			_readerCounter--;
+			return NULL;
+		}
+		ret = SpecString::newString();
+	}
 
 	ITERATE_VALID_STREAMS(idx)
 		if (stringArray[idx]) {
 			MYASSERT(idx!=readerIdx);
 			delete stringArray[idx];
-			stringArray[idx] = readerArray[idx]->get(tmr);
+			stringArray[idx] = readerArray[idx]->get(tmr, readerCounter);
 			if (!stringArray[idx]) {
-				delete ret;
-				std::string err = "Input stream " + std::to_string(idx+1) + " ran dry while active stream ("
-						+ std::to_string(readerIdx+1) + ") still has records";
-				MYTHROW(err);
+				if (STOP_STREAM_ANY==stopReaderIdx || idx==(stopReaderIdx-1) || 0==readerCounter) {
+					delete ret;
+					_readerCounter--;
+					return NULL;
+				}
+				stringArray[idx] = SpecString::newString();
 			}
 		} else {
 			MYASSERT(idx==readerIdx || bFirstGet);
 			/* ret has already been read, and the stringArray slot remains NULL */
 			if (bFirstGet && idx!=readerIdx) {
-				stringArray[idx] = readerArray[idx]->get(tmr);
+				stringArray[idx] = readerArray[idx]->get(tmr, readerCounter);
 				if (!stringArray[idx]) {
-					std::string err = "Input stream " + std::to_string(idx+1) + " ran dry at the first record"
-							" while active stream (" + std::to_string(readerIdx+1) + ") still has records";
-					MYTHROW(err);
+					if (STOP_STREAM_ANY==stopReaderIdx || idx==(stopReaderIdx-1) || 0==readerCounter) {
+						delete ret;
+						_readerCounter--;
+						return NULL;
+					}
+					stringArray[idx] = SpecString::newString();
 				}
 			}
 		}

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <string.h>
 #ifdef WIN64
 #include <windows.h>
 #else
@@ -15,6 +16,8 @@
 #endif
 #include "utils/platform.h"
 #include "utils/TimeUtils.h"
+#include "utils/PythonIntf.h"
+#include "utils/aluRegex.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -35,8 +38,12 @@ static void useKeyValue(std::string& key, std::string& value)
 			specTimeSetTimeZone(value);
 		} else if (key == "locale") {
 			specTimeSetLocale(value);
+		} else if (key == "regexType") {
+			setRegexType(value);
 		}
-		ExternalLiterals[key] = value;
+		if (ExternalLiterals.find(key) == ExternalLiterals.end()) {
+			ExternalLiterals[key] = value;
+		}
 	}
 }
 
@@ -172,6 +179,7 @@ void readConfigurationFile()
 #ifdef GITTAG
 	ExternalLiterals["version"] = STRINGIFY(GITTAG);
 #endif
+	ExternalLiterals["python"] = pythonInterfaceEnabled() ? "Enabled" : "Disabled";
 	if (0==ExternalLiterals.count("cols")) {
 		ExternalLiterals["cols"] = getTerminalRowsAndColumns(false);
 	}
@@ -188,6 +196,11 @@ bool configSpecLiteralExists(std::string& key)
 std::string& configSpecLiteralGet(std::string& key)
 {
 	return ExternalLiterals[key];
+}
+
+std::string& configSpecLiteralGetWithDefault(std::string& key, std::string& _default)
+{
+	return ExternalLiterals[key].empty() ? _default : ExternalLiterals[key];
 }
 
 void configSpecLiteralSet(std::string& key, std::string& value)
@@ -211,4 +224,69 @@ bool anyNonPrimaryInputStreamDefined()
 	}
 
 	return ret;
+}
+
+bool inputStreamIsDefined(int i)
+{
+	switch (i) {
+	case 1: return true;
+	case 2: return (g_inputStream2!="");
+	case 3: return (g_inputStream3!="");
+	case 4: return (g_inputStream4!="");
+	case 5: return (g_inputStream5!="");
+	case 6: return (g_inputStream6!="");
+	case 7: return (g_inputStream7!="");
+	case 8: return (g_inputStream8!="");
+	default:
+		return false;
+	}
+}
+
+const char* getFullSpecPath()
+{
+	static std::string res("");
+	static bool ran_once = false;
+
+	if (!ran_once) {
+		static std::string pathConfigString("SPECSPATH");
+
+		// add the path from the environment variable
+		char* envpath = getenv(pathConfigString.c_str());
+		if (envpath && envpath[0]) {
+			char* onePath = strtok(envpath, PATH_LIST_SEPARATOR);
+			while (onePath) {
+				if (res.length()>0) res += PATH_LIST_SEPARATOR;
+				res += onePath;
+				onePath = strtok(NULL, PATH_LIST_SEPARATOR);
+			}
+		}
+
+		// Also add from the configuration string
+		if (configSpecLiteralExists(pathConfigString)) {
+			char* configPath = strdup(configSpecLiteralGet(pathConfigString).c_str());
+			char* onePath = strtok(configPath, PATH_LIST_SEPARATOR);
+			while (onePath) {
+				if (res.length()>0) res += PATH_LIST_SEPARATOR;
+				res += onePath;
+				onePath = strtok(NULL, PATH_LIST_SEPARATOR);
+			}
+			free(configPath);
+		}
+
+		// Use the default if all else fails
+		if (res.empty()) {
+			char* parentPath = getenv(DEFAULT_SPECS_PARENT_DIR);
+			if (parentPath && parentPath[0]) {
+				res += parentPath;
+			} else {
+				res += FALLBACK_SPECS_PARENT_DIR;
+			}
+			res += PATHSEP;
+			res += "specs";
+		}
+
+		ran_once = true;
+	}
+
+	return res.c_str();
 }

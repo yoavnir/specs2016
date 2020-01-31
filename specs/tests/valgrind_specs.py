@@ -274,6 +274,18 @@ s = "a: word 1 . print 'includes(a,\"red\")' 1"
 i = "the\nred\nincredible"
 run_case(s,i,"Functions: includes")
 
+s = "a: word 1 . print 'includes(a,\"red\",\"incredible\")' 1"
+i = "the\nred\nincredible\nthe incredible red"
+run_case(s,i,"Functions: includes (multiple needles)")
+
+s = "a: word 1 . print 'includesall(a,\"red\")' 1"
+i = "the\nred\nincredible"
+run_case(s,i,"Functions: includesall")
+
+s = "a: word 1 . print 'includesall(a,\"red\",\"incredible\")' 1"
+i = "the\nred\nincredible\nthe incredible red"
+run_case(s,i,"Functions: includesall (multiple needles)")
+
 s = "a: word 1 . print 'length(a)' 1"
 i = "the\nred\n\nincredible"
 run_case(s,i,"Functions: length")
@@ -400,21 +412,21 @@ s = "print 'conf(\"version\")' 1 print 'conf(\"cracker\")' nw"
 i = None
 run_case(s,i,"Functions: conf")
 
-s = "a: w1 . print 'd2tf(a,\"%Y-%m-%dT%H:%M:%S\")' 1"
+s = "a: w1 . print 's2tf(a,\"%Y-%m-%dT%H:%M:%S\")' 1"
 i = "1553109338\n1553109340\n15\n-1953109338"
-run_case(s,i,"Functions: d2tf(1)")
+run_case(s,i,"Functions: s2tf(1)")
 
-s = "a: w1 . print 'd2tf(a,\"%Y-%m-%dT%H:%M:%S.%6f\")' 1"
+s = "a: w1 . print 's2tf(a,\"%Y-%m-%dT%H:%M:%S.%6f\")' 1"
 i = "1553109338\n1553109340.15\n15.9876\n-1953109338.123456"
-run_case(s,i,"Functions: d2tf(2)")
+run_case(s,i,"Functions: s2tf(2)")
 
-s = "print 'tf2d(@@,\"%Y-%m-%dT%H:%M:%S\")' 1"
+s = "print 'tf2s(@@,\"%Y-%m-%dT%H:%M:%S\")' 1"
 i = "2024-12-05T23:45:12"
-run_case(s,i,"Functions: tf2d(1)")
+run_case(s,i,"Functions: tf2s(1)")
 
-s = "print 'tf2d(@@,\"%H:%M:%S.%6f\")' 1"
+s = "print 'tf2s(@@,\"%H:%M:%S.%6f\")' 1"
 i = "23:45:12\n12:12:76.743\n13:13:13.123456"
-run_case(s,i,"Functions: tf2d(1)")
+run_case(s,i,"Functions: tf2s(1)")
 
 # Conditional Execution
 
@@ -576,7 +588,7 @@ ELSE
 	PRINT "#4"                1
 	WORD 2             NEXTWORD
 	READ
-	WORD 2-6 tf2d "%c" NEXTWORD
+	WORD 2-6 tf2s "%c" NEXTWORD
 	WHILE "word(1)!='commit'" DO
 		READSTOP
 	DONE
@@ -596,7 +608,7 @@ WORD 2                    1
 READSTOP
 WORD 2             NEXTWORD
 READSTOP
-WORD 2-6 tf2d "%c" NEXTWORD
+WORD 2-6 tf2s "%c" NEXTWORD
 WHILE "word(1)!='commit'" DO
 	READSTOP
 DONE
@@ -643,7 +655,19 @@ run_case(s,i,"dual input stream missing secondary",expected_rc=memcheck.RetCode_
 
 # Dual stream with mismatched streams
 i2 = input_samples.ls_out_inodes_mismatched
-run_case(s,i,"dual input stream with mismatched secondary",expected_rc=memcheck.RetCode_COMMAND_FAILED,inp2=i2)
+run_case(s,i,"dual input stream with mismatched secondary",inp2=i2)
+
+# Dual stream with mismatched streams - STOP ALLEOF
+i2 = input_samples.ls_out_inodes_mismatched
+run_case("STOP ALLEOF "+s,i,"dual input stream with mismatched secondary - STOP ALLEOF",inp2=i2)
+
+# Dual stream with mismatched streams - STOP ANYEOF
+i2 = input_samples.ls_out_inodes_mismatched
+run_case("STOP ANYEOF "+s,i,"dual input stream with mismatched secondary - STOP ANYEOF",inp2=i2)
+
+# Dual stream with mismatched streams - STOP 2
+i2 = input_samples.ls_out_inodes_mismatched
+run_case("STOP 2 "+s,i,"dual input stream with mismatched secondary - STOP 2",inp2=i2)
 
 # Dual output stream 
 i = input_samples.ls_out_inodes

@@ -12,6 +12,8 @@ typedef unsigned long long int u_int64_t;
 int setenv(const char *name, const char *value, int overwrite);
 #endif
 
+#define SUPPRESS_UNUSED_FUNCTION_WARNING(a) (void)a
+
 #ifdef _MSC_VER 
 	//not #if defined(_WIN32) || defined(_WIN64) because we have strncasecmp in mingw
 	#define strncasecmp _strnicmp
@@ -75,6 +77,24 @@ int setenv(const char *name, const char *value, int overwrite);
 #else
 #define QUEUE_HIGH_WM 5000
 #define QUEUE_LOW_WM  4500
+#endif
+
+#ifdef WIN64
+#define PATHSEP "\\"
+#define PATH_LIST_SEPARATOR ";"
+#define PATH_LIST_WSEPARATOR L";"
+#else
+#define PATHSEP "/"
+#define PATH_LIST_SEPARATOR ":"
+#define PATH_LIST_WSEPARATOR L":"
+#endif
+
+#ifdef WIN64
+#define DEFAULT_SPECS_PARENT_DIR "APPDATA"
+#define FALLBACK_SPECS_PARENT_DIR  "C:"
+#else
+#define DEFAULT_SPECS_PARENT_DIR "HOME"
+#define FALLBACK_SPECS_PARENT_DIR  "/etc"
 #endif
 
 #endif

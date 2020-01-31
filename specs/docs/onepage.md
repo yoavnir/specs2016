@@ -82,8 +82,10 @@ The conversion argument can specify any of the following conversions:
 * **BSWAP** - byte swap. reverses the order of bytes: "AB" --> "BA"
 * **ti2f** - convert internal time format (8-byte microseconds since the epoch) to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * **tf2i** - convert printable time format to the internal 8-byte representation. 
-* **d2tf** - convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
-* **tf2d** - convert printable time format to a decimal number, representing seconds since the epoch. 
+* **s2tf** - convert a decimal number with up to six decimal places, representing seconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2s** - convert printable time format to a decimal number, representing seconds since the epoch. 
+* **mcs2tf** - convert a number, representing microseconds since the epoch, to printable format using the conventions of strftime, plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
+* **tf2mcs** - convert printable time format to a number, representing microseconds since the epoch. 
  
 There are also other spec units, that may be used:
 
@@ -94,6 +96,13 @@ There are also other spec units, that may be used:
 * **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges. For **WordSeparator** it is possible to use the special value, *default*,
 to make all whitespace defined by the locale work as a word separator. 
 * **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
+
+MainOptions
+===========
+These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
+* **STOP** - This option is followed by either the keyword `ALLEOF`, the keyword `ANYEOF`, or a number indicating an input stream. This indicates when the specification stops. The default is `ALLEOF` which means that the specification terminates when every input stream is exhausted. When some but not all of the streams are exhausted, those that are get treated as if they emit empty records. With `ANYEOF` the specification terminates when *any* of the streams is exhausted. With a numeric value the specification terminates when the specified stream is exhausted. Other streams, if exhausted are treated as if they emit empty records.
+* **PRINTONLY** - This option instructs *specs* to suppress output records unless a specified *break level* is established. The break level is either a field identifier (case matters) or it can be the keyword `EOF`, which specifies records are suppressed until the input is exhausted or the condition specified with `STOP` is satisfied.
+* **KEEP** - This option, always following `PRINTONLY`instructs *specs* not to reset the output buffer when a record in not output due to break level not being established. This allows the content from several records to be aggregated into a single output record.
 
 Conditions and Loops
 ====================

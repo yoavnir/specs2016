@@ -61,7 +61,7 @@ public:
 	void         Add(TokenFieldRange *rng);
 	virtual std::string Debug();
 private:
-	int m_idx;
+	size_t m_idx;
 	std::vector<TokenFieldRange*> rangeVec;
 };
 
@@ -112,7 +112,7 @@ void TokenFieldRangeComplex::setDone()
 std::string TokenFieldRangeComplex::Debug()
 {
 	std::string ret = "C:(";
-	for (int i=0; i<rangeVec.size(); i++) {
+	for (size_t i=0; i<rangeVec.size(); i++) {
 		if (i>0) {
 			ret += " ";
 		}
@@ -507,7 +507,7 @@ static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int 
 		std::string err = "Too many items in ranges group at index " + std::to_string(argidx);
 		MYTHROW(err);
 	}
-	for (int i=0; i<idx; i++) {
+	for (unsigned int i=0; i<idx; i++) {
 		parseSingleToken(pVec, std::string(itemPtrs[i]), argidx);
 	}
 
@@ -548,7 +548,19 @@ static bool mayBeLiteral(Token& tok)
 static bool mayBeFieldIdentifier(Token& tok)
 {
 	// doesn't matter how we parsed it.  As long as it's one character
-	return (tok.Orig().length()==1);
+	if (tok.Orig().length()==1) {
+		char ch = tok.Orig()[0];
+		if ((ch>='A' && ch<='Z') || (ch>='a' && ch<='z')) return true;
+	}
+
+	return false;
+}
+
+static bool isStreamIdentifier(Token& tok)
+{
+	return (TokenListType__RANGE == tok.Type()) &&
+			(tok.Range()->isSingleNumber()) &&
+			(tok.Range()->getSingleNumber() > 0);
 }
 
 // Looking for one word (no character below '0') and starting with a letter or underscore
@@ -587,7 +599,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 {
 	if (tokList->size()==0) return;
 
-	for (int i=0; i<tokList->size()-1; i++) {
+	for (size_t i=0; i<tokList->size()-1; i++) {
 		Token& tok = tokList->at(i);
 		Token& nextTok = tokList->at(i+1);
 		switch (tok.Type()) {
@@ -641,14 +653,19 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				}
 			}
 			break;
+		case TokenListType__PRINTONLY:
 		case TokenListType__ID:
 		{
 			if (tok.Literal()=="") {
 				if (mayBeFieldIdentifier(nextTok)) {
 					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
+				} else if (TokenListType__PRINTONLY == tok.Type() && TokenListType__EOF == nextTok.Type()) {
+					tok.setLiteral("EOF");
+					tokList->erase(tokList->begin()+(i+1));
 				} else {
-					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for ID at index "+std::to_string(nextTok.argIndex());
+					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for <" +
+							tok.Orig() + "> at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
 				}
 			}
@@ -761,6 +778,24 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for BREAK at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
 				}
+			}
+			break;
+		}
+		case TokenListType__STOP:  // followed by ALLEOF, ANYEOF, or a number indicating an input stream
+		{
+			if (tok.Literal()=="") {
+				if (TokenListType__ALLEOF==nextTok.Type()) {
+					tok.setLiteral("all");
+				} else if (TokenListType__ANYEOF==nextTok.Type()) {
+					tok.setLiteral("any");
+				} else if (isStreamIdentifier(nextTok)) {
+					tok.setLiteral(std::to_string(nextTok.Range()->getSingleNumber()));
+				} else {
+					std::string err = "Invalid STOP condition <" + nextTok.Orig()+"> at index " + std::to_string(nextTok.argIndex());
+					MYTHROW(err);
+				}
+				nextTok.deallocDynamic();
+				tokList->erase(tokList->begin()+(i+1));
 			}
 			break;
 		}

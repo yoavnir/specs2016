@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
 #include "tokens.h"
@@ -35,7 +36,7 @@ std::vector<Token> parseTokensSplit(const char* arg)
 
 	const char* ptr = arg;
 	std::string sarg;
-	char delimiter;
+	char delimiter = '\0';
 
 	while (*ptr) {
 		switch (st) {
@@ -135,42 +136,26 @@ std::string removeComment(std::string& st)
 	return st.substr(0,found);
 }
 
-#ifdef WIN64
-#define PATHSEP "\\"
-#else
-#define PATHSEP "/"
-#endif
-
 static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 {
-	static std::string pathConfigString("SPECSPATH");
 	theFile.open(fileName);
 	if (theFile.is_open()) return;
 
-	// No?  Try the path list in the environment variable
-	char* envpath = getenv(pathConfigString.c_str());
-	if (envpath && envpath[0]) {
-		char* onePath = strtok(envpath,":");
+	// No?  Try the path
+	char* spath = strdup(getFullSpecPath());
+	if (spath && spath[0]) {
+		char* onePath = strtok(spath, PATH_LIST_SEPARATOR);
 		while (onePath) {
 			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
 			theFile.open(fullpath);
-			if (theFile.is_open()) return;
-			onePath = strtok(NULL,":");
+			if (theFile.is_open()) {
+				free(spath);
+				return;
+			}
+			onePath = strtok(NULL, PATH_LIST_SEPARATOR);
 		}
 	}
-
-	// Still no?  Try the path in the config variable
-	if (configSpecLiteralExists(pathConfigString)) {
-		char* configPath = strdup(configSpecLiteralGet(pathConfigString).c_str());
-		char* onePath = strtok(configPath,":");
-		while (onePath) {
-			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
-			theFile.open(fullpath);
-			if (theFile.is_open()) return;
-			onePath = strtok(NULL,":");
-		}
-		free(configPath);
-	}
+	if (spath) free(spath);
 }
 
 std::vector<Token> parseTokensFile(std::string& fileName)

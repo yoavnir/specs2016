@@ -5,6 +5,7 @@
 #include "utils/platform.h"  // For put_time and get_time vs strftime and strptime
 #include "utils/ErrorReporting.h"
 #include "utils/alu.h"
+#include "utils/aluRegex.h"
 #include "utils/TimeUtils.h"
 #include "processing/ProcessingState.h"
 
@@ -12,6 +13,8 @@ ALUCounters counters;
 ProcessingState g_ps;
 
 std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
+
+extern void setRegexType(std::string& s);
 
 #define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
 
@@ -224,7 +227,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 #define VERIFY_EXPR(s,e) do {					\
 	INC_TEST_INDEX;								\
 	std::string _expr(s);						\
-	bool _res = parseAluExpression(_expr,vec);	\
+	parseAluExpression(_expr,vec);				\
 	std::string _dump = dumpAluVec(vec, true);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": <"<< s << "> ==> \"" << e << "\": "; 	\
@@ -291,7 +294,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 		INC_TEST_INDEX;										\
 		std::string _expr(s);								\
 		AluVec rpnVec;										\
-		bool _res, _res2;									\
+		bool _res, _res2 = true;							\
 		ALUValue* _result = NULL;							\
 		_res = parseAluExpression(_expr,vec);				\
 		if (_res) {                                         \
@@ -352,6 +355,12 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 			else std::cout << "#" << k << " == " << counters.getStr(k) << "\n";	\
 		}														\
 	} while(0);
+
+void setRegexType(const char* str)
+{
+	std::string s = str;
+	setRegexType(s);
+}
 
 class testGetter : public fieldIdentifierGetter {
 public:
@@ -656,7 +665,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_RPN("a>b & b>c","FI(a);FI(b);BOP(>);FI(b);FI(c);BOP(>);BOP(&)");
 
 	// Issue #37
-	VERIFY_RPN("tf2d(wordrange(1,2),'%d')", "Number(1);Number(2);FUNC(wordrange);Literal(%d);FUNC(tf2d)");
+	VERIFY_RPN("tf2mcs(wordrange(1,2),'%d')", "Number(1);Number(2);FUNC(wordrange);Literal(%d);FUNC(tf2mcs)");
 
 	// TODO: More here as well
 
@@ -747,25 +756,33 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("record()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 
 	// time reformat
-	VERIFY_EXPR_RES("tf2d('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603000000");
-	VERIFY_EXPR_RES("d2tf(1546550663000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
+	VERIFY_EXPR_RES("tf2mcs('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603000000");
+	VERIFY_EXPR_RES("mcs2tf(1546550663000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
+
+	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
+#ifdef VISUAL_STUDIO  // TODO: check whether this needs to be VS or WIN64
+	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23:123456','%Y-%m-%d %H:%M:%S:%6f')", "1546550603.12346");
+#else
+	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23:123456','%Y-%m-%d %H:%M:%S:%6f')", "1546550603.123456");
+#endif
+	VERIFY_EXPR_RES("s2tf(1546550663.000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
 	// Issue #62
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.98531','%d/%m %H:%M:%S.%6f')", "1547097241985310");    // only 5 digits in the subsecond
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.985317','%d/%m %H:%M:%S.%6f')", "1547097241985317");   // proper 6 digits in the subsecond
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.9853177','%d/%m %H:%M:%S.%6f')", "1547097241985317");  // 7 digits in the subsecond
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.98531','%Y/%d/%m %H:%M:%S.%6f')", "1547097241985310");    // only 5 digits in the subsecond
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.985317','%Y/%d/%m %H:%M:%S.%6f')", "1547097241985317");   // proper 6 digits in the subsecond
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.9853177','%Y/%d/%m %H:%M:%S.%6f')", "1547097241985317");  // 7 digits in the subsecond
 
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01.','%d/%m %H:%M:%S.%6f')", "1547097241000000");         // no subsecond digits at all
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.','%Y/%d/%m %H:%M:%S.%6f')", "1547097241000000");         // no subsecond digits at all
 #ifdef PUT_TIME__SUPPORTED
   #ifdef VISUAL_STUDIO
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
   #else
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "1547097241000000");                 // no subsecond digits and a missing dot!
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "1547097241000000");                 // no subsecond digits and a missing dot!
   #endif
 #else
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:01','%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
 #endif
-	VERIFY_EXPR_RES("tf2d('10/01 07:14:0153','%d/%m %H:%M:%S.%6f')", "0");                        // This is just weird
+	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:0153','%Y/%d/%m %H:%M:%S.%6f')", "0");                        // This is just weird
 
 	// Issue #38
 	VERIFY_EXPR_RES("2-2", "0");
@@ -813,17 +830,40 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("pos('x', #9)", "0");
 	VERIFY_EXPR_RES("pos('a ', #9)", "5");
 	VERIFY_EXPR_RES("pos('a ', left(#9,13))", "5");
+	VERIFY_EXPR_RES("pos('a')", "37");
 
 	VERIFY_EXPR_RES("lastpos('g', #9)", "3");
 	VERIFY_EXPR_RES("lastpos('a', #9)", "11");
 	VERIFY_EXPR_RES("lastpos('x', #9)", "0");
 	VERIFY_EXPR_RES("lastpos('a ', #9)", "5");
 	VERIFY_EXPR_RES("lastpos('a ', left(#9,13))", "11");
+	VERIFY_EXPR_RES("lastpos('e')", "34");
 
 	VERIFY_EXPR_RES("includes(#9, 'a')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'x')", "0");
 	VERIFY_EXPR_RES("includes(#9, 'gn')", "1");
 	VERIFY_EXPR_RES("includes(#9, 'rt ')", "0");
+	VERIFY_EXPR_RES("includes(#9, 'a', 'x')", "1");
+	VERIFY_EXPR_RES("includes(#9, 'x', 'a')", "1");
+	VERIFY_EXPR_RES("includes(#9, 'gn', 'a')", "1");
+	VERIFY_EXPR_RES("includes(#9, 'x', 'rt ')", "0");
+	VERIFY_EXPR_RES("includes(,'quick','fox')", "1");
+	VERIFY_EXPR_RES("includes(,'fast','fox')", "1");
+	VERIFY_EXPR_RES("includes(,'quick','goose')", "1");
+	VERIFY_EXPR_RES("includes(,'fast','goose')", "0");
+
+	VERIFY_EXPR_RES("includesall(#9, 'a')", "1");
+	VERIFY_EXPR_RES("includesall(#9, 'x')", "0");
+	VERIFY_EXPR_RES("includesall(#9, 'gn')", "1");
+	VERIFY_EXPR_RES("includesall(#9, 'rt ')", "0");
+	VERIFY_EXPR_RES("includesall(#9, 'a', 'x')", "0");
+	VERIFY_EXPR_RES("includesall(#9, 'x', 'a')", "0");
+	VERIFY_EXPR_RES("includesall(#9, 'gn', 'a')", "1");
+	VERIFY_EXPR_RES("includesall(#9, 'x', 'rt ')", "0");
+	VERIFY_EXPR_RES("includesall(,'quick','fox')", "1");
+	VERIFY_EXPR_RES("includesall(,'fast','fox')", "0");
+	VERIFY_EXPR_RES("includesall(,'quick','goose')", "0");
+	VERIFY_EXPR_RES("includesall(,'fast','goose')", "0");
 
 	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
 
@@ -1152,6 +1192,75 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fmt(p,'s',12)","1.000314159265e+04");
 	VERIFY_EXPR_RES("fmt(p,,12,'$')","10003$1415927");
 	VERIFY_EXPR_RES("fmt(p,,12,,'$')","10$003.1415927");
+
+	/* regular expressions */
+	disableRegexCache();
+	tg.set('s', "There is a subsequence in the string");
+	VERIFY_EXPR_RES("rmatch('subject','(sub)(.*)')", "1");
+	VERIFY_EXPR_RES("rmatch('object','(sub)(.*)')", "0");
+	VERIFY_EXPR_RES("rmatch('nonsubjective','(sub)(.*)')", "0");
+	VERIFY_EXPR_RES("rmatch(,'.*brown.*')", "1");
+	VERIFY_EXPR_RES("rmatch(,'.*black.*')", "0");
+	VERIFY_EXPR_RES("rsearch('subject','(sub)(.*)')", "1");
+	VERIFY_EXPR_RES("rsearch('object','(sub)(.*)')", "0");
+	VERIFY_EXPR_RES("rsearch('nonsubjective','(sub)(.*)')", "1");
+	VERIFY_EXPR_RES("rsearch(,'brown')", "1");
+	VERIFY_EXPR_RES("rsearch(,'black')", "0");
+	VERIFY_EXPR_RES("rreplace(s,'\\\\b(sub)([^ ]*)','sub-$2')","There is a sub-sequence in the string");
+	VERIFY_EXPR_RES("rreplace(s,'\\\\b(sub)([^ ]*)','$2')","There is a sequence in the string");
+
+	/* regular expression variations */
+	tg.set('t', "It's just a jump to the left\nAnd then a step to the right\n");
+	setRegexType("");
+	VERIFY_EXPR_RES("rsearch(t,'JUMP')", "0");
+	setRegexType("icase");
+	VERIFY_EXPR_RES("rsearch(t,'JUMP')", "1");
+
+	tg.set('z', "zzxayyzz");
+#ifdef REGEX_GRAMMARS
+	setRegexType("");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("basic");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("extended");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+	setRegexType("awk");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+	setRegexType("grep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("egrep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+#else
+#ifdef VISUAL_STUDIO
+	setRegexType("");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
+	setRegexType("basic");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("extended");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("awk");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("grep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+	setRegexType("egrep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+#else
+	setRegexType("");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("basic");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("extended");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("awk");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("grep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	setRegexType("egrep");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+#endif
+#endif
+
+	setRegexType("");
 
 #ifdef DEBUG
 	// Keep these tests at the end. All real functions should go first
