@@ -4,6 +4,20 @@ python_cflags=""
 python_ldflags=""
 python_version=0
 
+def run_the_cmd(cmd):
+	with open("xx.txt","w") as o:
+		rc = subprocess.call(cmd,shell=True,stdout=o.fileno(), stderr=o.fileno())
+	return rc
+	
+def cleanup_after_compile():
+	global compiler_cleanup_cmd,platform
+	with open("yy.txt","w") as o:
+		subprocess.call(compiler_cleanup_cmd,shell=True,stdout=o.fileno(), stderr=o.fileno())
+	if platform=="NT":
+		os.system("del yy.txt")
+	else:
+		os.system("/bin/rm yy.txt")
+
 def python_search(arg):
 	global python_cflags,python_ldflags,python_version,variation
 	
@@ -31,8 +45,8 @@ with open("xx.txt","w") as v:
 			return False
 	
 	# Get the result of python-config --cflags
-	cmd = "{}-config --cflags > xx.txt".format(arg)
-	rc = os.system(cmd)
+	cmd = "{}-config --cflags".format(arg)
+	rc = run_the_cmd(cmd)
 	if rc!=0:
 		sys.stdout.write("No -- could not get cflags from {}-config.\n".format(arg))
 		return False
@@ -46,11 +60,11 @@ with open("xx.txt","w") as v:
 	
 	# Get the result of python-config --cflags
 	with open("xx.txt","w") as o:
-		cmd = "{}-config --ldflags --embed > xx.txt".format(arg)  # first try with --embed needed for python 3.8
-		rc = subprocess.call(cmd,shell=True,stdout=o.fileno(), stderr=o.fileno())
+		cmd = "{}-config --ldflags --embed".format(arg)  # first try with --embed needed for python 3.8
+		rc = run_the_cmd(cmd)
 	if rc!=0:
-		cmd = "{}-config --ldflags > xx.txt".format(arg)
-		rc = os.system(cmd)
+		cmd = "{}-config --ldflags".format(arg)
+		rc = run_the_cmd(cmd)
 	if rc!=0:
 		sys.stdout.write("No -- could not get ldflags from {}-config.\n".format(arg))
 		return False
@@ -264,10 +278,12 @@ if platform=="POSIX":
 	mkdir_c = "mkdir -p"
 	exe_dir = "../exe"
 	clear_clean_part = clear_clean_posix
+	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt"
 elif platform=="NT":
 	mkdir_c = "mkdir"
 	exe_dir = "..\\exe"
 	clear_clean_part = clear_clean_nt
+	compiler_cleanup_cmd = "del xx.cc xx.o xx.exe xx.txt"
 else:
 	sys.stderr.write("Logic error: platform {} is not supported.\n".format(platform))
 	exit(-4)
@@ -282,21 +298,14 @@ else:
 	cppflags = cppflags_gcc
 	cppflags_test = "--std=c++11"
 	
-if platform=="POSIX":
-	errs = "2> /dev/null"
-else:
-	errs = "2> nul"
 	
 # Test if the compiler exists
-test_compiler_exists_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+test_compiler_exists_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write('void iefbr14() {}\n')
 sys.stdout.write("Testing compiler exists...")
-rc = os.system(test_compiler_exists_cmd)
-if platform=="NT":
-	os.system("del xx.cc xx.o")
-else:
-	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+rc = run_the_cmd(test_compiler_exists_cmd)
+cleanup_after_compile()
 if 0==rc:
 	sys.stdout.write("Yes.\n")
 else:
@@ -304,15 +313,12 @@ else:
 	exit(-4)
 	
 # Test if the compiler supports C++11
-test_cpp11_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+test_cpp11_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write('int ret_auto_0() {auto i=0; return i;}\n')
 sys.stdout.write("Testing C++11 support.....")
-rc = os.system(test_cpp11_cmd)
-if platform=="NT":
-	os.system("del xx.cc xx.o")
-else:
-	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+rc = run_the_cmd(test_cpp11_cmd)
+cleanup_after_compile()
 if 0==rc:
 	sys.stdout.write("Yes.\n")
 else:
@@ -320,30 +326,27 @@ else:
 	exit(-4)
 
 # Test if the compiler supports put_time
-test_put_time_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+test_put_time_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write('#include <iomanip>\nvoid x() { std::put_time(NULL,""); }\n')
 sys.stdout.write("Testing std::put_time()...")
-if 0==os.system(test_put_time_cmd):
+if 0==run_the_cmd(test_put_time_cmd):
 	sys.stdout.write("Supported.\n")
 	CFG_put_time = True
 else:
 	sys.stdout.write("not supported.\n")
 	CFG_put_time = False
-if platform=="NT":
-	os.system("del xx.cc xx.o")
-else:
-	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+cleanup_after_compile()
 	
 # Test if the environment supports a Spanish locale
-test_spanish_locale_cmd = "{} {} -o xx.exe xx.cc {}".format(cxx,cppflags_test,errs)
+test_spanish_locale_cmd = "{} {} -o xx.exe xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write('#include <locale>\nint main(int argc, char** argv){std::locale l("es_ES"); return 0;}')
 sys.stdout.write("Testing Spanish locale (for unit tests)...")
-if 0==os.system(test_spanish_locale_cmd):
+if 0==run_the_cmd(test_spanish_locale_cmd):
 	sys.stdout.write("Compiled...")
 	test_spanish_locale_cmd = "./xx.exe" if platform!="NT" else "xx.exe"
-	if 0==os.system(test_spanish_locale_cmd):
+	if 0==run_the_cmd(test_spanish_locale_cmd):
 		sys.stdout.write("Supported\n")
 		CFG_spanish_locale = True
 	else:
@@ -352,62 +355,50 @@ if 0==os.system(test_spanish_locale_cmd):
 else:
 	sys.stdout.write("Internal error.\n")
 	exit(-4)
-if platform=="NT":
-	os.system("del xx.cc xx.exe")
-else:
-	os.system("/bin/rm xx.cc xx.exe {}".format(errs))
+cleanup_after_compile()
 	
 # Test if the environment contains a random number generator
 found_random_source = False
 rand_source = "rand"
 
-test_rand_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+test_rand_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write("#include <CommonCrypto/CommonRandom.h>\nvoid x() {}\n")
 sys.stdout.write("Testing if the CommonCrypto library is available...")
-if 0==os.system(test_rand_cmd):
+if 0==run_the_cmd(test_rand_cmd):
 	sys.stdout.write("Yes.\n")
 	if not avoid_cryptographic_random:
 		rand_source="CommonCrypto"
 		found_random_source = True
 else:
 	sys.stdout.write("No.\n")
-if platform=="NT":
-	os.system("del xx.cc xx.o")
-else:
-	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+cleanup_after_compile()
 
-test_rand_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+test_rand_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write("#include <windows.h>\n#include <wincrypt.h>\nvoid x() {}\n")
 sys.stdout.write("Testing if the wincrypt library is available...")
-if 0==os.system(test_rand_cmd):
+if 0==run_the_cmd(test_rand_cmd):
 	sys.stdout.write("Yes.\n")
 	if not found_random_source and not avoid_cryptographic_random:
 		rand_source="wincrypt"
 		found_random_source = True
 else:
 	sys.stdout.write("No.\n")
-if platform=="NT":
-	os.system("del xx.cc xx.o")
-else:
-	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+cleanup_after_compile()
 	
-test_rand_cmd = "{} {} -o xx.o -c xx.cc {}".format(cxx,cppflags_test,errs)
+test_rand_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write("#include <stdlib.h>\nint x() { return drand48_r(NULL, NULL); }\n")
 sys.stdout.write("Testing if the rand48 extension to stdlib is available...")
-if 0==os.system(test_rand_cmd):
+if 0==run_the_cmd(test_rand_cmd):
 	sys.stdout.write("Yes.\n")
 	if not found_random_source:
 		rand_source="rand48"
 		found_random_source = True
 else:
 	sys.stdout.write("No.\n")
-if platform=="NT":
-	os.system("del xx.cc xx.o")
-else:
-	os.system("/bin/rm xx.cc xx.o {}".format(errs))
+cleanup_after_compile()
 	
 #
 # Python support
@@ -428,7 +419,7 @@ if platform=="NT":
 else:
 	if python_prefix=="": # default: python is optional and prefix is 'python'
 		CFG_python = python_search("python")
-		os.system("/bin/rm xx.txt {}".format(errs))
+		os.system("/bin/rm xx.txt")
 
 	elif python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
@@ -438,7 +429,7 @@ else:
 			python_prefix = "python"
 
 		rc = python_search(python_prefix)
-		os.system("/bin/rm xx.txt {}".format(errs))
+		run_the_cmd("/bin/rm xx.txt")
 		if rc:
 			CFG_python = True
 		else:
