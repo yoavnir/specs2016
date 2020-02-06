@@ -371,15 +371,20 @@ private:
 	std::map<char,std::string> m_map;
 };
 
+/* global variables */
+std::vector<unsigned int> failedTests;
+unsigned int testIndex = 0;
+unsigned int countFailures = 0;
+testGetter tg;
+AluVec vec;
+/* global variables */
+
 int runALUUnitTests(unsigned int onlyTest)
 {
-	std::vector<unsigned int> failedTests;
-	unsigned int testIndex = 0;
-	unsigned int countFailures = 0;
 
 	setStateQueryAgent(&g_ps);
-	testGetter tg;
 	setFieldIdentifierGetter(&tg);
+
 	tg.set('b', "84");
 	tg.set('c', "specs");
 	tg.set('z', "0.0");
@@ -496,6 +501,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_UNARY(uNot,12,Int,"1");
 	VERIFY_UNARY(uNot,13,Int,"1");
 
+	return 0;
+}
+
+int runALUUnitTests2(unsigned int onlyTest)
+{
 #define X(nm,st,prio) AluBinaryOperator u##nm(st);
 	ALU_BOP_LIST
 #undef X
@@ -601,8 +611,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_BINARY(uOR,30,1,Int,"1");    // 0 or "hello"
 	VERIFY_BINARY(uOR,30,3,Int,"1");    // 0 or 3.14159265
 	VERIFY_BINARY(uOR,30,32,Int,"0");	// 0 or 0.0
+	return 0;
+}
 
-
+int runALUUnitTests3(unsigned int onlyTest)
+{
 #define X(nm,st) AluAssnOperator uAss##nm(st);
 	ALU_ASSOP_LIST
 #undef X
@@ -619,7 +632,6 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	std::cout << "\nExpressions\n===========\n\n";
 
-	AluVec vec;
 	VERIFY_EXPR("23+45", "Number(23);BOP(+);Number(45)");
 	VERIFY_EXPR(" 23 + -8", "Number(23);BOP(+);Number(-8)");
 
@@ -647,7 +659,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_ASSNMENT("#0 += a", "FI(a)");
 
 	// TODO: More
+	return 0;
+}
 
+int runALUUnitTests4(unsigned int onlyTest)
+{
 	std::cout << "\nInfix to RPN Conversions - Shunting Yard Algorithm\n==================================================\n\n";
 
 	VERIFY_RPN("2+3", "Number(2);Number(3);BOP(+)");
@@ -668,7 +684,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_RPN("tf2mcs(wordrange(1,2),'%d')", "Number(1);Number(2);FUNC(wordrange);Literal(%d);FUNC(tf2mcs)");
 
 	// TODO: More here as well
+	return 0;
+}
 
+int runALUUnitTests5(unsigned int onlyTest)
+{
 	std::cout << "\nEvaluating Expressions\n======================\n\n";
 
 	VERIFY_EXPR_RES("5", "5");
@@ -717,7 +737,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("length('hello')", "5");
 
 	VERIFY_EXPR_RES("sqrt(4)||' by '||sqrt(16)", "2 by 4");
+	return 0;
+}
 
+int runALUUnitTests6(unsigned int onlyTest)
+{
 	// The functions that look at the line being processed
 	g_ps.setString(SpecString::newString());
 	VERIFY_EXPR_RES("wordcount()", "0");
@@ -754,7 +778,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("range(44,48)", "");
 	VERIFY_EXPR_RES("@@", "The\tquick brown\tfox jumps\tover the\tlazy dog");
 	VERIFY_EXPR_RES("record()", "The\tquick brown\tfox jumps\tover the\tlazy dog");
+	return 0;
+}
 
+int runALUUnitTests7(unsigned int onlyTest)
+{
 	// time reformat
 	VERIFY_EXPR_RES("tf2mcs('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603000000");
 	VERIFY_EXPR_RES("mcs2tf(1546550663000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
@@ -786,7 +814,11 @@ int runALUUnitTests(unsigned int onlyTest)
 
 	// Issue #38
 	VERIFY_EXPR_RES("2-2", "0");
+	return 0;
+}
 
+int runALUUnitTests8(unsigned int onlyTest)
+{
 	// String processing functions
 	counters.set(9,"Magna Carta");
 	VERIFY_EXPR_RES("substr(#9,2,4)", "agna");
@@ -866,7 +898,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includesall(,'fast','goose')", "0");
 
 	VERIFY_EXPR_RES("#4:=5","5");  // Issue #48: an assignment returns the counter value
+	return 0;
+}
 
+int runALUUnitTests9(unsigned int onlyTest)
+{
 	// Conversion-equivalent functions
 	VERIFY_EXPR_RES("x2d('A',0)", "10");
 	VERIFY_EXPR_RES("x2d('A',1)", "-6");
@@ -915,7 +951,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2x(bswap(x2ch('c0a80102')))", "0201a8c0")
 	VERIFY_EXPR_RES("bswap('LoWeRcAsE')", "EsAcReWoL");
 	VERIFY_EXPR_RES("bswap('')", "");
+	return 0;
+}
 
+int runALUUnitTests10(unsigned int onlyTest)
+{
 	// rounding functions
 	VERIFY_EXPR_RES("floor(3.4)", "3");
 	VERIFY_EXPR_RES("floor(-3.4)", "-4");
@@ -973,7 +1013,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2d('גגג')", "161454579225303");
 	VERIFY_EXPR_RES("c2d('גגגג')", "-7865656769600056617");
 	VERIFY_EXPR_RES("c2d('גגגגג')", "c2u/c2d: Invalid input length: 10");
+	return 0;
+}
 
+int runALUUnitTests11(unsigned int onlyTest)
+{
 #ifdef VISUAL_STUDIO
 #define C2FERR ". Supported lengths: 4, 8"
 #else
@@ -1052,7 +1096,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("compare('Hello','Hello ')", "0");
 	VERIFY_EXPR_RES("compare('Hello', 'He', 'x')", "3");
 	VERIFY_EXPR_RES("compare('Hello', 'He', 'l')", "5");
+	return 0;
+}
 
+int runALUUnitTests12(unsigned int onlyTest)
+{
 	VERIFY_EXPR_RES("copies('Hello',3)", "HelloHelloHello");
 	VERIFY_EXPR_RES("copies('Hello',0)", "");
 	VERIFY_EXPR_RES("copies('Hello',-1)", "copies: Second argument should be a non-negative integer. Got: -1");
@@ -1119,7 +1167,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("reverse('12')", "21");
 	VERIFY_EXPR_RES("reverse('bird')", "drib");
 	VERIFY_EXPR_RES("reverse('chuck')", "kcuhc");
+	return 0;
+}
 
+int runALUUnitTests13(unsigned int onlyTest)
+{
 	VERIFY_EXPR_RES("sign(-88)", "-1");
 	VERIFY_EXPR_RES("sign(88)", "1");
 	VERIFY_EXPR_RES("sign(+0)", "0");
@@ -1183,7 +1235,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	// Issue #94
 	VERIFY_EXPR_RES("pow(2+3,4)", "625");
 	VERIFY_EXPR_RES("subword(substr('There are those who believe',3-2,4+4*4),(4-2)/(1+1),2)","There are");
+	return 0;
+}
 
+int runALUUnitTests14(unsigned int onlyTest)
+{
 	tg.set('p', "10003.14159265359");
 	VERIFY_EXPR_RES("fmt(p)","10003.1");
 	VERIFY_EXPR_RES("fmt(p,,12)","10003.1415927");
@@ -1272,7 +1328,11 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_EXPR_RES("testfunc(1,2)", "1,2,(nil),(nil)");
 	VERIFY_EXPR_RES("testfunc()", "(nil),(nil),(nil),(nil)");
 #endif
+	return 0;
+}
 
+int runALUUnitTests15(unsigned int onlyTest)
+{
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
@@ -1305,5 +1365,22 @@ int main (int argc, char** argv)
 
 	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
 
-	return runALUUnitTests(onlyTest);
+	int rc = runALUUnitTests(onlyTest);
+
+	rc += runALUUnitTests2(onlyTest);
+	rc += runALUUnitTests3(onlyTest);
+	rc += runALUUnitTests4(onlyTest);
+	rc += runALUUnitTests5(onlyTest);
+	rc += runALUUnitTests6(onlyTest);
+	rc += runALUUnitTests7(onlyTest);
+	rc += runALUUnitTests8(onlyTest);
+	rc += runALUUnitTests9(onlyTest);
+	rc += runALUUnitTests10(onlyTest);
+	rc += runALUUnitTests11(onlyTest);
+	rc += runALUUnitTests12(onlyTest);
+	rc += runALUUnitTests13(onlyTest);
+	rc += runALUUnitTests14(onlyTest);
+	rc += runALUUnitTests15(onlyTest);
+
+	return rc;
 }
