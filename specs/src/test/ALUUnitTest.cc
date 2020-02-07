@@ -17,6 +17,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 extern void setRegexType(std::string& s);
 
 #define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
+#define INC_TEST_INDEX2 if (++testIndex==onlyTest || onlyTest==0);
 
 #define VERIFY_TYPE(i,t) do {\
 	INC_TEST_INDEX;				\
@@ -290,12 +291,11 @@ extern void setRegexType(std::string& s);
 	} while(0);
 
 
-#define VERIFY_EXPR_RES(s,res) do {							\
-		INC_TEST_INDEX;										\
-		std::string _expr(s);								\
-		AluVec rpnVec;										\
-		bool _res, _res2 = true;							\
-		ALUValue* _result = NULL;							\
+#define VERIFY_EXPR_RES(s,res) 								\
+		INC_TEST_INDEX2 {									\
+		_expr = s;											\
+		_res2 = true;										\
+		_result = NULL;										\
 		_res = parseAluExpression(_expr,vec);				\
 		if (_res) {                                         \
 			if (expressionIsAssignment(vec)) {              \
@@ -329,7 +329,7 @@ extern void setRegexType(std::string& s);
 			countFailures++;  failedTests.push_back(testIndex);		\
 		}															\
 		if (_result) delete(_result);								\
-	} while(0);
+	}
 
 #define VERIFY_ASSN_RES(s,exp) do {								\
 		INC_TEST_INDEX;											\
@@ -377,6 +377,10 @@ unsigned int testIndex = 0;
 unsigned int countFailures = 0;
 testGetter tg;
 AluVec vec;
+std::string _expr;
+AluVec rpnVec;
+bool _res, _res2;
+ALUValue* _result;
 /* global variables */
 
 int runALUUnitTests(unsigned int onlyTest)
