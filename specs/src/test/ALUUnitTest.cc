@@ -17,7 +17,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 extern void setRegexType(std::string& s);
 
 #define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
-#define INC_TEST_INDEX2 if (++testIndex==onlyTest || onlyTest==0);
+#define INC_TEST_INDEX2 if (++testIndex==onlyTest || onlyTest==0)
 
 #define VERIFY_TYPE(i,t) do {\
 	INC_TEST_INDEX;				\
