@@ -711,6 +711,6 @@ run_case(s,i,"breaking out with continue #1")
 
 s = 'w1 1 if "word(2)==\'mark\'" then continue endif w3 nw'
 i = input_samples.matrix_with_marks
-run_case(s,i,"breaking out with continue #1")
+run_case(s,i,"breaking out with continue #2")
 
 
