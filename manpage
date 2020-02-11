@@ -231,6 +231,10 @@ to make all whitespace defined by the locale work as a word separator.
 Causes the current output line to become the new input line.
 .IP "SET" 3
 Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
+.IP "CONTINUE" 3
+Causes the specification to stop and go on to the next record. If any output has been made, it is dumped to output.  This is typically used in an 
+.B IF
+block.
 
 .SS "MainOptions"
 These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.

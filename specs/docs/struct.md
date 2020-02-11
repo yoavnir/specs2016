@@ -284,3 +284,10 @@ specs
       a: 55-57     NW
          ASSERT  'a<=120'
 ```
+
+### CONTINUE
+`CONTINUE` units cause control to move to the next cycle. Any output generated already will be dumped as the output record of this cycle. If no output has been generated then no record will be written. This is useful in `IF` blocks:
+```
+# Our own way to filter out comment lines
+specs  if "word(1)=='#' THEN CONTINUE ENDIF  1-* 1"
+```
