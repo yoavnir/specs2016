@@ -11,6 +11,7 @@ uint64_t regexCacheSearches = 0;
 uint64_t regexCacheSets = 0;
 uint64_t matchFlagsCacheSets = 0;
 bool     g_RegexCacheDisabled = false;
+bool     g_bWarnAboutGrammars = true;
 
 static std::regex_constants::syntax_option_type g_regexType = std::regex_constants::ECMAScript;
 static std::string gs_regexType = "";
@@ -87,7 +88,7 @@ void setRegexType(std::string& s) {
 			std::string err = "Invalid regular expression syntax option type: " + std::string(p);
 			MYTHROW(err);
 		}
-		if (bWarnUnsupportedGrammarOption) {
+		if (bWarnUnsupportedGrammarOption && g_bWarnAboutGrammars) {
 			std::cerr << "\nWarning: syntax option '" << p << "' is not supported on this platform\n";
 		}
 		p = strtok(NULL, ",");

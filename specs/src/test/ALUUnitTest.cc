@@ -15,6 +15,7 @@ ProcessingState g_ps;
 std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 extern void setRegexType(std::string& s);
+extern bool g_bWarnAboutGrammars;
 
 #define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
 #define INC_TEST_INDEX2 if (++testIndex==onlyTest || onlyTest==0)
@@ -1366,6 +1367,7 @@ int main (int argc, char** argv)
 	if (argc>1) {
 		onlyTest = std::stoul(argv[1]);
 	}
+	g_bWarnAboutGrammars = false;
 
 	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
 
