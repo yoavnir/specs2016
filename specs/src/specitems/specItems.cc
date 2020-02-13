@@ -759,7 +759,7 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		break;
 	}
 	case PRED_ASSERT: {
-		if (!evaluate()) {
+		if (pState.needToEvaluate() && !evaluate()) {
 			std::string err = "ASSERTION failed: " + m_rawExpression;
 			MYABEND(err);
 		}
