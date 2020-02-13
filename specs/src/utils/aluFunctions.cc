@@ -449,10 +449,8 @@ ALUValue* AluFunc_s2tf(ALUValue* pValue, ALUValue* pFormat)
 
 // Substring functions
 
-static ALUValue* AluFunc_substring_do(ALUValue* pBigString, ALUInt start, ALUInt length)
+static ALUValue* AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt length)
 {
-	std::string* pStr = pBigString->getStrPtr();
-
 	// handle start
 	if (start==0) {    // invalid string index in specs
 		return new ALUValue();  // NaN
@@ -483,31 +481,34 @@ static ALUValue* AluFunc_substring_do(ALUValue* pBigString, ALUInt start, ALUInt
 
 ALUValue* AluFunc_substr(ALUValue* pBigString, ALUValue* pStart, ALUValue* pLength)
 {
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
-	return AluFunc_substring_do(pBigString, start, length);
+	return AluFunc_substring_do(pBigStr, start, length);
 }
 
 ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
 {
 	ASSERT_NOT_ELIDED(pBigString,1,bigString);
 	ASSERT_NOT_ELIDED(pLength,2,length);
-	auto bigLength = pBigString->getStrPtr()->length();
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
 	if (len < 0) len = len + bigLength + 1;
 	if (size_t(len) > bigLength) {
-		return new ALUValue(*pBigString->getStrPtr()
+		return new ALUValue(*pBigStr
 				+ std::string(len-bigLength, PAD_CHAR));
 	}
-	return AluFunc_substring_do(pBigString, 1, len);
+	return AluFunc_substring_do(pBigStr, 1, len);
 }
 
 ALUValue* AluFunc_right(ALUValue* pBigString, ALUValue* pLength)
 {
 	ASSERT_NOT_ELIDED(pBigString,1,bigString);
 	ASSERT_NOT_ELIDED(pLength,2,length);
-	auto bigLength = pBigString->getStrPtr()->length();
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
 	if (len < 0) len = len + bigLength + 1;
@@ -515,14 +516,15 @@ ALUValue* AluFunc_right(ALUValue* pBigString, ALUValue* pLength)
 		return new ALUValue(std::string(len-bigLength, PAD_CHAR)
 				+ *pBigString->getStrPtr());
 	}
-	return AluFunc_substring_do(pBigString, bigLength-len+1, len);
+	return AluFunc_substring_do(pBigStr, bigLength-len+1, len);
 }
 
 ALUValue* AluFunc_center(ALUValue* pBigString, ALUValue* pLength)
 {
 	ASSERT_NOT_ELIDED(pBigString,1,bigString);
 	ASSERT_NOT_ELIDED(pLength,2,length);
-	auto bigLength = pBigString->getStrPtr()->length();
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return new ALUValue("",0);
 	if (len < 0) len = len + bigLength + 1;
@@ -530,10 +532,10 @@ ALUValue* AluFunc_center(ALUValue* pBigString, ALUValue* pLength)
 		size_t smallHalf = (len-bigLength) / 2;
 		size_t bigHalf = (len-bigLength) - smallHalf;
 		return new ALUValue(std::string(smallHalf, PAD_CHAR)
-				+ *pBigString->getStrPtr()
+				+ *pBigStr
 				+ std::string(bigHalf, PAD_CHAR));
 	}
-	return AluFunc_substring_do(pBigString, (bigLength - len) / 2 + 1, len);
+	return AluFunc_substring_do(pBigStr, (bigLength - len) / 2 + 1, len);
 }
 
 ALUValue* AluFunc_centre(ALUValue* pBigString, ALUValue* pLength)
