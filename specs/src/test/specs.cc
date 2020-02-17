@@ -79,6 +79,22 @@ CONTINUE:
 		}
 	}
 
+	// help
+	if (g_help!="") {
+		try {
+			p_gExternalFunctions->Initialize(getFullSpecPath());
+		} catch (const SpecsException& e) {
+			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+			exit(0);
+		}
+		if (g_help == "pyfuncs") {
+			p_gExternalFunctions->Debug();
+		} else if (false == p_gExternalFunctions->DebugOne(g_help)) {
+			std::cerr << "specs: I don't know anything about " << g_help << std::endl;
+		}
+		return false;
+	}
+
 	return true;
 }
 

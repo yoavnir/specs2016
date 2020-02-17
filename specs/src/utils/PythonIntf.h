@@ -18,6 +18,7 @@ public:
 	virtual bool                 IsInitialized() = 0;
 	virtual void                 Initialize(const char* _path) = 0;
 	virtual void                 Debug() = 0;
+	virtual bool                 DebugOne(std::string& funcName) = 0;
 	virtual size_t               CountFunctions() = 0;
 	virtual ExternalFunctionRec* GetFunctionByName(std::string fname) = 0;
 	virtual void                 SetErrorHandling(std::string& smethod) = 0;

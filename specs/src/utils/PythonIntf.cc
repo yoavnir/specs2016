@@ -104,6 +104,8 @@ public:
 		}
 	}
 
+	void setDoc(const char* cstr) { m_doc = cstr; }
+
 	void setArgValue(size_t idx, ALUValue *pValue) {
 		PyObject* pValObj;
 		size_t argCount = GetArgCount();
@@ -214,7 +216,7 @@ public:
 
 	std::string getStr() {
 		std::ostringstream strm;
-		strm << m_name << " @ " << std::hex << m_pFuncPtr << " (";
+		strm << m_name << " (";
 		bool first = true;
 		for (auto& arg : m_args) {
 			if (first) {
@@ -225,6 +227,13 @@ public:
 			strm << arg.getStr();
 		}
 		strm << ")";
+		if (m_doc.length() > 0) {
+			if (m_doc.find("\n") != std::string::npos) {
+				strm << " :\n" << m_doc << "\n";
+			} else {
+				strm << " : " << m_doc;
+			}
+		}
 		return strm.str();
 	}
 private:
@@ -232,6 +241,7 @@ private:
 	PyObject*                  m_pFuncPtr;
 	std::vector<PythonFuncArg> m_args;
 	PyObject*                  m_pTuple;
+	std::string                m_doc;
 };
 
 
@@ -400,6 +410,19 @@ public:
 				}
 				m_Functions[funcName] = pFuncRec;
 				Py_DECREF(pTuple);
+
+				PyObject* pDoc = PyObject_GetAttrString(pFunc, "__doc__");
+				if (pDoc != NULL && pDoc != Py_None) {
+					if (PyObject_Length(pDoc) >= 0) {
+#ifdef PYTHON_VER_2
+						pFuncRec->setDoc(PyString_AS_STRING(pDoc));
+#else
+						PyObject* pUnicode = PyUnicode_AsEncodedString(pDoc, "utf-8", "~E~");
+						pFuncRec->setDoc(PyBytes_AS_STRING(pUnicode));
+#endif
+					}
+					Py_DECREF(pDoc);
+				}
 			}
 			Py_DECREF(pRepr);
 #ifdef PYTHON_VER_3
@@ -449,11 +472,18 @@ public:
 			return;
 		}
 
-		std::cerr << "Python Interface: " << m_Functions.size() << " functions loaded:\n";
+		std::cerr << "\nPython Interface Functions: \n===========================\n";
 		for (auto it = m_Functions.begin() ; it != m_Functions.end() ; it++) {
-			std::cerr << "\t" << it->second->getStr() << "\n";
+			std::cerr << "- " << it->second->getStr() << "\n";
 		}
 		std::cerr << std::endl;
+	}
+
+	virtual bool DebugOne(std::string& funcName) {
+		MYASSERT(m_Initialized);
+		if (m_Functions.find(funcName) == m_Functions.end()) return false;
+		std::cerr << m_Functions[funcName]->getStr() << "\n";
+		return true;
 	}
 
 private:
