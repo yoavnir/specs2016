@@ -1415,6 +1415,14 @@ and
 make 
 .I specs
 behave as if the function returned, NaN, the integer zero, or an empty string respectively.
+.IP "--help" 3
+Does not run specs. Instead it displays a help message according to the parameter: 
+.B help
+prints general help, 
+.B pyfuncs
+prints the name, arguments, and docstring of all loaded python functions, and a particular python function name makes 
+.I help
+display the arguments and docstring of that function only.
 
 .SH CONFIGURATION FILE
 .B specs
