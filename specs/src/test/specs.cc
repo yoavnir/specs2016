@@ -17,23 +17,32 @@
 extern int g_stop_stream;
 extern char g_printonly_rule;
 
-std::string getNextArg(int& argc, char**& argv)
+std::string getNextArg(std::string& argName, int& argc, char**& argv)
 {
+	static std::string emptyString;
 	argc--; argv++;
-	MYASSERT(argc>0);
-	return std::string(argv[0]);
+	if (argc>0) {
+		return std::string(argv[0]);
+	} else {
+		if (argName=="help") {
+			return argName;
+		}
+		return emptyString;
+	}
 }
 
-#define NEXTARG getNextArg(argc, argv)
+#define NEXTARG getNextArg(argName,argc, argv)
 #define X(nm,typ,defval,ssw,cliswitch,oval) \
 	if (0==strcmp(argv[0], "--"#cliswitch) ||       \
 			0==strcmp(argv[0], "-"#ssw)) {  		\
+		argName = #nm;								\
 		g_##nm = oval;								\
 		goto CONTINUE;								\
 	}
 
 bool parseSwitches(int& argc, char**& argv)
 {
+	std::string argName;
 	/* Skip the program name */
 	argc--; argv++;
 
@@ -77,6 +86,29 @@ CONTINUE:
 			std::cerr << "Invalid record format: <" << g_recfm << ">\n";
 			return false;
 		}
+	}
+
+	// help
+	if (g_help!="") {
+		try {
+			p_gExternalFunctions->Initialize(getFullSpecPath());
+		} catch (const SpecsException& e) {
+			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
+			exit(0);
+		}
+		if (g_help == "help") {
+			std::cerr << "specs help:\n";
+			std::cerr << "\tspecs --help help       -- this list\n";
+			std::cerr << "\tspecs --help pyfuncs    -- lists the available python functions\n";
+			std::cerr << "\tspecs --help <funcname> -- provides arguments and doc for a particular python function\n";
+			return false;
+		}
+		if (g_help == "pyfuncs") {
+			p_gExternalFunctions->Debug();
+		} else if (false == p_gExternalFunctions->DebugOne(g_help)) {
+			std::cerr << "specs: I don't know anything about " << g_help << std::endl;
+		}
+		return false;
 	}
 
 	return true;

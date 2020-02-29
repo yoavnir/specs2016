@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "31 Jan 2020" "0.6-alpha" "specs man page"
+.TH man 1 "29 Feb 2020" "0.6-beta" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -231,6 +231,10 @@ to make all whitespace defined by the locale work as a word separator.
 Causes the current output line to become the new input line.
 .IP "SET" 3
 Followed by an assignment operation, SET implements this and assigns a value to one of the system counters. See the Expressions and Assignments section.
+.IP "CONTINUE" 3
+Causes the specification to stop and go on to the next record. If any output has been made, it is dumped to output.  This is typically used in an 
+.B IF
+block.
 
 .SS "MainOptions"
 These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
@@ -1411,6 +1415,14 @@ and
 make 
 .I specs
 behave as if the function returned, NaN, the integer zero, or an empty string respectively.
+.IP "--help" 3
+Does not run specs. Instead it displays a help message according to the parameter: 
+.B help
+prints general help, 
+.B pyfuncs
+prints the name, arguments, and docstring of all loaded python functions, and a particular python function name makes 
+.I help
+display the arguments and docstring of that function only.
 
 .SH CONFIGURATION FILE
 .B specs

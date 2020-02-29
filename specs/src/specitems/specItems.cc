@@ -55,6 +55,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__REDO:
 		case TokenListType__NOWRITE:
 		case TokenListType__ABEND:
+		case TokenListType__CONTINUE:
 		{
 			TokenItem *pItem = new TokenItem(tokenVec[index++]);
 			addItem(pItem);
@@ -389,6 +390,16 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			pState.setString(ps, false);
 			pState.setFirst();
 			break;
+		case ApplyRet__SkipToNext:
+			processingContinue = false;
+//			ps = pRd->get(tmr, rdrCounter);
+//			if (!ps) {
+//				processingContinue = false;
+//			} else {
+//				pState.setString(ps, true);
+//				pState.setFirst();
+//			}
+			break;
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
 		{
@@ -574,6 +585,8 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__UNREAD;
 	case TokenListType__REDO:
 		return ApplyRet__ReDo;
+	case TokenListType__CONTINUE:
+		return ApplyRet__SkipToNext;
 	default:
 		std::string err = "Unhandled TokenItem type " + TokenListType__2str(mp_Token->Type());
 		MYTHROW(err);
@@ -746,7 +759,7 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		break;
 	}
 	case PRED_ASSERT: {
-		if (!evaluate()) {
+		if (pState.needToEvaluate() && !evaluate()) {
 			std::string err = "ASSERTION failed: " + m_rawExpression;
 			MYABEND(err);
 		}

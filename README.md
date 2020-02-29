@@ -10,8 +10,8 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-31-Jan-2020: Version 0.6 Alpha is here 
---------------------------------------
+29-Feb-2020: Version 0.6 Beta is here 
+-------------------------------------
 New features:
 * Python functions
 * MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
@@ -25,7 +25,7 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.5:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.6:
 ```
 git checkout v0.6
 ```

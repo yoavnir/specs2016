@@ -165,3 +165,12 @@ test10:piweba3y.prodigy.com - - [04/Jul/1995:08:12:37 -0400] "GET /shuttle/count
 test10:crocus-fddi.csv.warwick.ac.uk - - [04/Jul/1995:08:12:39 -0400] "GET /shuttle/missions/sts-71/mission-sts-71.html HTTP/1.0" 200 12418
 test10:crocus-fddi.csv.warwick.ac.uk - - [04/Jul/1995:08:12:41 -0400] "GET /shuttle/missions/sts-71/sts-71-patch-small.gif HTTP/1.0" 200 12054
 '''
+
+matrix_with_marks = \
+'''
+mark 6    7    8    9
+4    mark 6    7    8
+3    4    mark 6    7 
+2    3    4    mark 6
+1    2    3    4    5
+'''

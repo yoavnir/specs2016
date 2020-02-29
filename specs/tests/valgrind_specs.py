@@ -704,3 +704,13 @@ run_case(s,i,"an abend that is reached",expected_rc=memcheck.RetCode_COMMAND_FAI
 s = "print \"fmt(sqrt(2),,10,',',':')\" 1"
 run_case(s,i,"a formatted number")
 
+# breaking out with continue
+s = 'if "word(2)==\'mark\'" then continue endif w1 1 w3 nw'
+i = input_samples.matrix_with_marks
+run_case(s,i,"breaking out with continue #1")
+
+s = 'w1 1 if "word(2)==\'mark\'" then continue endif w3 nw'
+i = input_samples.matrix_with_marks
+run_case(s,i,"breaking out with continue #2")
+
+

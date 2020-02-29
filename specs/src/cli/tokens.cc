@@ -336,6 +336,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(then, THEN);
 	SIMPLETOKEN(endif, ENDIF);
 	SIMPLETOKEN(elseif, ELSEIF);
+	SIMPLETOKEN(continue, CONTINUE);
 	SIMPLETOKEN(while, WHILE);
 	SIMPLETOKEN(do, DO);
 	SIMPLETOKEN(done, DONE);

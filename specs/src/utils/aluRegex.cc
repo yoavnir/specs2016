@@ -11,6 +11,7 @@ uint64_t regexCacheSearches = 0;
 uint64_t regexCacheSets = 0;
 uint64_t matchFlagsCacheSets = 0;
 bool     g_RegexCacheDisabled = false;
+bool     g_bWarnAboutGrammars = true;
 
 static std::regex_constants::syntax_option_type g_regexType = std::regex_constants::ECMAScript;
 static std::string gs_regexType = "";
@@ -87,7 +88,7 @@ void setRegexType(std::string& s) {
 			std::string err = "Invalid regular expression syntax option type: " + std::string(p);
 			MYTHROW(err);
 		}
-		if (bWarnUnsupportedGrammarOption) {
+		if (bWarnUnsupportedGrammarOption && g_bWarnAboutGrammars) {
 			std::cerr << "\nWarning: syntax option '" << p << "' is not supported on this platform\n";
 		}
 		p = strtok(NULL, ",");
@@ -177,7 +178,9 @@ bool regexMatch(std::string* pStr, ALUValue* pExp, std::string* pFlags)
 	std::regex* pRE = regexCalculator(sExp);
 
 	try {
-		return std::regex_match(*pStr, *pRE, getMatchFlags(pFlags));
+		bool bRet = std::regex_match(*pStr, *pRE, getMatchFlags(pFlags));
+		if (g_RegexCacheDisabled) delete pRE;
+		return bRet;
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression match : ") + e.what()
 				+ "\nString: " + *pStr + "\nExpression: " + sExp;
@@ -191,7 +194,9 @@ bool regexSearch(std::string* pStr, ALUValue* pExp, std::string* pFlags)
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
 	try {
-		return std::regex_search(*pStr, *pRE, getMatchFlags(pFlags));
+		bool bRet = std::regex_search(*pStr, *pRE, getMatchFlags(pFlags));
+		if (g_RegexCacheDisabled) delete pRE;
+		return bRet;
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression search : ") + e.what()
 				+ "\nString: " + *pStr + "\nExpression: " + sExp;
@@ -206,7 +211,9 @@ std::string regexReplace(std::string* pStr, ALUValue* pExp, std::string& fmt, st
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
 	try {
-		return std::regex_replace(*pStr, *pRE, fmt, getMatchFlags(pFlags));
+		std::string sRet = std::regex_replace(*pStr, *pRE, fmt, getMatchFlags(pFlags));
+		if (g_RegexCacheDisabled) delete pRE;
+		return sRet;
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression replace : ") + e.what()
 				+ "\nString: " + *pStr + "\nExpression: " + sExp + "\nFormat: " + fmt;

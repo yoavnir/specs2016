@@ -26,6 +26,7 @@
 	X(regexSyntaxType,              std::string,  "",     0,regexType,          NEXTARG)    \
 	X(pythonFuncs,                  std::string,  "auto", 0,pythonFuncs,        NEXTARG)    \
 	X(pythonErr,                    std::string,  "",     0,pythonErr,          NEXTARG)    \
+	X(help,                         std::string,  "",     0,help,               NEXTARG)    \
 	X(inputStream2,                 std::string,  "",     0,is2,                NEXTARG)    \
 	X(inputStream3,                 std::string,  "",     0,is3,                NEXTARG)    \
 	X(inputStream4,                 std::string,  "",     0,is4,                NEXTARG)    \

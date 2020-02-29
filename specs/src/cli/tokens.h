@@ -61,6 +61,7 @@
 	X(ELSE,           false, false) \
 	X(ELSEIF,         false, true)  \
 	X(ENDIF,          false, false) \
+	X(CONTINUE,       false, false) \
 	X(WHILE,          false, true)  \
 	X(DO,             false, false) \
 	X(DONE,           false, false) \
