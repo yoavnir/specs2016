@@ -899,7 +899,7 @@ std::string AluOtherToken::_identify()
 
 unsigned char AluFunction::m_flags = ALUFUNC_REGULAR;
 
-#define X(nm,cnt,flags,rl)	if (s==#nm) {  \
+#define X(nm,cnt,flags,rl,shorthelp,longhelp)	if (s==#nm) {  \
 		m_FuncName = s; m_ArgCount = cnt;  \
 		m_reliesOnInput = rl;              \
 		mp_Func = (void*)AluFunc_##nm;     \

@@ -12,128 +12,248 @@
 
 // function name, number of arguments, whether it needs lines from input
 #define ALU_FUNCTION_LIST            \
-	X(abs,            1, ALUFUNC_REGULAR,     false)  \
-	X(pow,            2, ALUFUNC_REGULAR,     false)  \
-	X(sqrt,           1, ALUFUNC_REGULAR,     false)  \
-	X(c2u,            1, ALUFUNC_REGULAR,     false)  \
-	X(c2f,            1, ALUFUNC_REGULAR,     false)  \
-	X(c2d,            1, ALUFUNC_REGULAR,     false)  \
-	X(frombin,        1, ALUFUNC_REGULAR,     false)  \
-	X(tobine,         2, ALUFUNC_REGULAR,     false)  \
-	X(tobin,          1, ALUFUNC_REGULAR,     false)  \
-	X(length,         1, ALUFUNC_REGULAR,     false)  \
-	X(first,          0, ALUFUNC_REGULAR,     false)  \
-	X(recno,          0, ALUFUNC_REGULAR,      true)  \
-	X(number,         0, ALUFUNC_REGULAR,      true)  \
-	X(eof,            0, ALUFUNC_REGULAR,     false)  \
-	X(record,         0, ALUFUNC_REGULAR,      true)  \
-	X(wordcount,      0, ALUFUNC_REGULAR,      true)  \
-	X(wordstart,      1, ALUFUNC_REGULAR,      true)  \
-	X(wordlen,        1, ALUFUNC_REGULAR,      true)  \
-	X(wordend,        1, ALUFUNC_REGULAR,      true)  \
-	X(word,           1, ALUFUNC_REGULAR,      true)  \
-	X(wordrange,      2, ALUFUNC_REGULAR,      true)  \
-	X(fieldcount,     0, ALUFUNC_REGULAR,      true)  \
-	X(fieldindex,     1, ALUFUNC_REGULAR,      true)  \
-	X(fieldlength,    1, ALUFUNC_REGULAR,      true)  \
-	X(fieldend,       1, ALUFUNC_REGULAR,      true)  \
-	X(field,          1, ALUFUNC_REGULAR,      true)  \
-	X(fieldrange,     2, ALUFUNC_REGULAR,      true)  \
-	X(range,          2, ALUFUNC_REGULAR,      true)  \
-	X(tf2mcs,         2, ALUFUNC_REGULAR,     false)  \
-	X(mcs2tf,         2, ALUFUNC_REGULAR,     false)  \
-	X(tf2s,           2, ALUFUNC_REGULAR,     false)  \
-	X(s2tf,           2, ALUFUNC_REGULAR,     false)  \
-	X(substr,         3, ALUFUNC_REGULAR,     false)  \
-	X(pos,            2, ALUFUNC_REGULAR,     false)  \
-	X(lastpos,        2, ALUFUNC_REGULAR,     false)  \
-	X(includes,       5, ALUFUNC_REGULAR,     false)  \
-	X(includesall,    5, ALUFUNC_REGULAR,     false)  \
-	X(rmatch,         3, ALUFUNC_REGULAR,     false)  \
-	X(rsearch,        3, ALUFUNC_REGULAR,     false)  \
-	X(rreplace,       4, ALUFUNC_REGULAR,     false)  \
-	X(left,           2, ALUFUNC_REGULAR,     false)  \
-	X(right,          2, ALUFUNC_REGULAR,     false)  \
-	X(center,         2, ALUFUNC_REGULAR,     false)  \
-	X(centre,         2, ALUFUNC_REGULAR,     false)  \
-	X(conf,           2, ALUFUNC_REGULAR,     false)  \
-	X(x2d,            2, ALUFUNC_REGULAR,     false)  \
-	X(d2x,            1, ALUFUNC_REGULAR,     false)  \
-	X(x2ch,           1, ALUFUNC_REGULAR,     false)  \
-	X(c2x,            1, ALUFUNC_REGULAR,     false)  \
-	X(ucase,          1, ALUFUNC_REGULAR,     false)  \
-	X(lcase,          1, ALUFUNC_REGULAR,     false)  \
-	X(bswap,          1, ALUFUNC_REGULAR,     false)  \
-	X(break,          1, ALUFUNC_REGULAR,     false)  \
-	X(sum,            1, ALUFUNC_STATISTICAL, false)  \
-	X(min,            1, ALUFUNC_STATISTICAL, false)  \
-	X(max,            1, ALUFUNC_STATISTICAL, false)  \
-	X(average,        1, ALUFUNC_STATISTICAL, false)  \
-	X(variance,       1, ALUFUNC_STATISTICAL, false)  \
-	X(stddev,         1, ALUFUNC_STATISTICAL, false)  \
-	X(stderrmean,     1, ALUFUNC_STATISTICAL, false)  \
-	X(present,        1, ALUFUNC_REGULAR,     false)  \
-	X(rand,           1, ALUFUNC_REGULAR,     false)  \
-	X(floor,          1, ALUFUNC_REGULAR,     false)  \
-	X(round,          2, ALUFUNC_REGULAR,     false)  \
-	X(ceil,           1, ALUFUNC_REGULAR,     false)  \
-	X(sin,            1, ALUFUNC_REGULAR,     false)  \
-	X(cos,            1, ALUFUNC_REGULAR,     false)  \
-	X(tan,            1, ALUFUNC_REGULAR,     false)  \
-	X(arcsin,         1, ALUFUNC_REGULAR,     false)  \
-	X(arccos,         1, ALUFUNC_REGULAR,     false)  \
-	X(arctan,         1, ALUFUNC_REGULAR,     false)  \
-	X(dsin,           1, ALUFUNC_REGULAR,     false)  \
-	X(dcos,           1, ALUFUNC_REGULAR,     false)  \
-	X(dtan,           1, ALUFUNC_REGULAR,     false)  \
-	X(arcdsin,        1, ALUFUNC_REGULAR,     false)  \
-	X(arcdcos,        1, ALUFUNC_REGULAR,     false)  \
-	X(arcdtan,        1, ALUFUNC_REGULAR,     false)  \
-	X(fmap_nelem,     1, ALUFUNC_FREQUENCY,   false)  \
-	X(fmap_nsamples,  1, ALUFUNC_FREQUENCY,   false)  \
-	X(fmap_count,     2, ALUFUNC_FREQUENCY,   false)  \
-	X(fmap_frac,      2, ALUFUNC_FREQUENCY,   false)  \
-	X(fmap_pct,       2, ALUFUNC_FREQUENCY,   false)  \
-	X(fmap_common,    1, ALUFUNC_FREQUENCY,   false)  \
-	X(fmap_rare,      1, ALUFUNC_FREQUENCY,   false)  \
-	X(fmap_sample,    2, ALUFUNC_FREQUENCY,   false)  \
-	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false)  \
-	X(string,         1, ALUFUNC_REGULAR,     false)  \
-	X(substitute,     4, ALUFUNC_REGULAR,     false)  \
-	X(sfield,         3, ALUFUNC_REGULAR,     false)  \
-	X(sword,          3, ALUFUNC_REGULAR,     false)  \
-	X(abbrev,         3, ALUFUNC_REGULAR,     false)  \
-	X(bitand,         2, ALUFUNC_REGULAR,     false)  \
-	X(bitor,          2, ALUFUNC_REGULAR,     false)  \
-	X(bitxor,         2, ALUFUNC_REGULAR,     false)  \
-	X(compare,        3, ALUFUNC_REGULAR,     false)  \
-	X(copies,         2, ALUFUNC_REGULAR,     false)  \
-	X(delstr,         3, ALUFUNC_REGULAR,     false)  \
-	X(delword,        3, ALUFUNC_REGULAR,     false)  \
-	X(find,           2, ALUFUNC_REGULAR,     false)  \
-	X(index,          3, ALUFUNC_REGULAR,     false)  \
-	X(insert,         5, ALUFUNC_REGULAR,     false)  \
-	X(justify,        3, ALUFUNC_REGULAR,     false)  \
-	X(overlay,        5, ALUFUNC_REGULAR,     false)  \
-	X(reverse,        1, ALUFUNC_REGULAR,     false)  \
-	X(sign,           1, ALUFUNC_REGULAR,     false)  \
-	X(space,          3, ALUFUNC_REGULAR,     false)  \
-	X(strip,          3, ALUFUNC_REGULAR,     false)  \
-	X(subword,        3, ALUFUNC_REGULAR,     false)  \
-	X(translate,      4, ALUFUNC_REGULAR,     false)  \
-	X(verify,         4, ALUFUNC_REGULAR,     false)  \
-	X(wordindex,      2, ALUFUNC_REGULAR,     false)  \
-	X(wordlength,     2, ALUFUNC_REGULAR,     false)  \
-	X(wordpos,        3, ALUFUNC_REGULAR,     false)  \
-	X(words,          1, ALUFUNC_REGULAR,     false)  \
-	X(xrange,         2, ALUFUNC_REGULAR,     false)  \
-	X(fmt,            5, ALUFUNC_REGULAR,     false)  \
-	X(next,           0, ALUFUNC_REGULAR,     false)  \
-	X(rest,           0, ALUFUNC_REGULAR,     false)  \
-	X(defined,        1, ALUFUNC_REGULAR,     false)  \
+	X(abs,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(pow,            2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(sqrt,           1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(c2u,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(c2f,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(c2d,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(frombin,        1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(tobine,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(tobin,          1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(length,         1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(first,          0, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(recno,          0, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(number,         0, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(eof,            0, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(record,         0, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(wordcount,      0, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(wordstart,      1, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(wordlen,        1, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(wordend,        1, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(word,           1, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(wordrange,      2, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(fieldcount,     0, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(fieldindex,     1, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(fieldlength,    1, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(fieldend,       1, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(field,          1, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(fieldrange,     2, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(range,          2, ALUFUNC_REGULAR,      true,  \
+			"","") \
+	X(tf2mcs,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(mcs2tf,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(tf2s,           2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(s2tf,           2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(substr,         3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(pos,            2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(lastpos,        2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(includes,       5, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(includesall,    5, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(rmatch,         3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(rsearch,        3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(rreplace,       4, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(left,           2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(right,          2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(center,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(centre,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(conf,           2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(x2d,            2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(d2x,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(x2ch,           1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(c2x,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(ucase,          1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(lcase,          1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(bswap,          1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(break,          1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(sum,            1, ALUFUNC_STATISTICAL, false,  \
+			"","") \
+	X(min,            1, ALUFUNC_STATISTICAL, false,  \
+			"","") \
+	X(max,            1, ALUFUNC_STATISTICAL, false,  \
+			"","") \
+	X(average,        1, ALUFUNC_STATISTICAL, false,  \
+			"","") \
+	X(variance,       1, ALUFUNC_STATISTICAL, false,  \
+			"","") \
+	X(stddev,         1, ALUFUNC_STATISTICAL, false,  \
+			"","") \
+	X(stderrmean,     1, ALUFUNC_STATISTICAL, false,  \
+			"","") \
+	X(present,        1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(rand,           1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(floor,          1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(round,          2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(ceil,           1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(sin,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(cos,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(tan,            1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(arcsin,         1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(arccos,         1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(arctan,         1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(dsin,           1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(dcos,           1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(dtan,           1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(arcdsin,        1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(arcdcos,        1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(arcdtan,        1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(fmap_nelem,     1, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_nsamples,  1, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_count,     2, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_frac,      2, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_pct,       2, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_common,    1, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_rare,      1, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_sample,    2, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(string,         1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(substitute,     4, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(sfield,         3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(sword,          3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(abbrev,         3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(bitand,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(bitor,          2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(bitxor,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(compare,        3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(copies,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(delstr,         3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(delword,        3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(find,           2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(index,          3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(insert,         5, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(justify,        3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(overlay,        5, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(reverse,        1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(sign,           1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(space,          3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(strip,          3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(subword,        3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(translate,      4, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(verify,         4, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(wordindex,      2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(wordlength,     2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(wordpos,        3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(words,          1, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(xrange,         2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(fmt,            5, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(next,           0, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(rest,           0, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(defined,        1, ALUFUNC_REGULAR,     false,  \
+			"","")
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
-	X(testfunc,       4, ALUFUNC_REGULAR,     false)  \
+	X(testfunc,       4, ALUFUNC_REGULAR,     false,  \
+			"","")
 
 #define ALU_PSEUDO_FUNCTION_LIST     \
 	X(break)                         \
@@ -162,7 +282,7 @@
 #define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*);
 #define ALUFUNC5(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*, ALUValue*);
 
-#define X(fn,argc,flags,rl) ALUFUNC##argc(fn)
+#define X(fn,argc,flags,rl,shorthelp,longhelp) ALUFUNC##argc(fn)
 ALU_FUNCTION_LIST
 #ifdef DEBUG
 ALU_DEBUG_FUNCTION_LIST
