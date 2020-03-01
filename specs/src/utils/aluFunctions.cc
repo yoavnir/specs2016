@@ -60,6 +60,48 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
 
 /*
  *
+ * HELP command support
+ * ====================
+ */
+
+static void aluFunc_help_builtin_func(std::string name, unsigned int argc, std::string sshort, std::string slong, bool bLong)
+{
+	std::cerr << "* " << name;
+	if (sshort.length() > 0) {
+		std::cerr << sshort << "\n";
+	} else {
+		static std::string default_args = "x,y,x,w,t";
+		std::cerr << "(" << default_args.substr(0,argc*2-1) << ")\n";
+	}
+	if (bLong) {
+		if (slong.length() > 0) {
+			std::cerr << "\n" << slong << "\n\n"; 
+		} else {
+			std::cerr << "\n";
+		}
+	}
+}
+
+#define X(fn,argc,flags,rl,shorthelp,longhelp) aluFunc_help_builtin_func(#fn,argc,shorthelp,longhelp,false);
+void aluFunc_help_builtin()
+{
+	ALU_FUNCTION_LIST
+}
+#undef X
+
+#define X(fn,argc,flags,rl,shorthelp,longhelp) if (funcName==#fn) {              \
+				aluFunc_help_builtin_func(#fn, argc, shorthelp, longhelp, true); \
+				return true;                                                     \
+			}
+bool aluFunc_help_one_builtin(std::string& funcName)
+{
+	ALU_FUNCTION_LIST
+	return false;
+}
+#undef X
+
+/*
+ *
  *
  * ALU FUNCTIONS
  * =============

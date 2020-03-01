@@ -13,13 +13,13 @@
 // function name, number of arguments, whether it needs lines from input
 #define ALU_FUNCTION_LIST            \
 	X(abs,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns the absolute value of x","Will return an int or a float depending on the type of the argument.") \
 	X(pow,            2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x,y) - Returns x to the power of y","Will return an int if both arguments are whole numbers, or a float otherwise.\nThe return value will be int even if the arguments were calculated as floats.") \
 	X(sqrt,           1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns the square root of x","Always returns a float.") \
 	X(c2u,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(s) - Returns the value of the string s re-cast as an integer","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
 	X(c2f,            1, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(c2d,            1, ALUFUNC_REGULAR,     false,  \
@@ -31,7 +31,7 @@
 	X(tobin,          1, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(s) - Returns the length of the string s","") \
 	X(first,          0, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(recno,          0, ALUFUNC_REGULAR,      true,  \
@@ -359,5 +359,8 @@ public:
 
 void setStateQueryAgent(stateQueryAgent* qa);
 void setPositionGetter(positionGetter* pGetter);
+
+void aluFunc_help_builtin();
+bool aluFunc_help_one_builtin(std::string& funcName);
 
 #endif

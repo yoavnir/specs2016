@@ -100,12 +100,15 @@ CONTINUE:
 			std::cerr << "specs help:\n";
 			std::cerr << "\tspecs --help help       -- this list\n";
 			std::cerr << "\tspecs --help pyfuncs    -- lists the available python functions\n";
-			std::cerr << "\tspecs --help <funcname> -- provides arguments and doc for a particular python function\n";
+			std::cerr << "\tspecs --help builtin    -- lists the available builtin functions\n";
+			std::cerr << "\tspecs --help <funcname> -- provides arguments and doc for a particular python or builtin function\n";
 			return false;
 		}
 		if (g_help == "pyfuncs") {
 			p_gExternalFunctions->Debug();
-		} else if (false == p_gExternalFunctions->DebugOne(g_help)) {
+		} else if (g_help == "builtin") {
+			aluFunc_help_builtin();
+		} else if ((false == aluFunc_help_one_builtin(g_help)) && (false == p_gExternalFunctions->DebugOne(g_help))) {
 			std::cerr << "specs: I don't know anything about " << g_help << std::endl;
 		}
 		return false;
