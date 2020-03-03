@@ -19,11 +19,11 @@
 	X(sqrt,           1, ALUFUNC_REGULAR,     false,  \
 			"(x) - Returns the square root of x","Always returns a float.") \
 	X(c2u,            1, ALUFUNC_REGULAR,     false,  \
-			"(s) - Returns the value of the string s re-cast as an integer","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
+			"(s) - Returns the value of the string s re-cast as an unsigned integer.","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
 	X(c2f,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(s) - Returns the value of the string s re-cast as a floating point number","The supported lengths are those of the float, double, and long double types.\nAny other length will cause a runtime error.") \
 	X(c2d,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(s) - Returns the value of the string s re-cast as a signed integer.","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
 	X(frombin,        1, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(tobine,         2, ALUFUNC_REGULAR,     false,  \
