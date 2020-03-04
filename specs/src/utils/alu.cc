@@ -935,8 +935,9 @@ AluFunction::AluFunction(std::string& _s)
 		}
 		MYASSERT(p_gExternalFunctions->IsInitialized());
 		m_pExternalFunc = p_gExternalFunctions->GetFunctionByName(_s);
-#endif
 	}
+#endif
+
 	if (!m_pExternalFunc) {
 		std::string err = "Unrecognized function "+_s;
 		MYTHROW(err);
