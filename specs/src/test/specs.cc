@@ -91,6 +91,7 @@ CONTINUE:
 	// help
 	if (g_help!="") {
 #ifndef SPECS_NO_PYTHON
+		readConfigurationFile();
 		try {
 			p_gExternalFunctions->Initialize(getFullSpecPath());
 		} catch (const SpecsException& e) {
