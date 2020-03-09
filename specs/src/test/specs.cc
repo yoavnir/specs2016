@@ -101,12 +101,13 @@ CONTINUE:
 #endif
 		if (g_help == "help") {
 			std::cerr << "specs help:\n";
-			std::cerr << "\tspecs --help help       -- this list\n";
+			std::cerr << "\tspecs --help help    -- this list\n";
 #ifndef SPECS_NO_PYTHON
-			std::cerr << "\tspecs --help pyfuncs    -- lists the available python functions\n";
+			std::cerr << "\tspecs --help pyfuncs -- lists the available python functions\n";
 #endif
-			std::cerr << "\tspecs --help builtin    -- lists the available builtin functions\n";
-			std::cerr << "\tspecs --help <funcname> -- provides arguments and doc for a particular python or builtin function\n";
+			std::cerr << "\tspecs --help builtin -- lists the available builtin functions\n";
+			std::cerr << "\tspecs --help specs   -- lists the available specifications\n";
+			std::cerr << "\tspecs --help <name>  -- provides arguments and doc for a particular python or builtin function, or specification\n";
 			return false;
 		}
 		if (g_help == "pyfuncs") {
@@ -117,11 +118,14 @@ CONTINUE:
 #endif
 		} else if (g_help == "builtin") {
 			aluFunc_help_builtin();
+		} else if (g_help == "specs") {
+			dumpSpecificationsList();
 		} else if ((false == aluFunc_help_one_builtin(g_help)) && 
 #ifdef SPECS_NO_PYTHON
 				(true))
 #else
-				(false == p_gExternalFunctions->DebugOne(g_help))) 
+				(false == p_gExternalFunctions->DebugOne(g_help)) &&
+				(false == dumpSpecificationsList(g_help)))
 #endif
 		{
 			std::cerr << "specs: I don't know anything about " << g_help << std::endl;
