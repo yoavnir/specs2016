@@ -127,6 +127,9 @@ std::vector<Token> parseTokensSplit(const char* arg)
 // on the line, preceded by whitespace unless it's at the start of the line.
 std::string removeComment(std::string& st)
 {
+	// Special case - a line that is just a pound sign
+	if (st=="#") return std::string("");
+	
 	std::size_t found = st.rfind("# ");
 	if (found==std::string::npos) return st;
 
