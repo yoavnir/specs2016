@@ -25,37 +25,37 @@
 	X(c2d,            1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the value of the string s re-cast as a signed integer.","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
 	X(frombin,        1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(op) - Re-casts op as a 64-bit number.","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
 	X(tobine,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(op,bits) - Returns a binary representation of op.","The unsigned integer in op is converted.\nThe output field has length of bits bits.\nValid values for bits are 8, 16, 32, and 64.") \
 	X(tobin,          1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(op) - Returns  a binary representation of the unsigned integer in x.","The field length is automatically determined by the value of x,\nbut will be 1, 2, 4, or 8 characters in length.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the length of the string s","") \
 	X(first,          0, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"() - Returns TRUE (1) if this is the first line.","") \
 	X(recno,          0, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"() - Returns the record number of the current record.","Increments with every READ or READSTOP.") \
 	X(number,         0, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"() - Returns the number of times this specification has restarted","Does not increment with READ or READSTOP. Otherwise similar to recno().") \
 	X(eof,            0, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"() - Returns TRUE (1) if this is the run-out phase.","") \
 	X(record,         0, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable.") \
 	X(wordcount,      0, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"() - Returns the number of words in the current record.","Result depends on the current word separator.") \
 	X(wordstart,      1, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i) - Returns the position in the current record where word i begins.","") \
 	X(wordlen,        1, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i) - Returns the length of word i in the current record.","") \
 	X(wordend,        1, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i) - Returns the position in the current record where word i ends.","") \
 	X(word,           1, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i) - Returns the i-th word in the current record.","") \
 	X(wordrange,      2, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i,j) - Returns the substring or current record from the start of the i-th word to the end of the j-th word.","") \
 	X(fieldcount,     0, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"() - Returns the number of fields in the current record.","Result depends on the current field separator.") \
 	X(fieldindex,     1, ALUFUNC_REGULAR,      true,  \
 			"","") \
 	X(fieldlength,    1, ALUFUNC_REGULAR,      true,  \
