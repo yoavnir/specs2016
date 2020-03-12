@@ -64,20 +64,28 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
  * ====================
  */
 
+#define FUNC_NAME_AND_ARGS_MIN_LEN  32
 static void aluFunc_help_builtin_func(std::string name, unsigned int argc, std::string sshort, std::string slong, bool bLong)
 {
-	std::cerr << "* " << name;
+	size_t lengthSoFar;
+	std::cout << "* " << name;
+	lengthSoFar = name.length();
 	if (sshort.length() > 0) {
-		std::cerr << sshort << "\n";
+		size_t pos = sshort.find(")");
+		lengthSoFar += pos;
+		std::cout << sshort.substr(0,pos+2);
+		static std::string dashes = "-----------------------------";
+		std::cout << dashes.substr(0,FUNC_NAME_AND_ARGS_MIN_LEN-lengthSoFar)
+				<< sshort .substr(pos+3) << "\n";
 	} else {
 		static std::string default_args = "x,y,x,w,t";
-		std::cerr << "(" << default_args.substr(0,argc*2-1) << ")\n";
+		std::cout << "(" << default_args.substr(0,argc*2-1) << ")\n";
 	}
 	if (bLong) {
 		if (slong.length() > 0) {
-			std::cerr << "\n" << slong << "\n\n"; 
+			std::cout << "\n" << slong << "\n\n";
 		} else {
-			std::cerr << "\n";
+			std::cout << "\n";
 		}
 	}
 }

@@ -53,29 +53,29 @@
 	X(word,           1, ALUFUNC_REGULAR,      true,  \
 			"(i) - Returns the i-th word in the current record.","") \
 	X(wordrange,      2, ALUFUNC_REGULAR,      true,  \
-			"(i,j) - Returns the substring or current record from the start of the i-th word to the end of the j-th word.","") \
+			"(i,j) - Returns the substring of the current record from the start of the i-th word to the end of the j-th word.","") \
 	X(fieldcount,     0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the number of fields in the current record.","Result depends on the current field separator.") \
 	X(fieldindex,     1, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i) - Returns the position in the current record where field i begins.","") \
 	X(fieldlength,    1, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i) - Returns the length of field i in the current record.","") \
 	X(fieldend,       1, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i) - Returns the position in the current record where field i ends.","") \
 	X(field,          1, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i) - Returns the i-th field in the current record.","") \
 	X(fieldrange,     2, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i,j) - Returns the substring of the current record from the start of the i-th field to the end of the j-th field.","") \
 	X(range,          2, ALUFUNC_REGULAR,      true,  \
-			"","") \
+			"(i,j) - Returns the substring of the current record from position i to position j (inclusive).","") \
 	X(tf2mcs,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(timeString,formatString) - Parses timeString as if it's formatted as indicated by formatString and returns the time value.","Time value is specified in microseconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(mcs2tf,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(timeValue,formatString) - Formats timeValue using the format in formatString and returns the result.","Time value is specified in microseconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(tf2s,           2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(timeString,formatString) - Parses timeString as if it's formatted as indicated by formatString and returns the time value.","Time value is specified in seconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(s2tf,           2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(timeValue,formatString) - Formats timeValue using the format in formatString and returns the result.","Time value is specified in seconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(substr,         3, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(pos,            2, ALUFUNC_REGULAR,     false,  \
