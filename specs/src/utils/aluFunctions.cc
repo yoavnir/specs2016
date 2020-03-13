@@ -64,7 +64,7 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
  * ====================
  */
 
-#define FUNC_NAME_AND_ARGS_MIN_LEN  32
+#define FUNC_NAME_AND_ARGS_MIN_LEN  40
 static void aluFunc_help_builtin_func(std::string name, unsigned int argc, std::string sshort, std::string slong, bool bLong)
 {
 	size_t lengthSoFar;
@@ -74,7 +74,7 @@ static void aluFunc_help_builtin_func(std::string name, unsigned int argc, std::
 		size_t pos = sshort.find(")");
 		lengthSoFar += pos;
 		std::cout << sshort.substr(0,pos+2);
-		static std::string dashes = "-----------------------------";
+		static std::string dashes = "..........................................";
 		std::cout << dashes.substr(0,FUNC_NAME_AND_ARGS_MIN_LEN-lengthSoFar)
 				<< sshort .substr(pos+3) << "\n";
 	} else {
@@ -539,7 +539,6 @@ ALUValue* AluFunc_substr(ALUValue* pBigString, ALUValue* pStart, ALUValue* pLeng
 
 ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
 {
-	ASSERT_NOT_ELIDED(pBigString,1,bigString);
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	auto bigLength = pBigStr->length();
@@ -555,7 +554,6 @@ ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
 
 ALUValue* AluFunc_right(ALUValue* pBigString, ALUValue* pLength)
 {
-	ASSERT_NOT_ELIDED(pBigString,1,bigString);
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	auto bigLength = pBigStr->length();

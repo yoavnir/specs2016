@@ -27,9 +27,9 @@
 	X(frombin,        1, ALUFUNC_REGULAR,     false,  \
 			"(op) - Re-casts op as a 64-bit number.","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
 	X(tobine,         2, ALUFUNC_REGULAR,     false,  \
-			"(op,bits) - Returns a binary representation of op.","The unsigned integer in op is converted.\nThe output field has length of bits bits.\nValid values for bits are 8, 16, 32, and 64.") \
+			"(op,bits) - Returns a 'bits'-bit binary representation of 'op'.","The unsigned integer in op is converted.\nThe output field has length of bits bits.\nValid values for bits are 8, 16, 32, and 64.") \
 	X(tobin,          1, ALUFUNC_REGULAR,     false,  \
-			"(op) - Returns  a binary representation of the unsigned integer in x.","The field length is automatically determined by the value of x,\nbut will be 1, 2, 4, or 8 characters in length.") \
+			"(op) - Returns a binary representation of the unsigned integer in 'op'.","The field length is automatically determined by the value of x,\nbut will be 1, 2, 4, or 8 characters in length.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the length of the string s","") \
 	X(first,          0, ALUFUNC_REGULAR,     false,  \
@@ -77,29 +77,29 @@
 	X(s2tf,           2, ALUFUNC_REGULAR,     false,  \
 			"(timeValue,formatString) - Formats timeValue using the format in formatString and returns the result.","Time value is specified in seconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(substr,         3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([str],[start],[length]) - Returns the substring of 'str' with length 'length' and starting from position 'start'.","If elided, 'str' defaults to the current record.\nIf elided, 'start' defaults to position 1. A negative value counts from the end of 'str'\nIf elided, 'length' defaults to the length of the string. The length can overflow and the result would be truncated at the end of 'str'.") \
 	X(pos,            2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(needle,[haystack]) - Returns the position of the first occurrence of 'needle' within 'haystack'","If elided, 'haystack' defaults to the current record.") \
 	X(lastpos,        2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(needle,[haystack]) - Returns the position of the last occurrence of 'needle' within 'haystack'","If elided, 'haystack' defaults to the current record.") \
 	X(includes,       5, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([haystack],needle1...) - Returns TRUE (1) if 'haystack' includes any of the needles, or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nOne needle is required, but up to four may be specified.") \
 	X(includesall,    5, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([haystack],needle1...) - Returns TRUE (1) if 'haystack' includes all of the needles, or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nOne needle is required, but up to four may be specified.") \
 	X(rmatch,         3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([haystack],exp,[matchFlags]) - Returns TRUE (1) if the regular expression 'exp' matches 'haystack', or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
 	X(rsearch,        3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([haystack],exp,[matchFlags]) - Returns TRUE (1) if the regular expression 'exp' matches some substring of 'haystack', or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
 	X(rreplace,       4, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([haystack],exp,fmt,[matchFlags]) - Returns the string 'haystack', with all matches of regular expression 'exp' replaced by 'fmt'.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
 	X(left,           2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([str],length) - Returns the substring of 'str' with length 'length' that starts at the beginning.","If elided, 'str' defaults to the current record.\nThe length can overflow and the result would just be all of 'str'.") \
 	X(right,          2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([str],length) - Returns the substring of 'str' with length 'length' that ends at the end of 'str'.","If elided, 'str' defaults to the current record.\nThe length can overflow and the result would just be all of 'str'.") \
 	X(center,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([str],length) - Returns the substring of 'str' with length 'length' centered within 'str'.","If elided, 'str' defaults to the current record.\nThe length can overflow and the result would just be all of 'str'.") \
 	X(centre,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([str],length) - Returns the substring of 'str' with length 'length' centred within 'str'.","If elided, 'str' defaults to the current record.\nThe length can overflow and the result would just be all of 'str'.") \
 	X(conf,           2, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(x2d,            2, ALUFUNC_REGULAR,     false,  \
