@@ -12,12 +12,14 @@
 
 // function name, number of arguments, whether it needs lines from input
 #define ALU_FUNCTION_LIST            \
+	H(Math Functions) \
 	X(abs,            1, ALUFUNC_REGULAR,     false,  \
 			"(x) - Returns the absolute value of x","Will return an int or a float depending on the type of the argument.") \
 	X(pow,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,y) - Returns x to the power of y","Will return an int if both arguments are whole numbers, or a float otherwise.\nThe return value will be int even if the arguments were calculated as floats.") \
 	X(sqrt,           1, ALUFUNC_REGULAR,     false,  \
 			"(x) - Returns the square root of x","Always returns a float.") \
+	H(Recasting Functions) \
 	X(c2u,            1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the value of the string s re-cast as an unsigned integer.","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
 	X(c2f,            1, ALUFUNC_REGULAR,     false,  \
@@ -30,8 +32,9 @@
 			"(op,bits) - Returns a 'bits'-bit binary representation of 'op'.","The unsigned integer in op is converted.\nThe output field has length of bits bits.\nValid values for bits are 8, 16, 32, and 64.") \
 	X(tobin,          1, ALUFUNC_REGULAR,     false,  \
 			"(op) - Returns a binary representation of the unsigned integer in 'op'.","The field length is automatically determined by the value of x,\nbut will be 1, 2, 4, or 8 characters in length.") \
-	X(length,         1, ALUFUNC_REGULAR,     false,  \
-			"(s) - Returns the length of the string s","") \
+	X(string,         1, ALUFUNC_REGULAR,     false,  \
+			"(x) - Converts x to a string.","") \
+	H(State Functions) \
 	X(first,          0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns TRUE (1) if this is the first line.","") \
 	X(recno,          0, ALUFUNC_REGULAR,      true,  \
@@ -40,8 +43,13 @@
 			"() - Returns the number of times this specification has restarted","Does not increment with READ or READSTOP. Otherwise similar to recno().") \
 	X(eof,            0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns TRUE (1) if this is the run-out phase.","") \
+	X(break,          1, ALUFUNC_REGULAR,     false,  \
+			"(fid) - Returns TRUE (1) if the break for field-identifier 'fid' is established, or FALSE (0) otherwise.","") \
+	H(Record Functions) \
 	X(record,         0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable.") \
+	X(length,         1, ALUFUNC_REGULAR,     false,  \
+			"(s) - Returns the length of the string s","") \
 	X(wordcount,      0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the number of words in the current record.","Result depends on the current word separator.") \
 	X(wordstart,      1, ALUFUNC_REGULAR,      true,  \
@@ -68,6 +76,7 @@
 			"(i,j) - Returns the substring of the current record from the start of the i-th field to the end of the j-th field.","") \
 	X(range,          2, ALUFUNC_REGULAR,      true,  \
 			"(i,j) - Returns the substring of the current record from position i to position j (inclusive).","") \
+	H(Time Functions) \
 	X(tf2mcs,         2, ALUFUNC_REGULAR,     false,  \
 			"(timeString,formatString) - Parses timeString as if it's formatted as indicated by formatString and returns the time value.","Time value is specified in microseconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(mcs2tf,         2, ALUFUNC_REGULAR,     false,  \
@@ -76,6 +85,7 @@
 			"(timeString,formatString) - Parses timeString as if it's formatted as indicated by formatString and returns the time value.","Time value is specified in seconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(s2tf,           2, ALUFUNC_REGULAR,     false,  \
 			"(timeValue,formatString) - Formats timeValue using the format in formatString and returns the result.","Time value is specified in seconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
+	H(String Functions) \
 	X(substr,         3, ALUFUNC_REGULAR,     false,  \
 			"([str],[start],[length]) - Returns the substring of 'str' with length 'length' and starting from position 'start'.","If elided, 'str' defaults to the current record.\nIf elided, 'start' defaults to position 1. A negative value counts from the end of 'str'\nIf elided, 'length' defaults to the length of the string. The length can overflow and the result would be truncated at the end of 'str'.") \
 	X(pos,            2, ALUFUNC_REGULAR,     false,  \
@@ -100,8 +110,6 @@
 			"([str],length) - Returns the substring of 'str' with length 'length' centered within 'str'.","If elided, 'str' defaults to the current record.\nThe length can overflow and the result would just be all of 'str'.") \
 	X(centre,         2, ALUFUNC_REGULAR,     false,  \
 			"([str],length) - Returns the substring of 'str' with length 'length' centred within 'str'.","If elided, 'str' defaults to the current record.\nThe length can overflow and the result would just be all of 'str'.") \
-	X(conf,           2, ALUFUNC_REGULAR,     false,  \
-			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(x2d,            2, ALUFUNC_REGULAR,     false,  \
 			"(hex,[length]) - Returns the decimal value of the hex string in 'hex'.","If 'length' is missing or non-positive, the result is the unsigned value of the entire 'hex' string.\nOtherwise, the first 'length' characters are considered (up to 16), and the result is signed based on the first hex digit.") \
 	X(d2x,            1, ALUFUNC_REGULAR,     false,  \
@@ -116,24 +124,42 @@
 			"(str) - Returns the string in 'str' converted to lowercase.","") \
 	X(bswap,          1, ALUFUNC_REGULAR,     false,  \
 			"(str) - Returns a byte-swapped copy of 'str'.","") \
-	X(break,          1, ALUFUNC_REGULAR,     false,  \
-			"(fid) - Returns TRUE (1) if the break for field-identifier 'fid' is established, or FALSE (0) otherwise.","") \
+	H(Statistical Functions) \
 	X(sum,            1, ALUFUNC_STATISTICAL, false,  \
-			"","") \
+			"(fid) - Returns the sum of all values of field identifier 'fid' that have been seen so far.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(min,            1, ALUFUNC_STATISTICAL, false,  \
-			"","") \
+			"(fid) - Returns the minimum of all values of field identifier 'fid' that have been seen so far.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(max,            1, ALUFUNC_STATISTICAL, false,  \
-			"","") \
+			"(fid) - Returns the maximum of all values of field identifier 'fid' that have been seen so far.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(average,        1, ALUFUNC_STATISTICAL, false,  \
-			"","") \
+			"(fid) - Returns the numerical average of all values of field identifier 'fid' that have been seen so far.","'fid' is used as a random variable.\nOnly provides information relevant to the entire data set during the run-out cycle.") \
 	X(variance,       1, ALUFUNC_STATISTICAL, false,  \
-			"","") \
+			"(fid) - Returns the variance of all values of field identifier 'fid' that have been seen so far.","'fid' is used as a random variable.\nOnly provides information relevant to the entire data set during the run-out cycle.") \
 	X(stddev,         1, ALUFUNC_STATISTICAL, false,  \
-			"","") \
+			"(fid) - Returns the standard deviation of all values of field identifier 'fid' that have been seen so far.","'fid' is used as a random variable.\nOnly provides information relevant to the entire data set during the run-out cycle.") \
 	X(stderrmean,     1, ALUFUNC_STATISTICAL, false,  \
-			"","") \
+			"(fid) - Returns the standard error of all values of field identifier 'fid' that have been seen so far.","'fid' is used as a random variable.\nOnly provides information relevant to the entire data set during the run-out cycle.") \
 	X(present,        1, ALUFUNC_REGULAR,     false,  \
+			"(fid) - Returns TRUE (1) if the field identifier 'fid' is set, or FALSE (0) otherwise.","All field identifiers are reset at every run of the specification. This function will\nreturn FALSE until the field identifier has been set within this run.") \
+	X(fmap_nelem,     1, ALUFUNC_FREQUENCY,   false,  \
 			"","") \
+	X(fmap_nsamples,  1, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_count,     2, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_frac,      2, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_pct,       2, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_common,    1, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_rare,      1, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_sample,    2, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false,  \
+			"","") \
+	H(Advanced Math Functions) \
 	X(rand,           1, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(floor,          1, ALUFUNC_REGULAR,     false,  \
@@ -166,26 +192,7 @@
 			"","") \
 	X(arcdtan,        1, ALUFUNC_REGULAR,     false,  \
 			"","") \
-	X(fmap_nelem,     1, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(fmap_nsamples,  1, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(fmap_count,     2, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(fmap_frac,      2, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(fmap_pct,       2, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(fmap_common,    1, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(fmap_rare,      1, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(fmap_sample,    2, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
-	X(string,         1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+	H(Other Functions) \
 	X(substitute,     4, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(sfield,         3, ALUFUNC_REGULAR,     false,  \
@@ -248,6 +255,9 @@
 			"","") \
 	X(rest,           0, ALUFUNC_REGULAR,     false,  \
 			"","") \
+	H(Misc Functions) \
+	X(conf,           2, ALUFUNC_REGULAR,     false,  \
+			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(defined,        1, ALUFUNC_REGULAR,     false,  \
 			"","")
 
@@ -283,11 +293,13 @@
 #define ALUFUNC5(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*, ALUValue*);
 
 #define X(fn,argc,flags,rl,shorthelp,longhelp) ALUFUNC##argc(fn)
+#define H(hdr)
 ALU_FUNCTION_LIST
 #ifdef DEBUG
 ALU_DEBUG_FUNCTION_LIST
 #endif
 #undef X
+#undef H
 
 typedef ALUValue* (*AluFunc0)();
 typedef ALUValue* (*AluFunc1)(ALUValue* op1);

@@ -90,23 +90,33 @@ static void aluFunc_help_builtin_func(std::string name, unsigned int argc, std::
 	}
 }
 
+static void aluFunc_help_builtin_header(const std::string& shdr)
+{
+	static std::string dashes("----------------------------------------");
+	std::cout << "\n" << shdr << "\n" << dashes.substr(0,shdr.length()) << "\n";
+}
+
 #define X(fn,argc,flags,rl,shorthelp,longhelp) aluFunc_help_builtin_func(#fn,argc,shorthelp,longhelp,false);
+#define H(hdr)  aluFunc_help_builtin_header(#hdr);
 void aluFunc_help_builtin()
 {
 	ALU_FUNCTION_LIST
 }
 #undef X
+#undef H
 
 #define X(fn,argc,flags,rl,shorthelp,longhelp) if (funcName==#fn) {              \
 				aluFunc_help_builtin_func(#fn, argc, shorthelp, longhelp, true); \
 				return true;                                                     \
 			}
+#define H(hdr)
 bool aluFunc_help_one_builtin(std::string& funcName)
 {
 	ALU_FUNCTION_LIST
 	return false;
 }
 #undef X
+#undef H
 
 /*
  *

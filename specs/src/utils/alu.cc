@@ -906,6 +906,7 @@ unsigned char AluFunction::m_flags = ALUFUNC_REGULAR;
 		m_flags |= flags;                  \
 		return;                            \
 	}
+#define H(hdr)
 AluFunction::AluFunction(std::string& _s)
 {
 	std::string s(_s);
@@ -949,6 +950,7 @@ AluFunction::AluFunction(std::string& _s)
 	m_flags |= ALUFUNC_EXTERNAL;
 }
 #undef X
+#undef H
 
 void AluFunction::_serialize(std::ostream& os) const
 {
