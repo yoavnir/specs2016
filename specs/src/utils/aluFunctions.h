@@ -101,23 +101,23 @@
 	X(centre,         2, ALUFUNC_REGULAR,     false,  \
 			"([str],length) - Returns the substring of 'str' with length 'length' centred within 'str'.","If elided, 'str' defaults to the current record.\nThe length can overflow and the result would just be all of 'str'.") \
 	X(conf,           2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(x2d,            2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(hex,[length]) - Returns the decimal value of the hex string in 'hex'.","If 'length' is missing or non-positive, the result is the unsigned value of the entire 'hex' string.\nOtherwise, the first 'length' characters are considered (up to 16), and the result is signed based on the first hex digit.") \
 	X(d2x,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(dec) - Returns the hex value of the number in 'dec'.","") \
 	X(x2ch,           1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(hex) - Returns a string with each character the ASCII encoding of two hex digits from 'hex'.","") \
 	X(c2x,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str) - Retuns a hex string with the ASCII value for each character in 'str'.","") \
 	X(ucase,          1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str) - Returns the string in 'str' converted to uppercase.","") \
 	X(lcase,          1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str) - Returns the string in 'str' converted to lowercase.","") \
 	X(bswap,          1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str) - Returns a byte-swapped copy of 'str'.","") \
 	X(break,          1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(fid) - Returns TRUE (1) if the break for field-identifier 'fid' is established, or FALSE (0) otherwise.","") \
 	X(sum,            1, ALUFUNC_STATISTICAL, false,  \
 			"","") \
 	X(min,            1, ALUFUNC_STATISTICAL, false,  \
