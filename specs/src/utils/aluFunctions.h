@@ -142,23 +142,23 @@
 	X(present,        1, ALUFUNC_REGULAR,     false,  \
 			"(fid) - Returns TRUE (1) if the field identifier 'fid' is set, or FALSE (0) otherwise.","All field identifiers are reset at every run of the specification. This function will\nreturn FALSE until the field identifier has been set within this run.") \
 	X(fmap_nelem,     1, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid) - Returns the number of discrete values of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(fmap_nsamples,  1, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid) - Returns the number of samples taken of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(fmap_count,     2, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid,elem) - Returns the number of occurences of 'elem' in field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(fmap_frac,      2, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid,elem) - Returns the fraction of values in field identifier 'fid' that are equal to 'elem'.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(fmap_pct,       2, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid,elem) - Returns the percentage of values in field identifier 'fid' that are equal to 'elem'.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(fmap_common,    1, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid) - Returns the most common value of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(fmap_rare,      1, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid) - Returns the least common value of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(fmap_sample,    2, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid,elem) - Notes an occurence of the value in 'elem' for field identifier 'fid', and returns the number of occurences so far.","This is the only one of the fmap_* functions that modifies the frequency map.\nIt also affects the other statistics functions.") \
 	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false,  \
-			"","") \
+			"(fid,format,order,percent) - Returns a multi-line string with the frequency map of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\nPercentage adds a percentage column if true.") \
 	H(Advanced Math Functions) \
 	X(rand,           1, ALUFUNC_REGULAR,     false,  \
 			"","") \

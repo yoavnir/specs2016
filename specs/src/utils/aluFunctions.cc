@@ -71,12 +71,16 @@ static void aluFunc_help_builtin_func(std::string name, unsigned int argc, std::
 	std::cout << "* " << name;
 	lengthSoFar = name.length();
 	if (sshort.length() > 0) {
-		size_t pos = sshort.find(")");
-		lengthSoFar += pos;
-		std::cout << sshort.substr(0,pos+2);
-		static std::string dashes = "..........................................";
-		std::cout << dashes.substr(0,FUNC_NAME_AND_ARGS_MIN_LEN-lengthSoFar)
-				<< sshort .substr(pos+3) << "\n";
+		if (bLong) {
+			std::cout << sshort << "\n";
+		} else {
+			size_t pos = sshort.find(")");
+			lengthSoFar += pos;
+			std::cout << sshort.substr(0,pos+2);
+			static std::string dashes = "..........................................";
+			std::cout << dashes.substr(0,FUNC_NAME_AND_ARGS_MIN_LEN-lengthSoFar)
+						<< sshort .substr(pos+3) << "\n";
+		}
 	} else {
 		static std::string default_args = "x,y,x,w,t";
 		std::cout << "(" << default_args.substr(0,argc*2-1) << ")\n";
@@ -106,6 +110,7 @@ void aluFunc_help_builtin()
 #undef H
 
 #define X(fn,argc,flags,rl,shorthelp,longhelp) if (funcName==#fn) {              \
+				std::cout << "\n";                                               \
 				aluFunc_help_builtin_func(#fn, argc, shorthelp, longhelp, true); \
 				return true;                                                     \
 			}
