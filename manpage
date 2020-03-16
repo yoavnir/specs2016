@@ -590,6 +590,14 @@ return an angle in radians, while
 and
 .B arcdtan 
 return an angle in degrees.
+.IP "exp(x) and log(x,base)" 3
+There return the 
+.B exponent 
+of x or the 
+.B logarithm 
+of x. By default, the logarithm function returns the 
+.I natural 
+log.
 .IP "string(x)" 3
 Returns the same value as the argument, but forced to be stored as a string. There is nothing preventing this from later evaluating as a number, so
 .I string(3)+2

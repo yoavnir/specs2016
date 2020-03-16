@@ -161,37 +161,41 @@
 			"(fid,format,order,percent) - Returns a multi-line string with the frequency map of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\nPercentage adds a percentage column if true.") \
 	H(Advanced Math Functions) \
 	X(rand,           1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"([limit]) - Returns a random integer up to (but not including) 'limit'.","If 'limit' is omitted, returns a floating point number between 0 and 1.") \
 	X(floor,          1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns the largest integer smaller than 'x'.","") \
 	X(round,          2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns the closest integer to 'x'.","") \
 	X(ceil,           1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns the smallest integer larger than 'x'.","") \
 	X(sin,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns sin(x) where 'x' is in radians.","") \
 	X(cos,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns cos(x) where 'x' is in radians.","") \
 	X(tan,            1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns tan(x) where 'x' is in radians.","") \
 	X(arcsin,         1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns arcsin(x) where the result is in radians.","") \
 	X(arccos,         1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns arccos(x) where the result is in radians.","") \
 	X(arctan,         1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns arctan(x) where the result is in radians.","") \
 	X(dsin,           1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns sin(x) where 'x' is in degrees.","") \
 	X(dcos,           1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns cons(x) where 'x' is in degrees.","") \
 	X(dtan,           1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns tan(x) where 'x' is in degrees.","") \
 	X(arcdsin,        1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns arcsin(x) where the result is in degrees.","") \
 	X(arcdcos,        1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns arccos(x) where the result is in degrees.","") \
 	X(arcdtan,        1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns arctan(x) where the result is in degrees.","") \
+	X(exp,            1, ALUFUNC_REGULAR,     false,  \
+			"(x) - Returns exponent function e^x.","") \
+	X(log,            2, ALUFUNC_REGULAR,     false,  \
+			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
 	H(Other Functions) \
 	X(substitute,     4, ALUFUNC_REGULAR,     false,  \
 			"","") \

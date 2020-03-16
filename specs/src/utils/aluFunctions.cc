@@ -58,6 +58,9 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
 #define ARG_STR_WITH_DEFAULT(arg,def)       \
 		((NULL == (arg)) ? def : (arg)->getStr())
 
+#define ARG_FLOAT_WITH_DEFAULT(arg,def)       \
+		((NULL == (arg)) ? def : (arg)->getFloat())
+
 /*
  *
  * HELP command support
@@ -1002,6 +1005,25 @@ ALUValue* AluFunc_arcdtan(ALUValue* pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(radians_to_degrees*atan(pX->getFloat())));
+}
+
+static ALUFloat e(2.71828182845904523536028747135266249775724709369995);
+ALUValue* AluFunc_exp(ALUValue* pX)
+{
+	ASSERT_NOT_ELIDED(pX,1,x);
+	return new ALUValue(std::pow(e, pX->getFloat()));
+}
+
+ALUValue* AluFunc_log(ALUValue* pX, ALUValue* pBase)
+{
+	ASSERT_NOT_ELIDED(pX,1,x);
+	ALUFloat res;
+	if (pBase) {
+		res = std::log(pX->getFloat()) / std::log(pBase->getFloat());
+	} else {
+		res = std::log(pX->getFloat());
+	}
+	return new ALUValue(res);
 }
 
 /*
