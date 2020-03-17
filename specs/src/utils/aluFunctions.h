@@ -124,6 +124,14 @@
 			"(str) - Returns the string in 'str' converted to lowercase.","") \
 	X(bswap,          1, ALUFUNC_REGULAR,     false,  \
 			"(str) - Returns a byte-swapped copy of 'str'.","") \
+	X(substitute,     4, ALUFUNC_REGULAR,     false,  \
+			"(haystack,needle,subst,[max]) - Returns 'haystack' where at most 'max' occurrences of 'needle' have been replaced by 'subst'","If 'max' is omitted, only 1 occurrence is replaced.\nIf 'max' is 'U', all occurrences are replaced.") \
+	X(sfield,         3, ALUFUNC_REGULAR,     false,  \
+			"(str,n,[sep]) - Returns the n-th field of 'str' if the field separator is 'sep'.","'sep' defaults to a tab.") \
+	X(sword,          3, ALUFUNC_REGULAR,     false,  \
+			"(str,n,[sep]) - Returns the n-th word of 'str' if the word separator is 'sep'.","'sep' defaults to a tab.") \
+	X(abbrev,         3, ALUFUNC_REGULAR,     false,  \
+			"(str,s,[len]) - Returns TRUE (1) if 's' is a prefix of 'str', or FALSE (0) otherwise.","If 'len' is specified, only the first 'len' characters of 's' are considered.") \
 	H(Statistical Functions) \
 	X(sum,            1, ALUFUNC_STATISTICAL, false,  \
 			"(fid) - Returns the sum of all values of field identifier 'fid' that have been seen so far.","Only provides information relevant to the entire data set during the run-out cycle.") \
@@ -197,14 +205,6 @@
 	X(log,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
 	H(Other Functions) \
-	X(substitute,     4, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(sfield,         3, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(sword,          3, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(abbrev,         3, ALUFUNC_REGULAR,     false,  \
-			"","") \
 	X(bitand,         2, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(bitor,          2, ALUFUNC_REGULAR,     false,  \

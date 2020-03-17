@@ -1428,7 +1428,11 @@ Does not run specs. Instead it displays a help message according to the paramete
 .B help
 prints general help, 
 .B pyfuncs
-prints the name, arguments, and docstring of all loaded python functions, and a particular python function name makes 
+prints the name, arguments, and docstring of all loaded python functions, 
+.B builtin
+prints the name, arguments, and a line of help for the built-in functions, 
+.B specs 
+prints a list of all specifications on the path and the comment, and a particular python function name makes 
 .I help
 display the arguments and docstring of that function only.
 

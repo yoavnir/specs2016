@@ -77,7 +77,7 @@ Writer Thread:
 * `--regexType` **syntaxOptionList** -- Sets the syntax option for regular expressions. The parameter is a comma-separated list of syntax options. See the table below for a list of valid syntax options.
 * `--pythonFuncs` **on/off/auto** -- Enables of disables the loading of Python functions. **auto**, which is the default signifies that Python functions are loaded only when the parser encounters an unknown function. Note that setting the `pythonDisabled` configured literal to `1` will disable Python functions and cannot be overridden from the command line.
 * `--pythonErr` **throw/NaN/zero/nullstr** -- determines what happens when a called Python function throws an exception. The default, `throw` is for **specs** to throw its own exception and terminate. The alternatives, `NaN`, `zero`, and `nullstr` make **specs** behave as if the function returned, NaN, the integer zero, or an empty string respectively.
-* `--help` **help/pyfuncs/funcname** -- does not run specs. Instead, it prints out help for the `help` switch, for python functions in general, or for a particular python function.
+* `--help` **help/pyfuncs/builtin/specs/funcname** -- does not run specs. Instead, it prints out help for the `help` switch, for python functions in general, for the built-in functions in general, for the saved specifications, or for a particular specification or function.
 
 ## Table of record formats
 
