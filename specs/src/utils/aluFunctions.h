@@ -132,6 +132,26 @@
 			"(str,n,[sep]) - Returns the n-th word of 'str' if the word separator is 'sep'.","'sep' defaults to a tab.") \
 	X(abbrev,         3, ALUFUNC_REGULAR,     false,  \
 			"(str,s,[len]) - Returns TRUE (1) if 's' is a prefix of 'str', or FALSE (0) otherwise.","If 'len' is specified, only the first 'len' characters of 's' are considered.") \
+	X(compare,        3, ALUFUNC_REGULAR,     false,  \
+			"(s1,s2,[pad]) - Returns the index of the first mis-matched charcter between s1 and s2.","If the strings are not equal in length, the 'pad' character is used to pad the shorter one.\nIf the 'pad' character is not specified, it defaults to a space.") \
+	X(copies,         2, ALUFUNC_REGULAR,     false,  \
+			"(s,n) - Returns the string 's' duplicated n times.","") \
+	X(delstr,         3, ALUFUNC_REGULAR,     false,  \
+			"(str,start,[length]) - Returns the string 'str' with the substring defined by 'start' and 'length' deleted.","If 'length' is unspecified or zero, the rest of the string is deleted.") \
+	X(delword,        3, ALUFUNC_REGULAR,     false,  \
+			"(str,start,length) - Returns the string 'str' with the word range defined by 'start' and 'length' deleted.","If 'length' is unspecified or zero, the rest of the string is deleted.") \
+	X(find,           2, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(index,          3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(insert,         5, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(justify,        3, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(overlay,        5, ALUFUNC_REGULAR,     false,  \
+			"","") \
+	X(reverse,        1, ALUFUNC_REGULAR,     false,  \
+			"","") \
 	H(Statistical Functions) \
 	X(sum,            1, ALUFUNC_STATISTICAL, false,  \
 			"(fid) - Returns the sum of all values of field identifier 'fid' that have been seen so far.","Only provides information relevant to the entire data set during the run-out cycle.") \
@@ -206,31 +226,11 @@
 			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
 	H(Other Functions) \
 	X(bitand,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(s1,s2) - Returns a bit-wise AND of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(bitor,          2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(s1,s2) - Returns a bit-wise OR of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(bitxor,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(compare,        3, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(copies,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(delstr,         3, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(delword,        3, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(find,           2, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(index,          3, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(insert,         5, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(justify,        3, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(overlay,        5, ALUFUNC_REGULAR,     false,  \
-			"","") \
-	X(reverse,        1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(s1,s2) - Returns a bit-wise XOR of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(sign,           1, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(space,          3, ALUFUNC_REGULAR,     false,  \
