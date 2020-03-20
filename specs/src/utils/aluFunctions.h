@@ -141,17 +141,17 @@
 	X(delword,        3, ALUFUNC_REGULAR,     false,  \
 			"(str,start,length) - Returns the string 'str' with the word range defined by 'start' and 'length' deleted.","If 'length' is unspecified or zero, the rest of the string is deleted.") \
 	X(find,           2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,phrase) - Returns the word number of the first occurrence of 'phrase' in 'str'.","Returns 0 if phrase is not found.\nMultiple blanks between words are treated as one in comparisons.") \
 	X(index,          3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(haystack,needle,[start]) - Returns the character position of needle within string haystack.","Returns 0 if needle is not found.\nIf positive, start tells where in haystack to initiate the search. It defaults to 1 if not specified.\nThe standard pos function should be used instead of index if possible.") \
 	X(insert,         5, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,target,pos,len,pad) - Inserts 'str' into 'target' at position 'pos' and truncated or padded with 'pad' characters to length 'len'.","With default or zero values, 'pos' inserts 'str' at the start of target, and the length of the string is kept as is.\nThe pad defaults to a space.") \
 	X(justify,        3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,len,pad) - Evenly justifies words within 'str'.","The length argument 'len' specifies the length of the returned string,\nwhile 'pad' specifies what padding (by default a space) to insert if necessary.") \
 	X(overlay,        5, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str1,str2,start,length,pad) - Returns a copy of 'str2', partially or fully overwritten by 'str1'.","'start' specifies the starting position of the overlay.\n'length' truncates or pads 'str1' prior to the operation, using 'pad' as the padding character.") \
 	X(reverse,        1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str) - Returns a copy of the string 'str' with its characters reversed.","") \
 	H(Statistical Functions) \
 	X(sum,            1, ALUFUNC_STATISTICAL, false,  \
 			"(fid) - Returns the sum of all values of field identifier 'fid' that have been seen so far.","Only provides information relevant to the entire data set during the run-out cycle.") \
