@@ -906,7 +906,7 @@ unsigned char AluFunction::m_flags = ALUFUNC_REGULAR;
 		m_flags |= flags;                  \
 		return;                            \
 	}
-#define H(hdr)
+#define H(hdr,len)
 AluFunction::AluFunction(std::string& _s)
 {
 	std::string s(_s);

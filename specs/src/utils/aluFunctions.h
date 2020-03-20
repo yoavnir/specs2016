@@ -12,14 +12,14 @@
 
 // function name, number of arguments, whether it needs lines from input
 #define ALU_FUNCTION_LIST            \
-	H(Math Functions) \
+	H(Math Functions,9) \
 	X(abs,            1, ALUFUNC_REGULAR,     false,  \
 			"(x) - Returns the absolute value of x","Will return an int or a float depending on the type of the argument.") \
 	X(pow,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,y) - Returns x to the power of y","Will return an int if both arguments are whole numbers, or a float otherwise.\nThe return value will be int even if the arguments were calculated as floats.") \
 	X(sqrt,           1, ALUFUNC_REGULAR,     false,  \
 			"(x) - Returns the square root of x","Always returns a float.") \
-	H(Recasting Functions) \
+	H(Recasting Functions,16) \
 	X(c2u,            1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the value of the string s re-cast as an unsigned integer.","A length of 1-8 characters is supported.\nA longer length will cause a runtime error.") \
 	X(c2f,            1, ALUFUNC_REGULAR,     false,  \
@@ -34,7 +34,7 @@
 			"(op) - Returns a binary representation of the unsigned integer in 'op'.","The field length is automatically determined by the value of x,\nbut will be 1, 2, 4, or 8 characters in length.") \
 	X(string,         1, ALUFUNC_REGULAR,     false,  \
 			"(x) - Converts x to a string.","") \
-	H(State Functions) \
+	H(State Functions,11) \
 	X(first,          0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns TRUE (1) if this is the first line.","") \
 	X(recno,          0, ALUFUNC_REGULAR,      true,  \
@@ -45,7 +45,7 @@
 			"() - Returns TRUE (1) if this is the run-out phase.","") \
 	X(break,          1, ALUFUNC_REGULAR,     false,  \
 			"(fid) - Returns TRUE (1) if the break for field-identifier 'fid' is established, or FALSE (0) otherwise.","") \
-	H(Record Functions) \
+	H(Record Functions,16) \
 	X(record,         0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
@@ -76,7 +76,7 @@
 			"(i,j) - Returns the substring of the current record from the start of the i-th field to the end of the j-th field.","") \
 	X(range,          2, ALUFUNC_REGULAR,      true,  \
 			"(i,j) - Returns the substring of the current record from position i to position j (inclusive).","") \
-	H(Time Functions) \
+	H(Time Functions,32) \
 	X(tf2mcs,         2, ALUFUNC_REGULAR,     false,  \
 			"(timeString,formatString) - Parses timeString as if it's formatted as indicated by formatString and returns the time value.","Time value is specified in microseconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(mcs2tf,         2, ALUFUNC_REGULAR,     false,  \
@@ -85,7 +85,7 @@
 			"(timeString,formatString) - Parses timeString as if it's formatted as indicated by formatString and returns the time value.","Time value is specified in seconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
 	X(s2tf,           2, ALUFUNC_REGULAR,     false,  \
 			"(timeValue,formatString) - Formats timeValue using the format in formatString and returns the result.","Time value is specified in seconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
-	H(String Functions) \
+	H(String Functions,40) \
 	X(substr,         3, ALUFUNC_REGULAR,     false,  \
 			"([str],[start],[length]) - Returns the substring of 'str' with length 'length' and starting from position 'start'.","If elided, 'str' defaults to the current record.\nIf elided, 'start' defaults to position 1. A negative value counts from the end of 'str'\nIf elided, 'length' defaults to the length of the string. The length can overflow and the result would be truncated at the end of 'str'.") \
 	X(pos,            2, ALUFUNC_REGULAR,     false,  \
@@ -97,11 +97,11 @@
 	X(includesall,    5, ALUFUNC_REGULAR,     false,  \
 			"([haystack],needle1...) - Returns TRUE (1) if 'haystack' includes all of the needles, or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nOne needle is required, but up to four may be specified.") \
 	X(rmatch,         3, ALUFUNC_REGULAR,     false,  \
-			"([haystack],exp,[matchFlags]) - Returns TRUE (1) if the regular expression 'exp' matches 'haystack', or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
+			"([haystack],exp,[mFlags]) - Returns TRUE (1) if the regular expression 'exp' matches 'haystack', or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
 	X(rsearch,        3, ALUFUNC_REGULAR,     false,  \
-			"([haystack],exp,[matchFlags]) - Returns TRUE (1) if the regular expression 'exp' matches some substring of 'haystack', or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
+			"([haystack],exp,[mFlags]) - Returns TRUE (1) if the regular expression 'exp' matches some substring of 'haystack', or FALSE (0) otherwise.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
 	X(rreplace,       4, ALUFUNC_REGULAR,     false,  \
-			"([haystack],exp,fmt,[matchFlags]) - Returns the string 'haystack', with all matches of regular expression 'exp' replaced by 'fmt'.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
+			"([haystack],exp,fmt,[mFlags]) - Returns the string 'haystack', with all matches of regular expression 'exp' replaced by 'fmt'.","If elided, 'haystack' defaults to the current record.\nSee manual for more information about regular expressions, including setting the syntax with\n--regexType and the effects of the matchFlags.") \
 	X(left,           2, ALUFUNC_REGULAR,     false,  \
 			"([str],length) - Returns the substring of 'str' with length 'length' that starts at the beginning.","If elided, 'str' defaults to the current record.\nThe length can overflow and the result would just be all of 'str'.") \
 	X(right,          2, ALUFUNC_REGULAR,     false,  \
@@ -152,7 +152,7 @@
 			"(str1,str2,start,length,pad) - Returns a copy of 'str2', partially or fully overwritten by 'str1'.","'start' specifies the starting position of the overlay.\n'length' truncates or pads 'str1' prior to the operation, using 'pad' as the padding character.") \
 	X(reverse,        1, ALUFUNC_REGULAR,     false,  \
 			"(str) - Returns a copy of the string 'str' with its characters reversed.","") \
-	H(Statistical Functions) \
+	H(Statistical Functions,29) \
 	X(sum,            1, ALUFUNC_STATISTICAL, false,  \
 			"(fid) - Returns the sum of all values of field identifier 'fid' that have been seen so far.","Only provides information relevant to the entire data set during the run-out cycle.") \
 	X(min,            1, ALUFUNC_STATISTICAL, false,  \
@@ -186,8 +186,8 @@
 	X(fmap_sample,    2, ALUFUNC_FREQUENCY,   false,  \
 			"(fid,elem) - Notes an occurence of the value in 'elem' for field identifier 'fid', and returns the number of occurences so far.","This is the only one of the fmap_* functions that modifies the frequency map.\nIt also affects the other statistics functions.") \
 	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false,  \
-			"(fid,format,order,percent) - Returns a multi-line string with the frequency map of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\nPercentage adds a percentage column if true.") \
-	H(Advanced Math Functions) \
+			"(fid,fmt,order,pct) - Returns a multi-line string with the frequency map of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\n'pct' adds a percentage column if true.") \
+	H(Advanced Math Functions,14) \
 	X(rand,           1, ALUFUNC_REGULAR,     false,  \
 			"([limit]) - Returns a random integer up to (but not including) 'limit'.","If 'limit' is omitted, returns a floating point number between 0 and 1.") \
 	X(floor,          1, ALUFUNC_REGULAR,     false,  \
@@ -224,7 +224,7 @@
 			"(x) - Returns exponent function e^x.","") \
 	X(log,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
-	H(Other Functions) \
+	H(Other Functions,30) \
 	X(bitand,         2, ALUFUNC_REGULAR,     false,  \
 			"(s1,s2) - Returns a bit-wise AND of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(bitor,          2, ALUFUNC_REGULAR,     false,  \
@@ -259,7 +259,7 @@
 			"","") \
 	X(rest,           0, ALUFUNC_REGULAR,     false,  \
 			"","") \
-	H(Misc Functions) \
+	H(Misc Functions,20) \
 	X(conf,           2, ALUFUNC_REGULAR,     false,  \
 			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(defined,        1, ALUFUNC_REGULAR,     false,  \
@@ -297,7 +297,7 @@
 #define ALUFUNC5(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*, ALUValue*);
 
 #define X(fn,argc,flags,rl,shorthelp,longhelp) ALUFUNC##argc(fn)
-#define H(hdr)
+#define H(hdr,len)
 ALU_FUNCTION_LIST
 #ifdef DEBUG
 ALU_DEBUG_FUNCTION_LIST

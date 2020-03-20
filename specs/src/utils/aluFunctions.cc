@@ -67,7 +67,7 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
  * ====================
  */
 
-#define FUNC_NAME_AND_ARGS_MIN_LEN  40
+size_t g_help_padding = 40;
 static void aluFunc_help_builtin_func(std::string name, unsigned int argc, std::string sshort, std::string slong, bool bLong)
 {
 	size_t lengthSoFar;
@@ -81,7 +81,7 @@ static void aluFunc_help_builtin_func(std::string name, unsigned int argc, std::
 			lengthSoFar += pos;
 			std::cout << sshort.substr(0,pos+2);
 			static std::string dashes = "..........................................";
-			std::cout << dashes.substr(0,FUNC_NAME_AND_ARGS_MIN_LEN-lengthSoFar)
+			std::cout << dashes.substr(0,g_help_padding-lengthSoFar)
 						<< sshort .substr(pos+3) << "\n";
 		}
 	} else {
@@ -104,7 +104,7 @@ static void aluFunc_help_builtin_header(const std::string& shdr)
 }
 
 #define X(fn,argc,flags,rl,shorthelp,longhelp) aluFunc_help_builtin_func(#fn,argc,shorthelp,longhelp,false);
-#define H(hdr)  aluFunc_help_builtin_header(#hdr);
+#define H(hdr,len)  aluFunc_help_builtin_header(#hdr); g_help_padding = len;
 void aluFunc_help_builtin()
 {
 	ALU_FUNCTION_LIST
@@ -117,7 +117,7 @@ void aluFunc_help_builtin()
 				aluFunc_help_builtin_func(#fn, argc, shorthelp, longhelp, true); \
 				return true;                                                     \
 			}
-#define H(hdr)
+#define H(hdr,len)
 bool aluFunc_help_one_builtin(std::string& funcName)
 {
 	ALU_FUNCTION_LIST
