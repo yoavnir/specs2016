@@ -1094,8 +1094,8 @@ Verifies that all characters in
 are members of the 
 .I reference 
 string. Returns the position of the first character in 
-.I string t
-hat is not in 
+.I string
+that is not in 
 .I reference, 
 or 0 if all characters in 
 .I string 

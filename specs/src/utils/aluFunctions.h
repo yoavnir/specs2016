@@ -224,7 +224,7 @@
 			"(x) - Returns exponent function e^x.","") \
 	X(log,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
-	H(Other Functions,30) \
+	H(Other Functions,36) \
 	X(bitand,         2, ALUFUNC_REGULAR,     false,  \
 			"(s1,s2) - Returns a bit-wise AND of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(bitor,          2, ALUFUNC_REGULAR,     false,  \
@@ -232,23 +232,23 @@
 	X(bitxor,         2, ALUFUNC_REGULAR,     false,  \
 			"(s1,s2) - Returns a bit-wise XOR of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(sign,           1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(x) - Returns -1/0/1 for negative/zero/positive x.","") \
 	X(space,          3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,[len],[pad]) - Formats 'str' by replacing internal blanks with 'len' occurrences of the 'pad' character.","'len' defaults to 1. 'pad' defaults to a space.") \
 	X(strip,          3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,[option],[char]) - Returns 'str' stripped on leading and/or trailing blanks, or whatever 'char' is specified.","'option' can be L/T/B for stripping leading blanks, trailing blanks, or both.\n'char' defaults to a space character; 'option' defaults to Both.") \
 	X(subword,        3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,start,[len]) - Returns the substring of 'str' that begins at blank-delimited word 'start' for 'len' words.","If length is omitted, it defaults to the remainder of the string.") \
 	X(translate,      4, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,[tout],[tin],[pad]) - Returns a translated copy of 'str'.","Characters are translated according to the input translation table 'tin' and its output\nequivalent, 'tout'. If both 'tin' and 'tout' are not coded, all characters in 'str'\nare translated to uppercase. If 'tout' is shorter than 'tin', it is padded with\nthe 'pad' character or its default, blanks.") \
 	X(verify,         4, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,ref,[option],[start]) - Verifies that all characters in the string 'str' are also in the reference string 'ref'.","Returns the position of the first character in 'str' that is not in the reference string, or 0 if all the characters are in the reference string.\n'option' can be 'N' (the default) if all characters should match, or 'M' if all characters should not match.\n'start' allows you to skip some characters of 'str' and defaults to 1.") \
 	X(wordindex,      2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,n) - Returns the starting position of the n-th blank-delimited word in 'str'.","") \
 	X(wordlength,     2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str,n) - Returns the length of the n-th blank-delimited word in 'str'.","") \
 	X(wordpos,        3, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(phrase,str,[start]) - If 'phrase' is a substring of 'str', returns the word number position at which it begins. Otherwise returns 0.","'start' defaults to 1 and is the index of the word where the searching starts.") \
 	X(words,          1, ALUFUNC_REGULAR,     false,  \
 			"","") \
 	X(xrange,         2, ALUFUNC_REGULAR,     false,  \
