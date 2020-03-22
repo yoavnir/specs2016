@@ -224,7 +224,7 @@
 			"(x) - Returns exponent function e^x.","") \
 	X(log,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
-	H(Other Functions,36) \
+	H(Other Functions,34) \
 	X(bitand,         2, ALUFUNC_REGULAR,     false,  \
 			"(s1,s2) - Returns a bit-wise AND of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(bitor,          2, ALUFUNC_REGULAR,     false,  \
@@ -250,20 +250,20 @@
 	X(wordpos,        3, ALUFUNC_REGULAR,     false,  \
 			"(phrase,str,[start]) - If 'phrase' is a substring of 'str', returns the word number position at which it begins. Otherwise returns 0.","'start' defaults to 1 and is the index of the word where the searching starts.") \
 	X(words,          1, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(str) - Returns the number of blank-delimited words in 'str'.","") \
 	X(xrange,         2, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(starts,end) - Returns a string composed of all the characters between 'start' and 'end' inclusive.","'start' defaults to 0x00, and 'end' defaults to 0xff.") \
 	X(fmt,            5, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"(val,fmt,digits,dec,sep) - Returns a string representation of the floating point number 'val'.","The 'fmt' argument can be omitted, or it can begin with 'f' for a fixed number of digits after the\ndecimal point, or 's' for scientific notation. When omitted, the 'digits' argument sets the total\nnumber of digits displayed. The 'dec' argument sets the character used for the decimal point (defaul\nis a period), while the 'sep' argument sets the character used as thousands separator (default is none).") \
 	X(next,           0, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"() - Returns the column of the next character to print if a spec unit specifies the NEXT position.","") \
 	X(rest,           0, ALUFUNC_REGULAR,     false,  \
-			"","") \
+			"() - Returns the number of columns from the current position to the end of the line.","") \
 	H(Misc Functions,20) \
 	X(conf,           2, ALUFUNC_REGULAR,     false,  \
 			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(defined,        1, ALUFUNC_REGULAR,     false,  \
-			"","")
+			"(s) - Returns TRUE (1) if the string 's' is a configured string, or FALSE (0) otherwise.","")
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false,  \
