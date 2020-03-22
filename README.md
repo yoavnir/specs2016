@@ -16,6 +16,7 @@ New features:
 * Python functions
 * MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
 * Regular expressions
+* Built in help through the --help switch
 
 Sources
 =======
