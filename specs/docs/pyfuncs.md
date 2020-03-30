@@ -78,3 +78,27 @@ Python Interface Functions:
 ```
 
 ## Advanced functions
+
+Functions written in Python can be as complex as you like. What's more, such functions need not be stateless. Consider the following example. The `countocc` function will tell us how many times the `needle` appears in the `haystack`.  Here's how to do it:
+```
+occ_dict = dict()
+def countocc(haystack,needle):
+	'''
+	This function counts how many time each needle was found in the haystack in invocations
+	of this function. The function returns the current count of matches
+	'''
+	global occ_dict  # make the global struct available to the function
+	
+	if not needle in occ_dict.keys():
+		occ_dict[needle] = 0
+	if haystack.find(needle) >= 0:
+		occ_dict[needle] = occ_dict[needle] + 1
+	
+	return occ_dict[needle]
+```
+So how would we use this?
+```
+specs set "#0:=countocc(@@,'hello')"  EOF print "#0" 1
+```
+This counts the lines in the input that included the word 'hello'.
+
