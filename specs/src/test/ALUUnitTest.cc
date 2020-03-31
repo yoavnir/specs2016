@@ -1001,6 +1001,12 @@ int runALUUnitTests10(unsigned int onlyTest)
 	VERIFY_EXPR_RES("round(arcdtan(0.5),8)", "26.56505118");
 	VERIFY_EXPR_RES("round(arcdtan(-0.2),8)", "-11.30993247");
 
+	VERIFY_EXPR_RES("exp(0)", "1");
+	VERIFY_EXPR_RES("floor(exp(3))", "20");
+	VERIFY_EXPR_RES("log(1)", "0");
+	VERIFY_EXPR_RES("round(log(20,10)*10)","13");
+	VERIFY_EXPR_RES("log(100,10)","2");
+
 	VERIFY_EXPR_RES("string(3.0000)", "3.0000");
 	VERIFY_EXPR_RES("string(3.0000+2.0000)", "5");
 

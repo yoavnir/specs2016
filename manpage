@@ -590,6 +590,14 @@ return an angle in radians, while
 and
 .B arcdtan 
 return an angle in degrees.
+.IP "exp(x) and log(x,base)" 3
+There return the 
+.B exponent 
+of x or the 
+.B logarithm 
+of x. By default, the logarithm function returns the 
+.I natural 
+log.
 .IP "string(x)" 3
 Returns the same value as the argument, but forced to be stored as a string. There is nothing preventing this from later evaluating as a number, so
 .I string(3)+2
@@ -1086,8 +1094,8 @@ Verifies that all characters in
 are members of the 
 .I reference 
 string. Returns the position of the first character in 
-.I string t
-hat is not in 
+.I string
+that is not in 
 .I reference, 
 or 0 if all characters in 
 .I string 
@@ -1420,7 +1428,11 @@ Does not run specs. Instead it displays a help message according to the paramete
 .B help
 prints general help, 
 .B pyfuncs
-prints the name, arguments, and docstring of all loaded python functions, and a particular python function name makes 
+prints the name, arguments, and docstring of all loaded python functions, 
+.B builtin
+prints the name, arguments, and a line of help for the built-in functions, 
+.B specs 
+prints a list of all specifications on the path and the comment, and a particular python function name makes 
 .I help
 display the arguments and docstring of that function only.
 

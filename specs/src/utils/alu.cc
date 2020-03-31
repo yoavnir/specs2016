@@ -899,13 +899,14 @@ std::string AluOtherToken::_identify()
 
 unsigned char AluFunction::m_flags = ALUFUNC_REGULAR;
 
-#define X(nm,cnt,flags,rl)	if (s==#nm) {  \
+#define X(nm,cnt,flags,rl,shorthelp,longhelp)	if (s==#nm) {  \
 		m_FuncName = s; m_ArgCount = cnt;  \
 		m_reliesOnInput = rl;              \
 		mp_Func = (void*)AluFunc_##nm;     \
 		m_flags |= flags;                  \
 		return;                            \
 	}
+#define H(hdr,len)
 AluFunction::AluFunction(std::string& _s)
 {
 	std::string s(_s);
@@ -935,8 +936,9 @@ AluFunction::AluFunction(std::string& _s)
 		}
 		MYASSERT(p_gExternalFunctions->IsInitialized());
 		m_pExternalFunc = p_gExternalFunctions->GetFunctionByName(_s);
-#endif
 	}
+#endif
+
 	if (!m_pExternalFunc) {
 		std::string err = "Unrecognized function "+_s;
 		MYTHROW(err);
@@ -948,6 +950,7 @@ AluFunction::AluFunction(std::string& _s)
 	m_flags |= ALUFUNC_EXTERNAL;
 }
 #undef X
+#undef H
 
 void AluFunction::_serialize(std::ostream& os) const
 {

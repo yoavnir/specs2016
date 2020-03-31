@@ -9,6 +9,9 @@ specs/src/.cproject
 specs/src/.project
 specs/src/.settings/
 
+# also vscode
+specs/src/.vscode/
+
 # Generated Makefile
 specs/src/Makefile
 

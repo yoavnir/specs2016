@@ -90,22 +90,44 @@ CONTINUE:
 
 	// help
 	if (g_help!="") {
+#ifndef SPECS_NO_PYTHON
+		readConfigurationFile();
 		try {
 			p_gExternalFunctions->Initialize(getFullSpecPath());
 		} catch (const SpecsException& e) {
 			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
 			exit(0);
 		}
+#endif
 		if (g_help == "help") {
 			std::cerr << "specs help:\n";
-			std::cerr << "\tspecs --help help       -- this list\n";
-			std::cerr << "\tspecs --help pyfuncs    -- lists the available python functions\n";
-			std::cerr << "\tspecs --help <funcname> -- provides arguments and doc for a particular python function\n";
+			std::cerr << "\tspecs --help help    -- this list\n";
+#ifndef SPECS_NO_PYTHON
+			std::cerr << "\tspecs --help pyfuncs -- lists the available python functions\n";
+#endif
+			std::cerr << "\tspecs --help builtin -- lists the available builtin functions\n";
+			std::cerr << "\tspecs --help specs   -- lists the available specifications\n";
+			std::cerr << "\tspecs --help <name>  -- provides arguments and doc for a particular python or builtin function, or specification\n";
 			return false;
 		}
 		if (g_help == "pyfuncs") {
+#ifdef SPECS_NO_PYTHON
+			std::cerr << "Python functions are not supported in this build.\n";
+#else
 			p_gExternalFunctions->Debug();
-		} else if (false == p_gExternalFunctions->DebugOne(g_help)) {
+#endif
+		} else if (g_help == "builtin") {
+			aluFunc_help_builtin();
+		} else if (g_help == "specs") {
+			dumpSpecificationsList();
+		} else if ((false == aluFunc_help_one_builtin(g_help)) && 
+#ifdef SPECS_NO_PYTHON
+				(true))
+#else
+				(false == p_gExternalFunctions->DebugOne(g_help)) &&
+				(false == dumpSpecificationsList(g_help)))
+#endif
+		{
 			std::cerr << "specs: I don't know anything about " << g_help << std::endl;
 		}
 		return false;
@@ -143,6 +165,7 @@ int main (int argc, char** argv)
 		exit(0);
 	}
 
+#ifndef SPECS_NO_PYTHON
 	if ("" != g_pythonErr) {
 		try {
 			p_gExternalFunctions->SetErrorHandling(g_pythonErr);
@@ -163,6 +186,7 @@ int main (int argc, char** argv)
 		p_gExternalFunctions->Debug();
 #endif
 	}
+#endif
 
 	std::vector<Token> vec;
 

@@ -8,6 +8,7 @@
 #include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
+#include <dirent.h>
 #include "tokens.h"
 
 void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx);
@@ -126,6 +127,9 @@ std::vector<Token> parseTokensSplit(const char* arg)
 // on the line, preceded by whitespace unless it's at the start of the line.
 std::string removeComment(std::string& st)
 {
+	// Special case - a line that is just a pound sign
+	if (st=="#") return std::string("");
+	
 	std::size_t found = st.rfind("# ");
 	if (found==std::string::npos) return st;
 
@@ -174,4 +178,61 @@ std::vector<Token> parseTokensFile(std::string& fileName)
 		std::string err = "Spec file not found: " + fileName;
 		MYTHROW(err);
 	}
+}
+
+static bool isPotentiallyASpecificationName(const char* _s)
+{
+	if (_s[0]=='.' || _s[0]=='_') return false;
+	if (strstr(_s, ".py")) return false;
+	return true;
+}
+
+bool dumpSpecificationsList(std::string specName)
+{
+	char* spath = strdup(getFullSpecPath());
+	if (spath && spath[0]) {
+		char* onePath = strtok(spath, PATH_LIST_SEPARATOR);
+		while (onePath) {
+			DIR *dir;
+			struct dirent *ent;
+			if ((dir = opendir (onePath)) != NULL) {
+				while ((ent = readdir (dir)) != NULL) {
+					if (isPotentiallyASpecificationName(ent->d_name) &&
+							(specName==ent->d_name || specName=="")) {
+						std::cerr << "Specification <" << ent->d_name << ">";
+						std::string fullpath = std::string(onePath) + PATHSEP + ent->d_name;
+						std::ifstream specFile;
+						specFile.open(fullpath);
+						std::string line;
+						if (specName=="") {
+							if (getline(specFile,line)) {
+								if (line[0]=='#') {
+									std::cerr << ": " << line.substr(1);
+								}
+							}
+							std::cerr << std::endl;
+						} else {
+							bool bStartCommentEnded = false;
+							std::cerr << std::endl;
+							while (!bStartCommentEnded && getline(specFile,line)) {
+								if (line[0]=='#') {
+									std::cerr << "\t" << line.substr(1) << std::endl;
+								} else {
+									bStartCommentEnded = true;
+								}
+							}
+							std::cerr << std::endl;
+							closedir(dir);
+							free(spath);
+							return true;
+						}
+					}
+				}
+				closedir(dir);
+			}
+			onePath = strtok(NULL, PATH_LIST_SEPARATOR);
+		}
+	}
+	if (spath) free(spath);
+	return (specName=="");
 }

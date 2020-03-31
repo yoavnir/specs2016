@@ -142,4 +142,6 @@ std::vector<Token> parseTokensFile(std::string& fileName);
 
 void normalizeTokenList(std::vector<Token> *tokList);
 
+bool dumpSpecificationsList(std::string specName = "");
+
 #endif
