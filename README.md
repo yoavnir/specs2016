@@ -10,8 +10,8 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-29-Feb-2020: Version 0.6 Beta is here 
--------------------------------------
+1-Apr-2020: Version 0.6 GA is here 
+----------------------------------
 New features:
 * Python functions
 * MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
