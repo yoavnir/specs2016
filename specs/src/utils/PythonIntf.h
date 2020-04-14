@@ -10,7 +10,7 @@ public:
 	virtual size_t    GetArgCount() = 0;
 	virtual void      ResetArgs() = 0;
 	virtual void      setArgValue(size_t idx, ALUValue *pValue) = 0;
-	virtual ALUValue* Call() = 0;
+	virtual PValue    Call() = 0;
 };
 
 class ExternalFunctionCollection {

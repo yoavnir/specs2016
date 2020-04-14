@@ -20,7 +20,7 @@ public:
 	ALUInt			getHex(ALUCounterKey i)		{return m_map[i].getHex();}
 	ALUFloat		getFloat(ALUCounterKey i)		{return m_map[i].getFloat();}
 	bool			getBool(ALUCounterKey i)		{return m_map[i].getBool();}
-	ALUValue*		getPointer(ALUCounterKey i)	{
+	PValue		getPointer(ALUCounterKey i)	{
 		if (0 == m_map.count(i)) m_map[i].set(ALUInt(0));
 		return &m_map[i];
 	}
@@ -106,12 +106,12 @@ public:
 	virtual void   			_serialize(std::ostream& os) const = 0;
 	virtual std::string     _identify() = 0;
 	virtual AluUnitType		type()	{return UT_Invalid;}
-	virtual ALUValue*		evaluate();
-	virtual ALUValue*		compute(ALUValue* op);
-	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2);
-	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
-	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
-	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5);
+	virtual PValue		evaluate();
+	virtual PValue		compute(PValue op);
+	virtual PValue		compute(PValue op1, PValue op2);
+	virtual PValue		compute(PValue op1, PValue op2, PValue op3);
+	virtual PValue		compute(PValue op1, PValue op2, PValue op3, PValue op4);
+	virtual PValue		compute(PValue op1, PValue op2, PValue op3, PValue op4, PValue op5);
 	virtual bool            requiresRead() {return false;} // true if this unit requires lines to be read
 };
 
@@ -122,7 +122,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_LiteralNumber;}
-	virtual ALUValue*			evaluate();
+	virtual PValue			evaluate();
 private:
 	ALUValue	m_literal;
 	bool        m_hintNumerical;
@@ -135,7 +135,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_Null;}
-	virtual ALUValue*			evaluate();
+	virtual PValue			evaluate();
 };
 
 class AluUnitCounter : public AluUnit {
@@ -146,7 +146,7 @@ public:
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_Counter;}
 	using AluUnit::compute;  // prevent a warning about overloading
-	virtual ALUValue*			compute(ALUCounters* pCtrs);
+	virtual PValue			compute(ALUCounters* pCtrs);
 	ALUCounterKey				getKey()		{return m_ctrNumber;}
 private:
 	ALUCounterKey m_ctrNumber;
@@ -167,7 +167,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify();
 	virtual AluUnitType			type()			{return UT_FieldIdentifier;}
-	virtual ALUValue*			evaluate();
+	virtual PValue			evaluate();
 	void                        setEvaluateToName()  {m_ReturnIdentifier = true;}
 private:
 	char         m_id;
@@ -180,7 +180,7 @@ enum ALU_UnaryOperator {
 };
 #undef X
 
-#define X(nm,str) ALUValue* compute##nm(ALUValue* operand);
+#define X(nm,str) PValue compute##nm(PValue operand);
 class AluUnitUnaryOperator : public AluUnit {
 public:
 	AluUnitUnaryOperator(std::string& s);
@@ -190,7 +190,7 @@ public:
 	virtual void			_serialize(std::ostream& os) const;
 	virtual std::string		_identify();
 	virtual AluUnitType		type()			{return UT_UnaryOp;}
-	virtual ALUValue*		compute(ALUValue* operand);
+	virtual PValue		compute(PValue operand);
 private:
 	void               setOpByName(std::string& s);
 	ALU_UOP_LIST
@@ -204,7 +204,7 @@ enum ALU_BinaryOperator {
 };
 #undef X
 
-#define X(nm,str,prio) ALUValue* compute##nm(ALUValue* op1, ALUValue* op2);
+#define X(nm,str,prio) PValue compute##nm(PValue op1, PValue op2);
 class AluBinaryOperator : public AluUnit {
 public:
 	AluBinaryOperator(std::string& s);
@@ -214,7 +214,7 @@ public:
 	virtual void			_serialize(std::ostream& os) const;
 	virtual std::string		_identify();
 	virtual AluUnitType		type()			{return UT_BinaryOp;}
-	virtual ALUValue*		compute(ALUValue* op1, ALUValue* op2);
+	virtual PValue		compute(PValue op1, PValue op2);
 	unsigned int			priority()	{return m_priority;}
 private:
 	void				setOpByName(std::string& s);
@@ -230,7 +230,7 @@ enum ALU_AssignmentOperator {
 };
 #undef X
 
-#define X(nm,str) ALUValue* compute##nm(ALUValue* operand, ALUValue* prevValue);
+#define X(nm,str) PValue compute##nm(PValue operand, PValue prevValue);
 class AluAssnOperator : public AluUnit {
 public:
 	AluAssnOperator()				{m_op = AssnOp__Let;}
@@ -241,7 +241,7 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string 		_identify();
 	virtual AluUnitType			type()			{return UT_AssignmentOp;}
-	void	perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, ALUValue* operand);
+	void	perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, PValue operand);
 private:
 	void               setOpByName(std::string& s);
 	ALU_ASSOP_LIST
@@ -257,12 +257,12 @@ public:
 	virtual void				_serialize(std::ostream& os) const;
 	virtual std::string			_identify()	{return "FUNC("+m_FuncName+")";}
 	virtual AluUnitType			type()		{return UT_Identifier;}
-	virtual ALUValue*			evaluate();
-	virtual ALUValue*			compute(ALUValue* op);
-	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2);
-	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3);
-	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
-	virtual ALUValue*			compute(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5);
+	virtual PValue			evaluate();
+	virtual PValue			compute(PValue op);
+	virtual PValue			compute(PValue op1, PValue op2);
+	virtual PValue			compute(PValue op1, PValue op2, PValue op3);
+	virtual PValue			compute(PValue op1, PValue op2, PValue op3, PValue op4);
+	virtual PValue			compute(PValue op1, PValue op2, PValue op3, PValue op4, PValue op5);
 	virtual bool                requiresRead()  { return m_reliesOnInput; }
 	std::string&                getName()       { return m_FuncName; }
 	static unsigned char        functionTypes() { return m_flags; }
@@ -284,7 +284,7 @@ public:
 	virtual void   			_serialize(std::ostream& os) const;
 	virtual std::string     _identify()	{return "@@";}
 	virtual AluUnitType		type()	{return UT_InputRecord;}
-	virtual ALUValue*		evaluate();
+	virtual PValue		evaluate();
 	virtual bool            requiresRead() {return true;}
 };
 
@@ -308,19 +308,19 @@ public:
 	AluValueStats(char id);
 	void         AddValue(char id);
 
-	ALUValue*    sum();
-	ALUValue*    sumi();
-	ALUValue*    sumf();
-	ALUValue*    _min();
-	ALUValue*    mini();
-	ALUValue*    minf();
-	ALUValue*    _max();
-	ALUValue*    maxi();
-	ALUValue*    maxf();
-	ALUValue*    average();
-	ALUValue*    variance();
-	ALUValue*    stddev();
-	ALUValue*    stderrmean();
+	PValue    sum();
+	PValue    sumi();
+	PValue    sumf();
+	PValue    _min();
+	PValue    mini();
+	PValue    minf();
+	PValue    _max();
+	PValue    maxi();
+	PValue    maxf();
+	PValue    average();
+	PValue    variance();
+	PValue    stddev();
+	PValue    stderrmean();
 
 private:
 	void         initialize();
@@ -359,7 +359,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
 
 bool breakAluVecByComma(AluVec& source, AluVec& dest);
 
-ALUValue* evaluateExpression(AluVec& expr, ALUCounters* pctrs);
+PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs);
 
 void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs);
 

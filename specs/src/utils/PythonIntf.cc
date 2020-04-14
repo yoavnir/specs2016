@@ -154,8 +154,8 @@ public:
 		PyTuple_SetItem(m_pTuple, idx, pValObj);
 	}
 
-	ALUValue* Call() {
-		ALUValue* pRet = NULL;
+	PValue Call() {
+		PValue pRet = NULL;
 
 		// Check that all values were passed, complete those that haven't
 		for (size_t i=0 ; i<GetArgCount() ; i++) {

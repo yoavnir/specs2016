@@ -431,7 +431,7 @@ void DataField::stripString(PSpecString &pOrig)
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	bool bWritingWasDone = false;
-	ALUValue* pComposedStartingPosition = NULL;
+	PValue pComposedStartingPosition = NULL;
 	PSpecString pInput = m_InputPart->getStr(pState);
 	size_t outputWidth = m_maxLength;
 
@@ -460,7 +460,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	// truncate or expand if necessary
 
 	if (outputWidth==POS_SPECIAL_VALUE_COMPOSED) {
-		ALUValue* res;
+		PValue res;
 		if (m_outputWidthExpression.size() > 0) {
 			res = evaluateExpression(m_outputWidthExpression, &g_counters);
 		} else if (m_outputStartExpression.size() > 0) {
@@ -493,7 +493,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		} else {
 			outputAlignment al = outputAlignmentLeft;
 			ellipsisSpec es = ellipsisSpecNone;
-			ALUValue* res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
+			PValue res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
 			std::string s = res->getStr();
 			delete res;
 
@@ -546,7 +546,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTFIELD) {
 		pSB->insertNextField(pInput);
 	} else if (m_outStart==POS_SPECIAL_VALUE_COMPOSED) {
-		ALUValue* res;
+		PValue res;
 		if (m_outputStartExpression.size() > 0) {
 			if (NULL == pComposedStartingPosition) {
 				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);

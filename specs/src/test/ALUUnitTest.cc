@@ -113,7 +113,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define UNIT_DIVINED_TYPE(u,t) do { \
 	INC_TEST_INDEX;				\
-	ALUValue* ctr = u.evaluate(); \
+	PValue ctr = u.evaluate(); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (ctr->getDivinedType()==counterType__##t) { \
@@ -128,7 +128,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_UNIT_ST(u,s) do { \
 	INC_TEST_INDEX;				\
-	ALUValue* ctr = u.compute(&counters); \
+	PValue ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is \""<< s <<"\": "; \
 	if (ctr->getStr()==s) { \
@@ -142,7 +142,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_UNIT_INT(u,i) do { \
 	INC_TEST_INDEX;				\
-	ALUValue* ctr = u.compute(&counters); \
+	PValue ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< i <<": "; \
 	if (ctr->getInt()==i) { \
@@ -156,7 +156,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_UNIT_F(u,f) do { \
 	INC_TEST_INDEX;				\
-	ALUValue* ctr = u.compute(&counters); \
+	PValue ctr = u.compute(&counters); \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << " is "<< f <<": "; \
 	if (ctr->getFloat()==f) { \
@@ -171,8 +171,8 @@ extern bool g_bWarnAboutGrammars;
 #define VERIFY_UNARY(u,o,t,s) do { \
 	INC_TEST_INDEX;				\
 	AluUnitCounter ctr(o);	\
-	ALUValue* _op = ctr.compute(&counters);	\
-	ALUValue* _res = u.compute(_op);	\
+	PValue _op = ctr.compute(&counters);	\
+	PValue _res = u.compute(_op);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
@@ -191,9 +191,9 @@ extern bool g_bWarnAboutGrammars;
 	INC_TEST_INDEX;				\
 	AluUnitCounter ctr1(o1);	\
 	AluUnitCounter ctr2(o2);	\
-	ALUValue* _op1 = ctr1.compute(&counters);	\
-	ALUValue* _op2 = ctr2.compute(&counters);	\
-	ALUValue* _res = u.compute(_op1,_op2);	\
+	PValue _op1 = ctr1.compute(&counters);	\
+	PValue _op2 = ctr2.compute(&counters);	\
+	PValue _res = u.compute(_op1,_op2);	\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
@@ -211,7 +211,7 @@ extern bool g_bWarnAboutGrammars;
 #define VERIFY_ASSN(u,p,o,t,s) do {		\
 	INC_TEST_INDEX;				\
 	AluUnitCounter 	ctr(o);	\
-	ALUValue*		op = ctr.compute(&counters);	\
+	PValue		op = ctr.compute(&counters);	\
 	u.perform(p,&counters,op);			\
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
 	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
@@ -381,7 +381,7 @@ AluVec vec;
 std::string _expr;
 AluVec rpnVec;
 bool _res, _res2;
-ALUValue* _result;
+PValue _result;
 /* global variables */
 
 int runALUUnitTests(unsigned int onlyTest)

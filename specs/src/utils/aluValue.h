@@ -59,4 +59,5 @@ private:
 	ALUCounterType m_type;
 };
 
+typedef ALUValue* PValue;
 #endif

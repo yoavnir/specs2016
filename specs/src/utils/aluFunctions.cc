@@ -135,7 +135,7 @@ bool aluFunc_help_one_builtin(std::string& funcName)
  *
  */
 
-ALUValue* AluFunc_abs(ALUValue* op)
+PValue AluFunc_abs(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	if (op->getType()==counterType__Int) {
@@ -149,7 +149,7 @@ ALUValue* AluFunc_abs(ALUValue* op)
 	}
 }
 
-ALUValue* AluFunc_pow(ALUValue* op1, ALUValue* op2)
+PValue AluFunc_pow(PValue op1, PValue op2)
 {
 	ASSERT_NOT_ELIDED(op1,1,base);
 	ASSERT_NOT_ELIDED(op2,2,exponent);
@@ -165,7 +165,7 @@ ALUValue* AluFunc_pow(ALUValue* op1, ALUValue* op2)
 	return new ALUValue(std::pow(op1->getFloat(), op2->getFloat()));
 }
 
-ALUValue* AluFunc_sqrt(ALUValue* op)
+PValue AluFunc_sqrt(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,square);
 	return new ALUValue(std::sqrt(op->getFloat()));
@@ -173,7 +173,7 @@ ALUValue* AluFunc_sqrt(ALUValue* op)
 
 // Both of the following functions assume little-endian architecture
 // The mainframe version and Solaris version will need some work...
-static uint64_t binary2uint64(ALUValue* op, unsigned char *pNumBits = NULL)
+static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = NULL)
 {
 	std::string str = op->getStr();
 	uint64_t value = 0;
@@ -225,7 +225,7 @@ static uint64_t binary2uint64(ALUValue* op, unsigned char *pNumBits = NULL)
 	return value;
 }
 
-ALUValue* AluFunc_c2u(ALUValue* op)
+PValue AluFunc_c2u(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	uint64_t value = binary2uint64(op);
@@ -233,7 +233,7 @@ ALUValue* AluFunc_c2u(ALUValue* op)
 	return new ALUValue(ALUInt(value));
 }
 
-ALUValue* AluFunc_c2d(ALUValue* op)
+PValue AluFunc_c2d(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	unsigned char numBytes;
@@ -264,7 +264,7 @@ ALUValue* AluFunc_c2d(ALUValue* op)
 	return NULL;
 }
 
-ALUValue* AluFunc_c2f(ALUValue* op)
+PValue AluFunc_c2f(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	std::string str = op->getStr();
@@ -293,14 +293,14 @@ ALUValue* AluFunc_c2f(ALUValue* op)
 
 
 
-ALUValue* AluFunc_frombin(ALUValue* op)
+PValue AluFunc_frombin(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	uint64_t value = binary2uint64(op);
 	return new ALUValue(ALUInt(value));
 }
 
-ALUValue* AluFunc_tobine(ALUValue* op, ALUValue* _bits)
+PValue AluFunc_tobine(PValue op, PValue _bits)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	ASSERT_NOT_ELIDED(_bits,2,bits);
@@ -319,7 +319,7 @@ ALUValue* AluFunc_tobine(ALUValue* op, ALUValue* _bits)
 	}
 }
 
-ALUValue* AluFunc_tobin(ALUValue* op)
+PValue AluFunc_tobin(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	static ALUValue bit8(ALUInt(8));
@@ -334,46 +334,46 @@ ALUValue* AluFunc_tobin(ALUValue* op)
 	return AluFunc_tobine(op,&bit64);
 }
 
-ALUValue* AluFunc_length(ALUValue* op)
+PValue AluFunc_length(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	return new ALUValue(ALUInt(op->getStr().length()));
 }
 
-ALUValue* AluFunc_first()
+PValue AluFunc_first()
 {
 	bool isFirst = g_pStateQueryAgent->isRunIn();
 	return new ALUValue(ALUInt(isFirst ? 1 : 0));
 }
 
-ALUValue* AluFunc_number()
+PValue AluFunc_number()
 {
 	return new ALUValue(g_pStateQueryAgent->getIterationCount());
 }
 
-ALUValue* AluFunc_recno()
+PValue AluFunc_recno()
 {
 	return new ALUValue(g_pStateQueryAgent->getRecordCount());
 }
 
-ALUValue* AluFunc_eof()
+PValue AluFunc_eof()
 {
 	bool isRunOut = g_pStateQueryAgent->isRunOut();
 	return new ALUValue(ALUInt(isRunOut ? 1 : 0));
 }
 
-ALUValue* AluFunc_wordcount()
+PValue AluFunc_wordcount()
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordCount()));
 }
 
-ALUValue* AluFunc_fieldcount()
+PValue AluFunc_fieldcount()
 {
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldCount()));
 }
 
 // Helper function
-static ALUValue* AluFunc_range(ALUInt start, ALUInt end)
+static PValue AluFunc_range(ALUInt start, ALUInt end)
 {
 	PSpecString pRange = g_pStateQueryAgent->getFromTo(start, end);
 	if (pRange) {
@@ -385,19 +385,19 @@ static ALUValue* AluFunc_range(ALUInt start, ALUInt end)
 	}
 }
 
-ALUValue* AluFunc_record()
+PValue AluFunc_record()
 {
 	return AluFunc_range(1,-1);
 }
 
-ALUValue* AluFunc_range(ALUValue* pStart, ALUValue* pEnd)
+PValue AluFunc_range(PValue pStart, PValue pEnd)
 {
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 	ALUInt end = ARG_INT_WITH_DEFAULT(pEnd, -1);
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_word(ALUValue* pIdx)
+PValue AluFunc_word(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	ALUInt idx = pIdx->getInt();
@@ -406,7 +406,7 @@ ALUValue* AluFunc_word(ALUValue* pIdx)
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_field(ALUValue* pIdx)
+PValue AluFunc_field(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	ALUInt idx = pIdx->getInt();
@@ -415,7 +415,7 @@ ALUValue* AluFunc_field(ALUValue* pIdx)
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_wordrange(ALUValue* pStart, ALUValue* pEnd)
+PValue AluFunc_wordrange(PValue pStart, PValue pEnd)
 {
 	ALUInt startIdx = ARG_INT_WITH_DEFAULT(pStart, 1);
 	ALUInt endIdx = ARG_INT_WITH_DEFAULT(pEnd, -1);
@@ -424,7 +424,7 @@ ALUValue* AluFunc_wordrange(ALUValue* pStart, ALUValue* pEnd)
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_fieldrange(ALUValue* pStart, ALUValue* pEnd)
+PValue AluFunc_fieldrange(PValue pStart, PValue pEnd)
 {
 	ALUInt startIdx = ARG_INT_WITH_DEFAULT(pStart, 1);
 	ALUInt endIdx = ARG_INT_WITH_DEFAULT(pEnd, -1);
@@ -433,19 +433,19 @@ ALUValue* AluFunc_fieldrange(ALUValue* pStart, ALUValue* pEnd)
 	return AluFunc_range(start, end);
 }
 
-ALUValue* AluFunc_fieldindex(ALUValue* pIdx)
+PValue AluFunc_fieldindex(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldStart(pIdx->getInt())));
 }
 
-ALUValue* AluFunc_fieldend(ALUValue* pIdx)
+PValue AluFunc_fieldend(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getFieldEnd(pIdx->getInt())));
 }
 
-ALUValue* AluFunc_fieldlength(ALUValue* pIdx)
+PValue AluFunc_fieldlength(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	auto idx = pIdx->getInt();
@@ -453,19 +453,19 @@ ALUValue* AluFunc_fieldlength(ALUValue* pIdx)
 	return new ALUValue(ALUInt(len));
 }
 
-ALUValue* AluFunc_wordstart(ALUValue* pIdx)
+PValue AluFunc_wordstart(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordStart(pIdx->getInt())));
 }
 
-ALUValue* AluFunc_wordend(ALUValue* pIdx)
+PValue AluFunc_wordend(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	return new ALUValue(ALUInt(g_pStateQueryAgent->getWordEnd(pIdx->getInt())));
 }
 
-ALUValue* AluFunc_wordlen(ALUValue* pIdx)
+PValue AluFunc_wordlen(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	auto idx = pIdx->getInt();
@@ -473,7 +473,7 @@ ALUValue* AluFunc_wordlen(ALUValue* pIdx)
 	return new ALUValue(ALUInt(len));
 }
 
-ALUValue* AluFunc_tf2mcs(ALUValue* pTimeFormatted, ALUValue* pFormat)
+PValue AluFunc_tf2mcs(PValue pTimeFormatted, PValue pFormat)
 {
 	ASSERT_NOT_ELIDED(pTimeFormatted,1,formatted_time);
 	ASSERT_NOT_ELIDED(pFormat,2,format);
@@ -481,18 +481,18 @@ ALUValue* AluFunc_tf2mcs(ALUValue* pTimeFormatted, ALUValue* pFormat)
 	return new ALUValue(ALUInt(tm));
 }
 
-ALUValue* AluFunc_mcs2tf(ALUValue* pValue, ALUValue* pFormat)
+PValue AluFunc_mcs2tf(PValue pValue, PValue pFormat)
 {
 	ASSERT_NOT_ELIDED(pValue,1,time_value);
 	ASSERT_NOT_ELIDED(pFormat,2,format);
 	int64_t microseconds = pValue->getInt();
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	ALUValue* ret = new ALUValue(printable->data(), printable->length());
+	PValue ret = new ALUValue(printable->data(), printable->length());
 	delete printable;
 	return ret;
 }
 
-ALUValue* AluFunc_tf2s(ALUValue* pTimeFormatted, ALUValue* pFormat)
+PValue AluFunc_tf2s(PValue pTimeFormatted, PValue pFormat)
 {
 	ASSERT_NOT_ELIDED(pTimeFormatted,1,formatted_time);
 	ASSERT_NOT_ELIDED(pFormat,2,format);
@@ -502,14 +502,14 @@ ALUValue* AluFunc_tf2s(ALUValue* pTimeFormatted, ALUValue* pFormat)
         return new ALUValue(ALUFloat(seconds+microseconds));
 }
 
-ALUValue* AluFunc_s2tf(ALUValue* pValue, ALUValue* pFormat)
+PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
 {
 	ASSERT_NOT_ELIDED(pValue,1,time_value);
 	ASSERT_NOT_ELIDED(pFormat,2,format);
         ALUFloat seconds = pValue->getFloat();
         int64_t microseconds = seconds * MICROSECONDS_PER_SECOND;
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	ALUValue* ret = new ALUValue(printable->data(), printable->length());
+	PValue ret = new ALUValue(printable->data(), printable->length());
 	delete printable;
 	return ret;
 }
@@ -517,7 +517,7 @@ ALUValue* AluFunc_s2tf(ALUValue* pValue, ALUValue* pFormat)
 
 // Substring functions
 
-static ALUValue* AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt length)
+static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt length)
 {
 	// handle start
 	if (start==0) {    // invalid string index in specs
@@ -547,7 +547,7 @@ static ALUValue* AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt le
 	return new ALUValue(pStr->substr(start-1,length));
 }
 
-ALUValue* AluFunc_substr(ALUValue* pBigString, ALUValue* pStart, ALUValue* pLength)
+PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 {
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
@@ -555,7 +555,7 @@ ALUValue* AluFunc_substr(ALUValue* pBigString, ALUValue* pStart, ALUValue* pLeng
 	return AluFunc_substring_do(pBigStr, start, length);
 }
 
-ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
+PValue AluFunc_left(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
@@ -570,7 +570,7 @@ ALUValue* AluFunc_left(ALUValue* pBigString, ALUValue* pLength)
 	return AluFunc_substring_do(pBigStr, 1, len);
 }
 
-ALUValue* AluFunc_right(ALUValue* pBigString, ALUValue* pLength)
+PValue AluFunc_right(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
@@ -585,7 +585,7 @@ ALUValue* AluFunc_right(ALUValue* pBigString, ALUValue* pLength)
 	return AluFunc_substring_do(pBigStr, bigLength-len+1, len);
 }
 
-ALUValue* AluFunc_center(ALUValue* pBigString, ALUValue* pLength)
+PValue AluFunc_center(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pBigString,1,bigString);
 	ASSERT_NOT_ELIDED(pLength,2,length);
@@ -604,12 +604,12 @@ ALUValue* AluFunc_center(ALUValue* pBigString, ALUValue* pLength)
 	return AluFunc_substring_do(pBigStr, (bigLength - len) / 2 + 1, len);
 }
 
-ALUValue* AluFunc_centre(ALUValue* pBigString, ALUValue* pLength)
+PValue AluFunc_centre(PValue pBigString, PValue pLength)
 {
 	return AluFunc_center(pBigString, pLength);
 }
 
-ALUValue* AluFunc_pos(ALUValue* _pNeedle, ALUValue* _pHaystack)
+PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
 	std::string* pNeedle = _pNeedle->getStrPtr();
@@ -622,7 +622,7 @@ ALUValue* AluFunc_pos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 	}
 }
 
-ALUValue* AluFunc_lastpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
+PValue AluFunc_lastpos(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
 	std::string* pNeedle = _pNeedle->getStrPtr();
@@ -635,7 +635,7 @@ ALUValue* AluFunc_lastpos(ALUValue* _pNeedle, ALUValue* _pHaystack)
 	}
 }
 
-ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* _pNeedle2, ALUValue* _pNeedle3, ALUValue* _pNeedle4)
+PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, PValue _pNeedle3, PValue _pNeedle4)
 {
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
 
@@ -654,7 +654,7 @@ ALUValue* AluFunc_includes(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* 
 	return new ALUValue(ALUInt(0));
 }
 
-ALUValue* AluFunc_includesall(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValue* _pNeedle2, ALUValue* _pNeedle3, ALUValue* _pNeedle4)
+PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, PValue _pNeedle3, PValue _pNeedle4)
 {
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
 
@@ -673,7 +673,7 @@ ALUValue* AluFunc_includesall(ALUValue* _pHaystack, ALUValue* _pNeedle1, ALUValu
 	return new ALUValue(ALUInt(1));
 }
 
-ALUValue* AluFunc_rmatch(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFlags)
+PValue AluFunc_rmatch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
@@ -684,7 +684,7 @@ ALUValue* AluFunc_rmatch(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFlag
 	return new ALUValue(ALUInt(regexMatch(pHaystack, _pExp)));
 }
 
-ALUValue* AluFunc_rsearch(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFlags)
+PValue AluFunc_rsearch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
@@ -695,7 +695,7 @@ ALUValue* AluFunc_rsearch(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFla
 	return new ALUValue(ALUInt(regexSearch(pHaystack, _pExp)));
 }
 
-ALUValue* AluFunc_rreplace(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFmt, ALUValue* _pFlags)
+PValue AluFunc_rreplace(PValue _pHaystack, PValue _pExp, PValue _pFmt, PValue _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
 	ASSERT_NOT_ELIDED(_pFmt,3,format);
@@ -709,7 +709,7 @@ ALUValue* AluFunc_rreplace(ALUValue* _pHaystack, ALUValue* _pExp, ALUValue* _pFm
 	return new ALUValue(regexReplace(pHaystack, _pExp, sFmt));
 }
 
-ALUValue* AluFunc_conf(ALUValue* _pKey, ALUValue* _pDefault)
+PValue AluFunc_conf(PValue _pKey, PValue _pDefault)
 {
 	ASSERT_NOT_ELIDED(_pKey,1,key);
 	std::string key = _pKey->getStr();
@@ -723,7 +723,7 @@ ALUValue* AluFunc_conf(ALUValue* _pKey, ALUValue* _pDefault)
 }
 
 extern std::string conv_D2X(std::string& s);
-ALUValue* AluFunc_d2x(ALUValue* _pDecValue)
+PValue AluFunc_d2x(PValue _pDecValue)
 {
 	ASSERT_NOT_ELIDED(_pDecValue,1,decValue);
 	std::string dec = _pDecValue->getStr();
@@ -732,7 +732,7 @@ ALUValue* AluFunc_d2x(ALUValue* _pDecValue)
 
 extern std::string conv_X2D(std::string& s);
 static ALUInt SZLL = ALUInt(2 * sizeof(long long int));
-ALUValue* AluFunc_x2d(ALUValue* _pHexValue, ALUValue* pLength)
+PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 {
 	static std::string zeropad = "0000000000000000";
 	static std::string ffffpad = "FFFFFFFFFFFFFFFF";
@@ -774,7 +774,7 @@ ALUValue* AluFunc_x2d(ALUValue* _pHexValue, ALUValue* pLength)
 }
 
 extern std::string conv_C2X(std::string& s);
-ALUValue* AluFunc_c2x(ALUValue* _pCharValue)
+PValue AluFunc_c2x(PValue _pCharValue)
 {
 	ASSERT_NOT_ELIDED(_pCharValue,1,charValue);
 	std::string cv = _pCharValue->getStr();
@@ -782,7 +782,7 @@ ALUValue* AluFunc_c2x(ALUValue* _pCharValue)
 }
 
 std::string conv_X2CH(std::string& s);
-ALUValue* AluFunc_x2ch(ALUValue* _pHexValue)
+PValue AluFunc_x2ch(PValue _pHexValue)
 {
 	ASSERT_NOT_ELIDED(_pHexValue,1,hexValue);
 	std::string hex = _pHexValue->getStr();
@@ -790,7 +790,7 @@ ALUValue* AluFunc_x2ch(ALUValue* _pHexValue)
 }
 
 extern std::string conv_UCASE(std::string& s);
-ALUValue* AluFunc_ucase(ALUValue* _pString)
+PValue AluFunc_ucase(PValue _pString)
 {
 	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
@@ -798,7 +798,7 @@ ALUValue* AluFunc_ucase(ALUValue* _pString)
 }
 
 extern std::string conv_LCASE(std::string& s);
-ALUValue* AluFunc_lcase(ALUValue* _pString)
+PValue AluFunc_lcase(PValue _pString)
 {
 	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
@@ -806,14 +806,14 @@ ALUValue* AluFunc_lcase(ALUValue* _pString)
 }
 
 extern std::string conv_BSWAP(std::string& s);
-ALUValue* AluFunc_bswap(ALUValue* _pString)
+PValue AluFunc_bswap(PValue _pString)
 {
 	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
 	return new ALUValue(conv_BSWAP(st));
 }
 
-ALUValue* AluFunc_break(ALUValue* _pFieldIdentifier)
+PValue AluFunc_break(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -821,7 +821,7 @@ ALUValue* AluFunc_break(ALUValue* _pFieldIdentifier)
 	return new ALUValue(ALUInt(bIsBreakEstablished ? 1 : 0));
 }
 
-ALUValue* AluFunc_present(ALUValue* _pFieldIdentifier)
+PValue AluFunc_present(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -829,7 +829,7 @@ ALUValue* AluFunc_present(ALUValue* _pFieldIdentifier)
 	return new ALUValue(ALUInt(bIsSet ? 1 : 0));
 }
 
-ALUValue* AluFunc_sum(ALUValue* _pFieldIdentifier)
+PValue AluFunc_sum(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -838,7 +838,7 @@ ALUValue* AluFunc_sum(ALUValue* _pFieldIdentifier)
 	return pVStats->sum();
 }
 
-ALUValue* AluFunc_min(ALUValue* _pFieldIdentifier)
+PValue AluFunc_min(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -847,7 +847,7 @@ ALUValue* AluFunc_min(ALUValue* _pFieldIdentifier)
 	return pVStats->_min();
 }
 
-ALUValue* AluFunc_max(ALUValue* _pFieldIdentifier)
+PValue AluFunc_max(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -856,7 +856,7 @@ ALUValue* AluFunc_max(ALUValue* _pFieldIdentifier)
 	return pVStats->_max();
 }
 
-ALUValue* AluFunc_average(ALUValue* _pFieldIdentifier)
+PValue AluFunc_average(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -865,7 +865,7 @@ ALUValue* AluFunc_average(ALUValue* _pFieldIdentifier)
 	return pVStats->average();
 }
 
-ALUValue* AluFunc_variance(ALUValue* _pFieldIdentifier)
+PValue AluFunc_variance(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -874,7 +874,7 @@ ALUValue* AluFunc_variance(ALUValue* _pFieldIdentifier)
 	return pVStats->variance();
 }
 
-ALUValue* AluFunc_stddev(ALUValue* _pFieldIdentifier)
+PValue AluFunc_stddev(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -883,7 +883,7 @@ ALUValue* AluFunc_stddev(ALUValue* _pFieldIdentifier)
 	return pVStats->stddev();
 }
 
-ALUValue* AluFunc_stderrmean(ALUValue* _pFieldIdentifier)
+PValue AluFunc_stderrmean(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -892,7 +892,7 @@ ALUValue* AluFunc_stderrmean(ALUValue* _pFieldIdentifier)
 	return pVStats->stderrmean();
 }
 
-ALUValue* AluFunc_rand(ALUValue* pLimit)
+PValue AluFunc_rand(PValue pLimit)
 {
 	if (pLimit) {
 		ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
@@ -906,13 +906,13 @@ ALUValue* AluFunc_rand(ALUValue* pLimit)
 	}
 }
 
-ALUValue* AluFunc_floor(ALUValue* pX)
+PValue AluFunc_floor(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(floor(pX->getFloat())));
 }
 
-ALUValue* AluFunc_round(ALUValue* pX, ALUValue* pDecimals)
+PValue AluFunc_round(PValue pX, PValue pDecimals)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	if (pDecimals) {
@@ -926,43 +926,43 @@ ALUValue* AluFunc_round(ALUValue* pX, ALUValue* pDecimals)
 	}
 }
 
-ALUValue* AluFunc_ceil(ALUValue* pX)
+PValue AluFunc_ceil(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(ceil(pX->getFloat())));
 }
 
-ALUValue* AluFunc_sin(ALUValue* pX)
+PValue AluFunc_sin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(sin(pX->getFloat())));
 }
 
-ALUValue* AluFunc_cos(ALUValue* pX)
+PValue AluFunc_cos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(cos(pX->getFloat())));
 }
 
-ALUValue* AluFunc_tan(ALUValue* pX)
+PValue AluFunc_tan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(tan(pX->getFloat())));
 }
 
-ALUValue* AluFunc_arcsin(ALUValue* pX)
+PValue AluFunc_arcsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(asin(pX->getFloat())));
 }
 
-ALUValue* AluFunc_arccos(ALUValue* pX)
+PValue AluFunc_arccos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(acos(pX->getFloat())));
 }
 
-ALUValue* AluFunc_arctan(ALUValue* pX)
+PValue AluFunc_arctan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(atan(pX->getFloat())));
@@ -971,50 +971,50 @@ ALUValue* AluFunc_arctan(ALUValue* pX)
 static ALUFloat degrees_to_radians = 0.0174532925199433;
 static ALUFloat radians_to_degrees = 57.29577951308232;
 
-ALUValue* AluFunc_dsin(ALUValue* pX)
+PValue AluFunc_dsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(sin(degrees_to_radians*pX->getFloat())));
 }
 
-ALUValue* AluFunc_dcos(ALUValue* pX)
+PValue AluFunc_dcos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(cos(degrees_to_radians*pX->getFloat())));
 }
 
-ALUValue* AluFunc_dtan(ALUValue* pX)
+PValue AluFunc_dtan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(tan(degrees_to_radians*pX->getFloat())));
 }
 
-ALUValue* AluFunc_arcdsin(ALUValue* pX)
+PValue AluFunc_arcdsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(radians_to_degrees*asin(pX->getFloat())));
 }
 
-ALUValue* AluFunc_arcdcos(ALUValue* pX)
+PValue AluFunc_arcdcos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(radians_to_degrees*acos(pX->getFloat())));
 }
 
-ALUValue* AluFunc_arcdtan(ALUValue* pX)
+PValue AluFunc_arcdtan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(ALUFloat(radians_to_degrees*atan(pX->getFloat())));
 }
 
 static ALUFloat e(2.71828182845904523536028747135266249775724709369995);
-ALUValue* AluFunc_exp(ALUValue* pX)
+PValue AluFunc_exp(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(std::pow(e, pX->getFloat()));
 }
 
-ALUValue* AluFunc_log(ALUValue* pX, ALUValue* pBase)
+PValue AluFunc_log(PValue pX, PValue pBase)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	ALUFloat res;
@@ -1208,7 +1208,7 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 }
 
 
-ALUValue* AluFunc_fmap_nelem(ALUValue* _pFieldIdentifier)
+PValue AluFunc_fmap_nelem(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -1216,7 +1216,7 @@ ALUValue* AluFunc_fmap_nelem(ALUValue* _pFieldIdentifier)
 	return new ALUValue(pfMap->nelem());
 }
 
-ALUValue* AluFunc_fmap_nsamples(ALUValue* _pFieldIdentifier)
+PValue AluFunc_fmap_nsamples(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -1224,7 +1224,7 @@ ALUValue* AluFunc_fmap_nsamples(ALUValue* _pFieldIdentifier)
 	return new ALUValue(pfMap->count());
 }
 
-ALUValue* AluFunc_fmap_count(ALUValue* _pFieldIdentifier, ALUValue* pVal)
+PValue AluFunc_fmap_count(PValue _pFieldIdentifier, PValue pVal)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	ASSERT_NOT_ELIDED(pVal,2,s);
@@ -1234,7 +1234,7 @@ ALUValue* AluFunc_fmap_count(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 	return new ALUValue((*pfMap)[s]);
 }
 
-ALUValue* AluFunc_fmap_frac(ALUValue* _pFieldIdentifier, ALUValue* pVal)
+PValue AluFunc_fmap_frac(PValue _pFieldIdentifier, PValue pVal)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	ASSERT_NOT_ELIDED(pVal,2,s);
@@ -1245,7 +1245,7 @@ ALUValue* AluFunc_fmap_frac(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 	return new ALUValue(frac);
 }
 
-ALUValue* AluFunc_fmap_pct(ALUValue* _pFieldIdentifier, ALUValue* pVal)
+PValue AluFunc_fmap_pct(PValue _pFieldIdentifier, PValue pVal)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	ASSERT_NOT_ELIDED(pVal,2,s);
@@ -1256,7 +1256,7 @@ ALUValue* AluFunc_fmap_pct(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 	return new ALUValue(PERCENTS * frac);
 }
 
-ALUValue* AluFunc_fmap_common(ALUValue* _pFieldIdentifier)
+PValue AluFunc_fmap_common(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -1264,7 +1264,7 @@ ALUValue* AluFunc_fmap_common(ALUValue* _pFieldIdentifier)
 	return new ALUValue(pfMap->mostCommon());
 }
 
-ALUValue* AluFunc_fmap_rare(ALUValue* _pFieldIdentifier)
+PValue AluFunc_fmap_rare(PValue _pFieldIdentifier)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
@@ -1272,7 +1272,7 @@ ALUValue* AluFunc_fmap_rare(ALUValue* _pFieldIdentifier)
 	return new ALUValue(pfMap->leastCommon());
 }
 
-ALUValue* AluFunc_fmap_sample(ALUValue* _pFieldIdentifier, ALUValue* pVal)
+PValue AluFunc_fmap_sample(PValue _pFieldIdentifier, PValue pVal)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	ASSERT_NOT_ELIDED(pVal,2,s);
@@ -1283,7 +1283,7 @@ ALUValue* AluFunc_fmap_sample(ALUValue* _pFieldIdentifier, ALUValue* pVal)
 	return new ALUValue((*pfMap)[s]);
 }
 
-ALUValue* AluFunc_fmap_dump(ALUValue* _pFieldIdentifier, ALUValue* pFormat, ALUValue* pOrder, ALUValue* pPct)
+PValue AluFunc_fmap_dump(PValue _pFieldIdentifier, PValue pFormat, PValue pOrder, PValue pPct)
 {
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	std::string s;
@@ -1321,13 +1321,13 @@ ALUValue* AluFunc_fmap_dump(ALUValue* _pFieldIdentifier, ALUValue* pFormat, ALUV
 }
 
 
-ALUValue* AluFunc_string(ALUValue* pX)
+PValue AluFunc_string(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	return new ALUValue(pX->getStr());
 }
 
-ALUValue* AluFunc_substitute(ALUValue* pSrc, ALUValue* pSearchString, ALUValue* pSubstitute, ALUValue* pMax)
+PValue AluFunc_substitute(PValue pSrc, PValue pSearchString, PValue pSubstitute, PValue pMax)
 {
 	ASSERT_NOT_ELIDED(pSrc,1,haystack);
 	ASSERT_NOT_ELIDED(pSearchString,2,needle);
@@ -1355,7 +1355,7 @@ ALUValue* AluFunc_substitute(ALUValue* pSrc, ALUValue* pSearchString, ALUValue* 
 	return new ALUValue(res);
 }
 
-ALUValue* AluFunc_sfield(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
+PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 {
 	ASSERT_NOT_ELIDED(pStr,1,str);
 	ASSERT_NOT_ELIDED(pCount,2,count);
@@ -1417,7 +1417,7 @@ ALUValue* AluFunc_sfield(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
 	}
 }
 
-ALUValue* AluFunc_sword(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
+PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 {
 	ASSERT_NOT_ELIDED(pStr,1,str);
 	ASSERT_NOT_ELIDED(pCount,2,count);
@@ -1483,7 +1483,7 @@ ALUValue* AluFunc_sword(ALUValue* pStr, ALUValue* pCount, ALUValue* pSep)
 
 /* REXX Functions */
 
-ALUValue* AluFunc_abbrev_do(ALUValue* pInformation, ALUValue* pInfo, size_t len)
+PValue AluFunc_abbrev_do(PValue pInformation, PValue pInfo, size_t len)
 {
 	std::string sBig = pInformation->getStr();
 	std::string sLittle = pInfo->getStr().substr(0,len);
@@ -1497,7 +1497,7 @@ ALUValue* AluFunc_abbrev_do(ALUValue* pInformation, ALUValue* pInfo, size_t len)
 	return new ALUValue(ALUInt(0));
 }
 
-ALUValue* AluFunc_abbrev(ALUValue* pInformation, ALUValue* pInfo, ALUValue* pLen)
+PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 {
 	ASSERT_NOT_ELIDED(pInformation,1,information);
 	ASSERT_NOT_ELIDED(pInfo,2,info);
@@ -1510,7 +1510,7 @@ ALUValue* AluFunc_abbrev(ALUValue* pInformation, ALUValue* pInfo, ALUValue* pLen
 	return AluFunc_abbrev_do(pInformation, pInfo, size_t(len));
 }
 
-ALUValue* AluFunc_bitand(ALUValue* pS1, ALUValue* pS2)
+PValue AluFunc_bitand(PValue pS1, PValue pS2)
 {
 	ASSERT_NOT_ELIDED(pS1,1,s1);
 	ASSERT_NOT_ELIDED(pS2,2,s2);
@@ -1528,14 +1528,14 @@ ALUValue* AluFunc_bitand(ALUValue* pS1, ALUValue* pS2)
 		pBuff[i] = pc1[i] & pc2[i];
 	}
 
-	ALUValue* pRet = new ALUValue((const char*)(pBuff), minlen);
+	PValue pRet = new ALUValue((const char*)(pBuff), minlen);
 
 	delete [] pBuff;
 
 	return pRet;
 }
 
-ALUValue* AluFunc_bitor(ALUValue* pS1, ALUValue* pS2)
+PValue AluFunc_bitor(PValue pS1, PValue pS2)
 {
 	ASSERT_NOT_ELIDED(pS1,1,s1);
 	ASSERT_NOT_ELIDED(pS2,2,s2);
@@ -1553,14 +1553,14 @@ ALUValue* AluFunc_bitor(ALUValue* pS1, ALUValue* pS2)
 		pBuff[i] = pc1[i] | pc2[i];
 	}
 
-	ALUValue* pRet = new ALUValue((const char*)(pBuff), minlen);
+	PValue pRet = new ALUValue((const char*)(pBuff), minlen);
 
 	delete [] pBuff;
 
 	return pRet;
 }
 
-ALUValue* AluFunc_bitxor(ALUValue* pS1, ALUValue* pS2)
+PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 {
 	ASSERT_NOT_ELIDED(pS1,1,s1);
 	ASSERT_NOT_ELIDED(pS2,2,s2);
@@ -1578,14 +1578,14 @@ ALUValue* AluFunc_bitxor(ALUValue* pS1, ALUValue* pS2)
 		pBuff[i] = pc1[i] ^ pc2[i];
 	}
 
-	ALUValue* pRet = new ALUValue((const char*)(pBuff), minlen);
+	PValue pRet = new ALUValue((const char*)(pBuff), minlen);
 
 	delete [] pBuff;
 
 	return pRet;
 }
 
-ALUValue* AluFunc_compare_do(ALUValue* pS1, ALUValue* pS2, char pad)
+PValue AluFunc_compare_do(PValue pS1, PValue pS2, char pad)
 {
 	auto s1 = pS1->getStr();
 	auto s2 = pS2->getStr();
@@ -1616,7 +1616,7 @@ ALUValue* AluFunc_compare_do(ALUValue* pS1, ALUValue* pS2, char pad)
 	return new ALUValue(ALUInt(0));
 }
 
-ALUValue* AluFunc_compare(ALUValue* pS1, ALUValue* pS2, ALUValue* pPad)
+PValue AluFunc_compare(PValue pS1, PValue pS2, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pS1,1,s1);
 	ASSERT_NOT_ELIDED(pS2,2,s2);
@@ -1628,7 +1628,7 @@ ALUValue* AluFunc_compare(ALUValue* pS1, ALUValue* pS2, ALUValue* pPad)
 	return AluFunc_compare_do(pS1, pS2, sPad[0]);
 }
 
-ALUValue* AluFunc_copies(ALUValue* pString, ALUValue* pTimes)
+PValue AluFunc_copies(PValue pString, PValue pTimes)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pTimes,2,times);
@@ -1649,7 +1649,7 @@ ALUValue* AluFunc_copies(ALUValue* pString, ALUValue* pTimes)
 	return new ALUValue(res);
 }
 
-ALUValue* AluFunc_delstr(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
+PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pStart,2,start);
@@ -1672,7 +1672,7 @@ ALUValue* AluFunc_delstr(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
 	return new ALUValue(res);
 }
 
-ALUValue* AluFunc_delword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
+PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pStart,2,start);
@@ -1804,7 +1804,7 @@ static std::vector<size_t> breakIntoWords_end(std::string s)
 	return ret;
 }
 
-ALUValue* AluFunc_find(ALUValue* string, ALUValue* phrase)
+PValue AluFunc_find(PValue string, PValue phrase)
 {
 	ASSERT_NOT_ELIDED(string,1,string);
 	ASSERT_NOT_ELIDED(phrase,2,phrase);
@@ -1828,7 +1828,7 @@ ALUValue* AluFunc_find(ALUValue* string, ALUValue* phrase)
 	return new ALUValue(ALUInt(0));
 }
 
-ALUValue* AluFunc_index(ALUValue* _pHaystack, ALUValue* _pNeedle, ALUValue* _pStart)
+PValue AluFunc_index(PValue _pHaystack, PValue _pNeedle, PValue _pStart)
 {
 	ASSERT_NOT_ELIDED(_pHaystack,1,haystack);
 	ASSERT_NOT_ELIDED(_pNeedle,2,needle);
@@ -1846,7 +1846,7 @@ ALUValue* AluFunc_index(ALUValue* _pHaystack, ALUValue* _pNeedle, ALUValue* _pSt
 	}
 }
 
-static ALUValue* insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
+static PValue insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
 {
 	std::string paddedStr;
 
@@ -1871,7 +1871,7 @@ static ALUValue* insert_do(std::string& str, std::string& tgt, size_t pos, size_
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_insert(ALUValue* pString, ALUValue* pTarget, ALUValue* pPosition, ALUValue* pLength, ALUValue* pPad)
+PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue pLength, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pTarget,2,target);
@@ -1896,7 +1896,7 @@ ALUValue* AluFunc_insert(ALUValue* pString, ALUValue* pTarget, ALUValue* pPositi
 	return insert_do(theString, theTarget, position, length, sPad[0]);
 }
 
-static ALUValue* justify_do(std::string& str, size_t len, char pad)
+static PValue justify_do(std::string& str, size_t len, char pad)
 {
 	auto wordVector = breakIntoWords(str);
 	int numOfSpaces = int(len);
@@ -1924,7 +1924,7 @@ static ALUValue* justify_do(std::string& str, size_t len, char pad)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_justify(ALUValue* pStr, ALUValue* pLen, ALUValue* pPad)
+PValue AluFunc_justify(PValue pStr, PValue pLen, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pStr,1,string);
 	ASSERT_NOT_ELIDED(pLen,2,length);
@@ -1943,7 +1943,7 @@ ALUValue* AluFunc_justify(ALUValue* pStr, ALUValue* pLen, ALUValue* pPad)
 	return justify_do(str,size_t(len), sPad[0]);
 }
 
-ALUValue* AluFunc_overlay(ALUValue* pString1, ALUValue* pString2, ALUValue* pStart, ALUValue* pLength, ALUValue* pPad)
+PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue pLength, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pString1,1,string1);
 	ASSERT_NOT_ELIDED(pString2,2,string1);
@@ -1993,7 +1993,7 @@ ALUValue* AluFunc_overlay(ALUValue* pString1, ALUValue* pString2, ALUValue* pSta
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_reverse(ALUValue* pStr)
+PValue AluFunc_reverse(PValue pStr)
 {
 	ASSERT_NOT_ELIDED(pStr,1,str);
 	auto str = pStr->getStr();
@@ -2001,7 +2001,7 @@ ALUValue* AluFunc_reverse(ALUValue* pStr)
 	return new ALUValue(str);
 }
 
-ALUValue* AluFunc_sign(ALUValue* pNumber)
+PValue AluFunc_sign(PValue pNumber)
 {
 	ASSERT_NOT_ELIDED(pNumber,1,number);
 	auto num = pNumber->getFloat();
@@ -2015,7 +2015,7 @@ ALUValue* AluFunc_sign(ALUValue* pNumber)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_space(ALUValue* pStr, ALUValue* pLength, ALUValue* pPad)
+PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pStr,1,string);
 	auto wordVector = breakIntoWords(pStr->getStr());
@@ -2042,7 +2042,7 @@ ALUValue* AluFunc_space(ALUValue* pStr, ALUValue* pLength, ALUValue* pPad)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_strip(ALUValue* pString, ALUValue* pOption, ALUValue* pPad)
+PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	auto str = pString->getStr();
@@ -2082,7 +2082,7 @@ ALUValue* AluFunc_strip(ALUValue* pString, ALUValue* pOption, ALUValue* pPad)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_subword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength)
+PValue AluFunc_subword(PValue pString, PValue pStart, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pStart,2,start);
@@ -2126,7 +2126,7 @@ ALUValue* AluFunc_subword(ALUValue* pString, ALUValue* pStart, ALUValue* pLength
 	}
 }
 
-ALUValue* AluFunc_translate(ALUValue* pString, ALUValue* pTableOut, ALUValue* pTableIn, ALUValue* pPad)
+PValue AluFunc_translate(PValue pString, PValue pTableOut, PValue pTableIn, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	auto str = pString->getStr();
@@ -2160,7 +2160,7 @@ ALUValue* AluFunc_translate(ALUValue* pString, ALUValue* pTableOut, ALUValue* pT
 	return new ALUValue(str);
 }
 
-ALUValue* AluFunc_verify(ALUValue* pString, ALUValue* pReference, ALUValue* pOption, ALUValue* pStart)
+PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue pStart)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pReference,1,reference);
@@ -2201,7 +2201,7 @@ ALUValue* AluFunc_verify(ALUValue* pString, ALUValue* pReference, ALUValue* pOpt
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_wordindex(ALUValue* pString, ALUValue* pIdx)
+PValue AluFunc_wordindex(PValue pString, PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pIdx,2,wordno);
@@ -2223,7 +2223,7 @@ ALUValue* AluFunc_wordindex(ALUValue* pString, ALUValue* pIdx)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_wordlength(ALUValue* pString, ALUValue* pIdx)
+PValue AluFunc_wordlength(PValue pString, PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pIdx,2,wordno);
@@ -2245,7 +2245,7 @@ ALUValue* AluFunc_wordlength(ALUValue* pString, ALUValue* pIdx)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_wordpos(ALUValue* pPhrase, ALUValue* pString, ALUValue* pStart)
+PValue AluFunc_wordpos(PValue pPhrase, PValue pString, PValue pStart)
 {
 	ASSERT_NOT_ELIDED(pPhrase,1,phrase);
 	ASSERT_NOT_ELIDED(pString,2,string);
@@ -2268,7 +2268,7 @@ ALUValue* AluFunc_wordpos(ALUValue* pPhrase, ALUValue* pString, ALUValue* pStart
 	return new ALUValue(ALUInt(0));
 }
 
-ALUValue* AluFunc_words(ALUValue* pStr)
+PValue AluFunc_words(PValue pStr)
 {
 	ASSERT_NOT_ELIDED(pStr,1,string);
 	auto str = pStr->getStr();
@@ -2277,7 +2277,7 @@ ALUValue* AluFunc_words(ALUValue* pStr)
 	return new ALUValue(ret);
 }
 
-ALUValue* AluFunc_xrange(ALUValue* pStart, ALUValue* pEnd)
+PValue AluFunc_xrange(PValue pStart, PValue pEnd)
 {
 	std::string startStr = ARG_STR_WITH_DEFAULT(pStart,"");
 	std::string endStr = ARG_STR_WITH_DEFAULT(pEnd,"");
@@ -2321,7 +2321,7 @@ private:
 };
 
 
-ALUValue* AluFunc_fmt(ALUValue* pVal, ALUValue* pFormat, ALUValue* pDigits, ALUValue* pDecimal, ALUValue* pSep)
+PValue AluFunc_fmt(PValue pVal, PValue pFormat, PValue pDigits, PValue pDecimal, PValue pSep)
 {
 	std::ostringstream oss;
 	ASSERT_NOT_ELIDED(pVal,1,value);
@@ -2366,13 +2366,13 @@ ALUValue* AluFunc_fmt(ALUValue* pVal, ALUValue* pFormat, ALUValue* pDigits, ALUV
 	return new ALUValue(oss.str());
 }
 
-ALUValue* AluFunc_next()
+PValue AluFunc_next()
 {
 	if (!g_PositionGetter) return new ALUValue(ALUInt(1));
 	return new ALUValue(ALUInt(g_PositionGetter->pos()));
 }
 
-ALUValue* AluFunc_rest()
+PValue AluFunc_rest()
 {
 	static std::string sName("cols");
 	static std::string sCols = configSpecLiteralGet(sName);
@@ -2380,7 +2380,7 @@ ALUValue* AluFunc_rest()
 	return new ALUValue(ALUInt(cols - g_PositionGetter->pos() + 1));
 }
 
-ALUValue* AluFunc_defined(ALUValue* pName)
+PValue AluFunc_defined(PValue pName)
 {
 	ASSERT_NOT_ELIDED(pName,1,confString);
 	auto name = pName->getStr();
@@ -2393,7 +2393,7 @@ ALUValue* AluFunc_defined(ALUValue* pName)
 
 
 #ifdef DEBUG
-ALUValue* AluFunc_testfunc(ALUValue* pArg1, ALUValue* pArg2, ALUValue* pArg3, ALUValue* pArg4)
+PValue AluFunc_testfunc(PValue pArg1, PValue pArg2, PValue pArg3, PValue pArg4)
 {
 	std::string str1 = pArg1 ? pArg1->getStr() : "(nil)";
 	std::string str2 = pArg2 ? pArg2->getStr() : "(nil)";

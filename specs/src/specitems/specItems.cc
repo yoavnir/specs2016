@@ -737,7 +737,7 @@ bool ConditionItem::evaluate()
 		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpression, &g_counters);
 		ret = g_counters.getPointer(m_counter)->getBool();
 	} else {
-		ALUValue* exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+		PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters);
 		ret = exprResult->getBool();
 		delete exprResult;
 	}

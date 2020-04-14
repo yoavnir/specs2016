@@ -289,12 +289,12 @@
 	X(fmap_sample)                   \
 	X(fmap_dump)                     \
 
-#define ALUFUNC0(nm)	ALUValue* AluFunc_##nm();
-#define ALUFUNC1(nm)	ALUValue* AluFunc_##nm(ALUValue*);
-#define ALUFUNC2(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*);
-#define ALUFUNC3(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*);
-#define ALUFUNC4(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*);
-#define ALUFUNC5(nm)	ALUValue* AluFunc_##nm(ALUValue*, ALUValue*, ALUValue*, ALUValue*, ALUValue*);
+#define ALUFUNC0(nm)	PValue AluFunc_##nm();
+#define ALUFUNC1(nm)	PValue AluFunc_##nm(PValue);
+#define ALUFUNC2(nm)	PValue AluFunc_##nm(PValue, PValue);
+#define ALUFUNC3(nm)	PValue AluFunc_##nm(PValue, PValue, PValue);
+#define ALUFUNC4(nm)	PValue AluFunc_##nm(PValue, PValue, PValue, PValue);
+#define ALUFUNC5(nm)	PValue AluFunc_##nm(PValue, PValue, PValue, PValue, PValue);
 
 #define X(fn,argc,flags,rl,shorthelp,longhelp) ALUFUNC##argc(fn)
 #define H(hdr,len)
@@ -305,12 +305,12 @@ ALU_DEBUG_FUNCTION_LIST
 #undef X
 #undef H
 
-typedef ALUValue* (*AluFunc0)();
-typedef ALUValue* (*AluFunc1)(ALUValue* op1);
-typedef ALUValue* (*AluFunc2)(ALUValue* op1, ALUValue* op2);
-typedef ALUValue* (*AluFunc3)(ALUValue* op1, ALUValue* op2, ALUValue* op3);
-typedef ALUValue* (*AluFunc4)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4);
-typedef ALUValue* (*AluFunc5)(ALUValue* op1, ALUValue* op2, ALUValue* op3, ALUValue* op4, ALUValue* op5);
+typedef PValue (*AluFunc0)();
+typedef PValue (*AluFunc1)(PValue op1);
+typedef PValue (*AluFunc2)(PValue op1, PValue op2);
+typedef PValue (*AluFunc3)(PValue op1, PValue op2, PValue op3);
+typedef PValue (*AluFunc4)(PValue op1, PValue op2, PValue op3, PValue op4);
+typedef PValue (*AluFunc5)(PValue op1, PValue op2, PValue op3, PValue op4, PValue op5);
 
 #define MAX_FUNC_OPERANDS 5
 

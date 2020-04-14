@@ -172,7 +172,7 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 	}
 }
 
-bool regexMatch(std::string* pStr, ALUValue* pExp, std::string* pFlags)
+bool regexMatch(std::string* pStr, PValue pExp, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
@@ -189,7 +189,7 @@ bool regexMatch(std::string* pStr, ALUValue* pExp, std::string* pFlags)
 	}
 }
 
-bool regexSearch(std::string* pStr, ALUValue* pExp, std::string* pFlags)
+bool regexSearch(std::string* pStr, PValue pExp, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);
@@ -206,7 +206,7 @@ bool regexSearch(std::string* pStr, ALUValue* pExp, std::string* pFlags)
 
 }
 
-std::string regexReplace(std::string* pStr, ALUValue* pExp, std::string& fmt, std::string* pFlags)
+std::string regexReplace(std::string* pStr, PValue pExp, std::string& fmt, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
 	std::regex* pRE = regexCalculator(sExp);

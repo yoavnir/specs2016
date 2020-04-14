@@ -241,7 +241,7 @@ std::string ExpressionPart::Debug()
 
 PSpecString ExpressionPart::getStr(ProcessingState& pState)
 {
-	ALUValue* res;
+	PValue res;
 	bool bDelete = true;
 	if (m_isAssignment) {
 		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpr, &g_counters);
