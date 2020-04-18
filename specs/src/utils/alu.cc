@@ -157,15 +157,6 @@ ALUCounterType ALUValue::getDivinedType() const
 	return counterType__Float;
 }
 
-class ALUCounterDeleter {
-public:
-	ALUCounterDeleter(PValue p) 	{p_ctr = p;}
-	~ALUCounterDeleter()				{if (p_ctr) delete p_ctr;}
-private:
-	PValue p_ctr;
-};
-
-
 PValue AluUnit::evaluate()
 {
 	std::string err = _identify() + " should not be called with no operands";
@@ -219,7 +210,7 @@ std::string AluUnitLiteral::_identify()
 
 PValue AluUnitLiteral::evaluate()
 {
-	PValue ret = new ALUValue(m_literal);
+	PValue ret = PValue(new ALUValue(m_literal));
 	if (m_hintNumerical) ret->divineType();
 	return ret;
 }
@@ -252,7 +243,7 @@ std::string AluUnitCounter::_identify()
 
 PValue AluUnitCounter::compute(ALUCounters* pCtrs)
 {
-	return new ALUValue(*(pCtrs->getPointer(m_ctrNumber)));
+	return PValue(new ALUValue(*(pCtrs->getPointer(m_ctrNumber))));
 }
 
 static fieldIdentifierGetter* g_fieldIdentifierGetter = NULL;
@@ -278,12 +269,12 @@ std::string AluUnitFieldIdentifier::_identify()
 PValue AluUnitFieldIdentifier::evaluate()
 {
 	if (m_ReturnIdentifier) {
-		return new ALUValue(ALUInt(m_id));
+		return PValue(new ALUValue(ALUInt(m_id)));
 	}
 	if (!g_fieldIdentifierGetter) {
 		MYTHROW("Field Identifier Getter is not set")
 	}
-	return new ALUValue(g_fieldIdentifierGetter->Get(m_id));
+	return PValue(new ALUValue(g_fieldIdentifierGetter->Get(m_id)));
 }
 
 #define X(nm,st)	if (s==st) {m_op = UnaryOp__##nm; return;}
@@ -333,9 +324,8 @@ std::string AluUnitUnaryOperator::_identify()
 #define X(nm,st)	case UnaryOp__##nm: return compute##nm(operand);
 PValue		AluUnitUnaryOperator::compute(PValue operand)
 {
-	ALUCounterDeleter _op(operand);
 	if (counterType__None==operand->getType()) {
-		return new ALUValue();
+		return PValue(new ALUValue());
 	}
 	switch (m_op) {
 	ALU_UOP_LIST
@@ -345,8 +335,8 @@ PValue		AluUnitUnaryOperator::compute(PValue operand)
 }
 #undef X
 
-#define RETURN_FALSE return new ALUValue(ALUInt(0))
-#define RETURN_TRUE  return new ALUValue(ALUInt(1))
+#define RETURN_FALSE return PValue(new ALUValue(ALUInt(0)))
+#define RETURN_TRUE  return PValue(new ALUValue(ALUInt(1)))
 
 #define RETURN_COND(cond) { if ((cond)) { RETURN_TRUE; } else { RETURN_FALSE; } }
 
@@ -360,12 +350,12 @@ PValue 	AluUnitUnaryOperator::computePlus(PValue operand)
 	switch (operand->getType()) {
 	case counterType__Float:
 	case counterType__Int:
-		return new ALUValue(*operand);
+		return PValue(new ALUValue(*operand));
 	case counterType__Str:
 		if (operand->isFloat()) {
-			return new ALUValue(operand->getFloat());
+			return PValue(new ALUValue(operand->getFloat()));
 		} else {
-			return new ALUValue(operand->getInt());
+			return PValue(new ALUValue(operand->getInt()));
 		}
 	default:
 		MYTHROW("Invalid operand type");
@@ -376,14 +366,14 @@ PValue 	AluUnitUnaryOperator::computeMinus(PValue operand)
 {
 	switch (operand->getType()) {
 	case counterType__Float:
-		return new ALUValue(-operand->getFloat());
+		return PValue(new ALUValue(-operand->getFloat()));
 	case counterType__Int:
-		return new ALUValue(-operand->getInt());
+		return PValue(new ALUValue(-operand->getInt()));
 	case counterType__Str:
 		if (operand->isFloat()) {
-			return new ALUValue(-operand->getFloat());
+			return PValue(new ALUValue(-operand->getFloat()));
 		} else {
-			return new ALUValue(-operand->getInt());
+			return PValue(new ALUValue(-operand->getInt()));
 		}
 	default:
 		MYTHROW("Invalid operand type");
@@ -439,10 +429,8 @@ std::string AluBinaryOperator::_identify()
 #define X(nm,st,prio)	case BinaryOp__##nm: return compute##nm(op1, op2);
 PValue		AluBinaryOperator::compute(PValue op1, PValue op2)
 {
-	ALUCounterDeleter _op1(op1);
-	ALUCounterDeleter _op2(op2);
 	if (counterType__None==op1->getType() || counterType__None==op2->getType()) {
-		return new ALUValue();
+		return PValue(new ALUValue());
 	}
 
 	switch (m_op) {
@@ -457,45 +445,45 @@ PValue		AluBinaryOperator::compute(PValue op1, PValue op2)
 PValue		AluBinaryOperator::computeAdd(PValue op1, PValue op2)
 {
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUValue(op1->getFloat() + op2->getFloat());
+		return PValue(new ALUValue(op1->getFloat() + op2->getFloat()));
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return new ALUValue(op1->getInt() + op2->getInt());
+		return PValue(new ALUValue(op1->getInt() + op2->getInt()));
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return new ALUValue(op1->getInt() + op2->getInt());
+		return PValue(new ALUValue(op1->getInt() + op2->getInt()));
 	}
-	return new ALUValue(op1->getFloat() + op2->getFloat());
+	return PValue(new ALUValue(op1->getFloat() + op2->getFloat()));
 }
 
 // Simple floating point or integer subtraction
 PValue		AluBinaryOperator::computeSub(PValue op1, PValue op2)
 {
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUValue(op1->getFloat() - op2->getFloat());
+		return PValue(new ALUValue(op1->getFloat() - op2->getFloat()));
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return new ALUValue(op1->getInt() - op2->getInt());
+		return PValue(new ALUValue(op1->getInt() - op2->getInt()));
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return new ALUValue(op1->getInt() - op2->getInt());
+		return PValue(new ALUValue(op1->getInt() - op2->getInt()));
 	}
-	return new ALUValue(op1->getFloat() - op2->getFloat());
+	return PValue(new ALUValue(op1->getFloat() - op2->getFloat()));
 }
 
 // Floating point or integer multiplication
 PValue		AluBinaryOperator::computeMult(PValue op1, PValue op2)
 {
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUValue(op1->getFloat() * op2->getFloat());
+		return PValue(new ALUValue(op1->getFloat() * op2->getFloat()));
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return new ALUValue(op1->getInt() * op2->getInt());
+		return PValue(new ALUValue(op1->getInt() * op2->getInt()));
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return new ALUValue(op1->getInt() * op2->getInt());
+		return PValue(new ALUValue(op1->getInt() * op2->getInt()));
 	}
-	return new ALUValue(op1->getFloat() * op2->getFloat());
+	return PValue(new ALUValue(op1->getFloat() * op2->getFloat()));
 }
 
 // Numeric division. The result quotient may be floating point even when the
@@ -504,28 +492,28 @@ PValue		AluBinaryOperator::computeDiv(PValue op1, PValue op2)
 {
 	// guard against divide-by-zero: return NaN
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
-		return new ALUValue();
+		return PValue(new ALUValue());
 	}
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return new ALUValue(op1->getFloat() / op2->getFloat());
+		return PValue(new ALUValue(op1->getFloat() / op2->getFloat()));
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		if (0==(op1->getInt() % op2->getInt())) {
-			return new ALUValue(op1->getInt() / op2->getInt());
+			return PValue(new ALUValue(op1->getInt() / op2->getInt()));
 		} else {
-			return new ALUValue(op1->getFloat() / op2->getFloat());
+			return PValue(new ALUValue(op1->getFloat() / op2->getFloat()));
 		}
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber() && (0==(op1->getInt() % op2->getInt()))) {
-		return new ALUValue(op1->getInt() / op2->getInt());
+		return PValue(new ALUValue(op1->getInt() / op2->getInt()));
 	}
-	return new ALUValue(op1->getFloat() / op2->getFloat());
+	return PValue(new ALUValue(op1->getFloat() / op2->getFloat()));
 }
 
 // String concatenation ||
 PValue		AluBinaryOperator::computeAppnd(PValue op1, PValue op2)
 {
-	return new ALUValue(op1->getStr() + op2->getStr());
+	return PValue(new ALUValue(op1->getStr() + op2->getStr()));
 }
 
 // Integer division. Divides the integer form of both numbers: 19.5 % 2.001 = 9
@@ -533,10 +521,10 @@ PValue		AluBinaryOperator::computeIntDiv(PValue op1, PValue op2)
 {
 	// guard against divide-by-zero: return NaN
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
-		return new ALUValue();
+		return PValue(new ALUValue());
 	}
 
-	return new ALUValue(op1->getInt() / op2->getInt());
+	return PValue(new ALUValue(op1->getInt() / op2->getInt()));
 }
 
 // Remainder in integer division. The operator is //
@@ -544,10 +532,10 @@ PValue		AluBinaryOperator::computeRemDiv(PValue op1, PValue op2)
 {
 	// guard against divide-by-zero: return NaN
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
-		return new ALUValue();
+		return PValue(new ALUValue());
 	}
 
-	return new ALUValue(op1->getInt() % op2->getInt());
+	return PValue(new ALUValue(op1->getInt() % op2->getInt()));
 }
 
 // Logical AND. Always returns zero or one.
@@ -708,7 +696,6 @@ std::string AluAssnOperator::_identify()
 void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, PValue operand)
 {
 	PValue result;
-	ALUCounterDeleter _op(operand);
 
 	PValue prevOp = ctrs->getPointer(ctrNumber);
 
@@ -724,8 +711,6 @@ void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, PValu
 	default:
 		MYTHROW("Invalid assignment operator");
 	}
-
-	ALUCounterDeleter _res((result==operand) ? NULL : result);
 
 	switch (result->getDivinedType()) {
 	case counterType__None:
@@ -758,91 +743,91 @@ PValue AluAssnOperator::computeLet(PValue operand, PValue prevOp)
 PValue AluAssnOperator::computeAdd(PValue operand, PValue prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return new ALUValue(prevOp->getFloat() + operand->getFloat());
+		return PValue(new ALUValue(prevOp->getFloat() + operand->getFloat()));
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
-		return new ALUValue(prevOp->getInt() + operand->getInt());
+		return PValue(new ALUValue(prevOp->getInt() + operand->getInt()));
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
-		return new ALUValue(prevOp->getInt() + operand->getInt());
+		return PValue(new ALUValue(prevOp->getInt() + operand->getInt()));
 	}
-	return new ALUValue(prevOp->getFloat() + operand->getFloat());
+	return PValue(new ALUValue(prevOp->getFloat() + operand->getFloat()));
 }
 
 PValue AluAssnOperator::computeSub(PValue operand, PValue prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return new ALUValue(prevOp->getFloat() - operand->getFloat());
+		return PValue(new ALUValue(prevOp->getFloat() - operand->getFloat()));
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
-		return new ALUValue(prevOp->getInt() - operand->getInt());
+		return PValue(new ALUValue(prevOp->getInt() - operand->getInt()));
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
-		return new ALUValue(prevOp->getInt() - operand->getInt());
+		return PValue(new ALUValue(prevOp->getInt() - operand->getInt()));
 	}
-	return new ALUValue(prevOp->getFloat() - operand->getFloat());
+	return PValue(new ALUValue(prevOp->getFloat() - operand->getFloat()));
 }
 
 PValue AluAssnOperator::computeMult(PValue operand, PValue prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return new ALUValue(prevOp->getFloat() * operand->getFloat());
+		return PValue(new ALUValue(prevOp->getFloat() * operand->getFloat()));
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
-		return new ALUValue(prevOp->getInt() * operand->getInt());
+		return PValue(new ALUValue(prevOp->getInt() * operand->getInt()));
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
-		return new ALUValue(prevOp->getInt() * operand->getInt());
+		return PValue(new ALUValue(prevOp->getInt() * operand->getInt()));
 	}
-	return new ALUValue(prevOp->getFloat() * operand->getFloat());
+	return PValue(new ALUValue(prevOp->getFloat() * operand->getFloat()));
 }
 
 PValue AluAssnOperator::computeDiv(PValue operand, PValue prevOp)
 {
 	// guard against divide-by-zero: return NaN
 	if (0.0==operand->getFloat()) {
-		return new ALUValue();
+		return PValue(new ALUValue());
 	}
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return new ALUValue(prevOp->getFloat() / operand->getFloat());
+		return PValue(new ALUValue(prevOp->getFloat() / operand->getFloat()));
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		if (0==(prevOp->getInt() % operand->getInt())) {
-			return new ALUValue(prevOp->getInt() / operand->getInt());
+			return PValue(new ALUValue(prevOp->getInt() / operand->getInt()));
 		} else {
-			return new ALUValue(prevOp->getFloat() / operand->getFloat());
+			return PValue(new ALUValue(prevOp->getFloat() / operand->getFloat()));
 		}
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber() && (0==(prevOp->getInt() % operand->getInt()))) {
-		return new ALUValue(prevOp->getInt() / operand->getInt());
+		return PValue(new ALUValue(prevOp->getInt() / operand->getInt()));
 	}
-	return new ALUValue(prevOp->getFloat() / operand->getFloat());
+	return PValue(new ALUValue(prevOp->getFloat() / operand->getFloat()));
 }
 
 PValue AluAssnOperator::computeIntDiv(PValue operand, PValue prevOp)
 {
 	// guard against divide-by-zero: return NaN
 	if (0.0==operand->getFloat()) {
-		return new ALUValue();
+		return PValue(new ALUValue());
 	}
 
-	return new ALUValue(prevOp->getInt() / operand->getInt());
+	return PValue(new ALUValue(prevOp->getInt() / operand->getInt()));
 }
 
 PValue AluAssnOperator::computeRemDiv(PValue operand, PValue prevOp)
 {
 	// guard against divide-by-zero: return NaN
 	if (0.0==operand->getFloat()) {
-		return new ALUValue();
+		return PValue(new ALUValue());
 	}
 
-	return new ALUValue(prevOp->getInt() % operand->getInt());
+	return PValue(new ALUValue(prevOp->getInt() % operand->getInt()));
 }
 
 PValue AluAssnOperator::computeAppnd(PValue operand, PValue prevOp)
 {
 	std::string ret = prevOp->getStr() + operand->getStr();
-	return new ALUValue(ret);
+	return PValue(new ALUValue(ret));
 }
 
 void AluInputRecord::_serialize(std::ostream& os) const
@@ -855,9 +840,9 @@ PValue AluInputRecord::evaluate()
 	PSpecString ps = g_pStateQueryAgent->getFromTo(1,-1);
 	PValue ret;
 	if (ps) {
-		ret = new ALUValue(ps->data(), ps->length());
+		ret = PValue(new ALUValue(ps->data(), ps->length()));
 	} else {
-		ret = new ALUValue("");
+		ret = PValue(new ALUValue(""));
 	}
 	delete ps;
 	return ret;
@@ -1825,70 +1810,40 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 					computeStack.push(pUnit->compute(arg1));
 				}
 				catch (const SpecsException& e) {
-					delete arg1;
 					throw;
 				}
-				delete arg1;  // Argh. Why doesn't C++ have a finally clause???!!!!!
 				break;
 			case 2:
 				try {
 					computeStack.push(pUnit->compute(arg1, arg2));
 				}
 				catch (const SpecsException& e) {
-					delete arg1;
-					delete arg2;
 					throw;
 				}
-				delete arg1;
-				delete arg2;
 				break;
 			case 3:
 				try {
 					computeStack.push(pUnit->compute(arg1, arg2, arg3));
 				}
 				catch (const SpecsException& e) {
-					delete arg1;
-					delete arg2;
-					delete arg3;
 					throw;
 				}
-				delete arg1;
-				delete arg2;
-				delete arg3;
 				break;
 			case 4:
 				try {
 					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4));
 				}
 				catch (const SpecsException& e) {
-					delete arg1;
-					delete arg2;
-					delete arg3;
-					delete arg4;
 					throw;
 				}
-				delete arg1;
-				delete arg2;
-				delete arg3;
-				delete arg4;
 				break;
 			case 5:
 				try {
 					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4, arg5));
 				}
 				catch (const SpecsException& e) {
-					delete arg1;
-					delete arg2;
-					delete arg3;
-					delete arg4;
-					delete arg5;
 					throw;
 				}
-				delete arg1;
-				delete arg2;
-				delete arg3;
-				delete arg4;
-				delete arg5;
 				break;
 			default:
 				break;
@@ -2028,29 +1983,29 @@ void AluValueStats::AddValue(char id)
 PValue AluValueStats::sum()
 {
 	if (0 < m_floatCount) {
-		return new ALUValue(m_sumFloat + m_sumInt);
+		return PValue(new ALUValue(m_sumFloat + m_sumInt));
 	} else {
-		return new ALUValue(m_sumInt);
+		return PValue(new ALUValue(m_sumInt));
 	}
 }
 
 PValue AluValueStats::sumi()
 {
-	return new ALUValue(m_sumInt);
+	return PValue(new ALUValue(m_sumInt));
 }
 
 PValue AluValueStats::sumf()
 {
-	return new ALUValue(m_sumFloat);
+	return PValue(new ALUValue(m_sumFloat));
 }
 
 PValue AluValueStats::_min()
 {
 	if (0 < m_floatCount) {
 		if (0 < m_intCount && m_minInt < m_minFloat) {
-			return new ALUValue(ALUFloat(m_minInt));
+			return PValue(new ALUValue(ALUFloat(m_minInt)));
 		} else {
-			return new ALUValue(m_minFloat);
+			return PValue(new ALUValue(m_minFloat));
 		}
 	} else {
 		return mini();
@@ -2060,18 +2015,18 @@ PValue AluValueStats::_min()
 PValue AluValueStats::mini()
 {
 	if (0 < m_intCount) {
-		return new ALUValue(m_minInt);
+		return PValue(new ALUValue(m_minInt));
 	} else {
-		return new ALUValue(); /* returns NaN */
+		return PValue(new ALUValue()); /* returns NaN */
 	}
 }
 
 PValue AluValueStats::minf()
 {
 	if (0 < m_floatCount) {
-		return new ALUValue(m_minFloat);
+		return PValue(new ALUValue(m_minFloat));
 	} else {
-		return new ALUValue(); /* returns NaN */
+		return PValue(new ALUValue()); /* returns NaN */
 	}
 }
 
@@ -2079,9 +2034,9 @@ PValue AluValueStats::_max()
 {
 	if (0 < m_floatCount) {
 		if (0 < m_intCount && m_maxInt < m_maxFloat) {
-			return new ALUValue(ALUFloat(m_maxInt));
+			return PValue(new ALUValue(ALUFloat(m_maxInt)));
 		} else {
-			return new ALUValue(m_maxFloat);
+			return PValue(new ALUValue(m_maxFloat));
 		}
 	} else {
 		return maxi();
@@ -2091,55 +2046,55 @@ PValue AluValueStats::_max()
 PValue AluValueStats::maxi()
 {
 	if (0 < m_intCount) {
-		return new ALUValue(m_maxInt);
+		return PValue(new ALUValue(m_maxInt));
 	} else {
-		return new ALUValue(); /* returns NaN */
+		return PValue(new ALUValue()); /* returns NaN */
 	}
 }
 
 PValue AluValueStats::maxf()
 {
 	if (0 < m_floatCount) {
-		return new ALUValue(m_maxFloat);
+		return PValue(new ALUValue(m_maxFloat));
 	} else {
-		return new ALUValue(); /* returns NaN */
+		return PValue(new ALUValue()); /* returns NaN */
 	}
 }
 
 PValue AluValueStats::average()
 {
 	if (m_totalCount==0) {
-		return new ALUValue(); /* returns NaN */
+		return PValue(new ALUValue()); /* returns NaN */
 	}
 
-	return new ALUValue(m_runningAverage);
+	return PValue(new ALUValue(m_runningAverage));
 }
 
 PValue AluValueStats::variance()
 {
 	if (m_totalCount==0) {
-		return new ALUValue(); /* returns NaN */
+		return PValue(new ALUValue()); /* returns NaN */
 	}
 
-	return new ALUValue(m_runningSn / m_totalCount);
+	return PValue(new ALUValue(m_runningSn / m_totalCount));
 }
 
 PValue AluValueStats::stddev()
 {
 	if (m_totalCount==0) {
-		return new ALUValue(); /* returns NaN */
+		return PValue(new ALUValue()); /* returns NaN */
 	}
 
-	return new ALUValue(std::sqrt(m_runningSn / m_totalCount));
+	return PValue(new ALUValue(std::sqrt(m_runningSn / m_totalCount)));
 }
 
 PValue AluValueStats::stderrmean()
 {
 	if (m_totalCount<=1) {
-		return new ALUValue(); /* returns NaN */
+		return PValue(new ALUValue()); /* returns NaN */
 	}
 
-	return new ALUValue(std::sqrt(m_runningSn / m_totalCount) / (m_totalCount-1));
+	return PValue(new ALUValue(std::sqrt(m_runningSn / m_totalCount) / (m_totalCount-1)));
 }
 
 std::ostream& operator<< (std::ostream& os, const ALUValue &c)

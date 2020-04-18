@@ -106,7 +106,7 @@ public:
 
 	void setDoc(const char* cstr) { m_doc = cstr; }
 
-	void setArgValue(size_t idx, ALUValue *pValue) {
+	void setArgValue(size_t idx, PValue pValue) {
 		PyObject* pValObj;
 		size_t argCount = GetArgCount();
 
@@ -118,7 +118,7 @@ public:
 
 		if (!pValue) {   // NULL passed - use default or None
 			static ALUValue pStatic;
-			pValue = &pStatic;
+			pValue = PValue(&pStatic);
 			PythonFuncArg& arg = m_args[idx];
 			switch (arg.m_default) {
 			case counterType__None:
@@ -160,25 +160,25 @@ public:
 		// Check that all values were passed, complete those that haven't
 		for (size_t i=0 ; i<GetArgCount() ; i++) {
 			if (NULL==PyTuple_GetItem(m_pTuple, i)) {
-				setArgValue(i, NULL);
+				setArgValue(i, PValue(NULL));
 			}
 		}
 
 		PyObject* pResult = PyObject_CallObject(m_pFuncPtr, m_pTuple);
 		if (pResult) {
 			if (PyLong_Check(pResult)) {
-				pRet = new ALUValue(ALUInt(PyLong_AsLong(pResult)));
+				pRet = PValue(new ALUValue(ALUInt(PyLong_AsLong(pResult))));
 			} else if (PyInt_Check(pResult)) {
-				pRet = new ALUValue(ALUInt(PyInt_AsLong(pResult)));
+				pRet = PValue(new ALUValue(ALUInt(PyInt_AsLong(pResult))));
 			} else if (PyFloat_Check(pResult)) {
-				pRet = new ALUValue(ALUFloat(PyFloat_AsDouble(pResult)));
+				pRet = PValue(new ALUValue(ALUFloat(PyFloat_AsDouble(pResult))));
 			} else if (PyUnicode_Check(pResult)) {
 				PyObject* pDefBytes = PyUnicode_AsASCIIString(pResult);
-				pRet = new ALUValue(PyBytes_AS_STRING(pDefBytes));
+				pRet = PValue(new ALUValue(PyBytes_AS_STRING(pDefBytes)));
 			} else if (PyString_Check(pResult)) {
-				pRet = new ALUValue(PyString_AS_STRING(pResult));
+				pRet = PValue(new ALUValue(PyString_AS_STRING(pResult)));
 			} else if (Py_None == pResult){
-				pRet = new ALUValue;  // NaN
+				pRet = PValue(new ALUValue);  // NaN
 			} else {
 				PyObject* pRepr = PyObject_Repr(pResult);
 				std::string err = "Invalid return type from function ";
@@ -193,13 +193,13 @@ public:
 			if (PyErr_Occurred()) {
 				switch (g_errorHandling) {
 				case externalFunctionError__NaN:
-					pRet = new ALUValue;
+					pRet = PValue(new ALUValue);
 					break;
 				case externalFunctionError__NullStr:
-					pRet = new ALUValue("");
+					pRet = PValue(new ALUValue(""));
 					break;
 				case externalFunctionError__Zero:
-					pRet = new ALUValue(ALUInt(0));
+					pRet = PValue(new ALUValue(ALUInt(0)));
 					break;
 				default:
 					if (g_bVerbose) {
@@ -208,7 +208,7 @@ public:
 					MYTHROW("Error in external function");
 				}
 			}
-			else pRet = new ALUValue; // NaN
+			else pRet = PValue(new ALUValue); // NaN
 		}
 
 		return pRet;

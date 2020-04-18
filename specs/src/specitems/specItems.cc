@@ -739,7 +739,6 @@ bool ConditionItem::evaluate()
 	} else {
 		PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters);
 		ret = exprResult->getBool();
-		delete exprResult;
 	}
 
 	return ret;

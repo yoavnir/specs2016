@@ -22,7 +22,7 @@ public:
 	bool			getBool(ALUCounterKey i)		{return m_map[i].getBool();}
 	PValue		getPointer(ALUCounterKey i)	{
 		if (0 == m_map.count(i)) m_map[i].set(ALUInt(0));
-		return &m_map[i];
+		return PValue(new ALUValue(m_map[i]));
 	}
 	void			set(ALUCounterKey i, std::string& s)  {m_map[i].set(s);}
 	void			set(ALUCounterKey i, const char* st)  {m_map[i].set(st);}

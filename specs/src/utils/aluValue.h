@@ -59,5 +59,5 @@ private:
 	ALUCounterType m_type;
 };
 
-typedef ALUValue* PValue;
+typedef std::shared_ptr<ALUValue> PValue;
 #endif

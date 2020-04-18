@@ -470,7 +470,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 			pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
 			ALUInt start = pComposedStartingPosition->getInt();
 			if (cols >= start) {
-				res = new ALUValue(cols - start + 1);
+				res = PValue(new ALUValue(cols - start + 1));
 			} else {
 				std::string err = "Composed starting position (" + std::to_string(start) +
 						") is beyond screen width (" + std::to_string(cols) + ")";
@@ -482,7 +482,6 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		}
 
 		outputWidth = res->getInt();
-		delete res;
 	} else if (outputWidth > MAX_OUTPUT_POSITION) {
 		MYTHROW("Excessive output width");
 	}
@@ -495,7 +494,6 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 			ellipsisSpec es = ellipsisSpecNone;
 			PValue res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
 			std::string s = res->getStr();
-			delete res;
 
 			if (s[0]=='c' || s[0]=='C') {
 				al = outputAlignmentCenter;
@@ -551,12 +549,11 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 			if (NULL == pComposedStartingPosition) {
 				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
 			}
-			res = pComposedStartingPosition;
+			res = PValue(new ALUValue(pComposedStartingPosition->getInt()));
 		} else {
 			res = AluFunc_next();
 		}
 		pSB->insert(pInput, res->getInt());
-		delete res;
 	} else if (m_outStart <= MAX_OUTPUT_POSITION) {
 		pSB->insert(pInput, m_outStart);
 	} else {

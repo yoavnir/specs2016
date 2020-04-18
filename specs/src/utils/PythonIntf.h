@@ -9,7 +9,7 @@ class ExternalFunctionRec {
 public:
 	virtual size_t    GetArgCount() = 0;
 	virtual void      ResetArgs() = 0;
-	virtual void      setArgValue(size_t idx, ALUValue *pValue) = 0;
+	virtual void      setArgValue(size_t idx, PValue pValue) = 0;
 	virtual PValue    Call() = 0;
 };
 

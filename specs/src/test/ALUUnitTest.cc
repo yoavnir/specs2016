@@ -123,7 +123,6 @@ extern bool g_bWarnAboutGrammars;
 				ALUCounterType2Str[ctr->getDivinedType()] << ")\n";  \
 		countFailures++;  failedTests.push_back(testIndex); \
 	} \
-	delete ctr; \
 } while(0);
 
 #define VERIFY_UNIT_ST(u,s) do { \
@@ -137,7 +136,6 @@ extern bool g_bWarnAboutGrammars;
 		std::cout << "*** NOT OK *** (" << ctr->getStr() << ")\n";  \
 		countFailures++;  failedTests.push_back(testIndex); \
 	} \
-	delete ctr; \
 } while(0);
 
 #define VERIFY_UNIT_INT(u,i) do { \
@@ -151,7 +149,6 @@ extern bool g_bWarnAboutGrammars;
 		std::cout << "*** NOT OK *** (" << ctr->getStr() << " - " << ctr->getInt() << ")\n";  \
 		countFailures++;  failedTests.push_back(testIndex); \
 	} \
-	delete ctr; \
 } while(0);
 
 #define VERIFY_UNIT_F(u,f) do { \
@@ -165,7 +162,6 @@ extern bool g_bWarnAboutGrammars;
 		std::cout << "*** NOT OK *** (" << ctr->getStr() << " - " << ctr->getFloat() << ")\n";  \
 		countFailures++;  failedTests.push_back(testIndex); \
 	} \
-	delete ctr; \
 } while(0);
 
 #define VERIFY_UNARY(u,o,t,s) do { \
@@ -184,7 +180,6 @@ extern bool g_bWarnAboutGrammars;
 	} else { \
 		std::cout << "OK.\n"; \
 	} \
-	delete _res; \
 } while(0);
 
 #define VERIFY_BINARY(u,o1,o2,t,s) do { \
@@ -205,7 +200,6 @@ extern bool g_bWarnAboutGrammars;
 	} else { \
 		std::cout << "OK.\n"; \
 	} \
-	delete _res; \
 } while(0);
 
 #define VERIFY_ASSN(u,p,o,t,s) do {		\
@@ -316,7 +310,7 @@ extern bool g_bWarnAboutGrammars;
 				if (_res) try {                             \
 					_result = evaluateExpression(rpnVec, &counters);	\
 				} catch(SpecsException& e) {                \
-					_result = new ALUValue(e.what(true));   \
+					_result = PValue(new ALUValue(e.what(true)));   \
 				}                                           \
 				cleanAluVec(rpnVec);						\
 				_res = (_result!=NULL) && (_result->getStr()==res);	\
@@ -329,7 +323,6 @@ extern bool g_bWarnAboutGrammars;
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
 			countFailures++;  failedTests.push_back(testIndex);		\
 		}															\
-		if (_result) delete(_result);								\
 	}
 
 #define VERIFY_ASSN_RES(s,exp) do {								\

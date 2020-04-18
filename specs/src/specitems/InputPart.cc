@@ -242,16 +242,13 @@ std::string ExpressionPart::Debug()
 PSpecString ExpressionPart::getStr(ProcessingState& pState)
 {
 	PValue res;
-	bool bDelete = true;
 	if (m_isAssignment) {
 		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpr, &g_counters);
 		res = g_counters.getPointer(m_counter);
-		bDelete = false;
 	} else {
 		res = evaluateExpression(m_RPNExpr, &g_counters);
 	}
 	std::string ret = res->getStr();
-	if (bDelete) delete res;
 	return SpecString::newString(ret);
 }
 
