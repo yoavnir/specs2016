@@ -2,6 +2,7 @@
 #define SPECS2016__UTILS__ALU_VALUE__H
 
 #include <string>
+#include <memory>
 
 typedef long long int ALUInt;
 typedef long double   ALUFloat;
