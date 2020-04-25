@@ -465,7 +465,6 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 					pState.getCurrentWriter()->Write(pOutString);
 					tmr.changeClass(timeClassProcessing);
 				} else {
-					delete pOutString;
 					pState.resetNoWrite();
 				}
 			}

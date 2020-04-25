@@ -105,18 +105,11 @@ ProcessingState::~ProcessingState()
 	fieldIdentifierClear();
 	fieldIdentifierStatsClear();
 	breakValuesClear();
-	if (m_prevPs) {
-		delete m_prevPs;
-	}
-	if (m_ps) {
-		delete m_ps;
-	}
 }
 
 void ProcessingState::setString(PSpecString ps, bool bResetState)
 {
 	if (m_ps && ps!=m_ps) {
-		if (m_prevPs) delete m_prevPs;
 		m_prevPs = m_ps;
 	} else {
 		MYASSERT(m_prevPs==NULL);
@@ -353,7 +346,6 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 		PSpecString pRet = SpecString::newString(currRecord(), from-1, slen-from+1);
 		PSpecString pWrappedAroundPart = SpecString::newString(currRecord(), 0, to);
 		pRet->append(pWrappedAroundPart);
-		delete pWrappedAroundPart;
 		return pRet;
 	}
 
@@ -362,9 +354,6 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 
 void ProcessingState::fieldIdentifierClear()
 {
-	for (const auto &pair : m_fieldIdentifiers) {
-		delete pair.second;
-	}
 	m_fieldIdentifiers.clear();
 }
 
@@ -382,9 +371,6 @@ void ProcessingState::fieldIdentifierStatsClear()
 
 void ProcessingState::breakValuesClear()
 {
-	for (const auto &pair : m_breakValues) {
-		delete pair.second;
-	}
 	m_breakValues.clear();
 }
 
@@ -416,8 +402,6 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 	}
 
 	if (m_breakValues[id] && 0==ps->Compare(m_breakValues[id]->data())) return;
-
-	if (m_breakValues[id]) delete m_breakValues[id];
 
 	m_breakValues[id] = SpecStringCopy(ps);
 	if (breakLevelGE(id, m_breakLevel)) {

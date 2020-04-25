@@ -17,7 +17,6 @@ int main(int argc, char** argv)
 	while (!pRead->eof()) {
 		PSpecString p = pRead->get(tmr, readerCount);
 		sb.insert(p,1);
-		delete p;
 		pWrite->Write(sb.GetString());
 	}
 

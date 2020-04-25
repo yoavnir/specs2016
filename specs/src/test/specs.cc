@@ -358,7 +358,6 @@ int main (int argc, char** argv)
 		} else {
 			ps.resetNoWrite();
 		}
-		delete pstr;
 		readLines = 0;
 		usedLines = 0;
 		generatedLines = 1;

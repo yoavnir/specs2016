@@ -18,7 +18,6 @@ Reader::~Reader()
 	End();
 	while (!m_queue.empty()) {
 		m_queue.wait_and_pop(ps);
-		delete ps;
 	}
 }
 
@@ -216,7 +215,7 @@ PSpecString StandardReader::getNextRecord() {
 
 TestReader::TestReader(size_t maxLineCount)
 {
-	mp_arr = (SpecString**)malloc(sizeof(PSpecString) * maxLineCount);
+	mp_arr = (PSpecString*)calloc(maxLineCount, sizeof(PSpecString));
 	m_count = m_idx = 0;
 	m_MaxCount = maxLineCount;
 }
@@ -224,10 +223,6 @@ TestReader::TestReader(size_t maxLineCount)
 TestReader::~TestReader()
 {
 	if (mp_arr) {
-		size_t i;
-		for (i=0; i<m_count; i++) {
-			delete mp_arr[i];
-		}
 		free(mp_arr);
 	}
 }
@@ -279,9 +274,6 @@ multiReader::~multiReader()
 	ITERATE_VALID_STREAMS(idx)
 		delete readerArray[idx];
 		readerArray[idx] = NULL;
-		if (stringArray[idx]) {
-			delete stringArray[idx];
-		}
 		readerCounter--;
 	ITERATE_VALID_STREAMS_END
 }
@@ -347,11 +339,9 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 	ITERATE_VALID_STREAMS(idx)
 		if (stringArray[idx]) {
 			MYASSERT(idx!=readerIdx);
-			delete stringArray[idx];
 			stringArray[idx] = readerArray[idx]->get(tmr, readerCounter);
 			if (!stringArray[idx]) {
 				if (STOP_STREAM_ANY==stopReaderIdx || idx==(stopReaderIdx-1) || 0==readerCounter) {
-					delete ret;
 					_readerCounter--;
 					return NULL;
 				}
@@ -364,7 +354,6 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 				stringArray[idx] = readerArray[idx]->get(tmr, readerCounter);
 				if (!stringArray[idx]) {
 					if (STOP_STREAM_ANY==stopReaderIdx || idx==(stopReaderIdx-1) || 0==readerCounter) {
-						delete ret;
 						_readerCounter--;
 						return NULL;
 					}

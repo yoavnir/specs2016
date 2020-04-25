@@ -2,6 +2,7 @@
 #define SPECS2016__UTILS_SPECSTRING__H
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #define MAX_STR_LEN 65535
@@ -25,7 +26,7 @@ enum ellipsisSpec {
 
 class SpecString;
 
-typedef SpecString* PSpecString;
+typedef std::shared_ptr<SpecString> PSpecString;
 
 class SpecString {
 public:
@@ -46,7 +47,6 @@ public:
 	virtual std::string* sdata() = 0;
 	virtual size_t length() = 0;
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar) = 0;
-	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar) = 0;
 	virtual void Resize(size_t newSize, void* pPadChar, outputAlignment oa, ellipsisSpec es) = 0;
 	virtual void Resize(size_t newSize, char padChar, outputAlignment oa, ellipsisSpec es) = 0;
 	virtual int  Compare(const char* pstrz) = 0;
@@ -66,7 +66,6 @@ public:
 	virtual std::string* sdata() {return &m_str;}
 	virtual size_t length() {return m_str.length();}
 	virtual void Overlay(PSpecString pss, size_t offset, void* pPadChar);
-	virtual void Overlay(SpecString& ss, size_t offset, void* pPadChar);
 	virtual void Resize(size_t newSize, void* pPadChar, outputAlignment oa, ellipsisSpec es);
 	virtual void Resize(size_t newSize, char padChar, outputAlignment oa, ellipsisSpec es);
 	virtual void _serialize(std::ostream& os) const;
@@ -76,6 +75,8 @@ public:
 private:
 	std::string m_str;
 };
+
+typedef std::shared_ptr<StdSpecString> PStdSpecString;
 
 std::ostream& operator<< (std::ostream& os, const SpecString &str);
 

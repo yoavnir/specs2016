@@ -93,9 +93,6 @@ StringBuilder::StringBuilder()
 
 StringBuilder::~StringBuilder()
 {
-	if (mp_str) {
-		delete mp_str;
-	}
 }
 PSpecString StringBuilder::GetStringUnsafe()
 {
@@ -135,10 +132,8 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 is not yet supported");
 	}
-	StdSpecString *psss = dynamic_cast<StdSpecString*>(s);
-	MYASSERT(psss!=NULL);
 
-	size_t endPos = offset + psss->length();
+	size_t endPos = offset + s->length();
 	if (mp_str->length() < endPos) {
 		MYASSERT(m_pad!=0);
 		mp_str->Resize(endPos, m_pad, outputAlignmentLeft, ellipsisSpecNone);

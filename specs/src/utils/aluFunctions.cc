@@ -382,7 +382,6 @@ static PValue AluFunc_range(ALUInt start, ALUInt end)
 	PSpecString pRange = g_pStateQueryAgent->getFromTo(start, end);
 	if (pRange) {
 		PValue pRet = PValue(new ALUValue(pRange->data()));
-		delete pRange;
 		return pRet;
 	} else {
 		return PValue(new ALUValue(""));
@@ -492,7 +491,6 @@ PValue AluFunc_mcs2tf(PValue pValue, PValue pFormat)
 	int64_t microseconds = pValue->getInt();
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
 	PValue ret = PValue(new ALUValue(printable->data(), printable->length()));
-	delete printable;
 	return ret;
 }
 
@@ -514,7 +512,6 @@ PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
         int64_t microseconds = seconds * MICROSECONDS_PER_SECOND;
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
 	PValue ret = PValue(new ALUValue(printable->data(), printable->length()));
-	delete printable;
 	return ret;
 }
 

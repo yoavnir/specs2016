@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 
 	pRd = new TestReader(100);
 	for (size_t i=0; i<sizeof(Jabberwocky)/sizeof(StdSpecString); i++) {
-		pRd->InsertString(&Jabberwocky[i]);
+		pRd->InsertString(PSpecString(&Jabberwocky[i]));
 	}
 
 	pWr = new SimpleWriter;

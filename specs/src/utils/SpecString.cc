@@ -5,7 +5,7 @@
 
 void StdSpecString::Overlay(PSpecString pss, size_t offset, void* pPadChar)
 {
-	StdSpecString* pSmallString = dynamic_cast<StdSpecString*>(pss);
+	PStdSpecString pSmallString = std::dynamic_pointer_cast<StdSpecString>(pss);
 	MYASSERT(pSmallString!=NULL);
 
 	size_t endPos = offset + pSmallString->length();
@@ -19,7 +19,7 @@ void StdSpecString::Overlay(PSpecString pss, size_t offset, void* pPadChar)
 
 // Used only for the ProcessingTest
 void StdSpecString::add(PSpecString ps) {
-	StdSpecString* pStringToAdd = dynamic_cast<StdSpecString*>(ps);
+	PStdSpecString pStringToAdd = std::dynamic_pointer_cast<StdSpecString>(ps);
 	if (pStringToAdd) {
 		m_str += "\n";
 		m_str += *pStringToAdd->getStdString();
@@ -27,15 +27,10 @@ void StdSpecString::add(PSpecString ps) {
 }
 
 void StdSpecString::append(PSpecString ps) {
-	StdSpecString* pStringToAdd = dynamic_cast<StdSpecString*>(ps);
+	PStdSpecString pStringToAdd = std::dynamic_pointer_cast<StdSpecString>(ps);
 	if (pStringToAdd) {
 		m_str += *pStringToAdd->getStdString();
 	}
-}
-
-void StdSpecString::Overlay(SpecString& ss, size_t offset, void* pPadChar)
-{
-	Overlay(&ss, offset, pPadChar);
 }
 
 void StdSpecString::Resize(size_t newSize, void* pPadChar, outputAlignment oa, ellipsisSpec es)
@@ -122,7 +117,7 @@ PSpecString SpecString::newString()
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return new StdSpecString();
+		return PSpecString(new StdSpecString());
 	}
 }
 
@@ -132,7 +127,7 @@ PSpecString SpecString::newString(const char* pstrz)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return new StdSpecString(pstrz);
+		return PSpecString(new StdSpecString(pstrz));
 	}
 }
 
@@ -142,7 +137,7 @@ PSpecString SpecString::newString(const char* pstrz, size_t len)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return new StdSpecString(pstrz, len);
+		return PSpecString(new StdSpecString(pstrz, len));
 	}
 }
 
@@ -152,9 +147,9 @@ PSpecString SpecString::newString(PSpecString pss, size_t start, size_t len)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		StdSpecString *psss = dynamic_cast<StdSpecString*>(pss);
+		PStdSpecString psss = std::dynamic_pointer_cast<StdSpecString>(pss);
 		MYASSERT(psss!=NULL);
-		return new StdSpecString(psss->data() + start, len);
+		return PSpecString(new StdSpecString(psss->data() + start, len));
 	}
 }
 
@@ -164,7 +159,7 @@ PSpecString SpecString::newString(std::string& st)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return new StdSpecString(st.c_str(), st.length());
+		return PSpecString(new StdSpecString(st.c_str(), st.length()));
 	}
 }
 
@@ -174,8 +169,8 @@ PSpecString SpecStringCopy(PSpecString pss)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		StdSpecString *psss = dynamic_cast<StdSpecString*>(pss);
+		PStdSpecString psss = std::dynamic_pointer_cast<StdSpecString>(pss);
 		MYASSERT(psss!=NULL);
-		return new StdSpecString(*psss);
+		return PSpecString(new StdSpecString(*psss));
 	}
 }

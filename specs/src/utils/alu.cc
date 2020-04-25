@@ -844,7 +844,6 @@ PValue AluInputRecord::evaluate()
 	} else {
 		ret = PValue(new ALUValue(""));
 	}
-	delete ps;
 	return ret;
 }
 

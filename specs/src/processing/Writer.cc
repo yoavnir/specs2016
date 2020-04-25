@@ -93,7 +93,6 @@ void SimpleWriter::WriteOut()
 		*m_File << *ps << std::endl;
 		m_Timer.changeClass(timeClassProcessing);
 		m_countWritten++;
-		delete ps;
 	} else {
 		m_Timer.changeClass(timeClassProcessing);
 	}

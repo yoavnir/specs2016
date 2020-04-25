@@ -169,7 +169,6 @@ static std::string conv_ti2f(std::string& s, std::string& parm)
 	int64_t internal = *((int64_t*)(s.c_str()));
 	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
 	std::string ret = std::string(pRet->data());
-	delete pRet;
 	return ret;
 }
 
@@ -184,7 +183,6 @@ static std::string conv_s2tf(std::string& s, std::string& parm)
 	int64_t internal = int64_t(std::stold(s) * MICROSECONDS_PER_SECOND + 0.5);
 	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
 	std::string ret = std::string(pRet->data());
-	delete pRet;
 	return ret;
 }
 
@@ -205,7 +203,6 @@ static std::string conv_mcs2tf(std::string& s, std::string& parm)
 	int64_t internal = int64_t(std::stold(s) + 0.5);
 	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
 	std::string ret = std::string(pRet->data());
-	delete pRet;
 	return ret;
 }
 

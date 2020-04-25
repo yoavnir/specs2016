@@ -29,7 +29,6 @@ extern bool        g_keep_suppressed_record;
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
 		}                                       \
-		delete ps;								\
 } while (0);
 
 #define VERIFY2(sp,ln,ex) do {          \
@@ -47,7 +46,6 @@ extern bool        g_keep_suppressed_record;
 			} else {                            \
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
 			}                                   \
-			delete ps;			\
 		}                                       \
 } while (0);
 
@@ -78,7 +76,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 
 	g_counters.clearAll();
 
-	TestReader tRead(20);
+	TestReader tRead(100);
 	unsigned int readerCounter = 1;
 	char* example = strdup(_example);
 	char* ln = strtok(example, "\n");
@@ -120,18 +118,15 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 					if (result) {
 						result->add(pOut);
-						delete pOut;
 					} else {
 						result = pOut;
 					}
 				} else {
-					delete pOut;
 				}
 			} while (!tRead.endOfSource());
 		}
 	} catch (SpecsException& e) {
 		if (result) {
-			delete result;
 		}
 		result = SpecString::newString(e.what(true));
 		goto end;
@@ -148,7 +143,6 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			PSpecString pOut = sb.GetStringUnsafe();
 			if (result) {
 				result->add(pOut);
-				delete pOut;
 			} else {
 				result = pOut;
 			}

@@ -414,7 +414,6 @@ void DataField::stripString(PSpecString &pOrig)
 	}
 
 	if (!len) {
-		delete old;
 		pOrig = SpecString::newString();
 	}
 
@@ -425,7 +424,6 @@ void DataField::stripString(PSpecString &pOrig)
 	}
 
 	pOrig = SpecString::newString(s, len);
-	delete old;
 }
 
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
@@ -441,7 +439,6 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		try {
 			pState.fieldIdentifierSet(m_label, pInput);
 		} catch (std::out_of_range& e) {
-			delete pInput;
 			throw e;
 		}
 	}
@@ -452,7 +449,6 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (m_conversion) {
 		std::string currentString(pInput->data(), pInput->length());
-		delete pInput;
 		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
 		pInput = SpecString::newString(convertedString);
 	}
@@ -564,7 +560,6 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	bWritingWasDone = true;
 
 FINISH:
-	delete pInput;
 	return bWritingWasDone ? ApplyRet__ContinueWithDataWritten : ApplyRet__Continue;
 }
 
