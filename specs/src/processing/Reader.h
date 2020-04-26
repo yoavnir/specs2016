@@ -55,7 +55,7 @@ public:
 	void    InsertString(const char* s);
 	void    InsertString(PSpecString ps);
 	virtual bool endOfSource() {return m_bAbort || (m_idx >= m_count); }
-	virtual PSpecString getNextRecord() {return SpecStringCopy(mp_arr[m_idx++]);}
+	virtual PSpecString getNextRecord() {return mp_arr[m_idx++];}
 	virtual PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter) {return getNextRecord();}
 private:
 	PSpecString  *mp_arr;
