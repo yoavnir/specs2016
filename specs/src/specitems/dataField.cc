@@ -466,7 +466,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 			pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
 			ALUInt start = pComposedStartingPosition->getInt();
 			if (cols >= start) {
-				res = PValue(new ALUValue(cols - start + 1));
+				res = mkValue(cols - start + 1);
 			} else {
 				std::string err = "Composed starting position (" + std::to_string(start) +
 						") is beyond screen width (" + std::to_string(cols) + ")";
@@ -545,7 +545,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 			if (NULL == pComposedStartingPosition) {
 				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
 			}
-			res = PValue(new ALUValue(pComposedStartingPosition->getInt()));
+			res = mkValue(pComposedStartingPosition->getInt());
 		} else {
 			res = AluFunc_next();
 		}

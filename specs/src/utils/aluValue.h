@@ -61,4 +61,9 @@ private:
 };
 
 typedef std::shared_ptr<ALUValue> PValue;
+
+#define mkValue0()     PValue(new ALUValue())
+#define mkValue(x)     PValue(new ALUValue(x))
+#define mkValue2(x,y)  PValue(new ALUValue(x,y))
+
 #endif

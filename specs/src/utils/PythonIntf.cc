@@ -167,18 +167,18 @@ public:
 		PyObject* pResult = PyObject_CallObject(m_pFuncPtr, m_pTuple);
 		if (pResult) {
 			if (PyLong_Check(pResult)) {
-				pRet = PValue(new ALUValue(ALUInt(PyLong_AsLong(pResult))));
+				pRet = mkValue(ALUInt(PyLong_AsLong(pResult)));
 			} else if (PyInt_Check(pResult)) {
-				pRet = PValue(new ALUValue(ALUInt(PyInt_AsLong(pResult))));
+				pRet = mkValue(ALUInt(PyInt_AsLong(pResult)));
 			} else if (PyFloat_Check(pResult)) {
-				pRet = PValue(new ALUValue(ALUFloat(PyFloat_AsDouble(pResult))));
+				pRet = mkValue(ALUFloat(PyFloat_AsDouble(pResult)));
 			} else if (PyUnicode_Check(pResult)) {
 				PyObject* pDefBytes = PyUnicode_AsASCIIString(pResult);
-				pRet = PValue(new ALUValue(PyBytes_AS_STRING(pDefBytes)));
+				pRet = mkValue(PyBytes_AS_STRING(pDefBytes));
 			} else if (PyString_Check(pResult)) {
-				pRet = PValue(new ALUValue(PyString_AS_STRING(pResult)));
+				pRet = mkValue(PyString_AS_STRING(pResult));
 			} else if (Py_None == pResult){
-				pRet = PValue(new ALUValue);  // NaN
+				pRet = mkValue0();  // NaN
 			} else {
 				PyObject* pRepr = PyObject_Repr(pResult);
 				std::string err = "Invalid return type from function ";
@@ -193,13 +193,13 @@ public:
 			if (PyErr_Occurred()) {
 				switch (g_errorHandling) {
 				case externalFunctionError__NaN:
-					pRet = PValue(new ALUValue);
+					pRet = mkValue0();
 					break;
 				case externalFunctionError__NullStr:
-					pRet = PValue(new ALUValue(""));
+					pRet = mkValue("");
 					break;
 				case externalFunctionError__Zero:
-					pRet = PValue(new ALUValue(ALUInt(0)));
+					pRet = mkValue(ALUInt(0));
 					break;
 				default:
 					if (g_bVerbose) {
@@ -208,7 +208,7 @@ public:
 					MYTHROW("Error in external function");
 				}
 			}
-			else pRet = PValue(new ALUValue); // NaN
+			else pRet = mkValue0(); // NaN
 		}
 
 		return pRet;

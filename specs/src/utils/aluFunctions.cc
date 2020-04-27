@@ -141,11 +141,11 @@ PValue AluFunc_abs(PValue op)
 	if (op->getType()==counterType__Int) {
 		ALUInt i = op->getInt();
 		if (i<0) i = -i;
-		return PValue(new ALUValue(i));
+		return mkValue(i);
 	} else {
 		ALUFloat f = op->getFloat();
 		if (f<0) f = -f;
-		return PValue(new ALUValue(f));
+		return mkValue(f);
 	}
 }
 
@@ -154,21 +154,21 @@ PValue AluFunc_pow(PValue op1, PValue op2)
 	ASSERT_NOT_ELIDED(op1,1,base);
 	ASSERT_NOT_ELIDED(op2,2,exponent);
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return PValue(new ALUValue(std::pow(op1->getFloat(), op2->getFloat())));
+		return mkValue(std::pow(op1->getFloat(), op2->getFloat()));
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return PValue(new ALUValue(ALUInt(std::pow(op1->getInt(), op2->getInt()))));
+		return mkValue(ALUInt(std::pow(op1->getInt(), op2->getInt())));
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return PValue(new ALUValue(ALUInt(std::pow(op1->getInt(), op2->getInt()))));
+		return mkValue(ALUInt(std::pow(op1->getInt(), op2->getInt())));
 	}
-	return PValue(new ALUValue(std::pow(op1->getFloat(), op2->getFloat())));
+	return mkValue(std::pow(op1->getFloat(), op2->getFloat()));
 }
 
 PValue AluFunc_sqrt(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,square);
-	return PValue(new ALUValue(std::sqrt(op->getFloat())));
+	return mkValue(std::sqrt(op->getFloat()));
 }
 
 // Both of the following functions assume little-endian architecture
@@ -230,7 +230,7 @@ PValue AluFunc_c2u(PValue op)
 	ASSERT_NOT_ELIDED(op,1,op);
 	uint64_t value = binary2uint64(op);
 	MYASSERT_WITH_MSG(value <= MAX_ALUInt, "c2u: Binary value exceeds limit");
-	return PValue(new ALUValue(ALUInt(value)));
+	return mkValue(ALUInt(value));
 }
 
 PValue AluFunc_c2d(PValue op)
@@ -241,19 +241,19 @@ PValue AluFunc_c2d(PValue op)
 	switch (numBytes) {
 	case 1: {
 		char *pvalue = (char*)(&uvalue);
-		return PValue(new ALUValue(ALUInt(*pvalue)));
+		return mkValue(ALUInt(*pvalue));
 	}
 	case 2: {
 		int16_t *pvalue = (int16_t*)(&uvalue);
-		return PValue(new ALUValue(ALUInt(*pvalue)));
+		return mkValue(ALUInt(*pvalue));
 	}
 	case 4: {
 		int32_t *pvalue = (int32_t*)(&uvalue);
-		return PValue(new ALUValue(ALUInt(*pvalue)));
+		return mkValue(ALUInt(*pvalue));
 	}
 	case 8: {
 		int64_t *pvalue = (int64_t*)(&uvalue);
-		return PValue(new ALUValue(ALUInt(*pvalue)));
+		return mkValue(ALUInt(*pvalue));
 	}
 	default: {
 		std::string err = "Invalid number of bytes: " + std::to_string(numBytes);
@@ -271,13 +271,13 @@ PValue AluFunc_c2f(PValue op)
 
 	if (str.length() == sizeof(float)) {
 		float* pf = (float*) str.c_str();
-		return PValue(new ALUValue(ALUFloat(*pf)));
+		return mkValue(ALUFloat(*pf));
 	} else if (str.length() == sizeof(double)) {
 		double *pd = (double*) str.c_str();
-		return PValue(new ALUValue(ALUFloat(*pd)));
+		return mkValue(ALUFloat(*pd));
 	} else if (str.length() == sizeof(long double)) {
 		long double *pld = (long double*) str.c_str();
-		return PValue(new ALUValue(ALUFloat(*pld)));
+		return mkValue(ALUFloat(*pld));
 	} else {
 		std::string err = "c2f: Invalid floating point length: " + std::to_string(str.length()) +
 				". Supported lengths: " + std::to_string(sizeof(float));
@@ -297,7 +297,7 @@ PValue AluFunc_frombin(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	uint64_t value = binary2uint64(op);
-	return PValue(new ALUValue(ALUInt(value)));
+	return mkValue(ALUInt(value));
 }
 
 PValue AluFunc_tobine(PValue op, PValue _bits)
@@ -311,7 +311,7 @@ PValue AluFunc_tobine(PValue op, PValue _bits)
 	case 16:
 	case 32:
 	case 64:
-		return PValue(new ALUValue((char*)&value, bits/8));
+		return mkValue2((char*)&value, bits/8);
 	default: {
 		std::string err = "Invalid bit length " + _bits->getStr();
 		MYTHROW(err);
@@ -341,39 +341,39 @@ PValue AluFunc_tobin(PValue op)
 PValue AluFunc_length(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
-	return PValue(new ALUValue(ALUInt(op->getStr().length())));
+	return mkValue(ALUInt(op->getStr().length()));
 }
 
 PValue AluFunc_first()
 {
 	bool isFirst = g_pStateQueryAgent->isRunIn();
-	return PValue(new ALUValue(ALUInt(isFirst ? 1 : 0)));
+	return mkValue(ALUInt(isFirst ? 1 : 0));
 }
 
 PValue AluFunc_number()
 {
-	return PValue(new ALUValue(g_pStateQueryAgent->getIterationCount()));
+	return mkValue(g_pStateQueryAgent->getIterationCount());
 }
 
 PValue AluFunc_recno()
 {
-	return PValue(new ALUValue(g_pStateQueryAgent->getRecordCount()));
+	return mkValue(g_pStateQueryAgent->getRecordCount());
 }
 
 PValue AluFunc_eof()
 {
 	bool isRunOut = g_pStateQueryAgent->isRunOut();
-	return PValue(new ALUValue(ALUInt(isRunOut ? 1 : 0)));
+	return mkValue(ALUInt(isRunOut ? 1 : 0));
 }
 
 PValue AluFunc_wordcount()
 {
-	return PValue(new ALUValue(ALUInt(g_pStateQueryAgent->getWordCount())));
+	return mkValue(ALUInt(g_pStateQueryAgent->getWordCount()));
 }
 
 PValue AluFunc_fieldcount()
 {
-	return PValue(new ALUValue(ALUInt(g_pStateQueryAgent->getFieldCount())));
+	return mkValue(ALUInt(g_pStateQueryAgent->getFieldCount()));
 }
 
 // Helper function
@@ -381,10 +381,10 @@ static PValue AluFunc_range(ALUInt start, ALUInt end)
 {
 	PSpecString pRange = g_pStateQueryAgent->getFromTo(start, end);
 	if (pRange) {
-		PValue pRet = PValue(new ALUValue(pRange->data()));
+		PValue pRet = mkValue(pRange->data());
 		return pRet;
 	} else {
-		return PValue(new ALUValue(""));
+		return mkValue("");
 	}
 }
 
@@ -439,13 +439,13 @@ PValue AluFunc_fieldrange(PValue pStart, PValue pEnd)
 PValue AluFunc_fieldindex(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
-	return PValue(new ALUValue(ALUInt(g_pStateQueryAgent->getFieldStart(pIdx->getInt()))));
+	return mkValue(ALUInt(g_pStateQueryAgent->getFieldStart(pIdx->getInt())));
 }
 
 PValue AluFunc_fieldend(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
-	return PValue(new ALUValue(ALUInt(g_pStateQueryAgent->getFieldEnd(pIdx->getInt()))));
+	return mkValue(ALUInt(g_pStateQueryAgent->getFieldEnd(pIdx->getInt())));
 }
 
 PValue AluFunc_fieldlength(PValue pIdx)
@@ -453,19 +453,19 @@ PValue AluFunc_fieldlength(PValue pIdx)
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	auto idx = pIdx->getInt();
 	auto len = g_pStateQueryAgent->getFieldEnd(idx) - g_pStateQueryAgent->getFieldStart(idx) + 1;
-	return PValue(new ALUValue(ALUInt(len)));
+	return mkValue(ALUInt(len));
 }
 
 PValue AluFunc_wordstart(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
-	return PValue(new ALUValue(ALUInt(g_pStateQueryAgent->getWordStart(pIdx->getInt()))));
+	return mkValue(ALUInt(g_pStateQueryAgent->getWordStart(pIdx->getInt())));
 }
 
 PValue AluFunc_wordend(PValue pIdx)
 {
 	ASSERT_NOT_ELIDED(pIdx,1,index);
-	return PValue(new ALUValue(ALUInt(g_pStateQueryAgent->getWordEnd(pIdx->getInt()))));
+	return mkValue(ALUInt(g_pStateQueryAgent->getWordEnd(pIdx->getInt())));
 }
 
 PValue AluFunc_wordlen(PValue pIdx)
@@ -473,7 +473,7 @@ PValue AluFunc_wordlen(PValue pIdx)
 	ASSERT_NOT_ELIDED(pIdx,1,index);
 	auto idx = pIdx->getInt();
 	auto len = g_pStateQueryAgent->getWordEnd(idx) - g_pStateQueryAgent->getWordStart(idx) + 1;
-	return PValue(new ALUValue(ALUInt(len)));
+	return mkValue(ALUInt(len));
 }
 
 PValue AluFunc_tf2mcs(PValue pTimeFormatted, PValue pFormat)
@@ -481,7 +481,7 @@ PValue AluFunc_tf2mcs(PValue pTimeFormatted, PValue pFormat)
 	ASSERT_NOT_ELIDED(pTimeFormatted,1,formatted_time);
 	ASSERT_NOT_ELIDED(pFormat,2,format);
 	int64_t tm = specTimeConvertFromPrintable(pTimeFormatted->getStr(), pFormat->getStr());
-	return PValue(new ALUValue(ALUInt(tm)));
+	return mkValue(ALUInt(tm));
 }
 
 PValue AluFunc_mcs2tf(PValue pValue, PValue pFormat)
@@ -490,7 +490,7 @@ PValue AluFunc_mcs2tf(PValue pValue, PValue pFormat)
 	ASSERT_NOT_ELIDED(pFormat,2,format);
 	int64_t microseconds = pValue->getInt();
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	PValue ret = PValue(new ALUValue(printable->data(), printable->length()));
+	PValue ret = mkValue2(printable->data(), printable->length());
 	return ret;
 }
 
@@ -501,7 +501,7 @@ PValue AluFunc_tf2s(PValue pTimeFormatted, PValue pFormat)
 	int64_t tm = specTimeConvertFromPrintable(pTimeFormatted->getStr(), pFormat->getStr());
         ALUFloat seconds = (tm/MICROSECONDS_PER_SECOND);
         ALUFloat microseconds = (ALUFloat)(tm%MICROSECONDS_PER_SECOND)/MICROSECONDS_PER_SECOND;
-        return PValue(new ALUValue(ALUFloat(seconds+microseconds)));
+        return mkValue(ALUFloat(seconds+microseconds));
 }
 
 PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
@@ -511,7 +511,7 @@ PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
         ALUFloat seconds = pValue->getFloat();
         int64_t microseconds = seconds * MICROSECONDS_PER_SECOND;
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	PValue ret = PValue(new ALUValue(printable->data(), printable->length()));
+	PValue ret = mkValue2(printable->data(), printable->length());
 	return ret;
 }
 
@@ -522,14 +522,14 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 {
 	// handle start
 	if (start==0) {    // invalid string index in specs
-		return PValue(new ALUValue());  // NaN
+		return mkValue();  // NaN
 	}
 	else if (start > ALUInt(pStr->length())) {
-		return PValue(new ALUValue("",0));
+		return mkValue2("",0);
 	} else if (start < 0) {
 		start += pStr->length() + 1;
 		if (start < 1) {
-			return PValue(new ALUValue("",0));
+			return mkValue2("",0);
 		}
 	}
 
@@ -537,7 +537,7 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 	if (length < 0) {
 		length += pStr->length() + 1; // length=-1 means the length of the string
 		if (length < 0) {
-			return PValue(new ALUValue("",0));
+			return mkValue2("",0);
 		}
 	}
 	if (size_t(start + length - 1) > pStr->length()) {
@@ -545,7 +545,7 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 	}
 
 	// Finally:
-	return PValue(new ALUValue(pStr->substr(start-1,length)));
+	return mkValue(pStr->substr(start-1,length));
 }
 
 PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
@@ -562,11 +562,11 @@ PValue AluFunc_left(PValue pBigString, PValue pLength)
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
-	if (len==0) return PValue(new ALUValue("",0));
+	if (len==0) return mkValue2("",0);
 	if (len < 0) len = len + bigLength + 1;
 	if (size_t(len) > bigLength) {
-		return PValue(new ALUValue(*pBigStr
-				+ std::string(len-bigLength, PAD_CHAR)));
+		return mkValue(*pBigStr
+				+ std::string(len-bigLength, PAD_CHAR));
 	}
 	return AluFunc_substring_do(pBigStr, 1, len);
 }
@@ -577,11 +577,11 @@ PValue AluFunc_right(PValue pBigString, PValue pLength)
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
-	if (len==0) return PValue(new ALUValue("",0));
+	if (len==0) return mkValue2("",0);
 	if (len < 0) len = len + bigLength + 1;
 	if (size_t(len) > bigLength) {
-		return PValue(new ALUValue(std::string(len-bigLength, PAD_CHAR)
-				+ *pBigString->getStrPtr()));
+		return mkValue(std::string(len-bigLength, PAD_CHAR)
+				+ *pBigString->getStrPtr());
 	}
 	return AluFunc_substring_do(pBigStr, bigLength-len+1, len);
 }
@@ -593,14 +593,14 @@ PValue AluFunc_center(PValue pBigString, PValue pLength)
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
-	if (len==0) return PValue(new ALUValue("",0));
+	if (len==0) return mkValue2("",0);
 	if (len < 0) len = len + bigLength + 1;
 	if (size_t(len) > bigLength) {
 		size_t smallHalf = (len-bigLength) / 2;
 		size_t bigHalf = (len-bigLength) - smallHalf;
-		return PValue(new ALUValue(std::string(smallHalf, PAD_CHAR)
+		return mkValue(std::string(smallHalf, PAD_CHAR)
 				+ *pBigStr
-				+ std::string(bigHalf, PAD_CHAR)));
+				+ std::string(bigHalf, PAD_CHAR));
 	}
 	return AluFunc_substring_do(pBigStr, (bigLength - len) / 2 + 1, len);
 }
@@ -617,9 +617,9 @@ PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	size_t pos = pHaystack->find(*pNeedle);
 	if (std::string::npos == pos) {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	} else {
-		return PValue(new ALUValue(ALUInt(pos+1)));
+		return mkValue(ALUInt(pos+1));
 	}
 }
 
@@ -630,9 +630,9 @@ PValue AluFunc_lastpos(PValue _pNeedle, PValue _pHaystack)
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 	size_t pos = pHaystack->rfind(*pNeedle);
 	if (std::string::npos == pos) {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	} else {
-		return PValue(new ALUValue(ALUInt(pos+1)));
+		return mkValue(ALUInt(pos+1));
 	}
 }
 
@@ -643,16 +643,16 @@ PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, P
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 
 	if (std::string::npos != pHaystack->find(*_pNeedle1->getStrPtr())) {
-		return PValue(new ALUValue(ALUInt(1)));
+		return mkValue(ALUInt(1));
 	} else if (_pNeedle2 && (std::string::npos != pHaystack->find(*_pNeedle2->getStrPtr()))) {
-		return PValue(new ALUValue(ALUInt(1)));
+		return mkValue(ALUInt(1));
 	} else if (_pNeedle3 && (std::string::npos != pHaystack->find(*_pNeedle3->getStrPtr()))) {
-		return PValue(new ALUValue(ALUInt(1)));
+		return mkValue(ALUInt(1));
 	} else if (_pNeedle4 && (std::string::npos != pHaystack->find(*_pNeedle4->getStrPtr()))) {
-		return PValue(new ALUValue(ALUInt(1)));
+		return mkValue(ALUInt(1));
 	}
 
-	return PValue(new ALUValue(ALUInt(0)));
+	return mkValue(ALUInt(0));
 }
 
 PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, PValue _pNeedle3, PValue _pNeedle4)
@@ -662,16 +662,16 @@ PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 
 	if (std::string::npos == pHaystack->find(*_pNeedle1->getStrPtr())) {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	} else if (_pNeedle2 && (std::string::npos == pHaystack->find(*_pNeedle2->getStrPtr()))) {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	} else if (_pNeedle3 && (std::string::npos == pHaystack->find(*_pNeedle3->getStrPtr()))) {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	} else if (_pNeedle4 && (std::string::npos == pHaystack->find(*_pNeedle4->getStrPtr()))) {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	}
 
-	return PValue(new ALUValue(ALUInt(1)));
+	return mkValue(ALUInt(1));
 }
 
 PValue AluFunc_rmatch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
@@ -680,9 +680,9 @@ PValue AluFunc_rmatch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 
 	if (_pFlags) {
-		return PValue(new ALUValue(ALUInt(regexMatch(pHaystack, _pExp, _pFlags->getStrPtr()))));
+		return mkValue(ALUInt(regexMatch(pHaystack, _pExp, _pFlags->getStrPtr())));
 	}
-	return PValue(new ALUValue(ALUInt(regexMatch(pHaystack, _pExp))));
+	return mkValue(ALUInt(regexMatch(pHaystack, _pExp)));
 }
 
 PValue AluFunc_rsearch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
@@ -691,9 +691,9 @@ PValue AluFunc_rsearch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
 
 	if (_pFlags) {
-		return PValue(new ALUValue(ALUInt(regexSearch(pHaystack, _pExp, _pFlags->getStrPtr()))));
+		return mkValue(ALUInt(regexSearch(pHaystack, _pExp, _pFlags->getStrPtr())));
 	}
-	return PValue(new ALUValue(ALUInt(regexSearch(pHaystack, _pExp))));
+	return mkValue(ALUInt(regexSearch(pHaystack, _pExp)));
 }
 
 PValue AluFunc_rreplace(PValue _pHaystack, PValue _pExp, PValue _pFmt, PValue _pFlags)
@@ -705,9 +705,9 @@ PValue AluFunc_rreplace(PValue _pHaystack, PValue _pExp, PValue _pFmt, PValue _p
 	std::string sFmt = _pFmt->getStr();
 
 	if (_pFlags) {
-		return PValue(new ALUValue(regexReplace(pHaystack, _pExp, sFmt, _pFlags->getStrPtr())));
+		return mkValue(regexReplace(pHaystack, _pExp, sFmt, _pFlags->getStrPtr()));
 	}
-	return PValue(new ALUValue(regexReplace(pHaystack, _pExp, sFmt)));
+	return mkValue(regexReplace(pHaystack, _pExp, sFmt));
 }
 
 PValue AluFunc_conf(PValue _pKey, PValue _pDefault)
@@ -715,11 +715,11 @@ PValue AluFunc_conf(PValue _pKey, PValue _pDefault)
 	ASSERT_NOT_ELIDED(_pKey,1,key);
 	std::string key = _pKey->getStr();
 	if (configSpecLiteralExists(key)) {
-		return PValue(new ALUValue(configSpecLiteralGet(key)));
+		return mkValue(configSpecLiteralGet(key));
 	} else if (_pDefault) {
-		return PValue(new ALUValue(*_pDefault));
+		return mkValue(*_pDefault);
 	} else {
-		return PValue(new ALUValue());
+		return mkValue();
 	}
 }
 
@@ -728,7 +728,7 @@ PValue AluFunc_d2x(PValue _pDecValue)
 {
 	ASSERT_NOT_ELIDED(_pDecValue,1,decValue);
 	std::string dec = _pDecValue->getStr();
-	return PValue(new ALUValue(conv_D2X(dec)));
+	return mkValue(conv_D2X(dec));
 }
 
 extern std::string conv_X2D(std::string& s);
@@ -742,13 +742,13 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 	ALUInt len = ARG_INT_WITH_DEFAULT(pLength, 0);
 
 	if (len < 1) {
-		return PValue(new ALUValue(conv_X2D(hex)));
+		return mkValue(conv_X2D(hex));
 	}
 
 	if (len > SZLL) len = SZLL;
 	while (size_t(len) > hex.length()) len--;
 
-	if (hex.length()==0) return PValue(new ALUValue(ALUInt(0)));
+	if (hex.length()==0) return mkValue(ALUInt(0));
 
 	MYASSERT(zeropad.length() >= size_t(SZLL));
 
@@ -771,7 +771,7 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 		CONVERSION_EXCEPTION_EX(hex, "Hex", "Decimal", "out of range")
 	}
 
-	return PValue(new ALUValue(ALUInt(value)));
+	return mkValue(ALUInt(value));
 }
 
 extern std::string conv_C2X(std::string& s);
@@ -779,7 +779,7 @@ PValue AluFunc_c2x(PValue _pCharValue)
 {
 	ASSERT_NOT_ELIDED(_pCharValue,1,charValue);
 	std::string cv = _pCharValue->getStr();
-	return PValue(new ALUValue(conv_C2X(cv)));
+	return mkValue(conv_C2X(cv));
 }
 
 std::string conv_X2CH(std::string& s);
@@ -787,7 +787,7 @@ PValue AluFunc_x2ch(PValue _pHexValue)
 {
 	ASSERT_NOT_ELIDED(_pHexValue,1,hexValue);
 	std::string hex = _pHexValue->getStr();
-	return PValue(new ALUValue(conv_X2CH(hex)));
+	return mkValue(conv_X2CH(hex));
 }
 
 extern std::string conv_UCASE(std::string& s);
@@ -795,7 +795,7 @@ PValue AluFunc_ucase(PValue _pString)
 {
 	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
-	return PValue(new ALUValue(conv_UCASE(st)));
+	return mkValue(conv_UCASE(st));
 }
 
 extern std::string conv_LCASE(std::string& s);
@@ -803,7 +803,7 @@ PValue AluFunc_lcase(PValue _pString)
 {
 	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
-	return PValue(new ALUValue(conv_LCASE(st)));
+	return mkValue(conv_LCASE(st));
 }
 
 extern std::string conv_BSWAP(std::string& s);
@@ -811,7 +811,7 @@ PValue AluFunc_bswap(PValue _pString)
 {
 	ASSERT_NOT_ELIDED(_pString,1,string);
 	std::string st = _pString->getStr();
-	return PValue(new ALUValue(conv_BSWAP(st)));
+	return mkValue(conv_BSWAP(st));
 }
 
 PValue AluFunc_break(PValue _pFieldIdentifier)
@@ -819,7 +819,7 @@ PValue AluFunc_break(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	bool bIsBreakEstablished = g_pStateQueryAgent->breakEstablished(fId);
-	return PValue(new ALUValue(ALUInt(bIsBreakEstablished ? 1 : 0)));
+	return mkValue(ALUInt(bIsBreakEstablished ? 1 : 0));
 }
 
 PValue AluFunc_present(PValue _pFieldIdentifier)
@@ -827,7 +827,7 @@ PValue AluFunc_present(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	bool bIsSet = g_pStateQueryAgent->fieldIdentifierIsSet(fId);
-	return PValue(new ALUValue(ALUInt(bIsSet ? 1 : 0)));
+	return mkValue(ALUInt(bIsSet ? 1 : 0));
 }
 
 PValue AluFunc_sum(PValue _pFieldIdentifier)
@@ -897,20 +897,20 @@ PValue AluFunc_rand(PValue pLimit)
 {
 	if (pLimit) {
 		ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
-		return PValue(new ALUValue(res));
+		return mkValue(res);
 	} else {
 		static ALUInt decimalLimit = 100000000000000000;
 		ALUInt randomDecimal = AluRandGetIntUpTo(decimalLimit);
 		std::ostringstream str;
 		str << "0." << std::setw(17) << std::setfill('0') << randomDecimal;
-		return PValue(new ALUValue(str.str()));
+		return mkValue(str.str());
 	}
 }
 
 PValue AluFunc_floor(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(floor(pX->getFloat()))));
+	return mkValue(ALUFloat(floor(pX->getFloat())));
 }
 
 PValue AluFunc_round(PValue pX, PValue pDecimals)
@@ -921,52 +921,52 @@ PValue AluFunc_round(PValue pX, PValue pDecimals)
 			MYTHROW("round: value for 'decimals' must not be negative");
 		}
 		ALUFloat scale = pow(((ALUFloat)(10.0)), pDecimals->getInt());
-		return PValue(new ALUValue(ALUFloat((round(scale * pX->getFloat())) / scale)));
+		return mkValue(ALUFloat((round(scale * pX->getFloat())) / scale));
 	} else {
-		return PValue(new ALUValue(ALUFloat(round(pX->getFloat()))));
+		return mkValue(ALUFloat(round(pX->getFloat())));
 	}
 }
 
 PValue AluFunc_ceil(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(ceil(pX->getFloat()))));
+	return mkValue(ALUFloat(ceil(pX->getFloat())));
 }
 
 PValue AluFunc_sin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(sin(pX->getFloat()))));
+	return mkValue(ALUFloat(sin(pX->getFloat())));
 }
 
 PValue AluFunc_cos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(cos(pX->getFloat()))));
+	return mkValue(ALUFloat(cos(pX->getFloat())));
 }
 
 PValue AluFunc_tan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(tan(pX->getFloat()))));
+	return mkValue(ALUFloat(tan(pX->getFloat())));
 }
 
 PValue AluFunc_arcsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(asin(pX->getFloat()))));
+	return mkValue(ALUFloat(asin(pX->getFloat())));
 }
 
 PValue AluFunc_arccos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(acos(pX->getFloat()))));
+	return mkValue(ALUFloat(acos(pX->getFloat())));
 }
 
 PValue AluFunc_arctan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(atan(pX->getFloat()))));
+	return mkValue(ALUFloat(atan(pX->getFloat())));
 }
 
 static ALUFloat degrees_to_radians = 0.0174532925199433;
@@ -975,44 +975,44 @@ static ALUFloat radians_to_degrees = 57.29577951308232;
 PValue AluFunc_dsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(sin(degrees_to_radians*pX->getFloat()))));
+	return mkValue(ALUFloat(sin(degrees_to_radians*pX->getFloat())));
 }
 
 PValue AluFunc_dcos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(cos(degrees_to_radians*pX->getFloat()))));
+	return mkValue(ALUFloat(cos(degrees_to_radians*pX->getFloat())));
 }
 
 PValue AluFunc_dtan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(tan(degrees_to_radians*pX->getFloat()))));
+	return mkValue(ALUFloat(tan(degrees_to_radians*pX->getFloat())));
 }
 
 PValue AluFunc_arcdsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(radians_to_degrees*asin(pX->getFloat()))));
+	return mkValue(ALUFloat(radians_to_degrees*asin(pX->getFloat())));
 }
 
 PValue AluFunc_arcdcos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(radians_to_degrees*acos(pX->getFloat()))));
+	return mkValue(ALUFloat(radians_to_degrees*acos(pX->getFloat())));
 }
 
 PValue AluFunc_arcdtan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(ALUFloat(radians_to_degrees*atan(pX->getFloat()))));
+	return mkValue(ALUFloat(radians_to_degrees*atan(pX->getFloat())));
 }
 
 static ALUFloat e(2.71828182845904523536028747135266249775724709369995);
 PValue AluFunc_exp(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(std::pow(e, pX->getFloat())));
+	return mkValue(std::pow(e, pX->getFloat()));
 }
 
 PValue AluFunc_log(PValue pX, PValue pBase)
@@ -1024,7 +1024,7 @@ PValue AluFunc_log(PValue pX, PValue pBase)
 	} else {
 		res = std::log(pX->getFloat());
 	}
-	return PValue(new ALUValue(res));
+	return mkValue(res);
 }
 
 /*
@@ -1214,7 +1214,7 @@ PValue AluFunc_fmap_nelem(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
-	return PValue(new ALUValue(pfMap->nelem()));
+	return mkValue(pfMap->nelem());
 }
 
 PValue AluFunc_fmap_nsamples(PValue _pFieldIdentifier)
@@ -1222,7 +1222,7 @@ PValue AluFunc_fmap_nsamples(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
-	return PValue(new ALUValue(pfMap->count()));
+	return mkValue(pfMap->count());
 }
 
 PValue AluFunc_fmap_count(PValue _pFieldIdentifier, PValue pVal)
@@ -1232,7 +1232,7 @@ PValue AluFunc_fmap_count(PValue _pFieldIdentifier, PValue pVal)
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
-	return PValue(new ALUValue((*pfMap)[s]));
+	return mkValue((*pfMap)[s]);
 }
 
 PValue AluFunc_fmap_frac(PValue _pFieldIdentifier, PValue pVal)
@@ -1243,7 +1243,7 @@ PValue AluFunc_fmap_frac(PValue _pFieldIdentifier, PValue pVal)
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
 	ALUFloat frac = ALUFloat((*pfMap)[s]) / ALUFloat(pfMap->count());
-	return PValue(new ALUValue(frac));
+	return mkValue(frac);
 }
 
 PValue AluFunc_fmap_pct(PValue _pFieldIdentifier, PValue pVal)
@@ -1254,7 +1254,7 @@ PValue AluFunc_fmap_pct(PValue _pFieldIdentifier, PValue pVal)
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
 	ALUFloat frac = ALUFloat((*pfMap)[s]) / ALUFloat(pfMap->count());
-	return PValue(new ALUValue(PERCENTS * frac));
+	return mkValue(PERCENTS * frac);
 }
 
 PValue AluFunc_fmap_common(PValue _pFieldIdentifier)
@@ -1262,7 +1262,7 @@ PValue AluFunc_fmap_common(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
-	return PValue(new ALUValue(pfMap->mostCommon()));
+	return mkValue(pfMap->mostCommon());
 }
 
 PValue AluFunc_fmap_rare(PValue _pFieldIdentifier)
@@ -1270,7 +1270,7 @@ PValue AluFunc_fmap_rare(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
-	return PValue(new ALUValue(pfMap->leastCommon()));
+	return mkValue(pfMap->leastCommon());
 }
 
 PValue AluFunc_fmap_sample(PValue _pFieldIdentifier, PValue pVal)
@@ -1281,7 +1281,7 @@ PValue AluFunc_fmap_sample(PValue _pFieldIdentifier, PValue pVal)
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
 	pfMap->note(s);
-	return PValue(new ALUValue((*pfMap)[s]));
+	return mkValue((*pfMap)[s]);
 }
 
 PValue AluFunc_fmap_dump(PValue _pFieldIdentifier, PValue pFormat, PValue pOrder, PValue pPct)
@@ -1318,14 +1318,14 @@ PValue AluFunc_fmap_dump(PValue _pFieldIdentifier, PValue pFormat, PValue pOrder
 
 	bool includePercentage = pPct ? pPct->getBool() : false;
 
-	return PValue(new ALUValue(pfMap->dump(f, o, includePercentage)));
+	return mkValue(pfMap->dump(f, o, includePercentage));
 }
 
 
 PValue AluFunc_string(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return PValue(new ALUValue(pX->getStr()));
+	return mkValue(pX->getStr());
 }
 
 PValue AluFunc_substitute(PValue pSrc, PValue pSearchString, PValue pSubstitute, PValue pMax)
@@ -1353,7 +1353,7 @@ PValue AluFunc_substitute(PValue pSrc, PValue pSearchString, PValue pSubstitute,
 		count--;
 	}
 
-	return PValue(new ALUValue(res));
+	return mkValue(res);
 }
 
 PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
@@ -1376,7 +1376,7 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 	// The following ensures that the string is not zero-length for the rest of the code
 	// which does make that assumption
 	if (0 == str.length()) {
-		return PValue(new ALUValue(""));
+		return mkValue("");
 	}
 
 
@@ -1390,11 +1390,11 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 			}
 		}
 		if (count > 1 || *pc=='\0') {
-			return PValue(new ALUValue(""));
+			return mkValue("");
 		} else {
 			char *pEnd = pc;
 			while ((*pEnd!='\0') && (*pEnd!=sep)) pEnd++;
-			return PValue(new ALUValue(pc, (pEnd-pc)));
+			return mkValue2(pc, (pEnd-pc));
 		}
 	}
 	else {
@@ -1409,11 +1409,11 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 			}
 		}
 		if (count < -1 || pc==pStart) {
-			return PValue(new ALUValue(""));
+			return mkValue("");
 		} else {
 			char *pBegin = pc;
 			while ((pBegin>pStart) && (*pBegin!=sep)) pBegin--;
-			return PValue(new ALUValue(pBegin+1, (pc-pBegin)));
+			return mkValue2(pBegin+1, (pc-pBegin));
 		}
 	}
 }
@@ -1438,7 +1438,7 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 	// The following ensures that the string is not zero-length for the rest of the code
 	// which does make that assumption
 	if (0 == str.length()) {
-		return PValue(new ALUValue(""));
+		return mkValue("");
 	}
 
 
@@ -1453,11 +1453,11 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 			}
 		}
 		if (count > 1 || *pc=='\0') {
-			return PValue(new ALUValue(""));
+			return mkValue("");
 		} else {
 			char *pEnd = pc;
 			while ((*pEnd!='\0') && (*pEnd!=sep)) pEnd++;
-			return PValue(new ALUValue(pc, (pEnd-pc)));
+			return mkValue2(pc, (pEnd-pc));
 		}
 	}
 	else {
@@ -1473,11 +1473,11 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 			}
 		}
 		if (count < -1 || pc==pStart) {
-			return PValue(new ALUValue(""));
+			return mkValue("");
 		} else {
 			char *pBegin = pc;
 			while ((pBegin>pStart) && (*pBegin!=sep)) pBegin--;
-			return PValue(new ALUValue(pBegin+1, (pc-pBegin)));
+			return mkValue2(pBegin+1, (pc-pBegin));
 		}
 	}
 }
@@ -1491,11 +1491,11 @@ PValue AluFunc_abbrev_do(PValue pInformation, PValue pInfo, size_t len)
 
 	if (sBig.length() >= sLittle.length()) {
 		if (sLittle == sBig.substr(0,sLittle.length())) {
-			return PValue(new ALUValue(ALUInt(1)));
+			return mkValue(ALUInt(1));
 		}
 	}
 
-	return PValue(new ALUValue(ALUInt(0)));
+	return mkValue(ALUInt(0));
 }
 
 PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
@@ -1529,7 +1529,7 @@ PValue AluFunc_bitand(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] & pc2[i];
 	}
 
-	PValue pRet = PValue(new ALUValue((const char*)(pBuff), minlen));
+	PValue pRet = mkValue2((const char*)(pBuff), minlen);
 
 	delete [] pBuff;
 
@@ -1554,7 +1554,7 @@ PValue AluFunc_bitor(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] | pc2[i];
 	}
 
-	PValue pRet = PValue(new ALUValue((const char*)(pBuff), minlen));
+	PValue pRet = mkValue2((const char*)(pBuff), minlen);
 
 	delete [] pBuff;
 
@@ -1579,7 +1579,7 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] ^ pc2[i];
 	}
 
-	PValue pRet = PValue(new ALUValue((const char*)(pBuff), minlen));
+	PValue pRet = mkValue2((const char*)(pBuff), minlen);
 
 	delete [] pBuff;
 
@@ -1591,7 +1591,7 @@ PValue AluFunc_compare_do(PValue pS1, PValue pS2, char pad)
 	auto s1 = pS1->getStr();
 	auto s2 = pS2->getStr();
 	if (s1 == s2) {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	}
 	auto s1Len = s1.length();
 	auto s2Len = s2.length();
@@ -1603,7 +1603,7 @@ PValue AluFunc_compare_do(PValue pS1, PValue pS2, char pad)
 		char c2 = (l < s2Len) ? s2[l] : pad;
 
 		if (c1 != c2) {
-			return PValue(new ALUValue(ALUInt(l)+1));
+			return mkValue(ALUInt(l)+1);
 		}
 	}
 
@@ -1614,7 +1614,7 @@ PValue AluFunc_compare_do(PValue pS1, PValue pS2, char pad)
 	}
 
 	// The padding made them equal
-	return PValue(new ALUValue(ALUInt(0)));
+	return mkValue(ALUInt(0));
 }
 
 PValue AluFunc_compare(PValue pS1, PValue pS2, PValue pPad)
@@ -1647,7 +1647,7 @@ PValue AluFunc_copies(PValue pString, PValue pTimes)
 		res += theString;
 	}
 
-	return PValue(new ALUValue(res));
+	return mkValue(res);
 }
 
 PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
@@ -1660,17 +1660,17 @@ PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
 	if (start < 1) start = 1;
 
 	// If start is after end of the string, we return the whole string
-	if (size_t(start) > theString.length()) return PValue(new ALUValue(theString));
+	if (size_t(start) > theString.length()) return mkValue(theString);
 
 	std::string res = theString.substr(0,start-1);
 
 	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
 	// zero is a special value meaning delete to the end. If the length is greater
 	// than the remainder, also delete to the end.
-	if (0>=length || size_t(length+start) > theString.length()) return PValue(new ALUValue(res));
+	if (0>=length || size_t(length+start) > theString.length()) return mkValue(res);
 
 	res += theString.substr(start+length-1);
-	return PValue(new ALUValue(res));
+	return mkValue(res);
 }
 
 PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
@@ -1686,7 +1686,7 @@ PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
 	auto length = pLength->getInt();
 	if (0>=length) length = MAX_ALUInt - start;
 
-	if (0 == theString.length()) return PValue(new ALUValue(theString));
+	if (0 == theString.length()) return mkValue(theString);
 
 	bool inWhitespace = isspace(theString[0]);
 	unsigned int  wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
@@ -1712,7 +1712,7 @@ PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
 		}
 	}
 
-	return PValue(new ALUValue(res));
+	return mkValue(res);
 }
 
 /*
@@ -1823,10 +1823,10 @@ PValue AluFunc_find(PValue string, PValue phrase)
 			if (phraseWords[j] != stringWords[i+j]) foundMismatch = true;
 		}
 
-		if (!foundMismatch) return PValue(new ALUValue(ALUInt(i+1)));
+		if (!foundMismatch) return mkValue(ALUInt(i+1));
 	}
 
-	return PValue(new ALUValue(ALUInt(0)));
+	return mkValue(ALUInt(0));
 }
 
 PValue AluFunc_index(PValue _pHaystack, PValue _pNeedle, PValue _pStart)
@@ -1841,9 +1841,9 @@ PValue AluFunc_index(PValue _pHaystack, PValue _pNeedle, PValue _pStart)
 
 	size_t pos = pHaystack->find(*pNeedle, (start-1));
 	if (std::string::npos == pos) {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	} else {
-		return PValue(new ALUValue(ALUInt(pos+1)));
+		return mkValue(ALUInt(pos+1));
 	}
 }
 
@@ -1869,7 +1869,7 @@ static PValue insert_do(std::string& str, std::string& tgt, size_t pos, size_t l
 
 	if (pos < tgt.length()) ret += tgt.substr(pos);
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue pLength, PValue pPad)
@@ -1922,7 +1922,7 @@ static PValue justify_do(std::string& str, size_t len, char pad)
 	if (ret.size() > len) ret = ret.substr(0,len);
 	MYASSERT(ret.size() == len);
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_justify(PValue pStr, PValue pLen, PValue pPad)
@@ -1955,7 +1955,7 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 	std::string padStr = ARG_STR_WITH_DEFAULT(pPad, " ");
 
 	// sanity checks
-	if (0 == str1.length()) return PValue(new ALUValue(str2));
+	if (0 == str1.length()) return mkValue(str2);
 	if (start < 1) {
 		std::string err = "overlay: start argument should be positive. Got: " + std::to_string(start);
 		MYTHROW(err);
@@ -1991,7 +1991,7 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 		ret += str2.substr(str1.length() + start - 1);
 	}
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_reverse(PValue pStr)
@@ -1999,7 +1999,7 @@ PValue AluFunc_reverse(PValue pStr)
 	ASSERT_NOT_ELIDED(pStr,1,str);
 	auto str = pStr->getStr();
 	std::reverse(str.begin(), str.end());
-	return PValue(new ALUValue(str));
+	return mkValue(str);
 }
 
 PValue AluFunc_sign(PValue pNumber)
@@ -2013,7 +2013,7 @@ PValue AluFunc_sign(PValue pNumber)
 		ret = -1;
 	}
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
@@ -2040,7 +2040,7 @@ PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 		ret += wordVector[i];
 	}
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
@@ -2080,7 +2080,7 @@ PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 		MYTHROW(err);
 	}
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_subword(PValue pString, PValue pStart, PValue pLength)
@@ -2110,20 +2110,20 @@ PValue AluFunc_subword(PValue pString, PValue pStart, PValue pLength)
 	else {
 		auto startVec = breakIntoWords_start(str);
 		if (size_t(start) > startVec.size()) {
-			return PValue(new ALUValue(""));
+			return mkValue("");
 		}
 		cstart = startVec[start-1];
 	}
 
 	if (0 == len) {
-		return PValue(new ALUValue(str.substr(cstart)));
+		return mkValue(str.substr(cstart));
 	} else {
 		auto endVec = breakIntoWords_end(str);
 		if (size_t(start + len - 1) > endVec.size()) {
-			return PValue(new ALUValue(str.substr(cstart)));
+			return mkValue(str.substr(cstart));
 		}
 		cend = endVec[start+len-2];
-		return PValue(new ALUValue(str.substr(cstart, cend-cstart+1)));
+		return mkValue(str.substr(cstart, cend-cstart+1));
 	}
 }
 
@@ -2158,7 +2158,7 @@ PValue AluFunc_translate(PValue pString, PValue pTableOut, PValue pTableIn, PVal
 		}
 	}
 
-	return PValue(new ALUValue(str));
+	return mkValue(str);
 }
 
 PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue pStart)
@@ -2199,7 +2199,7 @@ PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue 
 		}
 	}
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_wordindex(PValue pString, PValue pIdx)
@@ -2221,7 +2221,7 @@ PValue AluFunc_wordindex(PValue pString, PValue pIdx)
 		ret = wordvec[idx-1] + 1;
 	}
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_wordlength(PValue pString, PValue pIdx)
@@ -2243,7 +2243,7 @@ PValue AluFunc_wordlength(PValue pString, PValue pIdx)
 		ret = wordvec[idx-1].length();
 	}
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_wordpos(PValue pPhrase, PValue pString, PValue pStart)
@@ -2263,10 +2263,10 @@ PValue AluFunc_wordpos(PValue pPhrase, PValue pString, PValue pStart)
 
 	for (size_t i = start-1 ; i < startVec.size() ; i++) {
 		auto sub = str.substr(startVec[i], phrase.length());
-		if (sub==phrase) return PValue(new ALUValue(ALUInt(i+1)));
+		if (sub==phrase) return mkValue(ALUInt(i+1));
 	}
 
-	return PValue(new ALUValue(ALUInt(0)));
+	return mkValue(ALUInt(0));
 }
 
 PValue AluFunc_words(PValue pStr)
@@ -2275,7 +2275,7 @@ PValue AluFunc_words(PValue pStr)
 	auto str = pStr->getStr();
 	auto startVec = breakIntoWords(str);
 	ALUInt ret = startVec.size();
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 PValue AluFunc_xrange(PValue pStart, PValue pEnd)
@@ -2289,12 +2289,12 @@ PValue AluFunc_xrange(PValue pStart, PValue pEnd)
 	while (start < 0) start += 256;
 	while (end < 0) end += 256;
 
-	if (end < start) return PValue(new ALUValue(std::string("")));
+	if (end < start) return mkValue(std::string(""));
 
 	std::string ret;
 	for (int i = start ; i <= end ; i++) ret += char(i);
 
-	return PValue(new ALUValue(ret));
+	return mkValue(ret);
 }
 
 class my_punct : public std::numpunct<char>
@@ -2359,18 +2359,18 @@ PValue AluFunc_fmt(PValue pVal, PValue pFormat, PValue pDigits, PValue pDecimal,
 
 		oss.imbue(std::locale(oss.getloc(), pct));
 		oss << pVal->getFloat();
-		return PValue(new ALUValue(oss.str()));
+		return mkValue(oss.str());
 	}
 
 	oss << pVal->getFloat();
 
-	return PValue(new ALUValue(oss.str()));
+	return mkValue(oss.str());
 }
 
 PValue AluFunc_next()
 {
-	if (!g_PositionGetter) return PValue(new ALUValue(ALUInt(1)));
-	return PValue(new ALUValue(ALUInt(g_PositionGetter->pos())));
+	if (!g_PositionGetter) return mkValue(ALUInt(1));
+	return mkValue(ALUInt(g_PositionGetter->pos()));
 }
 
 PValue AluFunc_rest()
@@ -2378,7 +2378,7 @@ PValue AluFunc_rest()
 	static std::string sName("cols");
 	static std::string sCols = configSpecLiteralGet(sName);
 	static ALUInt cols = std::stoul(sCols);
-	return PValue(new ALUValue(ALUInt(cols - g_PositionGetter->pos() + 1)));
+	return mkValue(ALUInt(cols - g_PositionGetter->pos() + 1));
 }
 
 PValue AluFunc_defined(PValue pName)
@@ -2386,9 +2386,9 @@ PValue AluFunc_defined(PValue pName)
 	ASSERT_NOT_ELIDED(pName,1,confString);
 	auto name = pName->getStr();
 	if (configSpecLiteralExists(name)) {
-		return PValue(new ALUValue(ALUInt(1)));
+		return mkValue(ALUInt(1));
 	} else {
-		return PValue(new ALUValue(ALUInt(0)));
+		return mkValue(ALUInt(0));
 	}
 }
 
@@ -2403,6 +2403,6 @@ PValue AluFunc_testfunc(PValue pArg1, PValue pArg2, PValue pArg3, PValue pArg4)
 
 	std::string res = str1 + "," + str2 + "," + str3 + "," + str4;
 
-	return PValue(new ALUValue(res));
+	return mkValue(res);
 }
 #endif

@@ -310,7 +310,7 @@ extern bool g_bWarnAboutGrammars;
 				if (_res) try {                             \
 					_result = evaluateExpression(rpnVec, &counters);	\
 				} catch(SpecsException& e) {                \
-					_result = PValue(new ALUValue(e.what(true)));   \
+					_result = mkValue(e.what(true));        \
 				}                                           \
 				cleanAluVec(rpnVec);						\
 				_res = (_result!=NULL) && (_result->getStr()==res);	\
