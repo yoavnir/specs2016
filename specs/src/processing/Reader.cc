@@ -223,6 +223,12 @@ TestReader::TestReader(size_t maxLineCount)
 TestReader::~TestReader()
 {
 	if (mp_arr) {
+		// Need to alert the smart pointer that we're going to deallocate the whole array
+		// Not so smart, is it?
+		unsigned int i;
+		for (i=0 ; i<m_count ; i++) {
+			mp_arr[i] = NULL;
+		}
 		free(mp_arr);
 	}
 }
