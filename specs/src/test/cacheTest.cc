@@ -2,6 +2,8 @@
 #include <string>
 #include "utils/lruCache.h"
 
+typedef std::shared_ptr<std::string> PString;
+
 int main(int argc, char** argv)
 {
 	lruCache<int, std::string> cache(20,25);
@@ -9,7 +11,7 @@ int main(int argc, char** argv)
 	std::cout << "First, let's add 25 entries to the cache\n";
 
 	for (int i=0; i<25; i++) {
-		std::string* ps = new std::string(std::to_string(i));
+		auto ps = PString(new std::string(std::to_string(i)));
 		cache.set(i, ps);
 	}
 
@@ -25,13 +27,13 @@ int main(int argc, char** argv)
 
 	std::cout << "Now let's set a new value. It should replace 10\n";
 	int i=30;
-	cache.set(i, new std::string("30"));
+	cache.set(i, PString(new std::string("30")));
 
 	cache.Debug();
 
 	std::cout << "So let's try to get 10. It should be missing...";
 	i = 10;
-	std::string* ps = cache.get(i);
+	auto ps = cache.get(i);
 	if (ps) {
 		std::cout << "it's not!: " << *ps << std::endl;
 		return -4;
@@ -41,7 +43,7 @@ int main(int argc, char** argv)
 
 	std::cout << "Add a whole bunch of numbers. No other should remain\n";
 	for (int i=100; i<=200; i++) {
-		std::string* ps = new std::string(std::to_string(i));
+		auto ps = PString(new std::string(std::to_string(i)));
 		cache.set(i, ps);
 	}
 

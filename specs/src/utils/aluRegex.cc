@@ -13,6 +13,8 @@ uint64_t matchFlagsCacheSets = 0;
 bool     g_RegexCacheDisabled = false;
 bool     g_bWarnAboutGrammars = true;
 
+typedef std::shared_ptr<std::regex> PRegEx;
+
 static std::regex_constants::syntax_option_type g_regexType = std::regex_constants::ECMAScript;
 static std::string gs_regexType = "";
 
@@ -96,13 +98,13 @@ void setRegexType(std::string& s) {
 	free(st);
 }
 
-std::regex* regexCalculator(std::string& s)
+PRegEx regexCalculator(std::string& s)
 {
 	regexCacheSearches++;
-	std::regex* pRet = g_RegexCacheDisabled ? NULL : g_regexCache.get(s);
+	PRegEx pRet = g_RegexCacheDisabled ? NULL : g_regexCache.get(s);
 	if (!pRet) {
 		try {
-			pRet = new std::regex(s,g_regexType);
+			pRet = PRegEx(new std::regex(s,g_regexType));
 		} catch (std::regex_error& e) {
 			std::string err = "Invalid regular expression <" + s + "> : " + e.what();
 			MYTHROW(err);
@@ -124,7 +126,7 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 		return std::regex_constants::match_default;
 	} else {
 		std::string str = *sFlags;
-		std::regex_constants::match_flag_type* pFlags = g_matchFlagsCache.get(str);
+		auto pFlags = g_matchFlagsCache.get(str);
 		if (!pFlags) {
 			static std::regex_constants::match_flag_type ret;
 			ret = std::regex_constants::match_default;
@@ -164,7 +166,7 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 			}
 			free(st);
 
-			pFlags = new std::regex_constants::match_flag_type(ret);
+			pFlags = (std::shared_ptr<std::regex_constants::match_flag_type>)(new std::regex_constants::match_flag_type(ret));
 			g_matchFlagsCache.set(str,pFlags);
 			matchFlagsCacheSets++;
 		}
@@ -175,11 +177,10 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 bool regexMatch(std::string* pStr, PValue pExp, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
-	std::regex* pRE = regexCalculator(sExp);
+	PRegEx pRE = regexCalculator(sExp);
 
 	try {
 		bool bRet = std::regex_match(*pStr, *pRE, getMatchFlags(pFlags));
-		if (g_RegexCacheDisabled) delete pRE;
 		return bRet;
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression match : ") + e.what()
@@ -192,10 +193,9 @@ bool regexMatch(std::string* pStr, PValue pExp, std::string* pFlags)
 bool regexSearch(std::string* pStr, PValue pExp, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
-	std::regex* pRE = regexCalculator(sExp);
+	PRegEx pRE = regexCalculator(sExp);
 	try {
 		bool bRet = std::regex_search(*pStr, *pRE, getMatchFlags(pFlags));
-		if (g_RegexCacheDisabled) delete pRE;
 		return bRet;
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression search : ") + e.what()
@@ -209,10 +209,9 @@ bool regexSearch(std::string* pStr, PValue pExp, std::string* pFlags)
 std::string regexReplace(std::string* pStr, PValue pExp, std::string& fmt, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
-	std::regex* pRE = regexCalculator(sExp);
+	PRegEx pRE = regexCalculator(sExp);
 	try {
 		std::string sRet = std::regex_replace(*pStr, *pRE, fmt, getMatchFlags(pFlags));
-		if (g_RegexCacheDisabled) delete pRE;
 		return sRet;
 	} catch (std::regex_error& e) {
 		auto err = std::string("Error running regular expression replace : ") + e.what()

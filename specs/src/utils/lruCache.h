@@ -4,27 +4,27 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <memory>
 #include <algorithm> // for sort
 #include "utils/ErrorReporting.h"
 
 template <class S, class T>
 class cacheElement {
 public:
-	cacheElement(S& key, T* pElem, uint64_t& counter) {
+	cacheElement(S& key, std::shared_ptr<T> pElem, uint64_t& counter) {
 		m_pElem = pElem;
 		m_lru = ++counter;
 		m_key = key;
 	}
 	~cacheElement() {
-		delete m_pElem;
 	}
-	T* get(uint64_t& counter) {
+	std::shared_ptr<T> get(uint64_t& counter) {
 		m_lru = ++counter;
 		return m_pElem;
 	}
 	uint64_t getLRU() { return m_lru; }
 private:
-	T*        m_pElem;
+	std::shared_ptr<T> m_pElem;
 	uint64_t  m_lru;
 	S         m_key;
 };
@@ -47,22 +47,19 @@ public:
 	}
 
 	~lruCache() {
-		for (const auto &pair : m_map) {
-			delete pair.second;
-		}
 		m_map.clear();
 	}
 
-	T* get(S& s) {
+	std::shared_ptr<T> get(S& s) {
 		auto it = m_map.find(s);
 		if (it!=m_map.end()) {
-			T* pRet = it->second->get(m_counter);
+			auto pRet = it->second->get(m_counter);
 			return pRet;
 		}
 
 		return NULL;
 	}
-	void set(S& s, T* pT) {
+	void set(S& s, std::shared_ptr<T> pT) {
 		auto it = m_map.find(s);
 		MYASSERT(it==m_map.end());
 
