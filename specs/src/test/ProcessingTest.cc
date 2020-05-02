@@ -506,35 +506,54 @@ int main(int argc, char** argv)
 	VERIFY("requires version /4/ 1", "4");  // TEST #136
 	VERIFY("requires hello /4/ 1", "Missing required configured literal <hello>"); // TEST #137
 
+		// Default output placement
+	spec = "hello 1";
+	VERIFY(spec, "hello");                                                          // TEST #138
+
+	spec = "hello";
+	VERIFY(spec, "hello");                                                          // TEST #139
+
+	spec = "if '1+1==2' then hello endif";
+	VERIFY(spec, "hello");                                                         // TEST #140
+
+	spec = "if '1+1==2' then hello endif bye";
+	VERIFY(spec, "hello bye");                                                     // TEST #141
+
+	spec = "if '1+1==3' then hello else goodbye endif Dolly";
+	VERIFY(spec, "goodbye Dolly");                                               // TEST #142
+
+	spec = "while '#0>1' do hello done bye";
+	VERIFY(spec, "bye");                                                         // TEST #143
+
 	// tf2mcs and mcs2tf
 	VERIFY2("1-* tf2mcs %Y-%m-%dT%H:%M:%S.%6f a: ID a mcs2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #138
 #ifdef WIN64
-	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "12/21/18 17:48:16");  // Test #139
-	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "12/21/18 18:48:16");  // Test #140
+	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "12/21/18 17:48:16");  // Test #144
+	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "12/21/18 18:48:16");  // Test #145
 #else
-	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #139
-	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #140
+	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #144
+	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #145
 #endif
 
 #ifdef SPANISH_LOCALE_SUPPORTED
 #ifdef PUT_TIME__SUPPORTED
 	specTimeSetLocale("es_ES");
-	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #141
+	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #146
 	specTimeSetLocale("C");
 #else
-	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #141
+	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #146
 #endif
 #endif
-	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #142
+	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #147
 
 	spec = "printonly eof  a: w1 1 set '#0+=a' eof print '#0' 1";
-	VERIFY2(spec, "1\n2\n3\n4\n5", "15");                                            // TEST #143
+	VERIFY2(spec, "1\n2\n3\n4\n5", "15");                                            // TEST #148
 
 	spec = "printonly a  a: w1 . w2 1 set '#0+=a' eof print '#0' 1";
-	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n4\n7");                             // TEST #144
+	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n4\n7");                             // TEST #149
 
 	spec = "printonly a keep a: w1 . w2 nw set '#0+=a' eof print '#0' 1";
-	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n2 3 4\n7");                             // TEST #145
+	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n2 3 4\n7");                             // TEST #150
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

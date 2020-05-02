@@ -21,6 +21,8 @@ extern ALUCounters g_counters;
 		index++;                              \
 	}}
 
+#define REUSE_CURRENT_TOKEN {index--;}
+
 DataField::DataField()
 {
 	m_InputPart = NULL;
@@ -259,10 +261,6 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	/* output placement */
 	m_maxLength = LAST_POS_END;
 	switch (tokenType) {
-	case TokenListType__DUMMY:
-		/* Run out of tokens?  Can't do that. We need an output placement */
-		MYTHROW("Missing output placement at end of args");
-		break;
 	case TokenListType__RANGE:
 		if (!token.Range()->isSimpleRange()) {
 			std::string err = "Bad output placement " + token.HelpIdentify();
@@ -282,6 +280,17 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		m_outStart = LAST_POS_END;
 		m_tailLabel = token.Literal()[0];
 		break;
+	case TokenListType__ENDIF:
+	case TokenListType__ELSE:
+	case TokenListType__ELSEIF:
+	case TokenListType__DONE:
+	case TokenListType__WRITE:
+	case TokenListType__READ:
+	case TokenListType__READSTOP:
+		/* This is a control structure?  Assume NEXTWORD and re-use this one */
+		REUSE_CURRENT_TOKEN;
+	case TokenListType__DUMMY:
+		/* Run out of tokens?  Assume they meant to do the same as NEXTWORD */
 	case TokenListType__NEXTWORD:
 		m_outStart = POS_SPECIAL_VALUE_NEXTWORD;
 		if (token.Range()) {
