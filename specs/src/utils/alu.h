@@ -115,6 +115,8 @@ public:
 	virtual bool            requiresRead() {return false;} // true if this unit requires lines to be read
 };
 
+typedef std::shared_ptr<AluUnit> PUnit;
+
 class AluUnitLiteral : public AluUnit {
 public:
 	AluUnitLiteral(std::string& s, bool hintNumerical=false):m_literal(s),m_hintNumerical(hintNumerical)	{}
@@ -249,6 +251,8 @@ private:
 };
 #undef X
 
+typedef std::shared_ptr<AluAssnOperator> POperator;
+
 class AluFunction : public AluUnit {
 public:
 	AluFunction(std::string& s);
@@ -339,7 +343,7 @@ private:
 
 typedef AluValueStats* PAluValueStats;
 
-typedef std::vector<AluUnit*> AluVec;
+typedef std::vector<PUnit> AluVec;
 
 bool expressionForcesRunoutCycle(AluVec& vec);
 
@@ -361,7 +365,7 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest);
 
 PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs);
 
-void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs);
+void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs);
 
 bool AluExpressionReadsLines(AluVec& vec);
 

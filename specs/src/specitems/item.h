@@ -133,7 +133,7 @@ private:
 	AluVec m_RPNExpr;
 	bool   m_isAssignment;
 	ALUCounterKey	m_counter;
-	AluAssnOperator *m_assnOp;
+	POperator       m_assnOp;
 	std::string m_rawExpression;
 };
 
@@ -259,7 +259,7 @@ private:
 	predicate   m_pred;
 	bool   m_isAssignment;
 	ALUCounterKey	m_counter;
-	AluAssnOperator *m_assnOp;
+	POperator       m_assnOp;
 };
 
 class BreakItem : public Item {

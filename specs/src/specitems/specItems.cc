@@ -614,14 +614,12 @@ SetItem::SetItem(std::string& _statement)
 
 SetItem::~SetItem()
 {
-	for (AluUnit* unit : m_RPNExpression) {
-		delete unit;
-	}
 }
 
 ApplyRet SetItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
-	ALUPerformAssignment(m_key, &m_oper, m_RPNExpression, &g_counters);
+	auto pAss = POperator(new AluAssnOperator(m_oper));
+	ALUPerformAssignment(m_key, pAss, m_RPNExpression, &g_counters);
 	return ApplyRet__Continue;
 }
 
@@ -638,12 +636,12 @@ ConditionItem::ConditionItem(std::string& _statement)
 	AluVec expr;
 	MYASSERT(parseAluExpression(_statement, expr));
 	if (expressionIsAssignment(expr)) {
-		AluUnit* aUnit = expr[0];
-		AluUnitCounter* pCounterUnit = dynamic_cast<AluUnitCounter*>(aUnit);
+		PUnit aUnit = expr[0];
+		auto pCounterUnit = std::dynamic_pointer_cast<AluUnitCounter>(aUnit);
 		MYASSERT(NULL != pCounterUnit);
 		m_counter = pCounterUnit->getKey();
-		delete aUnit;
-		m_assnOp = dynamic_cast<AluAssnOperator*>(expr[1]);
+		aUnit = NULL;
+		m_assnOp = std::dynamic_pointer_cast<AluAssnOperator>(expr[1]);
 		MYASSERT(NULL != m_assnOp);
 		expr.erase(expr.begin(), expr.begin()+2);
 		m_isAssignment = true;
@@ -662,14 +660,6 @@ ConditionItem::ConditionItem(ConditionItem::predicate _p) : m_counter(0), m_assn
 
 ConditionItem::~ConditionItem()
 {
-	if ((m_pred == PRED_IF) || (m_pred == PRED_ELSEIF) || (m_pred == PRED_WHILE) || (m_pred == PRED_ASSERT)) {
-		for (AluUnit* unit : m_RPNExpression) {
-			delete unit;
-		}
-		if (m_isAssignment) {
-			delete m_assnOp;
-		}
-	}
 }
 
 std::string ConditionItem::Debug()

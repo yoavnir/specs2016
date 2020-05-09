@@ -1037,25 +1037,25 @@ static bool isFirstCharInIdentifier(char c) {
 	return isLetter(c) || c=='_';
 }
 
-#define X(nm,st) if (s==st) return new AluUnitUnaryOperator(s);
-static AluUnit* getUnaryOperator(std::string& s)
+#define X(nm,st) if (s==st) return PUnit(new AluUnitUnaryOperator(s));
+static PUnit getUnaryOperator(std::string& s)
 {
 	ALU_UOP_LIST
 	return NULL;
 }
 #undef X
 
-#define X(nm,st,prio) if (s==st) return new AluBinaryOperator(s);
-static AluUnit* getBinaryOperator(std::string& s)
+#define X(nm,st,prio) if (s==st) return PUnit(new AluBinaryOperator(s));
+static PUnit getBinaryOperator(std::string& s)
 {
 	ALU_BOP_LIST
 	return NULL;
 }
 #undef X
 
-static AluAssnOperator* getAssnOperator(std::string& s)
+static PUnit getAssnOperator(std::string& s)
 {
-#define X(nm,st) if (s==st) return new AluAssnOperator(s);
+#define X(nm,st) if (s==st) return PUnit(new AluAssnOperator(s));
 	ALU_ASSOP_LIST
 #undef X
 	return NULL;
@@ -1065,7 +1065,7 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 {
 	std::cerr << title << ": ALU Vector at " << &vec << " with " << vec.size() << " items:\n";
 	int index = 0;
-	for (AluUnit* pUnit : vec) {
+	for (PUnit pUnit : vec) {
 		if (index==pointer) {
 			std::cerr << "   ==> | ";
 		} else {
@@ -1096,19 +1096,19 @@ void dumpAluStack(const char* title, std::stack<PValue>& stk)
 	}
 }
 
-void dumpAluStack(const char* title, std::stack<AluUnit*>& stk)
+void dumpAluStack(const char* title, std::stack<PUnit>& stk)
 {
 	std::cerr << title << ": ALU Unit Stack at " << &stk << " with " << stk.size() << " items:\n";
-	std::stack<AluUnit*> tmp;
+	std::stack<PUnit> tmp;
 	while (!stk.empty()) {
-		AluUnit* v = stk.top();
+		PUnit v = stk.top();
 		stk.pop();
 		std::cerr << "   > " << v->_identify() << std::endl;
 		tmp.push(v);
 	}
 	std::cerr << std::endl;
 	while (!tmp.empty()) {
-		AluUnit* v = tmp.top();
+		PUnit v = tmp.top();
 		tmp.pop();
 		stk.push(v);
 	}
@@ -1125,7 +1125,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 {
 	char* c = (char*)s.c_str();
 	char* cEnd = c + s.length();
-	AluUnit* pUnit;
+	PUnit pUnit;
 	AluUnitType prevUnitType = UT_None;
 
 	if (!vec.empty()){
@@ -1166,7 +1166,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				tokEnd++;
 			}
 			std::string num(c,(tokEnd-c));
-			pUnit = new AluUnitLiteral(num,true);
+			pUnit = PUnit(new AluUnitLiteral(num,true));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
@@ -1187,7 +1187,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				}
 				tok += *tokEnd++;
 			}
-			pUnit = new AluUnitLiteral(tok);
+			pUnit = PUnit(new AluUnitLiteral(tok));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd+1;
@@ -1206,7 +1206,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				std::string err = "Key '" + key + "' not found in expression.";
 				MYTHROW(err);
 			}
-			pUnit = new AluUnitLiteral(configSpecLiteralGet(key));
+			pUnit = PUnit(new AluUnitLiteral(configSpecLiteralGet(key)));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
@@ -1217,7 +1217,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		// A special string @@ representing the entire input record
 		if (*c=='@' && c[1]=='@')  {
 			c+=2;
-			pUnit = new AluInputRecord();
+			pUnit = PUnit(new AluInputRecord());
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			mayBeStart = false;
@@ -1234,7 +1234,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				std::string err = "Invalid counter <#" + num + *tokEnd + "> in expression";
 				MYTHROW(err);
 			}
-			pUnit = new AluUnitCounter(std::stoi(num));
+			pUnit = PUnit(new AluUnitCounter(std::stoi(num)));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
@@ -1247,10 +1247,10 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			char *tokEnd = c+1;
 			while (tokEnd<cEnd && (isLetter(*tokEnd) || isDigit(*tokEnd) || *tokEnd=='_')) tokEnd++;
 			if (tokEnd == c+1) {
-				pUnit = new AluUnitFieldIdentifier(*c);
+				pUnit = PUnit(new AluUnitFieldIdentifier(*c));
 			} else {
 				std::string identifier(c,(tokEnd-c));
-				pUnit = new AluFunction(identifier);
+				pUnit = PUnit(new AluFunction(identifier));
 			}
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
@@ -1261,7 +1261,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 
 		// parenthesis
 		if (*c=='(') {
-			pUnit = new AluOtherToken(UT_OpenParenthesis);
+			pUnit = PUnit(new AluOtherToken(UT_OpenParenthesis));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
@@ -1270,7 +1270,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 
 		if (*c==')') {
-			pUnit = new AluOtherToken(UT_ClosingParenthesis);
+			pUnit = PUnit(new AluOtherToken(UT_ClosingParenthesis));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
@@ -1279,7 +1279,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 
 		if (*c==',') {
-			pUnit = new AluOtherToken(UT_Comma);
+			pUnit = PUnit(new AluOtherToken(UT_Comma));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
@@ -1321,7 +1321,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				MYTHROW(err);
 			}
 			std::string sLiteral(c+1, (tokEnd-c-1));
-			pUnit = new AluUnitLiteral(sLiteral);
+			pUnit = PUnit(new AluUnitLiteral(sLiteral));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
@@ -1338,9 +1338,9 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 void cleanAluVec(AluVec& vec)
 {
 	while (!vec.empty()) {
-		AluUnit* pUnit = vec[0];
+		PUnit pUnit = vec[0];
 		vec.erase(vec.begin());
-		delete pUnit;
+		pUnit = NULL;
 	}
 }
 
@@ -1349,11 +1349,11 @@ std::string dumpAluVec(AluVec& vec, bool deleteUnits)
 	std::string ret;
 	if (deleteUnits) {
 		while (!vec.empty()) {
-			AluUnit* pUnit = vec[0];
+			PUnit pUnit = vec[0];
 			if (!ret.empty()) ret += ";";
 			ret += pUnit->_identify();
 			vec.erase(vec.begin());
-			delete pUnit;
+			pUnit = NULL;
 		}
 	} else {
 		for (size_t i=0; i<vec.size(); i++) {
@@ -1388,19 +1388,19 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 		MYTHROW(err);
 	}
 
-	AluUnitCounter* ctr = dynamic_cast<AluUnitCounter*>(vec[0]);
-	AluAssnOperator* pAssnOp = dynamic_cast<AluAssnOperator*>(vec[1]);
+	auto ctr = std::dynamic_pointer_cast<AluUnitCounter>(vec[0]);
+	auto pAssnOp = std::dynamic_pointer_cast<AluAssnOperator>(vec[1]);
 	*pAss = *pAssnOp;
 	k = ctr->getKey();
 
 	vec.erase(vec.begin());
 	vec.erase(vec.begin());
-	delete ctr;
-	delete pAssnOp;
+	ctr = NULL;
+	pAssnOp = NULL;
 
 	// Check that we don't have something terrible like an assignment operator in the
 	// expression. Like this is C or something
-	for (AluUnit* pUnit : vec) {
+	for (PUnit pUnit : vec) {
 		if (UT_AssignmentOp==pUnit->type()) {
 			MYTHROW("ALU expression should not contain an assignment operator");
 		}
@@ -1408,10 +1408,10 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 	return true;
 }
 
-bool isHigherPrecedenceBinaryOp(AluUnit* op1, AluUnit* op2)
+bool isHigherPrecedenceBinaryOp(PUnit op1, PUnit op2)
 {
-	AluBinaryOperator *bop1 = dynamic_cast<AluBinaryOperator*>(op1);
-	AluBinaryOperator *bop2 = dynamic_cast<AluBinaryOperator*>(op2);
+	auto bop1 = std::dynamic_pointer_cast<AluBinaryOperator>(op1);
+	auto bop2 = std::dynamic_pointer_cast<AluBinaryOperator>(op2);
 
 	if (!bop1 || !bop2) {
 		MYTHROW("Received two units. Not both are binary operators");
@@ -1431,7 +1431,7 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 	}
 
 
-	for (AluUnit* pUnit : source) {
+	for (PUnit pUnit : source) {
 		countUnits++;
 		switch(pUnit->type()) {
 		case UT_OpenParenthesis:
@@ -1449,7 +1449,7 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 		}
 
 		if (foundComma) {
-			delete pUnit;
+			pUnit = NULL;
 			break;
 		}
 		else {
@@ -1526,7 +1526,7 @@ enum pseudoFunctionFindingState {
 };
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 {
-	std::stack<AluUnit*> operatorStack;
+	std::stack<PUnit> operatorStack;
 	unsigned int availableOperands = 0;
 
 	if (!dest.empty()){
@@ -1537,11 +1537,11 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	// The parameter should be a field identifier and it is converted to a number
 	// representing the ASCII value of the character
 	pseudoFunctionFindingState pffs = PFFS_lookingForPseudoFunction;
-	for (AluUnit* pUnit : source) {
+	for (PUnit pUnit : source) {
 		switch (pffs) {
 		case PFFS_lookingForPseudoFunction: {
 			if (pUnit->type() != UT_Identifier) continue;
-			AluFunction* func = (AluFunction*)pUnit;
+			auto func = std::dynamic_pointer_cast<AluFunction>(pUnit);
 			if (!isPseudoFunctionName(func->getName())) continue;
 			pffs = PFFS_lookingForOpen;
 			break;
@@ -1558,7 +1558,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			if (pUnit->type() != UT_FieldIdentifier) {
 				MYTHROW("Pseudo-functions' first argument may only be a field identifier");
 			}
-			AluUnitFieldIdentifier* pFI = (AluUnitFieldIdentifier*)pUnit;
+			auto pFI = std::dynamic_pointer_cast<AluUnitFieldIdentifier>(pUnit);
 			pFI->setEvaluateToName();
 			pffs = PFFS_lookingForClose;
 			break;
@@ -1586,7 +1586,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	bool     bExpectNullArgument = false;
 	functionNestingStack fstack;
 
-	for (AluUnit* pUnit : source) {
+	for (auto pUnit : source) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluCompile && g_bVerbose) {
 			std::cerr << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
@@ -1605,10 +1605,9 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 				operatorStack.pop();
 			}
 			if (bExpectNullArgument) {
-				dest.push_back(new AluUnitNull);
+				dest.push_back(PUnit(new AluUnitNull));
 				availableOperands++;
 			}
-			if (clearSource) delete pUnit;
 			bExpectNullArgument = true;
 			break;
 		case UT_AssignmentOp:
@@ -1627,7 +1626,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			bExpectNullArgument = false;
 			break;
 		case UT_Identifier: {	// a function
-			AluFunction* pFunc = dynamic_cast<AluFunction*>(pUnit);
+			auto pFunc = std::dynamic_pointer_cast<AluFunction>(pUnit);
 			operatorStack.push(pUnit);
 			fstack.push(pFunc->getName(), pFunc->countOperands(), availableOperands);
 			bExpectNullArgument = false;
@@ -1674,10 +1673,6 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			if (operatorStack.empty()) {
 				MYTHROW("Mismatched parenthesis -- too many closing");
 			} else {
-				if (clearSource) {
-					delete pUnit;
-					delete operatorStack.top();
-				}
 				operatorStack.pop(); // Pop off the opening parenthesis
 				// issue #37 - if what remains is a function, it should also go
 				if (!operatorStack.empty() && UT_Identifier==operatorStack.top()->type()) {
@@ -1689,7 +1684,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 						MYTHROW(err);
 					}
 					while (availableOperands < (fstack.availBefore() + fstack.argc())) {
-						dest.push_back(new AluUnitNull);
+						dest.push_back(PUnit(new AluUnitNull));
 						availableOperands++;
 					}
 					availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();
@@ -1706,7 +1701,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		if (operatorStack.top()->type()==UT_OpenParenthesis) {
 			MYTHROW("Mismatched parenthesis -- too many opening");
 		}
-		AluUnit* pTopUnit = operatorStack.top();
+		PUnit pTopUnit = operatorStack.top();
 		operatorStack.pop();
 		MYASSERT_WITH_MSG(pTopUnit->countOperands()<=dest.size(), "Not enough operands for operator (4)");
 		dest.push_back(pTopUnit);
@@ -1741,7 +1736,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	int index = 0;
 #endif
 
-	for (AluUnit* pUnit : expr) {
+	for (PUnit pUnit : expr) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
 			dumpAluVec("Expression Progress", expr, index);
@@ -1758,7 +1753,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 			computeStack.push(pUnit->evaluate());
 			break;
 		case UT_Counter: {
-			AluUnitCounter* pCtr = dynamic_cast<AluUnitCounter*>(pUnit);
+			auto pCtr = std::dynamic_pointer_cast<AluUnitCounter>(pUnit);
 			computeStack.push(pCtr->compute(pctrs));
 			break;
 		}
@@ -1866,7 +1861,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	return ret;
 }
 
-void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr, ALUCounters* pctrs)
+void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs)
 {
 	PValue exprResult = evaluateExpression(expr, pctrs);
 
@@ -1875,7 +1870,7 @@ void ALUPerformAssignment(ALUCounterKey& k, AluAssnOperator* pAss, AluVec& expr,
 
 bool AluExpressionReadsLines(AluVec& vec)
 {
-	for (AluUnit* unit : vec) {
+	for (PUnit unit : vec) {
 		if (unit->requiresRead()) {
 			return true;
 		}
@@ -1885,11 +1880,11 @@ bool AluExpressionReadsLines(AluVec& vec)
 
 bool expressionForcesRunoutCycle(AluVec& vec)
 {
-	for (AluUnit* unit : vec) {
+	for (PUnit unit : vec) {
 		switch (unit->type()) {
 		case UT_Identifier:
 		{
-			AluFunction* pFunction = dynamic_cast<AluFunction*>(unit);
+			auto pFunction = std::dynamic_pointer_cast<AluFunction>(unit);
 			MYASSERT(NULL!=pFunction);
 			return ("eof" == pFunction->getName());
 		}
