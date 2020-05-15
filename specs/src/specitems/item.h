@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include "cli/tokens.h"
 #include "processing/conversions.h"
 #include "processing/StringBuilder.h"
@@ -170,7 +171,7 @@ public:
 	virtual bool ApplyUnconditionally() {return false;}
 };
 
-typedef Item* PItem;
+typedef std::shared_ptr<Item> PItem;
 
 class DataField : public Item {
 public:
@@ -200,6 +201,8 @@ private:
 	AluVec            m_outputAlignmentExpression;
 };
 
+typedef std::shared_ptr<DataField> PDataField;
+
 class TokenItem : public Item {
 public:
 	TokenItem(Token& t);
@@ -211,6 +214,8 @@ public:
 private:
 	Token* mp_Token;
 };
+
+typedef std::shared_ptr<TokenItem> PTokenItem;
 
 class SetItem : public Item {
 public:
@@ -226,6 +231,8 @@ private:
 	AluAssnOperator m_oper;
 	AluVec          m_RPNExpression;
 };
+
+typedef std::shared_ptr<SetItem> PSetItem;
 
 class ConditionItem : public Item {
 public:
@@ -262,6 +269,8 @@ private:
 	POperator       m_assnOp;
 };
 
+typedef std::shared_ptr<ConditionItem> PConditionItem;
+
 class BreakItem : public Item {
 public:
 	BreakItem(char identifier);
@@ -272,6 +281,8 @@ public:
 private:
 	char m_identifier;
 };
+
+typedef std::shared_ptr<BreakItem> PBreakItem;
 
 class SelectItem : public Item {
 public:
@@ -285,5 +296,6 @@ private:
 	bool bOutput;
 };
 
+typedef std::shared_ptr<SelectItem> PSelectItem;
 
 #endif

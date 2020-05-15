@@ -10,7 +10,7 @@ char g_printonly_rule = PRINTONLY_PRINTALL;
 bool g_keep_suppressed_record = false;
 
 struct predicateStackItem {
-	ConditionItem* pred;
+	PConditionItem pred;
 	unsigned int   argIndex;
 };
 
@@ -27,7 +27,6 @@ itemGroup::~itemGroup()
 	while (!m_items.empty()) {
 		PItem pItem = m_items[0];
 		m_items.erase(m_items.begin());
-		delete pItem;
 	}
 }
 
@@ -57,7 +56,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__ABEND:
 		case TokenListType__CONTINUE:
 		{
-			TokenItem *pItem = new TokenItem(tokenVec[index++]);
+			auto pItem = PTokenItem(new TokenItem(tokenVec[index++]));
 			addItem(pItem);
 			break;
 		}
@@ -75,7 +74,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__ID:
 		case TokenListType__PRINT:
 		{
-			DataField *pItem = new DataField;
+			auto pItem = PDataField(new DataField);
 			pItem->parse(tokenVec, index);
 			if (pItem->forcesRunoutCycle()) {
 				bNeedRunoutCycleFromStart = bNeedRunoutCycle = true;
@@ -87,7 +86,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			MYASSERT(index < tokenVec.size());
 			try {
-				SetItem* pItem = new SetItem(tokenVec[index].Literal());
+				auto pItem = PSetItem(new SetItem(tokenVec[index].Literal()));
 				index++;
 				addItem(pItem);
 			} catch(const SpecsException& e) {
@@ -123,7 +122,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				}
 			}
 			try {
-				ConditionItem* pItem = new ConditionItem(tokenVec[index].Literal());
+				auto pItem = PConditionItem(new ConditionItem(tokenVec[index].Literal()));
 				if (TokenListType__IF == tokenVec[index].Type()) {
 					MYASSERT_WITH_MSG((predicateStackIdx+1)<MAX_DEPTH_CONDITION_STATEMENTS, "Too many nested conditions");
 					predicateStack[predicateStackIdx].pred = pItem;
@@ -160,14 +159,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__THEN:
 		{
-			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_THEN);
+			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_THEN));
 			index++;
 			addItem(pItem);
 			break;
 		}
 		case TokenListType__ELSE:
 		{
-			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_ELSE);
+			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_ELSE));
 			index++;
 			addItem(pItem);
 			break;
@@ -187,14 +186,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 						" at index " + std::to_string(predicateStack[predicateStackIdx].argIndex);
 				MYTHROW(err);
 			}
-			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_ENDIF);
+			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_ENDIF));
 			index++;
 			addItem(pItem);
 			break;
 		}
 		case TokenListType__DO:
 		{
-			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_DO);
+			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_DO));
 			index++;
 			addItem(pItem);
 			break;
@@ -214,21 +213,21 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 						" at index " + std::to_string(predicateStack[predicateStackIdx].argIndex);
 				MYTHROW(err);
 			}
-			ConditionItem* pItem = new ConditionItem(ConditionItem::PRED_DONE);
+			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_DONE));
 			index++;
 			addItem(pItem);
 			break;
 		}
 		case TokenListType__BREAK:
 		{
-			BreakItem* pItem = new BreakItem(tokenVec[index].Literal()[0]);
+			auto pItem = PBreakItem(new BreakItem(tokenVec[index].Literal()[0]));
 			index++;
 			addItem(pItem);
 			break;
 		}
 		case TokenListType__SELECT:
 		{
-			SelectItem* pItem = new SelectItem(tokenVec[index].Literal(), false /* bIsOutput */);
+			auto pItem = PSelectItem(new SelectItem(tokenVec[index].Literal(), false /* bIsOutput */));
 			index++;
 			addItem(pItem);
 			if (pItem->isSelectSecond()) setRegularRunAtEOF();
@@ -236,7 +235,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__OUTSTREAM:
 		{
-			SelectItem* pItem = new SelectItem(tokenVec[index].Literal(), true /* bIsOutput */);
+			auto pItem = PSelectItem(new SelectItem(tokenVec[index].Literal(), true /* bIsOutput */));
 			index++;
 			addItem(pItem);
 			break;
@@ -336,7 +335,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 	if (pState.isRunOut()) {
 		// Find the EOF token
 		for ( ; !bNeedRunoutCycleFromStart && i < m_items.size() && !bFoundSelectSecond; i++) {
-			TokenItem* pTok = dynamic_cast<TokenItem*>(m_items[i]);
+			PTokenItem pTok = std::dynamic_pointer_cast<TokenItem>(m_items[i]);
 			if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
 				i++;  // So we start with the one after the EOF
 				break;
@@ -501,7 +500,7 @@ bool itemGroup::readsLines()
 	bInRedo[bInRedoIdx] = false;
 	for (PItem pItem : m_items) {
 		// Check if we need to go up or down a level
-		ConditionItem* pCond = dynamic_cast<ConditionItem*>(pItem);
+		PConditionItem pCond = std::dynamic_pointer_cast<ConditionItem>(pItem);
 		if (pCond) {
 			switch (pCond->pred()) {
 			case ConditionItem::PRED_THEN:
@@ -521,7 +520,7 @@ bool itemGroup::readsLines()
 		}
 
 		// Check if we are starting a REDO so all ranges can be ignored.
-		TokenItem* pToken = dynamic_cast<TokenItem*>(pItem);
+		PTokenItem pToken = std::dynamic_pointer_cast<TokenItem>(pItem);
 		if (pToken && TokenListType__REDO==pToken->getToken()->Type()) {
 			bInRedo[bInRedoIdx] = true;
 		}
