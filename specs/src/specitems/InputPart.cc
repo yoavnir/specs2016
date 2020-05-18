@@ -110,13 +110,8 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 
 SubstringPart::~SubstringPart()
 {
-	if (mp_BigPart) {
-		delete mp_BigPart;
-	}
-
-	if (mp_SubPart) {
-		delete mp_SubPart;
-	}
+	mp_BigPart = NULL;
+	mp_SubPart = NULL;
 }
 
 std::string SubstringPart::Debug()

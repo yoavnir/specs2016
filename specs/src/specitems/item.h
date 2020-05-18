@@ -20,6 +20,8 @@ public:
 	virtual bool        forcesRunoutCycle() {return false;}
 };
 
+typedef std::shared_ptr<InputPart> PPart;
+
 class LiteralPart : public InputPart {
 public:
 	LiteralPart(std::string& s) {m_Str = s;}
@@ -29,6 +31,8 @@ public:
 private:
 	std::string m_Str;
 };
+
+typedef std::shared_ptr<LiteralPart> PLiteralPart;
 
 class RangePart : public InputPart {
 public:
@@ -42,6 +46,8 @@ protected:
 	int _to;
 };
 
+typedef std::shared_ptr<RangePart> PRangePart;
+
 class RegularRangePart : public RangePart {
 public:
 	RegularRangePart(int _first, int _last) : RangePart(_first,_last) {}
@@ -49,6 +55,8 @@ public:
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 };
+
+typedef std::shared_ptr<RegularRangePart> PRegularRangePart;
 
 class WordRangePart : public RangePart {
 public:
@@ -60,6 +68,8 @@ private:
 	char m_WordSep;
 };
 
+typedef std::shared_ptr<WordRangePart> PWordRangePart;
+
 class FieldRangePart : public RangePart {
 public:
 	FieldRangePart(int _first, int _last, char sep=0) : RangePart(_first,_last) {m_FieldSep = sep;}
@@ -70,17 +80,21 @@ private:
 	char m_FieldSep;
 };
 
+typedef std::shared_ptr<FieldRangePart> PFieldRangePart;
+
 class SubstringPart : public InputPart {
 public:
-	SubstringPart(RangePart* _sub, InputPart* _big) {mp_SubPart = _sub; mp_BigPart = _big;}
+	SubstringPart(PRangePart _sub, PPart _big) {mp_SubPart = _sub; mp_BigPart = _big;}
 	virtual ~SubstringPart();
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 	virtual bool        readsLines() {return mp_BigPart->readsLines();}
 private:
-	RangePart* mp_SubPart;
-	InputPart* mp_BigPart;
+	PRangePart mp_SubPart;
+	PPart      mp_BigPart;
 };
+
+typedef std::shared_ptr<SubstringPart> PSubstringPart;
 
 #define NUMBER_PART_FIELD_LEN  10
 #define CLOCKDIFF_PART_FIELD_LEN 12
@@ -94,6 +108,8 @@ public:
 private:
 	unsigned long m_Num;
 };
+
+typedef std::shared_ptr<NumberPart> PNumberPart;
 
 enum clockType {
 	ClockType__Static,
@@ -112,6 +128,8 @@ private:
 	clockValue   m_StaticClock;
 };
 
+typedef std::shared_ptr<ClockPart> PClockPart;
+
 class IDPart : public InputPart {
 public:
 	IDPart(std::string _fieldIdentifier) {m_fieldIdentifier = _fieldIdentifier;}
@@ -121,6 +139,8 @@ public:
 private:
 	std::string m_fieldIdentifier;
 };
+
+typedef std::shared_ptr<IDPart> PIDPart;
 
 class ExpressionPart : public InputPart {
 public:
@@ -137,6 +157,8 @@ private:
 	POperator       m_assnOp;
 	std::string m_rawExpression;
 };
+
+typedef std::shared_ptr<ExpressionPart> PExpressionPart;
 
 enum ApplyRet {
 	ApplyRet__Continue,
@@ -183,13 +205,13 @@ public:
 	virtual bool readsLines();
 	virtual bool forcesRunoutCycle() {return m_InputPart ? m_InputPart->forcesRunoutCycle() : false;}
 private:
-	InputPart* getInputPart(std::vector<Token> &tokenVec, unsigned int& index, char _wordSep=0, char _fieldSep=0);
-	SubstringPart* getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
+	PPart getInputPart(std::vector<Token> &tokenVec, unsigned int& index, char _wordSep=0, char _fieldSep=0);
+	PSubstringPart getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
 	void stripString(PSpecString &pOrig);
 	void interpretComposedOutputPlacement(std::string& outputPlacement);
 	char m_label;
 	char m_tailLabel;
-	InputPart *m_InputPart;
+	PPart  m_InputPart;
 	size_t m_outStart;  /* zero is a special value meaning no output */
 	size_t m_maxLength; /* zero is a special value meaning no limit  */
 	bool   m_strip;

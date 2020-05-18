@@ -36,7 +36,7 @@ DataField::DataField()
 }
 
 DataField::~DataField() {
-	if (m_InputPart) delete m_InputPart;
+	m_InputPart = NULL;
 	cleanAluVec(m_outputStartExpression);
 	cleanAluVec(m_outputWidthExpression);
 	cleanAluVec(m_outputAlignmentExpression);
@@ -62,13 +62,13 @@ DataField::~DataField() {
  *   - Caller must determine if a NULL return is acceptable
  */
 
-SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index)
+PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	Token token = dummyToken;
 	TokenListTypes tokenType;
-	InputPart* _pSub;
-	RangePart* pSub;
-	InputPart* pBig;
+	PPart      _pSub;
+	PRangePart pSub;
+	PPart      pBig;
 	char       subPartWordSeparator = 0;
 	char       subPartFieldSeparator = 0;
 
@@ -95,7 +95,7 @@ SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 	}
 
 	// sub must be of type RangePart
-	pSub = dynamic_cast<RangePart*>(_pSub);
+	pSub = std::dynamic_pointer_cast<RangePart>(_pSub);
 	if (!pSub) {
 		std::string err = "Invalid range part following SUBSTRING token " + token.HelpIdentify();
 		MYTHROW(err);
@@ -131,7 +131,7 @@ SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 		MYTHROW(err);
 	}
 
-	return new SubstringPart(pSub, pBig);
+	return PSubstringPart(new SubstringPart(pSub, pBig));
 }
 
 
@@ -155,10 +155,10 @@ SubstringPart* DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
  *   - index is not safe -- must verify it's not beyond the vector
  *   - Caller must determine if a NULL return is acceptable
  */
-InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index, char _wordSep, char _fieldSep)
+PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index, char _wordSep, char _fieldSep)
 {
 	unsigned int index = _index;
-	InputPart* ret;
+	PPart ret;
 	Token token = dummyToken;
 	TokenListTypes tokenType;
 
@@ -166,39 +166,39 @@ InputPart* DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _
 
 	switch (tokenType) {
 	case TokenListType__RANGE:
-		ret = new RegularRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
+		ret = PPart(new RegularRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast()));
 		break;
 	case TokenListType__WORDRANGE:
-		ret = new WordRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _wordSep);
+		ret = PPart(new WordRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _wordSep));
 		break;
 	case TokenListType__FIELDRANGE:
-		ret = new FieldRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _fieldSep);
+		ret = PPart(new FieldRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _fieldSep));
 		break;
 	case TokenListType__LITERAL:
-		ret = new LiteralPart(token.Literal());
+		ret = PPart(new LiteralPart(token.Literal()));
 		break;
 	case TokenListType__SUBSTRING:
 		ret = getSubstringPart(tokenVec, index);
 		break;
 	case TokenListType__NUMBER:
-		ret = new NumberPart();
+		ret = PPart(new NumberPart());
 		break;
 	case TokenListType__TODCLOCK:
-		ret = new ClockPart(ClockType__Static);
+		ret = PPart(new ClockPart(ClockType__Static));
 		break;
 	case TokenListType__DTODCLOCK:
-		ret = new ClockPart(ClockType__Dynamic);
+		ret = PPart(new ClockPart(ClockType__Dynamic));
 		break;
 	case TokenListType__TIMEDIFF:
-		ret = new ClockPart(ClockType__Diff);
+		ret = PPart(new ClockPart(ClockType__Diff));
 		break;
 	case TokenListType__ID:
-		ret = new IDPart(token.Literal());
+		ret = PPart(new IDPart(token.Literal()));
 		break;
 	case TokenListType__PRINT:
 	{
 		try {
-			ret = new ExpressionPart(token.Literal());
+			ret = PPart(new ExpressionPart(token.Literal()));
 		} catch(const SpecsException& e) {
 			std::string err = "Expression in "+ token.HelpIdentify()
 					+ ":\n" + e.what(true /* concise */);
