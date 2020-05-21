@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include "utils/ErrorReporting.h"
 
 //
@@ -112,23 +113,25 @@ class TokenFieldRange {
 		bool bDone;
 };
 
+typedef std::shared_ptr<TokenFieldRange> PTokenFieldRange;
+
 class Token {
 public:
-	Token(TokenListTypes _type, TokenFieldRange *pRange, std::string literal, int argc, std::string orig);
+	Token(TokenListTypes _type, PTokenFieldRange pRange, std::string literal, int argc, std::string orig);
 	std::string     Debug(int digits =  0);
 	TokenListTypes  Type() {return m_type;}
-	TokenFieldRange *Range() {return m_pRange;}
-	void            setRange(TokenFieldRange *prng) {MYASSERT(m_pRange==NULL); m_pRange = prng;}
+	PTokenFieldRange Range() {return m_pRange;}
+	void            setRange(PTokenFieldRange prng) {MYASSERT(m_pRange==NULL); m_pRange = prng;}
 	std::string&    Literal() {return m_literal;}
 	void            setLiteral(std::string l) {MYASSERT(m_literal.empty()); m_literal = l;}
 	void            setLiteral(char c) {m_literal.resize(1); m_literal[0]=c;}
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
 	std::string&    HelpIdentify();
-	void            deallocDynamic() {if (m_pRange) {delete m_pRange; m_pRange = NULL;}}
+	void            deallocDynamic() {/* - TODO: ERASE -- if (m_pRange) {m_pRange = NULL;} */} // do we even need this method?
 private:
 	TokenListTypes  m_type;
-	TokenFieldRange *m_pRange;
+	PTokenFieldRange m_pRange;
 	std::string     m_literal;
 	int             m_argc;
 	std::string     m_orig;

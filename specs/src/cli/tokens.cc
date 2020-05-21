@@ -51,6 +51,8 @@ class TokenFieldRangeSimple : public TokenFieldRange {
 		bool bIsSingleNumber;
 };
 
+typedef std::shared_ptr<TokenFieldRangeSimple> PTokenFieldRangeSimple;
+
 class TokenFieldRangeComplex : public TokenFieldRange {
 public:
 	TokenFieldRangeComplex();
@@ -128,7 +130,7 @@ void TokenFieldRangeComplex::Add(TokenFieldRange *rng)
 }
 
 
-Token::Token(TokenListTypes _type, TokenFieldRange *pRange, std::string literal, int argc, std::string orig)
+Token::Token(TokenListTypes _type, PTokenFieldRange pRange, std::string literal, int argc, std::string orig)
 {
 	m_type = _type;
 	m_pRange = pRange;
@@ -164,7 +166,7 @@ std::string& Token::HelpIdentify()
 }
 
 /* Helper functions */
-static TokenFieldRange *parseAsSingleNumber(std::string s)
+static PTokenFieldRange parseAsSingleNumber(std::string s)
 {
 	long int l;
 	try {
@@ -175,12 +177,12 @@ static TokenFieldRange *parseAsSingleNumber(std::string s)
 	if (l==0 || s!=std::to_string(l)) {
 		return NULL;
 	}
-	TokenFieldRangeSimple* pRet = new TokenFieldRangeSimple(l,l);
+	auto pRet = PTokenFieldRangeSimple(new TokenFieldRangeSimple(l,l));
 	pRet->setSingleNumber();
 	return pRet;
 }
 
-static TokenFieldRange *parseAsFromToRange(std::string s)
+static PTokenFieldRange parseAsFromToRange(std::string s)
 {
 	static std::string hyphens("-;:"); // all can separate the two numbers
 	size_t posOfHyphen;
@@ -216,10 +218,10 @@ static TokenFieldRange *parseAsFromToRange(std::string s)
 		}
 	}
 
-	return new TokenFieldRangeSimple(_from, _to);
+	return PTokenFieldRange(new TokenFieldRangeSimple(_from, _to));
 }
 
-static TokenFieldRange *parseAsFromLenRange(std::string s)
+static PTokenFieldRange parseAsFromLenRange(std::string s)
 {
 	size_t posOfDot;
 	long int _from, _to, _len;
@@ -245,13 +247,12 @@ static TokenFieldRange *parseAsFromLenRange(std::string s)
 		_to++;  // skipping the zero
 	}
 
-	return new TokenFieldRangeSimple(_from, _to);
+	return PTokenFieldRange(new TokenFieldRangeSimple(_from, _to));
 }
 
-static TokenFieldRange *parseAsAnySimpleRangeSpec(std::string s)
+static PTokenFieldRange parseAsAnySimpleRangeSpec(std::string s)
 {
-	TokenFieldRange *ret = NULL;
-	ret = parseAsSingleNumber(s);
+	PTokenFieldRange ret = parseAsSingleNumber(s);
 	if (!ret)
 		ret = parseAsFromToRange(s);
 	if (!ret)
@@ -291,7 +292,7 @@ static bool isPossibleDelimiter(char c) {
 static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int argidx);
 void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 {
-	TokenFieldRange* pRange = NULL;
+	PTokenFieldRange pRange = NULL;
 
 	/* various ifs, buts and maybes */
 
@@ -407,7 +408,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	size_t lastdot = arg.find_last_of('.');
 	size_t firstdot = arg.find_first_of('.');
 	if (lastdot==firstdot) { // either they're both NULL or there's exactly one dot
-		TokenFieldRangeSimple *pSimpleRange = NULL;
+		PTokenFieldRangeSimple pSimpleRange = NULL;
 		std::string nwnf = arg;
 		if (firstdot!=std::string::npos) {
 			nwnf = arg.substr(0,firstdot);
@@ -415,7 +416,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 			try {
 				int lFieldLength = std::stoi(fieldLength);
 				if (lFieldLength > 0 && std::to_string(lFieldLength)==fieldLength) {
-					pSimpleRange = new TokenFieldRangeSimple(1,lFieldLength);
+					pSimpleRange = PTokenFieldRangeSimple(new TokenFieldRangeSimple(1,lFieldLength));
 				} else {
 					goto CONT1;
 				}
@@ -439,7 +440,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 			NEXT_TOKEN;
 		}
 
-		delete pSimpleRange;
+		pSimpleRange = NULL;
 	}
 
 CONT1:
@@ -636,7 +637,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
 				} else if (nextTok.Type()==TokenListType__RANGE) {
-					TokenFieldRange *pRange = nextTok.Range();
+					PTokenFieldRange pRange = nextTok.Range();
 					if (!pRange->isSingleNumber()) {
 						std::string err = "Bad field separator <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 						MYTHROW(err);
@@ -711,7 +712,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					break;
 				case TokenListType__RANGE:
 				{
-					TokenFieldRange* pRange = nextTok.Range();
+					PTokenFieldRange pRange = nextTok.Range();
 					// We just want one number between 1 and 8. Anything else causes an exception.
 					if (!pRange || !pRange->isSingleNumber()) {
 						std::string err = "Invalid input stream descriptor: " + pRange->Debug();
@@ -745,7 +746,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					break;
 				case TokenListType__RANGE:
 				{
-					TokenFieldRange* pRange = nextTok.Range();
+					PTokenFieldRange pRange = nextTok.Range();
 					// We just want one number between 1 and 8. Anything else causes an exception.
 					if (!pRange || !pRange->isSingleNumber()) {
 						std::string err = "Invalid input stream descriptor: " + pRange->Debug();
