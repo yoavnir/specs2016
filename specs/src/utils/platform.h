@@ -97,4 +97,6 @@ int setenv(const char *name, const char *value, int overwrite);
 #define FALLBACK_SPECS_PARENT_DIR  "/etc"
 #endif
 
+char** getDirectoryFileNames(const char* spath);
+
 #endif

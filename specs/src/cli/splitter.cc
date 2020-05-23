@@ -8,7 +8,6 @@
 #include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
-#include <dirent.h>
 #include "tokens.h"
 
 void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx);
@@ -193,42 +192,38 @@ bool dumpSpecificationsList(std::string specName)
 	if (spath && spath[0]) {
 		char* onePath = strtok(spath, PATH_LIST_SEPARATOR);
 		while (onePath) {
-			DIR *dir;
-			struct dirent *ent;
-			if ((dir = opendir (onePath)) != NULL) {
-				while ((ent = readdir (dir)) != NULL) {
-					if (isPotentiallyASpecificationName(ent->d_name) &&
-							(specName==ent->d_name || specName=="")) {
-						std::cerr << "Specification <" << ent->d_name << ">";
-						std::string fullpath = std::string(onePath) + PATHSEP + ent->d_name;
-						std::ifstream specFile;
-						specFile.open(fullpath);
-						std::string line;
-						if (specName=="") {
-							if (getline(specFile,line)) {
-								if (line[0]=='#') {
-									std::cerr << ": " << line.substr(1);
-								}
+			auto fileNameList = getDirectoryFileNames(onePath);
+			unsigned int idx;
+			for (idx=0; fileNameList[idx]; idx++) {
+				if (isPotentiallyASpecificationName(fileNameList[idx]) &&
+						(specName==fileNameList[idx] || specName=="")) {
+					std::cerr << "Specification <" << fileNameList[idx] << ">";
+					std::string fullpath = std::string(onePath) + PATHSEP + fileNameList[idx];
+					std::ifstream specFile;
+					specFile.open(fullpath);
+					std::string line;
+					if (specName=="") {
+						if (getline(specFile,line)) {
+							if (line[0]=='#') {
+								std::cerr << ": " << line.substr(1);
 							}
-							std::cerr << std::endl;
-						} else {
-							bool bStartCommentEnded = false;
-							std::cerr << std::endl;
-							while (!bStartCommentEnded && getline(specFile,line)) {
-								if (line[0]=='#') {
-									std::cerr << "\t" << line.substr(1) << std::endl;
-								} else {
-									bStartCommentEnded = true;
-								}
-							}
-							std::cerr << std::endl;
-							closedir(dir);
-							free(spath);
-							return true;
 						}
+						std::cerr << std::endl;
+					} else {
+						bool bStartCommentEnded = false;
+						std::cerr << std::endl;
+						while (!bStartCommentEnded && getline(specFile,line)) {
+							if (line[0]=='#') {
+								std::cerr << "\t" << line.substr(1) << std::endl;
+							} else {
+								bStartCommentEnded = true;
+							}
+						}
+						std::cerr << std::endl;
+						free(spath);
+						return true;
 					}
 				}
-				closedir(dir);
 			}
 			onePath = strtok(NULL, PATH_LIST_SEPARATOR);
 		}
