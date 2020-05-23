@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "platform.h"
 #include "utils/ErrorReporting.h"
 #ifdef VISUAL_STUDIO
 #else
@@ -32,8 +33,39 @@ static void enlargeStringArray(char**& pRet, unsigned int newSize, unsigned int&
 
 char** getDirectoryFileNames(const char* spath)
 {
-	static char* nothing = NULL;
-	return &nothing;
+	static char** pRet = NULL;
+	static unsigned int rsize = 0;
+	unsigned int index = 0;
+
+	if (!pRet) {
+		enlargeStringArray(pRet, 64, rsize);
+	}
+
+	WIN32_FIND_DATA fdata;
+	HANDLE hfind = FindFirstFile(std::string(spath).append("\\*").c_str(), &fdata);
+	if (hfind == INVALID_HANDLE_VALUE) {
+		pRet[0] = NULL;
+		return pRet;
+	}
+
+	do {
+		std::string fname(fdata.cFileName);
+
+		if (fname != "." && fname != ".." && (fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY == 0) &&
+				((fdata.dwFileAttributes==FILE_ATTRIBUTE_NORMAL) || (fdata.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) || (fdata.dwFileAttributes & FILE_ATTRIBUTE_READONLY))) {
+			if (index + 1 > rsize) {
+				enlargeStringArray(pRet, rsize + 64, rsize);
+			}
+
+			if (pRet[index]) free(pRet[index]);
+
+			pRet[index] = strdup(fname.c_str());
+
+			index++;
+		}
+	} while (FindNextFile(hfind, &fdata) != 0);
+
+	return pRet;
 }
 #else
 
