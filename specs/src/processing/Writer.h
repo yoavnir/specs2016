@@ -2,7 +2,6 @@
 #define SPECS2016__PROCESSING__WRITER__H
 
 #include <string>
-#include <thread>
 #include <fstream>
 #include "utils/StringQueue.h"
 #include "utils/TimeUtils.h"
@@ -29,7 +28,7 @@ protected:
 	unsigned long m_countWritten;
 	bool  m_ended;
 	StringQueue m_queue;
-	std::thread *mp_thread;
+	std::unique_ptr<std::thread> mp_thread;
 	classifyingTimer m_Timer;
 };
 

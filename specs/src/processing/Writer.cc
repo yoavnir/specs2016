@@ -23,8 +23,8 @@ Writer::~Writer()
 {
 	if (mp_thread && mp_thread->joinable()) {
 		mp_thread->join();
-		delete mp_thread;
 	}
+	mp_thread = NULL;
 }
 
 void Writer::Write(PSpecString ps)
@@ -35,7 +35,7 @@ void Writer::Write(PSpecString ps)
 
 void Writer::Begin()
 {
-	mp_thread = new std::thread(WriteAllRecords, this);
+	mp_thread = std::unique_ptr<std::thread>(new std::thread(WriteAllRecords, this));
 }
 
 void Writer::End()
@@ -44,7 +44,6 @@ void Writer::End()
 	m_queue.Done();
 	if (mp_thread) {
 		mp_thread->join();
-		delete mp_thread;
 		mp_thread = NULL;
 	}
 }

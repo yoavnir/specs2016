@@ -39,7 +39,7 @@ public:
 	}
 protected:
 	StringQueue m_queue;
-	std::thread *mp_thread;
+	std::unique_ptr<std::thread> mp_thread;
 	PSpecString   m_pUnreadString;
 	unsigned long m_countRead;
 	unsigned long m_countUsed;

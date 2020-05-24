@@ -4,6 +4,7 @@
 #include <mutex>
 #include "SpecString.h"
 #include <thread>
+#include <memory>
 #include <queue>
 #include <condition_variable>
 #include "utils/platform.h"

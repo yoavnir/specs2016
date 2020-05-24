@@ -34,7 +34,7 @@ void Reader::End()
 	if (mp_thread) {
 		mp_thread->join();
 	}
-	delete mp_thread;
+
 	mp_thread = NULL;
 }
 
@@ -90,7 +90,7 @@ void Reader::readIntoQueue()
 }
 
 void Reader::Begin() {
-	mp_thread = new std::thread(ReadAllRecordsIntoReaderQueue, this);
+	mp_thread = std::unique_ptr<std::thread>(new std::thread(ReadAllRecordsIntoReaderQueue, this));
 }
 
 
