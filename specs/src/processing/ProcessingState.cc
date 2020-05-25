@@ -174,7 +174,7 @@ void ProcessingState::setActiveWriter(int idx)
 	}
 }
 
-Writer* ProcessingState::getCurrentWriter()
+PWriter ProcessingState::getCurrentWriter()
 {
 	return m_Writers[m_outputIndex];
 }

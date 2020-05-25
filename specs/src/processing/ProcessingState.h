@@ -88,7 +88,7 @@ public:
 	int  getActiveInputStream() { return m_inputStream; }
 	void setWriters(PWriter* p)  {m_Writers = p; m_outputIndex = 1; }
 	void setActiveWriter(int idx);
-	Writer* getCurrentWriter();
+	PWriter getCurrentWriter();
 	void setNoWrite()            { m_bNoWrite = true;  }
 	void resetNoWrite()          { m_bNoWrite = false; }
 	bool shouldWrite()           { return !m_bNoWrite; }

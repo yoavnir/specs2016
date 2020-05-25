@@ -90,8 +90,8 @@ int main(int argc, char** argv)
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
-	TestReader *pRd;
-	SimpleWriter *pWr;
+	PTestReader pRd;
+	PSimpleWriter pWr;
 
 	unsigned int index = 0;
 	ig.Compile(vec, index);
@@ -100,21 +100,19 @@ int main(int argc, char** argv)
 
 	std::cout << ig.Debug();
 
-	pRd = new TestReader(100);
+	pRd = PTestReader(new TestReader(100));
 	for (size_t i=0; i<sizeof(Jabberwocky)/sizeof(StdSpecString); i++) {
 		pRd->InsertString(PSpecString(&Jabberwocky[i]));
 	}
 
-	pWr = new SimpleWriter;
+	pWr = PSimpleWriter(new SimpleWriter);
 
 	pRd->Begin();
 	pWr->Begin();
 
 	ig.process(sb, ps, *pRd, tmr);
 
-	delete pRd;
 	pWr->End();
-	delete pWr;
 	vec.clear();
 
 	return 0;

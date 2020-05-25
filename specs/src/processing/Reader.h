@@ -2,6 +2,7 @@
 #define SPECS2016__PROCESSING__READER__H
 
 #include <fstream>
+#include <memory>
 #include "utils/StringQueue.h"
 #include "utils/TimeUtils.h"
 
@@ -48,6 +49,8 @@ protected:
 	classifyingTimer m_Timer;
 };
 
+typedef std::shared_ptr<Reader> PReader;
+
 class TestReader : public Reader {
 public:
 	TestReader(size_t maxLineCount);
@@ -63,6 +66,8 @@ private:
 	size_t       m_idx;
 	size_t       m_MaxCount;
 };
+
+typedef std::shared_ptr<TestReader> PTestReader;
 
 enum recordFormat {
 	RECFM_DELIMITED,
@@ -89,12 +94,14 @@ private:
 	char         m_lineDelimiter;
 };
 
+typedef std::shared_ptr<StandardReader> PStandardReader;
+
 #define MAX_INPUT_STREAMS  8
 #define DEFAULT_READER_IDX 1 // externally. Internally it is stored as zero
 
 class multiReader : public Reader {
 public:
-	multiReader(Reader* pDefaultReader);   // Please don't initiate with another multiReader...
+	multiReader(PReader pDefaultReader);   // Please don't initiate with another multiReader...
 	virtual ~multiReader();
 	void addStream(unsigned char idx, std::istream* f);
 	void addStream(unsigned char idx, std::string& fn);
@@ -108,7 +115,7 @@ public:
 	unsigned int        getReaderIdx()  { return readerIdx+1; }
 	void                setStopReader(int idx) { stopReaderIdx = idx; }
 private:
-	Reader*             readerArray[MAX_INPUT_STREAMS];
+	PReader             readerArray[MAX_INPUT_STREAMS];
 	PSpecString         stringArray[MAX_INPUT_STREAMS];
 	unsigned int        readerIdx;
 	unsigned int        maxReaderIdx;
@@ -116,6 +123,8 @@ private:
 	unsigned int        stopReaderIdx;
 	unsigned int        readerCounter;
 };
+
+typedef std::shared_ptr<multiReader> PMultiReader;
 
 
 #endif

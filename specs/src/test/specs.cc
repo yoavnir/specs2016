@@ -205,13 +205,13 @@ int main (int argc, char** argv)
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
-	Reader *pRd = NULL;
-	SimpleWriter *pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
+	PReader pRd = NULL;
+	PSimpleWriter pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
 	setPositionGetter(&sb);
 
-	memset(pWrtrs, 0, sizeof(void*) * (1 + MAX_INPUT_STREAMS));
+	// memset(pWrtrs, 0, sizeof(void*) * (1 + MAX_INPUT_STREAMS));
 
 	unsigned int index = 0;
 	try {
@@ -251,20 +251,20 @@ int main (int argc, char** argv)
 	std::clock_t clockAtStart = clock();
 
 	if (g_outputFile.empty()) {
-		pWrtrs[1] = new SimpleWriter();
+		pWrtrs[1] = PSimpleWriter(new SimpleWriter());
 	} else {
-		pWrtrs[1] = new SimpleWriter(g_outputFile);
+		pWrtrs[1] = PSimpleWriter(new SimpleWriter(g_outputFile));
 	}
 
-	pWrtrs[0] = new SimpleWriter(_stderr);
+	pWrtrs[0] = PSimpleWriter(new SimpleWriter(_stderr));
 
-	if (g_outputStream2 != "") pWrtrs[2] = new SimpleWriter(g_outputStream2);
-	if (g_outputStream3 != "") pWrtrs[3] = new SimpleWriter(g_outputStream3);
-	if (g_outputStream4 != "") pWrtrs[4] = new SimpleWriter(g_outputStream4);
-	if (g_outputStream5 != "") pWrtrs[5] = new SimpleWriter(g_outputStream5);
-	if (g_outputStream6 != "") pWrtrs[6] = new SimpleWriter(g_outputStream6);
-	if (g_outputStream7 != "") pWrtrs[7] = new SimpleWriter(g_outputStream7);
-	if (g_outputStream8 != "") pWrtrs[8] = new SimpleWriter(g_outputStream8);
+	if (g_outputStream2 != "") pWrtrs[2] = PSimpleWriter(new SimpleWriter(g_outputStream2));
+	if (g_outputStream3 != "") pWrtrs[3] = PSimpleWriter(new SimpleWriter(g_outputStream3));
+	if (g_outputStream4 != "") pWrtrs[4] = PSimpleWriter(new SimpleWriter(g_outputStream4));
+	if (g_outputStream5 != "") pWrtrs[5] = PSimpleWriter(new SimpleWriter(g_outputStream5));
+	if (g_outputStream6 != "") pWrtrs[6] = PSimpleWriter(new SimpleWriter(g_outputStream6));
+	if (g_outputStream7 != "") pWrtrs[7] = PSimpleWriter(new SimpleWriter(g_outputStream7));
+	if (g_outputStream8 != "") pWrtrs[8] = PSimpleWriter(new SimpleWriter(g_outputStream8));
 
 	for (int i=0; i <= MAX_INPUT_STREAMS ; i++) {
 		if (pWrtrs[i]) pWrtrs[i]->Begin();
@@ -274,9 +274,9 @@ int main (int argc, char** argv)
 
 	if (ig.readsLines() || g_bForceFileRead) {
 		if (g_inputFile.empty()) {
-			pRd = new StandardReader();
+			pRd = PReader(new StandardReader());
 		} else {
-			pRd = new StandardReader(g_inputFile);
+			pRd = PReader(new StandardReader(g_inputFile));
 		}
 
 		if (g_recfm=="F") {
@@ -290,7 +290,7 @@ int main (int argc, char** argv)
 		}
 
 		if (anyNonPrimaryInputStreamDefined()) {
-			multiReader* pmRd = new multiReader(pRd);
+			PMultiReader pmRd = PMultiReader(new multiReader(pRd));
 			if (g_inputStream2 != "") pmRd->addStream(2, g_inputStream2);
 			if (g_inputStream3 != "") pmRd->addStream(3, g_inputStream3);
 			if (g_inputStream4 != "") pmRd->addStream(4, g_inputStream4);
@@ -316,12 +316,10 @@ int main (int argc, char** argv)
 			std::cerr << e.what(conciseExceptions) << std::endl;
 			pRd->abortRead();
 			pRd->End();
-			delete pRd;
 			ps.fieldIdentifierStatsClear();
 			for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 				if (pWrtrs[i]) {
 					pWrtrs[i]->End();
-					delete pWrtrs[i];
 					pWrtrs[i] = NULL;
 				}
 			}
@@ -334,7 +332,6 @@ int main (int argc, char** argv)
 		generatedLines = 0;
 		writtenLines = 0;
 		if (!g_bPrintStats) {
-			delete pRd;
 			pRd = NULL;
 		} else {
 			pRd->endCollectingTimeData();
@@ -353,7 +350,7 @@ int main (int argc, char** argv)
 		}
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
-			SimpleWriter* pSW = (SimpleWriter*)(ps.getCurrentWriter());
+			auto pSW = std::dynamic_pointer_cast<SimpleWriter>(ps.getCurrentWriter());
 			*pSW->getStream() << *pstr << std::endl;
 		} else {
 			ps.resetNoWrite();
@@ -375,7 +372,6 @@ int main (int argc, char** argv)
 			if (g_bPrintStats) {
 				pWrtrs[i]->endCollectingTimeData();
 			} else {
-				delete pWrtrs[i];
 				pWrtrs[i] = NULL;
 			}
 		}
@@ -404,14 +400,13 @@ int main (int argc, char** argv)
 		timer.dump("Main Thread");
 		if (pRd) {
 			pRd->dumpTimeData();
-			delete pRd;
+			pRd = NULL;
 		}
 		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 			if (pWrtrs[i]) {
 				if (1 == i) {
 					pWrtrs[i]->dumpTimeData();
 				}
-				delete pWrtrs[i];
 				pWrtrs[i] = NULL;
 			}
 		}

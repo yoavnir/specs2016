@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include <memory>
 #include "utils/StringQueue.h"
 #include "utils/TimeUtils.h"
 
@@ -32,7 +33,7 @@ protected:
 	classifyingTimer m_Timer;
 };
 
-typedef class Writer *PWriter;
+typedef std::shared_ptr<Writer> PWriter;
 
 class SimpleWriter : public Writer {
 public:
@@ -45,5 +46,7 @@ private:
 	std::ostream* m_File;
 	bool m_NeedToClose;
 };
+
+typedef std::shared_ptr<SimpleWriter> PSimpleWriter;
 
 #endif

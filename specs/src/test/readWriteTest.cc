@@ -8,8 +8,8 @@ int main(int argc, char** argv)
 	classifyingTimer tmr;
 	StringBuilder sb;
 	unsigned int readerCount = 1;
-	Reader* pRead = new StandardReader();
-	Writer* pWrite = new SimpleWriter();
+	PReader pRead = PReader(new StandardReader());
+	PWriter pWrite = PWriter(new SimpleWriter());
 
 	pRead->Begin();
 	pWrite->Begin();
@@ -21,9 +21,6 @@ int main(int argc, char** argv)
 	}
 
 	pWrite->End();
-
-	delete pRead;
-	delete pWrite;
 
 	return 0;
 }

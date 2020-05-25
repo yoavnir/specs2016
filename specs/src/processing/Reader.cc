@@ -262,7 +262,7 @@ void TestReader::InsertString(PSpecString ps)
     }
 
 
-multiReader::multiReader(Reader* pDefaultReader)
+multiReader::multiReader(PReader pDefaultReader)
 {
 	memset(readerArray, 0, sizeof(readerArray));
 	memset(stringArray, 0, sizeof(stringArray));
@@ -278,7 +278,6 @@ multiReader::multiReader(Reader* pDefaultReader)
 multiReader::~multiReader()
 {
 	ITERATE_VALID_STREAMS(idx)
-		delete readerArray[idx];
 		readerArray[idx] = NULL;
 		readerCounter--;
 	ITERATE_VALID_STREAMS_END
@@ -290,7 +289,7 @@ void multiReader::addStream(unsigned char idx, std::istream* f)
 	idx--;  // Set to C-style index
 	MYASSERT_WITH_MSG(NULL==readerArray[idx], "Input stream is already defined");
 
-	readerArray[idx] = new StandardReader(f);
+	readerArray[idx] = PReader(new StandardReader(f));
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
 	readerCounter++;
 }
@@ -301,7 +300,7 @@ void multiReader::addStream(unsigned char idx, std::string& fn)
 	idx--;  // Set to C-style index
 	MYASSERT_WITH_MSG(NULL==readerArray[idx], "Input stream is already defined");
 
-	readerArray[idx] = new StandardReader(fn);
+	readerArray[idx] = PReader(new StandardReader(fn));
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
 	readerCounter++;
 }
