@@ -67,7 +67,7 @@ public:
 			clearLRU();
 		}
 
-		m_map[s] = new cacheElement<S,T>(s, pT, m_counter);
+		m_map[s] = std::shared_ptr<cacheElement<S,T>>(new cacheElement<S,T>(s, pT, m_counter));
 	}
 
 	void Debug() {
@@ -81,11 +81,11 @@ public:
 private:
 	void clearLRU() {
 		MYASSERT(m_map.size()==m_highWM);
-		std::vector<cacheElement<S,T>*> vec;
+		std::vector<std::shared_ptr<cacheElement<S,T>>> vec;
 		for (auto p : m_map) {
 			vec.insert(vec.end(), p.second);
 		}
-		std::sort(vec.begin(), vec.end(), [](cacheElement<S,T>* p1, cacheElement<S,T>* p2) {
+		std::sort(vec.begin(), vec.end(), [](std::shared_ptr<cacheElement<S,T>> p1, std::shared_ptr<cacheElement<S,T>> p2) {
 			return p1->getLRU() > p2->getLRU();
 		});
 
@@ -102,7 +102,7 @@ private:
 
 	size_t m_highWM;
 	size_t m_lowWM;
-	std::map<S,cacheElement<S,T>*> m_map;
+	std::map<S,std::shared_ptr<cacheElement<S,T>>> m_map;
 	uint64_t m_counter;
 };
 
