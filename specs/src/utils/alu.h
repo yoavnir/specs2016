@@ -5,6 +5,7 @@
 #include <vector>
 #include <climits>
 #include <string>
+#include <memory>
 #include "utils/platform.h"
 #include "utils/PythonIntf.h"
 #include "utils/aluValue.h"
@@ -341,7 +342,7 @@ private:
 	ALUFloat     m_runningSn;  // Sn is the variance multiplied by n
 };
 
-typedef AluValueStats* PAluValueStats;
+typedef std::shared_ptr<AluValueStats> PAluValueStats;
 
 typedef std::vector<PUnit> AluVec;
 

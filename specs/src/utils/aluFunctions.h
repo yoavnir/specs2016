@@ -2,6 +2,7 @@
 #define SPECS2016__UTILS__ALU_FUNCTIONS_H
 
 #include <unordered_map>
+#include <memory>
 #include "utils/SpecString.h"
 #include "utils/alu.h"
 
@@ -346,7 +347,7 @@ private:
 	freqMapImpl      map;
 	ALUInt           counter;
 };
-typedef frequencyMap *PFrequencyMap;
+typedef std::shared_ptr<frequencyMap> PFrequencyMap;
 
 class stateQueryAgent {
 public:
