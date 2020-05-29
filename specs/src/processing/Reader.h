@@ -85,7 +85,7 @@ public:
 	virtual void setFormatFixed(unsigned int lrecl, bool blocked);
 	virtual void setLineDelimiter(char c);
 private:
-	std::istream* m_File;
+	std::shared_ptr<std::istream> m_File;
     char* m_buffer;
 	bool  m_EOF;
 	bool  m_NeedToClose;

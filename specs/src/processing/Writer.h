@@ -41,9 +41,9 @@ public:
 	SimpleWriter(const std::string& fn);
 	virtual ~SimpleWriter();
 	virtual void WriteOut();
-	std::ostream* getStream() { return m_File; }
+	std::shared_ptr<std::ostream> getStream() { return m_File; }
 private:
-	std::ostream* m_File;
+	std::shared_ptr<std::ostream> m_File;
 	bool m_NeedToClose;
 };
 

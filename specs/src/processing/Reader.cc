@@ -95,7 +95,7 @@ void Reader::Begin() {
 
 
 StandardReader::StandardReader() {
-	m_File = &std::cin;
+	m_File = std::shared_ptr<std::istream>(&std::cin);
 	m_NeedToClose = false;
 	m_EOF = false;
 	m_buffer = NULL;
@@ -109,7 +109,7 @@ StandardReader::StandardReader(std::istream* f) {
 	if (!f->good()) {  // so it crashes if what we've been passed is not a stream pointer
 		m_EOF = true;
 	}
-	m_File = f;
+	m_File = std::shared_ptr<std::istream>(f);
 	m_NeedToClose = false;
 	m_buffer = NULL;
 	m_recfm = RECFM_DELIMITED;
@@ -117,7 +117,7 @@ StandardReader::StandardReader(std::istream* f) {
 }
 
 StandardReader::StandardReader(std::string& fn) {
-	std::ifstream* pInputFile = new std::ifstream(fn);
+	auto pInputFile = std::shared_ptr<std::ifstream>(new std::ifstream(fn));
 	m_File = pInputFile;
 	if (!pInputFile->is_open()) {
 		std::string err = "File not found: " + fn;
@@ -132,9 +132,9 @@ StandardReader::StandardReader(std::string& fn) {
 
 StandardReader::~StandardReader() {
 	if (m_NeedToClose) {
-		std::ifstream* pInputFile = dynamic_cast<std::ifstream*>(m_File);
-		pInputFile->close();
-		delete pInputFile;
+		auto pInputFile = std::dynamic_pointer_cast<std::ifstream>(m_File);
+		if (pInputFile) pInputFile->close();
+		m_File = NULL;
 	}
 	if (m_buffer) {
 		free(m_buffer);
