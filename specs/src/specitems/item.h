@@ -229,12 +229,12 @@ class TokenItem : public Item {
 public:
 	TokenItem(Token& t);
 	virtual ~TokenItem();
-	Token* getToken()   {return mp_Token;}
+	std::shared_ptr<Token> getToken()   {return mp_Token;}
 	virtual std::string Debug();
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
 	virtual bool readsLines();
 private:
-	Token* mp_Token;
+	std::shared_ptr<Token> mp_Token;
 };
 
 typedef std::shared_ptr<TokenItem> PTokenItem;

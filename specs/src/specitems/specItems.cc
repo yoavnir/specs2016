@@ -535,13 +535,12 @@ bool itemGroup::readsLines()
 
 TokenItem::TokenItem(Token& t)
 {
-	mp_Token = new Token(t);
+	mp_Token = std::make_shared<Token>(t);
 }
 
 TokenItem::~TokenItem()
 {
 	if (mp_Token) {
-		delete mp_Token;
 		mp_Token = NULL;
 	}
 }
