@@ -244,6 +244,7 @@ private:
 	std::string                m_doc;
 };
 
+typedef std::shared_ptr<PythonFuncRec> PPythonFuncRec;
 
 class PythonFunctionCollection : public ExternalFunctionCollection {
 public:
@@ -251,9 +252,7 @@ public:
 
 	~PythonFunctionCollection() {
 		if (Py_IsInitialized()) {
-		for (auto it = m_Functions.begin() ; it != m_Functions.end() ; it++) {
-			delete it->second;
-		}
+			m_Functions.clear();
 
 			Py_Finalize();
 			if (g_bVerbose) {
@@ -368,7 +367,7 @@ public:
 				Py_ssize_t firstWithDefault = (Py_None==pDefaultList) ? MAX_FUNC_OPERANDS :
 						PyObject_Length(pArgList) - PyObject_Length(pDefaultList);
 
-				PythonFuncRec* pFuncRec = new PythonFuncRec(funcName, pFunc);
+				auto pFuncRec = std::make_shared<PythonFuncRec>(funcName, pFunc);
 
 				for (Py_ssize_t i = 0 ; i < PyObject_Length(pArgList) ; i++) {
 					char* pArgName;
@@ -461,7 +460,7 @@ public:
 	virtual size_t CountFunctions() {
 		return m_Functions.size();
 	}
-	virtual ExternalFunctionRec* GetFunctionByName(std::string fname) {
+	virtual PExternalFunctionRec GetFunctionByName(std::string fname) {
 		return m_Functions[fname];
 	}
 
@@ -487,7 +486,7 @@ public:
 	}
 
 private:
-	std::map<std::string,PythonFuncRec*> m_Functions;
+	std::map<std::string,PPythonFuncRec> m_Functions;
 	bool                                 m_Initialized;
 	PyObject*                            m_LocalMod;
 };

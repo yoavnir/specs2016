@@ -279,7 +279,7 @@ private:
 	void*			     mp_Func;
 	unsigned int	     m_ArgCount;
 	bool                 m_reliesOnInput;
-	ExternalFunctionRec* m_pExternalFunc;
+	PExternalFunctionRec m_pExternalFunc;
 };
 
 class AluInputRecord : public AluUnit {
