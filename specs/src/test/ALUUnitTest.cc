@@ -300,7 +300,7 @@ extern bool g_bWarnAboutGrammars;
 				_res = parseAluStatement(_expr,k,&op,vec);  \
 				if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
 				if (_res) {									\
-					POperator pop(new AluAssnOperator(op)); \
+					POperator pop = std::make_shared<AluAssnOperator>(op); \
 					ALUPerformAssignment(k,pop,rpnVec,&counters); \
 					_res2 = (counters.getStr(k)==res);		\
 					cleanAluVec(rpnVec);					\
@@ -336,7 +336,7 @@ extern bool g_bWarnAboutGrammars;
 		_res = parseAluStatement(_expr,k,&op,vec);				\
 		if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
 		if (_res) {												\
-			POperator pop(new AluAssnOperator(op)); \
+			POperator pop = std::make_shared<AluAssnOperator>(op); \
 			ALUPerformAssignment(k,pop,rpnVec,&counters);			\
 			_res2 = (counters.getStr(k)==exp);					\
 		}														\

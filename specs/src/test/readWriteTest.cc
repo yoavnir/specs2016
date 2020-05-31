@@ -8,8 +8,8 @@ int main(int argc, char** argv)
 	classifyingTimer tmr;
 	StringBuilder sb;
 	unsigned int readerCount = 1;
-	PReader pRead = PReader(new StandardReader());
-	PWriter pWrite = PWriter(new SimpleWriter());
+	PReader pRead = std::make_shared<StandardReader>();
+	PWriter pWrite = std::make_shared<SimpleWriter>();
 
 	pRead->Begin();
 	pWrite->Begin();

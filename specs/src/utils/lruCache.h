@@ -67,7 +67,7 @@ public:
 			clearLRU();
 		}
 
-		m_map[s] = std::shared_ptr<cacheElement<S,T>>(new cacheElement<S,T>(s, pT, m_counter));
+		m_map[s] = std::make_shared<cacheElement<S,T>>(s, pT, m_counter);
 	}
 
 	void Debug() {

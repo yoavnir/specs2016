@@ -56,7 +56,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__ABEND:
 		case TokenListType__CONTINUE:
 		{
-			auto pItem = PTokenItem(new TokenItem(tokenVec[index++]));
+			auto pItem = std::make_shared<TokenItem>(tokenVec[index++]);
 			addItem(pItem);
 			break;
 		}
@@ -74,7 +74,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__ID:
 		case TokenListType__PRINT:
 		{
-			auto pItem = PDataField(new DataField);
+			auto pItem = std::make_shared<DataField>();
 			pItem->parse(tokenVec, index);
 			if (pItem->forcesRunoutCycle()) {
 				bNeedRunoutCycleFromStart = bNeedRunoutCycle = true;
@@ -86,7 +86,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			MYASSERT(index < tokenVec.size());
 			try {
-				auto pItem = PSetItem(new SetItem(tokenVec[index].Literal()));
+				auto pItem = std::make_shared<SetItem>(tokenVec[index].Literal());
 				index++;
 				addItem(pItem);
 			} catch(const SpecsException& e) {
@@ -122,7 +122,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				}
 			}
 			try {
-				auto pItem = PConditionItem(new ConditionItem(tokenVec[index].Literal()));
+				auto pItem = std::make_shared<ConditionItem>(tokenVec[index].Literal());
 				if (TokenListType__IF == tokenVec[index].Type()) {
 					MYASSERT_WITH_MSG((predicateStackIdx+1)<MAX_DEPTH_CONDITION_STATEMENTS, "Too many nested conditions");
 					predicateStack[predicateStackIdx].pred = pItem;
@@ -159,14 +159,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__THEN:
 		{
-			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_THEN));
+			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_THEN);
 			index++;
 			addItem(pItem);
 			break;
 		}
 		case TokenListType__ELSE:
 		{
-			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_ELSE));
+			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_ELSE);
 			index++;
 			addItem(pItem);
 			break;
@@ -186,14 +186,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 						" at index " + std::to_string(predicateStack[predicateStackIdx].argIndex);
 				MYTHROW(err);
 			}
-			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_ENDIF));
+			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_ENDIF);
 			index++;
 			addItem(pItem);
 			break;
 		}
 		case TokenListType__DO:
 		{
-			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_DO));
+			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_DO);
 			index++;
 			addItem(pItem);
 			break;
@@ -213,21 +213,21 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 						" at index " + std::to_string(predicateStack[predicateStackIdx].argIndex);
 				MYTHROW(err);
 			}
-			auto pItem = PConditionItem(new ConditionItem(ConditionItem::PRED_DONE));
+			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_DONE);
 			index++;
 			addItem(pItem);
 			break;
 		}
 		case TokenListType__BREAK:
 		{
-			auto pItem = PBreakItem(new BreakItem(tokenVec[index].Literal()[0]));
+			auto pItem = std::make_shared<BreakItem>(tokenVec[index].Literal()[0]);
 			index++;
 			addItem(pItem);
 			break;
 		}
 		case TokenListType__SELECT:
 		{
-			auto pItem = PSelectItem(new SelectItem(tokenVec[index].Literal(), false /* bIsOutput */));
+			auto pItem = std::make_shared<SelectItem>(tokenVec[index].Literal(), false /* bIsOutput */);
 			index++;
 			addItem(pItem);
 			if (pItem->isSelectSecond()) setRegularRunAtEOF();
@@ -235,7 +235,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__OUTSTREAM:
 		{
-			auto pItem = PSelectItem(new SelectItem(tokenVec[index].Literal(), true /* bIsOutput */));
+			auto pItem = std::make_shared<SelectItem>(tokenVec[index].Literal(), true /* bIsOutput */);
 			index++;
 			addItem(pItem);
 			break;
@@ -616,7 +616,7 @@ SetItem::~SetItem()
 
 ApplyRet SetItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
-	auto pAss = POperator(new AluAssnOperator(m_oper));
+	auto pAss = std::make_shared<AluAssnOperator>(m_oper);
 	ALUPerformAssignment(m_key, pAss, m_RPNExpression, &g_counters);
 	return ApplyRet__Continue;
 }

@@ -131,7 +131,7 @@ PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 		MYTHROW(err);
 	}
 
-	return PSubstringPart(new SubstringPart(pSub, pBig));
+	return std::make_shared<SubstringPart>(pSub, pBig);
 }
 
 
@@ -166,39 +166,39 @@ PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index
 
 	switch (tokenType) {
 	case TokenListType__RANGE:
-		ret = PPart(new RegularRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast()));
+		ret = std::make_shared<RegularRangePart>(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast());
 		break;
 	case TokenListType__WORDRANGE:
-		ret = PPart(new WordRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _wordSep));
+		ret = std::make_shared<WordRangePart>(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _wordSep);
 		break;
 	case TokenListType__FIELDRANGE:
-		ret = PPart(new FieldRangePart(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _fieldSep));
+		ret = std::make_shared<FieldRangePart>(token.Range()->getSimpleFirst(), token.Range()->getSimpleLast(), _fieldSep);
 		break;
 	case TokenListType__LITERAL:
-		ret = PPart(new LiteralPart(token.Literal()));
+		ret = std::make_shared<LiteralPart>(token.Literal());
 		break;
 	case TokenListType__SUBSTRING:
 		ret = getSubstringPart(tokenVec, index);
 		break;
 	case TokenListType__NUMBER:
-		ret = PPart(new NumberPart());
+		ret = std::make_shared<NumberPart>();
 		break;
 	case TokenListType__TODCLOCK:
-		ret = PPart(new ClockPart(ClockType__Static));
+		ret = std::make_shared<ClockPart>(ClockType__Static);
 		break;
 	case TokenListType__DTODCLOCK:
-		ret = PPart(new ClockPart(ClockType__Dynamic));
+		ret = std::make_shared<ClockPart>(ClockType__Dynamic);
 		break;
 	case TokenListType__TIMEDIFF:
-		ret = PPart(new ClockPart(ClockType__Diff));
+		ret = std::make_shared<ClockPart>(ClockType__Diff);
 		break;
 	case TokenListType__ID:
-		ret = PPart(new IDPart(token.Literal()));
+		ret = std::make_shared<IDPart>(token.Literal());
 		break;
 	case TokenListType__PRINT:
 	{
 		try {
-			ret = PPart(new ExpressionPart(token.Literal()));
+			ret = std::make_shared<ExpressionPart>(token.Literal());
 		} catch(const SpecsException& e) {
 			std::string err = "Expression in "+ token.HelpIdentify()
 					+ ":\n" + e.what(true /* concise */);

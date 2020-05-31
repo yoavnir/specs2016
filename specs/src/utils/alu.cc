@@ -1037,7 +1037,7 @@ static bool isFirstCharInIdentifier(char c) {
 	return isLetter(c) || c=='_';
 }
 
-#define X(nm,st) if (s==st) return PUnit(new AluUnitUnaryOperator(s));
+#define X(nm,st) if (s==st) return std::make_shared<AluUnitUnaryOperator>(s);
 static PUnit getUnaryOperator(std::string& s)
 {
 	ALU_UOP_LIST
@@ -1045,7 +1045,7 @@ static PUnit getUnaryOperator(std::string& s)
 }
 #undef X
 
-#define X(nm,st,prio) if (s==st) return PUnit(new AluBinaryOperator(s));
+#define X(nm,st,prio) if (s==st) return std::make_shared<AluBinaryOperator>(s);
 static PUnit getBinaryOperator(std::string& s)
 {
 	ALU_BOP_LIST
@@ -1055,7 +1055,7 @@ static PUnit getBinaryOperator(std::string& s)
 
 static PUnit getAssnOperator(std::string& s)
 {
-#define X(nm,st) if (s==st) return PUnit(new AluAssnOperator(s));
+#define X(nm,st) if (s==st) return std::make_shared<AluAssnOperator>(s);
 	ALU_ASSOP_LIST
 #undef X
 	return NULL;
@@ -1166,7 +1166,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				tokEnd++;
 			}
 			std::string num(c,(tokEnd-c));
-			pUnit = PUnit(new AluUnitLiteral(num,true));
+			pUnit = std::make_shared<AluUnitLiteral>(num,true);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
@@ -1187,7 +1187,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				}
 				tok += *tokEnd++;
 			}
-			pUnit = PUnit(new AluUnitLiteral(tok));
+			pUnit = std::make_shared<AluUnitLiteral>(tok);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd+1;
@@ -1206,7 +1206,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				std::string err = "Key '" + key + "' not found in expression.";
 				MYTHROW(err);
 			}
-			pUnit = PUnit(new AluUnitLiteral(configSpecLiteralGet(key)));
+			pUnit = std::make_shared<AluUnitLiteral>(configSpecLiteralGet(key));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
@@ -1217,7 +1217,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		// A special string @@ representing the entire input record
 		if (*c=='@' && c[1]=='@')  {
 			c+=2;
-			pUnit = PUnit(new AluInputRecord());
+			pUnit = std::make_shared<AluInputRecord>();
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			mayBeStart = false;
@@ -1234,7 +1234,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				std::string err = "Invalid counter <#" + num + *tokEnd + "> in expression";
 				MYTHROW(err);
 			}
-			pUnit = PUnit(new AluUnitCounter(std::stoi(num)));
+			pUnit = std::make_shared<AluUnitCounter>(std::stoi(num));
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
@@ -1247,10 +1247,10 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			char *tokEnd = c+1;
 			while (tokEnd<cEnd && (isLetter(*tokEnd) || isDigit(*tokEnd) || *tokEnd=='_')) tokEnd++;
 			if (tokEnd == c+1) {
-				pUnit = PUnit(new AluUnitFieldIdentifier(*c));
+				pUnit = std::make_shared<AluUnitFieldIdentifier>(*c);
 			} else {
 				std::string identifier(c,(tokEnd-c));
-				pUnit = PUnit(new AluFunction(identifier));
+				pUnit = std::make_shared<AluFunction>(identifier);
 			}
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
@@ -1261,7 +1261,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 
 		// parenthesis
 		if (*c=='(') {
-			pUnit = PUnit(new AluOtherToken(UT_OpenParenthesis));
+			pUnit = std::make_shared<AluOtherToken>(UT_OpenParenthesis);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
@@ -1270,7 +1270,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 
 		if (*c==')') {
-			pUnit = PUnit(new AluOtherToken(UT_ClosingParenthesis));
+			pUnit = std::make_shared<AluOtherToken>(UT_ClosingParenthesis);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
@@ -1279,7 +1279,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 
 		if (*c==',') {
-			pUnit = PUnit(new AluOtherToken(UT_Comma));
+			pUnit = std::make_shared<AluOtherToken>(UT_Comma);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c++;
@@ -1321,7 +1321,7 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 				MYTHROW(err);
 			}
 			std::string sLiteral(c+1, (tokEnd-c-1));
-			pUnit = PUnit(new AluUnitLiteral(sLiteral));
+			pUnit = std::make_shared<AluUnitLiteral>(sLiteral);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
@@ -1605,7 +1605,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 				operatorStack.pop();
 			}
 			if (bExpectNullArgument) {
-				dest.push_back(PUnit(new AluUnitNull));
+				dest.push_back(std::make_shared<AluUnitNull>());
 				availableOperands++;
 			}
 			bExpectNullArgument = true;
@@ -1684,7 +1684,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 						MYTHROW(err);
 					}
 					while (availableOperands < (fstack.availBefore() + fstack.argc())) {
-						dest.push_back(PUnit(new AluUnitNull));
+						dest.push_back(std::make_shared<AluUnitNull>());
 						availableOperands++;
 					}
 					availableOperands = availableOperands + 1 - operatorStack.top()->countOperands();

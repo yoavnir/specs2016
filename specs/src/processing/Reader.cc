@@ -117,7 +117,7 @@ StandardReader::StandardReader(std::istream* f) {
 }
 
 StandardReader::StandardReader(std::string& fn) {
-	auto pInputFile = std::shared_ptr<std::ifstream>(new std::ifstream(fn));
+	auto pInputFile = std::make_shared<std::ifstream>(fn);
 	m_File = pInputFile;
 	if (!pInputFile->is_open()) {
 		std::string err = "File not found: " + fn;
@@ -289,7 +289,7 @@ void multiReader::addStream(unsigned char idx, std::istream* f)
 	idx--;  // Set to C-style index
 	MYASSERT_WITH_MSG(NULL==readerArray[idx], "Input stream is already defined");
 
-	readerArray[idx] = PReader(new StandardReader(f));
+	readerArray[idx] = std::make_shared<StandardReader>(f);
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
 	readerCounter++;
 }
@@ -300,7 +300,7 @@ void multiReader::addStream(unsigned char idx, std::string& fn)
 	idx--;  // Set to C-style index
 	MYASSERT_WITH_MSG(NULL==readerArray[idx], "Input stream is already defined");
 
-	readerArray[idx] = PReader(new StandardReader(fn));
+	readerArray[idx] = std::make_shared<StandardReader>(fn);
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
 	readerCounter++;
 }

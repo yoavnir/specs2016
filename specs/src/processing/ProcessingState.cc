@@ -380,7 +380,7 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 	// Count the statistics of this field value.
 	if (ALUFUNC_STATISTICAL & AluFunction::functionTypes()) {
 		if (m_fiStatistics[id]==NULL) {
-			m_fiStatistics[id] = PAluValueStats(new AluValueStats(id));
+			m_fiStatistics[id] = std::make_shared<AluValueStats>(id);
 		} else {
 			m_fiStatistics[id]->AddValue(id);
 		}
@@ -389,7 +389,7 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 	if (ALUFUNC_FREQUENCY & AluFunction::functionTypes()) {
 		std::string s(ps->data(), ps->length());
 		if (m_freqMaps[id]==NULL) {
-			m_freqMaps[id] = PFrequencyMap(new frequencyMap());
+			m_freqMaps[id] = std::make_shared<frequencyMap>();
 		}
 
 		m_freqMaps[id]->note(s);
@@ -437,7 +437,7 @@ PAluValueStats ProcessingState::valueStatistics(char id)
 PFrequencyMap ProcessingState::getFrequencyMap(char id)
 {
 	if (m_freqMaps[id]==NULL) {
-		m_freqMaps[id] = PFrequencyMap(new frequencyMap());
+		m_freqMaps[id] = std::make_shared<frequencyMap>();
 	}
 	return m_freqMaps[id];
 }

@@ -117,7 +117,7 @@ PSpecString SpecString::newString()
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return PSpecString(new StdSpecString());
+		return std::make_shared<StdSpecString>();
 	}
 }
 
@@ -127,7 +127,7 @@ PSpecString SpecString::newString(const char* pstrz)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return PSpecString(new StdSpecString(pstrz));
+		return std::make_shared<StdSpecString>(pstrz);
 	}
 }
 
@@ -137,7 +137,7 @@ PSpecString SpecString::newString(const char* pstrz, size_t len)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return PSpecString(new StdSpecString(pstrz, len));
+		return std::make_shared<StdSpecString>(pstrz, len);
 	}
 }
 
@@ -149,7 +149,7 @@ PSpecString SpecString::newString(PSpecString pss, size_t start, size_t len)
 	} else {
 		PStdSpecString psss = std::dynamic_pointer_cast<StdSpecString>(pss);
 		MYASSERT(psss!=NULL);
-		return PSpecString(new StdSpecString(psss->data() + start, len));
+		return std::make_shared<StdSpecString>(psss->data() + start, len);
 	}
 }
 
@@ -159,7 +159,7 @@ PSpecString SpecString::newString(std::string& st)
 		MYTHROW("UTF-8 not supported yet");
 		return NULL; // appease the compiler warning
 	} else {
-		return PSpecString(new StdSpecString(st.c_str(), st.length()));
+		return std::make_shared<StdSpecString>(st.c_str(), st.length());
 	}
 }
 
@@ -171,6 +171,6 @@ PSpecString SpecStringCopy(PSpecString pss)
 	} else {
 		PStdSpecString psss = std::dynamic_pointer_cast<StdSpecString>(pss);
 		MYASSERT(psss!=NULL);
-		return PSpecString(new StdSpecString(*psss));
+		return std::make_shared<StdSpecString>(*psss);
 	}
 }

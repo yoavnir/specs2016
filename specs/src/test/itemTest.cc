@@ -100,12 +100,12 @@ int main(int argc, char** argv)
 
 	std::cout << ig.Debug();
 
-	pRd = PTestReader(new TestReader(100));
+	pRd = std::make_shared<TestReader>(100);
 	for (size_t i=0; i<sizeof(Jabberwocky)/sizeof(StdSpecString); i++) {
 		pRd->InsertString(PSpecString(&Jabberwocky[i]));
 	}
 
-	pWr = PSimpleWriter(new SimpleWriter);
+	pWr = std::make_shared<SimpleWriter>();
 
 	pRd->Begin();
 	pWr->Begin();

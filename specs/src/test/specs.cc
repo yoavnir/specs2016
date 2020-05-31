@@ -251,20 +251,20 @@ int main (int argc, char** argv)
 	std::clock_t clockAtStart = clock();
 
 	if (g_outputFile.empty()) {
-		pWrtrs[1] = PSimpleWriter(new SimpleWriter());
+		pWrtrs[1] = std::make_shared<SimpleWriter>();
 	} else {
-		pWrtrs[1] = PSimpleWriter(new SimpleWriter(g_outputFile));
+		pWrtrs[1] = std::make_shared<SimpleWriter>(g_outputFile);
 	}
 
-	pWrtrs[0] = PSimpleWriter(new SimpleWriter(_stderr));
+	pWrtrs[0] = std::make_shared<SimpleWriter>(_stderr);
 
-	if (g_outputStream2 != "") pWrtrs[2] = PSimpleWriter(new SimpleWriter(g_outputStream2));
-	if (g_outputStream3 != "") pWrtrs[3] = PSimpleWriter(new SimpleWriter(g_outputStream3));
-	if (g_outputStream4 != "") pWrtrs[4] = PSimpleWriter(new SimpleWriter(g_outputStream4));
-	if (g_outputStream5 != "") pWrtrs[5] = PSimpleWriter(new SimpleWriter(g_outputStream5));
-	if (g_outputStream6 != "") pWrtrs[6] = PSimpleWriter(new SimpleWriter(g_outputStream6));
-	if (g_outputStream7 != "") pWrtrs[7] = PSimpleWriter(new SimpleWriter(g_outputStream7));
-	if (g_outputStream8 != "") pWrtrs[8] = PSimpleWriter(new SimpleWriter(g_outputStream8));
+	if (g_outputStream2 != "") pWrtrs[2] = std::make_shared<SimpleWriter>(g_outputStream2);
+	if (g_outputStream3 != "") pWrtrs[3] = std::make_shared<SimpleWriter>(g_outputStream3);
+	if (g_outputStream4 != "") pWrtrs[4] = std::make_shared<SimpleWriter>(g_outputStream4);
+	if (g_outputStream5 != "") pWrtrs[5] = std::make_shared<SimpleWriter>(g_outputStream5);
+	if (g_outputStream6 != "") pWrtrs[6] = std::make_shared<SimpleWriter>(g_outputStream6);
+	if (g_outputStream7 != "") pWrtrs[7] = std::make_shared<SimpleWriter>(g_outputStream7);
+	if (g_outputStream8 != "") pWrtrs[8] = std::make_shared<SimpleWriter>(g_outputStream8);
 
 	for (int i=0; i <= MAX_INPUT_STREAMS ; i++) {
 		if (pWrtrs[i]) pWrtrs[i]->Begin();
@@ -274,9 +274,9 @@ int main (int argc, char** argv)
 
 	if (ig.readsLines() || g_bForceFileRead) {
 		if (g_inputFile.empty()) {
-			pRd = PReader(new StandardReader());
+			pRd = std::make_shared<StandardReader>();
 		} else {
-			pRd = PReader(new StandardReader(g_inputFile));
+			pRd = std::make_shared<StandardReader>(g_inputFile);
 		}
 
 		if (g_recfm=="F") {
@@ -290,7 +290,7 @@ int main (int argc, char** argv)
 		}
 
 		if (anyNonPrimaryInputStreamDefined()) {
-			PMultiReader pmRd = PMultiReader(new multiReader(pRd));
+			PMultiReader pmRd = std::make_shared<multiReader>(pRd);
 			if (g_inputStream2 != "") pmRd->addStream(2, g_inputStream2);
 			if (g_inputStream3 != "") pmRd->addStream(3, g_inputStream3);
 			if (g_inputStream4 != "") pmRd->addStream(4, g_inputStream4);

@@ -104,7 +104,7 @@ PRegEx regexCalculator(std::string& s)
 	PRegEx pRet = g_RegexCacheDisabled ? NULL : g_regexCache.get(s);
 	if (!pRet) {
 		try {
-			pRet = PRegEx(new std::regex(s,g_regexType));
+			pRet = std::make_shared<std::regex>(s,g_regexType);
 		} catch (std::regex_error& e) {
 			std::string err = "Invalid regular expression <" + s + "> : " + e.what();
 			MYTHROW(err);
@@ -166,7 +166,7 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 			}
 			free(st);
 
-			pFlags = (std::shared_ptr<std::regex_constants::match_flag_type>)(new std::regex_constants::match_flag_type(ret));
+			pFlags = std::make_shared<std::regex_constants::match_flag_type>(ret);
 			g_matchFlagsCache.set(str,pFlags);
 			matchFlagsCacheSets++;
 		}

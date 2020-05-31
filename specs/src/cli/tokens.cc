@@ -177,7 +177,7 @@ static PTokenFieldRange parseAsSingleNumber(std::string s)
 	if (l==0 || s!=std::to_string(l)) {
 		return NULL;
 	}
-	auto pRet = PTokenFieldRangeSimple(new TokenFieldRangeSimple(l,l));
+	auto pRet = std::make_shared<TokenFieldRangeSimple>(l,l);
 	pRet->setSingleNumber();
 	return pRet;
 }
@@ -218,7 +218,7 @@ static PTokenFieldRange parseAsFromToRange(std::string s)
 		}
 	}
 
-	return PTokenFieldRange(new TokenFieldRangeSimple(_from, _to));
+	return std::make_shared<TokenFieldRangeSimple>(_from, _to);
 }
 
 static PTokenFieldRange parseAsFromLenRange(std::string s)
@@ -247,7 +247,7 @@ static PTokenFieldRange parseAsFromLenRange(std::string s)
 		_to++;  // skipping the zero
 	}
 
-	return PTokenFieldRange(new TokenFieldRangeSimple(_from, _to));
+	return std::make_shared<TokenFieldRangeSimple>(_from, _to);
 }
 
 static PTokenFieldRange parseAsAnySimpleRangeSpec(std::string s)
@@ -416,7 +416,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 			try {
 				int lFieldLength = std::stoi(fieldLength);
 				if (lFieldLength > 0 && std::to_string(lFieldLength)==fieldLength) {
-					pSimpleRange = PTokenFieldRangeSimple(new TokenFieldRangeSimple(1,lFieldLength));
+					pSimpleRange = std::make_shared<TokenFieldRangeSimple>(1,lFieldLength);
 				} else {
 					goto CONT1;
 				}

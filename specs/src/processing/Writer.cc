@@ -64,7 +64,7 @@ SimpleWriter::SimpleWriter(const std::string& fn) {
 		m_File = std::shared_ptr<std::ostream>(&std::cerr);
 		m_NeedToClose = false;
 	} else {
-		auto pOutFile = std::shared_ptr<std::ofstream>(new std::ofstream(fn));
+		auto pOutFile = std::make_shared<std::ofstream>(fn);
 		m_File = pOutFile;
 		if (!pOutFile->is_open()) {
 			std::string err = "Could not open output file " + fn;

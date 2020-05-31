@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 	std::cout << "First, let's add 25 entries to the cache\n";
 
 	for (int i=0; i<25; i++) {
-		auto ps = PString(new std::string(std::to_string(i)));
+		auto ps = std::make_shared<std::string>(std::to_string(i));
 		cache.set(i, ps);
 	}
 
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 
 	std::cout << "Now let's set a new value. It should replace 10\n";
 	int i=30;
-	cache.set(i, PString(new std::string("30")));
+	cache.set(i, std::make_shared<std::string>("30"));
 
 	cache.Debug();
 
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 
 	std::cout << "Add a whole bunch of numbers. No other should remain\n";
 	for (int i=100; i<=200; i++) {
-		auto ps = PString(new std::string(std::to_string(i)));
+		auto ps = std::make_shared<std::string>(std::to_string(i));
 		cache.set(i, ps);
 	}
 
