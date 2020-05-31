@@ -322,14 +322,10 @@ PValue AluFunc_tobine(PValue op, PValue _bits)
 PValue AluFunc_tobin(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
-	static ALUValue* pbit8 = new  ALUValue(ALUInt(8));
-	static ALUValue* pbit16 = new ALUValue(ALUInt(16));
-	static ALUValue* pbit32 = new ALUValue(ALUInt(32));
-	static ALUValue* pbit64 = new ALUValue(ALUInt(64));
-	static PValue ppbit8(pbit8);
-	static PValue ppbit16(pbit16);
-	static PValue ppbit32(pbit32);
-	static PValue ppbit64(pbit64);
+	static PValue ppbit8 = std::make_shared<ALUValue>(ALUInt(8));
+	static PValue ppbit16 = std::make_shared<ALUValue>(ALUInt(16));
+	static PValue ppbit32 = std::make_shared<ALUValue>(ALUInt(32));
+	static PValue ppbit64 = std::make_shared<ALUValue>(ALUInt(64));
 	ALUInt value = op->getInt();
 
 	if (0 == (value >> 8)) return AluFunc_tobine(op,ppbit8);
@@ -1520,7 +1516,7 @@ PValue AluFunc_bitand(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char *pBuff = new unsigned char[minlen];
+	unsigned char pBuff[minlen];
 
 	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
 	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
@@ -1530,8 +1526,6 @@ PValue AluFunc_bitand(PValue pS1, PValue pS2)
 	}
 
 	PValue pRet = mkValue2((const char*)(pBuff), minlen);
-
-	delete [] pBuff;
 
 	return pRet;
 }
@@ -1545,7 +1539,7 @@ PValue AluFunc_bitor(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char *pBuff = new unsigned char[minlen];
+	unsigned char pBuff[minlen];
 
 	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
 	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
@@ -1555,8 +1549,6 @@ PValue AluFunc_bitor(PValue pS1, PValue pS2)
 	}
 
 	PValue pRet = mkValue2((const char*)(pBuff), minlen);
-
-	delete [] pBuff;
 
 	return pRet;
 }
@@ -1570,7 +1562,7 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char *pBuff = new unsigned char[minlen];
+	unsigned char pBuff[minlen];
 
 	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
 	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
@@ -1580,8 +1572,6 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 	}
 
 	PValue pRet = mkValue2((const char*)(pBuff), minlen);
-
-	delete [] pBuff;
 
 	return pRet;
 }
