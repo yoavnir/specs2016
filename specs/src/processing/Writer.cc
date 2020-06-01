@@ -54,15 +54,13 @@ bool Writer::Done()
 }
 
 SimpleWriter::SimpleWriter() {
-	m_File = std::shared_ptr<std::ostream>(&std::cout);
-	m_NeedToClose = false;
+	m_WriterType = writerType__COUT;
 }
 
 SimpleWriter::SimpleWriter(const std::string& fn) {
 	static const std::string _stderr = WRITER_STDERR;
 	if (fn == _stderr) {
-		m_File = std::shared_ptr<std::ostream>(&std::cerr);
-		m_NeedToClose = false;
+		m_WriterType = writerType__CERR;
 	} else {
 		auto pOutFile = std::make_shared<std::ofstream>(fn);
 		m_File = pOutFile;
@@ -70,12 +68,12 @@ SimpleWriter::SimpleWriter(const std::string& fn) {
 			std::string err = "Could not open output file " + fn;
 			MYTHROW(err);
 		}
-		m_NeedToClose = true;
+		m_WriterType = writerType__FILE;
 	}
 }
 
 SimpleWriter::~SimpleWriter() {
-	if (m_NeedToClose) {
+	if (writerType__FILE == m_WriterType) {
 		std::shared_ptr<std::ofstream> pOutFile = std::dynamic_pointer_cast<std::ofstream>(m_File);
 		if (pOutFile) pOutFile->clear();
 		m_File = NULL;
@@ -89,7 +87,16 @@ void SimpleWriter::WriteOut()
 	bool res = m_queue.wait_and_pop(ps);
 	if (res) {
 		m_Timer.changeClass(timeClassIO);
-		*m_File << *ps << std::endl;
+		switch (m_WriterType) {
+			case writerType__COUT:
+				std::cout << *ps << '\n';
+				break;
+			case writerType__CERR:
+				std::cerr << *ps << '\n';
+				break;
+			case writerType__FILE:
+				*m_File << *ps << '\n';
+		}
 		m_Timer.changeClass(timeClassProcessing);
 		m_countWritten++;
 	} else {
