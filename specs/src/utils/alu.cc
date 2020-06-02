@@ -1118,6 +1118,12 @@ bool expressionIsAssignment(AluVec& vec)
 			UT_AssignmentOp == vec[1]->type());
 }
 
+static char nextNonBlankChar(char* pc)
+{
+	while (*pc==' ') pc++;
+	return *pc;
+}
+
 bool parseAluExpression(std::string& s, AluVec& vec)
 {
 	char* c = (char*)s.c_str();
@@ -1245,9 +1251,12 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			while (tokEnd<cEnd && (isLetter(*tokEnd) || isDigit(*tokEnd) || *tokEnd=='_')) tokEnd++;
 			if (tokEnd == c+1) {
 				pUnit = std::make_shared<AluUnitFieldIdentifier>(*c);
-			} else {
+			} else if (nextNonBlankChar(tokEnd)=='(') {
 				std::string identifier(c,(tokEnd-c));
 				pUnit = std::make_shared<AluFunction>(identifier);
+			} else {
+				std::string lit(c,(tokEnd-c));
+				pUnit = std::make_shared<AluUnitLiteral>(lit);
 			}
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();

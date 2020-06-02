@@ -647,6 +647,10 @@ int runALUUnitTests3(unsigned int onlyTest)
 
 	VERIFY_EXPR("length(5)", "FUNC(length);(;Number(5);)");
 
+	VERIFY_EXPR("length('hello')", "FUNC(length);(;Literal(hello);)");
+
+	VERIFY_EXPR("length(hello)", "FUNC(length);(;Literal(hello);)"); // Issue #141 - arguments without quotes
+
 	// TODO: Yeah, a whole bunch of more expressions
 
 	std::cout << "\nAssignment Statements\n=====================\n\n";
@@ -735,6 +739,7 @@ int runALUUnitTests5(unsigned int onlyTest)
 	VERIFY_EXPR_RES("length(5)", "1");
 	VERIFY_EXPR_RES("length(512)", "3");
 	VERIFY_EXPR_RES("length('hello')", "5");
+	VERIFY_EXPR_RES("length(hello)", "5");
 
 	VERIFY_EXPR_RES("sqrt(4)||' by '||sqrt(16)", "2 by 4");
 	return 0;
