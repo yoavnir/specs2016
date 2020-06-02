@@ -914,9 +914,6 @@ AluFunction::AluFunction(std::string& _s)
 				std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
 				exit(0);
 			}
-#ifdef DEBUG
-			p_gExternalFunctions->Debug();
-#endif
 		}
 		MYASSERT(p_gExternalFunctions->IsInitialized());
 		m_pExternalFunc = p_gExternalFunctions->GetFunctionByName(_s);
