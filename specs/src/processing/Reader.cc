@@ -95,7 +95,6 @@ void Reader::Begin() {
 
 
 StandardReader::StandardReader() {
-	m_File = std::shared_ptr<std::istream>(&std::cin);
 	m_NeedToClose = false;
 	m_EOF = false;
 	m_buffer = NULL;
@@ -161,20 +160,30 @@ bool StandardReader::endOfSource() {
 
 PSpecString StandardReader::getNextRecord() {
 	std::string line;
+	bool ok;
 	switch (m_recfm) {
 	case RECFM_FIXED_DELIMITED:
 	case RECFM_DELIMITED: {
 		if (0 != m_lineDelimiter) {
 			m_Timer.changeClass(timeClassIO);
-			bool ok = std::getline(*m_File, line, m_lineDelimiter) ? true : false;
+			if (m_NeedToClose) {
+				ok = std::getline(*m_File, line, m_lineDelimiter) ? true : false;
+			} else {
+				ok = std::getline(std::cin, line, m_lineDelimiter) ? true : false;
+			}
 			m_Timer.changeClass(timeClassProcessing);
 			if (!ok) {
 				m_EOF = true;
 				return NULL;
 			}
 		} else {
+			bool ok;
 			m_Timer.changeClass(timeClassIO);
-			bool ok = std::getline(*m_File, line) ? true : false;
+			if (m_NeedToClose) {
+				ok = std::getline(*m_File, line) ? true : false;
+			} else {
+				ok = std::getline(std::cin, line) ? true : false;
+			}
 			m_Timer.changeClass(timeClassProcessing);
 			if (!ok) {
 				m_EOF = true;
