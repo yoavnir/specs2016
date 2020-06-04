@@ -301,6 +301,35 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 	}
 
+	// Fill in missing trailing predicates
+	bool bAddedMissingPredicate;
+
+	do {
+		bAddedMissingPredicate = false;
+		if (predicateStackIdx > 0) {
+			switch (predicateStack[predicateStackIdx-1].pred->pred()) {
+				case ConditionItem::PRED_IF:
+					predicateStackIdx--;
+					addItem(std::make_shared<ConditionItem>(ConditionItem::PRED_ENDIF));
+					bAddedMissingPredicate = true;
+#ifdef DEBUG
+					if (g_bVerbose) std::cerr << "specs: Adding an ENDIF\n";
+#endif
+					break;
+				case ConditionItem::PRED_WHILE:
+					predicateStackIdx--;
+					addItem(std::make_shared<ConditionItem>(ConditionItem::PRED_DONE));
+					bAddedMissingPredicate = true;
+#ifdef DEBUG
+					if (g_bVerbose) std::cerr << "specs: Adding a DONE\n";
+#endif
+					break;
+				default:
+					break;
+			}
+		}
+	} while (bAddedMissingPredicate);
+
 	if (predicateStackIdx > 0) {
 		predicateStackIdx--;
 		std::string err = "Predicate " + predicateStack[predicateStackIdx].pred->Debug() +
