@@ -493,13 +493,13 @@ int main(int argc, char** argv)
 	// Issue #34
 	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1' done", "4...."); // TEST #125
 	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' /./ n set '#0-=1' done", "Missing DO after WHILE at index 6 with condition \"#0>0\""); // TEST #126
-	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1'", "Predicate WHILE (#0>0) at index 6 is not terminated"); // TEST #127
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1'", "4...."); // TEST #127 - meaningless after issue #145
 	VERIFY("/4/ 1 done","DONE without WHILE at index 3"); // TEST #128
 	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1' endif", "Mismatched predicates: ENDIF at index 13 does not match WHILE (#0>0) at index 6"); // TEST #129
 	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw endif", "4 (natural)"); // TEST #130
 	VERIFY("a: /4/ 1 if 'a>=0' /(natural)/ nw else /(non-natural)/ nw endif", "Missing THEN after IF at index 4 with condition \"a>=0\""); // TEST #131
-	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "Predicate IF (a>=0) at index 4 is not terminated"); // TEST #132
-	VERIFY("a: /-4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "Predicate IF (a>=0) at index 4 is not terminated"); // TEST #133
+	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "4 (natural)"); // TEST #132 - meaningless after issue #145
+	VERIFY("a: /-4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "-4 (non-natural)"); // TEST #133 - meaningless after issue #145
 	VERIFY("/4/ 1 endif","ENDIF without IF at index 3"); // TEST #134
 	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw done", "Mismatched predicates: DONE at index 12 does not match IF (a>=0) at index 4"); // TEST #135
 
