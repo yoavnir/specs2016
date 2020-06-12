@@ -235,6 +235,18 @@ Followed by an assignment operation, SET implements this and assigns a value to 
 Causes the specification to stop and go on to the next record. If any output has been made, it is dumped to output.  This is typically used in an 
 .B IF
 block.
+.IP "SKIP-WHILE and SKIP-UNTIL" 3
+Either of these statements causes the specification to skip input lines
+.B while
+a condition is true, or
+.B until
+if becomes false. More precisely, the specification stops and goes to the next record, similar to the 
+.B CONTINUE
+unit, but once the condition for passing occurs once, the condition is never evaluated again and future records are passed unchecked. It usually only makes sense to place 
+.B SKIP-WHILE
+and
+.B SKIP-UNTIL
+units at the beginning of the specification.
 
 .SS "MainOptions"
 These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.

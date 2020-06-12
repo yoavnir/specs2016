@@ -10,6 +10,11 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+1-Jul-2020: Version 0.7 Alpha is here
+=====================================
+New features:
+* Conditional skip
+
 1-Apr-2020: Version 0.6 GA is here 
 ----------------------------------
 New features:

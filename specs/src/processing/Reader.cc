@@ -133,7 +133,7 @@ StandardReader::~StandardReader() {
 	if (m_NeedToClose) {
 		auto pInputFile = std::dynamic_pointer_cast<std::ifstream>(m_File);
 		if (pInputFile) pInputFile->close();
-		m_File = NULL;
+		// m_File = NULL;
 	}
 	if (m_buffer) {
 		free(m_buffer);

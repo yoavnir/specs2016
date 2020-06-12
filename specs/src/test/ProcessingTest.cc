@@ -553,7 +553,16 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n4\n7");                             // TEST #149
 
 	spec = "printonly a keep a: w1 . w2 nw set '#0+=a' eof print '#0' 1";
-	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n2 3 4\n7");                             // TEST #150
+	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n2 3 4\n7");                         // TEST #150
+
+	spec = "a: w1 . skip-until 'a>2' id a";
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "3\n4\n5\n6");                                 // TEST #151
+
+	spec = "a: w1 . skip-while 'a<3' id a";
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "3\n4\n5\n6");                                 // TEST #152
+
+	spec = "a: w1 . skip-until 'a>2' set '#0 += a' skip-until 'a>4' GT 1 EOF print #0";
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "GT\nGT\n18");                                // TEST #153. 3+4+5+6=18
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

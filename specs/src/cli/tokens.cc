@@ -350,6 +350,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(outstream, OUTSTREAM);
 	SIMPLETOKEN(stderr, STDERR);
 	SIMPLETOKEN(requires, REQUIRES);
+	SIMPLETOKEN(skip-while, SKIPWHILE);
+	SIMPLETOKEN(skip-until, SKIPUNTIL);
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&
@@ -680,6 +682,8 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__WHILE:
 		case TokenListType__ASSERT:
 		case TokenListType__ABEND:
+		case TokenListType__SKIPUNTIL:
+		case TokenListType__SKIPWHILE:
 		{
 			if (tok.Literal()=="") {
 				if (TokenListType__GROUPSTART == nextTok.Type()) {

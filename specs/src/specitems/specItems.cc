@@ -98,6 +98,22 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			}
 			break;
 		}
+		case TokenListType__SKIPUNTIL:
+		case TokenListType__SKIPWHILE:
+		{
+			try {
+				auto pItem = std::make_shared<SkipItem>(tokenVec[index].Literal(), (tokenVec[index].Type()==TokenListType__SKIPUNTIL));
+				index++;
+				addItem(pItem);
+			} catch(const SpecsException& e) {
+				if (g_bVerbose) {
+					std::cerr << "While parsing statement, got: " << e.what(true) << "\n";
+				}
+				std::string err = "Error in statement in "+ tokenVec[index].HelpIdentify();
+				MYTHROW(err);
+			}
+			break;
+		}
 		case TokenListType__IF:
 		case TokenListType__ELSEIF:
 		case TokenListType__WHILE:
@@ -420,13 +436,6 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			break;
 		case ApplyRet__SkipToNext:
 			processingContinue = false;
-//			ps = pRd->get(tmr, rdrCounter);
-//			if (!ps) {
-//				processingContinue = false;
-//			} else {
-//				pState.setString(ps, true);
-//				pState.setFirst();
-//			}
 			break;
 		case ApplyRet__Read:
 		case ApplyRet__ReadStop:
@@ -655,6 +664,42 @@ bool SetItem::readsLines()
 	return AluExpressionReadsLines(m_RPNExpression);
 }
 
+SkipItem::SkipItem(std::string& _statement, bool bIsUntil)
+{
+	m_rawExpression = _statement;
+	m_bIsUntil = bIsUntil;
+	m_bSatisfied = false;
+	AluVec expr;
+	MYASSERT(parseAluExpression(_statement, expr));
+	MYASSERT(convertAluVecToPostfix(expr, m_RPNExpression, true));
+}
+
+SkipItem::~SkipItem()
+{
+}
+
+ApplyRet SkipItem::apply(ProcessingState& pState, StringBuilder* pSB)
+{
+	if (m_bSatisfied) return ApplyRet__Continue;
+
+	PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+
+	// The condition below covers both cases:
+	//   - This is an UNTIL condition and the condition is TRUE
+	//   - This is a WHILE condition and the condition is FALSE
+	// In both cases, we're done skipping.
+	if (exprResult->getBool() == m_bIsUntil) {
+		m_bSatisfied = true;
+		return ApplyRet__Continue;
+	}
+
+	return ApplyRet__SkipToNext;
+}
+
+bool SkipItem::readsLines()
+{
+	return true;
+}
 
 ConditionItem::ConditionItem(std::string& _statement)
 {

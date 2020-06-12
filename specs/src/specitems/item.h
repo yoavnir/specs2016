@@ -256,6 +256,23 @@ private:
 
 typedef std::shared_ptr<SetItem> PSetItem;
 
+class SkipItem : public Item {
+public:
+	SkipItem(std::string& _statement, bool bIsUntil);
+	virtual ~SkipItem();
+	virtual std::string Debug()		{return m_rawExpression;}
+	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	virtual bool readsLines();
+	virtual bool forcesRunoutCycle() { return expressionForcesRunoutCycle(m_RPNExpression);}
+private:
+	std::string     m_rawExpression;
+	AluVec          m_RPNExpression;
+	bool            m_bIsUntil;
+	bool            m_bSatisfied;
+};
+
+typedef std::shared_ptr<SkipItem> PSkipItem;
+
 class ConditionItem : public Item {
 public:
 	enum predicate {

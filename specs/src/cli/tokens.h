@@ -75,6 +75,8 @@
 	X(OUTSTREAM,      false, true)  \
 	X(STDERR,         false, false) \
 	X(REQUIRES,       false, true)  \
+	X(SKIPUNTIL,      false, true)  \
+	X(SKIPWHILE,      false, true)  \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

@@ -30,7 +30,7 @@ Basic Functionality
   * [Conditional Execution](struct.md#conditional-execution)
   * [Loops](struct.md#loops)
   * [Run-In and Run-Out](struct.md#run-in-and-run-out)
-  * [Control Breaks](struct.md#control-breaks)
+  * [Control Breaks And Other Structures](struct.md#control-breaks)
 * [Input and Output Streams and Records](streams.md)
   * [>1 Output Record in Each Iteration](streams.md#1-output-record-in-each-iteration)
   * [>1 Input Record in Each Iteration](streams.md#1-input-record-in-each-iteration)
