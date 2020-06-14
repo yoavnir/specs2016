@@ -20,6 +20,21 @@ drwxr-xr-x  19 synp  staff     608 Mar  9 10:45 utils
 -rw-r--r--   1 synp  staff   11931 Feb 27 21:39 xxx
 """
 
+ls_out_hdr = \
+"""
+total 80
+-rw-r--r--   1 synp  staff   1941 Jun 12 20:58 Makefile
+-rw-r--r--   1 synp  staff   6291 Apr  7 14:25 Makefile.cached_depends
+-rw-r--r--   1 synp  staff   6347 Apr  7 14:25 Makefile.cached_depends_vs
+drwxr-xr-x   7 synp  staff    224 Jun 12 22:28 cli
+-rwxr-xr-x   1 synp  staff    170 Oct 22  2019 mkcache.sh
+drwxr-xr-x  20 synp  staff    640 Jun 12 22:28 processing
+-rw-r--r--   1 synp  staff  15146 Apr  7 14:25 setup.py
+drwxr-xr-x  10 synp  staff    320 Jun 12 22:28 specitems
+drwxr-xr-x  18 synp  staff    576 Jun 12 22:29 test
+drwxr-xr-x  32 synp  staff   1024 Jun 12 22:29 utils
+"""
+
 ls_out_inodes = \
 """
 8630081633 Makefile
@@ -174,3 +189,4 @@ mark 6    7    8    9
 2    3    4    mark 6
 1    2    3    4    5
 '''
+

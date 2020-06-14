@@ -713,4 +713,12 @@ s = 'w1 1 if "word(2)==\'mark\'" then continue endif w3 nw'
 i = input_samples.matrix_with_marks
 run_case(s,i,"breaking out with continue #2")
 
+s = 'skip-while "wordcount()<5" w9'
+i = input_samples.ls_out_hdr
+run_case(s,i,"Skipping a line one way")
+
+s = 'skip-until "wordcount()==9" w9'
+i = input_samples.ls_out_hdr
+run_case(s,i,"Skipping a line another way")
+
 
