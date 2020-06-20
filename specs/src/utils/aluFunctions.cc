@@ -2371,6 +2371,64 @@ PValue AluFunc_rest()
 	return mkValue(ALUInt(cols - g_PositionGetter->pos() + 1));
 }
 
+frequencyMap g_OccuranceMap;
+PValue AluFunc_countocc(PValue _pNeedle, PValue _pHaystack)
+{
+	ASSERT_NOT_ELIDED(_pNeedle, 1, needle);
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string needle = _pNeedle->getStr();
+
+	if (std::string::npos != pHaystack->find(needle)) {
+		g_OccuranceMap.note(needle);
+	}
+
+	return mkValue(g_OccuranceMap[needle]);
+}
+
+PValue AluFunc_countocc_get(PValue _pNeedle)
+{
+	ASSERT_NOT_ELIDED(_pNeedle, 1, needle);
+	std::string needle = _pNeedle->getStr();
+
+	return mkValue(g_OccuranceMap[needle]);
+}
+
+PValue AluFunc_countocc_dump(PValue pFormat, PValue pOrder, PValue pPct)
+{
+	std::string s;
+
+	fmap_format f;
+	s = ARG_STR_WITH_DEFAULT(pFormat, "txt");
+	if (s=="" || s=="txt" || s=="0") f = fmap_format__textualJustified;
+	else if (s=="lin") f = fmap_format__textualJustifiedLines;
+	else if (s=="csv") f = fmap_format__csv;
+	else if (s=="json") f = fmap_format__json;
+	else if (counterType__Int == pFormat->getDivinedType()) {
+		f = (fmap_format(pFormat->getInt()));
+	}
+	else {
+		std::string err = "Invalid frequency map dump format: " + s;
+		MYTHROW(err);
+	}
+
+	fmap_sortOrder o;
+	s = ARG_STR_WITH_DEFAULT(pOrder,"sa");
+	if (s=="" || s=="s" || s=="sa") o = fmap_sortOrder__byStringAscending;
+	else if (s=="sd") o = fmap_sortOrder__byStringDescending;
+	else if (s=="c" || s=="ca") o = fmap_sortOrder__byCountAscending;
+	else if (s=="cd") o = fmap_sortOrder__byCountDescending;
+	else {
+		std::string err = "Invalid frequency map sort order: " + s;
+		MYTHROW(err);
+	}
+
+	bool includePercentage = pPct ? pPct->getBool() : false;
+
+	return mkValue(g_OccuranceMap.dump(f, o, includePercentage));
+}
+
+
+// g_pStateQueryAgent->getFromTo(start, end);
 PValue AluFunc_defined(PValue pName)
 {
 	ASSERT_NOT_ELIDED(pName,1,confString);

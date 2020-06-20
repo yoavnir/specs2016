@@ -260,6 +260,12 @@
 			"() - Returns the column of the next character to print if a spec unit specifies the NEXT position.","") \
 	X(rest,           0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns the number of columns from the current position to the end of the line.","") \
+	X(countocc,       2, ALUFUNC_REGULAR,     true,   \
+			"(needle,[haystack]) - Returns the number of times since the start of this run that this particular needle has been found in haystacks.", "The counter is incremented if the needle is found in 'haystack'.\nIf 'haystack' is omitted, it defaults to the input line.") \
+	X(countocc_get,   1, ALUFUNC_REGULAR,     false,  \
+			"(needle) - Returns the number of times since the start of this run that this particular needle has been found in haystacks.", "") \
+	X(countocc_dump,  3, ALUFUNC_REGULAR,     false,  \
+			"(fmt,sOrder,showPct) - Returns a multi-line string with the dump of occurrences found through 'countocc'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\n'pct' adds a percentage column if true.") \
 	H(Misc Functions,20) \
 	X(conf,           2, ALUFUNC_REGULAR,     false,  \
 			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \

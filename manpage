@@ -1256,6 +1256,20 @@ a. Returns the count of occurences of s.
 Returns a string containing a dump of the frequency map for
 .B Field Identifier
 a.
+.IP "countocc(n,h)" 3
+Returns the number of matches for this particular 
+.B needle 
+so far.
+.IP "countocc_get(n)" 3
+Returns the number of matches for this particular 
+.B needle 
+so far. No match is made here.
+.IP "countocc_dump(format,sortOrder,showPct)" 3
+Returns a string containing a dump of the 
+.I frequency map 
+used in 
+.B countocc`.
+
 
 .SH Regular Expressions
 Regular expressions can be used with the 

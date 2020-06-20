@@ -182,6 +182,9 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `fmap_pct(a,s)` | Returns the percentage of *field identifier* `a` values that are equal to `s` |
 | `fmap_sample(a,s)` | Treats the value of the string in `s` as a new sample for *field identifier* `a`. Returns the count of occurences of `s`. This is useful mainly in tests. |
 | `fmap_dump(a,format,sortOrder,showPct)` | Returns a string containing a dump of the frequency map for *field identifier* `a`. |
+| `countocc(n,h)` | Returns the number of matches for this particular needle so far |
+| `countocc_get(n)` | Returns the number of matches for this particular needle so far. No match is made here |
+| `countocc_dump(format,sortOrder,showPct)` | Returns a string containing a dump of the frequency map used in `countocc` |
 
 The parameters for the `fmap_dump` functions are as follows:
 * *format*. Possible values:

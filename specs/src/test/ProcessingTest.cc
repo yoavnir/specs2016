@@ -174,6 +174,7 @@ int main(int argc, char** argv)
 	int onlyTest   = 0;
 
 	std::string spec;
+	std::string strm;
 
 	if (argc > 1) onlyTest = std::stoi(argv[1]);
 
@@ -563,6 +564,36 @@ int main(int argc, char** argv)
 
 	spec = "a: w1 . skip-until 'a>2' set '#0 += a' skip-until 'a>4' GT 1 EOF print #0";
 	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "GT\nGT\n18");                                // TEST #153. 3+4+5+6=18
+
+	spec =  "a: w1-* . "                  \
+			"set '#0:=countocc(hot)'  "   \
+			"set '#1:=countocc(cold)' "   \
+			"number 1 "                   \
+			"EOF "                        \
+			"print 'countocc_get(hot)' 1 'hot and' nw print 'countocc_get(cold)' nw cold nw write " \
+			"print 'countocc_dump(lin)'";
+	strm = "hot \n"                   \
+			"cold \n"                 \
+			"hot & cold \n"           \
+			"cold & hot \n"           \
+			"neither hot nor cold \n" \
+			"warm \n"                 \
+			"uppercase HOT and lowercase cold";
+	std::string res = \
+			"         1\n"  \
+			"         2\n"  \
+			"         3\n"  \
+			"         4\n"  \
+			"         5\n"  \
+			"         6\n"  \
+			"         7\n"  \
+			"4 hot and 5 cold " \
+			"+------+---+\n"  \
+			"| cold | 5 |\n"  \
+			"| hot  | 4 |\n"  \
+			"+------+---+\n";
+
+	VERIFY2(spec, strm.c_str(), res); // TEST #154
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
