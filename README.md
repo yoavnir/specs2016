@@ -12,9 +12,14 @@ News
 ====
 1-Jul-2020: Version 0.7 Alpha is here
 =====================================
-New features:
-* Conditional skip
-
+What's New:
+* Usability improvements:
+  * Allow eliding last output position (defaults to NEXTWORD)
+  * Allow eliding final ENDIF or DONE
+  * Passing unambiguous string arguments to functions without quotes
+* New builtin functions: *countocc*, *countocc_get*, *countocc_dump*
+* **SKIP-WHILE** and **SKIP-UNTIL**
+* Under-the-hood improvements
 1-Apr-2020: Version 0.6 GA is here 
 ----------------------------------
 New features:
