@@ -565,6 +565,12 @@ int main(int argc, char** argv)
 	spec = "a: w1 . skip-until 'a>2' set '#0 += a' skip-until 'a>4' GT 1 EOF print #0";
 	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "GT\nGT\n18");                                // TEST #153. 3+4+5+6=18
 
+	spec = "a: w1 EOF print 'sum(a)'";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n2\n3\n4\n10");                                  // TEST #154. Elide before EOF
+
+	spec = "a: w1 if 'a>2' then b: w1 EOF print 'sum(b)'";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n2\n3 3\n4 4\n7");                               // TEST #155. Elide endif and placement before EOF
+
 	spec =  "a: w1-* . "                  \
 			"set '#0:=countocc(hot)'  "   \
 			"set '#1:=countocc(cold)' "   \

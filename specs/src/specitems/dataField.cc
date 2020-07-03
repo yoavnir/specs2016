@@ -280,13 +280,16 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		m_outStart = LAST_POS_END;
 		m_tailLabel = token.Literal()[0];
 		break;
+	case TokenListType__IF:
 	case TokenListType__ENDIF:
 	case TokenListType__ELSE:
 	case TokenListType__ELSEIF:
+	case TokenListType__WHILE:
 	case TokenListType__DONE:
 	case TokenListType__WRITE:
 	case TokenListType__READ:
 	case TokenListType__READSTOP:
+	case TokenListType__EOF:
 		/* This is a control structure?  Assume NEXTWORD and re-use this one */
 		REUSE_CURRENT_TOKEN;
 	case TokenListType__DUMMY:
