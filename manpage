@@ -905,6 +905,22 @@ counting from the start or end of the string depending on the sign of n. Separat
 if specified and non-empty, or 
 .B tab
 otherwise.
+.IP "lvalue(str,sep)" 3
+Returns the left hand side of strings such as 
+.B pi=3.14159265. 
+For this input it will return the string 
+.B pi. 
+.I sep 
+defaults to the equals sign, but can be overridden for input strings such as 
+.B idnum:543
+.IP "rvalue(str,sep)" 3
+Returns the right hand side of strings such as 
+.B pi=3.14159265. 
+For this input it will return the string 
+.B 3.14159265. 
+.I sep 
+defaults to the equals sign, but can be overridden for input strings such as 
+.B idnum:543
 .IP "sword(str,n,sep)" 3
 Returns the n-th word of string
 .I str

@@ -92,6 +92,8 @@
 | `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack`. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `lastpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack`. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a tab character |
+| `lvalue(str,sep)` | This returns the left hand side of strings such as `pi=3.14159265`. For this input it will return the string `pi`. `sep` defaults to the equals sign, but can be overridden for input strings such as `idnum:543` |
+| `rvalue(str,sep)` | This returns the right hand side of strings such as `pi=3.14159265`. For this input it will return the string `3.1415925`. `sep` defaults to the equals sign, but can be overridden for input strings such as `idnum:543` |
 | `sword(str,n,sep)` | This is the equivalent of the `word` function from **CMS Pipelines**. It returns the n-th word, counting from the start of the string (positive *n*) or end of the string (negative *n*), where words are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a space character |
 
 ## matchFlags for regular expressions

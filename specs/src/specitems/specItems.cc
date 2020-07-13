@@ -274,7 +274,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				g_stop_stream = STOP_STREAM_ANY;
 			} else {
 				try {
-					g_stop_stream = std::stol(tokenVec[index].Literal());
+					g_stop_stream = std::stoi(tokenVec[index].Literal());
 				} catch (std::invalid_argument& e) {
 					std::string err = "STOP condition requires a parameter: ANYEOF, ALLEOF, or a valid input stream. Got <" +
 							tokenVec[index].Literal() + ">";

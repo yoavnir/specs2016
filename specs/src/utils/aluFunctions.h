@@ -129,6 +129,10 @@
 			"(haystack,needle,subst,[max]) - Returns 'haystack' where at most 'max' occurrences of 'needle' have been replaced by 'subst'","If 'max' is omitted, only 1 occurrence is replaced.\nIf 'max' is 'U', all occurrences are replaced.") \
 	X(sfield,         3, ALUFUNC_REGULAR,     false,  \
 			"(str,n,[sep]) - Returns the n-th field of 'str' if the field separator is 'sep'.","'sep' defaults to a tab.") \
+	X(lvalue,         2, ALUFUNC_REGULAR,     false,  \
+			"(str,[sep]) - Return the left hand part of 'str' separated by 'sep'.","'sep' defaults to an equals sign.") \
+	X(rvalue,         2, ALUFUNC_REGULAR,     false,  \
+			"(str,[sep]) - Return the right hand part of 'str' separated by 'sep'.","'sep' defaults to an equals sign.") \
 	X(sword,          3, ALUFUNC_REGULAR,     false,  \
 			"(str,n,[sep]) - Returns the n-th word of 'str' if the word separator is 'sep'.","'sep' defaults to a tab.") \
 	X(abbrev,         3, ALUFUNC_REGULAR,     false,  \
@@ -364,6 +368,11 @@ public:
 	virtual int     getFieldStart(int idx) = 0;
 	virtual int     getFieldEnd(int idx) = 0;
 	virtual PSpecString getFromTo(int from, int to) = 0;
+	// virtual int     getWordStart(ALUInt idx) { return getWordStart(int(idx)); }
+	// virtual int     getWordEnd(ALUInt idx) { return getWordEnd(int(idx)); }
+	// virtual int     getFieldStart(ALUInt idx) { return getFieldStart(int(idx)); }
+	// virtual int     getFieldEnd(ALUInt idx) { return getFieldEnd(int(idx)); }
+	// virtual PSpecString getFromTo(ALUInt from, ALUInt to) { return getFromTo(int(from), int(to)); }
 	virtual PSpecString currRecord() = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;

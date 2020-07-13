@@ -112,7 +112,7 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 	// take care of microseconds
 	if (fractionalSecondLength > 0) {
 		try {
-			int extraZeros = 6 - fractionalPart.length();
+			int extraZeros = 6 - int(fractionalPart.length());
 			fractionalSeconds = std::stoi(fractionalPart);
 			while (extraZeros > 0) {
 				fractionalSeconds *= 10;

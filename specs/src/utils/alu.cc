@@ -925,7 +925,7 @@ AluFunction::AluFunction(std::string& _s)
 		MYTHROW(err);
 	}
 	m_FuncName = _s;
-	m_ArgCount = m_pExternalFunc->GetArgCount();
+	m_ArgCount = (unsigned int)(m_pExternalFunc->GetArgCount());
 	m_reliesOnInput = false;
 	mp_Func = NULL;
 	m_flags |= ALUFUNC_EXTERNAL;

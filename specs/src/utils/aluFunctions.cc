@@ -1129,12 +1129,12 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 
 	std::set<freqMapPair, Comparator> setOfFreqs(map.begin(), map.end(), compFunctor);
 
-	unsigned int width = 0;
+	int width = 0;
 	ALUInt maxFreq = 0;
 	ALUInt sumFreq = 0;
 	for (auto& kv : setOfFreqs) {
-		if (kv.first.size() > width) {
-			width = kv.first.size();
+		if (int(kv.first.size()) > width) {
+			width = int(kv.first.size());
 		}
 		if (kv.second > maxFreq) {
 			maxFreq = kv.second;
@@ -1142,10 +1142,10 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 		sumFreq += kv.second;
 	}
 
-	unsigned int freqWidth = std::to_string(maxFreq).size();
+	int freqWidth = int(std::to_string(maxFreq).size());
 
 	if ((f > fmap_format__textualJustified) && (f < fmap_format__textualJustifiedLines)) {
-		width = (unsigned int)(f);
+		width = int(f);
 	}
 
 	std::ostringstream oss;
@@ -1412,6 +1412,38 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 			return mkValue2(pBegin+1, (pc-pBegin));
 		}
 	}
+}
+
+PValue AluFunc_lvalue(PValue pStr, PValue pSep)
+{
+	ASSERT_NOT_ELIDED(pStr,1,str);
+	PValue pRes;
+	static PValue pCount = std::make_shared<ALUValue>(ALUInt(1));
+	static PValue pDefaultSep = std::make_shared<ALUValue>("=");
+
+	if (pSep) {
+		pRes = AluFunc_sfield(pStr,pCount,pSep);
+	} else {
+		pRes = AluFunc_sfield(pStr,pCount,pDefaultSep);
+	}
+
+	return AluFunc_strip(pRes, NULL, NULL);
+}
+
+PValue AluFunc_rvalue(PValue pStr, PValue pSep)
+{
+	ASSERT_NOT_ELIDED(pStr,1,str);
+	PValue pRes;
+	static PValue pCount = std::make_shared<ALUValue>(ALUInt(2));
+	static PValue pDefaultSep = std::make_shared<ALUValue>("=");
+
+	if (pSep) {
+		pRes = AluFunc_sfield(pStr,pCount,pSep);
+	} else {
+		pRes = AluFunc_sfield(pStr,pCount,pDefaultSep);
+	}
+
+	return AluFunc_strip(pRes, NULL, NULL);
 }
 
 PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
@@ -1723,7 +1755,7 @@ static std::vector<std::string> breakIntoWords(std::string s)
 			if (!isspace(s[i])) {
 				inWhitespace = false;
 				wordIndex++;
-				wordStart = i;
+				wordStart = int(i);
 			}
 		} else {
 			if (isspace(s[i])) {
@@ -1802,8 +1834,8 @@ PValue AluFunc_find(PValue string, PValue phrase)
 	auto phraseWords = breakIntoWords(phrase->getStr());
 	auto stringWords = breakIntoWords(string->getStr());
 
-	int phraseWordCount = phraseWords.size();
-	int stringWordCount = stringWords.size();
+	int phraseWordCount = int(phraseWords.size());
+	int stringWordCount = int(stringWords.size());
 
 	for (int i=0 ; i < stringWordCount - phraseWordCount + 1 ; i++)
 	{
@@ -2037,6 +2069,10 @@ PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	auto str = pString->getStr();
+
+	if (0 == str.length()) {
+		return mkValue(str);
+	}
 
 	std::string sOpt = ARG_STR_WITH_DEFAULT(pOption, "B");
 	if (sOpt.length() != 1) {
@@ -2428,7 +2464,6 @@ PValue AluFunc_countocc_dump(PValue pFormat, PValue pOrder, PValue pPct)
 }
 
 
-// g_pStateQueryAgent->getFromTo(start, end);
 PValue AluFunc_defined(PValue pName)
 {
 	ASSERT_NOT_ELIDED(pName,1,confString);

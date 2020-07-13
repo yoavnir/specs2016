@@ -1079,6 +1079,21 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("sfield('\tWhere hae\tya been\t',-1,'')","");
 	VERIFY_EXPR_RES("sfield('\tWhere hae\tya been\t',-2,'')","ya been");
 
+	VERIFY_EXPR_RES("lvalue('pi=3.14')","pi");
+	VERIFY_EXPR_RES("lvalue('pi=3.14=tau/2')","pi");
+	VERIFY_EXPR_RES("lvalue('pi=3.14',':')","pi=3.14");
+	VERIFY_EXPR_RES("lvalue('pi:3.14',':')","pi");
+	VERIFY_EXPR_RES("lvalue('pi: 3.14',':')","pi");
+	VERIFY_EXPR_RES("lvalue('pi :3.14',':')","pi");
+
+	VERIFY_EXPR_RES("rvalue('pi=3.14')","3.14");
+	VERIFY_EXPR_RES("rvalue('pi=3.14=tau/2')","3.14");
+	VERIFY_EXPR_RES("rvalue('pi=3.14',':')","");
+	VERIFY_EXPR_RES("rvalue('pi:3.14',':')","3.14");
+	VERIFY_EXPR_RES("rvalue('pi: 3.14',':')","3.14");
+	VERIFY_EXPR_RES("rvalue('pi :3.14',':')","3.14");
+
+
 	VERIFY_EXPR_RES("sword('Where hae\tya been',0,'')","sword: Called with count equal to zero");
 	VERIFY_EXPR_RES("sword('Where  hae\tya been',1,'')","Where");
 	VERIFY_EXPR_RES("sword('   Where hae\tya been',2,'')","hae\tya");
@@ -1371,7 +1386,7 @@ int main (int argc, char** argv)
 {
 	unsigned int onlyTest = 0;
 	if (argc>1) {
-		onlyTest = std::stoul(argv[1]);
+		onlyTest = (unsigned int)(std::stoul(argv[1]));
 	}
 	g_bWarnAboutGrammars = false;
 
