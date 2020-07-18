@@ -63,4 +63,24 @@ private:
 
 typedef std::shared_ptr<SimpleWriter> PSimpleWriter;
 
+// A writer to an internal string. 
+// Only used by ProcessingTest
+class StringWriter : public Writer {
+public:
+	StringWriter() {}
+	virtual ~StringWriter() {}
+	virtual void WriteOut() {}
+	virtual PSpecString getString() {
+		if (!m_queue.empty()) {
+			PSpecString ret;
+			m_queue.wait_and_pop(ret);
+			return ret;
+		} else {
+			return NULL;  // SpecString::newString();
+		}
+	}
+};
+
+typedef std::shared_ptr<StringWriter> PStringWriter;
+
 #endif

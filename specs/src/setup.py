@@ -18,6 +18,13 @@ def cleanup_after_compile():
 	else:
 		os.system("/bin/rm yy.txt")
 
+def cleanup_after_python():
+	global platform
+	if platform=="NT":
+		os.system("del test_script.py")
+	else:
+		os.system("/bin/rm test_script.py")
+
 def python_search(arg):
 	global python_cflags,python_ldflags,python_version,variation
 	
@@ -31,6 +38,7 @@ with open("xx.txt","w") as v:
 		scriptf.write(script)
 	cmd = "{} test_script.py".format(arg)
 	rc = os.system(cmd)
+	cleanup_after_python()
 	if rc!=0:
 		sys.stdout.write("No -- could not get python version from {}.\n".format(arg))
 		return False

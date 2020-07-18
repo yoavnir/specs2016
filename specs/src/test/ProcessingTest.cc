@@ -73,8 +73,15 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	setFieldIdentifierGetter(&fiGetter);
 	setStateQueryAgent(&ps);
 	classifyingTimer tmr;
+	PWriter pwr0 = std::make_shared<StringWriter>();
+	PStringWriter pwr1 = std::make_shared<StringWriter>();
+
+	PWriter writerArray[] = {pwr0,pwr1};
+	ps.setWriters(writerArray);
 
 	g_counters.clearAll();
+	g_keep_suppressed_record = false;
+	g_printonly_rule = PRINTONLY_PRINTALL;
 
 	TestReader tRead(100);
 	unsigned int readerCounter = 1;
@@ -114,13 +121,15 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				if (ps.printSuppressed(g_printonly_rule) && g_keep_suppressed_record) {
 					continue;
 				}
+				PSpecString pWritten = pwr1->getString();
 				PSpecString pOut = sb.GetStringUnsafe();
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
-					if (result) {
-						result->add(pOut);
-					} else {
-						result = pOut;
+					if (pWritten) {
+						if (result) result->add(pWritten);
+						else result = pWritten;
 					}
+					if (result) result->add(pOut);
+					else result = pOut;
 				} else {
 				}
 			} while (!tRead.endOfSource());
@@ -140,12 +149,14 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		ps.setFirst();
 		try {
 			ig.processDo(sb, ps, NULL, tmr, readerCounter);
+			PSpecString pWritten = pwr1->getString();
 			PSpecString pOut = sb.GetStringUnsafe();
-			if (result) {
-				result->add(pOut);
-			} else {
-				result = pOut;
+			if (pWritten) {
+				if (result) result->add(pWritten);
+				else result = pWritten;
 			}
+			if (result) result->add(pOut);
+			else result = pOut;
 		} catch (SpecsException& e) {
 			result = SpecString::newString(e.what(true));
 			goto end;
@@ -527,49 +538,52 @@ int main(int argc, char** argv)
 	VERIFY(spec, "bye");                                                         // TEST #143
 
 	// tf2mcs and mcs2tf
-	VERIFY2("1-* tf2mcs %Y-%m-%dT%H:%M:%S.%6f a: ID a mcs2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #138
+	VERIFY2("1-* tf2mcs %Y-%m-%dT%H:%M:%S.%6f a: ID a mcs2tf /%A, %B %drd, %Y; %M minutes past the %Hth hour/ 1", "2018-11-23T14:43:43.126573","Friday, November 23rd, 2018; 43 minutes past the 14th hour"); // Test #144
 #ifdef WIN64
-	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "12/21/18 17:48:16");  // Test #144
-	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "12/21/18 18:48:16");  // Test #145
+	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "12/21/18 17:48:16");  // Test #145
+	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "12/21/18 18:48:16");  // Test #146
 #else
-	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #144
-	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #145
+	VERIFY("/1545407296548900/ mcs2tf '%c' 1", "Fri Dec 21 17:48:16 2018");  // Test #145
+	VERIFY("a: /1545407296548900/ . print 'a+3600000000' mcs2tf '%c' 1", "Fri Dec 21 18:48:16 2018");  // Test #146
 #endif
 
 #ifdef SPANISH_LOCALE_SUPPORTED
 #ifdef PUT_TIME__SUPPORTED
 	specTimeSetLocale("es_ES");
-	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #146
+	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #147
 	specTimeSetLocale("C");
 #else
-	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #146
-#endif
-#endif
 	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #147
+#endif
+#endif
+	VERIFY("/1545407296548900/ mcs2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #148
 
 	spec = "printonly eof  a: w1 1 set '#0+=a' eof print '#0' 1";
-	VERIFY2(spec, "1\n2\n3\n4\n5", "15");                                            // TEST #148
+	VERIFY2(spec, "1\n2\n3\n4\n5", "15");                                            // TEST #149
 
 	spec = "printonly a  a: w1 . w2 1 set '#0+=a' eof print '#0' 1";
-	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n4\n7");                             // TEST #149
+	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n4\n7");                             // TEST #150
 
 	spec = "printonly a keep a: w1 . w2 nw set '#0+=a' eof print '#0' 1";
-	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n2 3 4\n7");                         // TEST #150
+	VERIFY2(spec, "1 1\n1 2\n1 3\n2 4\n2 5", "1\n2 3 4\n7");                         // TEST #151
 
 	spec = "a: w1 . skip-until 'a>2' id a";
-	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "3\n4\n5\n6");                                 // TEST #151
-
-	spec = "a: w1 . skip-while 'a<3' id a";
 	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "3\n4\n5\n6");                                 // TEST #152
 
+	spec = "a: w1 . skip-while 'a<3' id a";
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "3\n4\n5\n6");                                 // TEST #153
+
 	spec = "a: w1 . skip-until 'a>2' set '#0 += a' skip-until 'a>4' GT 1 EOF print #0";
-	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "GT\nGT\n18");                                // TEST #153. 3+4+5+6=18
+	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "GT\nGT\n18");                                // TEST #154. 3+4+5+6=18
 
 	spec = "a: w1 EOF print 'sum(a)'";
-	VERIFY2(spec, "1\n2\n3\n4", "1\n2\n3\n4\n10");                                  // TEST #154. Elide before EOF
+	VERIFY2(spec, "1\n2\n3\n4", "1\n2\n3\n4\n10");                                  // TEST #155. Elide before EOF
 
 	spec = "a: w1 if 'a>2' then b: w1 EOF print 'sum(b)'";
-	VERIFY2(spec, "1\n2\n3\n4", "1\n2\n3 3\n4 4\n7");                               // TEST #155. Elide endif and placement before EOF
+	VERIFY2(spec, "1\n2\n3\n4", "1\n2\n3 3\n4 4\n7");                               // TEST #156. Elide endif and placement before EOF
+
+	spec = "w1 1 EOF /hello/ 1 write /bye/ 1";
+	VERIFY2(spec, "1\n2", "1\n2\nhello\nbye");                                      // TEST #157. Write
 
 	spec =  "a: w1-* . "                  \
 			"set '#0:=countocc(hot)'  "   \
@@ -593,13 +607,13 @@ int main(int argc, char** argv)
 			"         5\n"  \
 			"         6\n"  \
 			"         7\n"  \
-			"4 hot and 5 cold " \
+			"4 hot and 5 cold\n" \
 			"+------+---+\n"  \
 			"| cold | 5 |\n"  \
 			"| hot  | 4 |\n"  \
 			"+------+---+\n";
 
-	VERIFY2(spec, strm.c_str(), res); // TEST #154
+	VERIFY2(spec, strm.c_str(), res); // TEST #158
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
