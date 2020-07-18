@@ -13,7 +13,7 @@ if args.nvg==True:
 	memcheck.no_valgrind = True
 
 tests_to_skip = []
-tests_that_may_fail = [43,48,61,63,382,384,394,396]
+tests_that_may_fail = [43,48,61,63,385,387,397,399]
 for i in range(count_ALU_tests):
     if (i+1) in tests_to_skip:
         continue
