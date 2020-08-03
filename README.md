@@ -10,18 +10,20 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-1-Jul-2020: Version 0.7 Alpha is here
-=====================================
+3-Aug-2020: Version 0.7 Beta is here
+====================================
 What's New:
 * Usability improvements:
   * Allow eliding last output position (defaults to NEXTWORD)
   * Allow eliding final ENDIF or DONE
   * Passing unambiguous string arguments to functions without quotes
-* New builtin functions: *countocc*, *countocc_get*, *countocc_dump*
+* New builtin functions: *countocc*, *countocc_get*, *countocc_dump*, *lvalue*, *rvalue*
 * **SKIP-WHILE** and **SKIP-UNTIL**
 * Under-the-hood improvements
-1-Apr-2020: Version 0.6 GA is here 
-----------------------------------
+
+
+Stable version 0.6 GA 
+---------------------
 New features:
 * Python functions
 * MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
