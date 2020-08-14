@@ -1007,6 +1007,25 @@ int runALUUnitTests10(unsigned int onlyTest)
 	VERIFY_EXPR_RES("round(log(20,10)*10)","13");
 	VERIFY_EXPR_RES("log(100,10)","2");
 
+	VERIFY_EXPR_RES("fact(6)","720");
+	VERIFY_EXPR_RES("fact(2)","2");
+	VERIFY_EXPR_RES("fact(1)","1");
+	VERIFY_EXPR_RES("fact(0)","1");
+	VERIFY_EXPR_RES("fact(-5)","1");
+	VERIFY_EXPR_RES("fact(3.14)","6");
+
+	VERIFY_EXPR_RES("permutations(6,4)","360");  // 6*5*4*3
+	VERIFY_EXPR_RES("permutations(6,2)","30");
+	VERIFY_EXPR_RES("permutations(6,1)","6");
+	VERIFY_EXPR_RES("permutations(6,0)","permutations: k must be greater than zero");
+	VERIFY_EXPR_RES("permutations(6,8)","permutations: k must be no greater than n");
+
+	VERIFY_EXPR_RES("combinations(6,4)","15");  // 6*5*4*3 / 4*3*2*1
+	VERIFY_EXPR_RES("combinations(6,2)","15");
+	VERIFY_EXPR_RES("combinations(6,1)","6");
+	VERIFY_EXPR_RES("combinations(6,0)","combinations: k must be greater than zero");
+	VERIFY_EXPR_RES("combinations(6,8)","combinations: k must be no greater than n");
+
 	VERIFY_EXPR_RES("string(3.0000)", "3.0000");
 	VERIFY_EXPR_RES("string(3.0000+2.0000)", "5");
 

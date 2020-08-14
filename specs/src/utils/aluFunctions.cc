@@ -1023,6 +1023,57 @@ PValue AluFunc_log(PValue pX, PValue pBase)
 	return mkValue(res);
 }
 
+PValue AluFunc_fact(PValue pX)
+{
+	ASSERT_NOT_ELIDED(pX,1,x);
+	ALUInt i,res = 1;
+
+	for (i=2; i <= pX->getInt(); i++) {
+		res *= i;
+	}
+
+	return mkValue(res);
+}
+
+PValue AluFunc_combinations(PValue pN, PValue pK)
+{
+	ASSERT_NOT_ELIDED(pN,1,n);
+	ASSERT_NOT_ELIDED(pK,1,k);
+	MYASSERT_WITH_MSG(pK->getInt() > 0, "combinations: k must be greater than zero");
+	MYASSERT_WITH_MSG(pN->getInt() >= pK->getInt(), "combinations: k must be no greater than n");
+
+	ALUInt i, res=1;
+
+	for (i=pN->getInt() ; i > (pN->getInt()-pK->getInt()) ; i--) {
+		res *= i;
+	}
+
+	ALUInt denominator=1;
+	for (i=2; i <= pK->getInt(); i++) {
+		denominator *= i; 
+	}
+
+	MYASSERT(0 == res % denominator);
+
+	return mkValue(res / denominator);
+}
+
+PValue AluFunc_permutations(PValue pN, PValue pK)
+{
+	ASSERT_NOT_ELIDED(pN,1,n);
+	ASSERT_NOT_ELIDED(pK,1,k);
+	MYASSERT_WITH_MSG(pK->getInt() > 0, "permutations: k must be greater than zero");
+	MYASSERT_WITH_MSG(pN->getInt() >= pK->getInt(), "permutations: k must be no greater than n");
+
+	ALUInt i, res=1;
+
+	for (i=pN->getInt() ; i > (pN->getInt()-pK->getInt()) ; i--) {
+		res *= i;
+	}
+
+	return mkValue(res);
+}
+
 /*
  * FREQUENCY MAP - CLASS AND ALU FUNCTIONS
  */

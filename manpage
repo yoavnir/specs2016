@@ -548,6 +548,27 @@ decimal places. If
 is omitted, 
 .B round 
 returns the closest whole number.
+.IP "fact(n)" 3
+The
+.B fact
+function returns the factorial of 
+.I n
+.IP "combinations(n,k) and permutations(n,k)" 3
+These function give the number of ways in which 
+.I k
+elements can be chosen from a set of 
+.I n
+elements. The difference is that with 
+.B combinations
+the order of the elements within the subgroup (or the order in which they were selected) 
+does not matter, while with
+.B permutations,
+it does. For example, if we are choosing 2 elements from a group of 6,
+.B permutations
+will return 30, because there are 6 ways to choose the first element and 5 to choose the 
+second element. On the other hand, 
+.B combinations
+will return 15, because it doesn't matter which of the two chosen elements was chosen first.
 .IP "fmt(value,format,digits,decimal,separator)" 3
 The
 .B fmt
@@ -603,7 +624,7 @@ and
 .B arcdtan 
 return an angle in degrees.
 .IP "exp(x) and log(x,base)" 3
-There return the 
+These return the 
 .B exponent 
 of x or the 
 .B logarithm 

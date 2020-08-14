@@ -229,6 +229,12 @@
 			"(x) - Returns exponent function e^x.","") \
 	X(log,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
+	X(fact,           1, ALUFUNC_REGULAR,     false,  \
+			"(x) - Returns the factorial of x","")    \
+	X(permutations,   2, ALUFUNC_REGULAR,     false,  \
+			"(n,k) - Returns the number of permutations of k elements from n elements.","Order matters.")    \
+	X(combinations,   2, ALUFUNC_REGULAR,     false,  \
+			"(n,k) - Returns the number of combinations of k elements from n elements.","Order does not matter.")    \
 	H(Other Functions,34) \
 	X(bitand,         2, ALUFUNC_REGULAR,     false,  \
 			"(s1,s2) - Returns a bit-wise AND of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
