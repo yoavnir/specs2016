@@ -18,8 +18,8 @@ What's New:
   * Allow eliding final ENDIF or DONE
   * Passing unambiguous string arguments to functions without quotes
 * New builtin functions: 
-** *countocc*, *countocc_get*, *countocc_dump*, *lvalue*, *rvalue*
-** *fact*, *permutations*, *combinations*
+  * *countocc*, *countocc_get*, *countocc_dump*, *lvalue*, *rvalue*
+  * *fact*, *permutations*, *combinations*
 * **SKIP-WHILE** and **SKIP-UNTIL**
 * Under-the-hood improvements
 
