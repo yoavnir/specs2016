@@ -4,6 +4,7 @@
 #include "utils/aluRand.h"
 #include "utils/aluRegex.h"
 #include "processing/Config.h"
+#include "processing/persistent.h"
 #include <string.h>
 #include <cmath>
 #include <functional>
@@ -2524,6 +2525,53 @@ PValue AluFunc_defined(PValue pName)
 	} else {
 		return mkValue(ALUInt(0));
 	}
+}
+
+PValue AluFunc_pget(PValue pName, PValue pDefault)
+{
+	ASSERT_NOT_ELIDED(pName,1,variableName);
+	auto name = pName->getStr();
+	if (persistentVarDefined(name)) {
+		std::string res = persistentVarGet(name);
+		return mkValue(res);
+	} else {
+		return pDefault ? pDefault : mkValue();
+	}
+}
+
+PValue AluFunc_pdefined(PValue pName)
+{
+	ASSERT_NOT_ELIDED(pName,1,variableName);
+	auto name = pName->getStr();
+	if (persistentVarDefined(name)) {
+		return mkValue(ALUInt(1));
+	} else {
+		return mkValue(ALUInt(0));
+	}
+}
+
+PValue AluFunc_pclear(PValue pName)
+{
+	ASSERT_NOT_ELIDED(pName,1,variableName);
+	auto name = pName->getStr();
+	if (persistentVarDefined(name)) {
+		auto ret = mkValue(persistentVarGet(name));
+		persistentVarClear(name);
+		return ret;
+	} else {
+		persistentVarClear(name);
+		return mkValue();
+	}
+}
+
+PValue AluFunc_pset(PValue pName, PValue pValue)
+{
+	ASSERT_NOT_ELIDED(pName,1,variableName);
+	ASSERT_NOT_ELIDED(pValue,2,value);
+	std::string varName = pName->getStr();
+	std::string varValue = pValue->getStr();
+	persistentVarSet(varName, varValue);
+	return pValue;
 }
 
 

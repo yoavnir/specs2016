@@ -918,6 +918,41 @@ Returns
 is defined, or 
 .B FALSE
 (0) otherwise.
+.IP "pset(var,value)" 3
+Sets the
+.B persistent variable
+with the name in 
+.I var
+to the value
+.I value
+The value will be set in future invocations of 
+.B specs.
+The function returns the value in 
+.I value. 
+.IP "pget(var,default)" 3
+Returns the value of the
+.B persistent variable
+with the name in
+.I var
+If the variable is not defined, it returns the 
+.I default
+value. If that is unspecified, returns 
+.B NaN
+.IP "pdefined(var)" 3
+Returns 
+.B TRUE
+(1) if the
+.B persistent variable
+.I var
+is defined, or 
+.B FALSE
+(0) otherwise.
+.IP "pclear(var)" 3
+Clears the 
+.B persistent variable
+.I var.
+Returns the value before clearing it. If the variable was not defined, returns
+.B NaN.
 .IP "sfield(str,n,sep)" 3
 Returns the n-th field of string
 .I str

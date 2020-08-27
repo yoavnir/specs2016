@@ -54,12 +54,20 @@ static std::string getConfigFileName() {
 	}
 	return std::string(std::getenv("HOMEDRIVE")) + std::getenv("HOMEPATH") + "\\specs.cfg";
 }
+
+std::string getPersistneceFileName() {
+	return std::string(std::getenv("HOMEDRIVE")) + std::getenv("HOMEPATH") + "\\specs_persistent.sav";
+}
 #else
 static std::string getConfigFileName() {
 	if (g_configurationFile!="") {
 		return g_configurationFile;
 	}
 	return std::string(std::getenv("HOME")) + "/.specs";
+}
+
+std::string getPersistneceFileName() {
+	return std::string(std::getenv("HOME")) + "/.specs_persistent";
 }
 #endif
 

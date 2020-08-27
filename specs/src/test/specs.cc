@@ -5,6 +5,7 @@
 #include "utils/platform.h"
 #include "cli/tokens.h"
 #include "processing/Config.h"
+#include "processing/persistent.h"
 #include "specitems/specItems.h"
 #include "processing/StringBuilder.h"
 #include "processing/Reader.h"
@@ -147,6 +148,7 @@ int main (int argc, char** argv)
 	}
 
 	readConfigurationFile();
+	persistentVarLoad();
 
 	if (g_timeZone != "") {
 		specTimeSetTimeZone(g_timeZone);
@@ -413,6 +415,8 @@ int main (int argc, char** argv)
 
 		dumpRegexStats();
 	}
+
+	persistentVarSaveIfNeeded();
 
 	return 0;
 }

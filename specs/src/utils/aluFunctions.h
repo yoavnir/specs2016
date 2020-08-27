@@ -280,7 +280,15 @@
 	X(conf,           2, ALUFUNC_REGULAR,     false,  \
 			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(defined,        1, ALUFUNC_REGULAR,     false,  \
-			"(s) - Returns TRUE (1) if the string 's' is a configured string, or FALSE (0) otherwise.","")
+			"(s) - Returns TRUE (1) if the string 's' is a configured string, or FALSE (0) otherwise.","") \
+	X(pget,           2, ALUFUNC_REGULAR,    false,  \
+			"(key,[default]) - returns the value of persistent variable 'key'.","If the variable is not defines, returns the default value.\nIf that is not defined, returns NaN.") \
+	X(pset,           2, ALUFUNC_REGULAR,     false,  \
+			"(key, value) - Sets the persistent variable 'key' to value 'value'.","") \
+	X(pdefined,       1, ALUFUNC_REGULAR,    false,  \
+			"(key) - Returns TRUE (1) if the persistent variable 'key' is defined, or FALSE (0) otherwise.","") \
+	X(pclear,         1, ALUFUNC_REGULAR,    false,  \
+			"(key) - Clears the persistent variable 'key' and returns its old value if defined, or NaN otherwise.","")
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false,  \

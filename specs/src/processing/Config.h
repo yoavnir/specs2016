@@ -71,4 +71,6 @@ bool inputStreamIsDefined(int i);
 
 const char* getFullSpecPath();
 
+std::string getPersistneceFileName();
+
 #endif

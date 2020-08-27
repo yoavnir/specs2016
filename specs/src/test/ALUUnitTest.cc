@@ -1378,6 +1378,25 @@ int runALUUnitTests14(unsigned int onlyTest)
 
 int runALUUnitTests15(unsigned int onlyTest)
 {
+	VERIFY_EXPR_RES("pget(unitTestVar)","NaN");
+	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
+	VERIFY_EXPR_RES("pdefined(unitTestVar)","0");
+	VERIFY_EXPR_RES("pset(unitTestVar,9)","9");
+	VERIFY_EXPR_RES("pget(unitTestVar)","9");
+	VERIFY_EXPR_RES("pget(unitTestVar,8)","9");
+	VERIFY_EXPR_RES("pdefined(unitTestVar)","1");
+	VERIFY_EXPR_RES("pclear(unitTestVar)","9");
+	VERIFY_EXPR_RES("pclear(unitTestVar)","NaN");
+	VERIFY_EXPR_RES("pget(unitTestVar)","NaN");
+	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
+	VERIFY_EXPR_RES("pdefined(unitTestVar)","0");
+
+	return 0;
+}
+
+
+int runALUUnitTests16(unsigned int onlyTest)
+{
 	std::cout << "\nEvaluating Assignments\n======================\n\n";
 
 	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
@@ -1427,6 +1446,7 @@ int main (int argc, char** argv)
 	rc += runALUUnitTests13(onlyTest);
 	rc += runALUUnitTests14(onlyTest);
 	rc += runALUUnitTests15(onlyTest);
+	rc += runALUUnitTests16(onlyTest);
 
 	return rc;
 }

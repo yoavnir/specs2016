@@ -10,8 +10,8 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-3-Aug-2020: Version 0.7 Beta is here
-====================================
+1-Sep-2020: Version 0.7 is here
+===============================
 What's New:
 * Usability improvements:
   * Allow eliding last output position (defaults to NEXTWORD)
@@ -20,17 +20,10 @@ What's New:
 * New builtin functions: 
   * *countocc*, *countocc_get*, *countocc_dump*, *lvalue*, *rvalue*
   * *fact*, *permutations*, *combinations*
+  * persistent variable functions: *pset*, *pget*, *pdefined*, *pclear*
 * **SKIP-WHILE** and **SKIP-UNTIL**
 * Under-the-hood improvements
 
-
-Stable version 0.6 GA 
----------------------
-New features:
-* Python functions
-* MainOptions - see [issue #101](https://github.com/yoavnir/specs2016/issues/101).
-* Regular expressions
-* Built in help through the --help switch
 
 Sources
 =======
@@ -42,7 +35,7 @@ Building
 ========
 If you have downloaded a git repository, first make sure to check out a stable tag such as v0.6:
 ```
-git checkout v0.6
+git checkout v0.7
 ```
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 
@@ -68,7 +61,7 @@ Known Issues
 
 Contributing
 ============
-Anyone can contribute. So far, I have written all of the code, but if you want to help, I'll be very happy. Feel free to:
+Anyone can contribute. So far, I have written most of the code, but if you want to help, I'll be very happy. Feel free to:
 * Submit bug reports or feature requests at the [Issue Tracker](https://github.com/yoavnir/specs2016/issues).
 * Help solve some existing issue.
 * Submit pull requests
