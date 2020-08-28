@@ -519,7 +519,7 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 {
 	// handle start
 	if (start==0) {    // invalid string index in specs
-		return mkValue();  // NaN
+		return mkValue0();  // NaN
 	}
 	else if (start > ALUInt(pStr->length())) {
 		return mkValue2("",0);
@@ -716,7 +716,7 @@ PValue AluFunc_conf(PValue _pKey, PValue _pDefault)
 	} else if (_pDefault) {
 		return mkValue(*_pDefault);
 	} else {
-		return mkValue();
+		return mkValue0();
 	}
 }
 
