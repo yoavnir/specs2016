@@ -1600,7 +1600,7 @@ PValue AluFunc_bitand(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char pBuff[minlen];
+	unsigned char *pBuff = new unsigned char[minlen];
 
 	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
 	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
@@ -1610,6 +1610,8 @@ PValue AluFunc_bitand(PValue pS1, PValue pS2)
 	}
 
 	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+
+	delete [] pBuff;
 
 	return pRet;
 }
@@ -1623,7 +1625,7 @@ PValue AluFunc_bitor(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char pBuff[minlen];
+	unsigned char *pBuff = new unsigned char[minlen];
 
 	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
 	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
@@ -1633,6 +1635,8 @@ PValue AluFunc_bitor(PValue pS1, PValue pS2)
 	}
 
 	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+
+	delete [] pBuff;
 
 	return pRet;
 }
@@ -1646,7 +1650,7 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char pBuff[minlen];
+	unsigned char *pBuff = new unsigned char[minlen];
 
 	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
 	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
@@ -1656,6 +1660,8 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 	}
 
 	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+
+	delete [] pBuff;
 
 	return pRet;
 }
@@ -2535,7 +2541,7 @@ PValue AluFunc_pget(PValue pName, PValue pDefault)
 		std::string res = persistentVarGet(name);
 		return mkValue(res);
 	} else {
-		return pDefault ? pDefault : mkValue();
+		return pDefault ? pDefault : mkValue0();
 	}
 }
 
@@ -2560,7 +2566,7 @@ PValue AluFunc_pclear(PValue pName)
 		return ret;
 	} else {
 		persistentVarClear(name);
-		return mkValue();
+		return mkValue0();
 	}
 }
 
