@@ -1302,6 +1302,7 @@ int runALUUnitTests14(unsigned int onlyTest)
 	VERIFY_EXPR_RES("rmatch('nonsubjective','(sub)(.*)')", "0");
 	VERIFY_EXPR_RES("rmatch(,'.*brown.*')", "1");
 	VERIFY_EXPR_RES("rmatch(,'.*black.*')", "0");
+#ifdef ADVANCED_REGEX_FUNCTIONS
 	VERIFY_EXPR_RES("rsearch('subject','(sub)(.*)')", "1");
 	VERIFY_EXPR_RES("rsearch('object','(sub)(.*)')", "0");
 	VERIFY_EXPR_RES("rsearch('nonsubjective','(sub)(.*)')", "1");
@@ -1358,6 +1359,7 @@ int runALUUnitTests14(unsigned int onlyTest)
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
 	setRegexType("egrep");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+#endif
 #endif
 #endif
 

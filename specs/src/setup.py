@@ -345,6 +345,31 @@ else:
 	sys.stdout.write("not supported.\n")
 	CFG_put_time = False
 cleanup_after_compile()
+
+# Test if regex_search and regex_replace are supported
+test_advanced_regex_cmd = "{} {} -o xx.exe xx.cc".format(cxx,cppflags_test)
+with open("xx.cc", "w") as testfile:
+	testfile.write('#include <regex>\n')
+	testfile.write('int main(int argc, char** argv) {\n')
+	testfile.write('    static const char st[]="this subject has a submarine as a subsequence";\n')
+	testfile.write('    std::regex e ("\\\\b(sub)([^ ]*)");   // matches words beginning by "sub"\n')
+	testfile.write('    bool b = std::regex_search(st,e);\n')
+	testfile.write('    return b ? 0 : -4;\n')
+	testfile.write('}\n')
+sys.stdout.write("Testing std::regex_search()...")
+if 0==run_the_cmd(test_advanced_regex_cmd):
+	sys.stdout.write("Compiled...")
+	test_advanced_regex_cmd = "./xx.exe" if platform!="NT" else "xx.exe"
+	if 0==run_the_cmd(test_advanced_regex_cmd):
+		sys.stdout.write("Supported\n")
+		CFG_advanced_regex = True
+	else:
+		sys.stdout.write("Not supported\n")
+		CFG_advanced_regex = False
+else:
+	sys.stdout.write("Internal error.\n")
+	exit(-4)
+cleanup_after_compile()
 	
 # Test if the environment supports a Spanish locale
 test_spanish_locale_cmd = "{} {} -o xx.exe xx.cc".format(cxx,cppflags_test)
@@ -452,6 +477,9 @@ if CFG_put_time:
 	
 if CFG_spanish_locale:
 	condcomp = condcomp + "{}SPANISH_LOCALE_SUPPORTED".format(def_prefix)
+
+if CFG_advanced_regex:
+	condcomp = condcomp + "{}ADVANCED_REGEX_FUNCTIONS".format(def_prefix)
 	
 if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
