@@ -1327,7 +1327,9 @@ a. Returns the count of occurences of s.
 .IP "fmap_dump(a,format,sortOrder,showPct)" 3
 Returns a string containing a dump of the frequency map for
 .B Field Identifier
-a.
+a. If the frequency map is empty, returns the content of the configuration string
+.B EmptyFrequencyMapMessage,
+and if that is not defined, returns an empty string.
 .IP "countocc(n,h)" 3
 Returns the number of matches for this particular 
 .B needle 

@@ -1200,6 +1200,17 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 		width = int(f);
 	}
 
+	// Handle empty dataset
+	if (0 == counter) {
+		static std::string varname("EmptyFrequencyMapMessage");
+
+		if (configSpecLiteralExists(varname)) {
+			return configSpecLiteralGet(varname);
+		} else {
+			return std::string();
+		}
+	}
+
 	std::ostringstream oss;
 
 	// preamble
