@@ -8,6 +8,7 @@
 #include "utils/aluRegex.h"
 #include "utils/TimeUtils.h"
 #include "processing/ProcessingState.h"
+#include "processing/persistent.h"
 
 ALUCounters counters;
 ProcessingState g_ps;
@@ -1432,6 +1433,8 @@ int main (int argc, char** argv)
 
 	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
 
+	persistentVarLoad();
+
 	int rc = runALUUnitTests(onlyTest);
 
 	rc += runALUUnitTests2(onlyTest);
@@ -1449,6 +1452,8 @@ int main (int argc, char** argv)
 	rc += runALUUnitTests14(onlyTest);
 	rc += runALUUnitTests15(onlyTest);
 	rc += runALUUnitTests16(onlyTest);
+
+	persistentVarSaveIfNeeded();
 
 	return rc;
 }
