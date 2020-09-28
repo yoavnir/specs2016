@@ -192,3 +192,12 @@ These are optional spec units that appear at the beginning of the specification 
 * **STOP** - This option is followed by either the keyword `ALLEOF`, the keyword `ANYEOF`, or a number indicating an input stream. This indicates when the specification stops. The default is `ALLEOF` which means that the specification terminates when every input stream is exhausted. When some but not all of the streams are exhausted, those that are get treated as if they emit empty records. With `ANYEOF` the specification terminates when *any* of the streams is exhausted. With a numeric value the specification terminates when the specified stream is exhausted. Other streams, if exhausted are treated as if they emit empty records.
 * **PRINTONLY** - This option instructs *specs* to suppress output records unless a specified *break level* is established. The break level is either a field identifier (case matters) or it can be the keyword `EOF`, which specifies records are suppressed until the input is exhausted or the condition specified with `STOP` is satisfied.
 * **KEEP** - This option, always following `PRINTONLY`instructs *specs* not to reset the output buffer when a record in not output due to break level not being established. This allows the content from several records to be aggregated into a single output record.
+
+Directives
+==========
+**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MIUST** precede all spec units. Below are the supported directives:
+* `+SET` - This directive followed by a single word and then a command-line command, sets a *Configured String* to the output of the command. If the command issues multiple lines of output, only the first line is stored in the configured string. For example, the following directive may lead the configured string ex1 to contain a value such as  `total  120` on Unix-like systems:
+```
+              +SET ex1 ls -l
+```
+* `+IN` - This directive followed by a command runs the command and uses its output as the input stream for the specification.

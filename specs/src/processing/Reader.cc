@@ -129,11 +129,19 @@ StandardReader::StandardReader(std::string& fn) {
 	m_lineDelimiter = 0;
 }
 
+StandardReader::StandardReader(pipeType pipe) {
+	m_pipe = pipe;
+	m_NeedToClose = false;
+	m_EOF = false;
+	m_buffer = NULL;
+	m_recfm = RECFM_DELIMITED;
+	m_lineDelimiter = 0;
+}
+
 StandardReader::~StandardReader() {
 	if (m_NeedToClose) {
 		auto pInputFile = std::dynamic_pointer_cast<std::ifstream>(m_File);
 		if (pInputFile) pInputFile->close();
-		// m_File = NULL;
 	}
 	if (m_buffer) {
 		free(m_buffer);
@@ -168,6 +176,16 @@ PSpecString StandardReader::getNextRecord() {
 			m_Timer.changeClass(timeClassIO);
 			if (m_NeedToClose) {
 				ok = std::getline(*m_File, line, m_lineDelimiter) ? true : false;
+			} else if (m_pipe) {
+				char c = fgetc(m_pipe.get());
+				ok = feof(m_pipe.get());
+				if (ok) {
+					line = "";
+					while (c!=EOF && c!=m_lineDelimiter) {
+						line += c;
+						c = fgetc(m_pipe.get());
+					}
+				}
 			} else {
 				ok = std::getline(std::cin, line, m_lineDelimiter) ? true : false;
 			}
@@ -181,6 +199,16 @@ PSpecString StandardReader::getNextRecord() {
 			m_Timer.changeClass(timeClassIO);
 			if (m_NeedToClose) {
 				ok = std::getline(*m_File, line) ? true : false;
+			} else if (m_pipe) {
+				char c = fgetc(m_pipe.get());
+				ok = !feof(m_pipe.get());
+				if (ok) {
+					line = "";
+					while (c!=EOF && c!='\n') {
+						line += c;
+						c = fgetc(m_pipe.get());
+					}
+				}
 			} else {
 				ok = std::getline(std::cin, line) ? true : false;
 			}

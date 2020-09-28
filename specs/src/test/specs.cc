@@ -14,6 +14,7 @@
 #include "utils/ErrorReporting.h"
 #include "utils/PythonIntf.h"
 #include "utils/aluRegex.h"
+#include "utils/directives.h"
 
 extern int g_stop_stream;
 extern char g_printonly_rule;
@@ -276,9 +277,17 @@ int main (int argc, char** argv)
 
 	if (ig.readsLines() || g_bForceFileRead) {
 		if (g_inputFile.empty()) {
-			pRd = std::make_shared<StandardReader>();
+			if (NULL == primaryInputPipe()) {
+				pRd = std::make_shared<StandardReader>();
+			} else {
+				pRd = std::make_shared<StandardReader>(primaryInputPipe());
+			}
 		} else {
 			pRd = std::make_shared<StandardReader>(g_inputFile);
+			if (NULL != primaryInputPipe()) {
+				std::cerr << "Error: Both input file and input stream specified.\n";
+				return -4;
+			}
 		}
 
 		if (g_recfm=="F") {

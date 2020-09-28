@@ -5,6 +5,7 @@
 #include <memory>
 #include "utils/StringQueue.h"
 #include "utils/TimeUtils.h"
+#include "utils/directives.h"
 
 #define STOP_STREAM_ALL     97
 #define STOP_STREAM_ANY     98
@@ -79,6 +80,7 @@ public:
 	StandardReader();	      /* simple constructor - stdin becomes the source */
 	StandardReader(std::istream* f);
 	StandardReader(std::string& fn);
+	StandardReader(pipeType pipe);
 	virtual ~StandardReader();
 	virtual bool endOfSource();
 	virtual PSpecString getNextRecord();
@@ -86,6 +88,7 @@ public:
 	virtual void setLineDelimiter(char c);
 private:
 	std::shared_ptr<std::istream> m_File;
+	pipeType  m_pipe;
     char* m_buffer;
 	bool  m_EOF;
 	bool  m_NeedToClose;

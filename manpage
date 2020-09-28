@@ -1418,8 +1418,29 @@ Sections that do not match are not copied
 .B (for rreplace only) 
 Only the first occurrence is matched.
 
+.SH DIRECTIVES
+.B specs
+specifications that are specified in a 
+.B specFile
+can include some directives that influence the processing. Directives
+.I MUST
+begin with a plus (+) sign on the left-most column of the line in the specification file. All directives 
+.I MIUST
+precede all spec units. Below are the supported directives:
+.IP "+SET" 3
+This directive followed by a single word and then a command-line command, sets a 
+.B Configured String
+to the output of the command. If the command issues multiple lines of output, only the first line is stored in the configured string. For example, the following directive may lead the configured string
+.B ex1
+to contain a value such as "total 120" on Unix-like systems:
+
+    +SET ex1 ls -l
+.IP "+IN" 3
+This directive followed by a command runs the command and uses its output as the input stream for the specification.
+
 .SH OPTIONS
-specs supports the following switches:
+.B specs 
+supports the following switches:
 .IP "--toASCII" 3
 Causes output to be translated into ASCII if it's outside the range.
 .IP "--force-read-input" 3

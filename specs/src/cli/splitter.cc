@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "utils/platform.h"
+#include "utils/directives.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
 #include "tokens.h"
@@ -126,17 +127,33 @@ std::vector<Token> parseTokensSplit(const char* arg)
 // on the line, preceded by whitespace unless it's at the start of the line.
 std::string removeComment(std::string& st)
 {
+	std::string ret;
+	std::size_t found = 0;
+
 	// Special case - a line that is just a pound sign
-	if (st=="#") return std::string("");
+	if (st=="#") {
+		ret = std::string("");
+		goto FINISH;
+	}
 	
-	std::size_t found = st.rfind("# ");
-	if (found==std::string::npos) return st;
+	found = st.rfind("# ");
 
-	if (found>0 && !is_whitespace(st[found-1])) return st;
+	if (found==std::string::npos || (found>0 && !is_whitespace(st[found-1]))) {
+		ret = st;
+		goto FINISH;
+	} else if (found==0) {
+		ret = std::string("");
+		goto FINISH;
+	}
 
-	if (found==0) return std::string("");
+	ret = st.substr(0,found);
 
-	return st.substr(0,found);
+FINISH:
+	// return empty string if the string is all whitespace
+	if (std::string::npos == ret.find_first_not_of(" \t\n\r")) {
+		ret = std::string("");
+	}
+	return ret;
 }
 
 static void openSpecFile(std::ifstream& theFile, std::string& fileName)
@@ -169,8 +186,15 @@ std::vector<Token> parseTokensFile(std::string& fileName)
 		std::string spec;
 		std::string line;
 		while (getline(specFile,line)) {
-			spec += " ";
-			spec += removeComment(line);
+			if (spec=="" && line[0]=='+') {
+				processPlusDirective(line);
+				continue;
+			}
+			std::string deCommentedLine = removeComment(line);
+			if (deCommentedLine.length() > 0) {
+				spec += " ";
+				spec += removeComment(line);
+			}
 		}
 		return parseTokensSplit(spec.c_str());
 	} else {
