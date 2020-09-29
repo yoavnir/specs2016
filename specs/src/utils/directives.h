@@ -2,6 +2,7 @@
 #define SPECS2016__UTILS__DIRECTIVES__H
 
 #include <string>
+#include <memory>
 
 typedef std::shared_ptr<FILE> pipeType;
 
