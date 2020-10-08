@@ -721,4 +721,17 @@ s = 'skip-until "wordcount()==9" w9'
 i = input_samples.ls_out_hdr
 run_case(s,i,"Skipping a line another way")
 
+s = \
+"""
++IN ls 
+W! 
+"""
+run_case(s,i,"inline input")
+
+s = \
+"""
++SET fname ls
+'The file name is' 1 w1 nw
+"""
+run_case(s,i,"inline variable")
 
