@@ -57,8 +57,8 @@ CONTINUE:
 		if (g_configuredString != "") {
 			auto equalsPos = g_configuredString.find('=');
 			if (std::string::npos == equalsPos || 1 == equalsPos) {
-				std::string err = "Malformed parameter for 'set': " + g_configuredString;
-				MYTHROW(err);
+				std::cerr << "Malformed parameter for --set: '" << g_configuredString << "'\n";
+				return false;
 			}
 			auto key = g_configuredString.substr(0,equalsPos);
 			auto value = g_configuredString.substr(equalsPos+1);
