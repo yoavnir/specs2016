@@ -213,6 +213,7 @@ The parameters for the `fmap_dump` functions are as follows:
 | `eof()` | Returns `1` in the run-out phase, or `0` otherwise |
 | `conf(key,default)` | Returns the configured string `key` if it exists, the value `default` if it doesn't, and **NaN** if `default` is omitted |
 | `defined(key)` | Returns `1` if the configured string `key` is defined, or `0` if it isn't |
+| `getenv(name)` | Returns the content of the environment variable `name` or **NaN** if the variable is not defined |
 | `pset(var,value)` | Sets the **persistent variable** with the name in *var* to the value *value*. The value will be set in future invocations of **specs**. The function returns the value in *value* | 
 | `pget(var,default)` | Returns the value of the **persistent variable** with the name in *var*. If the variable is not defined, it returns the *default* value. If that is unspecified, returns **NaN** |
 | `pdefined(var)` | Returns **TRUE** (1) if the **persistent variable** *var* is defined, or **FALSE** (0) otherwise |

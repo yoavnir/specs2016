@@ -12,6 +12,7 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm> // for std::reverse
+#include <cstdlib>   // for std::getenv
 
 #define PAD_CHAR ' '
 
@@ -2589,6 +2590,17 @@ PValue AluFunc_pset(PValue pName, PValue pValue)
 	std::string varValue = pValue->getStr();
 	persistentVarSet(varName, varValue);
 	return pValue;
+}
+
+PValue AluFunc_getenv(PValue pName)
+{
+	ASSERT_NOT_ELIDED(pName,1,variableName);
+
+	if (const char* env_p = std::getenv(pName->getStr().c_str())) {
+		return mkValue(env_p);
+	} else {
+		return mkValue0();
+	}
 }
 
 

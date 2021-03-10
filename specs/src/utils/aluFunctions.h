@@ -288,7 +288,9 @@
 	X(pdefined,       1, ALUFUNC_REGULAR,    false,  \
 			"(key) - Returns TRUE (1) if the persistent variable 'key' is defined, or FALSE (0) otherwise.","") \
 	X(pclear,         1, ALUFUNC_REGULAR,    false,  \
-			"(key) - Clears the persistent variable 'key' and returns its old value if defined, or NaN otherwise.","")
+			"(key) - Clears the persistent variable 'key' and returns its old value if defined, or NaN otherwise.","") \
+	X(getenv,         1, ALUFUNC_REGULAR,    false,  \
+			"(name) - Returns the content of the environment variable 'name' or NaN if not defined.", "")
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false,  \

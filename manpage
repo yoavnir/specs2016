@@ -918,6 +918,12 @@ Returns
 is defined, or 
 .B FALSE
 (0) otherwise.
+.IP "getenv(name)" 3
+Returns the content of the environment variable 
+.I name
+or
+.B NaN
+if the environment variable of that name is not defined.
 .IP "pset(var,value)" 3
 Sets the
 .B persistent variable
