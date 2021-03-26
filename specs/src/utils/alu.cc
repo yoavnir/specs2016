@@ -1227,18 +1227,34 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			continue;
 		}
 
-		// hash-sign followed by a number is a counter
+		// hash-sign followed by a number is either a counter or a persistent variable
 		if (*c=='#') {
 			c++;
 			char* tokEnd = c;
-			while (tokEnd<cEnd && *tokEnd>='0' && *tokEnd<='9') tokEnd++;
-			std::string num(c,(tokEnd-c));
-			if ((num.length() == 0) || (num.length() > 3)) {
-				std::string err = "Invalid counter <#" + num + *tokEnd + "> in expression";
-				MYTHROW(err);
+			if (!isDigit(*c)) {
+				// Equivalent to pget(name)
+				while (tokEnd<cEnd && (isLetter(*tokEnd) || isDigit(*tokEnd) || *tokEnd=='_')) tokEnd++;
+				std::string name(c,(tokEnd-c));
+				static std::string pget_identifier("pget");
+				pUnit = std::make_shared<AluFunction>(pget_identifier);
+				vec.push_back(pUnit);
+				pUnit = std::make_shared<AluOtherToken>(UT_OpenParenthesis);
+				vec.push_back(pUnit);
+				pUnit = std::make_shared<AluUnitLiteral>(name);
+				vec.push_back(pUnit);
+				pUnit = std::make_shared<AluOtherToken>(UT_ClosingParenthesis);
+				vec.push_back(pUnit);
+			} else {
+				// a counter
+				while (tokEnd<cEnd && *tokEnd>='0' && *tokEnd<='9') tokEnd++;
+				std::string num(c,(tokEnd-c));
+				if ((num.length() == 0) || (num.length() > 3)) {
+					std::string err = "Invalid counter <#" + num + *tokEnd + "> in expression";
+					MYTHROW(err);
+				}
+				pUnit = std::make_shared<AluUnitCounter>(std::stoi(num));
+				vec.push_back(pUnit);
 			}
-			pUnit = std::make_shared<AluUnitCounter>(std::stoi(num));
-			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
 			mayBeStart = false;

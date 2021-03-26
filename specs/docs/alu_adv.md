@@ -215,7 +215,7 @@ The parameters for the `fmap_dump` functions are as follows:
 | `defined(key)` | Returns `1` if the configured string `key` is defined, or `0` if it isn't |
 | `getenv(name)` | Returns the content of the environment variable `name` or **NaN** if the variable is not defined |
 | `pset(var,value)` | Sets the **persistent variable** with the name in *var* to the value *value*. The value will be set in future invocations of **specs**. The function returns the value in *value* | 
-| `pget(var,default)` | Returns the value of the **persistent variable** with the name in *var*. If the variable is not defined, it returns the *default* value. If that is unspecified, returns **NaN** |
+| `pget(var,default)` | Returns the value of the **persistent variable** with the name in *var*. If the variable is not defined, it returns the *default* value. If that is unspecified, returns **NaN**.  It is possible to use `#var` as an abbreviated form of `pget(var)`|
 | `pdefined(var)` | Returns **TRUE** (1) if the **persistent variable** *var* is defined, or **FALSE** (0) otherwise |
 | `pclear(var)` | Clears the **persistent variable** *var*. Returns the value before clearing it. If the variable was not defined, returns **NaN**.
 | `tf2mcs(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is microseconds since the UNIX epoch. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |

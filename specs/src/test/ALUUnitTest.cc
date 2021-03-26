@@ -1382,10 +1382,12 @@ int runALUUnitTests14(unsigned int onlyTest)
 int runALUUnitTests15(unsigned int onlyTest)
 {
 	VERIFY_EXPR_RES("pget(unitTestVar)","NaN");
+	VERIFY_EXPR_RES("#unitTestVar","NaN");
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
 	VERIFY_EXPR_RES("pdefined(unitTestVar)","0");
 	VERIFY_EXPR_RES("pset(unitTestVar,9)","9");
 	VERIFY_EXPR_RES("pget(unitTestVar)","9");
+	VERIFY_EXPR_RES("#unitTestVar","9");
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","9");
 	VERIFY_EXPR_RES("pdefined(unitTestVar)","1");
 	VERIFY_EXPR_RES("pclear(unitTestVar)","9");
