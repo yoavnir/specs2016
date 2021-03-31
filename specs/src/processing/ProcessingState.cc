@@ -234,6 +234,28 @@ void ProcessingState::identifyFields()
 	}
 }
 
+void ProcessingState::alterFieldSeparator(char sep)
+{
+	m_fieldSeparator = sep;
+	m_fieldCount = -1;
+}
+
+char ProcessingState::getFieldSeparator()
+{
+	return m_fieldSeparator;
+}
+
+void ProcessingState::alterWordSeparator(char sep)
+{
+	m_wordSeparator = sep;
+	m_wordCount = -1;
+}
+
+char ProcessingState::getWordSeparator()
+{
+	return m_wordSeparator;
+}
+
 int ProcessingState::getFieldStart(int idx) {
 	if (m_fieldCount==-1) {
 		identifyFields();

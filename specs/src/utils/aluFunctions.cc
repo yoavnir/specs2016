@@ -2603,6 +2603,66 @@ PValue AluFunc_getenv(PValue pName)
 	}
 }
 
+PValue AluFunc_split(PValue pSep, PValue pHdr, PValue pFtr)
+{
+	auto hdr = ARG_INT_WITH_DEFAULT(pHdr,0);
+	auto ftr = ARG_INT_WITH_DEFAULT(pFtr,0);
+
+	MYASSERT_WITH_MSG(hdr>=0, "hdr argument should be non-negative");
+	MYASSERT_WITH_MSG(ftr>=0, "ftr argument should be non-negative");
+
+	char restoreFieldSeparator = 0;
+	if (pSep && pSep->getStr()[0] != g_pStateQueryAgent->getFieldSeparator()) {
+		restoreFieldSeparator = g_pStateQueryAgent->getFieldSeparator();
+		g_pStateQueryAgent->alterFieldSeparator(pSep->getStr()[0]);
+	}
+
+	std::string res;
+
+	bool first = true;
+	for (auto i=hdr+1; i<=g_pStateQueryAgent->getFieldCount()-ftr; i++) {
+		if (!first) res += '\n';
+		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i))->sdata();
+		first = false;
+	}
+
+	if (restoreFieldSeparator != 0) {
+		g_pStateQueryAgent->alterFieldSeparator(restoreFieldSeparator);
+	}
+
+	return mkValue(res);
+}
+
+PValue AluFunc_splitw(PValue pSep, PValue pHdr, PValue pFtr)
+{
+	auto hdr = ARG_INT_WITH_DEFAULT(pHdr,0);
+	auto ftr = ARG_INT_WITH_DEFAULT(pFtr,0);
+
+	MYASSERT_WITH_MSG(hdr>=0, "hdr argument should be non-negative");
+	MYASSERT_WITH_MSG(ftr>=0, "ftr argument should be non-negative");
+
+	char restoreWordSeparator = 0;
+	if (pSep && pSep->getStr()[0] != g_pStateQueryAgent->getWordSeparator()) {
+		restoreWordSeparator = g_pStateQueryAgent->getWordSeparator();
+		g_pStateQueryAgent->alterWordSeparator(pSep->getStr()[0]);
+	}
+
+	std::string res;
+
+	bool first = true;
+	for (auto i=hdr+1; i<=g_pStateQueryAgent->getWordCount()-ftr; i++) {
+		if (!first) res += '\n';
+		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i))->sdata();
+		first = false;
+	}
+
+	if (restoreWordSeparator != 0) {
+		g_pStateQueryAgent->alterWordSeparator(restoreWordSeparator);
+	}
+
+	return mkValue(res);
+}
+
 
 #ifdef DEBUG
 PValue AluFunc_testfunc(PValue pArg1, PValue pArg2, PValue pArg3, PValue pArg4)

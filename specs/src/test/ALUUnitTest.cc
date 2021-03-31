@@ -756,15 +756,21 @@ int runALUUnitTests6(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordend(2)", "0");
 	VERIFY_EXPR_RES("wordrange(3,4)", "");
 
-	g_ps.setString(SpecString::newString("The quick brown fox jumps over the lazy dog"));
+	g_ps.setString(SpecString::newString("The quick brown foox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
 	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("wordlen(2)", "5");
-	VERIFY_EXPR_RES("wordrange(3,4)", "brown fox");
-	VERIFY_EXPR_RES("@@", "The quick brown fox jumps over the lazy dog");
-	VERIFY_EXPR_RES("length(@@)", "43");
+	VERIFY_EXPR_RES("wordrange(3,4)", "brown foox");
+	VERIFY_EXPR_RES("@@", "The quick brown foox jumps over the lazy dog");
+	VERIFY_EXPR_RES("length(@@)", "44");
+	VERIFY_EXPR_RES("splitw()", "The\nquick\nbrown\nfoox\njumps\nover\nthe\nlazy\ndog");
+	VERIFY_EXPR_RES("splitw(,3,4)", "foox\njumps");
+	VERIFY_EXPR_RES("splitw('m')", "The quick brown foox ju\nps over the lazy dog");
+	VERIFY_EXPR_RES("split()", "The quick brown foox jumps over the lazy dog");
+	VERIFY_EXPR_RES("split('o')", "The quick br\nwn f\n\nx jumps \nver the lazy d\ng"); 
+	VERIFY_EXPR_RES("split('o',2,2)", "\nx jumps ");
 
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");

@@ -166,6 +166,8 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
 | `wordlen(n)` | Returns the length of the *n*-th word |
+| `split(sep,hdr,ftr)` | Returns all fields in the input line, one on each output line. If *sep* is specified, it will be used instead of the active field separator. If *hdr* and/or *ftr* are specified, the first *hdr* fields and last *ftr* fields are omitted. | 
+| `splitw(sep,hdr,ftr)` | Returns all words in the input line, one on each output line. If *sep* is specified, it will be used instead of the active word separator. If *hdr* and/or *ftr* are specified, the first *hdr* words and last *ftr* words are omitted. | 
 
 ## Table of Statistical and Frequency Map Pseudo-Functions
 | Function | Description |

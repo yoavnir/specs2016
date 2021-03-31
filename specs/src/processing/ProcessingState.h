@@ -64,6 +64,12 @@ public:
 	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
 	void fieldIdentifierStatsClear();
+
+	void alterFieldSeparator(char sep);
+	char getFieldSeparator();
+	void alterWordSeparator(char sep);
+	char getWordSeparator();
+
 	void breakValuesClear();
 	void resetBreaks();
 	bool needToEvaluate();

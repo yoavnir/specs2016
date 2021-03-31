@@ -1248,6 +1248,30 @@ inclusive.
 defaults to 0x00, and 
 .I end
 defaults to 0xff.
+.IP "split([sep], [hdr], [ftr])" 3
+Returns all fields in the input line, one on each output line.  If 
+.I sep 
+is specified, it will be used instead of the active field separator. If 
+.I hdr 
+and/or 
+.I ftr 
+are specified, the first 
+.I hdr 
+fields and last 
+.I ftr 
+fields are omitted.
+.IP "splitw([sep], [hdr], [ftr])" 3
+Returns all words in the input line, one on each output line.  If 
+.I sep 
+is specified, it will be used instead of the active word separator. If 
+.I hdr 
+and/or 
+.I ftr 
+are specified, the first 
+.I hdr 
+words and last 
+.I ftr 
+words are omitted.
 
 
 .SS "Built-In Statistical Pseudo-Functions" 
