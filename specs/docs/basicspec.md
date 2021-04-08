@@ -42,7 +42,7 @@ The **InputSource** argument may be any of the following:
 * **NUMBER** - A record counter as a 10-digit decimal number.  Read more about expressions on the [Arithmetic-Logical Unit](alu.md) page.
 * **TIMEDIFF** - a 12-char decimal number indicating the number of microseconds since the invocation of the program.
 * An **ID** keyword followed by a previously defined **FieldIdentifier**.
-* The **PRINT** keyword followed by a calculated expression
+* The **PRINT** keyword followed by a calculated expression. The keyword **PRINT** can be replaced by a question mark, either as a standalone token as in `specs ? "2+2"` or as a prefix to the expression, as in `specs "?2+2"`. It should be noted that the former does not work in a shell environment such as *zsh* or *tcsh*, where a question mark is a wildcard for a single character, but it does work for *bash*.
 * A string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the Unix command line requires you to enclose them in double quotes.
 * A **SUBSTring** of another InputSource.
 

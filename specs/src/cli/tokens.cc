@@ -332,6 +332,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(timediff, TIMEDIFF);
 	SIMPLETOKEN(set, SET);
 	SIMPLETOKEN(print, PRINT);
+	SIMPLETOKEN(?,PRINT);
 	SIMPLETOKEN(if, IF);
 	SIMPLETOKEN(else, ELSE);
 	SIMPLETOKEN(then, THEN);
@@ -352,6 +353,13 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(requires, REQUIRES);
 	SIMPLETOKEN(skip-while, SKIPWHILE);
 	SIMPLETOKEN(skip-until, SKIPUNTIL);
+
+	/* question mark to replace PRINT */
+	if (arg[0]=='?') {
+		pVec->insert(pVec->end(), Token(TokenListType__PRINT, NULL, "", argidx, arg));
+		arg.erase(0,1);
+		while (arg.length()>0 && arg[0]==' ') arg.erase(0,1);
+	}
 
 	/* range label */
 	if (arg.length()==2 && arg[1]==':' &&

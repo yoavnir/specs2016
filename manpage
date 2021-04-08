@@ -82,7 +82,11 @@ keyword followed by a previously defined
 .P
 The 
 .B PRINT
-keyword followed by a calculated expression
+keyword followed by a calculated expression.
+.B PRINT
+can be replaced by a question mark (
+.B ?
+) either as its own command-line token or prefixing the calculated expression.
 .P
 A string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the command line requires you to enclose them in double quotes.
 .P
@@ -456,7 +460,7 @@ command-line switches to specify the files that contain the other input streams.
 .B specs
 set to stream #1.  For example, suppose we have two files: f1 and f2, both of which contain lists of numbers, and we want to add them:
 
-    specs -i f1 --is2 f2 a: W1 1 '+' NW  SELECT 2  b: W1 NW  '=' NW  PRINT "a+b" NW
+    specs -i f1 --is2 f2 a: W1 1 '+' NW  SELECT 2  b: W1 NW  '=' NW  "?a+b" NW
     
 If both files contained the natural numbers we would get the following output:
     1 + 1 = 2
@@ -514,6 +518,10 @@ For example:
 Assignment can also be used as expressions. When used as such, the value returned is the content of the counter after executing the assignment. For example, the following specification:
 
     specs print "#0:=2+2" 1
+    
+OR
+
+    specs "?#0:=2+2" 
     
 will output 4.  The assignment is performed and the value stored in the counter.
 	
