@@ -14,7 +14,7 @@
 
 class Reader {
 public:
-	Reader() {mp_thread = NULL; m_countRead = m_countUsed = 0; m_pUnreadString = NULL; m_bAbort = false; m_bRanDry = false;}
+	Reader() {mp_thread = nullptr; m_countRead = m_countUsed = 0; m_pUnreadString = nullptr; m_bAbort = false; m_bRanDry = false;}
 	virtual ~Reader();
 	virtual void        selectStream(unsigned char idx);
 	virtual bool        endOfSource() = 0;

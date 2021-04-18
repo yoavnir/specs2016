@@ -86,7 +86,7 @@ size_t char2physOffset(PSpecString s, size_t charOffset)
 
 StringBuilder::StringBuilder()
 {
-	mp_str = NULL;
+	mp_str = nullptr;
 	m_pos = 1;
 	m_pad = 0;
 }
@@ -96,9 +96,9 @@ StringBuilder::~StringBuilder()
 }
 PSpecString StringBuilder::GetStringUnsafe()
 {
-	if (!mp_str) return NULL;
+	if (!mp_str) return nullptr;
 	PSpecString pRet = mp_str;
-	mp_str = NULL;
+	mp_str = nullptr;
 	m_pos = 1;
 	return pRet;
 }
@@ -107,7 +107,7 @@ PSpecString StringBuilder::GetString()
 {
 	if (!mp_str) return SpecString::newString();
 	PSpecString pRet = mp_str;
-	mp_str = NULL;
+	mp_str = nullptr;
 	m_pos = 1;
 	return pRet;
 }

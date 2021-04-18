@@ -208,7 +208,7 @@ int main (int argc, char** argv)
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
-	PReader pRd = NULL;
+	PReader pRd = nullptr;
 	PSimpleWriter pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
@@ -277,14 +277,14 @@ int main (int argc, char** argv)
 
 	if (ig.readsLines() || g_bForceFileRead) {
 		if (g_inputFile.empty()) {
-			if (NULL == primaryInputPipe()) {
+			if (nullptr == primaryInputPipe()) {
 				pRd = std::make_shared<StandardReader>();
 			} else {
 				pRd = std::make_shared<StandardReader>(primaryInputPipe());
 			}
 		} else {
 			pRd = std::make_shared<StandardReader>(g_inputFile);
-			if (NULL != primaryInputPipe()) {
+			if (nullptr != primaryInputPipe()) {
 				std::cerr << "Error: Both input file and input stream specified.\n";
 				return -4;
 			}
@@ -331,7 +331,7 @@ int main (int argc, char** argv)
 			for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 				if (pWrtrs[i]) {
 					pWrtrs[i]->End();
-					pWrtrs[i] = NULL;
+					pWrtrs[i] = nullptr;
 				}
 			}
 			return -4;
@@ -343,7 +343,7 @@ int main (int argc, char** argv)
 		generatedLines = 0;
 		writtenLines = 0;
 		if (!g_bPrintStats) {
-			pRd = NULL;
+			pRd = nullptr;
 		} else {
 			pRd->endCollectingTimeData();
 		}
@@ -383,7 +383,7 @@ int main (int argc, char** argv)
 			if (g_bPrintStats) {
 				pWrtrs[i]->endCollectingTimeData();
 			} else {
-				pWrtrs[i] = NULL;
+				pWrtrs[i] = nullptr;
 			}
 		}
 	}
@@ -411,14 +411,14 @@ int main (int argc, char** argv)
 		timer.dump("Main Thread");
 		if (pRd) {
 			pRd->dumpTimeData();
-			pRd = NULL;
+			pRd = nullptr;
 		}
 		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 			if (pWrtrs[i]) {
 				if (1 == i) {
 					pWrtrs[i]->dumpTimeData();
 				}
-				pWrtrs[i] = NULL;
+				pWrtrs[i] = nullptr;
 			}
 		}
 

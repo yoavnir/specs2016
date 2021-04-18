@@ -15,7 +15,7 @@ class scopedLock {
 public:
 	scopedLock(std::mutex* m) {m_lock = new std::unique_lock<std::mutex>(*m);}
 	~scopedLock() {if (m_lock) delete(m_lock);}
-	void unlock() {delete(m_lock); m_lock = NULL;}
+	void unlock() {delete(m_lock); m_lock = nullptr;}
 	std::unique_lock<std::mutex>& ulock() {return *m_lock;}
 private:
 	std::unique_lock<std::mutex> *m_lock;
@@ -34,7 +34,7 @@ public:
     StringQueue() {m_Done = false;}
     void push(PSpecString const& data)
     {
-    	MYASSERT(data!=NULL);
+    	MYASSERT(data!=nullptr);
         scopedLock lock(&m_Mutex);
         while (m_Queue.size()>=QUEUE_HIGH_WM) {
         	cv_QueueFull.wait(lock.ulock());

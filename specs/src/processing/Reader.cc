@@ -14,7 +14,7 @@ void ReadAllRecordsIntoReaderQueue(Reader* r)
 
 Reader::~Reader()
 {
-	PSpecString ps = NULL;
+	PSpecString ps = nullptr;
 	End();
 	while (!m_queue.empty()) {
 		m_queue.wait_and_pop(ps);
@@ -35,15 +35,15 @@ void Reader::End()
 		mp_thread->join();
 	}
 
-	mp_thread = NULL;
+	mp_thread = nullptr;
 }
 
 PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 {
-	PSpecString ret = NULL;
+	PSpecString ret = nullptr;
 	if (m_pUnreadString) {
 		ret = m_pUnreadString;
-		m_pUnreadString = NULL;
+		m_pUnreadString = nullptr;
 		return ret;
 	}
 	if (eof()) {
@@ -52,7 +52,7 @@ PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 			_readerCounter--;
 		}
 		m_bRanDry = true;
-		return NULL;
+		return nullptr;
 	}
 	tmr.changeClass(timeClassInputQueue);
 	bool res = m_queue.wait_and_pop(ret);
@@ -64,13 +64,13 @@ PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 		MYASSERT(_readerCounter>0);
 		_readerCounter--;
 		m_bRanDry = true;
-		return NULL;
+		return nullptr;
 	}
 }
 
 void Reader::pushBack(PSpecString ps)
 {
-	MYASSERT_WITH_MSG(m_pUnreadString==NULL, "Only one record can be UNREAD at a time");
+	MYASSERT_WITH_MSG(m_pUnreadString==nullptr, "Only one record can be UNREAD at a time");
 	m_pUnreadString = ps;
 }
 
@@ -97,20 +97,20 @@ void Reader::Begin() {
 StandardReader::StandardReader() {
 	m_NeedToClose = false;
 	m_EOF = false;
-	m_buffer = NULL;
+	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
 }
 
 StandardReader::StandardReader(std::istream* f) {
-	MYASSERT(f!=NULL);
+	MYASSERT(f!=nullptr);
 	m_EOF = false;
 	if (!f->good()) {  // so it crashes if what we've been passed is not a stream pointer
 		m_EOF = true;
 	}
 	m_File = std::shared_ptr<std::istream>(f);
 	m_NeedToClose = false;
-	m_buffer = NULL;
+	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
 }
@@ -124,7 +124,7 @@ StandardReader::StandardReader(std::string& fn) {
 	}
 	m_NeedToClose = true;
 	m_EOF = false;
-	m_buffer = NULL;
+	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
 }
@@ -133,7 +133,7 @@ StandardReader::StandardReader(pipeType pipe) {
 	m_pipe = pipe;
 	m_NeedToClose = false;
 	m_EOF = false;
-	m_buffer = NULL;
+	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
 }
@@ -192,7 +192,7 @@ PSpecString StandardReader::getNextRecord() {
 			m_Timer.changeClass(timeClassProcessing);
 			if (!ok) {
 				m_EOF = true;
-				return NULL;
+				return nullptr;
 			}
 		} else {
 			bool ok;
@@ -215,7 +215,7 @@ PSpecString StandardReader::getNextRecord() {
 			m_Timer.changeClass(timeClassProcessing);
 			if (!ok) {
 				m_EOF = true;
-				return NULL;
+				return nullptr;
 			}
 		}
 		// strip trailing newline if any
@@ -240,13 +240,13 @@ PSpecString StandardReader::getNextRecord() {
 		m_Timer.changeClass(timeClassProcessing);
 		if (m_File->gcount() < m_lrecl) {
 			m_EOF = true;
-			return NULL;
+			return nullptr;
 		} else {
 			return SpecString::newString(m_buffer, m_lrecl);
 		}
 	}
 	default:
-		return NULL;	
+		return nullptr;	
 	}
 }
 
@@ -264,7 +264,7 @@ TestReader::~TestReader()
 		// Not so smart, is it?
 		unsigned int i;
 		for (i=0 ; i<m_count ; i++) {
-			mp_arr[i] = NULL;
+			mp_arr[i] = nullptr;
 		}
 		free(mp_arr);
 	}
@@ -292,7 +292,7 @@ void TestReader::InsertString(PSpecString ps)
 #define ITERATE_VALID_STREAMS(i)                \
 	unsigned char i;                            \
 	for (i=0 ; i < maxReaderIdx+1 ; i++) {   \
-		if (NULL != readerArray[i]) {
+		if (nullptr != readerArray[i]) {
 
 #define ITERATE_VALID_STREAMS_END				\
 		}                                       \
@@ -315,7 +315,7 @@ multiReader::multiReader(PReader pDefaultReader)
 multiReader::~multiReader()
 {
 	ITERATE_VALID_STREAMS(idx)
-		readerArray[idx] = NULL;
+		readerArray[idx] = nullptr;
 		readerCounter--;
 	ITERATE_VALID_STREAMS_END
 }
@@ -324,7 +324,7 @@ void multiReader::addStream(unsigned char idx, std::istream* f)
 {
 	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
 	idx--;  // Set to C-style index
-	MYASSERT_WITH_MSG(NULL==readerArray[idx], "Input stream is already defined");
+	MYASSERT_WITH_MSG(nullptr==readerArray[idx], "Input stream is already defined");
 
 	readerArray[idx] = std::make_shared<StandardReader>(f);
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
@@ -335,7 +335,7 @@ void multiReader::addStream(unsigned char idx, std::string& fn)
 {
 	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
 	idx--;  // Set to C-style index
-	MYASSERT_WITH_MSG(NULL==readerArray[idx], "Input stream is already defined");
+	MYASSERT_WITH_MSG(nullptr==readerArray[idx], "Input stream is already defined");
 
 	readerArray[idx] = std::make_shared<StandardReader>(fn);
 	if (idx > maxReaderIdx) maxReaderIdx = idx;
@@ -346,13 +346,13 @@ void multiReader::selectStream(unsigned char idx, PSpecString* ppRecord)
 {
 	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
 	idx--;  // Set to C-style index
-	MYASSERT_WITH_MSG(NULL!=readerArray[idx], "Invalid input stream");
+	MYASSERT_WITH_MSG(nullptr!=readerArray[idx], "Invalid input stream");
 
 	if (readerIdx!=idx) {
-		MYASSERT(NULL == stringArray[readerIdx]);
+		MYASSERT(nullptr == stringArray[readerIdx]);
 		stringArray[readerIdx] = *ppRecord;
 		*ppRecord = stringArray[idx];
-		stringArray[idx] = NULL;
+		stringArray[idx] = nullptr;
 		readerIdx = idx;
 	}
 }
@@ -373,7 +373,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 		if (STOP_STREAM_ANY==stopReaderIdx || readerIdx==(stopReaderIdx-1) || 0==readerCounter) {
 			/* Yes, time to exit */
 			_readerCounter--;
-			return NULL;
+			return nullptr;
 		}
 		ret = SpecString::newString();
 	}
@@ -385,7 +385,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 			if (!stringArray[idx]) {
 				if (STOP_STREAM_ANY==stopReaderIdx || idx==(stopReaderIdx-1) || 0==readerCounter) {
 					_readerCounter--;
-					return NULL;
+					return nullptr;
 				}
 				stringArray[idx] = SpecString::newString();
 			}
@@ -397,7 +397,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 				if (!stringArray[idx]) {
 					if (STOP_STREAM_ANY==stopReaderIdx || idx==(stopReaderIdx-1) || 0==readerCounter) {
 						_readerCounter--;
-						return NULL;
+						return nullptr;
 					}
 					stringArray[idx] = SpecString::newString();
 				}
@@ -418,5 +418,5 @@ bool multiReader::endOfSource()
 PSpecString multiReader::getNextRecord()
 {
 	MYTHROW("multiReader::getNextRecord() should not have been called.");
-	return NULL;
+	return nullptr;
 }

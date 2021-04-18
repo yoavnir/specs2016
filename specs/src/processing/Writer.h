@@ -76,7 +76,7 @@ public:
 			m_queue.wait_and_pop(ret);
 			return ret;
 		} else {
-			return NULL;  // SpecString::newString();
+			return nullptr;  // SpecString::newString();
 		}
 	}
 };

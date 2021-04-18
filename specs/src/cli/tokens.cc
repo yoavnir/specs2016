@@ -11,7 +11,7 @@
 
 extern std::string conv_X2CH(std::string& s);
 
-Token dummyToken(TokenListType__DUMMY, NULL, "", 0, std::string("dummyToken"));
+Token dummyToken(TokenListType__DUMMY, nullptr, "", 0, std::string("dummyToken"));
 
 std::vector<Token> parseTokensSplit(const char* arg);
 
@@ -172,10 +172,10 @@ static PTokenFieldRange parseAsSingleNumber(std::string s)
 	try {
 		l = std::stol(s);
 	} catch(std::invalid_argument& e) {
-		return NULL;
+		return nullptr;
 	}
 	if (l==0 || s!=std::to_string(l)) {
-		return NULL;
+		return nullptr;
 	}
 	auto pRet = std::make_shared<TokenFieldRangeSimple>(l,l);
 	pRet->setSingleNumber();
@@ -191,11 +191,11 @@ static PTokenFieldRange parseAsFromToRange(std::string s)
 	try {
 		_from = std::stol(s, &posOfHyphen);
 	} catch(std::invalid_argument& e) {
-		return NULL;
+		return nullptr;
 	}
 	if (_from==0 || s.substr(0,posOfHyphen)!=std::to_string(_from)
 		|| (std::string::npos==hyphens.find(s[posOfHyphen]))) {
-		return NULL;
+		return nullptr;
 	}
 
 	bRealHyphen = (s[posOfHyphen]=='-');
@@ -203,18 +203,18 @@ static PTokenFieldRange parseAsFromToRange(std::string s)
 	try {
 		_to = std::stol(s.substr(posOfHyphen+1));
 		if (_to==0 || s.substr(posOfHyphen+1)!=std::to_string(_to)) {
-			return NULL;
+			return nullptr;
 		}
 		if (bRealHyphen) {
 			if (_to < _from || _from < 1) {
-				return NULL;
+				return nullptr;
 			}
 		}
 	} catch (std::invalid_argument& e) {
 		if (s.substr(posOfHyphen+1)=="*") {
 			_to = LAST_POS_END;
 		} else {
-			return NULL;
+			return nullptr;
 		}
 	}
 
@@ -228,18 +228,18 @@ static PTokenFieldRange parseAsFromLenRange(std::string s)
 	try {
 		_from = std::stol(s, &posOfDot);
 	} catch(std::invalid_argument& e) {
-		return NULL;
+		return nullptr;
 	}
 	if (_from==0 || s.substr(0,posOfDot)!=std::to_string(_from) || s[posOfDot]!='.') {
-		return NULL;
+		return nullptr;
 	}
 	try {
 		_len = std::stol(s.substr(posOfDot+1));
 	} catch (std::invalid_argument& e) {
-		return NULL;
+		return nullptr;
 	}
 	if (_len<=0 || s.substr(posOfDot+1)!=std::to_string(_len)) {
-		return NULL;
+		return nullptr;
 	}
 
 	_to = _from + _len - 1;
@@ -274,14 +274,14 @@ static bool compareStringWithMinLength(std::string& shortString, const char* sz,
 #define SIMPLETOKEN(s,t)   \
 		if (CASEEQ(arg,#s)) {   \
 			pVec->insert(pVec->end(),   \
-					Token(TokenListType__##t, NULL, "", argidx, arg)); \
+					Token(TokenListType__##t, nullptr, "", argidx, arg)); \
 			return; \
 		}
 
 #define SIMPLETOKENV(s,t,l)  \
 		if (compareStringWithMinLength(arg,#s,l)) {   \
 			pVec->insert(pVec->end(),    \
-					Token(TokenListType__##t, NULL, "", argidx, arg)); \
+					Token(TokenListType__##t, nullptr, "", argidx, arg)); \
 			return;  \
 		}
 
@@ -292,7 +292,7 @@ static bool isPossibleDelimiter(char c) {
 static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int argidx);
 void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 {
-	PTokenFieldRange pRange = NULL;
+	PTokenFieldRange pRange = nullptr;
 
 	/* various ifs, buts and maybes */
 
@@ -356,7 +356,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 
 	/* question mark to replace PRINT */
 	if (arg[0]=='?') {
-		pVec->insert(pVec->end(), Token(TokenListType__PRINT, NULL, "", argidx, arg));
+		pVec->insert(pVec->end(), Token(TokenListType__PRINT, nullptr, "", argidx, arg));
 		arg.erase(0,1);
 		while (arg.length()>0 && arg[0]==' ') arg.erase(0,1);
 	}
@@ -366,7 +366,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 			((arg[0]>='a' && arg[0]<='z') || (arg[0]>='A' && arg[0]<='Z'))) {
 		pVec->insert(pVec->end(),
 				Token(TokenListType__RANGELABEL,
-						NULL, arg.substr(0,1), argidx, arg));
+						nullptr, arg.substr(0,1), argidx, arg));
 		NEXT_TOKEN;
 	}
 
@@ -374,7 +374,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	if (arg.length()==1 && arg[0]=='.') {
 		pVec->insert(pVec->end(),
 				Token(TokenListType__PERIOD,
-						NULL, "", argidx, arg));
+						nullptr, "", argidx, arg));
 		NEXT_TOKEN;
 	}
 
@@ -382,7 +382,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	if (StringConversion__NONE!=getConversionByName(arg)) {
 		pVec->insert(pVec->end(),
 				Token(TokenListType__CONVERSION,
-						NULL, arg, argidx, arg));
+						nullptr, arg, argidx, arg));
 		NEXT_TOKEN;
 	}
 
@@ -418,7 +418,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	size_t lastdot = arg.find_last_of('.');
 	size_t firstdot = arg.find_first_of('.');
 	if (lastdot==firstdot) { // either they're both NULL or there's exactly one dot
-		PTokenFieldRangeSimple pSimpleRange = NULL;
+		PTokenFieldRangeSimple pSimpleRange = nullptr;
 		std::string nwnf = arg;
 		if (firstdot!=std::string::npos) {
 			nwnf = arg.substr(0,firstdot);
@@ -450,15 +450,15 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 			NEXT_TOKEN;
 		}
 
-		pSimpleRange = NULL;
+		pSimpleRange = nullptr;
 	}
 
 CONT1:
 	/* input ranges */
 	if (arg[0]=='(' && arg.back()==')') {
-		pVec->insert(pVec->end(), Token(TokenListType__GROUPSTART, NULL, "", argidx, "("));
+		pVec->insert(pVec->end(), Token(TokenListType__GROUPSTART, nullptr, "", argidx, "("));
 		parseInputRangesTokens(pVec, arg, argidx);
-		pVec->insert(pVec->end(), Token(TokenListType__GROUPEND, NULL, "", argidx, ")"));
+		pVec->insert(pVec->end(), Token(TokenListType__GROUPEND, nullptr, "", argidx, ")"));
 		NEXT_TOKEN;
 	}
 
@@ -468,7 +468,7 @@ CONT1:
 			std::string hexLiteral = arg.substr(1);
 			std::string literal = conv_X2CH(hexLiteral);
 			pVec->insert(pVec->end(),
-				Token(TokenListType__LITERAL, NULL /* range */,
+				Token(TokenListType__LITERAL, nullptr /* range */,
 						literal, argidx, arg));
 			NEXT_TOKEN;
 		} catch(ConversionException& e) {
@@ -481,7 +481,7 @@ CONT1:
 	if ((arg[0]=='@') && (arg.length() > 1) && (configSpecLiteralExists(key))) {
 		std::string literal = configSpecLiteralGet(key);
 		pVec->insert(pVec->end(),
-				Token(TokenListType__LITERAL, NULL /* range */,
+				Token(TokenListType__LITERAL, nullptr /* range */,
 						literal, argidx, arg));
 		NEXT_TOKEN;
 	}
@@ -496,7 +496,7 @@ CONT1:
 		}
 
 		pVec->insert(pVec->end(),
-			Token(TokenListType__LITERAL, NULL /* range */,
+			Token(TokenListType__LITERAL, nullptr /* range */,
 				literal, argidx, arg));
 		NEXT_TOKEN;
 	}
@@ -513,7 +513,7 @@ static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int 
 	itemPtrs[idx] = strtok(localCopy, " ");
 	while (itemPtrs[idx] && idx<MAX_INPUT_RANGES_IN_GROUP) {
 		idx++;
-		itemPtrs[idx] = strtok(NULL, " ");
+		itemPtrs[idx] = strtok(nullptr, " ");
 	}
 	if (idx==MAX_INPUT_RANGES_IN_GROUP) {
 		std::string err = "Too many items in ranges group at index " + std::to_string(argidx);
@@ -617,7 +617,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		switch (tok.Type()) {
 		case TokenListType__WORDRANGE:
 		case TokenListType__FIELDRANGE:
-			if (tok.Range()==NULL) {
+			if (tok.Range()==nullptr) {
 				if (nextTok.Type()!=TokenListType__RANGE) {
 					std::string err = "Bad word/field range <"+nextTok.Orig()+"> at index "+ std::to_string(nextTok.argIndex())+".";
 					MYTHROW(err);

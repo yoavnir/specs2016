@@ -88,7 +88,7 @@ std::vector<Token> parseTokensSplit(const char* arg)
 					std::string delimitedToken = sarg.substr(1);
 					sarg += delimiter;
 					ret.insert(ret.end(),
-							Token(TokenListType__LITERAL, NULL /* range */,
+							Token(TokenListType__LITERAL, nullptr /* range */,
 									delimitedToken, argindex++, sarg));
 				}
 				sarg.clear();
@@ -172,7 +172,7 @@ static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 				free(spath);
 				return;
 			}
-			onePath = strtok(NULL, PATH_LIST_SEPARATOR);
+			onePath = strtok(nullptr, PATH_LIST_SEPARATOR);
 		}
 	}
 	if (spath) free(spath);
@@ -249,7 +249,7 @@ bool dumpSpecificationsList(std::string specName)
 					}
 				}
 			}
-			onePath = strtok(NULL, PATH_LIST_SEPARATOR);
+			onePath = strtok(nullptr, PATH_LIST_SEPARATOR);
 		}
 	}
 	if (spath) free(spath);

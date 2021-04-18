@@ -291,7 +291,7 @@ extern bool g_bWarnAboutGrammars;
 		INC_TEST_INDEX2 {									\
 		_expr = s;											\
 		_res2 = true;										\
-		_result = NULL;										\
+		_result = nullptr;										\
 		_res = parseAluExpression(_expr,vec);				\
 		if (_res) {                                         \
 			if (expressionIsAssignment(vec)) {              \
@@ -315,7 +315,7 @@ extern bool g_bWarnAboutGrammars;
 					_result = mkValue(e.what(true));        \
 				}                                           \
 				cleanAluVec(rpnVec);						\
-				_res = (_result!=NULL) && (_result->getStr()==res);	\
+				_res = (_result!=nullptr) && (_result->getStr()==res);	\
 			}                                               \
 		}                                                   \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \

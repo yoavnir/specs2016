@@ -18,8 +18,8 @@
 
 #define PERCENTS (ALUFloat(100.0))
 
-stateQueryAgent* g_pStateQueryAgent = NULL;
-positionGetter* g_PositionGetter = NULL;
+stateQueryAgent* g_pStateQueryAgent = nullptr;
+positionGetter* g_PositionGetter = nullptr;
 
 void setStateQueryAgent(stateQueryAgent* qa)
 {
@@ -49,19 +49,19 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
 }
 
 #define ASSERT_NOT_ELIDED(arg,idx,name)     \
-	if (NULL == (arg)) { throw_argument_issue(__func__,idx,#name,"Argument must not be elided"); }
+	if (nullptr == (arg)) { throw_argument_issue(__func__,idx,#name,"Argument must not be elided"); }
 
 #define THROW_ARG_ISSUE(idx,name,msg)       \
 		throw_argument_issue(__func__,idx,#name,msg.c_str());
 
 #define ARG_INT_WITH_DEFAULT(arg,def)       \
-		((NULL == (arg)) ? def : (arg)->getInt())
+		((nullptr == (arg)) ? def : (arg)->getInt())
 
 #define ARG_STR_WITH_DEFAULT(arg,def)       \
-		((NULL == (arg)) ? def : (arg)->getStr())
+		((nullptr == (arg)) ? def : (arg)->getStr())
 
 #define ARG_FLOAT_WITH_DEFAULT(arg,def)       \
-		((NULL == (arg)) ? def : (arg)->getFloat())
+		((nullptr == (arg)) ? def : (arg)->getFloat())
 
 /*
  *
@@ -175,7 +175,7 @@ PValue AluFunc_sqrt(PValue op)
 
 // Both of the following functions assume little-endian architecture
 // The mainframe version and Solaris version will need some work...
-static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = NULL)
+static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = nullptr)
 {
 	std::string str = op->getStr();
 	uint64_t value = 0;
@@ -263,7 +263,7 @@ PValue AluFunc_c2d(PValue op)
 	}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 PValue AluFunc_c2f(PValue op)
@@ -760,7 +760,7 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 	long long int value;
 	try {
 		try {
-			unsigned long long int uvalue = std::stoull(hex, NULL, 16);
+			unsigned long long int uvalue = std::stoull(hex, nullptr, 16);
 			value = (long long int) uvalue;
 		} catch (std::invalid_argument) {
 			CONVERSION_EXCEPTION(hex, "Hex", "Decimal");
@@ -833,7 +833,7 @@ PValue AluFunc_sum(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "SUM requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "SUM requested for undefined field identifier")
 	return pVStats->sum();
 }
 
@@ -842,7 +842,7 @@ PValue AluFunc_min(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "MIN requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "MIN requested for undefined field identifier")
 	return pVStats->_min();
 }
 
@@ -851,7 +851,7 @@ PValue AluFunc_max(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "MAX requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "MAX requested for undefined field identifier")
 	return pVStats->_max();
 }
 
@@ -860,7 +860,7 @@ PValue AluFunc_average(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "AVERAGE requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "AVERAGE requested for undefined field identifier")
 	return pVStats->average();
 }
 
@@ -869,7 +869,7 @@ PValue AluFunc_variance(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "VARIANCE requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "VARIANCE requested for undefined field identifier")
 	return pVStats->variance();
 }
 
@@ -878,7 +878,7 @@ PValue AluFunc_stddev(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "STDDEV requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "STDDEV requested for undefined field identifier")
 	return pVStats->stddev();
 }
 
@@ -887,7 +887,7 @@ PValue AluFunc_stderrmean(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "STDERRMEAN requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "STDERRMEAN requested for undefined field identifier")
 	return pVStats->stderrmean();
 }
 
@@ -1491,7 +1491,7 @@ PValue AluFunc_lvalue(PValue pStr, PValue pSep)
 		pRes = AluFunc_sfield(pStr,pCount,pDefaultSep);
 	}
 
-	return AluFunc_strip(pRes, NULL, NULL);
+	return AluFunc_strip(pRes, nullptr, nullptr);
 }
 
 PValue AluFunc_rvalue(PValue pStr, PValue pSep)
@@ -1507,7 +1507,7 @@ PValue AluFunc_rvalue(PValue pStr, PValue pSep)
 		pRes = AluFunc_sfield(pStr,pCount,pDefaultSep);
 	}
 
-	return AluFunc_strip(pRes, NULL, NULL);
+	return AluFunc_strip(pRes, nullptr, nullptr);
 }
 
 PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)

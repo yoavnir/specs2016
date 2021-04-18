@@ -28,13 +28,13 @@ std::string callParseTokens(const char* _str)
 {
 	int argc = 0;
 	char* argv[200];
-	static char* str = NULL;
+	static char* str = nullptr;
 	if (str) free(str);
 	str = strdup(_str);
 	char* ptr = strtok(str, " ");
 	while (ptr) {
 		argv[argc++] = ptr;
-		ptr = strtok(NULL, " ");
+		ptr = strtok(nullptr, " ");
 		assert(argc<200);
 	}
 	

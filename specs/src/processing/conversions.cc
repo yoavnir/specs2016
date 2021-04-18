@@ -129,7 +129,7 @@ std::string conv_X2D(std::string& s) {
 	unsigned long long value;
 	try {
 		try {
-			value = std::stoull(s, NULL, 16);
+			value = std::stoull(s, nullptr, 16);
 		} catch (std::invalid_argument) {
 			CONVERSION_EXCEPTION(s, "Hex", "Decimal");
 		}

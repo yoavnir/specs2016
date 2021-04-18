@@ -10,10 +10,10 @@ void disableRegexCache();
 
 void setRegexType(std::string& s);
 
-bool regexMatch(std::string* pStr, PValue pExp, std::string* pFlags = NULL);
+bool regexMatch(std::string* pStr, PValue pExp, std::string* pFlags = nullptr);
 
-bool regexSearch(std::string* pStr, PValue pExp, std::string* pFlags = NULL);
+bool regexSearch(std::string* pStr, PValue pExp, std::string* pFlags = nullptr);
 
-std::string regexReplace(std::string* pStr, PValue pExp, std::string& fmt, std::string* pFlags = NULL);
+std::string regexReplace(std::string* pStr, PValue pExp, std::string& fmt, std::string* pFlags = nullptr);
 
 #endif

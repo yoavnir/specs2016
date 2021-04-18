@@ -25,7 +25,7 @@ extern ALUCounters g_counters;
 
 DataField::DataField()
 {
-	m_InputPart = NULL;
+	m_InputPart = nullptr;
 	m_label = m_tailLabel = '\0';
 	m_outStart = LAST_POS_END;
 	m_maxLength = LAST_POS_END;
@@ -36,7 +36,7 @@ DataField::DataField()
 }
 
 DataField::~DataField() {
-	m_InputPart = NULL;
+	m_InputPart = nullptr;
 	cleanAluVec(m_outputStartExpression);
 	cleanAluVec(m_outputWidthExpression);
 	cleanAluVec(m_outputAlignmentExpression);
@@ -207,7 +207,7 @@ PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index
 		break;
 	}
 	default:
-		return NULL;
+		return nullptr;
 	}
 
 	_index = index;
@@ -441,7 +441,7 @@ void DataField::stripString(PSpecString &pOrig)
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	bool bWritingWasDone = false;
-	PValue pComposedStartingPosition = NULL;
+	PValue pComposedStartingPosition = nullptr;
 	PSpecString pInput = m_InputPart->getStr(pState);
 	size_t outputWidth = m_maxLength;
 
@@ -554,7 +554,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	} else if (m_outStart==POS_SPECIAL_VALUE_COMPOSED) {
 		PValue res;
 		if (m_outputStartExpression.size() > 0) {
-			if (NULL == pComposedStartingPosition) {
+			if (nullptr == pComposedStartingPosition) {
 				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
 			}
 			res = mkValue(pComposedStartingPosition->getInt());

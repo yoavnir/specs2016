@@ -92,7 +92,7 @@ void processPlusDirective(std::string& dirline)
 		configSpecLiteralSet(variable, line);
 	} else if (directive=="+IN") {
 		// Like in The Highlander, there can only be one
-		MYASSERT(g_primaryInput==NULL);
+		MYASSERT(g_primaryInput==nullptr);
 
 		auto pipe = execCmd(dirline);
 		if (!pipe) {

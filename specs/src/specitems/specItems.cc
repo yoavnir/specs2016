@@ -392,7 +392,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 	for ( ; processingContinue && i<m_items.size(); i++) {
 		if (pState.inputStreamHasChanged()) {
 			multiReader* pmRead = dynamic_cast<multiReader*>(pRd);
-			MYASSERT_WITH_MSG(NULL != pmRead, "Stream selected in non-multi-stream specification");
+			MYASSERT_WITH_MSG(nullptr != pmRead, "Stream selected in non-multi-stream specification");
 			pState.setFirst();
 			PSpecString ps = pState.currRecord();
 			pmRead->selectStream(pState.getActiveInputStream(), &ps);
@@ -522,7 +522,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	}
 
 	// run-out cycle
-	pState.setString(NULL);
+	pState.setString(nullptr);
 	pState.setFirst();
 	if (processDo(sb, pState, &rd, tmr, readerCounter)) {
 		pState.getCurrentWriter()->Write(sb.GetString());
@@ -579,7 +579,7 @@ TokenItem::TokenItem(Token& t)
 TokenItem::~TokenItem()
 {
 	if (mp_Token) {
-		mp_Token = NULL;
+		mp_Token = nullptr;
 	}
 }
 
@@ -710,11 +710,11 @@ ConditionItem::ConditionItem(std::string& _statement)
 	if (expressionIsAssignment(expr)) {
 		PUnit aUnit = expr[0];
 		auto pCounterUnit = std::dynamic_pointer_cast<AluUnitCounter>(aUnit);
-		MYASSERT(NULL != pCounterUnit);
+		MYASSERT(nullptr != pCounterUnit);
 		m_counter = pCounterUnit->getKey();
-		aUnit = NULL;
+		aUnit = nullptr;
 		m_assnOp = std::dynamic_pointer_cast<AluAssnOperator>(expr[1]);
-		MYASSERT(NULL != m_assnOp);
+		MYASSERT(nullptr != m_assnOp);
 		expr.erase(expr.begin(), expr.begin()+2);
 		m_isAssignment = true;
 	} else {
@@ -723,7 +723,7 @@ ConditionItem::ConditionItem(std::string& _statement)
 	MYASSERT(convertAluVecToPostfix(expr, m_RPNExpression, true));
 }
 
-ConditionItem::ConditionItem(ConditionItem::predicate _p) : m_counter(0), m_assnOp(NULL)
+ConditionItem::ConditionItem(ConditionItem::predicate _p) : m_counter(0), m_assnOp(nullptr)
 {
 	MYASSERT(_p != PRED_IF);
 	m_isAssignment = false;
