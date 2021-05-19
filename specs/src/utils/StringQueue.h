@@ -21,18 +21,18 @@ private:
 	std::unique_lock<std::mutex> *m_lock;
 };
 
-class StringQueue
+template <class T> class MTQueue
 {
 private:
-    std::queue<PSpecString> m_Queue;
+    std::queue<T> m_Queue;
     mutable std::mutex m_Mutex;
     std::condition_variable cv_QueueEmpty;
     std::condition_variable cv_QueueFull;
     queueTimer m_timer;
     bool m_Done;
 public:
-    StringQueue() {m_Done = false;}
-    void push(PSpecString const& data)
+    MTQueue() : m_Done(false) {}
+    void push(T const& data)
     {
     	MYASSERT(data!=nullptr);
         scopedLock lock(&m_Mutex);
@@ -51,7 +51,7 @@ public:
         return m_Queue.empty();
     }
 
-    bool wait_and_pop(PSpecString& popped_value)
+    bool wait_and_pop(T& popped_value)
     {
         scopedLock lock(&m_Mutex);
         while(m_Queue.empty() && false==m_Done)
@@ -84,5 +84,7 @@ public:
 
 };
 
+
+typedef MTQueue<PSpecString> StringQueue;
 
 #endif
