@@ -89,7 +89,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	char* ln = strtok(example, "\n");
 	while (ln) {
 		tRead.InsertString(ln);
-		ln = strtok(NULL, "\n");
+		ln = strtok(nullptr, "\n");
 	}
 
 	char* specList = (char*)_specList;
@@ -98,7 +98,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	normalizeTokenList(&vec);
 	itemGroup ig;
 
-	PSpecString result = NULL;
+	PSpecString result = nullptr;
 	StringBuilder sb;
 	setPositionGetter(&sb);
 
@@ -145,10 +145,10 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		if (!ig.readsLines()) {
 			ig.setRegularRunAtEOF();
 		}
-		ps.setString(NULL);
+		ps.setString(nullptr);
 		ps.setFirst();
 		try {
-			ig.processDo(sb, ps, NULL, tmr, readerCounter);
+			ig.processDo(sb, ps, nullptr, tmr, readerCounter);
 			PSpecString pWritten = pwr1->getString();
 			PSpecString pOut = sb.GetStringUnsafe();
 			if (pWritten) {

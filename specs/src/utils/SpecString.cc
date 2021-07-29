@@ -6,7 +6,7 @@
 void StdSpecString::Overlay(PSpecString pss, size_t offset, void* pPadChar)
 {
 	PStdSpecString pSmallString = std::dynamic_pointer_cast<StdSpecString>(pss);
-	MYASSERT(pSmallString!=NULL);
+	MYASSERT(pSmallString!=nullptr);
 
 	size_t endPos = offset + pSmallString->length();
 	if (endPos > m_str.length()) {
@@ -115,7 +115,7 @@ PSpecString SpecString::newString()
 {
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 not supported yet");
-		return NULL; // appease the compiler warning
+		return nullptr; // appease the compiler warning
 	} else {
 		return std::make_shared<StdSpecString>();
 	}
@@ -125,7 +125,7 @@ PSpecString SpecString::newString(const char* pstrz)
 {
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 not supported yet");
-		return NULL; // appease the compiler warning
+		return nullptr; // appease the compiler warning
 	} else {
 		return std::make_shared<StdSpecString>(pstrz);
 	}
@@ -135,7 +135,7 @@ PSpecString SpecString::newString(const char* pstrz, size_t len)
 {
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 not supported yet");
-		return NULL; // appease the compiler warning
+		return nullptr; // appease the compiler warning
 	} else {
 		return std::make_shared<StdSpecString>(pstrz, len);
 	}
@@ -145,10 +145,10 @@ PSpecString SpecString::newString(PSpecString pss, size_t start, size_t len)
 {
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 not supported yet");
-		return NULL; // appease the compiler warning
+		return nullptr; // appease the compiler warning
 	} else {
 		PStdSpecString psss = std::dynamic_pointer_cast<StdSpecString>(pss);
-		MYASSERT(psss!=NULL);
+		MYASSERT(psss!=nullptr);
 		return std::make_shared<StdSpecString>(psss->data() + start, len);
 	}
 }
@@ -157,7 +157,7 @@ PSpecString SpecString::newString(std::string& st)
 {
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 not supported yet");
-		return NULL; // appease the compiler warning
+		return nullptr; // appease the compiler warning
 	} else {
 		return std::make_shared<StdSpecString>(st.c_str(), st.length());
 	}
@@ -167,10 +167,10 @@ PSpecString SpecStringCopy(PSpecString pss)
 {
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 not supported yet");
-		return NULL; // appease the compiler warning
+		return nullptr; // appease the compiler warning
 	} else {
 		PStdSpecString psss = std::dynamic_pointer_cast<StdSpecString>(pss);
-		MYASSERT(psss!=NULL);
+		MYASSERT(psss!=nullptr);
 		return std::make_shared<StdSpecString>(*psss);
 	}
 }

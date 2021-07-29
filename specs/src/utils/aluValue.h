@@ -41,7 +41,7 @@ public:
 	ALUCounterType getDivinedType() const;
 	void           divineType()		{m_type = getDivinedType();}
 	std::string    getStr()  const  {return (m_type==counterType__None) ? std::string("NaN") : m_value;}
-	std::string*   getStrPtr()      {return (m_type==counterType__None) ? NULL : &m_value;}
+	std::string*   getStrPtr()      {return (m_type==counterType__None) ? nullptr : &m_value;}
 	ALUInt         getInt() const;
 	ALUInt         getHex() const;
 	ALUFloat       getFloat() const;

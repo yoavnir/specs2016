@@ -48,7 +48,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandContext    HCRYPTPROV
   #define AluRandSeedType   char
   #define AluRandSeed(s)    if (0==CryptAcquireContext(&AluRandCtxBuffer_G, NULL, \
-		  NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {                            \
+		  nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {                            \
 		      std::string err = "CryptAquireContext() failed. GetLastError() returns " + std::to_string(GetLastError()); \
 		      MYTHROW(err);   \
 		  }

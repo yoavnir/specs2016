@@ -12,6 +12,14 @@ These are string or numerical values that appear in the expression.  The numbers
 ```
 specs print "'2+3=' || (2+3)" 1
 ``` 
+or
+```
+specs ? "'2+3=' || (2+3)" 1
+``` 
+or even
+```
+specs "?'2+3=' || (2+3)" 1
+``` 
 ### Field Identifiers
 The field identifiers mentioned in [Basic Specifications](basicspec.md) can be used as values in expressions by using just the single letter. For example, here's an expression involving a field identifier:
 ```

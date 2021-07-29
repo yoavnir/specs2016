@@ -166,6 +166,8 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
 | `wordlen(n)` | Returns the length of the *n*-th word |
+| `split(sep,hdr,ftr)` | Returns all fields in the input line, one on each output line. If *sep* is specified, it will be used instead of the active field separator. If *hdr* and/or *ftr* are specified, the first *hdr* fields and last *ftr* fields are omitted. | 
+| `splitw(sep,hdr,ftr)` | Returns all words in the input line, one on each output line. If *sep* is specified, it will be used instead of the active word separator. If *hdr* and/or *ftr* are specified, the first *hdr* words and last *ftr* words are omitted. | 
 
 ## Table of Statistical and Frequency Map Pseudo-Functions
 | Function | Description |
@@ -213,8 +215,9 @@ The parameters for the `fmap_dump` functions are as follows:
 | `eof()` | Returns `1` in the run-out phase, or `0` otherwise |
 | `conf(key,default)` | Returns the configured string `key` if it exists, the value `default` if it doesn't, and **NaN** if `default` is omitted |
 | `defined(key)` | Returns `1` if the configured string `key` is defined, or `0` if it isn't |
+| `getenv(name)` | Returns the content of the environment variable `name` or **NaN** if the variable is not defined |
 | `pset(var,value)` | Sets the **persistent variable** with the name in *var* to the value *value*. The value will be set in future invocations of **specs**. The function returns the value in *value* | 
-| `pget(var,default)` | Returns the value of the **persistent variable** with the name in *var*. If the variable is not defined, it returns the *default* value. If that is unspecified, returns **NaN** |
+| `pget(var,default)` | Returns the value of the **persistent variable** with the name in *var*. If the variable is not defined, it returns the *default* value. If that is unspecified, returns **NaN**.  It is possible to use `#var` as an abbreviated form of `pget(var)`|
 | `pdefined(var)` | Returns **TRUE** (1) if the **persistent variable** *var* is defined, or **FALSE** (0) otherwise |
 | `pclear(var)` | Clears the **persistent variable** *var*. Returns the value before clearing it. If the variable was not defined, returns **NaN**.
 | `tf2mcs(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is microseconds since the UNIX epoch. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |

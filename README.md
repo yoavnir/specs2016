@@ -10,6 +10,14 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+1-June-2021: Version 0.8 Alpha is here
+=====================================
+What's New:
+* Directives for in-file specifications:
+  * `+SET` to set internal configured strings from a command output
+  * `+IN` to set the input stream to be a command output
+* Some code readability improvements
+
 1-Sep-2020: Version 0.7 is here
 ===============================
 What's New:

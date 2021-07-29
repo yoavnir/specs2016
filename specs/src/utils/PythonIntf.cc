@@ -64,7 +64,7 @@ public:
 
 class PythonFuncRec : public ExternalFunctionRec {
 public:
-	PythonFuncRec(std::string& _name, PyObject* _pFunc) : m_name(_name), m_pFuncPtr(_pFunc), m_pTuple(NULL) {
+	PythonFuncRec(std::string& _name, PyObject* _pFunc) : m_name(_name), m_pFuncPtr(_pFunc), m_pTuple(nullptr) {
 		Py_INCREF(m_pFuncPtr);
 	}
 	
@@ -100,7 +100,7 @@ public:
 	void ResetArgs() {
 		if (m_pTuple) {
 			Py_DECREF(m_pTuple);
-			m_pTuple = NULL;
+			m_pTuple = nullptr;
 		}
 	}
 
@@ -155,12 +155,12 @@ public:
 	}
 
 	PValue Call() {
-		PValue pRet = NULL;
+		PValue pRet = nullptr;
 
 		// Check that all values were passed, complete those that haven't
 		for (size_t i=0 ; i<GetArgCount() ; i++) {
-			if (NULL==PyTuple_GetItem(m_pTuple, i)) {
-				setArgValue(i, PValue(NULL));
+			if (nullptr==PyTuple_GetItem(m_pTuple, i)) {
+				setArgValue(i, PValue(nullptr));
 			}
 		}
 
@@ -411,7 +411,7 @@ public:
 				Py_DECREF(pTuple);
 
 				PyObject* pDoc = PyObject_GetAttrString(pFunc, "__doc__");
-				if (pDoc != NULL && pDoc != Py_None) {
+				if (pDoc != nullptr && pDoc != Py_None) {
 					if (PyObject_Length(pDoc) >= 0) {
 #ifdef PYTHON_VER_2
 						pFuncRec->setDoc(PyString_AS_STRING(pDoc));

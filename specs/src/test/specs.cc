@@ -14,6 +14,7 @@
 #include "utils/ErrorReporting.h"
 #include "utils/PythonIntf.h"
 #include "utils/aluRegex.h"
+#include "utils/directives.h"
 
 extern int g_stop_stream;
 extern char g_printonly_rule;
@@ -56,8 +57,8 @@ CONTINUE:
 		if (g_configuredString != "") {
 			auto equalsPos = g_configuredString.find('=');
 			if (std::string::npos == equalsPos || 1 == equalsPos) {
-				std::string err = "Malformed parameter for 'set': " + g_configuredString;
-				MYTHROW(err);
+				std::cerr << "Malformed parameter for --set: '" << g_configuredString << "'\n";
+				return false;
 			}
 			auto key = g_configuredString.substr(0,equalsPos);
 			auto value = g_configuredString.substr(equalsPos+1);
@@ -207,7 +208,7 @@ int main (int argc, char** argv)
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
-	PReader pRd = NULL;
+	PReader pRd = nullptr;
 	PSimpleWriter pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
@@ -276,9 +277,17 @@ int main (int argc, char** argv)
 
 	if (ig.readsLines() || g_bForceFileRead) {
 		if (g_inputFile.empty()) {
-			pRd = std::make_shared<StandardReader>();
+			if (nullptr == primaryInputPipe()) {
+				pRd = std::make_shared<StandardReader>();
+			} else {
+				pRd = std::make_shared<StandardReader>(primaryInputPipe());
+			}
 		} else {
 			pRd = std::make_shared<StandardReader>(g_inputFile);
+			if (nullptr != primaryInputPipe()) {
+				std::cerr << "Error: Both input file and input stream specified.\n";
+				return -4;
+			}
 		}
 
 		if (g_recfm=="F") {
@@ -322,7 +331,7 @@ int main (int argc, char** argv)
 			for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 				if (pWrtrs[i]) {
 					pWrtrs[i]->End();
-					pWrtrs[i] = NULL;
+					pWrtrs[i] = nullptr;
 				}
 			}
 			return -4;
@@ -334,7 +343,7 @@ int main (int argc, char** argv)
 		generatedLines = 0;
 		writtenLines = 0;
 		if (!g_bPrintStats) {
-			pRd = NULL;
+			pRd = nullptr;
 		} else {
 			pRd->endCollectingTimeData();
 		}
@@ -374,7 +383,7 @@ int main (int argc, char** argv)
 			if (g_bPrintStats) {
 				pWrtrs[i]->endCollectingTimeData();
 			} else {
-				pWrtrs[i] = NULL;
+				pWrtrs[i] = nullptr;
 			}
 		}
 	}
@@ -402,14 +411,14 @@ int main (int argc, char** argv)
 		timer.dump("Main Thread");
 		if (pRd) {
 			pRd->dumpTimeData();
-			pRd = NULL;
+			pRd = nullptr;
 		}
 		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 			if (pWrtrs[i]) {
 				if (1 == i) {
 					pWrtrs[i]->dumpTimeData();
 				}
-				pWrtrs[i] = NULL;
+				pWrtrs[i] = nullptr;
 			}
 		}
 

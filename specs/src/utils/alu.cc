@@ -88,7 +88,7 @@ ALUInt ALUValue::getInt() const
 ALUInt ALUValue::getHex() const
 {
 	try {
-		return (counterType__None==m_type) ? 0 : std::stoll(m_value, NULL, 16);
+		return (counterType__None==m_type) ? 0 : std::stoll(m_value, nullptr, 16);
 	} catch (std::invalid_argument& e) {
 		return 0;
 	}
@@ -227,7 +227,7 @@ std::string AluUnitNull::_identify()
 
 PValue AluUnitNull::evaluate()
 {
-	return NULL;
+	return nullptr;
 }
 
 
@@ -246,7 +246,7 @@ PValue AluUnitCounter::compute(ALUCounters* pCtrs)
 	return mkValue(*(pCtrs->getPointer(m_ctrNumber)));
 }
 
-static fieldIdentifierGetter* g_fieldIdentifierGetter = NULL;
+static fieldIdentifierGetter* g_fieldIdentifierGetter = nullptr;
 
 void setFieldIdentifierGetter(fieldIdentifierGetter* getter)
 {
@@ -896,8 +896,8 @@ AluFunction::AluFunction(std::string& _s)
 	std::string s(_s);
 	std::transform(s.begin(), s.end(),s.begin(), ::tolower);
 
-	mp_Func = NULL;
-	m_pExternalFunc = NULL;
+	mp_Func = nullptr;
+	m_pExternalFunc = nullptr;
 
 	ALU_FUNCTION_LIST
 #ifdef DEBUG
@@ -927,7 +927,7 @@ AluFunction::AluFunction(std::string& _s)
 	m_FuncName = _s;
 	m_ArgCount = (unsigned int)(m_pExternalFunc->GetArgCount());
 	m_reliesOnInput = false;
-	mp_Func = NULL;
+	mp_Func = nullptr;
 	m_flags |= ALUFUNC_EXTERNAL;
 }
 #undef X
@@ -941,7 +941,7 @@ void AluFunction::_serialize(std::ostream& os) const
 PValue AluFunction::evaluate()
 {
 	if (0 != countOperands()) return AluUnit::evaluate();
-	if (NULL != m_pExternalFunc) {
+	if (nullptr != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		return m_pExternalFunc->Call();
 	}
@@ -951,7 +951,7 @@ PValue AluFunction::evaluate()
 PValue AluFunction::compute(PValue op1)
 {
 	if (1 != countOperands()) return AluUnit::compute(op1);
-	if (NULL != m_pExternalFunc) {
+	if (nullptr != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		return m_pExternalFunc->Call();
@@ -962,7 +962,7 @@ PValue AluFunction::compute(PValue op1)
 PValue AluFunction::compute(PValue op1, PValue op2)
 {
 	if (2 != countOperands()) return AluUnit::compute(op1,op2);
-	if (NULL != m_pExternalFunc) {
+	if (nullptr != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		m_pExternalFunc->setArgValue(1,op2);
@@ -974,7 +974,7 @@ PValue AluFunction::compute(PValue op1, PValue op2)
 PValue AluFunction::compute(PValue op1, PValue op2, PValue op3)
 {
 	if (3 != countOperands()) return AluUnit::compute(op1,op2,op3);
-	if (NULL != m_pExternalFunc) {
+	if (nullptr != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		m_pExternalFunc->setArgValue(1,op2);
@@ -987,7 +987,7 @@ PValue AluFunction::compute(PValue op1, PValue op2, PValue op3)
 PValue AluFunction::compute(PValue op1, PValue op2, PValue op3, PValue op4)
 {
 	if (4 != countOperands()) return AluUnit::compute(op1,op2,op3,op4);
-	if (NULL != m_pExternalFunc) {
+	if (nullptr != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		m_pExternalFunc->setArgValue(1,op2);
@@ -1001,7 +1001,7 @@ PValue AluFunction::compute(PValue op1, PValue op2, PValue op3, PValue op4)
 PValue AluFunction::compute(PValue op1, PValue op2, PValue op3, PValue op4, PValue op5)
 {
 	if (5 != countOperands()) return AluUnit::compute(op1,op2,op3,op4,op5);
-	if (NULL != m_pExternalFunc) {
+	if (nullptr != m_pExternalFunc) {
 		m_pExternalFunc->ResetArgs();
 		m_pExternalFunc->setArgValue(0,op1);
 		m_pExternalFunc->setArgValue(1,op2);
@@ -1038,7 +1038,7 @@ static bool isFirstCharInIdentifier(char c) {
 static PUnit getUnaryOperator(std::string& s)
 {
 	ALU_UOP_LIST
-	return NULL;
+	return nullptr;
 }
 #undef X
 
@@ -1046,7 +1046,7 @@ static PUnit getUnaryOperator(std::string& s)
 static PUnit getBinaryOperator(std::string& s)
 {
 	ALU_BOP_LIST
-	return NULL;
+	return nullptr;
 }
 #undef X
 
@@ -1055,7 +1055,7 @@ static PUnit getAssnOperator(std::string& s)
 #define X(nm,st) if (s==st) return std::make_shared<AluAssnOperator>(s);
 	ALU_ASSOP_LIST
 #undef X
-	return NULL;
+	return nullptr;
 }
 
 void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
@@ -1227,18 +1227,34 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			continue;
 		}
 
-		// hash-sign followed by a number is a counter
+		// hash-sign followed by a number is either a counter or a persistent variable
 		if (*c=='#') {
 			c++;
 			char* tokEnd = c;
-			while (tokEnd<cEnd && *tokEnd>='0' && *tokEnd<='9') tokEnd++;
-			std::string num(c,(tokEnd-c));
-			if ((num.length() == 0) || (num.length() > 3)) {
-				std::string err = "Invalid counter <#" + num + *tokEnd + "> in expression";
-				MYTHROW(err);
+			if (!isDigit(*c)) {
+				// Equivalent to pget(name)
+				while (tokEnd<cEnd && (isLetter(*tokEnd) || isDigit(*tokEnd) || *tokEnd=='_')) tokEnd++;
+				std::string name(c,(tokEnd-c));
+				static std::string pget_identifier("pget");
+				pUnit = std::make_shared<AluFunction>(pget_identifier);
+				vec.push_back(pUnit);
+				pUnit = std::make_shared<AluOtherToken>(UT_OpenParenthesis);
+				vec.push_back(pUnit);
+				pUnit = std::make_shared<AluUnitLiteral>(name);
+				vec.push_back(pUnit);
+				pUnit = std::make_shared<AluOtherToken>(UT_ClosingParenthesis);
+				vec.push_back(pUnit);
+			} else {
+				// a counter
+				while (tokEnd<cEnd && *tokEnd>='0' && *tokEnd<='9') tokEnd++;
+				std::string num(c,(tokEnd-c));
+				if ((num.length() == 0) || (num.length() > 3)) {
+					std::string err = "Invalid counter <#" + num + *tokEnd + "> in expression";
+					MYTHROW(err);
+				}
+				pUnit = std::make_shared<AluUnitCounter>(std::stoi(num));
+				vec.push_back(pUnit);
 			}
-			pUnit = std::make_shared<AluUnitCounter>(std::stoi(num));
-			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			c = tokEnd;
 			mayBeStart = false;
@@ -1346,7 +1362,7 @@ void cleanAluVec(AluVec& vec)
 	while (!vec.empty()) {
 		PUnit pUnit = vec[0];
 		vec.erase(vec.begin());
-		pUnit = NULL;
+		pUnit = nullptr;
 	}
 }
 
@@ -1359,7 +1375,7 @@ std::string dumpAluVec(AluVec& vec, bool deleteUnits)
 			if (!ret.empty()) ret += ";";
 			ret += pUnit->_identify();
 			vec.erase(vec.begin());
-			pUnit = NULL;
+			pUnit = nullptr;
 		}
 	} else {
 		for (size_t i=0; i<vec.size(); i++) {
@@ -1401,8 +1417,8 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 
 	vec.erase(vec.begin());
 	vec.erase(vec.begin());
-	ctr = NULL;
-	pAssnOp = NULL;
+	ctr = nullptr;
+	pAssnOp = nullptr;
 
 	// Check that we don't have something terrible like an assignment operator in the
 	// expression. Like this is C or something
@@ -1455,7 +1471,7 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 		}
 
 		if (foundComma) {
-			pUnit = NULL;
+			pUnit = nullptr;
 			break;
 		}
 		else {
@@ -1891,7 +1907,7 @@ bool expressionForcesRunoutCycle(AluVec& vec)
 		case UT_Identifier:
 		{
 			auto pFunction = std::dynamic_pointer_cast<AluFunction>(unit);
-			MYASSERT(NULL!=pFunction);
+			MYASSERT(nullptr!=pFunction);
 			return ("eof" == pFunction->getName());
 		}
 		default:

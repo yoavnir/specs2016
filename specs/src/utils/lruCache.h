@@ -57,7 +57,7 @@ public:
 			return pRet;
 		}
 
-		return NULL;
+		return nullptr;
 	}
 	void set(S& s, std::shared_ptr<T> pT) {
 		auto it = m_map.find(s);
