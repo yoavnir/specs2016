@@ -10,8 +10,8 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-1-June-2021: Version 0.8 Alpha is here
-=====================================
+29-July-2021: Version 0.8 Beta is here
+======================================
 What's New:
 * Directives for in-file specifications:
   * `+SET` to set internal configured strings from a command output
