@@ -16,7 +16,13 @@ What's New:
 * Directives for in-file specifications:
   * `+SET` to set internal configured strings from a command output
   * `+IN` to set the input stream to be a command output
+* Minor functionality improvements:
+  * The `getenv` function
+  * Hashmark access to persistent variables
+  * The `split` and `splitw` functions
+  * Use of a question mark as a shorthand for `PRINT`
 * Some code readability improvements
+* Support for Apple's M1 processor for both Mac OS X and Linux (under Parallels)
 
 1-Sep-2020: Version 0.7 is here
 ===============================
