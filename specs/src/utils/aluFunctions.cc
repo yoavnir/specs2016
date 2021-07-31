@@ -762,10 +762,10 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 		try {
 			unsigned long long int uvalue = std::stoull(hex, nullptr, 16);
 			value = (long long int) uvalue;
-		} catch (std::invalid_argument) {
+		} catch (std::invalid_argument&) {
 			CONVERSION_EXCEPTION(hex, "Hex", "Decimal");
 		}
-	} catch (std::out_of_range) {
+	} catch (std::out_of_range&) {
 		CONVERSION_EXCEPTION_EX(hex, "Hex", "Decimal", "out of range")
 	}
 
