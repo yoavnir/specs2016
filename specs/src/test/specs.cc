@@ -46,6 +46,7 @@ bool parseSwitches(int& argc, char**& argv)
 {
 	std::string argName;
 	/* Skip the program name */
+	std::string programName(argv[0]);
 	argc--; argv++;
 
 	while (argc>0) {
@@ -88,6 +89,18 @@ CONTINUE:
 			std::cerr << "Invalid record format: <" << g_recfm << ">\n";
 			return false;
 		}
+	}
+
+	// info
+	if (g_info) {
+		std::cerr << "specs invoked as '" << programName << "'\n";
+#ifdef __VERSION__
+		std::cerr << "\tCompiler version: " << __VERSION__ << "\n";
+#endif
+		std::cerr << "\tHigh/low watermark for queues: " << QUEUE_HIGH_WM << " / " << QUEUE_LOW_WM << "\n";
+		std::cerr << "\tRandom Provider: " << RandomProvider << "\n";
+		std::cerr << "\tFloating point precision: " << ALUFloatPrecision << " (" << sizeof(ALUFloat) << " bytes)\n";
+		exit(0);
 	}
 
 	// help

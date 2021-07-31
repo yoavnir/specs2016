@@ -36,6 +36,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandSeed(s)
   #define ALU_RAND_FUNC_WITH_LEN
   #define AluRandFunc(d,l) CCRandomGenerateBytes((void*)(d), (size_t)(l))
+  #define RandomProvider "Common Crypto"
 #endif
 
 #ifdef ALURAND_rand48
@@ -44,6 +45,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandSeedType   long int
   #define AluRandSeed(s)    srand48_r(s,&AluRandCtxBuffer_G)
   #define AluRandFunc(r)    lrand48_r(&AluRandCtxBuffer_G, (long int*)(&r))
+  #define RandomProvider "rand48"
 #endif
 
 #ifdef ALURAND_wincrypt
@@ -61,6 +63,7 @@ int setenv(const char *name, const char *value, int overwrite);
 		      std::string err = "CryptGenRandom() failed. GetLastError() returns " + std::to_string(GetLastError()); \
 		      MYTHROW(err);   \
 		  }
+  #define RandomProvider "WinCrypt"
 #endif
 
 #ifdef ALURAND_rand
@@ -69,6 +72,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandSeedType   unsigned int
   #define AluRandSeed(s)    srand(s)
   #define AluRandFunc(r)    r = rand()
+  #define RandomProvider "stdlib"
 #endif
 
 #ifndef AluRandContext

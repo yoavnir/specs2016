@@ -532,6 +532,8 @@ int runALUUnitTests2(unsigned int onlyTest)
 	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769");  // 123 / 65 - VS has one less digit of precision
 #elif ALUFloatPrecision == 16
 	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
+#elif ALUFloatPrecision == 18
+	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769231");  // 123 / 65
 #elif ALUFloatPrecision == 33
 	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769230769230769230769");  // 123 / 65
 #else
@@ -1072,6 +1074,8 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.0784311294556");
 #elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945557");
+#elif ALUFloatPrecision == 18
+	VERIFY_EXPR_RES("c2f('AAAA')", "12.0784311294555664");
 #elif ALUFloatPrecision == 33
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945556640625");
 #else
@@ -1084,6 +1088,8 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392");
 #elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.509803921");
+#elif ALUFloatPrecision == 18
+	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392145");
 #elif ALUFloatPrecision == 33
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392144992947578430176");
 #else
@@ -1100,6 +1106,8 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "c2f: Invalid floating point length: 16" C2FERR)
 #elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
+#elif ALUFloatPrecision == 18
+	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.66814841595012435e+96");
 #elif ALUFloatPrecision == 33
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "1.072181727834810710522875562594e+97");
 #else
