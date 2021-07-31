@@ -530,8 +530,12 @@ int runALUUnitTests2(unsigned int onlyTest)
 	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
 #if ALUFloatPrecision == 15
 	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769");  // 123 / 65 - VS has one less digit of precision
-#else
+#elif ALUFloatPrecision == 16
 	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
+#elif ALUFloatPrecision == 33
+	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769230769230769230769");  // 123 / 65
+#else
+#warning "Dropping test case because of unsupported precision"
 #endif
 	VERIFY_BINARY(uDiv,4,33,Int,"41");      // 123 / 3
 	VERIFY_BINARY(uDiv,4,99,None,"");       // 123 / 0 = NaN
@@ -1066,16 +1070,24 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAA')", "c2f: Invalid floating point length: 3" C2FERR)
 #if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.0784311294556");
-#else
+#elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945557");
+#elif ALUFloatPrecision == 33
+	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945556640625");
+#else
+#warning "Dropping test case because of unsupported precision"
 #endif
 	VERIFY_EXPR_RES("c2f('AAAAA')", "c2f: Invalid floating point length: 5" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAA')", "c2f: Invalid floating point length: 6" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAA')", "c2f: Invalid floating point length: 7" C2FERR)
 #if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392");
-#else
+#elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.509803921");
+#elif ALUFloatPrecision == 33
+	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392144992947578430176");
+#else
+#warning "Dropping test case because of unsupported precision"
 #endif
 	VERIFY_EXPR_RES("c2f('AAAAAAAAA')", "c2f: Invalid floating point length: 9" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAA')", "c2f: Invalid floating point length: 10" C2FERR)
@@ -1086,8 +1098,12 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15" C2FERR)
 #if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "c2f: Invalid floating point length: 16" C2FERR)
-#else
+#elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
+#elif ALUFloatPrecision == 33
+	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "1.072181727834810710522875562594e+97");
+#else
+#warning "Dropping test case because of unsupported precision"
 #endif
 
 	VERIFY_EXPR_RES("substitute('Just the place for a snark','','',1)", "substitute: Search string must not be empty");
