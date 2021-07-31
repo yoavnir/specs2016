@@ -22,7 +22,11 @@ int setenv(const char *name, const char *value, int overwrite);
 	#define VISUAL_STUDIO
 	#define NOMINMAX 1
 #else
+#ifdef __LDBL_DIG__
+	#define ALUFloatPrecision __LDBL_DIG__
+#else
 	#define ALUFloatPrecision 16
+#endif
 #endif
 
 #ifdef ALURAND_CommonCrypto

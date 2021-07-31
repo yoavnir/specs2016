@@ -528,7 +528,7 @@ int runALUUnitTests2(unsigned int onlyTest)
 	VERIFY_BINARY(uMult,8,11,Float,"-788.8");    // 98.6 * (-8)
 	VERIFY_BINARY(uMult,9,4,Int,"7995");    // 65*123
 	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769");  // 123 / 65 - VS has one less digit of precision
 #else
 	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
@@ -800,7 +800,7 @@ int runALUUnitTests7(unsigned int onlyTest)
 	VERIFY_EXPR_RES("mcs2tf(1546550663000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
 	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
-#ifdef VISUAL_STUDIO  // TODO: check whether this needs to be VS or WIN64
+#if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23:123456','%Y-%m-%d %H:%M:%S:%6f')", "1546550603.12346");
 #else
 	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23:123456','%Y-%m-%d %H:%M:%S:%6f')", "1546550603.123456");
@@ -1055,7 +1055,7 @@ int runALUUnitTests10(unsigned int onlyTest)
 
 int runALUUnitTests11(unsigned int onlyTest)
 {
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 #define C2FERR ". Supported lengths: 4, 8"
 #else
 #define C2FERR ". Supported lengths: 4, 8, 16"
@@ -1064,7 +1064,7 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('A')", "c2f: Invalid floating point length: 1" C2FERR)
 	VERIFY_EXPR_RES("c2f('AA')", "c2f: Invalid floating point length: 2" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAA')", "c2f: Invalid floating point length: 3" C2FERR)
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.0784311294556");
 #else
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945557");
@@ -1072,7 +1072,7 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAAA')", "c2f: Invalid floating point length: 5" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAA')", "c2f: Invalid floating point length: 6" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAA')", "c2f: Invalid floating point length: 7" C2FERR)
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392");
 #else
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.509803921");
@@ -1084,7 +1084,7 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAA')", "c2f: Invalid floating point length: 13" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 14" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15" C2FERR)
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "c2f: Invalid floating point length: 16" C2FERR)
 #else
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
