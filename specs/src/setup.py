@@ -185,11 +185,14 @@ valid_platforms = ["POSIX","NT"]
 
 default_platform = os.name.upper()
 
-if default_platform=="POSIX" or default_platform=="NT":
+if default_platform=="POSIX":
 	default_compiler = "GCC"
+elif default_platform=="NT":
+	default_compiler = "VS"
 else:
 	sys.stderr.write("Unsupported platform: {}; Assuming POSIX\n".format(platform))
 	default_platform = "POSIX"
+	default_compiler = "GCC"
 	
 parser = argparse.ArgumentParser(description="Parse compiler and variation flags")
 parser.add_argument("-c", dest="compiler", action="store", default=default_compiler, 
@@ -439,7 +442,7 @@ sys.stdout.write("Testing if python support is available...")
 if platform=="NT":
 	if python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
-		CFG_Python = False
+		CFG_python = False
 	else:
 		cv = sysconfig.get_config_vars()
 		python_prefix = cv['prefix']
