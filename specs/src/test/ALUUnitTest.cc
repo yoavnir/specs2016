@@ -820,11 +820,7 @@ int runALUUnitTests7(unsigned int onlyTest)
 
 	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.','%Y/%d/%m %H:%M:%S.%6f')", "1547097241000000");         // no subsecond digits at all
 #ifdef PUT_TIME__SUPPORTED
-  #ifdef VISUAL_STUDIO
-	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
-  #else
 	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "1547097241000000");                 // no subsecond digits and a missing dot!
-  #endif
 #else
 	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
 #endif
