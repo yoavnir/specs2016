@@ -253,10 +253,17 @@ public:
 	~PythonFunctionCollection() {
 		if (Py_IsInitialized()) {
 			m_Functions.clear();
+#ifdef PYTHON_VER_3
 			int res = Py_FinalizeEx();
 			if (g_bVerbose) {
 				std::cerr << "Python Interface: Unloaded (res=" << res << ")" << std::endl;
 			}
+#else
+			Py_Finalize();
+			if (g_bVerbose) {
+				std::cerr << "Python Interface: Unloaded" << std::endl;
+			}
+#endif
 		}
 	}
 
