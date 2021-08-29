@@ -253,11 +253,17 @@ public:
 	~PythonFunctionCollection() {
 		if (Py_IsInitialized()) {
 			m_Functions.clear();
-
+#ifdef PYTHON_VER_3
+			int res = Py_FinalizeEx();
+			if (g_bVerbose) {
+				std::cerr << "Python Interface: Unloaded (res=" << res << ")" << std::endl;
+			}
+#else
 			Py_Finalize();
 			if (g_bVerbose) {
 				std::cerr << "Python Interface: Unloaded" << std::endl;
 			}
+#endif
 		}
 	}
 
@@ -268,22 +274,24 @@ public:
 			m_Initialized = true;
 			return;
 		}
+		// Initialize Python environment
+		Py_Initialize();
+
 		// update the python path
 		if (_path && _path[0]) {
 #ifdef PYTHON_VER_3
 			std::wstring wpath(strlen(_path)+1, L'#');
 			mbstowcs(&wpath[0],_path,strlen(_path));
 			wpath.erase(wpath.length()-1);
-			std::wstring newPath = std::wstring(Py_GetPath()) + std::wstring(PATH_LIST_WSEPARATOR) + wpath;
+			std::wstring newPath =  wpath + std::wstring(PATH_LIST_WSEPARATOR) + std::wstring(Py_GetPath());
+			// Need to finalize and then re-initialize for SetPath to "take"
+			Py_FinalizeEx();
 			Py_SetPath(newPath.data());
 			Py_Initialize();
 #else
-			Py_Initialize();
 			std::string newPath = std::string(Py_GetPath()) + PATH_LIST_SEPARATOR + std::string(_path);
 			PySys_SetPath((char*)newPath.c_str());
 #endif
-		} else {
-			Py_Initialize();
 		}
 
 		// Get the argument parsing function getfullargspec/getargspec
@@ -298,11 +306,13 @@ public:
 				if (g_bVerbose) {
 					std::cerr << "Python Interface: Local functions not found" << std::endl;
 				}
+				PyErr_Clear();
+				
 				m_Initialized = true;
 				return;
 			} else {
 				if (g_bVerbose) {
-					std::cerr << "Python Interface: Error loading local functions:\n";
+					std::cerr << "Python Interface: Error loading local functions: ";
 					PyErr_Print();
 				}
 				MYTHROW("Error loading local functions");
