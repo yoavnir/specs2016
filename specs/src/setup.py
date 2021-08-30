@@ -205,6 +205,8 @@ parser.add_argument("--use_cached_depends", dest="ucd", action="store_true", def
 					help="Use Cached Depends rather than re-calculating. Necessary for VS")
 parser.add_argument("--fast_random", dest="nocrypt", action="store_true", default=None,
 					help="Avoid cryptographic random number generators")
+parser.add_argument("--os_version", dest="osversion", action="store", default="",
+					help="OS version to link against. Available only in Mac OS")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
 args = parser.parse_args()
@@ -212,6 +214,7 @@ args = parser.parse_args()
 compiler = args.compiler.upper()
 variation = args.variation.upper()
 platform = args.platform.upper()
+osversion = args.osversion if sys.platform=="darwin" else ""
 use_cached_depends = args.ucd
 avoid_cryptographic_random = args.nocrypt
 python_prefix = args.pyprefix
@@ -495,6 +498,9 @@ else:
 	
 if CFG_regex_grammars:
 	condcomp = condcomp + "{}REGEX_GRAMMARS".format(def_prefix)
+
+if osversion != "":
+	condlink = condlink + " -mmacosx-version-min={}".format(osversion)
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))

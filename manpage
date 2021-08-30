@@ -1246,6 +1246,22 @@ at which the search starts. It defaults to 1.
 .IP "words(string)" 3
 Returns the number of blank-delimited words within the 
 .I string.
+.IP "wordwith(substr)" 3
+Returns the first word of the input string that contains
+.I substr
+or an empty string if not found.
+.IP "wordwithidx(substr)" 3
+Returns the index of the first word of the input string that contains
+.I substr
+or zero if not found.
+.IP "fieldwith(substr)" 3
+Returns the first field of the input string that contains
+.I substr
+or an empty string if not found.
+.IP "fieldwithidx(substr)" 3
+Returns the index of the first field of the input string that contains
+.I substr
+or zero if not found.
 .IP "xrange(start,end)" 3
 Returns a string composed of all the characters between 
 .I start 

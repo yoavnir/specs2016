@@ -262,6 +262,14 @@
 			"(phrase,str,[start]) - If 'phrase' is a substring of 'str', returns the word number position at which it begins. Otherwise returns 0.","'start' defaults to 1 and is the index of the word where the searching starts.") \
 	X(words,          1, ALUFUNC_REGULAR,     false,  \
 			"(str) - Returns the number of blank-delimited words in 'str'.","") \
+	X(wordwith,       1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the first word of the input string that contains 'substr' or an empty string if not found.","") \
+	X(wordwithidx,    1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the index of the first word of the input string that contains 'substr' or zero if not found.","") \
+	X(fieldwith,      1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the first field of the input string that contains 'substr' or an empty string if not found.","") \
+	X(fieldwithidx,   1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the index of the first field of the input string that contains 'substr' or zero if not found.","") \
 	X(xrange,         2, ALUFUNC_REGULAR,     false,  \
 			"(starts,end) - Returns a string composed of all the characters between 'start' and 'end' inclusive.","'start' defaults to 0x00, and 'end' defaults to 0xff.") \
 	X(fmt,            5, ALUFUNC_REGULAR,     false,  \

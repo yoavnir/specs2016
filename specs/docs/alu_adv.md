@@ -144,6 +144,10 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `wordlength(string,wordno)` | Returns the length of the blank-delimited word given by word number `wordno` within `string`. Returns 0 if the word numbered `wordno` does not exist in the `string`.|
 | `wordpos(phrase, string [,start])` | If `phrase` is a substring of `string`, returns the word number position at which it begins. Otherwise returns 0. `start` is an optional word number within `string` at which the search starts. It defaults to 1. |
 | `words(string)` | Returns the number of blank-delimited words within the `string`.|
+| `wordwith(substr)` | Returns the first word of the input string that contains `substr` or an empty string if not found.|
+| `wordwithidx(substr)` | Returns the index of the first word of the input string that contains `substr` or zero if not found.|
+| `fieldwith(substr)` | Returns the first field of the input string that contains `substr` or an empty string if not found.|
+| `fieldwithidx(substr)` | Returns the index of the first field of the input string that contains `substr` or zero if not found.|
 | `xrange(start,end)` | Returns a string composed of all the characters between `start` and `end` inclusive. `start` defaults to 0x00, and `end` defaults to 0xff. |
 | `x2d(string,length)` | Returns the value in `string` converted to decimal. If `length` is missing or non-positive, the resulting decimal is signed, otherwise it is unsigned. |
 

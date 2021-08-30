@@ -10,8 +10,8 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-29-July-2021: Version 0.8 Beta is here
-======================================
+5-Sep-2021: Version 0.8 is here
+================================
 What's New:
 * Directives for in-file specifications:
   * `+SET` to set internal configured strings from a command output
@@ -23,6 +23,7 @@ What's New:
   * Use of a question mark as a shorthand for `PRINT`
 * Some code readability improvements
 * Support for Apple's M1 processor for both Mac OS X and Linux (under Parallels)
+* New functions: wordwith, wordwithidx, fieldwith, fieldwithidx.
 
 1-Sep-2020: Version 0.7 is here
 ===============================

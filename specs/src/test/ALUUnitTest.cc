@@ -777,6 +777,12 @@ int runALUUnitTests6(unsigned int onlyTest)
 	VERIFY_EXPR_RES("split()", "The quick brown foox jumps over the lazy dog");
 	VERIFY_EXPR_RES("split('o')", "The quick br\nwn f\n\nx jumps \nver the lazy d\ng"); 
 	VERIFY_EXPR_RES("split('o',2,2)", "\nx jumps ");
+	VERIFY_EXPR_RES("wordwith('o')", "brown");
+	VERIFY_EXPR_RES("wordwith('oo')", "foox");
+	VERIFY_EXPR_RES("wordwith('ooo')", "");
+	VERIFY_EXPR_RES("wordwithidx('o')", "3");
+	VERIFY_EXPR_RES("wordwithidx('oo')", "4");
+	VERIFY_EXPR_RES("wordwithidx('ooo')", "0");
 
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
@@ -790,6 +796,10 @@ int runALUUnitTests6(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fieldend(3)", "25");
 	VERIFY_EXPR_RES("fieldlength(2)", "11"); // length of "quick brown"
 	VERIFY_EXPR_RES("fieldrange(2,3)", "quick brown\tfox jumps");
+	VERIFY_EXPR_RES("fieldwith('i')", "quick brown");
+	VERIFY_EXPR_RES("fieldwithidx('i')", "2");
+	VERIFY_EXPR_RES("fieldwith('oo')", "");
+	VERIFY_EXPR_RES("fieldwithidx('oo')", "0");
 	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");

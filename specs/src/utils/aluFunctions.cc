@@ -2663,6 +2663,55 @@ PValue AluFunc_splitw(PValue pSep, PValue pHdr, PValue pFtr)
 	return mkValue(res);
 }
 
+PValue AluFunc_wordwith(PValue pSubStr)
+{
+	ALUInt i, wordcount = g_pStateQueryAgent->getWordCount();
+	for (i=1; i<=wordcount; i++) {
+		const char* pWord = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i))->data();
+		if (strstr(pWord, pSubStr->getStrPtr()->data())) {
+			return mkValue(pWord);
+		}
+	}
+	return mkValue("");
+}
+
+PValue AluFunc_wordwithidx(PValue pSubStr)
+{
+	ALUInt i, wordcount = g_pStateQueryAgent->getWordCount();
+	for (i=1; i<=wordcount; i++) {
+		const char* pWord = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i))->data();
+		if (strstr(pWord, pSubStr->getStrPtr()->data())) {
+			return mkValue(i);
+		}
+	}
+	return mkValue(ALUInt(0));
+}
+
+
+PValue AluFunc_fieldwith(PValue pSubStr)
+{
+	ALUInt i, fieldcount = g_pStateQueryAgent->getFieldCount();
+	for (i=1; i<=fieldcount; i++) {
+		const char* pField = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i))->data();
+		if (strstr(pField, pSubStr->getStrPtr()->data())) {
+			return mkValue(pField);
+		}
+	}
+	return mkValue("");
+}
+
+PValue AluFunc_fieldwithidx(PValue pSubStr)
+{
+	ALUInt i, fieldcount = g_pStateQueryAgent->getFieldCount();
+	for (i=1; i<=fieldcount; i++) {
+		const char* pField = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i))->data();
+		if (strstr(pField, pSubStr->getStrPtr()->data())) {
+			return mkValue(i);
+		}
+	}
+	return mkValue(ALUInt(0));
+}
+
 
 #ifdef DEBUG
 PValue AluFunc_testfunc(PValue pArg1, PValue pArg2, PValue pArg3, PValue pArg4)
