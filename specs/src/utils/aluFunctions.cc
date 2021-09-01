@@ -307,7 +307,7 @@ PValue AluFunc_tobine(PValue op, PValue _bits)
 	ASSERT_NOT_ELIDED(op,1,op);
 	ASSERT_NOT_ELIDED(_bits,2,bits);
 	ALUInt value = op->getInt();
-	ALUInt bits = _bits->getInt();
+	int    bits = int(_bits->getInt());
 	switch (bits) {
 	case 8:
 	case 16:
@@ -488,7 +488,7 @@ PValue AluFunc_mcs2tf(PValue pValue, PValue pFormat)
 	ASSERT_NOT_ELIDED(pFormat,2,format);
 	int64_t microseconds = pValue->getInt();
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	PValue ret = mkValue2(printable->data(), printable->length());
+	PValue ret = mkValue2(printable->data(), int(printable->length()));
 	return ret;
 }
 
@@ -509,7 +509,7 @@ PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
         ALUFloat seconds = pValue->getFloat();
         int64_t microseconds = seconds * MICROSECONDS_PER_SECOND;
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	PValue ret = mkValue2(printable->data(), printable->length());
+	PValue ret = mkValue2(printable->data(), int(printable->length()));
 	return ret;
 }
 
@@ -1454,7 +1454,7 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 		} else {
 			char *pEnd = pc;
 			while ((*pEnd!='\0') && (*pEnd!=sep)) pEnd++;
-			return mkValue2(pc, (pEnd-pc));
+			return mkValue2(pc, int(pEnd-pc));
 		}
 	}
 	else {
@@ -1473,7 +1473,7 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 		} else {
 			char *pBegin = pc;
 			while ((pBegin>pStart) && (*pBegin!=sep)) pBegin--;
-			return mkValue2(pBegin+1, (pc-pBegin));
+			return mkValue2(pBegin+1, int(pc-pBegin));
 		}
 	}
 }
@@ -1549,7 +1549,7 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 		} else {
 			char *pEnd = pc;
 			while ((*pEnd!='\0') && (*pEnd!=sep)) pEnd++;
-			return mkValue2(pc, (pEnd-pc));
+			return mkValue2(pc, int(pEnd-pc));
 		}
 	}
 	else {
@@ -1569,7 +1569,7 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 		} else {
 			char *pBegin = pc;
 			while ((pBegin>pStart) && (*pBegin!=sep)) pBegin--;
-			return mkValue2(pBegin+1, (pc-pBegin));
+			return mkValue2(pBegin+1, int(pc-pBegin));
 		}
 	}
 }
@@ -1621,7 +1621,7 @@ PValue AluFunc_bitand(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] & pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
 
 	delete [] pBuff;
 
@@ -1646,7 +1646,7 @@ PValue AluFunc_bitor(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] | pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
 
 	delete [] pBuff;
 
@@ -1671,7 +1671,7 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] ^ pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
 
 	delete [] pBuff;
 
@@ -2667,7 +2667,8 @@ PValue AluFunc_wordwith(PValue pSubStr)
 {
 	ALUInt i, wordcount = g_pStateQueryAgent->getWordCount();
 	for (i=1; i<=wordcount; i++) {
-		const char* pWord = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i))->data();
+		PSpecString pRange = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i));
+		const char* pWord = pRange->data();
 		if (strstr(pWord, pSubStr->getStrPtr()->data())) {
 			return mkValue(pWord);
 		}
@@ -2679,7 +2680,8 @@ PValue AluFunc_wordwithidx(PValue pSubStr)
 {
 	ALUInt i, wordcount = g_pStateQueryAgent->getWordCount();
 	for (i=1; i<=wordcount; i++) {
-		const char* pWord = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i))->data();
+		PSpecString pRange = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i));
+		const char* pWord = pRange->data();
 		if (strstr(pWord, pSubStr->getStrPtr()->data())) {
 			return mkValue(i);
 		}
@@ -2692,7 +2694,8 @@ PValue AluFunc_fieldwith(PValue pSubStr)
 {
 	ALUInt i, fieldcount = g_pStateQueryAgent->getFieldCount();
 	for (i=1; i<=fieldcount; i++) {
-		const char* pField = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i))->data();
+		PSpecString pRange = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i));
+		const char* pField = pRange->data();
 		if (strstr(pField, pSubStr->getStrPtr()->data())) {
 			return mkValue(pField);
 		}
@@ -2704,7 +2707,8 @@ PValue AluFunc_fieldwithidx(PValue pSubStr)
 {
 	ALUInt i, fieldcount = g_pStateQueryAgent->getFieldCount();
 	for (i=1; i<=fieldcount; i++) {
-		const char* pField = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i))->data();
+		PSpecString pRange = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i));
+		const char* pField = pRange->data();
 		if (strstr(pField, pSubStr->getStrPtr()->data())) {
 			return mkValue(i);
 		}

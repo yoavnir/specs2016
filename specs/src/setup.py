@@ -137,7 +137,7 @@ $(EXE_DIR):
 	$(MKDIR_C) $@
 	
 $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
-	$(CXX) {}$@ {} $^ $(CONDLINK)
+	$(LINKER) {}$@{} {} $^ $(CONDLINK)
 		
 install_unix: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
@@ -163,9 +163,7 @@ clear_clean_nt = \
 """
 clean:
 	del /S *.d *.o *.obj
-	del $(EXE_DIR)\*.exe
-	del $(EXE_DIR)\*.ilk
-	del $(EXE_DIR)\*.pdb
+	del /q $(EXE_DIR)\*
 	rmdir $(EXE_DIR)
 	
 clear:
@@ -274,13 +272,13 @@ elif compiler=="CLANG":
 elif compiler=="VS":
 	cxx = "cl.exe"
 	if variation=="RELEASE":
-		condlink = "/O2"
+		condlink = ""
 		condcomp = "/O2 /EHsc"
 	elif variation=="DEBUG":
 		condlink = "/MAP /DEBUG"
 		condcomp = "/Zi /EHsc /DDEBUG /DALU_DUMP"
 	else:
-		condlink = "/O2 /Zi /MAP /DEBUG"
+		condlink = "/Zi /MAP /DEBUG"
 		condcomp = "/O2 /Zi /EHsc"	
 	
 if platform=="NT":
@@ -504,6 +502,7 @@ if osversion != "":
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))
+	makefile.write("LINKER={}\n".format("link.exe" if (compiler=="VS") else cxx))
 	makefile.write("CONDCOMP={}\n".format(condcomp))
 	makefile.write("CONDLINK={}\n".format(condlink))
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
@@ -513,13 +512,13 @@ with open("Makefile", "w") as makefile:
 	
 	if compiler=="VS":
 		body1fmt = body1.format("obj","obj")
-		body2fmt = body2.format("obj","-o ","advapi32.lib")    # should be "/OUT:" but I haven't got it to work yet
+		body2fmt = body2.format("obj","/OUT:",".exe","advapi32.lib")
 	elif compiler=="CLANG":
 		body1fmt = body1.format("o","o")
-		body2fmt = body2.format("o", "-o ", "-pthread")
+		body2fmt = body2.format("o", "-o ", "", "-pthread")
 	else:
 		body1fmt = body1.format("o","o")
-		body2fmt = body2.format("o", "-o ", "-pthread")
+		body2fmt = body2.format("o", "-o ", "", "-pthread")
 	
 	makefile.write("{}\n".format(body1fmt))
 	if use_cached_depends:
