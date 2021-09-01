@@ -19,11 +19,10 @@ What's New:
 * Minor functionality improvements:
   * The `getenv` function
   * Hashmark access to persistent variables
-  * The `split` and `splitw` functions
+  * New functions: `split`, `splitw`, `wordwith`, `wordwithidx`, `fieldwith`, `fieldwithidx`
   * Use of a question mark as a shorthand for `PRINT`
 * Some code readability improvements
 * Support for Apple's M1 processor for both Mac OS X and Linux (under Parallels)
-* New functions: wordwith, wordwithidx, fieldwith, fieldwithidx.
 
 1-Sep-2020: Version 0.7 is here
 ===============================
