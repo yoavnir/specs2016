@@ -4,7 +4,7 @@
 #include "string.h"
 #include "cli/tokens.h"
 
-unsigned int onlyTest = 0;
+unsigned long onlyTest = 0;
 
 std::string callParseTokens(int argc, char** argv)
 {

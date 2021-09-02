@@ -262,6 +262,14 @@
 			"(phrase,str,[start]) - If 'phrase' is a substring of 'str', returns the word number position at which it begins. Otherwise returns 0.","'start' defaults to 1 and is the index of the word where the searching starts.") \
 	X(words,          1, ALUFUNC_REGULAR,     false,  \
 			"(str) - Returns the number of blank-delimited words in 'str'.","") \
+	X(wordwith,       1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the first word of the input string that contains 'substr' or an empty string if not found.","") \
+	X(wordwithidx,    1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the index of the first word of the input string that contains 'substr' or zero if not found.","") \
+	X(fieldwith,      1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the first field of the input string that contains 'substr' or an empty string if not found.","") \
+	X(fieldwithidx,   1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the index of the first field of the input string that contains 'substr' or zero if not found.","") \
 	X(xrange,         2, ALUFUNC_REGULAR,     false,  \
 			"(starts,end) - Returns a string composed of all the characters between 'start' and 'end' inclusive.","'start' defaults to 0x00, and 'end' defaults to 0xff.") \
 	X(fmt,            5, ALUFUNC_REGULAR,     false,  \
@@ -387,11 +395,26 @@ public:
 	virtual int     getWordEnd(int idx) = 0;
 	virtual int     getFieldStart(int idx) = 0;
 	virtual int     getFieldEnd(int idx) = 0;
+	virtual int     getWordStart(ALUInt idx) {
+		return getWordStart(int(idx));
+	}
+	virtual int     getWordEnd(ALUInt idx) {
+		return getWordEnd(int(idx));
+	}
+	virtual int     getFieldStart(ALUInt idx) {
+		return getFieldStart(int(idx));
+	}
+	virtual int     getFieldEnd(ALUInt idx) {
+		return getFieldEnd(int(idx));
+	}
 	virtual void    alterFieldSeparator(char sep) = 0;
 	virtual char    getFieldSeparator() = 0;
 	virtual void    alterWordSeparator(char sep) = 0;
 	virtual char    getWordSeparator() = 0;
 	virtual PSpecString getFromTo(int from, int to) = 0;
+	virtual PSpecString getFromTo(ALUInt from, ALUInt to) {
+		return getFromTo(int(from), int(to));
+	}
 	virtual PSpecString currRecord() = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;

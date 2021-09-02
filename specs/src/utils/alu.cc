@@ -840,7 +840,7 @@ PValue AluInputRecord::evaluate()
 	PSpecString ps = g_pStateQueryAgent->getFromTo(1,-1);
 	PValue ret;
 	if (ps) {
-		ret = mkValue2(ps->data(), ps->length());
+		ret = mkValue2(ps->data(), int(ps->length()));
 	} else {
 		ret = mkValue("");
 	}
@@ -2125,4 +2125,3 @@ std::ostream& operator<< (std::ostream& os, const AluUnit &u)
 
     return os;
 }
-

@@ -12,7 +12,11 @@ typedef unsigned long long int u_int64_t;
 int setenv(const char *name, const char *value, int overwrite);
 #endif
 
+#ifdef _MSC_VER
+#define SUPPRESS_UNUSED_FUNCTION_WARNING(a)
+#else
 #define SUPPRESS_UNUSED_FUNCTION_WARNING(a) (void)a
+#endif
 
 #ifdef _MSC_VER 
 	//not #if defined(_WIN32) || defined(_WIN64) because we have strncasecmp in mingw
@@ -22,7 +26,11 @@ int setenv(const char *name, const char *value, int overwrite);
 	#define VISUAL_STUDIO
 	#define NOMINMAX 1
 #else
+#ifdef __LDBL_DIG__
+	#define ALUFloatPrecision __LDBL_DIG__
+#else
 	#define ALUFloatPrecision 16
+#endif
 #endif
 
 #ifdef ALURAND_CommonCrypto
@@ -32,6 +40,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandSeed(s)
   #define ALU_RAND_FUNC_WITH_LEN
   #define AluRandFunc(d,l) CCRandomGenerateBytes((void*)(d), (size_t)(l))
+  #define RandomProvider "Common Crypto"
 #endif
 
 #ifdef ALURAND_rand48
@@ -40,6 +49,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandSeedType   long int
   #define AluRandSeed(s)    srand48_r(s,&AluRandCtxBuffer_G)
   #define AluRandFunc(r)    lrand48_r(&AluRandCtxBuffer_G, (long int*)(&r))
+  #define RandomProvider "rand48"
 #endif
 
 #ifdef ALURAND_wincrypt
@@ -57,6 +67,7 @@ int setenv(const char *name, const char *value, int overwrite);
 		      std::string err = "CryptGenRandom() failed. GetLastError() returns " + std::to_string(GetLastError()); \
 		      MYTHROW(err);   \
 		  }
+  #define RandomProvider "WinCrypt"
 #endif
 
 #ifdef ALURAND_rand
@@ -65,6 +76,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #define AluRandSeedType   unsigned int
   #define AluRandSeed(s)    srand(s)
   #define AluRandFunc(r)    r = rand()
+  #define RandomProvider "stdlib"
 #endif
 
 #ifndef AluRandContext

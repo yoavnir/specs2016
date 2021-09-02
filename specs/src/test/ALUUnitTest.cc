@@ -528,10 +528,16 @@ int runALUUnitTests2(unsigned int onlyTest)
 	VERIFY_BINARY(uMult,8,11,Float,"-788.8");    // 98.6 * (-8)
 	VERIFY_BINARY(uMult,9,4,Int,"7995");    // 65*123
 	VERIFY_BINARY(uMult,3,9,Float,"204.20352225");	// Pi * 65
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769");  // 123 / 65 - VS has one less digit of precision
-#else
+#elif ALUFloatPrecision == 16
 	VERIFY_BINARY(uDiv,4,9,Float,"1.892307692307692");  // 123 / 65
+#elif ALUFloatPrecision == 18
+	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769231");  // 123 / 65
+#elif ALUFloatPrecision == 33
+	VERIFY_BINARY(uDiv,4,9,Float,"1.89230769230769230769230769230769");  // 123 / 65
+#else
+#warning "Dropping test case because of unsupported precision"
 #endif
 	VERIFY_BINARY(uDiv,4,33,Int,"41");      // 123 / 3
 	VERIFY_BINARY(uDiv,4,99,None,"");       // 123 / 0 = NaN
@@ -771,6 +777,12 @@ int runALUUnitTests6(unsigned int onlyTest)
 	VERIFY_EXPR_RES("split()", "The quick brown foox jumps over the lazy dog");
 	VERIFY_EXPR_RES("split('o')", "The quick br\nwn f\n\nx jumps \nver the lazy d\ng"); 
 	VERIFY_EXPR_RES("split('o',2,2)", "\nx jumps ");
+	VERIFY_EXPR_RES("wordwith('o')", "brown");
+	VERIFY_EXPR_RES("wordwith('oo')", "foox");
+	VERIFY_EXPR_RES("wordwith('ooo')", "");
+	VERIFY_EXPR_RES("wordwithidx('o')", "3");
+	VERIFY_EXPR_RES("wordwithidx('oo')", "4");
+	VERIFY_EXPR_RES("wordwithidx('ooo')", "0");
 
 	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
@@ -784,6 +796,10 @@ int runALUUnitTests6(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fieldend(3)", "25");
 	VERIFY_EXPR_RES("fieldlength(2)", "11"); // length of "quick brown"
 	VERIFY_EXPR_RES("fieldrange(2,3)", "quick brown\tfox jumps");
+	VERIFY_EXPR_RES("fieldwith('i')", "quick brown");
+	VERIFY_EXPR_RES("fieldwithidx('i')", "2");
+	VERIFY_EXPR_RES("fieldwith('oo')", "");
+	VERIFY_EXPR_RES("fieldwithidx('oo')", "0");
 	VERIFY_EXPR_RES("range(5,25)", "quick brown\tfox jumps");
 	VERIFY_EXPR_RES("range(41,43)", "dog");
 	VERIFY_EXPR_RES("range(41,45)", "dog");
@@ -800,7 +816,7 @@ int runALUUnitTests7(unsigned int onlyTest)
 	VERIFY_EXPR_RES("mcs2tf(1546550663000000,'%Y-%m-%d %H:%M:%S')", "2019-01-03 23:24:23");
 
 	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23','%Y-%m-%d %H:%M:%S')", "1546550603");
-#ifdef VISUAL_STUDIO  // TODO: check whether this needs to be VS or WIN64
+#if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23:123456','%Y-%m-%d %H:%M:%S:%6f')", "1546550603.12346");
 #else
 	VERIFY_EXPR_RES("tf2s('2019-01-03 23:23:23:123456','%Y-%m-%d %H:%M:%S:%6f')", "1546550603.123456");
@@ -814,11 +830,7 @@ int runALUUnitTests7(unsigned int onlyTest)
 
 	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01.','%Y/%d/%m %H:%M:%S.%6f')", "1547097241000000");         // no subsecond digits at all
 #ifdef PUT_TIME__SUPPORTED
-  #ifdef VISUAL_STUDIO
-	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
-  #else
 	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "1547097241000000");                 // no subsecond digits and a missing dot!
-  #endif
 #else
 	VERIFY_EXPR_RES("tf2mcs('2019/10/01 07:14:01','%Y/%d/%m %H:%M:%S.%6f')", "0");                          // no subsecond digits and a missing dot!
 #endif
@@ -1055,7 +1067,7 @@ int runALUUnitTests10(unsigned int onlyTest)
 
 int runALUUnitTests11(unsigned int onlyTest)
 {
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 #define C2FERR ". Supported lengths: 4, 8"
 #else
 #define C2FERR ". Supported lengths: 4, 8, 16"
@@ -1064,18 +1076,30 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('A')", "c2f: Invalid floating point length: 1" C2FERR)
 	VERIFY_EXPR_RES("c2f('AA')", "c2f: Invalid floating point length: 2" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAA')", "c2f: Invalid floating point length: 3" C2FERR)
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.0784311294556");
-#else
+#elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945557");
+#elif ALUFloatPrecision == 18
+	VERIFY_EXPR_RES("c2f('AAAA')", "12.0784311294555664");
+#elif ALUFloatPrecision == 33
+	VERIFY_EXPR_RES("c2f('AAAA')", "12.07843112945556640625");
+#else
+#warning "Dropping test case because of unsupported precision"
 #endif
 	VERIFY_EXPR_RES("c2f('AAAAA')", "c2f: Invalid floating point length: 5" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAA')", "c2f: Invalid floating point length: 6" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAA')", "c2f: Invalid floating point length: 7" C2FERR)
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392");
-#else
+#elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.509803921");
+#elif ALUFloatPrecision == 18
+	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392145");
+#elif ALUFloatPrecision == 33
+	VERIFY_EXPR_RES("c2f('AAAAAAAA')", "2261634.50980392144992947578430176");
+#else
+#warning "Dropping test case because of unsupported precision"
 #endif
 	VERIFY_EXPR_RES("c2f('AAAAAAAAA')", "c2f: Invalid floating point length: 9" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAA')", "c2f: Invalid floating point length: 10" C2FERR)
@@ -1084,10 +1108,16 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAA')", "c2f: Invalid floating point length: 13" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 14" C2FERR)
 	VERIFY_EXPR_RES("c2f('AAAAAAAAAAAAAAA')", "c2f: Invalid floating point length: 15" C2FERR)
-#ifdef VISUAL_STUDIO
+#if ALUFloatPrecision == 15
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "c2f: Invalid floating point length: 16" C2FERR)
-#else
+#elif ALUFloatPrecision == 16
 	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.668148415950124e+96");
+#elif ALUFloatPrecision == 18
+	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "9.66814841595012435e+96");
+#elif ALUFloatPrecision == 33
+	VERIFY_EXPR_RES("c2f('אאאאAAAAAAAA')", "1.072181727834810710522875562594e+97");
+#else
+#warning "Dropping test case because of unsupported precision"
 #endif
 
 	VERIFY_EXPR_RES("substitute('Just the place for a snark','','',1)", "substitute: Search string must not be empty");

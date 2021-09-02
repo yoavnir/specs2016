@@ -36,7 +36,11 @@ static std::string breakOffOneToken(std::string& str)
 #define MAX_LINE_LENGTH 65536
 static pipeType execCmd(std::string& cmd)
 {
+#ifdef WIN64
+	pipeType pipe(_popen(cmd.c_str(), "r"), _pclose);
+#else
 	pipeType pipe(popen(cmd.c_str(), "r"), pclose);
+#endif
 	return pipe;
 }
 

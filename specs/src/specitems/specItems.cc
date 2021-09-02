@@ -455,7 +455,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			break;
 		}
 		case ApplyRet__EnterLoop:
-			pState.pushLoop(i);
+			pState.pushLoop(int(i));
 			break;
 		case ApplyRet__DoneLoop:
 			i = pState.getLoopStart() - 1;  // subtracting 1 because the for loop increments
