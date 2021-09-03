@@ -1,0 +1,22 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ v0.9-dev ]
+  pull_request:
+    branches: [ v0.9-dev ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: configure
+      run: cd specs/src
+      run: python setup.py
+    - name: make
+      run: make all
+    - name: make check
+      run: make run_tests
