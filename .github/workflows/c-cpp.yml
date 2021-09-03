@@ -13,8 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: configure
+    - name: cd
       run: cd specs/src
+    - name: configure
       run: python setup.py
     - name: make
       run: make all
