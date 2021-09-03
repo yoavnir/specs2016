@@ -43,7 +43,7 @@ class ConversionException : public SpecsException {
 public:
 	explicit ConversionException(const char* _fn, unsigned int _ln,
 			const char* _srcf, const char* _dstf, std::string& _src,
-			const char* reason = NULL) : SpecsException(_fn, _ln, "") {
+			const char* reason = nullptr) : SpecsException(_fn, _ln, "") {
 		if (reason) {
 			msg = "Cannot convert <" + _src + "> from format <" + _srcf + "> to format <" + _dstf + ">: " + reason;
 		} else {

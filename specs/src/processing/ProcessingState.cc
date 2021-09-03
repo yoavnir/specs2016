@@ -46,8 +46,8 @@ ProcessingState::ProcessingState()
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
-	m_ps = NULL;
-	m_prevPs = NULL;
+	m_ps = nullptr;
+	m_prevPs = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
@@ -55,7 +55,7 @@ ProcessingState::ProcessingState()
 	m_bNoWrite = false;
 	m_bEOF = false;
 	m_outputIndex = 1;
-	m_Writers = NULL;
+	m_Writers = nullptr;
 }
 
 ProcessingState::ProcessingState(ProcessingState& ps)
@@ -67,8 +67,8 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
-	m_ps = NULL;
-	m_prevPs = NULL;
+	m_ps = nullptr;
+	m_prevPs = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
@@ -76,7 +76,7 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_bNoWrite = false;
 	m_bEOF = false;
 	m_outputIndex = 1;
-	m_Writers = NULL;
+	m_Writers = nullptr;
 }
 
 ProcessingState::ProcessingState(ProcessingState* pPS)
@@ -88,8 +88,8 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
-	m_ps = NULL;
-	m_prevPs = NULL;
+	m_ps = nullptr;
+	m_prevPs = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
@@ -97,7 +97,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_bNoWrite = false;
 	m_bEOF = false;
 	m_outputIndex = 1;
-	m_Writers = NULL;
+	m_Writers = nullptr;
 }
 
 ProcessingState::~ProcessingState()
@@ -112,7 +112,7 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 	if (m_ps && ps!=m_ps) {
 		m_prevPs = m_ps;
 	} else {
-		MYASSERT(m_prevPs==NULL);
+		MYASSERT(m_prevPs==nullptr);
 		m_prevPs = SpecString::newString();
 	}
 	m_ps = ps;
@@ -167,7 +167,7 @@ void ProcessingState::setActiveWriter(int idx)
 		m_outputIndex = 0;
 	} else {
 		m_outputIndex = idx;
-		if (NULL == m_Writers[idx]) {
+		if (nullptr == m_Writers[idx]) {
 			std::string err = "Undefined output stream " + std::to_string(idx) + " selected.";
 			MYTHROW(err);
 		}
@@ -232,6 +232,28 @@ void ProcessingState::identifyFields()
 		m_fieldEnd.insert(m_fieldEnd.end(), bFieldHasContent ? i : EMPTY_FIELD_MARKER);
 		if (pc[i]==m_fieldSeparator) i++;
 	}
+}
+
+void ProcessingState::alterFieldSeparator(char sep)
+{
+	m_fieldSeparator = sep;
+	m_fieldCount = -1;
+}
+
+char ProcessingState::getFieldSeparator()
+{
+	return m_fieldSeparator;
+}
+
+void ProcessingState::alterWordSeparator(char sep)
+{
+	m_wordSeparator = sep;
+	m_wordCount = -1;
+}
+
+char ProcessingState::getWordSeparator()
+{
+	return m_wordSeparator;
 }
 
 int ProcessingState::getFieldStart(int idx) {
@@ -315,7 +337,7 @@ int ProcessingState::getWordEnd(int idx) {
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
 	if (m_inputStation != STATION_SECOND) {
-		MYASSERT_WITH_MSG(NULL!=m_ps,"Tried to read record in run-out cycle");
+		MYASSERT_WITH_MSG(nullptr!=m_ps,"Tried to read record in run-out cycle");
 	}
 	int slen = (int)(currRecord()->length());
 
@@ -338,7 +360,7 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	}
 
 	// Consider overflows
-	if (from>slen) return NULL;
+	if (from>slen) return nullptr;
 	if (to>slen) to = slen;
 
 	// to < from ==> wrap-around
@@ -370,7 +392,7 @@ void ProcessingState::breakValuesClear()
 
 void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 {
-	if (m_fieldIdentifiers[id]!=NULL) {
+	if (m_fieldIdentifiers[id]!=nullptr) {
 		std::string err = std::string("Field Identifier <") + id + "> redefined.";
 		MYTHROW(err);
 	}
@@ -379,7 +401,7 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 
 	// Count the statistics of this field value.
 	if (ALUFUNC_STATISTICAL & AluFunction::functionTypes()) {
-		if (m_fiStatistics[id]==NULL) {
+		if (m_fiStatistics[id]==nullptr) {
 			m_fiStatistics[id] = std::make_shared<AluValueStats>(id);
 		} else {
 			m_fiStatistics[id]->AddValue(id);
@@ -388,7 +410,7 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 
 	if (ALUFUNC_FREQUENCY & AluFunction::functionTypes()) {
 		std::string s(ps->data(), ps->length());
-		if (m_freqMaps[id]==NULL) {
+		if (m_freqMaps[id]==nullptr) {
 			m_freqMaps[id] = std::make_shared<frequencyMap>();
 		}
 
@@ -436,7 +458,7 @@ PAluValueStats ProcessingState::valueStatistics(char id)
 
 PFrequencyMap ProcessingState::getFrequencyMap(char id)
 {
-	if (m_freqMaps[id]==NULL) {
+	if (m_freqMaps[id]==nullptr) {
 		m_freqMaps[id] = std::make_shared<frequencyMap>();
 	}
 	return m_freqMaps[id];

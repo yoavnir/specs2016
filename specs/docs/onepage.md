@@ -104,6 +104,12 @@ These are optional spec units that appear at the beginning of the specification 
 * **PRINTONLY** - This option instructs *specs* to suppress output records unless a specified *break level* is established. The break level is either a field identifier (case matters) or it can be the keyword `EOF`, which specifies records are suppressed until the input is exhausted or the condition specified with `STOP` is satisfied.
 * **KEEP** - This option, always following `PRINTONLY`instructs *specs* not to reset the output buffer when a record in not output due to break level not being established. This allows the content from several records to be aggregated into a single output record.
 
+Directives
+==========
+**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MIUST** precede all spec units. Below are the supported directives:
+* `+SET`
+* `+IN`
+
 Conditions and Loops
 ====================
 **specs** also supports conditions and loops. 

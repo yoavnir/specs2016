@@ -10,6 +10,20 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+5-Sep-2021: Version 0.8 is here
+================================
+What's New:
+* Directives for in-file specifications:
+  * `+SET` to set internal configured strings from a command output
+  * `+IN` to set the input stream to be a command output
+* Minor functionality improvements:
+  * The `getenv` function
+  * Hashmark access to persistent variables
+  * New functions: `split`, `splitw`, `wordwith`, `wordwithidx`, `fieldwith`, `fieldwithidx`
+  * Use of a question mark as a shorthand for `PRINT`
+* Some code readability improvements
+* Support for Apple's M1 processor for both Mac OS X and Linux (under Parallels)
+
 1-Sep-2020: Version 0.7 is here
 ===============================
 What's New:

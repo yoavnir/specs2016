@@ -265,7 +265,7 @@ const char* getFullSpecPath()
 			while (onePath) {
 				if (res.length()>0) res += PATH_LIST_SEPARATOR;
 				res += onePath;
-				onePath = strtok(NULL, PATH_LIST_SEPARATOR);
+				onePath = strtok(nullptr, PATH_LIST_SEPARATOR);
 			}
 		}
 
@@ -276,7 +276,7 @@ const char* getFullSpecPath()
 			while (onePath) {
 				if (res.length()>0) res += PATH_LIST_SEPARATOR;
 				res += onePath;
-				onePath = strtok(NULL, PATH_LIST_SEPARATOR);
+				onePath = strtok(nullptr, PATH_LIST_SEPARATOR);
 			}
 			free(configPath);
 		}

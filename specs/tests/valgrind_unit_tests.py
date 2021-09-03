@@ -1,6 +1,6 @@
 import sys, memcheck, argparse
 
-count_ALU_tests = 669
+count_ALU_tests = 677
 count_processing_tests = 158
 count_token_tests = 16
 
@@ -13,7 +13,7 @@ if args.nvg==True:
 	memcheck.no_valgrind = True
 
 tests_to_skip = []
-tests_that_may_fail = [43,48,61,63,385,387,397,399]
+tests_that_may_fail = []
 for i in range(count_ALU_tests):
     if (i+1) in tests_to_skip:
         continue
@@ -61,7 +61,7 @@ for i in range(count_token_tests):
     memcheck.cleanup()
 
 
-tests_that_may_fail = [73]
+tests_that_may_fail = [102]
 for i in range(count_processing_tests):
     cmd = "../exe/ProcessingTest {}".format(i+1)
     (rc,info) = memcheck.leak_check(cmd)
@@ -73,7 +73,7 @@ for i in range(count_processing_tests):
             else:
                 sys.stdout.write("ProcessingTest Test #{} - no leaks (but it should have failed -- check out cmd.out)\n".format(i+1))
                 memcheck.cleanup_valgrind()
-                exit(0)
+                # exit(0)
         else:
             sys.stdout.write("ProcessingTest Test #{} - no leaks\n".format(i+1))
     elif rc==memcheck.RetCode_COMMAND_FAILED and (i+1) in tests_that_may_fail:
@@ -82,4 +82,3 @@ for i in range(count_processing_tests):
         sys.stdout.write("Command '{}' failed with return code '{}' and extra info {}\nSee file valgrind.out for details.\n".format(cmd,memcheck.RetCode_strings[rc], info))
         exit(0)
     memcheck.cleanup()
-

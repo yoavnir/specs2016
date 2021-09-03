@@ -25,7 +25,7 @@ static void enlargeStringArray(char**& pRet, unsigned int newSize, unsigned int&
 	MYASSERT_NOT_NULL_WITH_DESC(pRet,"Failed to allocate string array");
 
 	unsigned int i;
-	for (i=rsize; i<newSize; i++) pRet[i] = NULL;
+	for (i=rsize; i<newSize; i++) pRet[i] = nullptr;
 	rsize = newSize;
 }
 
@@ -71,7 +71,7 @@ char** getDirectoryFileNames(const char* spath)
 
 char** getDirectoryFileNames(const char* spath)
 {
-	static char** pRet = NULL;
+	static char** pRet = nullptr;
 	static unsigned int rsize = 0;
 
 	if (!pRet) {
@@ -80,14 +80,14 @@ char** getDirectoryFileNames(const char* spath)
 
 	DIR* pdir = opendir(spath);
 	if (!pdir) {
-		pRet[0] = NULL;
+		pRet[0] = nullptr;
 		return pRet;
 	}
 
 	struct dirent *ent;
 	unsigned int index = 0;
 
-	while ((ent = readdir(pdir)) != NULL) {
+	while ((ent = readdir(pdir)) != nullptr) {
 		if (index+1 > rsize) {
 			enlargeStringArray(pRet, rsize+64, rsize);
 		}

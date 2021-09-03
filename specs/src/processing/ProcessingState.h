@@ -9,7 +9,7 @@
 #include "utils/aluFunctions.h"
 
 #define DEFAULT_PAD_CHAR ' '
-#define LOCAL_WHITESPACE  -1
+#define LOCAL_WHITESPACE  1
 #define DEFAULT_WORDSEPARATOR ' '
 #define DEFAULT_FIELDSEPARATOR '\t'
 
@@ -49,7 +49,7 @@ public:
 	virtual int     getFieldEnd(int idx);
 	virtual PSpecString getFromTo(int from, int to);
 	virtual bool    isRunIn()   { return (m_CycleCounter==1); }
-	virtual bool    isRunOut()  { return (m_ps==NULL); } // NOTE: will return true before first record
+	virtual bool    isRunOut()  { return (m_ps==nullptr); } // NOTE: will return true before first record
 	virtual ALUInt  getRecordCount()    { return ALUInt(m_CycleCounter + m_ExtraReads); }
 	virtual ALUInt  getIterationCount() { return ALUInt(m_CycleCounter); }
 	virtual bool    breakEstablished(char id);
@@ -64,6 +64,12 @@ public:
 	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
 	void fieldIdentifierStatsClear();
+
+	void alterFieldSeparator(char sep);
+	char getFieldSeparator();
+	void alterWordSeparator(char sep);
+	char getWordSeparator();
+
 	void breakValuesClear();
 	void resetBreaks();
 	bool needToEvaluate();
@@ -82,7 +88,7 @@ public:
 	void setStream(int i);
 	int  getActiveInputStation() { return m_inputStation; }
 	virtual PSpecString currRecord() { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
-	bool recordNotAvailable() { return NULL==currRecord(); }
+	bool recordNotAvailable() { return nullptr==currRecord(); }
 	bool inputStreamHasChanged() { return m_inputStreamChanged; }
 	void resetInputStreamFlag() { m_inputStreamChanged = false; }
 	int  getActiveInputStream() { return m_inputStream; }

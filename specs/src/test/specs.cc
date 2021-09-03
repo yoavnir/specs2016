@@ -14,6 +14,7 @@
 #include "utils/ErrorReporting.h"
 #include "utils/PythonIntf.h"
 #include "utils/aluRegex.h"
+#include "utils/directives.h"
 
 extern int g_stop_stream;
 extern char g_printonly_rule;
@@ -45,6 +46,7 @@ bool parseSwitches(int& argc, char**& argv)
 {
 	std::string argName;
 	/* Skip the program name */
+	std::string programName(argv[0]);
 	argc--; argv++;
 
 	while (argc>0) {
@@ -56,8 +58,8 @@ CONTINUE:
 		if (g_configuredString != "") {
 			auto equalsPos = g_configuredString.find('=');
 			if (std::string::npos == equalsPos || 1 == equalsPos) {
-				std::string err = "Malformed parameter for 'set': " + g_configuredString;
-				MYTHROW(err);
+				std::cerr << "Malformed parameter for --set: '" << g_configuredString << "'\n";
+				return false;
 			}
 			auto key = g_configuredString.substr(0,equalsPos);
 			auto value = g_configuredString.substr(equalsPos+1);
@@ -87,6 +89,18 @@ CONTINUE:
 			std::cerr << "Invalid record format: <" << g_recfm << ">\n";
 			return false;
 		}
+	}
+
+	// info
+	if (g_info) {
+		std::cerr << "specs invoked as '" << programName << "'\n";
+#ifdef __VERSION__
+		std::cerr << "\tCompiler version: " << __VERSION__ << "\n";
+#endif
+		std::cerr << "\tHigh/low watermark for queues: " << QUEUE_HIGH_WM << " / " << QUEUE_LOW_WM << "\n";
+		std::cerr << "\tRandom Provider: " << RandomProvider << "\n";
+		std::cerr << "\tFloating point precision: " << ALUFloatPrecision << " (" << sizeof(ALUFloat) << " bytes)\n";
+		exit(0);
 	}
 
 	// help
@@ -207,7 +221,7 @@ int main (int argc, char** argv)
 	itemGroup ig;
 	StringBuilder sb;
 	ProcessingState ps;
-	PReader pRd = NULL;
+	PReader pRd = nullptr;
 	PSimpleWriter pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
@@ -276,9 +290,17 @@ int main (int argc, char** argv)
 
 	if (ig.readsLines() || g_bForceFileRead) {
 		if (g_inputFile.empty()) {
-			pRd = std::make_shared<StandardReader>();
+			if (nullptr == primaryInputPipe()) {
+				pRd = std::make_shared<StandardReader>();
+			} else {
+				pRd = std::make_shared<StandardReader>(primaryInputPipe());
+			}
 		} else {
 			pRd = std::make_shared<StandardReader>(g_inputFile);
+			if (nullptr != primaryInputPipe()) {
+				std::cerr << "Error: Both input file and input stream specified.\n";
+				return -4;
+			}
 		}
 
 		if (g_recfm=="F") {
@@ -322,7 +344,7 @@ int main (int argc, char** argv)
 			for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 				if (pWrtrs[i]) {
 					pWrtrs[i]->End();
-					pWrtrs[i] = NULL;
+					pWrtrs[i] = nullptr;
 				}
 			}
 			return -4;
@@ -334,7 +356,7 @@ int main (int argc, char** argv)
 		generatedLines = 0;
 		writtenLines = 0;
 		if (!g_bPrintStats) {
-			pRd = NULL;
+			pRd = nullptr;
 		} else {
 			pRd->endCollectingTimeData();
 		}
@@ -374,7 +396,7 @@ int main (int argc, char** argv)
 			if (g_bPrintStats) {
 				pWrtrs[i]->endCollectingTimeData();
 			} else {
-				pWrtrs[i] = NULL;
+				pWrtrs[i] = nullptr;
 			}
 		}
 	}
@@ -402,14 +424,14 @@ int main (int argc, char** argv)
 		timer.dump("Main Thread");
 		if (pRd) {
 			pRd->dumpTimeData();
-			pRd = NULL;
+			pRd = nullptr;
 		}
 		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
 			if (pWrtrs[i]) {
 				if (1 == i) {
 					pWrtrs[i]->dumpTimeData();
 				}
-				pWrtrs[i] = NULL;
+				pWrtrs[i] = nullptr;
 			}
 		}
 

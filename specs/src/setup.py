@@ -137,7 +137,7 @@ $(EXE_DIR):
 	$(MKDIR_C) $@
 	
 $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
-	$(CXX) {}$@ {} $^ $(CONDLINK)
+	$(LINKER) {}$@{} {} $^ $(CONDLINK)
 		
 install_unix: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
@@ -163,9 +163,7 @@ clear_clean_nt = \
 """
 clean:
 	del /S *.d *.o *.obj
-	del $(EXE_DIR)\*.exe
-	del $(EXE_DIR)\*.ilk
-	del $(EXE_DIR)\*.pdb
+	del /q $(EXE_DIR)\*
 	rmdir $(EXE_DIR)
 	
 clear:
@@ -185,11 +183,14 @@ valid_platforms = ["POSIX","NT"]
 
 default_platform = os.name.upper()
 
-if default_platform=="POSIX" or default_platform=="NT":
+if default_platform=="POSIX":
 	default_compiler = "GCC"
+elif default_platform=="NT":
+	default_compiler = "VS"
 else:
 	sys.stderr.write("Unsupported platform: {}; Assuming POSIX\n".format(platform))
 	default_platform = "POSIX"
+	default_compiler = "GCC"
 	
 parser = argparse.ArgumentParser(description="Parse compiler and variation flags")
 parser.add_argument("-c", dest="compiler", action="store", default=default_compiler, 
@@ -202,6 +203,8 @@ parser.add_argument("--use_cached_depends", dest="ucd", action="store_true", def
 					help="Use Cached Depends rather than re-calculating. Necessary for VS")
 parser.add_argument("--fast_random", dest="nocrypt", action="store_true", default=None,
 					help="Avoid cryptographic random number generators")
+parser.add_argument("--os_version", dest="osversion", action="store", default="",
+					help="OS version to link against. Available only in Mac OS")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
 args = parser.parse_args()
@@ -209,6 +212,7 @@ args = parser.parse_args()
 compiler = args.compiler.upper()
 variation = args.variation.upper()
 platform = args.platform.upper()
+osversion = args.osversion if sys.platform=="darwin" else ""
 use_cached_depends = args.ucd
 avoid_cryptographic_random = args.nocrypt
 python_prefix = args.pyprefix
@@ -268,13 +272,13 @@ elif compiler=="CLANG":
 elif compiler=="VS":
 	cxx = "cl.exe"
 	if variation=="RELEASE":
-		condlink = "/O2"
+		condlink = ""
 		condcomp = "/O2 /EHsc"
 	elif variation=="DEBUG":
 		condlink = "/MAP /DEBUG"
 		condcomp = "/Zi /EHsc /DDEBUG /DALU_DUMP"
 	else:
-		condlink = "/O2 /Zi /MAP /DEBUG"
+		condlink = "/Zi /MAP /DEBUG"
 		condcomp = "/O2 /Zi /EHsc"	
 	
 if platform=="NT":
@@ -439,7 +443,7 @@ sys.stdout.write("Testing if python support is available...")
 if platform=="NT":
 	if python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
-		CFG_Python = False
+		CFG_python = False
 	else:
 		cv = sysconfig.get_config_vars()
 		python_prefix = cv['prefix']
@@ -493,8 +497,12 @@ else:
 if CFG_regex_grammars:
 	condcomp = condcomp + "{}REGEX_GRAMMARS".format(def_prefix)
 
+if osversion != "":
+	condlink = condlink + " -mmacosx-version-min={}".format(osversion)
+
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))
+	makefile.write("LINKER={}\n".format("link.exe" if (compiler=="VS") else cxx))
 	makefile.write("CONDCOMP={}\n".format(condcomp))
 	makefile.write("CONDLINK={}\n".format(condlink))
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
@@ -504,13 +512,13 @@ with open("Makefile", "w") as makefile:
 	
 	if compiler=="VS":
 		body1fmt = body1.format("obj","obj")
-		body2fmt = body2.format("obj","-o ","advapi32.lib")    # should be "/OUT:" but I haven't got it to work yet
+		body2fmt = body2.format("obj","/OUT:",".exe","advapi32.lib")
 	elif compiler=="CLANG":
 		body1fmt = body1.format("o","o")
-		body2fmt = body2.format("o", "-o ", "-pthread")
+		body2fmt = body2.format("o", "-o ", "", "-pthread")
 	else:
 		body1fmt = body1.format("o","o")
-		body2fmt = body2.format("o", "-o ", "-pthread")
+		body2fmt = body2.format("o", "-o ", "", "-pthread")
 	
 	makefile.write("{}\n".format(body1fmt))
 	if use_cached_depends:

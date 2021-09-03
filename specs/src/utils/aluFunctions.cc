@@ -12,13 +12,14 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm> // for std::reverse
+#include <cstdlib>   // for std::getenv
 
 #define PAD_CHAR ' '
 
 #define PERCENTS (ALUFloat(100.0))
 
-stateQueryAgent* g_pStateQueryAgent = NULL;
-positionGetter* g_PositionGetter = NULL;
+stateQueryAgent* g_pStateQueryAgent = nullptr;
+positionGetter* g_PositionGetter = nullptr;
 
 void setStateQueryAgent(stateQueryAgent* qa)
 {
@@ -48,19 +49,19 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
 }
 
 #define ASSERT_NOT_ELIDED(arg,idx,name)     \
-	if (NULL == (arg)) { throw_argument_issue(__func__,idx,#name,"Argument must not be elided"); }
+	if (nullptr == (arg)) { throw_argument_issue(__func__,idx,#name,"Argument must not be elided"); }
 
 #define THROW_ARG_ISSUE(idx,name,msg)       \
 		throw_argument_issue(__func__,idx,#name,msg.c_str());
 
 #define ARG_INT_WITH_DEFAULT(arg,def)       \
-		((NULL == (arg)) ? def : (arg)->getInt())
+		((nullptr == (arg)) ? def : (arg)->getInt())
 
 #define ARG_STR_WITH_DEFAULT(arg,def)       \
-		((NULL == (arg)) ? def : (arg)->getStr())
+		((nullptr == (arg)) ? def : (arg)->getStr())
 
 #define ARG_FLOAT_WITH_DEFAULT(arg,def)       \
-		((NULL == (arg)) ? def : (arg)->getFloat())
+		((nullptr == (arg)) ? def : (arg)->getFloat())
 
 /*
  *
@@ -174,7 +175,7 @@ PValue AluFunc_sqrt(PValue op)
 
 // Both of the following functions assume little-endian architecture
 // The mainframe version and Solaris version will need some work...
-static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = NULL)
+static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = nullptr)
 {
 	std::string str = op->getStr();
 	uint64_t value = 0;
@@ -262,7 +263,7 @@ PValue AluFunc_c2d(PValue op)
 	}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 PValue AluFunc_c2f(PValue op)
@@ -306,7 +307,7 @@ PValue AluFunc_tobine(PValue op, PValue _bits)
 	ASSERT_NOT_ELIDED(op,1,op);
 	ASSERT_NOT_ELIDED(_bits,2,bits);
 	ALUInt value = op->getInt();
-	ALUInt bits = _bits->getInt();
+	int    bits = int(_bits->getInt());
 	switch (bits) {
 	case 8:
 	case 16:
@@ -487,7 +488,7 @@ PValue AluFunc_mcs2tf(PValue pValue, PValue pFormat)
 	ASSERT_NOT_ELIDED(pFormat,2,format);
 	int64_t microseconds = pValue->getInt();
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	PValue ret = mkValue2(printable->data(), printable->length());
+	PValue ret = mkValue2(printable->data(), int(printable->length()));
 	return ret;
 }
 
@@ -508,7 +509,7 @@ PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
         ALUFloat seconds = pValue->getFloat();
         int64_t microseconds = seconds * MICROSECONDS_PER_SECOND;
 	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	PValue ret = mkValue2(printable->data(), printable->length());
+	PValue ret = mkValue2(printable->data(), int(printable->length()));
 	return ret;
 }
 
@@ -759,12 +760,12 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 	long long int value;
 	try {
 		try {
-			unsigned long long int uvalue = std::stoull(hex, NULL, 16);
+			unsigned long long int uvalue = std::stoull(hex, nullptr, 16);
 			value = (long long int) uvalue;
-		} catch (std::invalid_argument) {
+		} catch (std::invalid_argument&) {
 			CONVERSION_EXCEPTION(hex, "Hex", "Decimal");
 		}
-	} catch (std::out_of_range) {
+	} catch (std::out_of_range&) {
 		CONVERSION_EXCEPTION_EX(hex, "Hex", "Decimal", "out of range")
 	}
 
@@ -832,7 +833,7 @@ PValue AluFunc_sum(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "SUM requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "SUM requested for undefined field identifier")
 	return pVStats->sum();
 }
 
@@ -841,7 +842,7 @@ PValue AluFunc_min(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "MIN requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "MIN requested for undefined field identifier")
 	return pVStats->_min();
 }
 
@@ -850,7 +851,7 @@ PValue AluFunc_max(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "MAX requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "MAX requested for undefined field identifier")
 	return pVStats->_max();
 }
 
@@ -859,7 +860,7 @@ PValue AluFunc_average(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "AVERAGE requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "AVERAGE requested for undefined field identifier")
 	return pVStats->average();
 }
 
@@ -868,7 +869,7 @@ PValue AluFunc_variance(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "VARIANCE requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "VARIANCE requested for undefined field identifier")
 	return pVStats->variance();
 }
 
@@ -877,7 +878,7 @@ PValue AluFunc_stddev(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "STDDEV requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "STDDEV requested for undefined field identifier")
 	return pVStats->stddev();
 }
 
@@ -886,7 +887,7 @@ PValue AluFunc_stderrmean(PValue _pFieldIdentifier)
 	ASSERT_NOT_ELIDED(_pFieldIdentifier,1,fieldIdentifier);
 	char fId = (char)(_pFieldIdentifier->getInt());
 	PAluValueStats pVStats = g_pStateQueryAgent->valueStatistics(fId);
-	MYASSERT_WITH_MSG(pVStats!=NULL, "STDERRMEAN requested for undefined field identifier")
+	MYASSERT_WITH_MSG(pVStats!=nullptr, "STDERRMEAN requested for undefined field identifier")
 	return pVStats->stderrmean();
 }
 
@@ -1453,7 +1454,7 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 		} else {
 			char *pEnd = pc;
 			while ((*pEnd!='\0') && (*pEnd!=sep)) pEnd++;
-			return mkValue2(pc, (pEnd-pc));
+			return mkValue2(pc, int(pEnd-pc));
 		}
 	}
 	else {
@@ -1472,7 +1473,7 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 		} else {
 			char *pBegin = pc;
 			while ((pBegin>pStart) && (*pBegin!=sep)) pBegin--;
-			return mkValue2(pBegin+1, (pc-pBegin));
+			return mkValue2(pBegin+1, int(pc-pBegin));
 		}
 	}
 }
@@ -1490,7 +1491,7 @@ PValue AluFunc_lvalue(PValue pStr, PValue pSep)
 		pRes = AluFunc_sfield(pStr,pCount,pDefaultSep);
 	}
 
-	return AluFunc_strip(pRes, NULL, NULL);
+	return AluFunc_strip(pRes, nullptr, nullptr);
 }
 
 PValue AluFunc_rvalue(PValue pStr, PValue pSep)
@@ -1506,7 +1507,7 @@ PValue AluFunc_rvalue(PValue pStr, PValue pSep)
 		pRes = AluFunc_sfield(pStr,pCount,pDefaultSep);
 	}
 
-	return AluFunc_strip(pRes, NULL, NULL);
+	return AluFunc_strip(pRes, nullptr, nullptr);
 }
 
 PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
@@ -1548,7 +1549,7 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 		} else {
 			char *pEnd = pc;
 			while ((*pEnd!='\0') && (*pEnd!=sep)) pEnd++;
-			return mkValue2(pc, (pEnd-pc));
+			return mkValue2(pc, int(pEnd-pc));
 		}
 	}
 	else {
@@ -1568,7 +1569,7 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 		} else {
 			char *pBegin = pc;
 			while ((pBegin>pStart) && (*pBegin!=sep)) pBegin--;
-			return mkValue2(pBegin+1, (pc-pBegin));
+			return mkValue2(pBegin+1, int(pc-pBegin));
 		}
 	}
 }
@@ -1620,7 +1621,7 @@ PValue AluFunc_bitand(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] & pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
 
 	delete [] pBuff;
 
@@ -1645,7 +1646,7 @@ PValue AluFunc_bitor(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] | pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
 
 	delete [] pBuff;
 
@@ -1670,7 +1671,7 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 		pBuff[i] = pc1[i] ^ pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), minlen);
+	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
 
 	delete [] pBuff;
 
@@ -2589,6 +2590,130 @@ PValue AluFunc_pset(PValue pName, PValue pValue)
 	std::string varValue = pValue->getStr();
 	persistentVarSet(varName, varValue);
 	return pValue;
+}
+
+PValue AluFunc_getenv(PValue pName)
+{
+	ASSERT_NOT_ELIDED(pName,1,variableName);
+
+	if (const char* env_p = std::getenv(pName->getStr().c_str())) {
+		return mkValue(env_p);
+	} else {
+		return mkValue0();
+	}
+}
+
+PValue AluFunc_split(PValue pSep, PValue pHdr, PValue pFtr)
+{
+	auto hdr = ARG_INT_WITH_DEFAULT(pHdr,0);
+	auto ftr = ARG_INT_WITH_DEFAULT(pFtr,0);
+
+	MYASSERT_WITH_MSG(hdr>=0, "hdr argument should be non-negative");
+	MYASSERT_WITH_MSG(ftr>=0, "ftr argument should be non-negative");
+
+	char restoreFieldSeparator = 0;
+	if (pSep && pSep->getStr()[0] != g_pStateQueryAgent->getFieldSeparator()) {
+		restoreFieldSeparator = g_pStateQueryAgent->getFieldSeparator();
+		g_pStateQueryAgent->alterFieldSeparator(pSep->getStr()[0]);
+	}
+
+	std::string res;
+
+	bool first = true;
+	for (auto i=hdr+1; i<=g_pStateQueryAgent->getFieldCount()-ftr; i++) {
+		if (!first) res += '\n';
+		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i))->sdata();
+		first = false;
+	}
+
+	if (restoreFieldSeparator != 0) {
+		g_pStateQueryAgent->alterFieldSeparator(restoreFieldSeparator);
+	}
+
+	return mkValue(res);
+}
+
+PValue AluFunc_splitw(PValue pSep, PValue pHdr, PValue pFtr)
+{
+	auto hdr = ARG_INT_WITH_DEFAULT(pHdr,0);
+	auto ftr = ARG_INT_WITH_DEFAULT(pFtr,0);
+
+	MYASSERT_WITH_MSG(hdr>=0, "hdr argument should be non-negative");
+	MYASSERT_WITH_MSG(ftr>=0, "ftr argument should be non-negative");
+
+	char restoreWordSeparator = 0;
+	if (pSep && pSep->getStr()[0] != g_pStateQueryAgent->getWordSeparator()) {
+		restoreWordSeparator = g_pStateQueryAgent->getWordSeparator();
+		g_pStateQueryAgent->alterWordSeparator(pSep->getStr()[0]);
+	}
+
+	std::string res;
+
+	bool first = true;
+	for (auto i=hdr+1; i<=g_pStateQueryAgent->getWordCount()-ftr; i++) {
+		if (!first) res += '\n';
+		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i))->sdata();
+		first = false;
+	}
+
+	if (restoreWordSeparator != 0) {
+		g_pStateQueryAgent->alterWordSeparator(restoreWordSeparator);
+	}
+
+	return mkValue(res);
+}
+
+PValue AluFunc_wordwith(PValue pSubStr)
+{
+	ALUInt i, wordcount = g_pStateQueryAgent->getWordCount();
+	for (i=1; i<=wordcount; i++) {
+		PSpecString pRange = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i));
+		const char* pWord = pRange->data();
+		if (strstr(pWord, pSubStr->getStrPtr()->data())) {
+			return mkValue(pWord);
+		}
+	}
+	return mkValue("");
+}
+
+PValue AluFunc_wordwithidx(PValue pSubStr)
+{
+	ALUInt i, wordcount = g_pStateQueryAgent->getWordCount();
+	for (i=1; i<=wordcount; i++) {
+		PSpecString pRange = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i));
+		const char* pWord = pRange->data();
+		if (strstr(pWord, pSubStr->getStrPtr()->data())) {
+			return mkValue(i);
+		}
+	}
+	return mkValue(ALUInt(0));
+}
+
+
+PValue AluFunc_fieldwith(PValue pSubStr)
+{
+	ALUInt i, fieldcount = g_pStateQueryAgent->getFieldCount();
+	for (i=1; i<=fieldcount; i++) {
+		PSpecString pRange = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i));
+		const char* pField = pRange->data();
+		if (strstr(pField, pSubStr->getStrPtr()->data())) {
+			return mkValue(pField);
+		}
+	}
+	return mkValue("");
+}
+
+PValue AluFunc_fieldwithidx(PValue pSubStr)
+{
+	ALUInt i, fieldcount = g_pStateQueryAgent->getFieldCount();
+	for (i=1; i<=fieldcount; i++) {
+		PSpecString pRange = g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i));
+		const char* pField = pRange->data();
+		if (strstr(pField, pSubStr->getStrPtr()->data())) {
+			return mkValue(i);
+		}
+	}
+	return mkValue(ALUInt(0));
 }
 
 

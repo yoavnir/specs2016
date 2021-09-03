@@ -18,7 +18,7 @@ PSpecString LiteralPart::getStr(ProcessingState& pState)
 		return SpecString::newString(m_Str);
 	} else {
 		MYTHROW("UTF-8 is not supported yet");
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -110,8 +110,8 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 
 SubstringPart::~SubstringPart()
 {
-	mp_BigPart = NULL;
-	mp_SubPart = NULL;
+	mp_BigPart = nullptr;
+	mp_SubPart = nullptr;
 }
 
 std::string SubstringPart::Debug()
@@ -123,7 +123,7 @@ PSpecString SubstringPart::getStr(ProcessingState& pState)
 {
 	PSpecString bigPart = mp_BigPart->getStr(pState);
 
-	if (!bigPart) return NULL;
+	if (!bigPart) return nullptr;
 
 	// Create the special pState for the substring.
 	ProcessingState subState;
@@ -204,10 +204,10 @@ ExpressionPart::ExpressionPart(std::string& _expr)
 	if (expressionIsAssignment(infixExpression)) {
 		PUnit aUnit = infixExpression[0];
 		auto pCounterUnit = std::dynamic_pointer_cast<AluUnitCounter>(aUnit);
-		MYASSERT(NULL != pCounterUnit);
+		MYASSERT(nullptr != pCounterUnit);
 		m_counter = pCounterUnit->getKey();
 		m_assnOp = std::dynamic_pointer_cast<AluAssnOperator>(infixExpression[1]);
-		MYASSERT(NULL != m_assnOp);
+		MYASSERT(nullptr != m_assnOp);
 		infixExpression.erase(infixExpression.begin(), infixExpression.begin()+2);
 		m_isAssignment = true;
 	} else {

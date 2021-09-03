@@ -262,6 +262,14 @@
 			"(phrase,str,[start]) - If 'phrase' is a substring of 'str', returns the word number position at which it begins. Otherwise returns 0.","'start' defaults to 1 and is the index of the word where the searching starts.") \
 	X(words,          1, ALUFUNC_REGULAR,     false,  \
 			"(str) - Returns the number of blank-delimited words in 'str'.","") \
+	X(wordwith,       1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the first word of the input string that contains 'substr' or an empty string if not found.","") \
+	X(wordwithidx,    1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the index of the first word of the input string that contains 'substr' or zero if not found.","") \
+	X(fieldwith,      1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the first field of the input string that contains 'substr' or an empty string if not found.","") \
+	X(fieldwithidx,   1, ALUFUNC_REGULAR,     true,   \
+			"(substr) - Returns the index of the first field of the input string that contains 'substr' or zero if not found.","") \
 	X(xrange,         2, ALUFUNC_REGULAR,     false,  \
 			"(starts,end) - Returns a string composed of all the characters between 'start' and 'end' inclusive.","'start' defaults to 0x00, and 'end' defaults to 0xff.") \
 	X(fmt,            5, ALUFUNC_REGULAR,     false,  \
@@ -281,14 +289,20 @@
 			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(defined,        1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns TRUE (1) if the string 's' is a configured string, or FALSE (0) otherwise.","") \
-	X(pget,           2, ALUFUNC_REGULAR,    false,  \
+	X(pget,           2, ALUFUNC_REGULAR,     false,  \
 			"(key,[default]) - returns the value of persistent variable 'key'.","If the variable is not defines, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(pset,           2, ALUFUNC_REGULAR,     false,  \
 			"(key, value) - Sets the persistent variable 'key' to value 'value'.","") \
-	X(pdefined,       1, ALUFUNC_REGULAR,    false,  \
+	X(pdefined,       1, ALUFUNC_REGULAR,     false,  \
 			"(key) - Returns TRUE (1) if the persistent variable 'key' is defined, or FALSE (0) otherwise.","") \
-	X(pclear,         1, ALUFUNC_REGULAR,    false,  \
-			"(key) - Clears the persistent variable 'key' and returns its old value if defined, or NaN otherwise.","")
+	X(pclear,         1, ALUFUNC_REGULAR,     false,  \
+			"(key) - Clears the persistent variable 'key' and returns its old value if defined, or NaN otherwise.","") \
+	X(getenv,         1, ALUFUNC_REGULAR,     false,  \
+			"(name) - Returns the content of the environment variable 'name' or NaN if not defined.", "") \
+	X(split,          3, ALUFUNC_REGULAR,     true,   \
+			"([sep], [hdr], [ftr]) - Returns on multiple lines the fields (separated by the 'sep' character), discarding the first 'hdr' and last 'ftr' records.","The separator defaults to the current field separator.\n'hdr' and 'ftr' both default to zero.") \
+	X(splitw,         3, ALUFUNC_REGULAR,     true,   \
+			"([sep], [hdr], [ftr]) - Returns on multiple lines the words (separated by the 'sep' character), discarding the first 'hdr' and last 'ftr' records.","The separator defaults to the current word separator.\n'hdr' and 'ftr' both default to zero.")
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false,  \
@@ -381,12 +395,26 @@ public:
 	virtual int     getWordEnd(int idx) = 0;
 	virtual int     getFieldStart(int idx) = 0;
 	virtual int     getFieldEnd(int idx) = 0;
+	virtual int     getWordStart(ALUInt idx) {
+		return getWordStart(int(idx));
+	}
+	virtual int     getWordEnd(ALUInt idx) {
+		return getWordEnd(int(idx));
+	}
+	virtual int     getFieldStart(ALUInt idx) {
+		return getFieldStart(int(idx));
+	}
+	virtual int     getFieldEnd(ALUInt idx) {
+		return getFieldEnd(int(idx));
+	}
+	virtual void    alterFieldSeparator(char sep) = 0;
+	virtual char    getFieldSeparator() = 0;
+	virtual void    alterWordSeparator(char sep) = 0;
+	virtual char    getWordSeparator() = 0;
 	virtual PSpecString getFromTo(int from, int to) = 0;
-	// virtual int     getWordStart(ALUInt idx) { return getWordStart(int(idx)); }
-	// virtual int     getWordEnd(ALUInt idx) { return getWordEnd(int(idx)); }
-	// virtual int     getFieldStart(ALUInt idx) { return getFieldStart(int(idx)); }
-	// virtual int     getFieldEnd(ALUInt idx) { return getFieldEnd(int(idx)); }
-	// virtual PSpecString getFromTo(ALUInt from, ALUInt to) { return getFromTo(int(from), int(to)); }
+	virtual PSpecString getFromTo(ALUInt from, ALUInt to) {
+		return getFromTo(int(from), int(to));
+	}
 	virtual PSpecString currRecord() = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;

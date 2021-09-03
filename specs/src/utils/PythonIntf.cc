@@ -64,7 +64,7 @@ public:
 
 class PythonFuncRec : public ExternalFunctionRec {
 public:
-	PythonFuncRec(std::string& _name, PyObject* _pFunc) : m_name(_name), m_pFuncPtr(_pFunc), m_pTuple(NULL) {
+	PythonFuncRec(std::string& _name, PyObject* _pFunc) : m_name(_name), m_pFuncPtr(_pFunc), m_pTuple(nullptr) {
 		Py_INCREF(m_pFuncPtr);
 	}
 	
@@ -100,7 +100,7 @@ public:
 	void ResetArgs() {
 		if (m_pTuple) {
 			Py_DECREF(m_pTuple);
-			m_pTuple = NULL;
+			m_pTuple = nullptr;
 		}
 	}
 
@@ -155,12 +155,12 @@ public:
 	}
 
 	PValue Call() {
-		PValue pRet = NULL;
+		PValue pRet = nullptr;
 
 		// Check that all values were passed, complete those that haven't
 		for (size_t i=0 ; i<GetArgCount() ; i++) {
-			if (NULL==PyTuple_GetItem(m_pTuple, i)) {
-				setArgValue(i, PValue(NULL));
+			if (nullptr==PyTuple_GetItem(m_pTuple, i)) {
+				setArgValue(i, PValue(nullptr));
 			}
 		}
 
@@ -253,11 +253,17 @@ public:
 	~PythonFunctionCollection() {
 		if (Py_IsInitialized()) {
 			m_Functions.clear();
-
+#ifdef PYTHON_VER_3
+			int res = Py_FinalizeEx();
+			if (g_bVerbose) {
+				std::cerr << "Python Interface: Unloaded (res=" << res << ")" << std::endl;
+			}
+#else
 			Py_Finalize();
 			if (g_bVerbose) {
 				std::cerr << "Python Interface: Unloaded" << std::endl;
 			}
+#endif
 		}
 	}
 
@@ -268,22 +274,24 @@ public:
 			m_Initialized = true;
 			return;
 		}
+		// Initialize Python environment
+		Py_Initialize();
+
 		// update the python path
 		if (_path && _path[0]) {
 #ifdef PYTHON_VER_3
 			std::wstring wpath(strlen(_path)+1, L'#');
 			mbstowcs(&wpath[0],_path,strlen(_path));
 			wpath.erase(wpath.length()-1);
-			std::wstring newPath = std::wstring(Py_GetPath()) + std::wstring(PATH_LIST_WSEPARATOR) + wpath;
+			std::wstring newPath =  wpath + std::wstring(PATH_LIST_WSEPARATOR) + std::wstring(Py_GetPath());
+			// Need to finalize and then re-initialize for SetPath to "take"
+			Py_FinalizeEx();
 			Py_SetPath(newPath.data());
 			Py_Initialize();
 #else
-			Py_Initialize();
 			std::string newPath = std::string(Py_GetPath()) + PATH_LIST_SEPARATOR + std::string(_path);
 			PySys_SetPath((char*)newPath.c_str());
 #endif
-		} else {
-			Py_Initialize();
 		}
 
 		// Get the argument parsing function getfullargspec/getargspec
@@ -298,11 +306,13 @@ public:
 				if (g_bVerbose) {
 					std::cerr << "Python Interface: Local functions not found" << std::endl;
 				}
+				PyErr_Clear();
+				
 				m_Initialized = true;
 				return;
 			} else {
 				if (g_bVerbose) {
-					std::cerr << "Python Interface: Error loading local functions:\n";
+					std::cerr << "Python Interface: Error loading local functions: ";
 					PyErr_Print();
 				}
 				MYTHROW("Error loading local functions");
@@ -411,7 +421,7 @@ public:
 				Py_DECREF(pTuple);
 
 				PyObject* pDoc = PyObject_GetAttrString(pFunc, "__doc__");
-				if (pDoc != NULL && pDoc != Py_None) {
+				if (pDoc != nullptr && pDoc != Py_None) {
 					if (PyObject_Length(pDoc) >= 0) {
 #ifdef PYTHON_VER_2
 						pFuncRec->setDoc(PyString_AS_STRING(pDoc));

@@ -15,26 +15,26 @@ class scopedLock {
 public:
 	scopedLock(std::mutex* m) {m_lock = new std::unique_lock<std::mutex>(*m);}
 	~scopedLock() {if (m_lock) delete(m_lock);}
-	void unlock() {delete(m_lock); m_lock = NULL;}
+	void unlock() {delete(m_lock); m_lock = nullptr;}
 	std::unique_lock<std::mutex>& ulock() {return *m_lock;}
 private:
 	std::unique_lock<std::mutex> *m_lock;
 };
 
-class StringQueue
+template <class T> class MTQueue
 {
 private:
-    std::queue<PSpecString> m_Queue;
+    std::queue<T> m_Queue;
     mutable std::mutex m_Mutex;
     std::condition_variable cv_QueueEmpty;
     std::condition_variable cv_QueueFull;
     queueTimer m_timer;
     bool m_Done;
 public:
-    StringQueue() {m_Done = false;}
-    void push(PSpecString const& data)
+    MTQueue() : m_Done(false) {}
+    void push(T const& data)
     {
-    	MYASSERT(data!=NULL);
+    	MYASSERT(data!=nullptr);
         scopedLock lock(&m_Mutex);
         while (m_Queue.size()>=QUEUE_HIGH_WM) {
         	cv_QueueFull.wait(lock.ulock());
@@ -51,7 +51,7 @@ public:
         return m_Queue.empty();
     }
 
-    bool wait_and_pop(PSpecString& popped_value)
+    bool wait_and_pop(T& popped_value)
     {
         scopedLock lock(&m_Mutex);
         while(m_Queue.empty() && false==m_Done)
@@ -84,5 +84,7 @@ public:
 
 };
 
+
+typedef MTQueue<PSpecString> StringQueue;
 
 #endif

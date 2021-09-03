@@ -113,10 +113,10 @@ std::string conv_D2X(std::string& s) {
 	try {
 		try {
 			value = std::stoull(s);
-		} catch (std::invalid_argument) {
+		} catch (std::invalid_argument&) {
 			CONVERSION_EXCEPTION(s, "Decimal", "Hex");
 		}
-	} catch (std::out_of_range) {
+	} catch (std::out_of_range&) {
 		CONVERSION_EXCEPTION_EX(s, "Decimal", "Hex", "out of range")
 	}
 
@@ -129,11 +129,11 @@ std::string conv_X2D(std::string& s) {
 	unsigned long long value;
 	try {
 		try {
-			value = std::stoull(s, NULL, 16);
-		} catch (std::invalid_argument) {
+			value = std::stoull(s, nullptr, 16);
+		} catch (std::invalid_argument&) {
 			CONVERSION_EXCEPTION(s, "Hex", "Decimal");
 		}
-	} catch (std::out_of_range) {
+	} catch (std::out_of_range&) {
 		CONVERSION_EXCEPTION_EX(s, "Hex", "Decimal", "out of range")
 	}
 

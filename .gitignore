@@ -34,3 +34,6 @@ specs/tests/thespec
 specs/tests/theconf
 specs/tests/memcheck.pyc
 specs/tests/input_samples.pyc
+
+# Mac OS stuff
+.DS_Store

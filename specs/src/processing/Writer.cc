@@ -13,7 +13,7 @@ void WriteAllRecords(Writer *pw)
 
 Writer::Writer()
 {
-	mp_thread = NULL;
+	mp_thread = nullptr;
 	m_ended = false;
 	m_countGenerated = 0;
 	m_countWritten = 0;
@@ -24,7 +24,7 @@ Writer::~Writer()
 	if (mp_thread && mp_thread->joinable()) {
 		mp_thread->join();
 	}
-	mp_thread = NULL;
+	mp_thread = nullptr;
 }
 
 void Writer::Write(PSpecString ps)
@@ -44,7 +44,7 @@ void Writer::End()
 	m_queue.Done();
 	if (mp_thread) {
 		mp_thread->join();
-		mp_thread = NULL;
+		mp_thread = nullptr;
 	}
 }
 
@@ -76,13 +76,13 @@ SimpleWriter::~SimpleWriter() {
 	if (writerType__FILE == m_WriterType) {
 		std::shared_ptr<std::ofstream> pOutFile = std::dynamic_pointer_cast<std::ofstream>(m_File);
 		if (pOutFile) pOutFile->clear();
-		m_File = NULL;
+		m_File = nullptr;
 	}
 }
 
 void SimpleWriter::WriteOut()
 {
-	PSpecString ps = NULL;
+	PSpecString ps = nullptr;
 	m_Timer.changeClass(timeClassInputQueue);
 	bool res = m_queue.wait_and_pop(ps);
 	if (res) {

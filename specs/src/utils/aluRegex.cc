@@ -93,7 +93,7 @@ void setRegexType(std::string& s) {
 		if (bWarnUnsupportedGrammarOption && g_bWarnAboutGrammars) {
 			std::cerr << "\nWarning: syntax option '" << p << "' is not supported on this platform\n";
 		}
-		p = strtok(NULL, ",");
+		p = strtok(nullptr, ",");
 	}
 	free(st);
 }
@@ -101,7 +101,7 @@ void setRegexType(std::string& s) {
 PRegEx regexCalculator(std::string& s)
 {
 	regexCacheSearches++;
-	PRegEx pRet = g_RegexCacheDisabled ? NULL : g_regexCache.get(s);
+	PRegEx pRet = g_RegexCacheDisabled ? nullptr : g_regexCache.get(s);
 	if (!pRet) {
 		try {
 			pRet = std::make_shared<std::regex>(s,g_regexType);
@@ -162,7 +162,7 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 					std::string err = "Invalid regular expression match option type: " + std::string(p);
 					MYTHROW(err);
 				}
-				p = strtok(NULL, ",");
+				p = strtok(nullptr, ",");
 			}
 			free(st);
 
