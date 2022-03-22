@@ -15,7 +15,7 @@ std::string LiteralPart::Debug()
 PSpecString LiteralPart::getStr(ProcessingState& pState)
 {
 	if (!g_bSupportUTF8) {
-		return SpecString::newString(m_Str);
+		return std::make_shared<std::string>(m_Str);
 	} else {
 		MYTHROW("UTF-8 is not supported yet");
 		return nullptr;
@@ -38,7 +38,7 @@ std::string RegularRangePart::Debug()
 
 PSpecString RegularRangePart::getStr(ProcessingState& pState)
 {
-	if (pState.recordNotAvailable()) return SpecString::newString();
+	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
 	return pState.getFromTo(_from, _to);
 }
 
@@ -53,7 +53,7 @@ std::string WordRangePart::Debug()
 
 PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
-	if (pState.recordNotAvailable()) return SpecString::newString();
+	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
 	char keepSeparator = DEFAULT_WORDSEPARATOR;
 	if (m_WordSep) {
 		keepSeparator = pState.getWSChar();
@@ -63,7 +63,7 @@ PSpecString WordRangePart::getStr(ProcessingState& pState)
 	PSpecString ret;
 	int wordCount = int(pState.getWordCount());
 	if (_from > wordCount) {
-		ret = SpecString::newString();
+		ret = std::make_shared<std::string>();
 	} else {
 		ret = pState.getFromTo(pState.getWordStart(_from), pState.getWordEnd(_to));
 	}
@@ -86,7 +86,7 @@ std::string FieldRangePart::Debug()
 
 PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
-	if (pState.recordNotAvailable()) return SpecString::newString();
+	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
 	char keepSeparator = DEFAULT_FIELDSEPARATOR;
 	if (m_FieldSep) {
 		keepSeparator = pState.getFSChar();
@@ -96,7 +96,7 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 	PSpecString ret;
 	int fieldCount = int(pState.getFieldCount());
 	if (_from > fieldCount) {
-		ret = SpecString::newString();
+		ret = std::make_shared<std::string>();
 	} else {
 		ret = pState.getFromTo(pState.getFieldStart(_from), pState.getFieldEnd(_to));
 	}
@@ -142,7 +142,7 @@ PSpecString NumberPart::getStr(ProcessingState& pState)
 {
 	std::string s = std::to_string(++m_Num);
 	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), ' ') + s;
-	return SpecString::newString(s);
+	return std::make_shared<std::string>(s);
 }
 
 ClockPart::ClockPart(clockType _type)
@@ -180,11 +180,11 @@ PSpecString ClockPart::getStr(ProcessingState& pState)
 			clockValue diff = specTimeGetTOD() - m_StaticClock;
 			std::string s = std::to_string(diff);
 			s = std::string(CLOCKDIFF_PART_FIELD_LEN - s.length(), ' ') + s;
-			return SpecString::newString(s);
+			return std::make_shared<std::string>(s);
 		}
 	}
 	std::string asString = std::to_string(timeStamp);
-	return SpecString::newString(asString);
+	return std::make_shared<std::string>(asString);
 }
 
 std::string IDPart::Debug()
@@ -194,7 +194,8 @@ std::string IDPart::Debug()
 
 PSpecString IDPart::getStr(ProcessingState& pState)
 {
-	return SpecStringCopy(pState.fieldIdentifierGet(m_fieldIdentifier[0]));
+	auto fidPtr = pState.fieldIdentifierGet(m_fieldIdentifier[0]);
+	return std::make_shared<std::string>(*fidPtr);
 }
 
 ExpressionPart::ExpressionPart(std::string& _expr)
@@ -237,7 +238,7 @@ PSpecString ExpressionPart::getStr(ProcessingState& pState)
 		res = evaluateExpression(m_RPNExpr, &g_counters);
 	}
 	std::string ret = res->getStr();
-	return SpecString::newString(ret);
+	return std::make_shared<std::string>(ret);
 }
 
 bool ExpressionPart::readsLines()

@@ -57,7 +57,7 @@ PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 		oss << fractionalSecond;
 	}
 	std::string ret = oss.str();
-	return SpecString::newString(ret);
+	return std::make_shared<std::string>(ret);
 }
 
 int64_t specTimeConvertFromPrintable(std::string printable, std::string format)

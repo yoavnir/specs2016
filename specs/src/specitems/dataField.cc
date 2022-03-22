@@ -426,7 +426,7 @@ void DataField::stripString(PSpecString &pOrig)
 	}
 
 	if (!len) {
-		pOrig = SpecString::newString();
+		pOrig = std::make_shared<std::string>();
 	}
 
 	const char* sEnd = s + len - 1;
@@ -435,7 +435,7 @@ void DataField::stripString(PSpecString &pOrig)
 		len--;
 	}
 
-	pOrig = SpecString::newString(s, len);
+	pOrig = std::make_shared<std::string>(s, len);
 }
 
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
@@ -445,7 +445,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	PSpecString pInput = m_InputPart->getStr(pState);
 	size_t outputWidth = m_maxLength;
 
-	if (!pInput) pInput = SpecString::newString();
+	if (!pInput) pInput = std::make_shared<std::string>();
 
 	if (m_label) {
 		try {
@@ -462,7 +462,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	if (m_conversion) {
 		std::string currentString(pInput->data(), pInput->length());
 		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
-		pInput = SpecString::newString(convertedString);
+		pInput = std::make_shared<std::string>(convertedString);
 	}
 
 	// truncate or expand if necessary
@@ -496,7 +496,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	if (outputWidth>0 && pInput->length()!=outputWidth) {
 		if (m_alignment != outputAlignmentComposed) {
-			pInput->Resize(outputWidth, pState.getPadChar(), m_alignment, ellipsisSpecNone);
+			SpecString_Resize(pInput, outputWidth, pState.getPadChar(), m_alignment, ellipsisSpecNone);
 		} else {
 			outputAlignment al = outputAlignmentLeft;
 			ellipsisSpec es = ellipsisSpecNone;
@@ -531,7 +531,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 				}
 			}
 
-			pInput->Resize(outputWidth, pState.getPadChar(), al, es);
+			SpecString_Resize(pInput, outputWidth, pState.getPadChar(), al, es);
 		}
 	}
 
