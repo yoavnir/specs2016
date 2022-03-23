@@ -115,6 +115,13 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			break;
 		}
 		case TokenListType__IF:
+		{
+			if ((index+1) == tokenVec.size()) {
+				tokenVec.insert(tokenVec.end(), Token(TokenListType__THEN, nullptr, "", index+2, "then"));
+				tokenVec.insert(tokenVec.end(), Token(TokenListType__RANGE,
+						GetUniversalRange(), "", index+3, "1-*"));
+			}
+		}
 		case TokenListType__ELSEIF:
 		case TokenListType__WHILE:
 		case TokenListType__ASSERT:
