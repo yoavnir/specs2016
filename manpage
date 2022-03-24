@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 Apr 2020" "0.6" "specs man page"
+.TH man 1 "1 Apr 2022" "0.9" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -39,7 +39,7 @@ is a single letter followed by a colon (like
 ), that maps to the input or output of a single data field unit for later reference such as
 in later data fields or in 
 .I expressions. 
-If the fieldIdentifier is at the start of the data field unit, it contains the input. It it
+If the fieldIdentifier is at the start of the data field unit, it contains the input. If it
 is the OutputPart, it contains the output.  For example:
 .RS 5
 a: w1 ucase b:
@@ -153,7 +153,7 @@ will output a prefix followed by an ellipsis; for
 and
 .I 4,
 .B specs
-will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.  The first arguments in a composed output placement can be elided, as in 
+will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively.  If a composed output placement argument appears in a particular data field, neither a regular Output Placement nor an Alignment argument may appear.  The first arguments in a composed output placement can be elided, as in 
 .I (,,'R'). 
 If that is done, the default for the output start is the next place, equivalent to the function 
 .I next(), 
@@ -1496,6 +1496,49 @@ to contain a value such as "total 120" on Unix-like systems:
 .IP "+IN" 3
 This directive followed by a command runs the command and uses its output as the input stream for the specification.
 
+.SH ELISIONS
+.B specs
+specifications can be made a little shorter by eliding some obvious tokens at the end.
+.SS "Final Output Placement"
+If the final
+.B spec-unit
+is missing its output placement, then 
+.B specs
+will assume a 
+.I NEXTWORD
+.P
+    specs w1 1 w3
+.P
+will print the first word followed by a space and then the third word.
+.SS "Final ENDIF / DONE"
+Final
+.I IF
+or
+.I WHILE
+clauses can omit their terminators, 
+.I ENDIF
+or
+.I DONE
+respectively.  So
+.P
+    specs IF "word(1)=='UU'" THEN w2 1 "has a conflict" NEXTWORD
+.P
+will work just fine, as long as that 
+.I IF
+clause is the last thing in the specification.  In fact, in view of the previous item, you could just shorted it to 
+.P
+    specs IF "word(1)=='UU'" THEN w2 1 "has a conflict" 
+.SS "grep-like elision of the THEN clause"
+If the specification ends with an 
+.I IF
+clause that covers that outputs the entire record if the condition occurs, you can omit the 
+.I THEN
+clause.  The following two are equivalent:
+.P
+    specs IF "word(1)=='UU'" THEN 1-* 
+.P
+    specs IF "word(1)=='UU'"
+    
 .SH OPTIONS
 .B specs 
 supports the following switches:
