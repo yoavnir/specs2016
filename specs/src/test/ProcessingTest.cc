@@ -617,6 +617,9 @@ int main(int argc, char** argv)
 
 	VERIFY2(spec, strm.c_str(), res); // TEST #158
 
+	spec = "w1 a: if 'a%2=1'";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n3");    // TEST #159. Print entire record if the condition holds
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {
