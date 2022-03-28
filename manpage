@@ -1645,6 +1645,12 @@ and
 make 
 .I specs
 behave as if the function returned, NaN, the integer zero, or an empty string respectively.
+.IP "--inCmd or -C" 3
+Makes the program read the input records from the output of the command that follows this command line parameter. Similar to the 
+.B +IN
+directive for specification specified in a
+.B specfile
+The command must be specified in a single command line parameter, so enclose it in single or double quotes to include spaces or pipes.
 .IP "--help" 3
 Does not run specs. Instead it displays a help message according to the parameter: 
 .B help

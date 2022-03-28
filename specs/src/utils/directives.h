@@ -6,8 +6,12 @@
 
 typedef std::shared_ptr<FILE> pipeType;
 
+pipeType execCmd(std::string& cmd);
+
 void processPlusDirective(std::string& dirline);
 
 pipeType primaryInputPipe();
+
+void setPrimaryInputPipe(pipeType p);
 
 #endif
