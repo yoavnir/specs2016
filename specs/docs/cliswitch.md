@@ -50,6 +50,7 @@ Writer Thread:
 	Draining: 48.686 us (0.000%)
 ```
 * `--inFile` **filename** or `-i` **filename** -- get the input records from a file rather than standard input.
+* `--inCmd` **cmd** or ``-C` **cmd** -- get the input records from the output of a command specified following this switch.
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.
 * `--spaceWS` -- Makes **specs** only treat spaces as the default word separator. By default all locale-defined whitespace is treated as the word separator.
 * `--debug-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
