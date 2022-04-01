@@ -10,6 +10,14 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+1-Apr-2022: Version 0.9 Alpha is here
+================================
+What's New:
+* Allow elision of `then` clause in final if to include entire record
+* Allow specifying a source command with the `--inCmd` or `-C` command line parameter
+* Some under-the-hood improvements
+
+
 5-Sep-2021: Version 0.8 is here
 ================================
 What's New:
@@ -24,20 +32,6 @@ What's New:
 * Some code readability improvements
 * Support for Apple's M1 processor for both Mac OS X and Linux (under Parallels)
 
-1-Sep-2020: Version 0.7 is here
-===============================
-What's New:
-* Usability improvements:
-  * Allow eliding last output position (defaults to NEXTWORD)
-  * Allow eliding final ENDIF or DONE
-  * Passing unambiguous string arguments to functions without quotes
-* New builtin functions: 
-  * *countocc*, *countocc_get*, *countocc_dump*, *lvalue*, *rvalue*
-  * *fact*, *permutations*, *combinations*
-  * persistent variable functions: *pset*, *pget*, *pdefined*, *pclear*
-* **SKIP-WHILE** and **SKIP-UNTIL**
-* Under-the-hood improvements
-
 
 Sources
 =======
@@ -47,9 +41,9 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.6:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.8:
 ```
-git checkout v0.7
+git checkout v0.8
 ```
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 

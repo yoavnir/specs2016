@@ -287,6 +287,15 @@ int main (int argc, char** argv)
 	}
 	ps.setWriters((PWriter*)pWrtrs);
 
+	if (g_incmd != "") {
+		auto p = execCmd(g_incmd);
+		if (!p) {
+			std::cerr << "Error: Failed to run the following command:\n   " << g_incmd << "\n";
+			return -4;
+		}
+		setPrimaryInputPipe(p);
+	}
+
 
 	if (ig.readsLines() || g_bForceFileRead) {
 		if (g_inputFile.empty()) {

@@ -232,7 +232,7 @@ PSpecString StandardReader::getNextRecord() {
 				}
 			}
 		}
-		return SpecString::newString(line);
+		return std::make_shared<std::string>(line);
 	}
 	case RECFM_FIXED: {
 		m_Timer.changeClass(timeClassIO);
@@ -242,7 +242,7 @@ PSpecString StandardReader::getNextRecord() {
 			m_EOF = true;
 			return nullptr;
 		} else {
-			return SpecString::newString(m_buffer, m_lrecl);
+			return std::make_shared<std::string>(m_buffer, m_lrecl);
 		}
 	}
 	default:
@@ -275,7 +275,7 @@ void TestReader::InsertString(const char* s)
 	if (m_count >= m_MaxCount) {
 		MYTHROW("Attempting to insert too many lines into TestReader");
 	}
-	mp_arr[m_count++] = SpecString::newString(s);
+	mp_arr[m_count++] = std::make_shared<std::string>(s);
 }
 
 void TestReader::InsertString(PSpecString ps)
@@ -375,7 +375,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 			_readerCounter--;
 			return nullptr;
 		}
-		ret = SpecString::newString();
+		ret = std::make_shared<std::string>();
 	}
 
 	ITERATE_VALID_STREAMS(idx)
@@ -387,7 +387,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 					_readerCounter--;
 					return nullptr;
 				}
-				stringArray[idx] = SpecString::newString();
+				stringArray[idx] = std::make_shared<std::string>();
 			}
 		} else {
 			MYASSERT(idx==readerIdx || bFirstGet);
@@ -399,7 +399,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 						_readerCounter--;
 						return nullptr;
 					}
-					stringArray[idx] = SpecString::newString();
+					stringArray[idx] = std::make_shared<std::string>();
 				}
 			}
 		}
