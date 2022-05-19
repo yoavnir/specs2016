@@ -219,7 +219,7 @@ PSpecString StandardReader::getNextRecord() {
 			}
 		}
 		// strip trailing newline if any
-		if (line.back() == '\n') {
+		if (!line.empty() && line.back() == '\n') {
 			line.pop_back();
 		}
 		
