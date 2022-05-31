@@ -117,23 +117,23 @@ public:
 		}
 
 		if (!pValue) {   // NULL passed - use default or None
-			static ALUValue pStatic;
-			pValue = PValue(&pStatic);
+			ALUValue v;
 			PythonFuncArg& arg = m_args[idx];
 			switch (arg.m_default) {
 			case counterType__None:
-				pStatic.set();
+				v.set();
 				break;
 			case counterType__Str:
-				pStatic.set(arg.m_defStr);
+				v.set(arg.m_defStr);
 				break;
 			case counterType__Int:
-				pStatic.set(ALUInt(arg.m_defInt));
+				v.set(ALUInt(arg.m_defInt));
 				break;
 			case counterType__Float:
-				pStatic.set(ALUFloat(arg.m_defFloat));
+				v.set(ALUFloat(arg.m_defFloat));
 				break;
 			}
+			pValue = std::make_shared<ALUValue>(v);
 		}
 
 		switch (pValue->getType()) {
