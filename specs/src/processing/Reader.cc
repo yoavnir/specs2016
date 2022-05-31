@@ -301,8 +301,10 @@ void TestReader::InsertString(PSpecString ps)
 
 multiReader::multiReader(PReader pDefaultReader)
 {
-	memset(readerArray, 0, sizeof(readerArray));
-	memset(stringArray, 0, sizeof(stringArray));
+	for (int i=0; i<MAX_INPUT_STREAMS; i++) {
+		readerArray[i] = nullptr;
+		stringArray[i] = nullptr;
+	}
 	readerIdx = DEFAULT_READER_IDX - 1;
 	maxReaderIdx = readerIdx;
 	readerArray[readerIdx] = pDefaultReader;
