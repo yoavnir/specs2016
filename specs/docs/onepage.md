@@ -25,6 +25,8 @@ Switches
 * --inCmd or -C -- get the input records from the output of a command specified following this switch.
 * --debug-alu-comp -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
 * --debug-alu-run -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
+* --help -- prints out some help information.
+* --info -- prints out information about this build of **specs**.
    
 Spec Units
 ==========

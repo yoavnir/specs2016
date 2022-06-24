@@ -94,11 +94,15 @@ CONTINUE:
 	// info
 	if (g_info) {
 		std::cerr << "specs invoked as '" << programName << "'\n";
-#ifdef __VERSION__
-		std::cerr << "\tCompiler version: " << __VERSION__ << "\n";
+#ifndef __VERSION__
+#define __VERSION__ "Unknown"
 #endif
+		std::cerr << "\tCompiler version: " << __VERSION__ << "\n";
 		std::cerr << "\tHigh/low watermark for queues: " << QUEUE_HIGH_WM << " / " << QUEUE_LOW_WM << "\n";
 		std::cerr << "\tRandom Provider: " << RandomProvider << "\n";
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
+		std::cerr << "\tPython version: " << STRINGIFY(PYTHON_FULL_VER) << "\n";
 		std::cerr << "\tFloating point precision: " << ALUFloatPrecision << " (" << sizeof(ALUFloat) << " bytes)\n";
 		exit(0);
 	}

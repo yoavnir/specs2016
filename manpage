@@ -1663,6 +1663,9 @@ prints the name, arguments, and a line of help for the built-in functions,
 prints a list of all specifications on the path and the comment, and a particular python function name makes 
 .I help
 display the arguments and docstring of that function only.
+.IP "--info" 3
+Does not run specs. Instead it displays some information about this build of specs: compiler version, watermarks for queues, 
+random provider, python and floating point precision.
 
 .SH CONFIGURATION FILE
 .B specs

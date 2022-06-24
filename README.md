@@ -10,7 +10,7 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-1-Apr-2022: Version 0.9 Alpha is here
+1-Jul-2022: Version 0.9 Beta is here
 ================================
 What's New:
 * Allow elision of `then` clause in final if to include entire record
