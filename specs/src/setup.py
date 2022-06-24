@@ -26,7 +26,7 @@ def cleanup_after_python():
 		os.system("/bin/rm test_script.py")
 
 def python_search(arg):
-	global python_cflags,python_ldflags,python_version,variation
+	global python_cflags,python_ldflags,python_version,full_python_version,variation
 	
 	# Get python version
 	script = '''
@@ -51,6 +51,7 @@ with open("xx.txt","w") as v:
 		else:
 			sys.stdout.write("No -- {} is an unrecognized Python version.\n".format(version_string))
 			return False
+		full_python_version = version_string
 	
 	# Get the result of python-config --cflags
 	cmd = "{}-config --cflags".format(arg)
@@ -461,6 +462,7 @@ else:
 	elif python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
 		CFG_python = False
+		full_python_version = "N/A"
 	else:
 		if python_prefix=="yes":
 			python_prefix = "python"
@@ -489,10 +491,12 @@ if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
 	
 if CFG_python:
-	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version)
+	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
+	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)
 	condlink = condlink + " " + python_ldflags
 else:
-	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix)
+	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix) \
+	                                   + "{}PYTHON_FULL_VER=N/A".format(def_prefix)
 	
 if CFG_regex_grammars:
 	condcomp = condcomp + "{}REGEX_GRAMMARS".format(def_prefix)
