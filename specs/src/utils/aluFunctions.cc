@@ -621,6 +621,107 @@ PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
 	}
 }
 
+PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
+{
+	ASSERT_NOT_ELIDED(_pNeedle,1,searchString);
+	ASSERT_NOT_ELIDED(_pOffset,2,offset);
+	size_t count = _pCount ? _pCount->getInt() : 1;
+	
+	std::string* pHaystack = g_pStateQueryAgent->currRecord().get();
+	
+	size_t pos = pHaystack->find(_pNeedle->getStr());
+	if (std::string::npos == pos) {
+		return mkValue("");   // TBD - fail instead?
+	}
+	if ((ALUInt(pos) + _pOffset->getInt()) < 0) {
+		return mkValue("");
+	}
+	if ((ALUInt(pos) + _pOffset->getInt()) >= ALUInt(pHaystack->length())) {
+		return mkValue("");
+	}
+	
+	char* resultStart = (char*)(pHaystack->c_str()) + size_t(int(pos) + _pOffset->getInt());
+	if (size_t(int(pos) + _pOffset->getInt() + count) > pHaystack->length()) {
+		count = size_t(pHaystack->length() - pos - _pOffset->getInt()); 
+	}
+		
+	return mkValue2(resultStart,count);
+}
+
+PValue AluFunc_wplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
+{
+	ASSERT_NOT_ELIDED(_pNeedle,1,searchString);
+	ASSERT_NOT_ELIDED(_pOffset,2,offset);
+	int count = _pCount ? _pCount->getInt() : 1;
+	
+	auto wordCount = int(g_pStateQueryAgent->getWordCount());
+
+	int idx;
+	for (idx=1; idx<=wordCount; idx++) {
+		auto start = g_pStateQueryAgent->getWordStart(idx);
+		auto end = g_pStateQueryAgent->getWordEnd(idx);
+		auto theWord = g_pStateQueryAgent->getFromTo(start,end);
+		if (*theWord ==_pNeedle->getStr()) break;
+	}
+
+	if (idx > wordCount) {
+		return mkValue("");
+	}
+
+	auto start = idx + _pOffset->getInt();
+	if (start<1 || start>wordCount) {
+		return mkValue("");
+	}
+
+	auto end = start + count - 1;
+	if (end > wordCount) {
+		end = wordCount;
+	}
+
+	auto startChar = g_pStateQueryAgent->getWordStart(start);
+	auto endChar = g_pStateQueryAgent->getWordEnd(end);
+	auto res = g_pStateQueryAgent->getFromTo(startChar, endChar);
+
+	return mkValue(*res);
+}
+
+PValue AluFunc_fplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
+{
+	ASSERT_NOT_ELIDED(_pNeedle,1,searchString);
+	ASSERT_NOT_ELIDED(_pOffset,2,offset);
+	int count = _pCount ? _pCount->getInt() : 1;
+	
+	auto fieldCount = int(g_pStateQueryAgent->getWordCount());
+
+	int idx;
+	for (idx=1; idx<=fieldCount; idx++) {
+		auto start = g_pStateQueryAgent->getFieldStart(idx);
+		auto end = g_pStateQueryAgent->getFieldEnd(idx);
+		auto theField = g_pStateQueryAgent->getFromTo(start,end);
+		if (*theField ==_pNeedle->getStr()) break;
+	}
+
+	if (idx > fieldCount) {
+		return mkValue("");
+	}
+	
+	auto start = idx + _pOffset->getInt();
+	if (start<1 || start>fieldCount) {
+		return mkValue("");
+	}
+
+	auto end = start + count - 1;
+	if (end > fieldCount) {
+		end = fieldCount;
+	}
+
+	auto startChar = g_pStateQueryAgent->getFieldStart(start);
+	auto endChar = g_pStateQueryAgent->getFieldEnd(end);
+	auto res = g_pStateQueryAgent->getFromTo(startChar, endChar);
+
+	return mkValue(*res);
+}
+
 PValue AluFunc_lastpos(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
