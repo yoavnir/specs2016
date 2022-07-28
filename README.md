@@ -43,8 +43,9 @@ After that, _cd_ to the specs/src directory, and run the following three command
 * `make some`
 * `sudo make install`
 
-Note: Windows does not need `sudo`. 
-Note: On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
+*Note:* Windows does not need `sudo`. 
+
+*Note:* On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
 
 Known Issues
 ============
