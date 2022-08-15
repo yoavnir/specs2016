@@ -11,6 +11,7 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 News
 ====
 15-Aug-2022: Version 0.9 is here
+
 What's New:
 * Allow elision of `then` clause in final if to include entire record
 * Allow specifying a source command with the `--inCmd` or `-C` command line parameter
