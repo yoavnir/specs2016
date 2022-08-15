@@ -161,6 +161,14 @@ int main (int argc, char** argv)
 	static const std::string _stderr = WRITER_STDERR;
 	bool conciseExceptions = true;
 
+	if (argc==1) { // Called without parameters
+		std::cerr << "Usage: " << argv[0] << " (switches & arguments)\n\n";
+#ifndef WIN64
+		std::cerr << "For more information, type 'man specs'\n";
+#endif
+		return -4;
+	}
+	
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
 	}

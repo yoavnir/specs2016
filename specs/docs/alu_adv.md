@@ -172,6 +172,9 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `wordlen(n)` | Returns the length of the *n*-th word |
 | `split(sep,hdr,ftr)` | Returns all fields in the input line, one on each output line. If *sep* is specified, it will be used instead of the active field separator. If *hdr* and/or *ftr* are specified, the first *hdr* fields and last *ftr* fields are omitted. | 
 | `splitw(sep,hdr,ftr)` | Returns all words in the input line, one on each output line. If *sep* is specified, it will be used instead of the active word separator. If *hdr* and/or *ftr* are specified, the first *hdr* words and last *ftr* words are omitted. | 
+| `splus(s,o,[l])` | Returns a substring of the current record, starting with the first character at offset *o* from the first instance of the string *s*, and having a length of *l* which defaults to 1.  *o* may be non-positive. If the search string *s* is not found or if the start of the substring underflows or overflows the input record, an empty string is returned. |
+| `wplus(s,o,[l])` | Returns a substring of the current record, starting with the first word at offset *o* (measured in words) from the first instance of the word *s*, and having a length of *l* words, which defaults to 1.  *o* may be non-positive. If the search word *s* is not found or if the start of the substring underflows or overflows the input record, an empty string is returned. |
+| `fplus(s,o,[l])` | Returns a substring of the current record, starting with the first field at offset *o* (measured in fields) from the first instance of the field *s*, and having a length of *l* fields, which defaults to 1.  *o* may be non-positive. If the search field *s* is not found or if the start of the substring underflows or overflows the input record, an empty string is returned. |
 
 ## Table of Statistical and Frequency Map Pseudo-Functions
 | Function | Description |

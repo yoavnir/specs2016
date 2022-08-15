@@ -740,6 +740,42 @@ field (default first) to the end of the
 field (default last). It is also equivalent to 
 .I range(fieldstart(s),fieldend(e))
 but less efficient.
+.IP "splus(s,o,[l])" 3
+Returns a substring of the current record, starting with the first character at offset 
+.B o
+from the first instance of the string
+.B s,
+and having a length of 
+.B l
+which defaults to 1.
+.B o 
+may be non-positive. If the search string 
+.B s
+is not found or if the start of the substring underflows or overflows the input record, an empty string is returned.
+.IP "wplus(s,o,[l])" 3
+Returns a substring of the current record, starting with the first word at offset 
+.B o
+(measured in words) from the first instance of the word
+.B s,
+and having a length of 
+.B l
+words, which defaults to 1.
+.B o 
+may be non-positive. If the search word 
+.B s
+is not found or if the start of the substring underflows or overflows the input record, an empty string is returned.
+.IP "fplus(s,o,[l])" 3
+Returns a substring of the current record, starting with the first field at offset 
+.B o
+(measured in fields) from the first instance of the field
+.B s,
+and having a length of 
+.B l
+fields, which defaults to 1.
+.B o 
+may be non-positive. If the search field 
+.B s
+is not found or if the start of the substring underflows or overflows the input record, an empty string is returned.
 .IP "tf2mcs(string,format)" 3
 Converts a string containing a date and time representation using the format specified in the 
 .I format

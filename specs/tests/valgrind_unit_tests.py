@@ -1,6 +1,6 @@
 import sys, memcheck, argparse
 
-count_ALU_tests = 677
+count_ALU_tests = 731
 count_processing_tests = 159
 count_token_tests = 16
 
@@ -8,9 +8,12 @@ count_token_tests = 16
 parser = argparse.ArgumentParser()
 parser.add_argument("--no_valgrind", dest="nvg", action="store_true", default=None,
 					help="Don't run valgrind - just check if the command succeeds.")
+parser.add_argument("--allow_fail", dest="okfail", action="store_true", default=None,
+					help="Ignore when tests fails")
 args = parser.parse_args()
 if args.nvg==True:
 	memcheck.no_valgrind = True
+all_tests_may_fail = True if args.okfail else False
 
 tests_to_skip = []
 tests_that_may_fail = []
@@ -30,7 +33,7 @@ for i in range(count_ALU_tests):
                 exit(0)
         else:
             sys.stdout.write("ALUUnitTest Test #{} - no leaks\n".format(i+1))
-    elif rc==memcheck.RetCode_COMMAND_FAILED and (i+1) in tests_that_may_fail:
+    elif rc==memcheck.RetCode_COMMAND_FAILED and (i+1) in tests_that_may_fail or all_tests_may_fail:
         sys.stdout.write("ALUUnitTest Test #{} - no leaks (but test failed)\n".format(i+1))
     else:
         sys.stdout.write("Command '{}' failed with return code '{}' and extra info {}\nSee file valgrind.out for details.\n".format(cmd,memcheck.RetCode_strings[rc], info))
@@ -53,7 +56,7 @@ for i in range(count_token_tests):
                 exit(0)
         else:
             sys.stdout.write("TokenTest Test #{} - no leaks\n".format(i+1))
-    elif rc==memcheck.RetCode_COMMAND_FAILED and (i+1) in tests_that_may_fail:
+    elif rc==memcheck.RetCode_COMMAND_FAILED and (i+1) in tests_that_may_fail or all_tests_may_fail:
         sys.stdout.write("TokenTest Test #{} - no leaks (but test failed)\n".format(i+1))
     else:
         sys.stdout.write("Command '{}' failed with return code '{}' and extra info {}\nSee file valgrind.out for details.\n".format(cmd,memcheck.RetCode_strings[rc], info))
@@ -76,7 +79,7 @@ for i in range(count_processing_tests):
                 # exit(0)
         else:
             sys.stdout.write("ProcessingTest Test #{} - no leaks\n".format(i+1))
-    elif rc==memcheck.RetCode_COMMAND_FAILED and (i+1) in tests_that_may_fail:
+    elif rc==memcheck.RetCode_COMMAND_FAILED and (i+1) in tests_that_may_fail or all_tests_may_fail:
         sys.stdout.write("ProcessingTest Test #{} - no leaks (but test failed)\n".format(i+1))
     else:
         sys.stdout.write("Command '{}' failed with return code '{}' and extra info {}\nSee file valgrind.out for details.\n".format(cmd,memcheck.RetCode_strings[rc], info))

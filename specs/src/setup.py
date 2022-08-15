@@ -449,6 +449,7 @@ if platform=="NT":
 		cv = sysconfig.get_config_vars()
 		python_prefix = cv['prefix']
 		python_ver = cv['py_version_nodot']
+		full_python_version = cv['py_version']
 		python_version = int(python_ver[0])
 		python_cflags = '{} "{}\\include"'.format(inc_prefix,python_prefix)
 		python_ldflags = '"{}\\libs\\python{}.lib"'.format(python_prefix,python_ver)
