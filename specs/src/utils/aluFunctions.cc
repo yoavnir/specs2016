@@ -548,7 +548,7 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 
 PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 {
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
 	return AluFunc_substring_do(pBigStr, start, length);
@@ -557,7 +557,7 @@ PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 PValue AluFunc_left(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return mkValue2("",0);
@@ -572,7 +572,7 @@ PValue AluFunc_left(PValue pBigString, PValue pLength)
 PValue AluFunc_right(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return mkValue2("",0);
@@ -588,7 +588,7 @@ PValue AluFunc_center(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pBigString,1,bigString);
 	ASSERT_NOT_ELIDED(pLength,2,length);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
 	if (len==0) return mkValue2("",0);
@@ -612,7 +612,7 @@ PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
 	std::string* pNeedle = _pNeedle->getStrPtr();
-	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	size_t pos = pHaystack->find(*pNeedle);
 	if (std::string::npos == pos) {
 		return mkValue(ALUInt(0));
@@ -621,11 +621,112 @@ PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
 	}
 }
 
+PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
+{
+	ASSERT_NOT_ELIDED(_pNeedle,1,searchString);
+	ASSERT_NOT_ELIDED(_pOffset,2,offset);
+	size_t count = _pCount ? _pCount->getInt() : 1;
+	
+	std::string* pHaystack = g_pStateQueryAgent->currRecord().get();
+	
+	size_t pos = pHaystack->find(_pNeedle->getStr());
+	if (std::string::npos == pos) {
+		return mkValue("");   // TBD - fail instead?
+	}
+	if ((ALUInt(pos) + _pOffset->getInt()) < 0) {
+		return mkValue("");
+	}
+	if ((ALUInt(pos) + _pOffset->getInt()) >= ALUInt(pHaystack->length())) {
+		return mkValue("");
+	}
+	
+	char* resultStart = (char*)(pHaystack->c_str()) + size_t(int(pos) + _pOffset->getInt());
+	if (size_t(int(pos) + _pOffset->getInt() + count) > pHaystack->length()) {
+		count = size_t(pHaystack->length() - pos - _pOffset->getInt()); 
+	}
+		
+	return mkValue2(resultStart,count);
+}
+
+PValue AluFunc_wplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
+{
+	ASSERT_NOT_ELIDED(_pNeedle,1,searchString);
+	ASSERT_NOT_ELIDED(_pOffset,2,offset);
+	int count = _pCount ? _pCount->getInt() : 1;
+	
+	auto wordCount = int(g_pStateQueryAgent->getWordCount());
+
+	int idx;
+	for (idx=1; idx<=wordCount; idx++) {
+		auto start = g_pStateQueryAgent->getWordStart(idx);
+		auto end = g_pStateQueryAgent->getWordEnd(idx);
+		auto theWord = g_pStateQueryAgent->getFromTo(start,end);
+		if (*theWord ==_pNeedle->getStr()) break;
+	}
+
+	if (idx > wordCount) {
+		return mkValue("");
+	}
+
+	auto start = idx + _pOffset->getInt();
+	if (start<1 || start>wordCount) {
+		return mkValue("");
+	}
+
+	auto end = start + count - 1;
+	if (end > wordCount) {
+		end = wordCount;
+	}
+
+	auto startChar = g_pStateQueryAgent->getWordStart(start);
+	auto endChar = g_pStateQueryAgent->getWordEnd(end);
+	auto res = g_pStateQueryAgent->getFromTo(startChar, endChar);
+
+	return mkValue(*res);
+}
+
+PValue AluFunc_fplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
+{
+	ASSERT_NOT_ELIDED(_pNeedle,1,searchString);
+	ASSERT_NOT_ELIDED(_pOffset,2,offset);
+	int count = _pCount ? _pCount->getInt() : 1;
+	
+	auto fieldCount = int(g_pStateQueryAgent->getWordCount());
+
+	int idx;
+	for (idx=1; idx<=fieldCount; idx++) {
+		auto start = g_pStateQueryAgent->getFieldStart(idx);
+		auto end = g_pStateQueryAgent->getFieldEnd(idx);
+		auto theField = g_pStateQueryAgent->getFromTo(start,end);
+		if (*theField ==_pNeedle->getStr()) break;
+	}
+
+	if (idx > fieldCount) {
+		return mkValue("");
+	}
+	
+	auto start = idx + _pOffset->getInt();
+	if (start<1 || start>fieldCount) {
+		return mkValue("");
+	}
+
+	auto end = start + count - 1;
+	if (end > fieldCount) {
+		end = fieldCount;
+	}
+
+	auto startChar = g_pStateQueryAgent->getFieldStart(start);
+	auto endChar = g_pStateQueryAgent->getFieldEnd(end);
+	auto res = g_pStateQueryAgent->getFromTo(startChar, endChar);
+
+	return mkValue(*res);
+}
+
 PValue AluFunc_lastpos(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
 	std::string* pNeedle = _pNeedle->getStrPtr();
-	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	size_t pos = pHaystack->rfind(*pNeedle);
 	if (std::string::npos == pos) {
 		return mkValue(ALUInt(0));
@@ -638,7 +739,7 @@ PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, P
 {
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
 
-	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
 	if (std::string::npos != pHaystack->find(*_pNeedle1->getStrPtr())) {
 		return mkValue(ALUInt(1));
@@ -657,7 +758,7 @@ PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2
 {
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
 
-	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
 	if (std::string::npos == pHaystack->find(*_pNeedle1->getStrPtr())) {
 		return mkValue(ALUInt(0));
@@ -675,7 +776,7 @@ PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2
 PValue AluFunc_rmatch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
-	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
 	if (_pFlags) {
 		return mkValue(ALUInt(regexMatch(pHaystack, _pExp, _pFlags->getStrPtr())));
@@ -686,7 +787,7 @@ PValue AluFunc_rmatch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 PValue AluFunc_rsearch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
-	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
 	if (_pFlags) {
 		return mkValue(ALUInt(regexSearch(pHaystack, _pExp, _pFlags->getStrPtr())));
@@ -699,7 +800,7 @@ PValue AluFunc_rreplace(PValue _pHaystack, PValue _pExp, PValue _pFmt, PValue _p
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
 	ASSERT_NOT_ELIDED(_pFmt,3,format);
 
-	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	std::string sFmt = _pFmt->getStr();
 
 	if (_pFlags) {
@@ -2481,7 +2582,7 @@ frequencyMap g_OccuranceMap;
 PValue AluFunc_countocc(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle, 1, needle);
-	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord()->sdata();
+	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	std::string needle = _pNeedle->getStr();
 
 	if (std::string::npos != pHaystack->find(needle)) {
@@ -2622,7 +2723,7 @@ PValue AluFunc_split(PValue pSep, PValue pHdr, PValue pFtr)
 	bool first = true;
 	for (auto i=hdr+1; i<=g_pStateQueryAgent->getFieldCount()-ftr; i++) {
 		if (!first) res += '\n';
-		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i))->sdata();
+		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i)).get();
 		first = false;
 	}
 
@@ -2652,7 +2753,7 @@ PValue AluFunc_splitw(PValue pSep, PValue pHdr, PValue pFtr)
 	bool first = true;
 	for (auto i=hdr+1; i<=g_pStateQueryAgent->getWordCount()-ftr; i++) {
 		if (!first) res += '\n';
-		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i))->sdata();
+		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i)).get();
 		first = false;
 	}
 

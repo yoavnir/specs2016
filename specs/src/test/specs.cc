@@ -94,11 +94,15 @@ CONTINUE:
 	// info
 	if (g_info) {
 		std::cerr << "specs invoked as '" << programName << "'\n";
-#ifdef __VERSION__
-		std::cerr << "\tCompiler version: " << __VERSION__ << "\n";
+#ifndef __VERSION__
+#define __VERSION__ "Unknown"
 #endif
+		std::cerr << "\tCompiler version: " << __VERSION__ << "\n";
 		std::cerr << "\tHigh/low watermark for queues: " << QUEUE_HIGH_WM << " / " << QUEUE_LOW_WM << "\n";
 		std::cerr << "\tRandom Provider: " << RandomProvider << "\n";
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
+		std::cerr << "\tPython version: " << STRINGIFY(PYTHON_FULL_VER) << "\n";
 		std::cerr << "\tFloating point precision: " << ALUFloatPrecision << " (" << sizeof(ALUFloat) << " bytes)\n";
 		exit(0);
 	}
@@ -157,6 +161,14 @@ int main (int argc, char** argv)
 	static const std::string _stderr = WRITER_STDERR;
 	bool conciseExceptions = true;
 
+	if (argc==1) { // Called without parameters
+		std::cerr << "Usage: " << argv[0] << " (switches & arguments)\n\n";
+#ifndef WIN64
+		std::cerr << "For more information, type 'man specs'\n";
+#endif
+		return -4;
+	}
+	
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
 	}
@@ -286,6 +298,15 @@ int main (int argc, char** argv)
 		if (pWrtrs[i]) pWrtrs[i]->Begin();
 	}
 	ps.setWriters((PWriter*)pWrtrs);
+
+	if (g_incmd != "") {
+		auto p = execCmd(g_incmd);
+		if (!p) {
+			std::cerr << "Error: Failed to run the following command:\n   " << g_incmd << "\n";
+			return -4;
+		}
+		setPrimaryInputPipe(p);
+	}
 
 
 	if (ig.readsLines() || g_bForceFileRead) {

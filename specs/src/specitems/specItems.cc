@@ -115,6 +115,13 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			break;
 		}
 		case TokenListType__IF:
+		{
+			if ((index+1) == tokenVec.size()) {
+				tokenVec.insert(tokenVec.end(), Token(TokenListType__THEN, nullptr, "", index+2, "then"));
+				tokenVec.insert(tokenVec.end(), Token(TokenListType__RANGE,
+						GetUniversalRange(), "", index+3, "1-*"));
+			}
+		}
 		case TokenListType__ELSEIF:
 		case TokenListType__WHILE:
 		case TokenListType__ASSERT:
@@ -420,7 +427,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				if (bSomethingWasDone) {
 					pState.getCurrentWriter()->Write(sb.GetString());
 				} else {
-					pState.getCurrentWriter()->Write(SpecString::newString());
+					pState.getCurrentWriter()->Write(std::make_shared<std::string>());
 				}
 			}
 			bSomethingWasDone = false;
@@ -429,7 +436,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			if (bSomethingWasDone) {
 				ps = sb.GetString();
 			} else {
-				ps = SpecString::newString();
+				ps = std::make_shared<std::string>();
 			}
 			pState.setString(ps, false);
 			pState.setFirst();
@@ -444,7 +451,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			ps = pRd->get(tmr, rdrCounter);
 			if (!ps) {
 				if (aRet==ApplyRet__Read) {
-					ps = SpecString::newString();
+					ps = std::make_shared<std::string>();
 				} else {
 					processingContinue = false; // Stop processing if no extra record is available
 				}
@@ -953,10 +960,11 @@ ApplyRet SelectItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	return ApplyRet__Continue;
 }
 
+#ifdef ndef
 std::ostream& operator<< (std::ostream& os, const SpecString &str)
 {
     str._serialize(os);
 
     return os;
 }
-
+#endif

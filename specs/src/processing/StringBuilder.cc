@@ -105,7 +105,7 @@ PSpecString StringBuilder::GetStringUnsafe()
 
 PSpecString StringBuilder::GetString()
 {
-	if (!mp_str) return SpecString::newString();
+	if (!mp_str) return std::make_shared<std::string>();
 	PSpecString pRet = mp_str;
 	mp_str = nullptr;
 	m_pos = 1;
@@ -116,7 +116,7 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 {
 	MYASSERT(offset>0);
 	if (!mp_str) {
-		mp_str = SpecString::newString();
+		mp_str = std::make_shared<std::string>();
 	}
 	offset--;  // translate it to C-style offsets
 
@@ -136,7 +136,7 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 	size_t endPos = offset + s->length();
 	if (mp_str->length() < endPos) {
 		MYASSERT(m_pad!=0);
-		mp_str->Resize(endPos, m_pad, outputAlignmentLeft, ellipsisSpecNone);
+		SpecString_Resize(mp_str, endPos, m_pad, outputAlignmentLeft, ellipsisSpecNone);
 	}
 	memcpy((void*)(mp_str->data()+offset), (void*)(s->data()), s->length());
 	m_pos = endPos + 1;
@@ -149,7 +149,7 @@ void StringBuilder::insertNext(PSpecString s)
 
 void StringBuilder::insertNextWord(PSpecString s)
 {
-	static PSpecString pSpace = SpecString::newString(" ");
+	static PSpecString pSpace = std::make_shared<std::string>(" ");
 	if (s->length()==0) return;
 	if (Length() > 0)
 		insert(pSpace,m_pos,true);
@@ -158,7 +158,7 @@ void StringBuilder::insertNextWord(PSpecString s)
 
 void StringBuilder::insertNextField(PSpecString s)
 {
-	static PSpecString pTab = SpecString::newString("\t");
+	static PSpecString pTab = std::make_shared<std::string>("\t");
 	insert(pTab,m_pos,true);
 	insert(s, m_pos, true);
 }

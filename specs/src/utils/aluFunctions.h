@@ -77,6 +77,12 @@
 			"(i,j) - Returns the substring of the current record from the start of the i-th field to the end of the j-th field.","") \
 	X(range,          2, ALUFUNC_REGULAR,      true,  \
 			"(i,j) - Returns the substring of the current record from position i to position j (inclusive).","") \
+	X(splus,           3,ALUFUNC_REGULAR,      true,    \
+	        "(s,o,[l]) - Returns the substring of the current record from 'o' characters from the first instance of 's', for 'l' characters (default 1)","If not found, of if the first character underflows or overflows the record, returns an empty string") \
+	X(wplus,           3,ALUFUNC_REGULAR,      true,    \
+	        "(s,o,[l]) - Returns the substring of the current record from 'o' words from the first instance of word 's', for 'l' words (default 1)","If not found, of if the first word underflows or overflows the record, returns an empty string") \
+	X(fplus,           3,ALUFUNC_REGULAR,      true,    \
+	        "(s,o,[l]) - Returns the substring of the current record from 'o' fields from the first instance of field 's', for 'l' fields (default 1)","If not found, of if the first field underflows or overflows the record, returns an empty string") \
 	H(Time Functions,32) \
 	X(tf2mcs,         2, ALUFUNC_REGULAR,     false,  \
 			"(timeString,formatString) - Parses timeString as if it's formatted as indicated by formatString and returns the time value.","Time value is specified in microseconds since the Unix epoch.\nThe time format uses the conventions of strftime, plus %xf for fractional seconds.") \
@@ -192,7 +198,7 @@
 			"(fid,elem) - Notes an occurence of the value in 'elem' for field identifier 'fid', and returns the number of occurences so far.","This is the only one of the fmap_* functions that modifies the frequency map.\nIt also affects the other statistics functions.") \
 	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false,  \
 			"(fid,fmt,order,pct) - Returns a multi-line string with the frequency map of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\n'pct' adds a percentage column if true.") \
-	H(Advanced Math Functions,14) \
+	H(Advanced Math Functions,20) \
 	X(rand,           1, ALUFUNC_REGULAR,     false,  \
 			"([limit]) - Returns a random integer up to (but not including) 'limit'.","If 'limit' is omitted, returns a floating point number between 0 and 1.") \
 	X(floor,          1, ALUFUNC_REGULAR,     false,  \
@@ -284,7 +290,7 @@
 			"(needle) - Returns the number of times since the start of this run that this particular needle has been found in haystacks.", "") \
 	X(countocc_dump,  3, ALUFUNC_REGULAR,     false,  \
 			"(fmt,sOrder,showPct) - Returns a multi-line string with the dump of occurrences found through 'countocc'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\n'pct' adds a percentage column if true.") \
-	H(Misc Functions,20) \
+	H(Misc Functions,28) \
 	X(conf,           2, ALUFUNC_REGULAR,     false,  \
 			"(key,[default]) - Returns the configuration string for 'key'.","If the string is not defined, returns the default value.\nIf that is not defined, returns NaN.") \
 	X(defined,        1, ALUFUNC_REGULAR,     false,  \

@@ -755,14 +755,14 @@ int runALUUnitTests5(unsigned int onlyTest)
 int runALUUnitTests6(unsigned int onlyTest)
 {
 	// The functions that look at the line being processed
-	g_ps.setString(SpecString::newString());
+	g_ps.setString(std::make_shared<std::string>());
 	VERIFY_EXPR_RES("wordcount()", "0");
 	VERIFY_EXPR_RES("word(2)", "");
 	VERIFY_EXPR_RES("wordstart(3)", "0");
 	VERIFY_EXPR_RES("wordend(2)", "0");
 	VERIFY_EXPR_RES("wordrange(3,4)", "");
 
-	g_ps.setString(SpecString::newString("The quick brown foox jumps over the lazy dog"));
+	g_ps.setString(std::make_shared<std::string>("The quick brown foox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
 	VERIFY_EXPR_RES("wordstart(3)", "11");
@@ -784,7 +784,7 @@ int runALUUnitTests6(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordwithidx('oo')", "4");
 	VERIFY_EXPR_RES("wordwithidx('ooo')", "0");
 
-	g_ps.setString(SpecString::newString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
+	g_ps.setString(std::make_shared<std::string>("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
 	VERIFY_EXPR_RES("wordstart(3)", "11");
@@ -1431,6 +1431,56 @@ int runALUUnitTests15(unsigned int onlyTest)
 	VERIFY_EXPR_RES("pget(unitTestVar)","NaN");
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
 	VERIFY_EXPR_RES("pdefined(unitTestVar)","0");
+	
+	g_ps.setString(std::make_shared<std::string>("The quick brown fox     jumps over the lazy dog"));
+	VERIFY_EXPR_RES("splus('ek',4)","");           // Should not find ek in the quick brown fox
+	VERIFY_EXPR_RES("splus('ck',4)","r");
+	VERIFY_EXPR_RES("splus('dog',-2)","y");
+	VERIFY_EXPR_RES("splus('dog',2)","g");	
+	VERIFY_EXPR_RES("splus('dog',3)","");	
+	VERIFY_EXPR_RES("splus('dog',4)","");	
+	VERIFY_EXPR_RES("splus('dog',400)","");	
+	VERIFY_EXPR_RES("splus('dog',1,2)","og");	
+	VERIFY_EXPR_RES("splus('dog',1,3)","og");	
+	VERIFY_EXPR_RES("splus('dog',1,30)","og");	
+	VERIFY_EXPR_RES("splus('The',1)","h");	
+	VERIFY_EXPR_RES("splus('The',-1)","");
+		
+
+	VERIFY_EXPR_RES("wplus('fast',0)",""); 
+	VERIFY_EXPR_RES("wplus('uick',0)",""); 
+	VERIFY_EXPR_RES("wplus('quic',0)",""); 
+	VERIFY_EXPR_RES("wplus('aquick',0)",""); 
+	VERIFY_EXPR_RES("wplus('quickz',0)",""); 
+	VERIFY_EXPR_RES("wplus('quick',0)","quick"); 
+	VERIFY_EXPR_RES("wplus('quick',1)","brown"); 
+	VERIFY_EXPR_RES("wplus('quick',-1)","The"); 
+	VERIFY_EXPR_RES("wplus('quick',-2)",""); 
+	VERIFY_EXPR_RES("wplus('quick',-12)",""); 
+	VERIFY_EXPR_RES("wplus('quick',1,3)","brown fox     jumps"); 
+	VERIFY_EXPR_RES("wplus('quick',1,7)","brown fox     jumps over the lazy dog"); 
+	VERIFY_EXPR_RES("wplus('quick',1,8)","brown fox     jumps over the lazy dog"); 
+	VERIFY_EXPR_RES("wplus('quick',1,70)","brown fox     jumps over the lazy dog"); 
+	VERIFY_EXPR_RES("wplus('quick',7)","dog"); 
+	VERIFY_EXPR_RES("wplus('quick',8)",""); 
+	
+	g_ps.setString(std::make_shared<std::string>("The\tquick brown\tfox jumps\tover the\tlazy dog"));
+	VERIFY_EXPR_RES("fplus('fast',0)",""); 
+	VERIFY_EXPR_RES("fplus('quick',0)",""); 
+	VERIFY_EXPR_RES("fplus('brown',0)",""); 
+	VERIFY_EXPR_RES("fplus('quick brown',0)","quick brown"); 
+	VERIFY_EXPR_RES("fplus('quick brown',1)","fox jumps"); 
+	VERIFY_EXPR_RES("fplus('quick brown',-1)","The"); 
+	VERIFY_EXPR_RES("fplus('quick brown',-2)",""); 
+	VERIFY_EXPR_RES("fplus('quick brown',-20)",""); 
+	VERIFY_EXPR_RES("fplus('quick brown',3)","lazy dog"); 
+	VERIFY_EXPR_RES("fplus('quick brown',4)",""); 
+	VERIFY_EXPR_RES("fplus('quick brown',41)",""); 
+	VERIFY_EXPR_RES("fplus('quick brown',1,1)","fox jumps"); 
+	VERIFY_EXPR_RES("fplus('quick brown',1,2)","fox jumps\tover the"); 
+	VERIFY_EXPR_RES("fplus('quick brown',1,3)","fox jumps\tover the\tlazy dog"); 
+	VERIFY_EXPR_RES("fplus('quick brown',1,4)","fox jumps\tover the\tlazy dog"); 
+	VERIFY_EXPR_RES("fplus('quick brown',1,34)","fox jumps\tover the\tlazy dog"); 
 
 	return 0;
 }

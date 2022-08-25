@@ -113,7 +113,7 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 		m_prevPs = m_ps;
 	} else {
 		MYASSERT(m_prevPs==nullptr);
-		m_prevPs = SpecString::newString();
+		m_prevPs = std::make_shared<std::string>();
 	}
 	m_ps = ps;
 	m_wordCount = -1;
@@ -182,7 +182,7 @@ PWriter ProcessingState::getCurrentWriter()
 PSpecString ProcessingState::extractCurrentRecord()
 {
 	PSpecString ret = m_ps;
-	m_ps = SpecString::newString(); // empty string
+	m_ps = std::make_shared<std::string>(); // empty string
 	return ret;
 }
 
@@ -341,9 +341,9 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	}
 	int slen = (int)(currRecord()->length());
 
-	if (0==from && 0==to) return SpecString::newString();
+	if (0==from && 0==to) return std::make_shared<std::string>();
 
-	if (to==EMPTY_FIELD_MARKER) return SpecString::newString();
+	if (to==EMPTY_FIELD_MARKER) return std::make_shared<std::string>();
 
 	// conventions
 	if (from==0) from=1;
@@ -365,13 +365,13 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 
 	// to < from ==> wrap-around
 	if (to<from) {
-		PSpecString pRet = SpecString::newString(currRecord(), from-1, slen-from+1);
-		PSpecString pWrappedAroundPart = SpecString::newString(currRecord(), 0, to);
-		pRet->append(pWrappedAroundPart);
+		PSpecString pRet = std::make_shared<std::string>(currRecord()->substr(from-1, slen-from+1));
+		PSpecString pWrappedAroundPart = std::make_shared<std::string>(currRecord()->substr(0, to));
+		*pRet += *pWrappedAroundPart;
 		return pRet;
 	}
 
-	return SpecString::newString(currRecord(), from-1, to-from+1);
+	return std::make_shared<std::string>(currRecord()->substr(from-1, to-from+1));
 }
 
 void ProcessingState::fieldIdentifierClear()
@@ -397,7 +397,7 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 		MYTHROW(err);
 	}
 
-	m_fieldIdentifiers[id] = SpecStringCopy(ps);
+	m_fieldIdentifiers[id] = std::make_shared<std::string>(*ps);
 
 	// Count the statistics of this field value.
 	if (ALUFUNC_STATISTICAL & AluFunction::functionTypes()) {
@@ -417,9 +417,9 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 		m_freqMaps[id]->note(s);
 	}
 
-	if (m_breakValues[id] && 0==ps->Compare(m_breakValues[id]->data())) return;
+	if (m_breakValues[id] && (*ps == *m_breakValues[id])) return;
 
-	m_breakValues[id] = SpecStringCopy(ps);
+	m_breakValues[id] = std::make_shared<std::string>(*ps);
 	if (breakLevelGE(id, m_breakLevel)) {
 		m_breakLevel = id;
 	}

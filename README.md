@@ -10,34 +10,13 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-5-Sep-2021: Version 0.8 is here
-================================
-What's New:
-* Directives for in-file specifications:
-  * `+SET` to set internal configured strings from a command output
-  * `+IN` to set the input stream to be a command output
-* Minor functionality improvements:
-  * The `getenv` function
-  * Hashmark access to persistent variables
-  * New functions: `split`, `splitw`, `wordwith`, `wordwithidx`, `fieldwith`, `fieldwithidx`
-  * Use of a question mark as a shorthand for `PRINT`
-* Some code readability improvements
-* Support for Apple's M1 processor for both Mac OS X and Linux (under Parallels)
+15-Aug-2022: Version 0.9 is here
 
-1-Sep-2020: Version 0.7 is here
-===============================
 What's New:
-* Usability improvements:
-  * Allow eliding last output position (defaults to NEXTWORD)
-  * Allow eliding final ENDIF or DONE
-  * Passing unambiguous string arguments to functions without quotes
-* New builtin functions: 
-  * *countocc*, *countocc_get*, *countocc_dump*, *lvalue*, *rvalue*
-  * *fact*, *permutations*, *combinations*
-  * persistent variable functions: *pset*, *pget*, *pdefined*, *pclear*
-* **SKIP-WHILE** and **SKIP-UNTIL**
-* Under-the-hood improvements
-
+* Allow elision of `then` clause in final if to include entire record
+* Allow specifying a source command with the `--inCmd` or `-C` command line parameter
+* New functions: `splus`, `wplus`, `fplus`.
+* Some under-the-hood improvements
 
 Sources
 =======
@@ -47,9 +26,9 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.6:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9:
 ```
-git checkout v0.7
+git checkout v0.9
 ```
 You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
 
@@ -64,7 +43,9 @@ After that, _cd_ to the specs/src directory, and run the following three command
 * `make some`
 * `sudo make install`
 
-Note: Windows does not need `sudo`
+*Note:* Windows does not need `sudo`. 
+
+*Note:* On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
 
 Known Issues
 ============

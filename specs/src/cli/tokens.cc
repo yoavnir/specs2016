@@ -53,6 +53,10 @@ class TokenFieldRangeSimple : public TokenFieldRange {
 
 typedef std::shared_ptr<TokenFieldRangeSimple> PTokenFieldRangeSimple;
 
+PTokenFieldRange GetUniversalRange()
+{
+	return std::make_shared<TokenFieldRangeSimple>(1,-1);
+}
 class TokenFieldRangeComplex : public TokenFieldRange {
 public:
 	TokenFieldRangeComplex();

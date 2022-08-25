@@ -22,8 +22,8 @@ extern bool        g_keep_suppressed_record;
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
 			errorCount++;                       \
 		} else {                                \
-			if (ps->Compare(ex)) {              \
-				std::cout << "*** NOT OK ***:\n\tGot <" << ps->data() << ">\n\tExp <" << ex << ">\n"; \
+			if (*(ps) != std::string(ex)) {              \
+				std::cout << "*** NOT OK ***:\n\tGot <" << *ps << ">\n\tExp <" << ex << ">\n"; \
 				errorCount++;                   \
 			} else {                            \
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
@@ -40,8 +40,8 @@ extern bool        g_keep_suppressed_record;
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
 			errorCount++;                       \
 		} else {                                \
-			if (ps->Compare(ex)) {              \
-				std::cout << "*** NOT OK ***:\n\tGot <" << ps->data() << ">\n\tExp <" << ex << ">\n"; \
+			if (*(ps) != std::string(ex)) {              \
+				std::cout << "*** NOT OK ***:\n\tGot <" << *ps << ">\n\tExp <" << ex << ">\n"; \
 				errorCount++;                   \
 			} else {                            \
 				std::cout << "***** OK *****: <" << ex << ">\n"; \
@@ -106,7 +106,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	try {
 		ig.Compile(vec,index);
 	} catch (const SpecsException& e) {
-		result = SpecString::newString(e.what(true));
+		result = std::make_shared<std::string>(e.what(true));
 		goto end;
 	}
 
@@ -125,10 +125,12 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				PSpecString pOut = sb.GetStringUnsafe();
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 					if (pWritten) {
-						if (result) result->add(pWritten);
+						if (result) *result += *pWritten;
 						else result = pWritten;
 					}
-					if (result) result->add(pOut);
+					if (result) {
+						if (pOut) *result = *result + '\n' + *pOut;
+					}
 					else result = pOut;
 				} else {
 				}
@@ -137,7 +139,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	} catch (SpecsException& e) {
 		if (result) {
 		}
-		result = SpecString::newString(e.what(true));
+		result = std::make_shared<std::string>(e.what(true));
 		goto end;
 	}
 
@@ -152,13 +154,13 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			PSpecString pWritten = pwr1->getString();
 			PSpecString pOut = sb.GetStringUnsafe();
 			if (pWritten) {
-				if (result) result->add(pWritten);
+				if (result) *result = *result + '\n' + *pWritten;
 				else result = pWritten;
 			}
-			if (result) result->add(pOut);
+			if (result) *result = *result + '\n' + *pOut;
 			else result = pOut;
 		} catch (SpecsException& e) {
-			result = SpecString::newString(e.what(true));
+			result = std::make_shared<std::string>(e.what(true));
 			goto end;
 		}
 	}
@@ -169,7 +171,7 @@ end:
 		vec[0].deallocDynamic();
 		vec.erase(vec.begin());
 	}
-	return result ? result : SpecString::newString();
+	return result ? result : std::make_shared<std::string>();
 }
 
 PSpecString runTestOnExample(std::string& s, const char* _example)
@@ -614,6 +616,9 @@ int main(int argc, char** argv)
 			"+------+---+\n";
 
 	VERIFY2(spec, strm.c_str(), res); // TEST #158
+
+	spec = "w1 a: if 'a%2=1'";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n3");    // TEST #159. Print entire record if the condition holds
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

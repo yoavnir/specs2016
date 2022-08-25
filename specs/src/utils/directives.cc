@@ -34,7 +34,7 @@ static std::string breakOffOneToken(std::string& str)
 // Run a command and return the output
 //typedef std::unique_ptr<FILE, decltype(&pclose)> pipeType;
 #define MAX_LINE_LENGTH 65536
-static pipeType execCmd(std::string& cmd)
+pipeType execCmd(std::string& cmd)
 {
 #ifdef WIN64
 	pipeType pipe(_popen(cmd.c_str(), "r"), _pclose);
@@ -49,6 +49,11 @@ static pipeType g_primaryInput;
 pipeType primaryInputPipe()
 {
 	return g_primaryInput;
+}
+
+void setPrimaryInputPipe(pipeType p)
+{
+	g_primaryInput = p;
 }
 
 /*
@@ -103,7 +108,7 @@ void processPlusDirective(std::string& dirline)
 			std::string err = "While processing +IN directive, failed to run command: " + dirline;
 			MYTHROW(err);
 		}
-		g_primaryInput = pipe;
+		setPrimaryInputPipe(pipe);
 	} else {
 		std::string err = "Unknown directive: " + directive;
 		MYTHROW(err);

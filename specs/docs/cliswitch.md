@@ -50,6 +50,7 @@ Writer Thread:
 	Draining: 48.686 us (0.000%)
 ```
 * `--inFile` **filename** or `-i` **filename** -- get the input records from a file rather than standard input.
+* `--inCmd` **cmd** or ``-C` **cmd** -- get the input records from the output of a command specified following this switch.
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.
 * `--spaceWS` -- Makes **specs** only treat spaces as the default word separator. By default all locale-defined whitespace is treated as the word separator.
 * `--debug-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
@@ -78,6 +79,7 @@ Writer Thread:
 * `--pythonFuncs` **on/off/auto** -- Enables of disables the loading of Python functions. **auto**, which is the default signifies that Python functions are loaded only when the parser encounters an unknown function. Note that setting the `pythonDisabled` configured literal to `1` will disable Python functions and cannot be overridden from the command line.
 * `--pythonErr` **throw/NaN/zero/nullstr** -- determines what happens when a called Python function throws an exception. The default, `throw` is for **specs** to throw its own exception and terminate. The alternatives, `NaN`, `zero`, and `nullstr` make **specs** behave as if the function returned, NaN, the integer zero, or an empty string respectively.
 * `--help` **help/pyfuncs/builtin/specs/funcname** -- does not run specs. Instead, it prints out help for the `help` switch, for python functions in general, for the built-in functions in general, for the saved specifications, or for a particular specification or function.
+* `--info` -- prints out information about this build of **specs**.
 
 ## Table of record formats
 

@@ -117,6 +117,8 @@ class TokenFieldRange {
 
 typedef std::shared_ptr<TokenFieldRange> PTokenFieldRange;
 
+PTokenFieldRange GetUniversalRange();
+
 class Token {
 public:
 	Token(TokenListTypes _type, PTokenFieldRange pRange, std::string literal, int argc, std::string orig);

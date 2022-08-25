@@ -219,7 +219,7 @@ PSpecString StandardReader::getNextRecord() {
 			}
 		}
 		// strip trailing newline if any
-		if (line.back() == '\n') {
+		if (!line.empty() && line.back() == '\n') {
 			line.pop_back();
 		}
 		
@@ -232,7 +232,7 @@ PSpecString StandardReader::getNextRecord() {
 				}
 			}
 		}
-		return SpecString::newString(line);
+		return std::make_shared<std::string>(line);
 	}
 	case RECFM_FIXED: {
 		m_Timer.changeClass(timeClassIO);
@@ -242,7 +242,7 @@ PSpecString StandardReader::getNextRecord() {
 			m_EOF = true;
 			return nullptr;
 		} else {
-			return SpecString::newString(m_buffer, m_lrecl);
+			return std::make_shared<std::string>(m_buffer, m_lrecl);
 		}
 	}
 	default:
@@ -275,7 +275,7 @@ void TestReader::InsertString(const char* s)
 	if (m_count >= m_MaxCount) {
 		MYTHROW("Attempting to insert too many lines into TestReader");
 	}
-	mp_arr[m_count++] = SpecString::newString(s);
+	mp_arr[m_count++] = std::make_shared<std::string>(s);
 }
 
 void TestReader::InsertString(PSpecString ps)
@@ -301,8 +301,10 @@ void TestReader::InsertString(PSpecString ps)
 
 multiReader::multiReader(PReader pDefaultReader)
 {
-	memset(readerArray, 0, sizeof(readerArray));
-	memset(stringArray, 0, sizeof(stringArray));
+	for (int i=0; i<MAX_INPUT_STREAMS; i++) {
+		readerArray[i] = nullptr;
+		stringArray[i] = nullptr;
+	}
 	readerIdx = DEFAULT_READER_IDX - 1;
 	maxReaderIdx = readerIdx;
 	readerArray[readerIdx] = pDefaultReader;
@@ -375,7 +377,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 			_readerCounter--;
 			return nullptr;
 		}
-		ret = SpecString::newString();
+		ret = std::make_shared<std::string>();
 	}
 
 	ITERATE_VALID_STREAMS(idx)
@@ -387,7 +389,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 					_readerCounter--;
 					return nullptr;
 				}
-				stringArray[idx] = SpecString::newString();
+				stringArray[idx] = std::make_shared<std::string>();
 			}
 		} else {
 			MYASSERT(idx==readerIdx || bFirstGet);
@@ -399,7 +401,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 						_readerCounter--;
 						return nullptr;
 					}
-					stringArray[idx] = SpecString::newString();
+					stringArray[idx] = std::make_shared<std::string>();
 				}
 			}
 		}

@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 Apr 2020" "0.6" "specs man page"
+.TH man 1 "1 Apr 2022" "0.9" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -39,7 +39,7 @@ is a single letter followed by a colon (like
 ), that maps to the input or output of a single data field unit for later reference such as
 in later data fields or in 
 .I expressions. 
-If the fieldIdentifier is at the start of the data field unit, it contains the input. It it
+If the fieldIdentifier is at the start of the data field unit, it contains the input. If it
 is the OutputPart, it contains the output.  For example:
 .RS 5
 a: w1 ucase b:
@@ -153,7 +153,7 @@ will output a prefix followed by an ellipsis; for
 and
 .I 4,
 .B specs
-will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively.  If a composed output placement argument appears in a particular data field, neither a regular OutputPlacement nor an Alignment argument may appear.  The first arguments in a composed output placement can be elided, as in 
+will output a prefix, an ellipsis and a suffix, with the prefix being one third, one half, or two thirds of the output string respectively.  If a composed output placement argument appears in a particular data field, neither a regular Output Placement nor an Alignment argument may appear.  The first arguments in a composed output placement can be elided, as in 
 .I (,,'R'). 
 If that is done, the default for the output start is the next place, equivalent to the function 
 .I next(), 
@@ -740,6 +740,42 @@ field (default first) to the end of the
 field (default last). It is also equivalent to 
 .I range(fieldstart(s),fieldend(e))
 but less efficient.
+.IP "splus(s,o,[l])" 3
+Returns a substring of the current record, starting with the first character at offset 
+.B o
+from the first instance of the string
+.B s,
+and having a length of 
+.B l
+which defaults to 1.
+.B o 
+may be non-positive. If the search string 
+.B s
+is not found or if the start of the substring underflows or overflows the input record, an empty string is returned.
+.IP "wplus(s,o,[l])" 3
+Returns a substring of the current record, starting with the first word at offset 
+.B o
+(measured in words) from the first instance of the word
+.B s,
+and having a length of 
+.B l
+words, which defaults to 1.
+.B o 
+may be non-positive. If the search word 
+.B s
+is not found or if the start of the substring underflows or overflows the input record, an empty string is returned.
+.IP "fplus(s,o,[l])" 3
+Returns a substring of the current record, starting with the first field at offset 
+.B o
+(measured in fields) from the first instance of the field
+.B s,
+and having a length of 
+.B l
+fields, which defaults to 1.
+.B o 
+may be non-positive. If the search field 
+.B s
+is not found or if the start of the substring underflows or overflows the input record, an empty string is returned.
 .IP "tf2mcs(string,format)" 3
 Converts a string containing a date and time representation using the format specified in the 
 .I format
@@ -1496,6 +1532,49 @@ to contain a value such as "total 120" on Unix-like systems:
 .IP "+IN" 3
 This directive followed by a command runs the command and uses its output as the input stream for the specification.
 
+.SH ELISIONS
+.B specs
+specifications can be made a little shorter by eliding some obvious tokens at the end.
+.SS "Final Output Placement"
+If the final
+.B spec-unit
+is missing its output placement, then 
+.B specs
+will assume a 
+.I NEXTWORD
+.P
+    specs w1 1 w3
+.P
+will print the first word followed by a space and then the third word.
+.SS "Final ENDIF / DONE"
+Final
+.I IF
+or
+.I WHILE
+clauses can omit their terminators, 
+.I ENDIF
+or
+.I DONE
+respectively.  So
+.P
+    specs IF "word(1)=='UU'" THEN w2 1 "has a conflict" NEXTWORD
+.P
+will work just fine, as long as that 
+.I IF
+clause is the last thing in the specification.  In fact, in view of the previous item, you could just shorted it to 
+.P
+    specs IF "word(1)=='UU'" THEN w2 1 "has a conflict" 
+.SS "grep-like elision of the THEN clause"
+If the specification ends with an 
+.I IF
+clause that covers that outputs the entire record if the condition occurs, you can omit the 
+.I THEN
+clause.  The following two are equivalent:
+.P
+    specs IF "word(1)=='UU'" THEN 1-* 
+.P
+    specs IF "word(1)=='UU'"
+    
 .SH OPTIONS
 .B specs 
 supports the following switches:
@@ -1602,6 +1681,12 @@ and
 make 
 .I specs
 behave as if the function returned, NaN, the integer zero, or an empty string respectively.
+.IP "--inCmd or -C" 3
+Makes the program read the input records from the output of the command that follows this command line parameter. Similar to the 
+.B +IN
+directive for specification specified in a
+.B specfile
+The command must be specified in a single command line parameter, so enclose it in single or double quotes to include spaces or pipes.
 .IP "--help" 3
 Does not run specs. Instead it displays a help message according to the parameter: 
 .B help
@@ -1614,6 +1699,9 @@ prints the name, arguments, and a line of help for the built-in functions,
 prints a list of all specifications on the path and the comment, and a particular python function name makes 
 .I help
 display the arguments and docstring of that function only.
+.IP "--info" 3
+Does not run specs. Instead it displays some information about this build of specs: compiler version, watermarks for queues, 
+random provider, python and floating point precision.
 
 .SH CONFIGURATION FILE
 .B specs
