@@ -1608,6 +1608,8 @@ Output statistics on run time, and records read, and on records written to stand
 Makes the program read the input records from a file rather than from standard input.
 .IP "--outFile or -o" 3
 Makes the program write the output records to a file rather than to standard output.
+.IP "--shell or -X" 3
+Executes the output records as shell commands rather than emitting them to standard output.
 .IP "--spaceWS" 3
 Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
 .IP "--debug-alu-comp" 3

@@ -1,5 +1,9 @@
+#include <stdio.h>  // for fgets
 #include <iostream>
+#include <memory>
 #include "utils/ErrorReporting.h"
+#include "Reader.h"
+#include "utils/directives.h"
 #include "Writer.h"
 
 void WriteAllRecords(Writer *pw)
@@ -59,8 +63,11 @@ SimpleWriter::SimpleWriter() {
 
 SimpleWriter::SimpleWriter(const std::string& fn) {
 	static const std::string _stderr = WRITER_STDERR;
+	static const std::string _shell = WRITER_SHELL;
 	if (fn == _stderr) {
 		m_WriterType = writerType__CERR;
+	} else if (fn == _shell) {
+		m_WriterType = writerType__SHELL;
 	} else {
 		auto pOutFile = std::make_shared<std::ofstream>(fn);
 		m_File = pOutFile;
@@ -83,6 +90,7 @@ SimpleWriter::~SimpleWriter() {
 void SimpleWriter::WriteOut()
 {
 	PSpecString ps = nullptr;
+	pipeType pipe;
 	m_Timer.changeClass(timeClassInputQueue);
 	bool res = m_queue.wait_and_pop(ps);
 	if (res) {
@@ -93,6 +101,16 @@ void SimpleWriter::WriteOut()
 				break;
 			case writerType__CERR:
 				std::cerr << *ps << '\n';
+				break;
+			case writerType__SHELL:
+				pipe = execCmd(*ps);
+				if (pipe) {
+					auto pRd = std::make_shared<StandardReader>(pipe);
+					PSpecString rec;
+					while (!pRd->endOfSource() && (rec = pRd->getNextRecord())) {
+						std::cout << *rec << "\n";
+					}
+				}
 				break;
 			case writerType__FILE:
 				*m_File << *ps << '\n';

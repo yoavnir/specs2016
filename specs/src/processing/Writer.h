@@ -8,6 +8,7 @@
 #include "utils/TimeUtils.h"
 
 #define WRITER_STDERR "::stderr::";
+#define WRITER_SHELL  "::shell::";
 
 class Writer {
 public:
@@ -40,6 +41,7 @@ public:
 	enum writerType {
 		writerType__COUT,
 		writerType__CERR,
+		writerType__SHELL,
 		writerType__FILE
 	};
 	SimpleWriter();
