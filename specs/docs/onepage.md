@@ -19,8 +19,9 @@ Switches
 * --specFile or -f -- reads the specification from a file rather than the command line.
 * --verbose or -v -- outputs more information when something goes wrong.
 * --stats -- output statistics on run time, and records read, and on records written. 
-* --inFile or -i -- get the input records from a file rather than standard input
-* --outFile or -o -- write the output records to a file rather than standard output
+* --inFile or -i -- get the input records from a file rather than standard input.
+* --outFile or -o -- write the output records to a file rather than standard output.
+* --shell or -X -- executes the output records as shell commands rather than emitting them to standard output. 
 * --spaceWS -- Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
 * --inCmd or -C -- get the input records from the output of a command specified following this switch.
 * --debug-alu-comp -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).

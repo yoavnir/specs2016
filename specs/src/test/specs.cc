@@ -159,6 +159,7 @@ int main (int argc, char** argv)
 {
 	classifyingTimer timer;
 	static const std::string _stderr = WRITER_STDERR;
+	static const std::string _shell = WRITER_SHELL;
 	bool conciseExceptions = true;
 
 	if (argc==1) { // Called without parameters
@@ -278,11 +279,17 @@ int main (int argc, char** argv)
 	clockValue timeAtStart = specTimeGetTOD();
 	std::clock_t clockAtStart = clock();
 
-	if (g_outputFile.empty()) {
-		pWrtrs[1] = std::make_shared<SimpleWriter>();
-	} else {
-		pWrtrs[1] = std::make_shared<SimpleWriter>(g_outputFile);
+	if (!g_outputFile.empty() && g_bShellCmd)  {  // These should not both be specified
+		std::cerr << "Error: Cannot specify both --shell and --outfile\n";
+		exit(0);
 	}
+	if (g_bShellCmd) {
+		pWrtrs[1] = std::make_shared<SimpleWriter>(_shell);
+	} else if (!g_outputFile.empty()) {
+		pWrtrs[1] = std::make_shared<SimpleWriter>(g_outputFile);
+	} else {
+		pWrtrs[1] = std::make_shared<SimpleWriter>();
+	} 
 
 	pWrtrs[0] = std::make_shared<SimpleWriter>(_stderr);
 
