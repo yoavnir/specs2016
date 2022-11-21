@@ -54,6 +54,9 @@ bool parseSwitches(int& argc, char**& argv)
 
 		CONFIG_PARAMS
 
+		std::cerr << "Unrecognized switch <" << argv[0] << ">\n";
+		return false;
+
 CONTINUE:
 		if (g_configuredString != "") {
 			auto equalsPos = g_configuredString.find('=');
