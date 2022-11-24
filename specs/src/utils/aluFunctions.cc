@@ -645,7 +645,7 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 		count = size_t(pHaystack->length() - pos - _pOffset->getInt()); 
 	}
 		
-	return mkValue2(resultStart,count);
+	return mkValue2(resultStart, int(count));
 }
 
 PValue AluFunc_wplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
