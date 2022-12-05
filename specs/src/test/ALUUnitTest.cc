@@ -1323,6 +1323,7 @@ int runALUUnitTests13(unsigned int onlyTest)
 int runALUUnitTests14(unsigned int onlyTest)
 {
 	tg.set('p', "10003.14159265359");
+	tg.set('q', "1234567890");
 	VERIFY_EXPR_RES("fmt(p)","10003.1");
 	VERIFY_EXPR_RES("fmt(p,,12)","10003.1415927");
 	VERIFY_EXPR_RES("fmt(p,'f',4)","10003.1416");
@@ -1330,6 +1331,10 @@ int runALUUnitTests14(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fmt(p,'s',12)","1.000314159265e+04");
 	VERIFY_EXPR_RES("fmt(p,,12,'$')","10003$1415927");
 	VERIFY_EXPR_RES("fmt(p,,12,,'$')","10$003.1415927");
+	VERIFY_EXPR_RES("pretty(p)","10,003.141593");
+	VERIFY_EXPR_RES("pretty(p,5)","1.000314e+04");
+	VERIFY_EXPR_RES("pretty(q)","1,234,567,890");
+	VERIFY_EXPR_RES("pretty(q,,5)","1.234568e+09");
 
 	/* regular expressions */
 	disableRegexCache();

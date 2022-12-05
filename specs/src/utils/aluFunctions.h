@@ -280,6 +280,8 @@
 			"(starts,end) - Returns a string composed of all the characters between 'start' and 'end' inclusive.","'start' defaults to 0x00, and 'end' defaults to 0xff.") \
 	X(fmt,            5, ALUFUNC_REGULAR,     false,  \
 			"(val,fmt,digits,dec,sep) - Returns a string representation of the floating point number 'val'.","The 'fmt' argument can be omitted, or it can begin with 'f' for a fixed number of digits after the\ndecimal point, or 's' for scientific notation. When omitted, the 'digits' argument sets the total\nnumber of digits displayed. The 'dec' argument sets the character used for the decimal point (defaul\nis a period), while the 'sep' argument sets the character used as thousands separator (default is none).") \
+	X(pretty,         3, ALUFUNC_REGULAR,     false,  \
+			"(val,flimit,ilimit) - Returns a string representation of the number 'val'.","The 'flimit' argument determines how many digits a floating point number should have before we switch to scientific notation. The defaults is 10. ilimit is the same for integers and defaults to never switch") \
 	X(next,           0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns the column of the next character to print if a spec unit specifies the NEXT position.","") \
 	X(rest,           0, ALUFUNC_REGULAR,     false,  \

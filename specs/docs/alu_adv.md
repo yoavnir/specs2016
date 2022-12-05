@@ -65,6 +65,7 @@
 | `fact(n)` | Returns the factorial function of `n` |
 | `floor(x)` | Returns the largest integer smaller than `x` |
 | `fmt(value,format,digits,decimal,separator)` | formats a floating-point `value` as a string. The `format` argument can be omitted, or it can begin with **f** for a **fixed** number of `digits` after the decimal point, or **s** for **scientific** notation. When omitted, the `digits` argument sets the total number of digits displayed. The `decimal` argument sets the character used for the decimal point (default is a period), while the `separator` argument sets the character used as thousands separator (default is none). |
+| `pretty(value,flimit,ilimit)` | formats the number in `value` as a printable string with commas.  The optional `flimit` and `ilimit` parameters determine how many digits the floating point or integer number should have (to the left of the decimal point) before the function switches to scientific notation. These parameters default to 10 and infinite digits respectively. |
 | `frombin(x)` | Returns the decimal value of the binary `x`. For example, if `x` is "A", the function returns 65; if `x` is "AB" the function returns 16961. Binary values are assumed to be in little-endian order. |
 | `log(x,base)` | Returns the logarithm of `x`. The default for `base` is to return the natural logarithm. |
 | `permutations(n,k)` | Returns the number of possible choices of `k` elements from a set of `n` elements: <img src="https://render.githubusercontent.com/render/math?math=\frac{n!}{(n-k)!}"/> |

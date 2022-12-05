@@ -601,6 +601,16 @@ argument sets the total number of digits displayed. The
 argument sets the character used for the decimal point (default is a period), while the 
 .B separator
 argument sets the character used as thousands separator (default is none).
+.IP "pretty(value,flimit,ilimit)" 3
+The
+.B pretty
+function formats the number in 
+.B value
+as a printable string with commas.  The optional 
+.B flimit
+and
+.B ilimit
+parameters determine how many digits the floating-point or integer number should have (to the left of the decimal point) before the function switches to scientific notation. These parameters default to 10 and infinite digits respectively. 
 .IP "pow(x,y)" 3
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
 .IP "rand(x)" 3
