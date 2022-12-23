@@ -15,7 +15,7 @@ News
 What's New:
 * Allow execution of the output with the `--shell` or `-X` command line parameters
 * New function `pretty`
-* Usability improvements
+* Usability improvements for functions `wordcount`, `fieldcount`.
 * Compiler alignment
 
 

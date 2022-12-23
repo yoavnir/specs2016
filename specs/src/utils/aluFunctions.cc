@@ -5,6 +5,7 @@
 #include "utils/aluRegex.h"
 #include "processing/Config.h"
 #include "processing/persistent.h"
+#include "processing/ProcessingState.h"
 #include <string.h>
 #include <cmath>
 #include <functional>
@@ -364,14 +365,58 @@ PValue AluFunc_eof()
 	return mkValue(ALUInt(isRunOut ? 1 : 0));
 }
 
-PValue AluFunc_wordcount()
+PValue AluFunc_wordcount(PValue pStr, PValue pSep)
 {
-	return mkValue(ALUInt(g_pStateQueryAgent->getWordCount()));
+	if (!pStr && !pSep) {
+		return mkValue(ALUInt(g_pStateQueryAgent->getWordCount()));
+	}
+
+	char sep;
+	if (pSep && pSep->getStrSptr()->length() > 0) {
+		sep = pSep->getStr()[0];
+	} else {
+		sep = ' ';
+	}
+
+	PSpecString str;
+	if (pStr) {
+		str = pStr->getStrSptr();
+	} else {
+		str = g_pStateQueryAgent->currRecord();
+	}
+
+	ProcessingState ps;
+	ps.setString(str);
+	ps.alterWordSeparator(sep);
+
+	return mkValue(ALUInt(ps.getWordCount()));
 }
 
-PValue AluFunc_fieldcount()
+PValue AluFunc_fieldcount(PValue pStr, PValue pSep)
 {
-	return mkValue(ALUInt(g_pStateQueryAgent->getFieldCount()));
+	if (!pStr && !pSep) {
+		return mkValue(ALUInt(g_pStateQueryAgent->getFieldCount()));
+	}
+
+	char sep;
+	if (pSep && pSep->getStrSptr()->length() > 0) {
+		sep = pSep->getStr()[0];
+	} else {
+		sep = '\t';
+	}
+
+	PSpecString str;
+	if (pStr) {
+		str = pStr->getStrSptr();
+	} else {
+		str = g_pStateQueryAgent->currRecord();
+	}
+
+	ProcessingState ps;
+	ps.setString(str);
+	ps.alterFieldSeparator(sep);
+
+	return mkValue(ALUInt(ps.getFieldCount()));
 }
 
 // Helper function

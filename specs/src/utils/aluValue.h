@@ -42,6 +42,7 @@ public:
 	void           divineType()		{m_type = getDivinedType();}
 	std::string    getStr()  const  {return (m_type==counterType__None) ? std::string("NaN") : m_value;}
 	std::string*   getStrPtr()      {return (m_type==counterType__None) ? nullptr : &m_value;}
+	std::shared_ptr<std::string> getStrSptr()     {return std::make_shared<std::string>(getStr()); }
 	ALUInt         getInt() const;
 	ALUInt         getHex() const;
 	ALUFloat       getFloat() const;

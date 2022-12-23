@@ -786,10 +786,18 @@ int runALUUnitTests6(unsigned int onlyTest)
 
 	g_ps.setString(std::make_shared<std::string>("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
+	VERIFY_EXPR_RES("wordcount(,'e')", "4");
+	VERIFY_EXPR_RES("wordcount('Some sentence with a bunch    of spaces')", "7");
+	VERIFY_EXPR_RES("wordcount('Some sentence with a bunch    of spaces','e')", "6");
+	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
 	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("wordrange(3,4)", "brown\tfox");
+	VERIFY_EXPR_RES("fieldcount()", "5");
+	VERIFY_EXPR_RES("fieldcount(,'e')", "4");
+	VERIFY_EXPR_RES("fieldcount('Some\tsentence\twith\ta\tbunch\tof\ttabs')", "7");
+	VERIFY_EXPR_RES("fieldcount('Some\tsentence\twith\ta\tbunch\tof\ttabs','b')", "3");
 	VERIFY_EXPR_RES("fieldcount()", "5");
 	VERIFY_EXPR_RES("field(3)", "fox jumps");
 	VERIFY_EXPR_RES("fieldindex(2)", "5");

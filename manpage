@@ -710,8 +710,19 @@ Returns the range of characters from
 (default first) to 
 .B e 
 (default last) from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
-.IP "wordcount()" 3
-Returns the count of words in the input record.
+.IP "wordcount(s,p)" 3
+Returns the number of words in string 
+.B s 
+or the current record if 
+.B s 
+is not specified. The separator used is
+.B p. 
+If 
+.B p 
+is not specified, the separator is the current separator if processing the current record, or a 
+.I blank space
+if processing 
+.B s.
 .IP "word(i)" 3
 Returns the i-th word in the input record.
 .IP "wordstart(i)" 3
@@ -730,8 +741,19 @@ word (default first) to the end of the
 word (default last). It is also equivalent to 
 .I range(wordstart(s),wordend(e))
 but less efficient.
-.IP "fieldcount()" 3
-Returns the count of fields in the input record.
+.IP "fieldcount(s,p)" 3
+Returns the number of fields in string 
+.B s 
+or the current record if 
+.B s 
+is not specified. The separator used is
+.B p. 
+If 
+.B p 
+is not specified, the separator is the current separator if processing the current record, or a 
+.I tab 
+if processing 
+.B s.
 .IP "field(i)" 3
 Returns the i-th field in the input record.
 .IP "fieldstart(i)" 3

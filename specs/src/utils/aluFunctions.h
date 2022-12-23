@@ -51,8 +51,8 @@
 			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the length of the string s","") \
-	X(wordcount,      0, ALUFUNC_REGULAR,      true,  \
-			"() - Returns the number of words in the current record.","Result depends on the current word separator.") \
+	X(wordcount,      2, ALUFUNC_REGULAR,      true,  \
+			"(s,p) - Returns the number of words in the input string 's' or in the current record.","Result depends on the current word separator, or the one given in 'p'.") \
 	X(wordstart,      1, ALUFUNC_REGULAR,      true,  \
 			"(i) - Returns the position in the current record where word i begins.","") \
 	X(wordlen,        1, ALUFUNC_REGULAR,      true,  \
@@ -63,8 +63,8 @@
 			"(i) - Returns the i-th word in the current record.","") \
 	X(wordrange,      2, ALUFUNC_REGULAR,      true,  \
 			"(i,j) - Returns the substring of the current record from the start of the i-th word to the end of the j-th word.","") \
-	X(fieldcount,     0, ALUFUNC_REGULAR,      true,  \
-			"() - Returns the number of fields in the current record.","Result depends on the current field separator.") \
+	X(fieldcount,     2, ALUFUNC_REGULAR,      true,  \
+			"(s,p) - Returns the number of fields in the input string 's' or in the current record.","Result depends on the current field separator, or the one given in 'p'.") \
 	X(fieldindex,     1, ALUFUNC_REGULAR,      true,  \
 			"(i) - Returns the position in the current record where field i begins.","") \
 	X(fieldlength,    1, ALUFUNC_REGULAR,      true,  \
