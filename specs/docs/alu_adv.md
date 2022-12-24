@@ -157,7 +157,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | -------- | ----------- |
 | `field(n)` | Returns the *n*-th field |
 | `fieldrange(n,m)` | Returns the substring from the *n*-th field (default first) to the *m*-th field (default last) |
-| `fieldcount(s,p)` | Returns the number of fields in string `s` or the current record if `s` is not specified. The separator used is `p`.  If `p` is not specified, the separator is the current separator if processing the current record, or a **TAB** if processing `s`. |
+| `fieldcount(s,p)` | Returns the number of fields in the string `s`, or in the current record if `s` is not specified. The separator used is `p`.  If `p` is not specified, the separator is the current field separator if processing the current record, or a **TAB** if processing `s`. |
 | `fieldend(n)` | Returns the offset from the start of the record that the *n*-th field ends at. Like other things in **specs**, this is 1-based. | 
 | `fieldindex(n)` | Returns the offset from the start of the record that the *n*-th field starts at. |
 | `fieldlength(n)` | Returns the length of the *n*-th field |
@@ -167,7 +167,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `record()` | Returns the entire input record |
 | `word(n)` | Returns the *n*-th word |
 | `wordrange(n,m)` | Returns the substring from the *n*-th word (default first) to the *m*-th word (default last) |
-| `wordcount(s,p)` | Returns the number of words in string `s` or the current record if `s` is not specified. The separator used is `p`.  If `p` is not specified, the separator is the current separator if processing the current record, or a **blank space** if processing `s`. |
+| `wordcount(s,p)` | Returns the number of words in the string `s`, or in the current record if `s` is not specified. The separator used is `p`.  If `p` is not specified, the separator is the current word separator if processing the current record, or a **blank space** if processing `s`. |
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
 | `wordlen(n)` | Returns the length of the *n*-th word |
