@@ -1,4 +1,5 @@
 #include <cctype>
+#include <unordered_set>
 #include "Config.h"
 #include "utils/ErrorReporting.h"
 #include "Reader.h"
@@ -392,9 +393,11 @@ void ProcessingState::breakValuesClear()
 
 void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 {
-	if (m_fieldIdentifiers[id]!=nullptr) {
-		std::string err = std::string("Field Identifier <") + id + "> redefined.";
-		MYTHROW(err);
+	static std::unordered_set<char> redefined_ids;
+	static std::string sWarnOff("NO_WARN_REDEFINED_FID");
+	if (m_fieldIdentifiers[id]!=nullptr && !configSpecLiteralExists(sWarnOff) && redefined_ids.end()==redefined_ids.find(id)) {
+		redefined_ids.insert(id);
+		std::cerr << "WARNING: Field Identifier <" << id << "> redefined.\n";
 	}
 
 	m_fieldIdentifiers[id] = std::make_shared<std::string>(*ps);

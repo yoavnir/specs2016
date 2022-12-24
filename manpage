@@ -1759,7 +1759,14 @@ allows you to issue a
 command like this:
 .P
     specs /My certificates come from/ 1 @myCA nw 
-    
+.SS "Special configuration labels"
+There is currently just one user-settable configuration label with special meaning:
+.IP "NO_WARN_REDEFINED_FID" 3
+If this is set to any value, then 
+.B specs
+suppresses the warning message if a 
+.I field identifier
+is re-defined within a specification.   
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
