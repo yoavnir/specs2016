@@ -187,8 +187,11 @@ std::vector<Token> parseTokensFile(std::string& fileName)
 		std::string line;
 		while (getline(specFile,line)) {
 			// issue #200 - deal with different line endings
-			while ((line.back() < ' ') && (line.back() >= 0)) {
+			while ((line.length() > 0) && (line.back() < ' ') && (line.back() >= 0)) {
 				line.pop_back();
+			}
+			if (line.length() == 0) {
+				continue;
 			}
 			if (spec=="" && line[0]=='+') {
 				processPlusDirective(line);
