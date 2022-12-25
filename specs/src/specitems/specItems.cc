@@ -35,6 +35,20 @@ void itemGroup::addItem(PItem pItem)
 	m_items.insert(m_items.end(), pItem);
 }
 
+void itemGroup::addItemBeforeEof(PItem pItem, size_t start)
+{
+	auto iter = m_items.begin();
+	iter += start-1;  // If start is too large, this will crash.  Should be the right index of an IF or WHILE
+	while (m_items.end() != iter) {
+		PTokenItem pTok = std::dynamic_pointer_cast<TokenItem>(*iter);
+		if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
+			break;
+		}
+		iter++;
+	}
+	m_items.insert(iter, pItem);
+}
+
 void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	predicateStackItem predicateStack[MAX_DEPTH_CONDITION_STATEMENTS];
@@ -333,7 +347,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			switch (predicateStack[predicateStackIdx-1].pred->pred()) {
 				case ConditionItem::PRED_IF:
 					predicateStackIdx--;
-					addItem(std::make_shared<ConditionItem>(ConditionItem::PRED_ENDIF));
+					addItemBeforeEof(std::make_shared<ConditionItem>(ConditionItem::PRED_ENDIF), predicateStack[predicateStackIdx].argIndex);
 					bAddedMissingPredicate = true;
 #ifdef DEBUG
 					if (g_bVerbose) std::cerr << "specs: Adding an ENDIF\n";
@@ -341,7 +355,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 					break;
 				case ConditionItem::PRED_WHILE:
 					predicateStackIdx--;
-					addItem(std::make_shared<ConditionItem>(ConditionItem::PRED_DONE));
+					addItemBeforeEof(std::make_shared<ConditionItem>(ConditionItem::PRED_DONE), predicateStack[predicateStackIdx].argIndex);
 					bAddedMissingPredicate = true;
 #ifdef DEBUG
 					if (g_bVerbose) std::cerr << "specs: Adding a DONE\n";
