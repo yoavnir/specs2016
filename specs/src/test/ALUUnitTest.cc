@@ -1272,6 +1272,8 @@ int runALUUnitTests13(unsigned int onlyTest)
 	VERIFY_EXPR_RES("strip('xxxabcxxx', 'B', 'x')", "abc");
 	VERIFY_EXPR_RES("strip('xxxabcxxx', , 'x')", "abc");
 	VERIFY_EXPR_RES("strip('xxxabcxxx', 't', 'x')", "xxxabc");
+	VERIFY_EXPR_RES("strip(' \t abc \t ')", "abc");
+	VERIFY_EXPR_RES("strip('everywhere', , 'aeiou')", "verywher");
 
 	VERIFY_EXPR_RES("space('abc   abc','1',' ')", "abc abc");
 	VERIFY_EXPR_RES("space('abc   abc','1','x')", "abcxabc");

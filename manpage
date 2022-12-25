@@ -1219,12 +1219,14 @@ occurrences of the
 character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If 
 .I length 
 is 0, all blanks are removed.
-.IP "strip(string,option,char)" 3
+.IP "strip(string,option,pad-chars)" 3
 Returns 
 .I string 
 stripped of leading and/or trailing blanks or any other 
 .I char 
-specified. 
+specified in the 
+.I pad-chars
+argument. 
 .I Option 
 values determine the action:
 .B L

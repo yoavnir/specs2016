@@ -2297,16 +2297,11 @@ PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 	}
 	char option = toupper(sOpt[0]);
 
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (sPad.length() != 1) {
-		std::string err = "strip: Pad argument should be 1 char. Got <" + sPad + ">";
-		MYTHROW(err);
-	}
-	char pad = sPad[0];
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " \t\n\r");
 
 	std::string ret;
-	auto first = str.find_first_not_of(pad);
-	auto last = str.find_last_not_of(pad);
+	auto first = str.find_first_not_of(sPad);
+	auto last = str.find_last_not_of(sPad);
 	switch (option) {
 	case 'B':
 		ret = str.substr(first, last-first+1);
