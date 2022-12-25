@@ -40,7 +40,7 @@ void itemGroup::addItemBeforeEof(PItem pItem, size_t start)
 	auto iter = m_items.begin();
 	iter += start-1;  // If start is too large, this will crash.  Should be the right index of an IF or WHILE
 	while (m_items.end() != iter) {
-		pTokenItem pTok = std::dynamic_pointer_cast<TokenItem>(*iter);
+		PTokenItem pTok = std::dynamic_pointer_cast<TokenItem>(*iter);
 		if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
 			break;
 		}
