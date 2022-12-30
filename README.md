@@ -17,6 +17,7 @@ What's New:
 * New function `pretty`
 * Usability improvements for functions `wordcount`, `fieldcount`.
 * Compiler alignment
+* Bug fixes
 
 
 15-Aug-2022: Version 0.9 is here

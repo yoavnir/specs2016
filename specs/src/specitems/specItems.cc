@@ -38,7 +38,10 @@ void itemGroup::addItem(PItem pItem)
 void itemGroup::addItemBeforeEof(PItem pItem, size_t start)
 {
 	auto iter = m_items.begin();
-	iter += start-1;  // If start is too large, this will crash.  Should be the right index of an IF or WHILE
+	while (m_items.end() != iter && (*iter)->originalIndex() < start) {
+		iter++;
+	}
+
 	while (m_items.end() != iter) {
 		PTokenItem pTok = std::dynamic_pointer_cast<TokenItem>(*iter);
 		if (pTok && (TokenListType__EOF == pTok->getToken()->Type())) {
@@ -49,12 +52,15 @@ void itemGroup::addItemBeforeEof(PItem pItem, size_t start)
 	m_items.insert(iter, pItem);
 }
 
+unsigned int g_currentTokenArgIndex = 0;
+
 void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	predicateStackItem predicateStack[MAX_DEPTH_CONDITION_STATEMENTS];
 	unsigned int predicateStackIdx = 0;
 
 	while (index < tokenVec.size()) {
+		g_currentTokenArgIndex = tokenVec[index].argIndex();
 		switch (tokenVec[index].Type()) {
 		case TokenListType__EOF:
 			bNeedRunoutCycle = true;
@@ -589,7 +595,7 @@ bool itemGroup::readsLines()
 	return false;
 }
 
-
+Item::Item() : m_originalIndex(g_currentTokenArgIndex)  {}
 
 
 TokenItem::TokenItem(Token& t)
