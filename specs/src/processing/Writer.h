@@ -55,6 +55,7 @@ public:
 			case writerType__CERR:
 				return std::cerr;
 			default:
+				MYASSERT(nullptr!=m_File);
 				return *m_File;
 		}
 	}
