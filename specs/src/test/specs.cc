@@ -105,6 +105,9 @@ CONTINUE:
 		std::cerr << "\tRandom Provider: " << RandomProvider << "\n";
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
+#ifdef GITTAG
+		std::cerr << "\tGit tag: " << STRINGIFY(GITTAG) << "\n";
+#endif
 		std::cerr << "\tPython version: " << STRINGIFY(PYTHON_FULL_VER) << "\n";
 		std::cerr << "\tFloating point precision: " << ALUFloatPrecision << " (" << sizeof(ALUFloat) << " bytes)\n";
 		exit(0);

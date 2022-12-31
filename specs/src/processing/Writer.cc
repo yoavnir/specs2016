@@ -1,5 +1,6 @@
 #include <stdio.h>  // for fgets
 #include <iostream>
+#include <sstream>
 #include <memory>
 #include "utils/ErrorReporting.h"
 #include "Reader.h"
@@ -67,6 +68,7 @@ SimpleWriter::SimpleWriter(const std::string& fn) {
 	if (fn == _stderr) {
 		m_WriterType = writerType__CERR;
 	} else if (fn == _shell) {
+		m_File = std::make_shared<std::ostringstream>();
 		m_WriterType = writerType__SHELL;
 	} else {
 		auto pOutFile = std::make_shared<std::ofstream>(fn);
@@ -80,10 +82,30 @@ SimpleWriter::SimpleWriter(const std::string& fn) {
 }
 
 SimpleWriter::~SimpleWriter() {
-	if (writerType__FILE == m_WriterType) {
+	switch (m_WriterType) {
+	case writerType__FILE:
+	{
 		std::shared_ptr<std::ofstream> pOutFile = std::dynamic_pointer_cast<std::ofstream>(m_File);
 		if (pOutFile) pOutFile->clear();
 		m_File = nullptr;
+		break;
+	}
+	case writerType__SHELL:
+	{
+		std::shared_ptr<std::ostringstream> pScript = std::dynamic_pointer_cast<std::ostringstream>(m_File);
+		std::string script(pScript->str());
+		pipeType pipe = execCmd(script);
+		if (pipe) {
+			auto pRd = std::make_shared<StandardReader>(pipe);
+			PSpecString rec;
+			while (!pRd->endOfSource() && (rec = pRd->getNextRecord())) {
+				std::cout << *rec << "\n";
+			}
+		}
+		break;
+	}
+	default:
+		;
 	}
 }
 
@@ -103,15 +125,6 @@ void SimpleWriter::WriteOut()
 				std::cerr << *ps << '\n';
 				break;
 			case writerType__SHELL:
-				pipe = execCmd(*ps);
-				if (pipe) {
-					auto pRd = std::make_shared<StandardReader>(pipe);
-					PSpecString rec;
-					while (!pRd->endOfSource() && (rec = pRd->getNextRecord())) {
-						std::cout << *rec << "\n";
-					}
-				}
-				break;
 			case writerType__FILE:
 				*m_File << *ps << '\n';
 		}

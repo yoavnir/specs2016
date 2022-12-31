@@ -5,6 +5,7 @@
 #include "utils/aluRegex.h"
 #include "processing/Config.h"
 #include "processing/persistent.h"
+#include "processing/ProcessingState.h"
 #include <string.h>
 #include <cmath>
 #include <functional>
@@ -364,14 +365,58 @@ PValue AluFunc_eof()
 	return mkValue(ALUInt(isRunOut ? 1 : 0));
 }
 
-PValue AluFunc_wordcount()
+PValue AluFunc_wordcount(PValue pStr, PValue pSep)
 {
-	return mkValue(ALUInt(g_pStateQueryAgent->getWordCount()));
+	if (!pStr && !pSep) {
+		return mkValue(ALUInt(g_pStateQueryAgent->getWordCount()));
+	}
+
+	char sep;
+	if (pSep && pSep->getStrSptr()->length() > 0) {
+		sep = pSep->getStr()[0];
+	} else {
+		sep = ' ';
+	}
+
+	PSpecString str;
+	if (pStr) {
+		str = pStr->getStrSptr();
+	} else {
+		str = g_pStateQueryAgent->currRecord();
+	}
+
+	ProcessingState ps;
+	ps.setString(str);
+	ps.alterWordSeparator(sep);
+
+	return mkValue(ALUInt(ps.getWordCount()));
 }
 
-PValue AluFunc_fieldcount()
+PValue AluFunc_fieldcount(PValue pStr, PValue pSep)
 {
-	return mkValue(ALUInt(g_pStateQueryAgent->getFieldCount()));
+	if (!pStr && !pSep) {
+		return mkValue(ALUInt(g_pStateQueryAgent->getFieldCount()));
+	}
+
+	char sep;
+	if (pSep && pSep->getStrSptr()->length() > 0) {
+		sep = pSep->getStr()[0];
+	} else {
+		sep = '\t';
+	}
+
+	PSpecString str;
+	if (pStr) {
+		str = pStr->getStrSptr();
+	} else {
+		str = g_pStateQueryAgent->currRecord();
+	}
+
+	ProcessingState ps;
+	ps.setString(str);
+	ps.alterFieldSeparator(sep);
+
+	return mkValue(ALUInt(ps.getFieldCount()));
 }
 
 // Helper function
@@ -645,7 +690,7 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 		count = size_t(pHaystack->length() - pos - _pOffset->getInt()); 
 	}
 		
-	return mkValue2(resultStart,count);
+	return mkValue2(resultStart, int(count));
 }
 
 PValue AluFunc_wplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
@@ -2252,16 +2297,11 @@ PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 	}
 	char option = toupper(sOpt[0]);
 
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (sPad.length() != 1) {
-		std::string err = "strip: Pad argument should be 1 char. Got <" + sPad + ">";
-		MYTHROW(err);
-	}
-	char pad = sPad[0];
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " \t\n\r");
 
 	std::string ret;
-	auto first = str.find_first_not_of(pad);
-	auto last = str.find_last_not_of(pad);
+	auto first = str.find_first_not_of(sPad);
+	auto last = str.find_last_not_of(sPad);
 	switch (option) {
 	case 'B':
 		ret = str.substr(first, last-first+1);
@@ -2518,6 +2558,25 @@ private:
 	char m_dec;
 };
 
+class pretty_punct : public std::numpunct<char>
+{
+public:
+	pretty_punct() {}
+protected:
+	virtual char do_thousands_sep() const
+	{
+		return ',';
+	}
+	virtual char do_decimal_point() const
+	{
+		return '.';
+	}
+	virtual std::string do_grouping() const
+	{
+		return  "\03";
+	}
+};
+
 
 PValue AluFunc_fmt(PValue pVal, PValue pFormat, PValue pDigits, PValue pDecimal, PValue pSep)
 {
@@ -2561,6 +2620,70 @@ PValue AluFunc_fmt(PValue pVal, PValue pFormat, PValue pDigits, PValue pDecimal,
 
 	oss << pVal->getFloat();
 
+	return mkValue(oss.str());
+}
+
+PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit)
+{
+	static ALUInt limits[]={
+			0,     
+			1,                    /* 1 digit   */
+			10,                   /* 2 digits  */
+			100,                  /* 3 digits  */
+			1000,                 /* 4 digits  */
+			10000,                /* 5 digits  */
+			100000,               /* 6 digits  */
+			1000000,              /* 7 digits  */
+			10000000,             /* 8 digits  */
+			100000000,            /* 9 digits  */
+			1000000000,           /* 10 digits */
+			10000000000,          /* 11 digits */
+			100000000000,         /* 12 digits */
+			1000000000000,        /* 13 digits */
+			10000000000000,       /* 14 digits */
+			100000000000000,      /* 15 digits */
+			1000000000000000,     /* 16 digits */
+			10000000000000000,    /* 17 digits */
+			100000000000000000,   /* 18 digits */
+			1000000000000000000,  /* 19 digits */
+			MAX_ALUInt};
+
+	std::ostringstream oss;
+	ASSERT_NOT_ELIDED(pVal,1,value);
+	auto flimit = ARG_INT_WITH_DEFAULT(pflimit, 10);
+	if (flimit < 1) {
+		flimit = 0;
+	}
+	auto ilimit = ARG_INT_WITH_DEFAULT(pilimit, 20);
+	if (ilimit > 19 || ilimit < 1) {
+		ilimit = 20;
+	}
+
+	bool useScientificNotation;
+
+	if (pVal->isFloat()) {
+		ALUFloat valtmp = pVal->getFloat();
+		while (flimit>19 && valtmp > limits[19]) {
+			valtmp /= ALUFloat(limits[19]);
+			flimit -= 19;
+		}
+		useScientificNotation = (valtmp > limits[flimit]);
+	} else {     // integer
+		useScientificNotation = (pVal->getInt() > limits[ilimit]);
+		if (!useScientificNotation) oss.precision(0);
+	}
+
+	static std::locale myStaticLocale;
+	
+	if (useScientificNotation) {
+		oss.setf(std::ios::scientific, std:: ios::floatfield);
+	} else {
+		pretty_punct* pct = new pretty_punct;
+		oss.setf(std::ios::fixed, std:: ios::floatfield);	
+		oss.imbue(std::locale(oss.getloc(), pct));
+	}
+
+	oss << (pVal->isFloat() ? pVal->getFloat() : pVal->getInt());
 	return mkValue(oss.str());
 }
 

@@ -786,10 +786,18 @@ int runALUUnitTests6(unsigned int onlyTest)
 
 	g_ps.setString(std::make_shared<std::string>("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
+	VERIFY_EXPR_RES("wordcount(,'e')", "4");
+	VERIFY_EXPR_RES("wordcount('Some sentence with a bunch    of spaces')", "7");
+	VERIFY_EXPR_RES("wordcount('Some sentence with a bunch    of spaces','e')", "6");
+	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
 	VERIFY_EXPR_RES("wordstart(3)", "11");
 	VERIFY_EXPR_RES("wordend(2)", "9");
 	VERIFY_EXPR_RES("wordrange(3,4)", "brown\tfox");
+	VERIFY_EXPR_RES("fieldcount()", "5");
+	VERIFY_EXPR_RES("fieldcount(,'e')", "4");
+	VERIFY_EXPR_RES("fieldcount('Some\tsentence\twith\ta\tbunch\tof\ttabs')", "7");
+	VERIFY_EXPR_RES("fieldcount('Some\tsentence\twith\ta\tbunch\tof\ttabs','b')", "3");
 	VERIFY_EXPR_RES("fieldcount()", "5");
 	VERIFY_EXPR_RES("field(3)", "fox jumps");
 	VERIFY_EXPR_RES("fieldindex(2)", "5");
@@ -1264,6 +1272,8 @@ int runALUUnitTests13(unsigned int onlyTest)
 	VERIFY_EXPR_RES("strip('xxxabcxxx', 'B', 'x')", "abc");
 	VERIFY_EXPR_RES("strip('xxxabcxxx', , 'x')", "abc");
 	VERIFY_EXPR_RES("strip('xxxabcxxx', 't', 'x')", "xxxabc");
+	VERIFY_EXPR_RES("strip(' \t abc \t ')", "abc");
+	VERIFY_EXPR_RES("strip('everywhere', , 'aeiou')", "verywher");
 
 	VERIFY_EXPR_RES("space('abc   abc','1',' ')", "abc abc");
 	VERIFY_EXPR_RES("space('abc   abc','1','x')", "abcxabc");
@@ -1323,6 +1333,7 @@ int runALUUnitTests13(unsigned int onlyTest)
 int runALUUnitTests14(unsigned int onlyTest)
 {
 	tg.set('p', "10003.14159265359");
+	tg.set('q', "1234567890");
 	VERIFY_EXPR_RES("fmt(p)","10003.1");
 	VERIFY_EXPR_RES("fmt(p,,12)","10003.1415927");
 	VERIFY_EXPR_RES("fmt(p,'f',4)","10003.1416");
@@ -1330,6 +1341,10 @@ int runALUUnitTests14(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fmt(p,'s',12)","1.000314159265e+04");
 	VERIFY_EXPR_RES("fmt(p,,12,'$')","10003$1415927");
 	VERIFY_EXPR_RES("fmt(p,,12,,'$')","10$003.1415927");
+	VERIFY_EXPR_RES("pretty(p)","10,003.141593");
+	VERIFY_EXPR_RES("pretty(p,5)","1.000314e+04");
+	VERIFY_EXPR_RES("pretty(q)","1,234,567,890");
+	VERIFY_EXPR_RES("pretty(q,,5)","1.234568e+09");
 
 	/* regular expressions */
 	disableRegexCache();

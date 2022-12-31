@@ -10,9 +10,14 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-??-???-2023: Version 0.9.1 is here
+01-JAN-2023: Version 0.9.1 beta is here
+29-JAN-2023: Version 0.9.1 is here
 What's New:
 * Allow execution of the output with the `--shell` or `-X` command line parameters
+* New function `pretty`
+* Usability improvements for functions `wordcount`, `fieldcount`.
+* Compiler alignment
+* Bug fixes
 
 
 15-Aug-2022: Version 0.9 is here

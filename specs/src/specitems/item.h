@@ -184,6 +184,7 @@ enum ApplyRet {
 
 class Item {
 public:
+	Item();
 	virtual ~Item() {}
 	virtual std::string Debug() = 0;
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
@@ -191,6 +192,9 @@ public:
 	virtual bool forcesRunoutCycle() {return false;}
 	virtual bool isBreak()    {return false;}
 	virtual bool ApplyUnconditionally() {return false;}
+	unsigned int originalIndex() { return m_originalIndex; }
+private:
+	unsigned int m_originalIndex;
 };
 
 typedef std::shared_ptr<Item> PItem;

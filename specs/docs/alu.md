@@ -100,6 +100,8 @@ which gives you
 cat
 ```
 
+The configured literal `NO_WARN_REDEFINED_FID` suppresses if set to any value, the warning about re-defining a field identifier within a spec.
+
 There are also pre-defined values that behave like a configured literals. One is `@version`. It returns the current version of specs. Try it:
 ```
 specs @version 1

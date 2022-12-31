@@ -51,8 +51,8 @@
 			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the length of the string s","") \
-	X(wordcount,      0, ALUFUNC_REGULAR,      true,  \
-			"() - Returns the number of words in the current record.","Result depends on the current word separator.") \
+	X(wordcount,      2, ALUFUNC_REGULAR,      true,  \
+			"(s,p) - Returns the number of words in the input string 's' or in the current record.","Result depends on the current word separator, or the one given in 'p'.") \
 	X(wordstart,      1, ALUFUNC_REGULAR,      true,  \
 			"(i) - Returns the position in the current record where word i begins.","") \
 	X(wordlen,        1, ALUFUNC_REGULAR,      true,  \
@@ -63,8 +63,8 @@
 			"(i) - Returns the i-th word in the current record.","") \
 	X(wordrange,      2, ALUFUNC_REGULAR,      true,  \
 			"(i,j) - Returns the substring of the current record from the start of the i-th word to the end of the j-th word.","") \
-	X(fieldcount,     0, ALUFUNC_REGULAR,      true,  \
-			"() - Returns the number of fields in the current record.","Result depends on the current field separator.") \
+	X(fieldcount,     2, ALUFUNC_REGULAR,      true,  \
+			"(s,p) - Returns the number of fields in the input string 's' or in the current record.","Result depends on the current field separator, or the one given in 'p'.") \
 	X(fieldindex,     1, ALUFUNC_REGULAR,      true,  \
 			"(i) - Returns the position in the current record where field i begins.","") \
 	X(fieldlength,    1, ALUFUNC_REGULAR,      true,  \
@@ -280,6 +280,8 @@
 			"(starts,end) - Returns a string composed of all the characters between 'start' and 'end' inclusive.","'start' defaults to 0x00, and 'end' defaults to 0xff.") \
 	X(fmt,            5, ALUFUNC_REGULAR,     false,  \
 			"(val,fmt,digits,dec,sep) - Returns a string representation of the floating point number 'val'.","The 'fmt' argument can be omitted, or it can begin with 'f' for a fixed number of digits after the\ndecimal point, or 's' for scientific notation. When omitted, the 'digits' argument sets the total\nnumber of digits displayed. The 'dec' argument sets the character used for the decimal point (defaul\nis a period), while the 'sep' argument sets the character used as thousands separator (default is none).") \
+	X(pretty,         3, ALUFUNC_REGULAR,     false,  \
+			"(val,flimit,ilimit) - Returns a string representation of the number 'val'.","The 'flimit' argument determines how many digits a floating point number should have before we switch to scientific notation. The defaults is 10. ilimit is the same for integers and defaults to never switch") \
 	X(next,           0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns the column of the next character to print if a spec unit specifies the NEXT position.","") \
 	X(rest,           0, ALUFUNC_REGULAR,     false,  \

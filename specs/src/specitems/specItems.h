@@ -27,6 +27,7 @@ private:
 	bool bNeedRunoutCycleFromStart;
 	bool bFoundSelectSecond;
 	void addItem(PItem pItem);
+	void addItemBeforeEof(PItem pItem, size_t start);
 	std::vector<PItem> m_items;
 };
 

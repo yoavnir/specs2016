@@ -65,6 +65,7 @@
 | `fact(n)` | Returns the factorial function of `n` |
 | `floor(x)` | Returns the largest integer smaller than `x` |
 | `fmt(value,format,digits,decimal,separator)` | formats a floating-point `value` as a string. The `format` argument can be omitted, or it can begin with **f** for a **fixed** number of `digits` after the decimal point, or **s** for **scientific** notation. When omitted, the `digits` argument sets the total number of digits displayed. The `decimal` argument sets the character used for the decimal point (default is a period), while the `separator` argument sets the character used as thousands separator (default is none). |
+| `pretty(value,flimit,ilimit)` | formats the number in `value` as a printable string with commas.  The optional `flimit` and `ilimit` parameters determine how many digits the floating point or integer number should have (to the left of the decimal point) before the function switches to scientific notation. These parameters default to 10 and infinite digits respectively. |
 | `frombin(x)` | Returns the decimal value of the binary `x`. For example, if `x` is "A", the function returns 65; if `x` is "AB" the function returns 16961. Binary values are assumed to be in little-endian order. |
 | `log(x,base)` | Returns the logarithm of `x`. The default for `base` is to return the natural logarithm. |
 | `permutations(n,k)` | Returns the number of possible choices of `k` elements from a set of `n` elements: <img src="https://render.githubusercontent.com/render/math?math=\frac{n!}{(n-k)!}"/> |
@@ -136,7 +137,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `reverse(string)` | Returns a copy of a `string` with its characters reversed. |
 | `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
 | `space(string,length,pad)` | Formats a `string` by replacing internal blanks with `length` occurrences of the `pad` character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If `length` is 0, all blanks are removed. |
-| strip(string,option,char) | Returns `string` stripped of leading and/or trailing blanks or any other `char` specified. `Option` values determine the action: *L* for leading, *T* for trailing, and *B* for both (the default) |
+| strip(string,option,pad-chars) | Returns `string` stripped of leading and/or trailing blanks or any other character specified in the `pad-chars` string. `Option` values determine the action: *L* for leading, *T* for trailing, and *B* for both (the default) |
 | `subword(string,start,length)` | Returns the substring that begins at blank-delimited word `start`. If `length` is omitted, it defaults to the remainder of the string. |
 | translate(string,tableout,tablein,pad) | Returns a translated copy of `string`. Characters are translated according to the input translation table `tablein` and its output equivalent, `tableout`. If `tablein` and `tableout` are not coded, all characters in `string` are translated to uppercase. If `tableout` is shorter than `tablein`, it is padded with the `pad` character or its default, blanks. |
 | `verify(string, reference ,option ,start)` | Verifies that all characters in `string` are members of the `reference` string. Returns the position of the first character in `string` that is not in `reference`, or 0 if all characters in `string` are in `reference`. <br />`start` specifies where in `string` to start the search, the default is 1. The `option` may be:<ul><li> **N** (Nomatch) — Default. Works as described earlier.</li><li> **M** (Match) — Returns the position of the first character in string that is in reference.</li></ul> |
@@ -156,7 +157,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | -------- | ----------- |
 | `field(n)` | Returns the *n*-th field |
 | `fieldrange(n,m)` | Returns the substring from the *n*-th field (default first) to the *m*-th field (default last) |
-| `fieldcount()` | Returns the number of fields in the current record |
+| `fieldcount(s,p)` | Returns the number of fields in the string `s`, or in the current record if `s` is not specified. The separator used is `p`.  If `p` is not specified, the separator is the current field separator if processing the current record, or a **TAB** if processing `s`. |
 | `fieldend(n)` | Returns the offset from the start of the record that the *n*-th field ends at. Like other things in **specs**, this is 1-based. | 
 | `fieldindex(n)` | Returns the offset from the start of the record that the *n*-th field starts at. |
 | `fieldlength(n)` | Returns the length of the *n*-th field |
@@ -166,7 +167,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `record()` | Returns the entire input record |
 | `word(n)` | Returns the *n*-th word |
 | `wordrange(n,m)` | Returns the substring from the *n*-th word (default first) to the *m*-th word (default last) |
-| `wordcount()` | Returns the number of words in the current record |
+| `wordcount(s,p)` | Returns the number of words in the string `s`, or in the current record if `s` is not specified. The separator used is `p`.  If `p` is not specified, the separator is the current word separator if processing the current record, or a **blank space** if processing `s`. |
 | `wordend(n)` | Returns the offset from the start of the record that the *n*-th word ends at. Like other things in **specs**, this is 1-based. | 
 | `wordstart(n)` | Returns the offset from the start of the record that the *n*-th word starts at. |
 | `wordlen(n)` | Returns the length of the *n*-th word |
