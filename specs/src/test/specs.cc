@@ -409,7 +409,7 @@ int main (int argc, char** argv)
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 			auto pSW = std::dynamic_pointer_cast<SimpleWriter>(ps.getCurrentWriter());
-			pSW->getStream() << *pstr << '\n';
+			pSW->Write(pstr);
 		} else {
 			ps.resetNoWrite();
 		}
