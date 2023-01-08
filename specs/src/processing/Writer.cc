@@ -126,7 +126,7 @@ SimpleWriter::~SimpleWriter() {
 		}
 		break;
 #ifdef WIN64
-		std::remove("specs.bat");
+		std::remove(temporaryBatchFileName_g);
 #endif		
 	}
 	default:
