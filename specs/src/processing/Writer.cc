@@ -114,7 +114,8 @@ SimpleWriter::~SimpleWriter() {
 		pipeType pipe = execCmd(temporaryBatchFileName_g);
 #else		
 		std::shared_ptr<std::ostringstream> pScript = std::dynamic_pointer_cast<std::ostringstream>(m_File);
-		pipeType pipe = execCmd(pScript->str());
+		std::string script(pScript->str());
+		pipeType pipe = execCmd(script);
 #endif
 		if (pipe) {
 			auto pRd = std::make_shared<StandardReader>(pipe);
