@@ -126,7 +126,7 @@ SimpleWriter::~SimpleWriter() {
 		}
 		break;
 #ifdef WIN64
-		std::remove(temporaryBatchFileName_g);
+		std::remove(temporaryBatchFileName_g.c_str());
 #endif		
 	}
 	default:
