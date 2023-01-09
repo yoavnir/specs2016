@@ -13,9 +13,9 @@ int setenv(const char *name, const char *value, int overwrite);
 #endif
 
 #ifdef _MSC_VER
-#define SUPPRESS_UNUSED_FUNCTION_WARNING(a)
+#define SUPPRESS_UNUSED_WARNING(a)
 #else
-#define SUPPRESS_UNUSED_FUNCTION_WARNING(a) (void)a
+#define SUPPRESS_UNUSED_WARNING(a) (void)a
 #endif
 
 #ifdef _MSC_VER 
