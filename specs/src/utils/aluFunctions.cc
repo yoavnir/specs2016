@@ -52,6 +52,11 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
 #define ASSERT_NOT_ELIDED(arg,idx,name)     \
 	if (nullptr == (arg)) { throw_argument_issue(__func__,idx,#name,"Argument must not be elided"); }
 
+#define ASSERT_ARG_OR_RECORD(arg,idx,name)   \
+	if ((nullptr == (arg)) && (nullptr == g_pStateQueryAgent->currRecord())) {  \
+		throw_argument_issue(__func__,idx,#name,"Missing --force-read-input switch. Argument elided with no forced read"); \
+	}
+
 #define THROW_ARG_ISSUE(idx,name,msg)       \
 		throw_argument_issue(__func__,idx,#name,msg.c_str());
 
@@ -367,6 +372,8 @@ PValue AluFunc_eof()
 
 PValue AluFunc_wordcount(PValue pStr, PValue pSep)
 {
+	ASSERT_ARG_OR_RECORD(pStr,1,string);
+
 	if (!pStr && !pSep) {
 		return mkValue(ALUInt(g_pStateQueryAgent->getWordCount()));
 	}
@@ -394,6 +401,8 @@ PValue AluFunc_wordcount(PValue pStr, PValue pSep)
 
 PValue AluFunc_fieldcount(PValue pStr, PValue pSep)
 {
+	ASSERT_ARG_OR_RECORD(pStr,1,string);
+
 	if (!pStr && !pSep) {
 		return mkValue(ALUInt(g_pStateQueryAgent->getFieldCount()));
 	}
@@ -593,6 +602,7 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 
 PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 {
+	ASSERT_ARG_OR_RECORD(pBigString,1,str);
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
@@ -602,6 +612,7 @@ PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 PValue AluFunc_left(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
+	ASSERT_ARG_OR_RECORD(pBigString,1,str);
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
@@ -617,6 +628,7 @@ PValue AluFunc_left(PValue pBigString, PValue pLength)
 PValue AluFunc_right(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
+	ASSERT_ARG_OR_RECORD(pBigString,1,str);
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
@@ -631,8 +643,8 @@ PValue AluFunc_right(PValue pBigString, PValue pLength)
 
 PValue AluFunc_center(PValue pBigString, PValue pLength)
 {
-	ASSERT_NOT_ELIDED(pBigString,1,bigString);
 	ASSERT_NOT_ELIDED(pLength,2,length);
+	ASSERT_ARG_OR_RECORD(pBigString,1,str);
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	auto bigLength = pBigStr->length();
 	ALUInt len = pLength->getInt();
@@ -656,6 +668,7 @@ PValue AluFunc_centre(PValue pBigString, PValue pLength)
 PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
+	ASSERT_ARG_OR_RECORD(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	size_t pos = pHaystack->find(*pNeedle);
@@ -770,6 +783,7 @@ PValue AluFunc_fplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 PValue AluFunc_lastpos(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,needle);
+	ASSERT_ARG_OR_RECORD(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	size_t pos = pHaystack->rfind(*pNeedle);
@@ -783,7 +797,7 @@ PValue AluFunc_lastpos(PValue _pNeedle, PValue _pHaystack)
 PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, PValue _pNeedle3, PValue _pNeedle4)
 {
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
-
+	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
 	if (std::string::npos != pHaystack->find(*_pNeedle1->getStrPtr())) {
@@ -802,7 +816,7 @@ PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, P
 PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, PValue _pNeedle3, PValue _pNeedle4)
 {
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
-
+	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
 	if (std::string::npos == pHaystack->find(*_pNeedle1->getStrPtr())) {
@@ -821,6 +835,7 @@ PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2
 PValue AluFunc_rmatch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
+	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
 	if (_pFlags) {
@@ -832,6 +847,7 @@ PValue AluFunc_rmatch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 PValue AluFunc_rsearch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 {
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
+	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
 	if (_pFlags) {
@@ -842,6 +858,7 @@ PValue AluFunc_rsearch(PValue _pHaystack, PValue _pExp, PValue _pFlags)
 
 PValue AluFunc_rreplace(PValue _pHaystack, PValue _pExp, PValue _pFmt, PValue _pFlags)
 {
+	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);	
 	ASSERT_NOT_ELIDED(_pExp,2,regExp);
 	ASSERT_NOT_ELIDED(_pFmt,3,format);
 
@@ -2705,6 +2722,7 @@ frequencyMap g_OccuranceMap;
 PValue AluFunc_countocc(PValue _pNeedle, PValue _pHaystack)
 {
 	ASSERT_NOT_ELIDED(_pNeedle, 1, needle);
+	ASSERT_ARG_OR_RECORD(_pHaystack,2,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	std::string needle = _pNeedle->getStr();
 
