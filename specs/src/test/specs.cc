@@ -54,6 +54,9 @@ bool parseSwitches(int& argc, char**& argv)
 
 		CONFIG_PARAMS
 
+		std::cerr << "Unrecognized switch <" << argv[0] << ">\n";
+		return false;
+
 CONTINUE:
 		if (g_configuredString != "") {
 			auto equalsPos = g_configuredString.find('=');
@@ -102,6 +105,9 @@ CONTINUE:
 		std::cerr << "\tRandom Provider: " << RandomProvider << "\n";
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
+#ifdef GITTAG
+		std::cerr << "\tGit tag: " << STRINGIFY(GITTAG) << "\n";
+#endif
 		std::cerr << "\tPython version: " << STRINGIFY(PYTHON_FULL_VER) << "\n";
 		std::cerr << "\tFloating point precision: " << ALUFloatPrecision << " (" << sizeof(ALUFloat) << " bytes)\n";
 		exit(0);
@@ -159,6 +165,7 @@ int main (int argc, char** argv)
 {
 	classifyingTimer timer;
 	static const std::string _stderr = WRITER_STDERR;
+	static const std::string _shell = WRITER_SHELL;
 	bool conciseExceptions = true;
 
 	if (argc==1) { // Called without parameters
@@ -278,11 +285,17 @@ int main (int argc, char** argv)
 	clockValue timeAtStart = specTimeGetTOD();
 	std::clock_t clockAtStart = clock();
 
-	if (g_outputFile.empty()) {
-		pWrtrs[1] = std::make_shared<SimpleWriter>();
-	} else {
-		pWrtrs[1] = std::make_shared<SimpleWriter>(g_outputFile);
+	if (!g_outputFile.empty() && g_bShellCmd)  {  // These should not both be specified
+		std::cerr << "Error: Cannot specify both --shell and --outfile\n";
+		exit(0);
 	}
+	if (g_bShellCmd) {
+		pWrtrs[1] = std::make_shared<SimpleWriter>(_shell);
+	} else if (!g_outputFile.empty()) {
+		pWrtrs[1] = std::make_shared<SimpleWriter>(g_outputFile);
+	} else {
+		pWrtrs[1] = std::make_shared<SimpleWriter>();
+	} 
 
 	pWrtrs[0] = std::make_shared<SimpleWriter>(_stderr);
 
@@ -317,10 +330,15 @@ int main (int argc, char** argv)
 				pRd = std::make_shared<StandardReader>(primaryInputPipe());
 			}
 		} else {
-			pRd = std::make_shared<StandardReader>(g_inputFile);
+			try {
+				pRd = std::make_shared<StandardReader>(g_inputFile);
+			} catch (const SpecsException& e) {
+				std::cerr << "Error: Failed to open input file: " << e.what(!g_bVerbose) << "\n";
+				exit(0);
+			}
 			if (nullptr != primaryInputPipe()) {
 				std::cerr << "Error: Both input file and input stream specified.\n";
-				return -4;
+				exit(0);
 			}
 		}
 
@@ -396,7 +414,7 @@ int main (int argc, char** argv)
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 			auto pSW = std::dynamic_pointer_cast<SimpleWriter>(ps.getCurrentWriter());
-			pSW->getStream() << *pstr << '\n';
+			pSW->Write(pstr);
 		} else {
 			ps.resetNoWrite();
 		}

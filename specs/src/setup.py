@@ -83,9 +83,9 @@ with open("xx.txt","w") as v:
 	sys.stdout.write("Yes.\n")
 	return True
 
-cppflags_gcc = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++11 -I ."
-cppflags_clang = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++11 -I ."
-cppflags_vs = "$(CONDCOMP) /DGITTAG=$(TAG) /nologo /I."
+cppflags_gcc = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++17 -I ."
+cppflags_clang = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++17 -I ."
+cppflags_vs = "$(CONDCOMP) /DGITTAG=$(TAG) /std:c++17 /nologo /I."
 
 body1 = \
 """
@@ -303,13 +303,13 @@ else:
 	
 if compiler=="VS":
 	cppflags = cppflags_vs
-	cppflags_test = "/EHsc /nologo"
+	cppflags_test = "/EHsc /nologo /std:c++17"
 elif compiler=="CLANG":
 	cppflags = cppflags_clang
-	cppflags_test = "-std=c++11"
+	cppflags_test = "-std=c++17"
 else:
 	cppflags = cppflags_gcc
-	cppflags_test = "--std=c++11"
+	cppflags_test = "--std=c++17"
 	
 	
 # Test if the compiler exists
@@ -325,11 +325,22 @@ else:
 	sys.stdout.write("No.  Aborting...\n")
 	exit(-4)
 	
-# Test if the compiler supports C++11
+# Test if the compiler supports C++17
 test_cpp11_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
+testprog = """
+#include <cstddef>
+#include <iostream>
+
+int main(int argc, char** argv) 
+{
+    std::byte b{5};
+    std::cout << std::to_integer<int>(b) << std::endl;
+    return 0;
+}
+"""
 with open("xx.cc", "w") as testfile:
-	testfile.write('int ret_auto_0() {auto i=0; return i;}\n')
-sys.stdout.write("Testing C++11 support.....")
+	testfile.write(testprog)
+sys.stdout.write("Testing C++17 support.....")
 rc = run_the_cmd(test_cpp11_cmd)
 cleanup_after_compile()
 if 0==rc:

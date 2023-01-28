@@ -601,6 +601,16 @@ argument sets the total number of digits displayed. The
 argument sets the character used for the decimal point (default is a period), while the 
 .B separator
 argument sets the character used as thousands separator (default is none).
+.IP "pretty(value,flimit,ilimit)" 3
+The
+.B pretty
+function formats the number in 
+.B value
+as a printable string with commas.  The optional 
+.B flimit
+and
+.B ilimit
+parameters determine how many digits the floating-point or integer number should have (to the left of the decimal point) before the function switches to scientific notation. These parameters default to 10 and infinite digits respectively. 
 .IP "pow(x,y)" 3
 The power function returns x to the power of y. Much like arithmetic operations, if either operand is float, the result is a float. If both operands are integers, the result is an integer. Otherwise, if both operands are whole numbers, the result is integer, otherwise it is float.
 .IP "rand(x)" 3
@@ -700,8 +710,19 @@ Returns the range of characters from
 (default first) to 
 .B e 
 (default last) from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
-.IP "wordcount()" 3
-Returns the count of words in the input record.
+.IP "wordcount(s,p)" 3
+Returns the number of words in the string 
+.B s, 
+or in the current record if 
+.B s 
+is not specified. The separator used is
+.B p. 
+If 
+.B p 
+is not specified, the separator is the current word separator if processing the current record, or a 
+.I blank space
+if processing 
+.B s.
 .IP "word(i)" 3
 Returns the i-th word in the input record.
 .IP "wordstart(i)" 3
@@ -720,8 +741,19 @@ word (default first) to the end of the
 word (default last). It is also equivalent to 
 .I range(wordstart(s),wordend(e))
 but less efficient.
-.IP "fieldcount()" 3
-Returns the count of fields in the input record.
+.IP "fieldcount(s,p)" 3
+Returns the number of fields in the string 
+.B s, 
+or in the current record if 
+.B s 
+is not specified. The separator used is
+.B p. 
+If 
+.B p 
+is not specified, the separator is the current field separator if processing the current record, or a 
+.I tab 
+if processing 
+.B s.
 .IP "field(i)" 3
 Returns the i-th field in the input record.
 .IP "fieldstart(i)" 3
@@ -1187,12 +1219,14 @@ occurrences of the
 character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If 
 .I length 
 is 0, all blanks are removed.
-.IP "strip(string,option,char)" 3
+.IP "strip(string,option,pad-chars)" 3
 Returns 
 .I string 
 stripped of leading and/or trailing blanks or any other 
 .I char 
-specified. 
+specified in the 
+.I pad-chars
+argument. 
 .I Option 
 values determine the action:
 .B L
@@ -1608,6 +1642,8 @@ Output statistics on run time, and records read, and on records written to stand
 Makes the program read the input records from a file rather than from standard input.
 .IP "--outFile or -o" 3
 Makes the program write the output records to a file rather than to standard output.
+.IP "--shell or -X" 3
+Executes the output records as shell commands rather than emitting them to standard output.
 .IP "--spaceWS" 3
 Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
 .IP "--debug-alu-comp" 3
@@ -1725,7 +1761,14 @@ allows you to issue a
 command like this:
 .P
     specs /My certificates come from/ 1 @myCA nw 
-    
+.SS "Special configuration labels"
+There is currently just one user-settable configuration label with special meaning:
+.IP "NO_WARN_REDEFINED_FID" 3
+If this is set to any value, then 
+.B specs
+suppresses the warning message if a 
+.I field identifier
+is re-defined within a specification.   
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3

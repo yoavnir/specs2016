@@ -8,6 +8,7 @@
 #include "utils/TimeUtils.h"
 
 #define WRITER_STDERR "::stderr::";
+#define WRITER_SHELL  "::shell::";
 
 class Writer {
 public:
@@ -40,22 +41,13 @@ public:
 	enum writerType {
 		writerType__COUT,
 		writerType__CERR,
+		writerType__SHELL,
 		writerType__FILE
 	};
 	SimpleWriter();
 	SimpleWriter(const std::string& fn);
 	virtual ~SimpleWriter();
 	virtual void WriteOut();
-	std::ostream& getStream() { 
-		switch (m_WriterType) {
-			case writerType__COUT:
-				return std::cout;
-			case writerType__CERR:
-				return std::cerr;
-			default:
-				return *m_File;
-		}
-	}
 private:
 	std::shared_ptr<std::ostream> m_File;
 	writerType m_WriterType;
