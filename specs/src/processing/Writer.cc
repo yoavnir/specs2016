@@ -1,4 +1,4 @@
-#include <stdio.h>  // for fgets
+#include <cstdio>  // for std::tmpnam
 #include <iostream>
 #include <sstream>
 #include <memory>
@@ -62,13 +62,29 @@ SimpleWriter::SimpleWriter() {
 	m_WriterType = writerType__COUT;
 }
 
+#ifdef WIN64
+std::string temporaryBatchFileName_g("");
+
+void generateTemporaryBatchFileName() 
+{
+	MYASSERT(0 == temporaryBatchFileName_g.length());
+	temporaryBatchFileName_g += std::tmpnam(nullptr);
+	temporaryBatchFileName_g += ".bat";
+}
+#endif
+
 SimpleWriter::SimpleWriter(const std::string& fn) {
 	static const std::string _stderr = WRITER_STDERR;
 	static const std::string _shell = WRITER_SHELL;
 	if (fn == _stderr) {
 		m_WriterType = writerType__CERR;
 	} else if (fn == _shell) {
+#ifdef WIN64
+		generateTemporaryBatchFileName();
+		m_File = std::make_shared<std::ofstream>(temporaryBatchFileName_g);
+#else
 		m_File = std::make_shared<std::ostringstream>();
+#endif
 		m_WriterType = writerType__SHELL;
 	} else {
 		auto pOutFile = std::make_shared<std::ofstream>(fn);
@@ -79,7 +95,7 @@ SimpleWriter::SimpleWriter(const std::string& fn) {
 		}
 		m_WriterType = writerType__FILE;
 	}
-}
+}	
 
 SimpleWriter::~SimpleWriter() {
 	switch (m_WriterType) {
@@ -92,9 +108,15 @@ SimpleWriter::~SimpleWriter() {
 	}
 	case writerType__SHELL:
 	{
+#ifdef WIN64
+		std::shared_ptr<std::ofstream> pBatch = std::dynamic_pointer_cast<std::ofstream>(m_File);
+		pBatch->close();
+		pipeType pipe = execCmd(temporaryBatchFileName_g);
+#else		
 		std::shared_ptr<std::ostringstream> pScript = std::dynamic_pointer_cast<std::ostringstream>(m_File);
 		std::string script(pScript->str());
 		pipeType pipe = execCmd(script);
+#endif
 		if (pipe) {
 			auto pRd = std::make_shared<StandardReader>(pipe);
 			PSpecString rec;
@@ -103,6 +125,9 @@ SimpleWriter::~SimpleWriter() {
 			}
 		}
 		break;
+#ifdef WIN64
+		std::remove(temporaryBatchFileName_g.c_str());
+#endif		
 	}
 	default:
 		;

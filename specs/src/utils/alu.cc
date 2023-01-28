@@ -130,7 +130,8 @@ bool ALUValue::isNumeric() const
 		return true;
 	default: try {
 		std::size_t pos;
-		std::stold(m_value, &pos);
+		long double discardedRetValue = std::stold(m_value, &pos);
+		SUPPRESS_UNUSED_WARNING(discardedRetValue);
 		return m_value.length() == pos;
 	} catch (std::out_of_range& e) {
 		return false;

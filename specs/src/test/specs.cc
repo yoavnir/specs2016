@@ -330,10 +330,15 @@ int main (int argc, char** argv)
 				pRd = std::make_shared<StandardReader>(primaryInputPipe());
 			}
 		} else {
-			pRd = std::make_shared<StandardReader>(g_inputFile);
+			try {
+				pRd = std::make_shared<StandardReader>(g_inputFile);
+			} catch (const SpecsException& e) {
+				std::cerr << "Error: Failed to open input file: " << e.what(!g_bVerbose) << "\n";
+				exit(0);
+			}
 			if (nullptr != primaryInputPipe()) {
 				std::cerr << "Error: Both input file and input stream specified.\n";
-				return -4;
+				exit(0);
 			}
 		}
 
@@ -409,7 +414,7 @@ int main (int argc, char** argv)
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 			auto pSW = std::dynamic_pointer_cast<SimpleWriter>(ps.getCurrentWriter());
-			pSW->getStream() << *pstr << '\n';
+			pSW->Write(pstr);
 		} else {
 			ps.resetNoWrite();
 		}

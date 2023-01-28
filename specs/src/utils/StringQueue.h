@@ -10,16 +10,7 @@
 #include "utils/platform.h"
 #include "utils/TimeUtils.h"
 
-// until we have C++17 and std::scoped_lock...
-class scopedLock {
-public:
-	scopedLock(std::mutex* m) {m_lock = new std::unique_lock<std::mutex>(*m);}
-	~scopedLock() {if (m_lock) delete(m_lock);}
-	void unlock() {delete(m_lock); m_lock = nullptr;}
-	std::unique_lock<std::mutex>& ulock() {return *m_lock;}
-private:
-	std::unique_lock<std::mutex> *m_lock;
-};
+typedef std::unique_lock<std::mutex> uniqueLock;
 
 template <class T> class MTQueue
 {
@@ -35,9 +26,9 @@ public:
     void push(T const& data)
     {
     	MYASSERT(data!=nullptr);
-        scopedLock lock(&m_Mutex);
+        uniqueLock lock(m_Mutex);
         while (m_Queue.size()>=QUEUE_HIGH_WM) {
-        	cv_QueueFull.wait(lock.ulock());
+        	cv_QueueFull.wait(lock);
         }
         m_Queue.push(data);
         m_timer.increment();
@@ -47,16 +38,16 @@ public:
 
     bool empty() const
     {
-        scopedLock lock(&m_Mutex);
+        uniqueLock lock(m_Mutex);
         return m_Queue.empty();
     }
 
     bool wait_and_pop(T& popped_value)
     {
-        scopedLock lock(&m_Mutex);
+        uniqueLock lock(m_Mutex);
         while(m_Queue.empty() && false==m_Done)
         {
-            cv_QueueEmpty.wait_for(lock.ulock(), std::chrono::milliseconds(2000));
+            cv_QueueEmpty.wait_for(lock, std::chrono::milliseconds(2000));
         }
 
         if (m_Done && m_Queue.empty()) return false;
