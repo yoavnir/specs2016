@@ -414,7 +414,7 @@ int main (int argc, char** argv)
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 			auto pSW = std::dynamic_pointer_cast<SimpleWriter>(ps.getCurrentWriter());
-			pSW->Write(pstr);
+			pSW->Write(pstr,timer);
 		} else {
 			ps.resetNoWrite();
 		}
@@ -461,16 +461,18 @@ int main (int argc, char** argv)
 				std::setfill('0') << std::setw(6) <<
 				u_int64_t((duration-std::floor(duration)+0.5) * 1000000) << " seconds.\n";
 		timer.dump("Main Thread");
-		if (pRd) {
-			pRd->dumpTimeData();
-			pRd = nullptr;
-		}
-		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
-			if (pWrtrs[i]) {
-				if (1 == i) {
-					pWrtrs[i]->dumpTimeData();
+		if (!g_bUnthreaded) {
+			if (pRd) {
+				pRd->dumpTimeData();
+				pRd = nullptr;
+			}
+			for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
+				if (pWrtrs[i]) {
+					if (1 == i) {
+						pWrtrs[i]->dumpTimeData();
+					}
+					pWrtrs[i] = nullptr;
 				}
-				pWrtrs[i] = nullptr;
 			}
 		}
 

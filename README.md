@@ -10,6 +10,10 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+01-Apr-2023: Version 0.9.2 beta is here
+What's New:
+* An unthreaded mode of operation
+
 29-JAN-2023: Version 0.9.1 is here
 What's New:
 * Allow execution of the output with the `--shell` or `-X` command line parameters
@@ -18,14 +22,6 @@ What's New:
 * Compiler alignment
 * Bug fixes
 
-
-15-Aug-2022: Version 0.9 is here
-
-What's New:
-* Allow elision of `then` clause in final if to include entire record
-* Allow specifying a source command with the `--inCmd` or `-C` command line parameter
-* New functions: `splus`, `wplus`, `fplus`.
-* Some under-the-hood improvements
 
 Sources
 =======

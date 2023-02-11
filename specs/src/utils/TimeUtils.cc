@@ -155,7 +155,7 @@ classifyingTimer::classifyingTimer()
 
 void classifyingTimer::changeClass(timeClasses _class)
 {
-	if (_class == m_currentClass) return;
+	if (_class == m_currentClass) return;  
 	MYASSERT(m_currentClass != timeClassLast);
 	auto now = HClock::now();
 	uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now-m_lastTimePoint).count();

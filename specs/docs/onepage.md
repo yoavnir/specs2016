@@ -19,6 +19,7 @@ Switches
 * --specFile or -f -- reads the specification from a file rather than the command line.
 * --verbose or -v -- outputs more information when something goes wrong.
 * --stats -- output statistics on run time, and records read, and on records written. 
+* `--unthreaded` or `-u` -- run **specs** in a single thread. The default is to have separate threads for processing, readers, and writers.
 * --inFile or -i -- get the input records from a file rather than standard input.
 * --outFile or -o -- write the output records to a file rather than standard output.
 * --shell or -X -- executes the output records as shell commands rather than emitting them to standard output. 

@@ -14,7 +14,7 @@ class Writer {
 public:
 	Writer();
 	virtual ~Writer();
-	virtual void Write(PSpecString ps);
+	virtual void Write(PSpecString ps, classifyingTimer& tmr);
 	virtual void Begin();
 	virtual void WriteOut() = 0;
 	void         End();
@@ -26,6 +26,7 @@ public:
 	void                endCollectingTimeData() { m_Timer.changeClass(timeClassLast); }
 	void                dumpTimeData()  { m_Timer.dump("Writer Thread"); m_queue.DumpStats("Writer Queue");}
 protected:
+	virtual void WriteOutDo(PSpecString, classifyingTimer& tmr);
 	unsigned long m_countGenerated;
 	unsigned long m_countWritten;
 	bool  m_ended;
@@ -49,6 +50,7 @@ public:
 	virtual ~SimpleWriter();
 	virtual void WriteOut();
 private:
+	virtual void WriteOutDo(PSpecString ps, classifyingTimer& tmr);
 	std::shared_ptr<std::ostream> m_File;
 	writerType m_WriterType;
 };

@@ -5,6 +5,7 @@
 #include "utils/ErrorReporting.h"
 #include "Reader.h"
 #include "utils/directives.h"
+#include "Config.h"
 #include "Writer.h"
 
 void WriteAllRecords(Writer *pw)
@@ -32,15 +33,28 @@ Writer::~Writer()
 	mp_thread = nullptr;
 }
 
-void Writer::Write(PSpecString ps)
+void Writer::WriteOutDo(PSpecString ps, classifyingTimer& tmr)
 {
-	m_queue.push(ps);
+	static const bool this_never_runs(false);
+	MYASSERT(this_never_runs);
+}
+
+void Writer::Write(PSpecString ps, classifyingTimer& tmr)
+{
+	if (g_bUnthreaded) {
+		WriteOutDo(ps,tmr);
+	} else {
+		tmr.changeClass(timeClassOutputQueue);
+		m_queue.push(ps);
+		tmr.changeClass(timeClassProcessing);
+	}
 	m_countGenerated++;
 }
 
 void Writer::Begin()
 {
-	mp_thread = std::unique_ptr<std::thread>(new std::thread(WriteAllRecords, this));
+	if (!g_bUnthreaded)
+		mp_thread = std::unique_ptr<std::thread>(new std::thread(WriteAllRecords, this));
 }
 
 void Writer::End()
@@ -134,6 +148,23 @@ SimpleWriter::~SimpleWriter() {
 	}
 }
 
+void SimpleWriter::WriteOutDo(PSpecString ps, classifyingTimer& tmr)
+{
+	tmr.changeClass(timeClassIO);
+	switch (m_WriterType) {
+		case writerType__COUT:
+			std::cout << *ps << '\n';
+			break;
+		case writerType__CERR:
+			std::cerr << *ps << '\n';
+			break;
+		case writerType__SHELL:
+		case writerType__FILE:
+			*m_File << *ps << '\n';
+	}
+	tmr.changeClass(timeClassProcessing);
+	m_countWritten++;
+}
 void SimpleWriter::WriteOut()
 {
 	PSpecString ps = nullptr;
@@ -141,20 +172,7 @@ void SimpleWriter::WriteOut()
 	m_Timer.changeClass(timeClassInputQueue);
 	bool res = m_queue.wait_and_pop(ps);
 	if (res) {
-		m_Timer.changeClass(timeClassIO);
-		switch (m_WriterType) {
-			case writerType__COUT:
-				std::cout << *ps << '\n';
-				break;
-			case writerType__CERR:
-				std::cerr << *ps << '\n';
-				break;
-			case writerType__SHELL:
-			case writerType__FILE:
-				*m_File << *ps << '\n';
-		}
-		m_Timer.changeClass(timeClassProcessing);
-		m_countWritten++;
+		WriteOutDo(ps, m_Timer);
 	} else {
 		m_Timer.changeClass(timeClassProcessing);
 	}

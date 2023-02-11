@@ -445,9 +445,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__Write:
 			if (pState.shouldWrite() && !pState.printSuppressed(g_printonly_rule)) {
 				if (bSomethingWasDone) {
-					pState.getCurrentWriter()->Write(sb.GetString());
+					pState.getCurrentWriter()->Write(sb.GetString(), tmr);
 				} else {
-					pState.getCurrentWriter()->Write(std::make_shared<std::string>());
+					pState.getCurrentWriter()->Write(std::make_shared<std::string>(), tmr);
 				}
 			}
 			bSomethingWasDone = false;
@@ -525,9 +525,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 			} else {
 				PSpecString pOutString = sb.GetString();
 				if (!bPrintSuppressed && pState.shouldWrite()) {
-					tmr.changeClass(timeClassOutputQueue);
-					pState.getCurrentWriter()->Write(pOutString);
-					tmr.changeClass(timeClassProcessing);
+					pState.getCurrentWriter()->Write(pOutString, tmr);
 				} else {
 					pState.resetNoWrite();
 				}
@@ -552,7 +550,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	pState.setString(nullptr);
 	pState.setFirst();
 	if (processDo(sb, pState, &rd, tmr, readerCounter)) {
-		pState.getCurrentWriter()->Write(sb.GetString());
+		pState.getCurrentWriter()->Write(sb.GetString(), tmr);
 	}
 
 	tmr.changeClass(timeClassDraining);

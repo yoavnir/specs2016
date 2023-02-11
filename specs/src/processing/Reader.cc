@@ -1,6 +1,7 @@
 #include <string.h>
 #include <fstream>
 #include "utils/ErrorReporting.h"
+#include "Config.h"
 #include "Reader.h"
 
 void ReadAllRecordsIntoReaderQueue(Reader* r)
@@ -54,6 +55,13 @@ PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 		m_bRanDry = true;
 		return nullptr;
 	}
+	if (g_bUnthreaded) {
+		tmr.changeClass(timeClassIO);
+		ret = getNextRecord();
+		tmr.changeClass(timeClassProcessing);
+		if (!ret) _readerCounter--;
+		return ret;
+	}
 	tmr.changeClass(timeClassInputQueue);
 	bool res = m_queue.wait_and_pop(ret);
 	tmr.changeClass(timeClassProcessing);
@@ -90,7 +98,8 @@ void Reader::readIntoQueue()
 }
 
 void Reader::Begin() {
-	mp_thread = std::unique_ptr<std::thread>(new std::thread(ReadAllRecordsIntoReaderQueue, this));
+	if (!g_bUnthreaded)
+		mp_thread = std::unique_ptr<std::thread>(new std::thread(ReadAllRecordsIntoReaderQueue, this));
 }
 
 
