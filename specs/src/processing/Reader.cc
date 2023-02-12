@@ -60,6 +60,10 @@ PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 		ret = getNextRecord();
 		tmr.changeClass(timeClassProcessing);
 		if (!ret) _readerCounter--;
+		else {
+			m_countRead++;
+			m_countUsed++;
+		}
 		return ret;
 	}
 	tmr.changeClass(timeClassInputQueue);
