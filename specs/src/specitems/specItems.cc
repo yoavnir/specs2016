@@ -141,6 +141,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				tokenVec.insert(tokenVec.end(), Token(TokenListType__RANGE,
 						GetUniversalRange(), "", index+3, "1-*"));
 			}
+			/* intentional fall-through */
 		}
 		case TokenListType__ELSEIF:
 		case TokenListType__WHILE:

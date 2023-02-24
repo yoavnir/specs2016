@@ -164,7 +164,8 @@ std::string Token::Debug(int digits)
 
 std::string& Token::HelpIdentify()
 {
-	static std::string ret = "Token " + TokenListType__2str(m_type) + " at index " +
+	static std::string ret;
+	ret = "Token " + TokenListType__2str(m_type) + " at index " +
 			std::to_string(m_argc) + " with content <" + ((m_literal.empty()) ? m_orig : m_literal) + ">";
 	return ret;
 }
@@ -614,10 +615,12 @@ std::string getLiteral(Token& tok)
 void normalizeTokenList(std::vector<Token> *tokList)
 {
 	if (tokList->size()==0) return;
+	bool bMayAccumulateConditions;
 
 	for (size_t i=0; i<tokList->size()-1; i++) {
 		Token& tok = tokList->at(i);
 		Token& nextTok = tokList->at(i+1);
+		bMayAccumulateConditions = false;
 		switch (tok.Type()) {
 		case TokenListType__WORDRANGE:
 		case TokenListType__FIELDRANGE:
@@ -687,11 +690,13 @@ void normalizeTokenList(std::vector<Token> *tokList)
 			}
 			break;
 		}
-		case TokenListType__SET:
-		case TokenListType__PRINT:
 		case TokenListType__IF:
 		case TokenListType__ELSEIF:
 		case TokenListType__WHILE:
+			bMayAccumulateConditions = true;
+			/* intentional fall-through */
+		case TokenListType__SET:
+		case TokenListType__PRINT:
 		case TokenListType__ASSERT:
 		case TokenListType__ABEND:
 		case TokenListType__SKIPUNTIL:
@@ -709,8 +714,15 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					tokList->erase(tokList->begin()+(i+1));
 					tok.setLiteral(expression);
 				} else {
-					tok.setLiteral(getLiteral(nextTok));
-					tokList->erase(tokList->begin()+(i+1));
+					do {
+						if (!tok.Literal().empty())
+							tok.appendLiteral(' ');
+						tok.appendLiteral(getLiteral(nextTok));
+						tokList->erase(tokList->begin()+(i+1));
+						if (i+1 < tokList->size()) {
+							nextTok = tokList->at(i+1);
+						} 
+					} while (bMayAccumulateConditions && (i+1 < tokList->size()) && (TokenListType__LITERAL == nextTok.Type()));
 				}
 			}
 			break;
