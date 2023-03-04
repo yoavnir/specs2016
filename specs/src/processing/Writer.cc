@@ -72,10 +72,6 @@ bool Writer::Done()
 	return m_ended && m_queue.empty();
 }
 
-SimpleWriter::SimpleWriter() {
-	m_WriterType = writerType__COUT;
-}
-
 #ifdef WIN64
 std::string temporaryBatchFileName_g("");
 
@@ -87,28 +83,37 @@ void generateTemporaryBatchFileName()
 }
 #endif
 
-SimpleWriter::SimpleWriter(const std::string& fn) {
-	static const std::string _stderr = WRITER_STDERR;
-	static const std::string _shell = WRITER_SHELL;
-	if (fn == _stderr) {
-		m_WriterType = writerType__CERR;
-	} else if (fn == _shell) {
+SimpleWriter::SimpleWriter(writerType typ) {
+	switch (typ) {
+		case writerType__COUT:
+		case writerType__CERR:
+			m_WriterType = typ;
+			break;
+		case writerType__SHELL:
 #ifdef WIN64
-		generateTemporaryBatchFileName();
-		m_File = std::make_shared<std::ofstream>(temporaryBatchFileName_g);
+			generateTemporaryBatchFileName();
+			m_File = std::make_shared<std::ofstream>(temporaryBatchFileName_g);
 #else
-		m_File = std::make_shared<std::ostringstream>();
+			m_File = std::make_shared<std::ostringstream>();
 #endif
-		m_WriterType = writerType__SHELL;
-	} else {
-		auto pOutFile = std::make_shared<std::ofstream>(fn);
-		m_File = pOutFile;
-		if (!pOutFile->is_open()) {
-			std::string err = "Could not open output file " + fn;
+			m_WriterType = writerType__SHELL;
+			break;
+		case writerType__FILE:
+		{
+			std::string err("Filename must be specified for writer type FILE");
 			MYTHROW(err);
 		}
-		m_WriterType = writerType__FILE;
 	}
+}
+
+SimpleWriter::SimpleWriter(const std::string& fn) {
+	auto pOutFile = std::make_shared<std::ofstream>(fn);
+	m_File = pOutFile;
+	if (!pOutFile->is_open()) {
+		std::string err = "Could not open output file " + fn;
+		MYTHROW(err);
+	}
+	m_WriterType = writerType__FILE;
 }	
 
 SimpleWriter::~SimpleWriter() {

@@ -7,9 +7,6 @@
 #include "utils/StringQueue.h"
 #include "utils/TimeUtils.h"
 
-#define WRITER_STDERR "::stderr::";
-#define WRITER_SHELL  "::shell::";
-
 class Writer {
 public:
 	Writer();
@@ -45,7 +42,7 @@ public:
 		writerType__SHELL,
 		writerType__FILE
 	};
-	SimpleWriter();
+	SimpleWriter(writerType typ);
 	SimpleWriter(const std::string& fn);
 	virtual ~SimpleWriter();
 	virtual void WriteOut();

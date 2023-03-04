@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 	StringBuilder sb;
 	unsigned int readerCount = 1;
 	PReader pRead = std::make_shared<StandardReader>();
-	PWriter pWrite = std::make_shared<SimpleWriter>();
+	PWriter pWrite = std::make_shared<SimpleWriter>(SimpleWriter::writerType__COUT);
 
 	pRead->Begin();
 	pWrite->Begin();
