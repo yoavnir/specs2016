@@ -164,8 +164,6 @@ CONTINUE:
 int main (int argc, char** argv)
 {
 	classifyingTimer timer;
-	static const std::string _stderr = WRITER_STDERR;
-	static const std::string _shell = WRITER_SHELL;
 	bool conciseExceptions = true;
 
 	if (argc==1) { // Called without parameters
@@ -290,14 +288,14 @@ int main (int argc, char** argv)
 		exit(0);
 	}
 	if (g_bShellCmd) {
-		pWrtrs[1] = std::make_shared<SimpleWriter>(_shell);
+		pWrtrs[1] = std::make_shared<SimpleWriter>(SimpleWriter::writerType__SHELL);
 	} else if (!g_outputFile.empty()) {
 		pWrtrs[1] = std::make_shared<SimpleWriter>(g_outputFile);
 	} else {
-		pWrtrs[1] = std::make_shared<SimpleWriter>();
+		pWrtrs[1] = std::make_shared<SimpleWriter>(SimpleWriter::writerType__COUT);
 	} 
 
-	pWrtrs[0] = std::make_shared<SimpleWriter>(_stderr);
+	pWrtrs[0] = std::make_shared<SimpleWriter>(SimpleWriter::writerType__CERR);
 
 	if (g_outputStream2 != "") pWrtrs[2] = std::make_shared<SimpleWriter>(g_outputStream2);
 	if (g_outputStream3 != "") pWrtrs[3] = std::make_shared<SimpleWriter>(g_outputStream3);
