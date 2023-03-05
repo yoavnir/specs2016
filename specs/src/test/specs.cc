@@ -398,12 +398,10 @@ int main (int argc, char** argv)
 			pRd->endCollectingTimeData();
 		}
 	} else {
-		TestReader tRead(5);
-
 		try {
 			unsigned int readerCount = 0;
 			ig.setRegularRunAtEOF();
-			ig.processDo(sb, ps, &tRead, timer, readerCount);
+			ig.processDo(sb, ps, nullptr, timer, readerCount);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
