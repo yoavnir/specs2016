@@ -137,12 +137,15 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.setString(pFirstLine);
 				ps.setFirst();
 				ps.incrementCycleCounter();
-				ig.processDo(sb, ps, &tRead, tmr, readerCounter);
+				bool bSomethingWasDone = ig.processDo(sb, ps, &tRead, tmr, readerCounter);
 				if (ps.printSuppressed(g_printonly_rule) && g_keep_suppressed_record) {
 					continue;
 				}
 				PSpecString pWritten = pwr1->getString();
 				PSpecString pOut = sb.GetStringUnsafe();
+				if (!pOut && bSomethingWasDone) {
+					pOut = std::make_shared<std::string>();
+				}
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 					if (pWritten) {
 						if (result) *result += *pWritten;
@@ -659,6 +662,10 @@ int main(int argc, char** argv)
 
 	spec = "w1 a: SKIP-UNTIL a%2=1 & a<6 ID a 1";
 	VERIFY2(spec, "8\n7\n6\n5\n4", "Bad output placement Token LITERAL at index 6 with content <a<6>");  // TEST #165
+
+	// Issue 224
+	spec = "3-* 1 REDO IF \"word(1)=='add'\"";
+	VERIFY2(spec, "hello there\ngladd\ngood-bye", "add");     // TEST #166
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

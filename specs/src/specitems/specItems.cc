@@ -456,6 +456,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__ReDo:
 			if (bSomethingWasDone) {
 				ps = sb.GetString();
+				bSomethingWasDone = false;
 			} else {
 				ps = std::make_shared<std::string>();
 			}
