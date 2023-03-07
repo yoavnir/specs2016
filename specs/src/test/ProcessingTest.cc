@@ -667,6 +667,12 @@ int main(int argc, char** argv)
 	spec = "3-* 1 REDO IF \"word(1)=='add'\"";
 	VERIFY2(spec, "hello there\ngladd\ngood-bye", "add");     // TEST #166
 
+	// Issue 227
+	spec = "FIELDSEP _ SUBSTRING FIELD 3 of WORD 1";
+	VERIFY2(spec, "a_b_c_d_e", "c");   // TEST #167
+	spec = "WORDSEP _ SUBSTRING WORD 3 of FIELD 1";
+	VERIFY2(spec, "a_b_c_d_e", "c");   // TEST #168
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {
