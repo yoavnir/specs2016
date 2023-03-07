@@ -13,6 +13,8 @@ News
 01-Apr-2023: Version 0.9.2 beta is here
 What's New:
 * An unthreaded mode of operation
+* Bug fixes
+* Reduced necessity of quoting complex conditions for `if` and `while`
 
 29-JAN-2023: Version 0.9.1 is here
 What's New:
@@ -33,10 +35,8 @@ Building
 ========
 If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9:
 ```
-git checkout v0.9
+git checkout v0.9.2
 ```
-You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
-
 A simple way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
 git checkout stable
@@ -54,9 +54,7 @@ After that, _cd_ to the specs/src directory, and run the following three command
 
 Known Issues
 ============
-* On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier some Python unit tests fail. Also, importing Python native functions doesn't work.
 * Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
-* On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier `rsearch` does not work reliably.
 * On Windows with Python support the appropriate dll (like `python38.dll`) must be in the path.
 
 Contributing
