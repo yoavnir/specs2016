@@ -673,6 +673,19 @@ int main(int argc, char** argv)
 	spec = "WORDSEP _ SUBSTRING WORD 3 of FIELD 1";
 	VERIFY2(spec, "a_b_c_d_e", "c");   // TEST #168
 
+	// Compound set - Issue 223
+	spec = "SET '(#0:=word(1))' print #0";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n2\n3\n4"); // TEST #169
+
+	spec = "SET '(#0:=word(1);#1+=#0)' print #1";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n3\n6\n10"); // TEST #170
+
+	spec = "SET #0:=word(1);#1+=#0 print #1";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n3\n6\n10"); // TEST #171
+
+	spec = "SET '#0:=word(1);#1+=#0' print #1";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n3\n6\n10"); // TEST #172
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {

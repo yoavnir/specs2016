@@ -54,6 +54,68 @@ void itemGroup::addItemBeforeEof(PItem pItem, size_t start)
 
 unsigned int g_currentTokenArgIndex = 0;
 
+bool CheckValiditySetStatement(std::string& setSpec)
+{
+	ALUCounterKey k;
+	AluAssnOperator assOp;
+	AluVec aVec, rpnVec;
+
+	if (false==parseAluStatement(setSpec, k, &assOp, aVec)) {
+		return false;
+	}
+
+	return convertAluVecToPostfix(aVec, rpnVec, true);
+}
+
+static void Strip(std::string& s)
+{
+	while (std::isspace(s[0])) {
+		s.erase(0,1);
+	}
+	while (std::isspace(s.back())) {
+		s.erase(s.size()-1);
+	}
+}
+
+std::vector<std::string> SplitSetSpecification(std::string setSpec)
+{
+	while (setSpec[0]=='(' && setSpec[setSpec.size()-1]==')') {
+		setSpec.erase(setSpec.size()-1);
+		setSpec.erase(0,1);
+	}
+	std::vector<std::string> ret;
+	std::string oneItem;
+	auto pos = setSpec.find(";");
+	while (pos != std::string::npos) {
+		oneItem += setSpec.substr(0,pos);
+		MYASSERT(oneItem.size()>0);
+		bool bIsValid;
+		try {
+			bIsValid = CheckValiditySetStatement(oneItem);
+		}
+		catch(const SpecsException& e) {
+			bIsValid = false;
+		}
+		if (bIsValid) {
+			Strip(oneItem);
+			ret.push_back(oneItem);
+			setSpec.erase(0,pos+1);
+			pos = setSpec.find(";");
+			oneItem.clear();
+		} else {
+			setSpec.erase(0,pos+1);
+			oneItem += ';';
+			pos = setSpec.find(";");
+		}
+	}
+	if (!oneItem.empty()) {
+		setSpec = oneItem+setSpec;
+	}
+	Strip(setSpec);
+	ret.push_back(setSpec);
+	return ret;
+}
+
 void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	predicateStackItem predicateStack[MAX_DEPTH_CONDITION_STATEMENTS];
@@ -106,9 +168,12 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			MYASSERT(index < tokenVec.size());
 			try {
-				auto pItem = std::make_shared<SetItem>(tokenVec[index].Literal());
+				std::vector<std::string> vec = SplitSetSpecification(tokenVec[index].Literal());
+				for (auto& s : vec) {
+					auto pItem = std::make_shared<SetItem>(s);
+					addItem(pItem);
+				}
 				index++;
-				addItem(pItem);
 			} catch(const SpecsException& e) {
 				if (g_bVerbose) {
 					std::cerr << "While parsing statement, got: " << e.what(true) << "\n";
