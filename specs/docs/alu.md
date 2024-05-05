@@ -43,6 +43,11 @@ specs  a: word 1 1  "items. Total is" nextword  SET "#0+=a"  PRINT "#0" nextword
 | 7 | 7 items. Total is 12 |
 | 3 | 3 items. Total is 15 |
 
+`SET` statements can also be compound. For example:
+```
+specs a: word 1 SET "#0+=1 ; #1+=a" "Count=" 1 print #0" NEXT "Sum=" NEXTWORD print #1 NEXT
+```
+
 All counters are initialized to the value zero (0) before they are first set.
 
 ### Configured Literals
