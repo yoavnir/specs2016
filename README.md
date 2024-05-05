@@ -10,11 +10,12 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-01-Apr-2023: Version 0.9.2 beta is here
+10-May-2024: Version 0.9.2 is here
 What's New:
 * An unthreaded mode of operation
-* Bug fixes
+* Compound `SET` statements
 * Reduced necessity of quoting complex conditions for `if` and `while`
+* Bug fixes
 
 29-JAN-2023: Version 0.9.1 is here
 What's New:
