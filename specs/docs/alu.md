@@ -109,9 +109,12 @@ The configured literal `NO_WARN_REDEFINED_FID` suppresses if set to any value, t
 
 There are also pre-defined values that behave like a configured literals. One is `@version`. It returns the current version of specs. Try it:
 ```
-specs @version 1
+specs @version 
 ```
-
+Another is `@platform` it can return something like this:
+```
+POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
+```
 Others are `@cols`, which contains the number of columns in the terminal screen, and `@rows`, which contains the number of rows on that same screen.
 
 Additionally, the `@@` string stands for the entire input record.

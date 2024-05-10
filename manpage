@@ -1800,7 +1800,10 @@ contains either
 or
 .B Disabled
 depending on whether support for python function is available.
-
+.IP "platform" 3
+contains a string describing this build. For example:
+.p
+    POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
     
 .SH EXAMPLES
 `ls -l` yields this:
