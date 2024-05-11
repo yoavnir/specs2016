@@ -164,8 +164,6 @@ CONTINUE:
 int main (int argc, char** argv)
 {
 	classifyingTimer timer;
-	static const std::string _stderr = WRITER_STDERR;
-	static const std::string _shell = WRITER_SHELL;
 	bool conciseExceptions = true;
 
 	if (argc==1) { // Called without parameters
@@ -290,14 +288,14 @@ int main (int argc, char** argv)
 		exit(0);
 	}
 	if (g_bShellCmd) {
-		pWrtrs[1] = std::make_shared<SimpleWriter>(_shell);
+		pWrtrs[1] = std::make_shared<SimpleWriter>(SimpleWriter::writerType__SHELL);
 	} else if (!g_outputFile.empty()) {
 		pWrtrs[1] = std::make_shared<SimpleWriter>(g_outputFile);
 	} else {
-		pWrtrs[1] = std::make_shared<SimpleWriter>();
+		pWrtrs[1] = std::make_shared<SimpleWriter>(SimpleWriter::writerType__COUT);
 	} 
 
-	pWrtrs[0] = std::make_shared<SimpleWriter>(_stderr);
+	pWrtrs[0] = std::make_shared<SimpleWriter>(SimpleWriter::writerType__CERR);
 
 	if (g_outputStream2 != "") pWrtrs[2] = std::make_shared<SimpleWriter>(g_outputStream2);
 	if (g_outputStream3 != "") pWrtrs[3] = std::make_shared<SimpleWriter>(g_outputStream3);
@@ -400,12 +398,10 @@ int main (int argc, char** argv)
 			pRd->endCollectingTimeData();
 		}
 	} else {
-		TestReader tRead(5);
-
 		try {
 			unsigned int readerCount = 0;
 			ig.setRegularRunAtEOF();
-			ig.processDo(sb, ps, &tRead, timer, readerCount);
+			ig.processDo(sb, ps, nullptr, timer, readerCount);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
@@ -414,7 +410,7 @@ int main (int argc, char** argv)
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 			auto pSW = std::dynamic_pointer_cast<SimpleWriter>(ps.getCurrentWriter());
-			pSW->Write(pstr);
+			pSW->Write(pstr,timer);
 		} else {
 			ps.resetNoWrite();
 		}
@@ -461,16 +457,18 @@ int main (int argc, char** argv)
 				std::setfill('0') << std::setw(6) <<
 				u_int64_t((duration-std::floor(duration)+0.5) * 1000000) << " seconds.\n";
 		timer.dump("Main Thread");
-		if (pRd) {
-			pRd->dumpTimeData();
-			pRd = nullptr;
-		}
-		for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
-			if (pWrtrs[i]) {
-				if (1 == i) {
-					pWrtrs[i]->dumpTimeData();
+		if (!g_bUnthreaded) {
+			if (pRd) {
+				pRd->dumpTimeData();
+				pRd = nullptr;
+			}
+			for (int i=0; i<=MAX_INPUT_STREAMS; i++) {
+				if (pWrtrs[i]) {
+					if (1 == i) {
+						pWrtrs[i]->dumpTimeData();
+					}
+					pWrtrs[i] = nullptr;
 				}
-				pWrtrs[i] = nullptr;
 			}
 		}
 

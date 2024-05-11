@@ -54,6 +54,68 @@ void itemGroup::addItemBeforeEof(PItem pItem, size_t start)
 
 unsigned int g_currentTokenArgIndex = 0;
 
+bool CheckValiditySetStatement(std::string& setSpec)
+{
+	ALUCounterKey k;
+	AluAssnOperator assOp;
+	AluVec aVec, rpnVec;
+
+	if (false==parseAluStatement(setSpec, k, &assOp, aVec)) {
+		return false;
+	}
+
+	return convertAluVecToPostfix(aVec, rpnVec, true);
+}
+
+static void Strip(std::string& s)
+{
+	while (std::isspace(s[0])) {
+		s.erase(0,1);
+	}
+	while (std::isspace(s.back())) {
+		s.erase(s.size()-1);
+	}
+}
+
+std::vector<std::string> SplitSetSpecification(std::string setSpec)
+{
+	while (setSpec[0]=='(' && setSpec[setSpec.size()-1]==')') {
+		setSpec.erase(setSpec.size()-1);
+		setSpec.erase(0,1);
+	}
+	std::vector<std::string> ret;
+	std::string oneItem;
+	auto pos = setSpec.find(";");
+	while (pos != std::string::npos) {
+		oneItem += setSpec.substr(0,pos);
+		MYASSERT(oneItem.size()>0);
+		bool bIsValid;
+		try {
+			bIsValid = CheckValiditySetStatement(oneItem);
+		}
+		catch(const SpecsException& e) {
+			bIsValid = false;
+		}
+		if (bIsValid) {
+			Strip(oneItem);
+			ret.push_back(oneItem);
+			setSpec.erase(0,pos+1);
+			pos = setSpec.find(";");
+			oneItem.clear();
+		} else {
+			setSpec.erase(0,pos+1);
+			oneItem += ';';
+			pos = setSpec.find(";");
+		}
+	}
+	if (!oneItem.empty()) {
+		setSpec = oneItem+setSpec;
+	}
+	Strip(setSpec);
+	ret.push_back(setSpec);
+	return ret;
+}
+
 void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	predicateStackItem predicateStack[MAX_DEPTH_CONDITION_STATEMENTS];
@@ -106,9 +168,12 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			MYASSERT(index < tokenVec.size());
 			try {
-				auto pItem = std::make_shared<SetItem>(tokenVec[index].Literal());
+				std::vector<std::string> vec = SplitSetSpecification(tokenVec[index].Literal());
+				for (auto& s : vec) {
+					auto pItem = std::make_shared<SetItem>(s);
+					addItem(pItem);
+				}
 				index++;
-				addItem(pItem);
 			} catch(const SpecsException& e) {
 				if (g_bVerbose) {
 					std::cerr << "While parsing statement, got: " << e.what(true) << "\n";
@@ -141,6 +206,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				tokenVec.insert(tokenVec.end(), Token(TokenListType__RANGE,
 						GetUniversalRange(), "", index+3, "1-*"));
 			}
+			/* intentional fall-through */
 		}
 		case TokenListType__ELSEIF:
 		case TokenListType__WHILE:
@@ -445,9 +511,9 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__Write:
 			if (pState.shouldWrite() && !pState.printSuppressed(g_printonly_rule)) {
 				if (bSomethingWasDone) {
-					pState.getCurrentWriter()->Write(sb.GetString());
+					pState.getCurrentWriter()->Write(sb.GetString(), tmr);
 				} else {
-					pState.getCurrentWriter()->Write(std::make_shared<std::string>());
+					pState.getCurrentWriter()->Write(std::make_shared<std::string>(), tmr);
 				}
 			}
 			bSomethingWasDone = false;
@@ -455,6 +521,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__ReDo:
 			if (bSomethingWasDone) {
 				ps = sb.GetString();
+				bSomethingWasDone = false;
 			} else {
 				ps = std::make_shared<std::string>();
 			}
@@ -525,9 +592,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 			} else {
 				PSpecString pOutString = sb.GetString();
 				if (!bPrintSuppressed && pState.shouldWrite()) {
-					tmr.changeClass(timeClassOutputQueue);
-					pState.getCurrentWriter()->Write(pOutString);
-					tmr.changeClass(timeClassProcessing);
+					pState.getCurrentWriter()->Write(pOutString, tmr);
 				} else {
 					pState.resetNoWrite();
 				}
@@ -552,7 +617,7 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 	pState.setString(nullptr);
 	pState.setFirst();
 	if (processDo(sb, pState, &rd, tmr, readerCounter)) {
-		pState.getCurrentWriter()->Write(sb.GetString());
+		pState.getCurrentWriter()->Write(sb.GetString(), tmr);
 	}
 
 	tmr.changeClass(timeClassDraining);

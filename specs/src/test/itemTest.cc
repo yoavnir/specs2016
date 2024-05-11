@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 		pRd->InsertString(PSpecString(&Jabberwocky[i]));
 	}
 
-	pWr = std::make_shared<SimpleWriter>();
+	pWr = std::make_shared<SimpleWriter>(SimpleWriter::writerType__COUT);
 
 	pRd->Begin();
 	pWr->Begin();

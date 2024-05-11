@@ -43,6 +43,11 @@ specs  a: word 1 1  "items. Total is" nextword  SET "#0+=a"  PRINT "#0" nextword
 | 7 | 7 items. Total is 12 |
 | 3 | 3 items. Total is 15 |
 
+`SET` statements can also be compound. For example:
+```
+specs a: word 1 SET "#0+=1 ; #1+=a" "Count=" 1 print #0" NEXT "Sum=" NEXTWORD print #1 NEXT
+```
+
 All counters are initialized to the value zero (0) before they are first set.
 
 ### Configured Literals
@@ -104,9 +109,12 @@ The configured literal `NO_WARN_REDEFINED_FID` suppresses if set to any value, t
 
 There are also pre-defined values that behave like a configured literals. One is `@version`. It returns the current version of specs. Try it:
 ```
-specs @version 1
+specs @version 
 ```
-
+Another is `@platform` it can return something like this:
+```
+POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
+```
 Others are `@cols`, which contains the number of columns in the terminal screen, and `@rows`, which contains the number of rows on that same screen.
 
 Additionally, the `@@` string stands for the entire input record.

@@ -501,7 +501,13 @@ if CFG_advanced_regex:
 	
 if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
-	
+
+if full_python_version!="N/A":
+	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx,full_python_version,variation.lower())
+else:
+	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx,variation.lower())
+condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatform)
+
 if CFG_python:
 	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
 	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)

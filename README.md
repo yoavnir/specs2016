@@ -10,6 +10,13 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+10-May-2024: Version 0.9.2 is here
+What's New:
+* An unthreaded mode of operation
+* Compound `SET` statements
+* Reduced necessity of quoting complex conditions for `if` and `while`
+* Bug fixes
+
 29-JAN-2023: Version 0.9.1 is here
 What's New:
 * Allow execution of the output with the `--shell` or `-X` command line parameters
@@ -18,14 +25,6 @@ What's New:
 * Compiler alignment
 * Bug fixes
 
-
-15-Aug-2022: Version 0.9 is here
-
-What's New:
-* Allow elision of `then` clause in final if to include entire record
-* Allow specifying a source command with the `--inCmd` or `-C` command line parameter
-* New functions: `splus`, `wplus`, `fplus`.
-* Some under-the-hood improvements
 
 Sources
 =======
@@ -37,10 +36,8 @@ Building
 ========
 If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9:
 ```
-git checkout v0.9
+git checkout v0.9.2
 ```
-You can also choose to checkout alpha or beta tags, but they will obviously be less stable.
-
 A simple way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
 git checkout stable
@@ -58,9 +55,7 @@ After that, _cd_ to the specs/src directory, and run the following three command
 
 Known Issues
 ============
-* On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier some Python unit tests fail. Also, importing Python native functions doesn't work.
 * Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
-* On CentOS 7 and other Linux distros using GCC 4.8.5 or earlier `rsearch` does not work reliably.
 * On Windows with Python support the appropriate dll (like `python38.dll`) must be in the path.
 
 Contributing

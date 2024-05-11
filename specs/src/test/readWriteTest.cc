@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 	StringBuilder sb;
 	unsigned int readerCount = 1;
 	PReader pRead = std::make_shared<StandardReader>();
-	PWriter pWrite = std::make_shared<SimpleWriter>();
+	PWriter pWrite = std::make_shared<SimpleWriter>(SimpleWriter::writerType__COUT);
 
 	pRead->Begin();
 	pWrite->Begin();
@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 	while (!pRead->eof()) {
 		PSpecString p = pRead->get(tmr, readerCount);
 		sb.insert(p,1);
-		pWrite->Write(sb.GetString());
+		pWrite->Write(sb.GetString(), tmr);
 	}
 
 	pWrite->End();

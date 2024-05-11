@@ -5,6 +5,7 @@
 #include "utils/ErrorReporting.h"
 #include "Reader.h"
 #include "utils/directives.h"
+#include "Config.h"
 #include "Writer.h"
 
 void WriteAllRecords(Writer *pw)
@@ -32,15 +33,28 @@ Writer::~Writer()
 	mp_thread = nullptr;
 }
 
-void Writer::Write(PSpecString ps)
+void Writer::WriteOutDo(PSpecString ps, classifyingTimer& tmr)
 {
-	m_queue.push(ps);
+	static const bool this_never_runs(false);
+	MYASSERT(this_never_runs);
+}
+
+void Writer::Write(PSpecString ps, classifyingTimer& tmr)
+{
+	if (g_bUnthreaded) {
+		WriteOutDo(ps,tmr);
+	} else {
+		tmr.changeClass(timeClassOutputQueue);
+		m_queue.push(ps);
+		tmr.changeClass(timeClassProcessing);
+	}
 	m_countGenerated++;
 }
 
 void Writer::Begin()
 {
-	mp_thread = std::unique_ptr<std::thread>(new std::thread(WriteAllRecords, this));
+	if (!g_bUnthreaded)
+		mp_thread = std::unique_ptr<std::thread>(new std::thread(WriteAllRecords, this));
 }
 
 void Writer::End()
@@ -58,10 +72,6 @@ bool Writer::Done()
 	return m_ended && m_queue.empty();
 }
 
-SimpleWriter::SimpleWriter() {
-	m_WriterType = writerType__COUT;
-}
-
 #ifdef WIN64
 std::string temporaryBatchFileName_g("");
 
@@ -73,28 +83,37 @@ void generateTemporaryBatchFileName()
 }
 #endif
 
-SimpleWriter::SimpleWriter(const std::string& fn) {
-	static const std::string _stderr = WRITER_STDERR;
-	static const std::string _shell = WRITER_SHELL;
-	if (fn == _stderr) {
-		m_WriterType = writerType__CERR;
-	} else if (fn == _shell) {
+SimpleWriter::SimpleWriter(writerType typ) {
+	switch (typ) {
+		case writerType__COUT:
+		case writerType__CERR:
+			m_WriterType = typ;
+			break;
+		case writerType__SHELL:
 #ifdef WIN64
-		generateTemporaryBatchFileName();
-		m_File = std::make_shared<std::ofstream>(temporaryBatchFileName_g);
+			generateTemporaryBatchFileName();
+			m_File = std::make_shared<std::ofstream>(temporaryBatchFileName_g);
 #else
-		m_File = std::make_shared<std::ostringstream>();
+			m_File = std::make_shared<std::ostringstream>();
 #endif
-		m_WriterType = writerType__SHELL;
-	} else {
-		auto pOutFile = std::make_shared<std::ofstream>(fn);
-		m_File = pOutFile;
-		if (!pOutFile->is_open()) {
-			std::string err = "Could not open output file " + fn;
+			m_WriterType = writerType__SHELL;
+			break;
+		case writerType__FILE:
+		{
+			std::string err("Filename must be specified for writer type FILE");
 			MYTHROW(err);
 		}
-		m_WriterType = writerType__FILE;
 	}
+}
+
+SimpleWriter::SimpleWriter(const std::string& fn) {
+	auto pOutFile = std::make_shared<std::ofstream>(fn);
+	m_File = pOutFile;
+	if (!pOutFile->is_open()) {
+		std::string err = "Could not open output file " + fn;
+		MYTHROW(err);
+	}
+	m_WriterType = writerType__FILE;
 }	
 
 SimpleWriter::~SimpleWriter() {
@@ -134,6 +153,23 @@ SimpleWriter::~SimpleWriter() {
 	}
 }
 
+void SimpleWriter::WriteOutDo(PSpecString ps, classifyingTimer& tmr)
+{
+	tmr.changeClass(timeClassIO);
+	switch (m_WriterType) {
+		case writerType__COUT:
+			std::cout << *ps << '\n';
+			break;
+		case writerType__CERR:
+			std::cerr << *ps << '\n';
+			break;
+		case writerType__SHELL:
+		case writerType__FILE:
+			*m_File << *ps << '\n';
+	}
+	tmr.changeClass(timeClassProcessing);
+	m_countWritten++;
+}
 void SimpleWriter::WriteOut()
 {
 	PSpecString ps = nullptr;
@@ -141,20 +177,7 @@ void SimpleWriter::WriteOut()
 	m_Timer.changeClass(timeClassInputQueue);
 	bool res = m_queue.wait_and_pop(ps);
 	if (res) {
-		m_Timer.changeClass(timeClassIO);
-		switch (m_WriterType) {
-			case writerType__COUT:
-				std::cout << *ps << '\n';
-				break;
-			case writerType__CERR:
-				std::cerr << *ps << '\n';
-				break;
-			case writerType__SHELL:
-			case writerType__FILE:
-				*m_File << *ps << '\n';
-		}
-		m_Timer.changeClass(timeClassProcessing);
-		m_countWritten++;
+		WriteOutDo(ps, m_Timer);
 	} else {
 		m_Timer.changeClass(timeClassProcessing);
 	}

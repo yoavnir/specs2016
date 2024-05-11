@@ -1402,13 +1402,13 @@ int runALUUnitTests14(unsigned int onlyTest)
 	setRegexType("");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
 	setRegexType("basic");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
 	setRegexType("extended");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
 	setRegexType("awk");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
 	setRegexType("grep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
 	setRegexType("egrep");
 	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
 #endif

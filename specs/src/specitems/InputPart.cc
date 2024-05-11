@@ -128,6 +128,8 @@ PSpecString SubstringPart::getStr(ProcessingState& pState)
 	// Create the special pState for the substring.
 	ProcessingState subState;
 	subState.setString(bigPart);
+	subState.setFSChar(pState.getFSChar());
+	subState.setWSChar(pState.getWSChar());
 
 	PSpecString ret = mp_SubPart->getStr(subState);
 	return ret;

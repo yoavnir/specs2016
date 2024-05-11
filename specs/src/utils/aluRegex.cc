@@ -70,21 +70,21 @@ void setRegexType(std::string& s) {
 		} else if (0 == strcasecmp(p,"collate")) {
 			g_regexType |= std::regex_constants::collate;
 		} else if (0 == strcasecmp(p,"ECMAScript")) {
-			g_regexType |= std::regex_constants::ECMAScript;
+			g_regexType = std::regex_constants::ECMAScript;
 		} else if (0 == strcasecmp(p,"basic")) {
-			g_regexType |= std::regex_constants::basic;
+			g_regexType = std::regex_constants::basic;
 			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else if (0 == strcasecmp(p,"extended")) {
-			g_regexType |= std::regex_constants::extended;
+			g_regexType = std::regex_constants::extended;
 			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else if (0 == strcasecmp(p,"awk")) {
-			g_regexType |= std::regex_constants::awk;
+			g_regexType = std::regex_constants::awk;
 			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else if (0 == strcasecmp(p,"grep")) {
-			g_regexType |= std::regex_constants::grep;
+			g_regexType = std::regex_constants::grep;
 			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else if (0 == strcasecmp(p,"egrep")) {
-			g_regexType |= std::regex_constants::egrep;
+			g_regexType = std::regex_constants::egrep;
 			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else {
 			std::string err = "Invalid regular expression syntax option type: " + std::string(p);
