@@ -13,6 +13,26 @@ extern ALUCounters g_counters;
 extern char        g_printonly_rule;
 extern bool        g_keep_suppressed_record;
 
+std::string prettify(std::string src)
+{
+	std::string ret;
+	for (char c : src) {
+		switch (c) {
+			case '\n':
+				ret.append("\\n");
+				break;
+			case '\t':
+			    do {
+					ret+=' ';
+				} while (0 != ret.size() % 4);
+				break;
+			default:
+				ret+=c;
+		}
+	}
+	return ret;
+}
+
 #define VERIFY(sp,ex) do {          \
 		testCount++;                            \
 		if (onlyTest!=0 && onlyTest != testCount) break;  \
@@ -23,10 +43,10 @@ extern bool        g_keep_suppressed_record;
 			errorCount++;                       \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {              \
-				std::cout << "*** NOT OK ***:\n\tGot <" << *ps << ">\n\tExp <" << ex << ">\n"; \
+				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
 				errorCount++;                   \
 			} else {                            \
-				std::cout << "***** OK *****: <" << ex << ">\n"; \
+				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
 			}                                   \
 		}                                       \
 } while (0);
@@ -37,14 +57,14 @@ extern bool        g_keep_suppressed_record;
 		PSpecString ps = runTestOnExample(sp, ln);  \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
-			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
+			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << prettify(ex) << ">\n"; \
 			errorCount++;                       \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {              \
-				std::cout << "*** NOT OK ***:\n\tGot <" << *ps << ">\n\tExp <" << ex << ">\n"; \
+				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
 				errorCount++;                   \
 			} else {                            \
-				std::cout << "***** OK *****: <" << ex << ">\n"; \
+				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
 			}                                   \
 		}                                       \
 } while (0);
@@ -58,10 +78,10 @@ extern bool        g_keep_suppressed_record;
 		actual_res = e.what(true);              \
 	}                                           \
 	if (res==actual_res) {                      \
-		std::cout << "***** OK *****: <" << actual_res << ">\n"; \
+		std::cout << "***** OK *****: <" << prettify(actual_res) << ">\n"; \
 	} else {                                    \
 		errorCount++;                           \
-		std::cout << "*** NOT OK ***:\n\tGot <" << actual_res << ">\n\tExp <" << res << ">\n"; \
+		std::cout << "*** NOT OK ***:\n\tGot <" << prettify(actual_res) << ">\n\tExp <" << prettify(res) << ">\n"; \
 	}                                           \
 } while (0);
 
@@ -117,12 +137,15 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				ps.setString(pFirstLine);
 				ps.setFirst();
 				ps.incrementCycleCounter();
-				ig.processDo(sb, ps, &tRead, tmr, readerCounter);
+				bool bSomethingWasDone = ig.processDo(sb, ps, &tRead, tmr, readerCounter);
 				if (ps.printSuppressed(g_printonly_rule) && g_keep_suppressed_record) {
 					continue;
 				}
 				PSpecString pWritten = pwr1->getString();
 				PSpecString pOut = sb.GetStringUnsafe();
+				if (!pOut && bSomethingWasDone) {
+					pOut = std::make_shared<std::string>();
+				}
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 					if (pWritten) {
 						if (result) *result += *pWritten;
@@ -506,12 +529,12 @@ int main(int argc, char** argv)
 
 	// Issue #34
 	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1' done", "4...."); // TEST #125
-	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' /./ n set '#0-=1' done", "Missing DO after WHILE at index 6 with condition \"#0>0\""); // TEST #126
+	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' /./ n set '#0-=1' done", "Missing DO after WHILE at index 6 with condition \"#0>0 .\""); // TEST #126
 	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1'", "4...."); // TEST #127 - meaningless after issue #145
 	VERIFY("/4/ 1 done","DONE without WHILE at index 3"); // TEST #128
 	VERIFY("a: /4/ 1 set '#0:=a' while '#0>0' do /./ n set '#0-=1' endif", "Mismatched predicates: ENDIF at index 13 does not match WHILE (#0>0) at index 6"); // TEST #129
 	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw endif", "4 (natural)"); // TEST #130
-	VERIFY("a: /4/ 1 if 'a>=0' /(natural)/ nw else /(non-natural)/ nw endif", "Missing THEN after IF at index 4 with condition \"a>=0\""); // TEST #131
+	VERIFY("a: /4/ 1 if 'a>=0' /(natural)/ nw else /(non-natural)/ nw endif", "Missing THEN after IF at index 4 with condition \"a>=0 (natural)\""); // TEST #131
 	VERIFY("a: /4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "4 (natural)"); // TEST #132 - meaningless after issue #145
 	VERIFY("a: /-4/ 1 if 'a>=0' then /(natural)/ nw else /(non-natural)/ nw", "-4 (non-natural)"); // TEST #133 - meaningless after issue #145
 	VERIFY("/4/ 1 endif","ENDIF without IF at index 3"); // TEST #134
@@ -619,6 +642,49 @@ int main(int argc, char** argv)
 
 	spec = "w1 a: if 'a%2=1'";
 	VERIFY2(spec, "1\n2\n3\n4", "1\n3");    // TEST #159. Print entire record if the condition holds
+
+	// Issue #203 - collecting additional tokens for conditions after if, elseif, and while
+	
+	spec = "w1 a: IF a%2=1 & a<3 THEN /a is one/ 1";
+	VERIFY2(spec, "3\n2\n1", "a is one");     // TEST #160 - complex condition between if and then
+
+	spec = "w1 a: IF a%2=1 & a<3 /a is one/ 1";
+	VERIFY2(spec, "3\n2\n1", "Missing THEN after IF at index 3 with condition \"a%2=1 & a<3 a is one\"");     // TEST #161 - complex condition, but forgot the THEN
+
+	spec = "SET #0:=word(1) WHILE #0%2=0 & #0>0 DO SET #0/=2 DONE print #0";
+	VERIFY2(spec, "10\n9\n8", "5\n9\n1");   // TEST #162 - complex condition in WHILE
+
+	spec = "w1 a: ASSERT a%2=1 | a>6 ID a 1";
+	VERIFY2(spec, "8\n7\n6\n5\n4", "Bad output placement Token LITERAL at index 6 with content <a>6>");  // TEST #163
+
+	spec = "w1 a: SKIP-UNTIL a<6 ID a 1";
+	VERIFY2(spec, "8\n7\n6\n5\n4", "5\n4");  // TEST #164
+
+	spec = "w1 a: SKIP-UNTIL a%2=1 & a<6 ID a 1";
+	VERIFY2(spec, "8\n7\n6\n5\n4", "Bad output placement Token LITERAL at index 6 with content <a<6>");  // TEST #165
+
+	// Issue 224
+	spec = "3-* 1 REDO IF \"word(1)=='add'\"";
+	VERIFY2(spec, "hello there\ngladd\ngood-bye", "add");     // TEST #166
+
+	// Issue 227
+	spec = "FIELDSEP _ SUBSTRING FIELD 3 of WORD 1";
+	VERIFY2(spec, "a_b_c_d_e", "c");   // TEST #167
+	spec = "WORDSEP _ SUBSTRING WORD 3 of FIELD 1";
+	VERIFY2(spec, "a_b_c_d_e", "c");   // TEST #168
+
+	// Compound set - Issue 223
+	spec = "SET '(#0:=word(1))' print #0";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n2\n3\n4"); // TEST #169
+
+	spec = "SET '(#0:=word(1);#1+=#0)' print #1";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n3\n6\n10"); // TEST #170
+
+	spec = "SET #0:=word(1);#1+=#0 print #1";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n3\n6\n10"); // TEST #171
+
+	spec = "SET '#0:=word(1);#1+=#0' print #1";
+	VERIFY2(spec, "1\n2\n3\n4", "1\n3\n6\n10"); // TEST #172
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

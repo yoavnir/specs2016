@@ -49,6 +49,7 @@ Writer Thread:
 	Waiting on input queue: 5.979 seconds (51.880%)
 	Draining: 48.686 us (0.000%)
 ```
+* `--unthreaded` or `-u` -- run **specs** in a single thread. The default is to have separate threads for processing, readers, and writers.
 * `--inFile` **filename** or `-i` **filename** -- get the input records from a file rather than standard input.
 * `--inCmd` **cmd** or ``-C` **cmd** -- get the input records from the output of a command specified following this switch.
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.

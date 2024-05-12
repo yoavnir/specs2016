@@ -1603,9 +1603,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			clearSource = false;
 		}
 	}
-#endif
 
 	int stepNumber = 0;
+#endif
+
 	bool     bExpectNullArgument = false;
 	functionNestingStack fstack;
 
@@ -1617,8 +1618,8 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 			dumpAluVec("Dest", dest);
 			dumpAluStack("operator stack",operatorStack);
 		}
-#endif
 		stepNumber++;
+#endif
 		switch (pUnit->type()) {
 		case UT_Comma:
 			while (!operatorStack.empty() && UT_OpenParenthesis!=operatorStack.top()->type()) {
