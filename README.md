@@ -10,19 +10,15 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+01-Oct-2024: Version 0.9.5 is here
+What's New:
+* The `exact()` function prototype for compatibility
+
 10-May-2024: Version 0.9.2 is here
 What's New:
 * An unthreaded mode of operation
 * Compound `SET` statements
 * Reduced necessity of quoting complex conditions for `if` and `while`
-* Bug fixes
-
-29-JAN-2023: Version 0.9.1 is here
-What's New:
-* Allow execution of the output with the `--shell` or `-X` command line parameters
-* New function `pretty`
-* Usability improvements for functions `wordcount`, `fieldcount`.
-* Compiler alignment
 * Bug fixes
 
 

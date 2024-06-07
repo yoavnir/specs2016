@@ -284,6 +284,8 @@
 			"(val,flimit,ilimit) - Returns a string representation of the number 'val'.","The 'flimit' argument determines how many digits a floating point number should have before we switch to scientific notation. The defaults is 10. ilimit is the same for integers and defaults to never switch") \
 	X(next,           0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns the column of the next character to print if a spec unit specifies the NEXT position.","") \
+	X(exact,          1, ALUFUNC_REGULAR,     false,  \
+	        "(expression) - Returns one(1) if evaluating 'expression' would result in an exact value, or zero(0) if not. Currently always returns zero.","") \
 	X(rest,           0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns the number of columns from the current position to the end of the line.","") \
 	X(countocc,       2, ALUFUNC_REGULAR,     true,   \

@@ -234,6 +234,7 @@ The parameters for the `fmap_dump` functions are as follows:
 | `s2tf(x,f)` | Returns the string representation of the number `x` treated as seconds since the UNIX epoch and formatted according to the string in `f`. |
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |
 | `next()` | Returns the index of the print position. `w1 "(next())"` should do the same as `w1 next`. |
+| `exact(expression)` | Returns `1` if the evaluation of the `expression` results in an exact value, or `0` if not. For now, it always returns `0`. |
 
 
 

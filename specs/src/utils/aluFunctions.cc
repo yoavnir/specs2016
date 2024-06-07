@@ -2704,6 +2704,11 @@ PValue AluFunc_next()
 	return mkValue(ALUInt(g_PositionGetter->pos()));
 }
 
+PValue AluFunc_exact(PValue pval)
+{
+	return mkValue(ALUInt(0));
+}
+
 PValue AluFunc_rest()
 {
 	static std::string sName("cols");
