@@ -686,6 +686,15 @@ int main(int argc, char** argv)
 	spec = "SET '#0:=word(1);#1+=#0' print #1";
 	VERIFY2(spec, "1\n2\n3\n4", "1\n3\n6\n10"); // TEST #172
 
+	// Multi-char field and word separator
+	VERIFY2("fs :. field 2 1 field 5 nw", "192.168.1.5:443", "168 443"); // Test #173
+	VERIFY2("fs :. field 2 1 field 5 nw", "192.168.1.5:443.5", "168 443"); // Test #174
+	VERIFY2("w1 1 substr fs :. field 3:-2 of w2 nw", "ip:port 192.168.1.5:443.5", "ip:port 1.5:443"); // Test #175
+
+	VERIFY2("ws :. word 2 1 word 5 nw", "192.168.1.5:443", "168 443"); // Test #176
+	VERIFY2("ws :. word 2 1 word 5 nw", "192.168.1:.:.5:443.5", "168 443"); // Test #177
+	VERIFY2("w1 1 substr ws :. word 3:-2 of 9-* nw", "ip:port 192.168.1.5:443.5", "ip:port 1.5:443"); // Test #178
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {

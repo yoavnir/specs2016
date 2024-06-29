@@ -684,10 +684,10 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	switch (mp_Token->Type()) {
 	case TokenListType__FIELDSEPARATOR:
-		pState.setFSChar(mp_Token->Literal()[0]);
+		pState.setFSChars(mp_Token->Literal());
 		return ApplyRet__Continue;
 	case TokenListType__WORDSEPARATOR:
-		pState.setWSChar(mp_Token->Literal()[0]);
+		pState.setWSChars(mp_Token->Literal());
 		return ApplyRet__Continue;
 	case TokenListType__PAD:
 		pState.setPadChar(mp_Token->Literal()[0]);

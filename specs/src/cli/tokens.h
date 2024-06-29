@@ -127,8 +127,7 @@ public:
 	PTokenFieldRange Range() {return m_pRange;}
 	void            setRange(PTokenFieldRange prng) {MYASSERT(m_pRange==nullptr); m_pRange = prng;}
 	std::string&    Literal() {return m_literal;}
-	void            setLiteral(std::string l) {MYASSERT(m_literal.empty()); m_literal = l;}
-	void            setLiteral(char c) {m_literal.resize(1); m_literal[0]=c;}
+	void            setLiteral(std::string l) {m_literal = l;}
 	void            appendLiteral(std::string l) {m_literal.append(l); } 
 	void            appendLiteral(char c) {m_literal+=c;}
 	int             argIndex() {return m_argc;}

@@ -417,10 +417,10 @@ public:
 	virtual int     getFieldEnd(ALUInt idx) {
 		return getFieldEnd(int(idx));
 	}
-	virtual void    alterFieldSeparator(char sep) = 0;
-	virtual char    getFieldSeparator() = 0;
-	virtual void    alterWordSeparator(char sep) = 0;
-	virtual char    getWordSeparator() = 0;
+	virtual void    alterFieldSeparator(const std::string& sep) = 0;
+	virtual std::string& getFieldSeparator() = 0;
+	virtual void    alterWordSeparator(const std::string& sep) = 0;
+	virtual std::string& getWordSeparator() = 0;
 	virtual PSpecString getFromTo(int from, int to) = 0;
 	virtual PSpecString getFromTo(ALUInt from, ALUInt to) {
 		return getFromTo(int(from), int(to));

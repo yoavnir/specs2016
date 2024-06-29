@@ -59,7 +59,7 @@ A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 c
 .P
 A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
 .P
-A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based.
+A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based.
 .P 
 .B TODclock
 -- A 64-bit formatted timestamp, giving microseconds since the Unix epoch.
@@ -228,9 +228,13 @@ The
 .I ABnormal END 
 keyword is used to abruptly end the run of the specification. The token that follows the ABEND token is output in the error message. ABEND units make sense only within conditionals as they are never part of the normal processing or a record.
 .IP "WORDSEPARATOR and FIELDSEPARATOR" 3
-Declare a character to be the word of field separator respectively, which affects word and field ranges. For WORDSEPARATOR it is possible to use the special value 
+Declares a string of characters to be the word of field separators respectively, which affects word and field ranges. For 
+.I WORDSEPARATOR 
+it is possible to use the special value 
 .I default
-to make all whitespace defined by the locale work as a word separator. 
+to make all whitespace defined by the locale work as a word separator. This keyword can also be used locally in a 
+.I SUBSTRING
+spec unit.
 .IP "REDO" 3
 Causes the current output line to become the new input line.
 .IP "SET" 3
