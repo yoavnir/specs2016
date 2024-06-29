@@ -34,23 +34,29 @@ bool breakLevelGE(char c1, char c2)
 	} else return false;
 }
 
-ProcessingState::ProcessingState()
+void ProcessingState::Reset()
 {
 	m_pad = DEFAULT_PAD_CHAR;
 	if (g_bLocalWhiteSpace) {
-		m_wordSeparator = LOCAL_WHITESPACE;
+		m_wordSeparatorLocal = true;
+		m_wordSeparator.clear();
 	} else {
+		m_wordSeparatorLocal = false;
 		m_wordSeparator = DEFAULT_WORDSEPARATOR;
 	}
 	m_fieldSeparator = DEFAULT_FIELDSEPARATOR;
-	m_fieldCount = 0;
-	m_wordCount = 0;
+	m_fieldCount = -1;
+	m_wordCount = -1;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
-	m_ps = nullptr;
-	m_prevPs = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
+}
+ProcessingState::ProcessingState()
+{
+	Reset();
+	m_ps = nullptr;
+	m_prevPs = nullptr;
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
 	m_bNoWrite = false;
@@ -62,6 +68,7 @@ ProcessingState::ProcessingState()
 ProcessingState::ProcessingState(ProcessingState& ps)
 {
 	m_pad = ps.m_pad;
+	m_wordSeparatorLocal = ps.m_wordSeparatorLocal;
 	m_wordSeparator = ps.m_wordSeparator;
 	m_fieldSeparator = ps.m_fieldSeparator;
 	m_fieldCount = 0;
@@ -83,6 +90,7 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 ProcessingState::ProcessingState(ProcessingState* pPS)
 {
 	m_pad = pPS->m_pad;
+	m_wordSeparatorLocal = pPS->m_wordSeparatorLocal;
 	m_wordSeparator = pPS->m_wordSeparator;
 	m_fieldSeparator = pPS->m_fieldSeparator;
 	m_fieldCount = 0;
@@ -187,7 +195,7 @@ PSpecString ProcessingState::extractCurrentRecord()
 	return ret;
 }
 
-#define IS_WHITESPACE(c) ((m_wordSeparator==LOCAL_WHITESPACE) ? (isspace((c))) : ((c)==m_wordSeparator))
+#define IS_WHITESPACE(c) ((m_wordSeparatorLocal) ? (isspace((c))) : (std::string::npos != m_wordSeparator.find(c)))
 void ProcessingState::identifyWords()
 {
 	m_wordStart.clear();
@@ -225,34 +233,35 @@ void ProcessingState::identifyFields()
 		bool bFieldHasContent = true;
 		m_fieldCount++;
 		m_fieldStart.insert(m_fieldStart.end(), i+1);
-		if (pc[i]==m_fieldSeparator) {
+		if (std::string::npos != m_fieldSeparator.find(pc[i])) {
 			bFieldHasContent = false;
 		} else {
-			while (pc[i]!=m_fieldSeparator && pc[i]!=0) i++;
+			while (pc[i] && std::string::npos == m_fieldSeparator.find(pc[i])) i++;
 		}
 		m_fieldEnd.insert(m_fieldEnd.end(), bFieldHasContent ? i : EMPTY_FIELD_MARKER);
-		if (pc[i]==m_fieldSeparator) i++;
+		if (std::string::npos != m_fieldSeparator.find(pc[i])) i++;
 	}
 }
 
-void ProcessingState::alterFieldSeparator(char sep)
+void ProcessingState::alterFieldSeparator(const std::string& sep)
 {
 	m_fieldSeparator = sep;
 	m_fieldCount = -1;
 }
 
-char ProcessingState::getFieldSeparator()
+std::string& ProcessingState::getFieldSeparator()
 {
 	return m_fieldSeparator;
 }
 
-void ProcessingState::alterWordSeparator(char sep)
+void ProcessingState::alterWordSeparator(const std::string& sep)
 {
 	m_wordSeparator = sep;
+	m_wordSeparatorLocal = false;
 	m_wordCount = -1;
 }
 
-char ProcessingState::getWordSeparator()
+std::string& ProcessingState::getWordSeparator()
 {
 	return m_wordSeparator;
 }

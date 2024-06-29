@@ -291,7 +291,8 @@ extern bool g_bWarnAboutGrammars;
 		INC_TEST_INDEX2 {									\
 		_expr = s;											\
 		_res2 = true;										\
-		_result = nullptr;										\
+		_result = nullptr;									\
+		g_ps.Reset();										\
 		_res = parseAluExpression(_expr,vec);				\
 		if (_res) {                                         \
 			if (expressionIsAssignment(vec)) {              \

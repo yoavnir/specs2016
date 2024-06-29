@@ -378,11 +378,11 @@ PValue AluFunc_wordcount(PValue pStr, PValue pSep)
 		return mkValue(ALUInt(g_pStateQueryAgent->getWordCount()));
 	}
 
-	char sep;
+	std::string sep;
 	if (pSep && pSep->getStrSptr()->length() > 0) {
-		sep = pSep->getStr()[0];
+		sep = pSep->getStr();
 	} else {
-		sep = ' ';
+		sep = DEFAULT_WORDSEPARATOR;
 	}
 
 	PSpecString str;
@@ -407,11 +407,11 @@ PValue AluFunc_fieldcount(PValue pStr, PValue pSep)
 		return mkValue(ALUInt(g_pStateQueryAgent->getFieldCount()));
 	}
 
-	char sep;
+	std::string sep;
 	if (pSep && pSep->getStrSptr()->length() > 0) {
-		sep = pSep->getStr()[0];
+		sep = pSep->getStr();
 	} else {
-		sep = '\t';
+		sep = DEFAULT_FIELDSEPARATOR;
 	}
 
 	PSpecString str;
@@ -2852,10 +2852,10 @@ PValue AluFunc_split(PValue pSep, PValue pHdr, PValue pFtr)
 	MYASSERT_WITH_MSG(hdr>=0, "hdr argument should be non-negative");
 	MYASSERT_WITH_MSG(ftr>=0, "ftr argument should be non-negative");
 
-	char restoreFieldSeparator = 0;
-	if (pSep && pSep->getStr()[0] != g_pStateQueryAgent->getFieldSeparator()) {
+	std::string restoreFieldSeparator;
+	if (pSep && pSep->getStr() != g_pStateQueryAgent->getFieldSeparator()) {
 		restoreFieldSeparator = g_pStateQueryAgent->getFieldSeparator();
-		g_pStateQueryAgent->alterFieldSeparator(pSep->getStr()[0]);
+		g_pStateQueryAgent->alterFieldSeparator(pSep->getStr());
 	}
 
 	std::string res;
@@ -2867,7 +2867,7 @@ PValue AluFunc_split(PValue pSep, PValue pHdr, PValue pFtr)
 		first = false;
 	}
 
-	if (restoreFieldSeparator != 0) {
+	if (!restoreFieldSeparator.empty()) {
 		g_pStateQueryAgent->alterFieldSeparator(restoreFieldSeparator);
 	}
 
@@ -2882,10 +2882,10 @@ PValue AluFunc_splitw(PValue pSep, PValue pHdr, PValue pFtr)
 	MYASSERT_WITH_MSG(hdr>=0, "hdr argument should be non-negative");
 	MYASSERT_WITH_MSG(ftr>=0, "ftr argument should be non-negative");
 
-	char restoreWordSeparator = 0;
-	if (pSep && pSep->getStr()[0] != g_pStateQueryAgent->getWordSeparator()) {
+	std::string restoreWordSeparator;
+	if (pSep && pSep->getStr() != g_pStateQueryAgent->getWordSeparator()) {
 		restoreWordSeparator = g_pStateQueryAgent->getWordSeparator();
-		g_pStateQueryAgent->alterWordSeparator(pSep->getStr()[0]);
+		g_pStateQueryAgent->alterWordSeparator(pSep->getStr());
 	}
 
 	std::string res;
@@ -2897,7 +2897,7 @@ PValue AluFunc_splitw(PValue pSep, PValue pHdr, PValue pFtr)
 		first = false;
 	}
 
-	if (restoreWordSeparator != 0) {
+	if (!restoreWordSeparator.empty()) {
 		g_pStateQueryAgent->alterWordSeparator(restoreWordSeparator);
 	}
 

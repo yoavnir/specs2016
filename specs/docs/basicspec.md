@@ -36,7 +36,7 @@ The **InputSource** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based. Negative values can be used for counting characters from the end, so -1 means the last character, -2 the penultimate character, etc.
 * A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based. Negative indexes can be used here as well.
-* A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based. Negative indexes can be used here as well.
+* A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based. Negative indexes can be used here as well.
 * **TODclock** - a floating point number, accurate to microseconds and giving seconds since the Unix epoch.
 * **DTODclock** - a floating point number, accurate to microseconds and giving seconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** - A record counter as a 10-digit decimal number.  Read more about expressions on the [Arithmetic-Logical Unit](alu.md) page.
@@ -167,7 +167,7 @@ You may get different results depending on when you run this. Why? Because the t
 ## Other Common *Spec Units*
 Here are a few more common spec units:
 ### WORDSEPARATOR or WS
-This is used to set the word separator character to something other than the default. For example:
+This is used to set the word separator characters to something other than the default. For example:
 ```
 specs wordseparator / word 2 1
 ```
@@ -175,9 +175,10 @@ will output `bye` from the folowing input record:
 ```
 /Good///bye/old///paint
 ```
+The word separator character can be set to the special value `default` (which is also the default), meaning that the local-defined word separator character will be used. There can be more than one word separator characters specified as a string with this unit. The `WordSeparator` spec unit can also be used locally within a `SubString` spec unit.
 
 ### FIELDSEPARATOR or FS
-This is used to set the field separator character to something other than the default (tab). For example:
+This is used to set the field separator characters to something other than the default (tab). For example:
 ```
 specs fieldseparator , /</ 1 f2 n />/ n /</ nw f4 n />/ n
 ```
@@ -185,6 +186,7 @@ This will produce the output `<bye><>` from this input record:
 ```
 Good,bye,old,,paint
 ```
+There can be more than one word separator characters specified as a string with this unit. The `FieldSeparator` spec unit can also be used locally within a `SubString` spec unit.
 
 MainOptions
 ===========

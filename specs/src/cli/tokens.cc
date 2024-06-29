@@ -645,8 +645,8 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__PAD:
 			if (tok.Literal()=="") {
 				if (mayBeLiteral(nextTok)) {
-					if (getLiteral(nextTok).length()!=1) {
-						std::string err = "Bad separator or pad character <"+nextTok.Orig() +
+					if (TokenListType__PAD == tok.Type() && getLiteral(nextTok).length()!=1) {
+						std::string err = "Bad pad character <"+nextTok.Orig() +
 								">  with length " + std::to_string(getLiteral(nextTok).length()) +
 								" at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 						MYTHROW(err);

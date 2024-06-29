@@ -69,19 +69,19 @@ PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 	PPart      _pSub;
 	PRangePart pSub;
 	PPart      pBig;
-	char       subPartWordSeparator = 0;
-	char       subPartFieldSeparator = 0;
+	std::string subPartWordSeparator;
+	std::string subPartFieldSeparator;
 
 	// Check for fs or ws at the start of sub part
 	GET_NEXT_TOKEN_NO_ADVANCE;
 
 	switch (tokenType) {
 	case TokenListType__WORDSEPARATOR:
-		subPartWordSeparator = token.Literal()[0];
+		subPartWordSeparator = token.Literal();
 		index++;
 		break;
 	case TokenListType__FIELDSEPARATOR:
-		subPartFieldSeparator = token.Literal()[0];
+		subPartFieldSeparator = token.Literal();
 		index++;
 		break;
 	default:
@@ -155,7 +155,7 @@ PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
  *   - index is not safe -- must verify it's not beyond the vector
  *   - Caller must determine if a NULL return is acceptable
  */
-PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index, char _wordSep, char _fieldSep)
+PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index, const std::string& _wordSep, const std::string& _fieldSep)
 {
 	unsigned int index = _index;
 	PPart ret;
