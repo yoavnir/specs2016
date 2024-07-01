@@ -9,9 +9,9 @@
 #include "utils/aluFunctions.h"
 
 #define DEFAULT_PAD_CHAR ' '
-#define LOCAL_WHITESPACE  1
-#define DEFAULT_WORDSEPARATOR ' '
-#define DEFAULT_FIELDSEPARATOR '\t'
+#define LOCAL_WHITESPACE  ""
+#define DEFAULT_WORDSEPARATOR " "
+#define DEFAULT_FIELDSEPARATOR "\t"
 
 #define STATION_FIRST  -1
 #define STATION_SECOND -2
@@ -28,14 +28,15 @@ public:
 	ProcessingState(ProcessingState* pPS);
 	ProcessingState(ProcessingState& ps);
 	~ProcessingState();
+	void    Reset();
 
 	void    setPadChar(char c) {m_pad = c;}
-	void    setWSChar(char c) {m_wordSeparator = c; m_wordCount=-1;}
-	void    setFSChar(char c) {m_fieldSeparator = c; m_fieldCount=-1;}
+	void    setWSChars(const std::string& c) {m_wordSeparator = c; m_wordSeparatorLocal = c.empty(); m_wordCount=-1;}
+	void    setFSChars(const std::string& c) {m_fieldSeparator = c; m_fieldCount=-1;}
 
 	char    getPadChar() { return m_pad;            }
-	char    getWSChar()  { return m_wordSeparator;  }
-	char    getFSChar()  { return m_fieldSeparator; }
+	std::string& getWSChars()  { return m_wordSeparator;  }
+	std::string& getFSChars()  { return m_fieldSeparator; }
 
 	void    setString(PSpecString ps, bool bResetState = true);
 	void    setStringInPlace(PSpecString ps);
@@ -65,10 +66,10 @@ public:
 	void fieldIdentifierClear();
 	void fieldIdentifierStatsClear();
 
-	void alterFieldSeparator(char sep);
-	char getFieldSeparator();
-	void alterWordSeparator(char sep);
-	char getWordSeparator();
+	void alterFieldSeparator(const std::string& sep);
+	std::string& getFieldSeparator();
+	void alterWordSeparator(const std::string& sep);
+	std::string& getWordSeparator();
 
 	void breakValuesClear();
 	void resetBreaks();
@@ -107,8 +108,9 @@ private:
 		bDontCare
 	};
 	char    m_pad;
-	char    m_wordSeparator;
-	char    m_fieldSeparator;
+	bool m_wordSeparatorLocal;
+	std::string m_wordSeparator;
+	std::string m_fieldSeparator;
 	PSpecString m_ps;  // The current record
 	PSpecString m_prevPs; // The previous record
 	int  m_wordCount;
