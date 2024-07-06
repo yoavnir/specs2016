@@ -18,6 +18,7 @@
 #include "utils/TimeUtils.h"
 #include "utils/PythonIntf.h"
 #include "utils/aluRegex.h"
+#include "utils/aluFunctions.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -37,7 +38,9 @@ static void useKeyValue(std::string& key, std::string& value)
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
 		} else if (key == "locale") {
+			if (value=="global") value = "";
 			specTimeSetLocale(value);
+			specPrettySetLocale(value);
 		} else if (key == "regexType") {
 			setRegexType(value);
 		}
