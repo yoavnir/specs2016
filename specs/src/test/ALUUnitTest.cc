@@ -1343,6 +1343,17 @@ int runALUUnitTests14(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fmt(p,,12,'$')","10003$1415927");
 	VERIFY_EXPR_RES("fmt(p,,12,,'$')","10$003.1415927");
 	VERIFY_EXPR_RES("pretty(p)","10,003.141593");
+#ifdef SPANISH_LOCALE_SUPPORTED
+	VERIFY_EXPR_RES("pretty(p,,,'de_DE')","10003,141593");
+	VERIFY_EXPR_RES("pretty(q,,,'de_DE')","1234567890");
+	VERIFY_EXPR_RES("pretty(p,,,'ru_RU')","10 003,141593");
+	VERIFY_EXPR_RES("pretty(q,,,'ru_RU')","1 234 567 890");
+#else
+	VERIFY_EXPR_RES("pretty(p,,,'de_DE')","Invalid locale <de_DE> passed to pretty function");
+	VERIFY_EXPR_RES("pretty(q,,,'de_DE')","Invalid locale <de_DE> passed to pretty function");
+	VERIFY_EXPR_RES("pretty(p,,,'ru_RU')","Invalid locale <ru_RU> passed to pretty function");
+	VERIFY_EXPR_RES("pretty(q,,,'ru_RU')","Invalid locale <ru_RU> passed to pretty function");
+#endif
 	VERIFY_EXPR_RES("pretty(p,5)","1.000314e+04");
 	VERIFY_EXPR_RES("pretty(q)","1,234,567,890");
 	VERIFY_EXPR_RES("pretty(q,,5)","1.234568e+09");

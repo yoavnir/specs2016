@@ -134,13 +134,16 @@ void specTimeSetTimeZone(const std::string& tzname)
 	setenv(sTZ, tzname.data(), 1);
 }
 
-void specTimeSetLocale(const std::string& _locale)
+void specTimeSetLocale(const std::string& _locale, bool throwIfInvalid)
 {
 	try {
-		g_locale = std::locale(_locale.c_str());
+		g_locale = std::locale(_locale);
 	} catch(std::runtime_error& e) {
 		std::string err = "Invalid locale <" + _locale + ">";
-		MYTHROW(err);
+		if (throwIfInvalid) {
+			MYTHROW(err);
+		}
+		std::cerr << err << std::endl;
 	}
 }
 

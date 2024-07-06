@@ -26,7 +26,7 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format);
 
 void specTimeSetTimeZone(const std::string& tzname);
 
-void specTimeSetLocale(const std::string& _locale);
+void specTimeSetLocale(const std::string& _locale, bool throwIfInvalid = false);
 
 enum timeClasses{
 	timeClassInitializing,
