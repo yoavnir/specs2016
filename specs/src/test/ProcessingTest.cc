@@ -502,7 +502,7 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "1+2=3\n3+4=7\n5+6=11"); // TEST #110
 
 	// locales
-	VERIFYCMD(specTimeSetLocale("kuku"),"Invalid locale <kuku>");  // TEST #111
+	VERIFYCMD(specTimeSetLocale("kuku",true),"Invalid locale <kuku>");  // TEST #111
 
 #ifdef SPANISH_LOCALE_SUPPORTED
 	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112

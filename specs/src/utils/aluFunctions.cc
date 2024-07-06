@@ -32,6 +32,37 @@ void setPositionGetter(positionGetter* pGetter)
 	g_PositionGetter = pGetter;
 }
 
+static bool g_localeSpecified = false;
+static std::string g_localeName;
+void specPrettySetLocale(std::string& value)
+{
+	bool bVerbose = g_bVerbose;
+#ifdef DEBUG
+	bVerbose = true;
+#endif
+	try {
+		auto locale = std::locale(value);
+		if (bVerbose) {
+			auto pNumPunct = new std::numpunct_byname<char>(value);
+			std::cerr << "Locale <" << value <<"> uses <" << pNumPunct->decimal_point()
+				<< "> as decimal point, <" << pNumPunct->thousands_sep()
+				<< "> as separator in a <";
+			for (size_t i=0 ; i<pNumPunct->grouping().length(); i++) {
+				if (i>0) std::cerr << '/';
+				auto c = pNumPunct->grouping()[i];
+				if (CHAR_MAX==c) std::cerr << "unlimited";
+				else std::cerr << int(c);
+			}
+			std::cerr << "> grouping." << std::endl;
+		} 
+		g_localeName = value;
+		g_localeSpecified = true;
+	} catch(std::runtime_error& e) {
+		std::string err = "Invalid locale <" + value + ">";
+		std::cerr << err << std::endl;
+	}
+}
+
 static void throw_argument_issue(const char* _funcName, unsigned int argIdx, const char* argName, const char* message)
 {
 	std::string err(_funcName);
@@ -2634,8 +2665,12 @@ PValue AluFunc_fmt(PValue pVal, PValue pFormat, PValue pDigits, PValue pDecimal,
 	return mkValue(oss.str());
 }
 
-PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit)
+PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit, PValue pLocale)
 {
+	static bool bRunFirstTime = true;
+	static std::locale myStaticLocale;
+	static std::numpunct<char>* pNumPunct = nullptr;
+
 	static ALUInt limits[]={
 			0,     
 			1,                    /* 1 digit   */
@@ -2661,6 +2696,15 @@ PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit)
 
 	std::ostringstream oss;
 	ASSERT_NOT_ELIDED(pVal,1,value);
+
+	if (bRunFirstTime) {
+		bRunFirstTime = false;
+		if (g_localeSpecified) {
+			myStaticLocale = std::locale(g_localeName);
+			pNumPunct = new std::numpunct_byname<char>(g_localeName,1);
+		}
+	}
+
 	auto flimit = ARG_INT_WITH_DEFAULT(pflimit, 10);
 	if (flimit < 1) {
 		flimit = 0;
@@ -2668,6 +2712,19 @@ PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit)
 	auto ilimit = ARG_INT_WITH_DEFAULT(pilimit, 20);
 	if (ilimit > 19 || ilimit < 1) {
 		ilimit = 20;
+	}
+
+	std::locale myLocale = myStaticLocale;
+	std::numpunct<char>* myPunct = pNumPunct;
+
+	if (pLocale) {
+		try {
+			myLocale = std::locale(pLocale->getStr());
+			myPunct = new std::numpunct_byname<char>(pLocale->getStr());
+		} catch(std::runtime_error& e) {
+			std::string err = "Invalid locale <" + pLocale->getStr() + "> passed to pretty function";
+			MYTHROW(err);
+		}
 	}
 
 	bool useScientificNotation;
@@ -2683,15 +2740,20 @@ PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit)
 		useScientificNotation = (pVal->getInt() > limits[ilimit]);
 		if (!useScientificNotation) oss.precision(0);
 	}
-
-	static std::locale myStaticLocale;
 	
 	if (useScientificNotation) {
 		oss.setf(std::ios::scientific, std:: ios::floatfield);
+		if (g_localeSpecified || pLocale) {
+			oss.imbue(std::locale(myLocale, myPunct));
+		}
 	} else {
 		pretty_punct* pct = new pretty_punct;
 		oss.setf(std::ios::fixed, std:: ios::floatfield);	
-		oss.imbue(std::locale(oss.getloc(), pct));
+		if (g_localeSpecified || pLocale) {
+			oss.imbue(std::locale(myLocale, myPunct));
+		} else {
+			oss.imbue(std::locale(oss.getloc(), pct));
+		}
 	}
 
 	oss << (pVal->isFloat() ? pVal->getFloat() : pVal->getInt());
