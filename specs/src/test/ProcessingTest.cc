@@ -214,7 +214,9 @@ int main(int argc, char** argv)
 
 	if (argc > 1) onlyTest = std::stoi(argv[1]);
 
-	readConfigurationFile();
+	std::string key("version");
+	std::string value("1.0");
+	configSpecLiteralSet(key,value);
 
 	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
 
