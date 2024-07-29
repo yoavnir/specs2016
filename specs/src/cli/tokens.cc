@@ -437,6 +437,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 				}
 			} catch (std::invalid_argument& e) {
 				goto CONT1;
+			} catch (std::out_of_range& e) {
+				goto CONT1;
 			}
 		}
 
