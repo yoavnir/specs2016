@@ -697,6 +697,9 @@ int main(int argc, char** argv)
 	VERIFY2("ws :. word 2 1 word 5 nw", "192.168.1:.:.5:443.5", "168 443"); // Test #177
 	VERIFY2("w1 1 substr ws :. word 3:-2 of 9-* nw", "ip:port 192.168.1.5:443.5", "ip:port 1.5:443"); // Test #178
 
+	// Issue #241
+	VERIFY("print '99.2189254761+1'", "100.2189254761");  // Test #179
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 	} else {
