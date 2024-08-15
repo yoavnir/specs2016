@@ -1347,8 +1347,8 @@ int runALUUnitTests14(unsigned int onlyTest)
 	#ifdef GERMAN_LOCALE_HAS_SEP
 		VERIFY_EXPR_RES("pretty(p,,,'de_DE')","10.003,141593");
 		VERIFY_EXPR_RES("pretty(q,,,'de_DE')","1.234.567.890");
-		VERIFY_EXPR_RES("pretty(p,,,'ru_RU')","10 003,141593");
-		VERIFY_EXPR_RES("pretty(q,,,'ru_RU')","1 234 567 890");
+		VERIFY_EXPR_RES("pretty(p,,,'ru_RU')","10\240003,141593");
+		VERIFY_EXPR_RES("pretty(q,,,'ru_RU')","1\240234\240567\240890");
 	#else
 		VERIFY_EXPR_RES("pretty(p,,,'de_DE')","10003,141593");
 		VERIFY_EXPR_RES("pretty(q,,,'de_DE')","1234567890");
