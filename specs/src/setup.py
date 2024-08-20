@@ -405,7 +405,44 @@ else:
 	sys.stdout.write("Internal error.\n")
 	exit(-4)
 cleanup_after_compile()
-	
+
+# Test what kind of German locale the environment supports.
+test_german_locale_cmd = "{} {} -o xx.exe xx.cc".format(cxx,cppflags_test)
+with open("xx.cc", "w") as testfile:
+	testfile.write('#include <locale>\n')
+	testfile.write('#include <iostream>\n')
+	testfile.write('int main(int argc, char** argv) {\n')
+	testfile.write('    std::locale l("de_DE");\n')
+	testfile.write('    const std::numpunct<char>& facet = std::use_facet<std::numpunct<char> >(l);\n')
+	testfile.write('    std::string s = facet.grouping();\n')
+	testfile.write('    if (s[0] == 127) {\n')
+	testfile.write('        std::cout << "NO-SEP\\n";\n')
+	testfile.write('    } else {\n')
+	testfile.write('        std::cout << "SEP\\n";\n')
+	testfile.write('    }\n')
+	testfile.write('    return 0;\n')
+	testfile.write('}\n')
+sys.stdout.write("Testing German locale (for unit tests)...")
+if 0==run_the_cmd(test_german_locale_cmd):
+	sys.stdout.write("Compiled...")
+	test_spanish_locale_cmd = "./xx.exe" if platform!="NT" else "xx.exe"
+	if 0==run_the_cmd(test_spanish_locale_cmd):
+		with open("xx.txt", "r") as output:
+			sep = output.read().strip()
+			if sep=="NO-SEP":
+				sys.stdout.write("No thousands separator in German locale\n")
+				CFG_german_locale = "nosep"
+			else:
+				sys.stdout.write("Uses thousands separator in German locale\n")
+				CFG_german_locale = "sep"
+	else:
+		sys.stdout.write("Not supported\n")
+		CFG_german_locale = False
+else:
+	sys.stdout.write("Internal error.\n")
+	exit(-4)
+cleanup_after_compile()
+
 # Test if the environment contains a random number generator
 found_random_source = False
 rand_source = "rand"
@@ -495,6 +532,9 @@ if CFG_put_time:
 	
 if CFG_spanish_locale:
 	condcomp = condcomp + "{}SPANISH_LOCALE_SUPPORTED".format(def_prefix)
+
+if CFG_german_locale == "sep":
+	condcomp = condcomp + "{}GERMAN_LOCALE_HAS_SEP".format(def_prefix)
 
 if CFG_advanced_regex:
 	condcomp = condcomp + "{}ADVANCED_REGEX_FUNCTIONS".format(def_prefix)
