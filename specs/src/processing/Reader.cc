@@ -4,6 +4,8 @@
 #include "Config.h"
 #include "Reader.h"
 
+uint64_t g_readRecordCounter = 0;
+
 void ReadAllRecordsIntoReaderQueue(Reader* r)
 {
 	r->startProcessing();
@@ -204,6 +206,7 @@ PSpecString StandardReader::getNextRecord() {
 			}
 			m_Timer.changeClass(timeClassProcessing);
 			if (!ok) {
+				if (!m_EOF) g_readRecordCounter++;
 				m_EOF = true;
 				return nullptr;
 			}
@@ -227,6 +230,7 @@ PSpecString StandardReader::getNextRecord() {
 			}
 			m_Timer.changeClass(timeClassProcessing);
 			if (!ok) {
+				if (!m_EOF) g_readRecordCounter++;
 				m_EOF = true;
 				return nullptr;
 			}
@@ -245,6 +249,7 @@ PSpecString StandardReader::getNextRecord() {
 				}
 			}
 		}
+		g_readRecordCounter++;
 		return std::make_shared<std::string>(line);
 	}
 	case RECFM_FIXED: {
@@ -252,9 +257,11 @@ PSpecString StandardReader::getNextRecord() {
 		m_File->read(m_buffer, m_lrecl);
 		m_Timer.changeClass(timeClassProcessing);
 		if (m_File->gcount() < m_lrecl) {
+			if (!m_EOF) g_readRecordCounter++;
 			m_EOF = true;
 			return nullptr;
 		} else {
+			g_readRecordCounter++;
 			return std::make_shared<std::string>(m_buffer, m_lrecl);
 		}
 	}

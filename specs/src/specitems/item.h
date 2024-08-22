@@ -194,7 +194,7 @@ public:
 	virtual bool isBreak()    {return false;}
 	virtual bool ApplyUnconditionally() {return false;}
 	unsigned int originalIndex() { return m_originalIndex; }
-private:
+protected:
 	unsigned int m_originalIndex;
 };
 
@@ -311,6 +311,8 @@ private:
 	bool   m_isAssignment;
 	ALUCounterKey	m_counter;
 	POperator       m_assnOp;
+	int             whileGuardCount{0};
+	uint64_t        whileGuardRecordCounter{0};
 };
 
 typedef std::shared_ptr<ConditionItem> PConditionItem;

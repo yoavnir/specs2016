@@ -136,6 +136,19 @@ The loop available in specs is a **while** loop.  It begins with the **while** t
                 set /#2 -= 1/
             done
 ```
+While-Guard
+===========
+The **while-guard** feature, available from version 0.9.5 makes an effort to prevent **specs** from entering endless loops. For example, consider this specification.
+```
+            set "#1 := 5"
+            while #1 > 3 do
+                set "#1 += 1"
+            done
+```
+Without **while-guard** this specification will loop forever. To solve this, **specs** keeps a counter for each while statement that it increments each time the loop is entered. This counter is reset to zero if a record is read from any input.  The **specs** program exits when the counter reaches 5000.
+
+**While-Guard** is not perfect. To disable it, you can use the command-line switch `--no-while-guard` or you can override the maximum iteration count at which the program exist by setting the `while-guard-limit` to some integer value.
+
 RunIn and RunOut Cycles
 =========================
 A **cycle** is defined as a single run of the specification, which includes reading an input record, processing it, and outputting one or more records. If the specification contains **read** or **readstop** tokens, a single cycle can consume more than one input records.
