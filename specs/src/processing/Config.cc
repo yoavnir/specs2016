@@ -28,6 +28,7 @@
 CONFIG_PARAMS
 #undef X
 
+extern unsigned int g_WhileGuardLimit;
 
 static std::map<std::string,std::string> ExternalLiterals;
 
@@ -43,6 +44,8 @@ static void useKeyValue(std::string& key, std::string& value)
 			specPrettySetLocale(value);
 		} else if (key == "regexType") {
 			setRegexType(value);
+		} else if (key == "while-guard-limit") {
+			g_WhileGuardLimit = std::stoul(value);
 		}
 		if (ExternalLiterals.find(key) == ExternalLiterals.end()) {
 			ExternalLiterals[key] = value;

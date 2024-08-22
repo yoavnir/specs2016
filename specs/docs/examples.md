@@ -21,7 +21,7 @@ EOF
 
 ## Random Check
 
-This specification doesn't need any input. It generates 10,000 random numbers between 0 and 9, and counts how may of them are 7. The expected value is, of course, 1000, and the standard deviation should be 30. This specification returns `OK` if the number of occurrences of 7 is within two standard deviations from the expected value. 
+This specification doesn't need any input. It generates 10,000 random numbers between 0 and 9, and counts how may of them are 7. The expected value is, of course, 1000, and the standard deviation should be 30. This specification returns `OK` if the number of occurrences of 7 is within two standard deviations from the expected value. Note that this specification will terminate prematurely because of the **while-guard**, so it should be run with the `--no-while-guard` switch.
 ```
 WHILE '#0<10000' DO
    PRINT 'fmap_sample(a,rand(10))' .

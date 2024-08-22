@@ -367,6 +367,45 @@ set /#2 -= 1/
 .B done
 .RE
 
+.SS "While-Guard"
+The
+.I While-Guard
+feature, available from version 0.9.5 makes an effort to prevent
+.B specs
+from entering endless loops. For example, consider this specification:
+
+.RS 5
+.B set
+"#1 := 5"
+.RS 1
+.RE 
+.B while
+#1 > 3
+.B do
+.RS 4
+.B set
+"#1 += 1"
+.RE
+.B done
+.RE
+
+Without
+.I while-guard
+this specification will loop forever. To solve this, 
+.B specs
+keeps a counter for each 
+.I while
+statement that it increments each time the loop is entered. This counter is reset to zero if a record is read from any input.  The 
+.B specs
+program exists when the counter reaches 5000.
+
+.I While-Guard
+is not perfect. To disable it, you can use the command-line switch
+.B --no-while-guard
+or you can override the maximum iteration count at which the program exist by setting the 
+.B while-guard-limit
+to some integer value.
+
 .SS "Control Breaks"
 The 
 .B Field Identifiers
@@ -1676,7 +1715,11 @@ Prints out detailed information about the parsing and compiling of expressions (
 .IP "--debug-alu-run" 3
 Prints out detailed step-by-step information about the evaluation of expressions (
 .I only in debug build
-).   
+). 
+.IP "--no-while-guard" 3
+Disables 
+.I while-guard, 
+allowing specifications to enter endless loops.
 .IP "--config or -c" 3
 Changes the configuration file from the default 
 .I ~/.specs
@@ -1767,9 +1810,10 @@ random provider, python and floating point precision.
 reads a configuration file by default from 
 .B $HOME/.specs
 .P 
-This file contains some configuration options. For now, it only allows you to set user-predefined labels and three specific configuration options: 
+This file contains some configuration options. For now, it only allows you to set user-predefined labels and four specific configuration options: 
 .B timezone, 
 .B locale, 
+.B while-guard-limit,
 and 
 .B SPECSPATH. 
 For example, an entry such as this:
@@ -1777,6 +1821,7 @@ For example, an entry such as this:
     timezone: "Europe/Belfast"
     locale: es_ES
     SPECSPATH: /home/myself/specs:/Library/specs
+    while-guard-limit: 8000
     myCA: "Honest Abe's Used Cars & Certificates"
 .P
 allows you to issue a 

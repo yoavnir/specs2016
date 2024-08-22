@@ -12,6 +12,7 @@
 extern ALUCounters g_counters;
 extern char        g_printonly_rule;
 extern bool        g_keep_suppressed_record;
+extern unsigned int g_WhileGuardLimit;
 
 std::string prettify(std::string src)
 {
@@ -450,6 +451,7 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "1\n2\n3\n4\n1\n5\n2\n3\n4\n3\n3", "5 11 3 5 4 0.3636 36.364%"); // TEST #103
 
 	// random and statistics
+	g_WhileGuardLimit = 10050;
 	spec = "while '#0<10000' do                  " \
            "   print 'fmap_sample(a,rand(10))' . " \
            "   set '#0+=1'                       " \
@@ -699,6 +701,22 @@ int main(int argc, char** argv)
 
 	// Issue #241
 	VERIFY("print '99.2189254761+1'", "100.2189254761");  // Test #179
+
+	// While-guard - similar to 104
+	g_WhileGuardLimit = 100;
+	spec = "while '#0<10000' do                  " \
+           "   print 'fmap_sample(a,rand(10))' . " \
+           "   set '#0+=1'                       " \
+           "done                                 " \
+           "set '#1:=fmap_count(a,7)'            " \
+           "if '#1 > 900 & #1 < 1100' then       " \
+           "   /OK/ 1                            " \
+           "else                                 " \
+           "   /NOT OK/ 1                        " \
+           "endif                                ";
+	VERIFY(spec, "Potentially endless while-loop detected in Token 2 with condition <#0<10000> - looped 101 times.");  // TEST #180
+
+
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

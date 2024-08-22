@@ -9,6 +9,9 @@ int g_stop_stream = STOP_STREAM_ALL;
 char g_printonly_rule = PRINTONLY_PRINTALL;
 bool g_keep_suppressed_record = false;
 
+extern uint64_t g_readRecordCounter;
+unsigned int g_WhileGuardLimit = 5000;
+
 struct predicateStackItem {
 	PConditionItem pred;
 	unsigned int   argIndex;
@@ -894,6 +897,19 @@ bool ConditionItem::evaluate()
 		ret = exprResult->getBool();
 	}
 
+	if (PRED_WHILE == m_pred && false == g_bNoWhileGuard) {
+		if (ret) {
+			if (whileGuardRecordCounter != g_readRecordCounter) {
+				whileGuardCount = 0;
+				whileGuardRecordCounter = g_readRecordCounter;
+			} else {
+				whileGuardCount++; 
+			}
+		} else {
+			whileGuardCount = 0;
+		}
+	}
+
 	return ret;
 }
 
@@ -937,6 +953,12 @@ ApplyRet ConditionItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		if (pState.needToEvaluate()) {
 			if (evaluate()) {
 				ret = ApplyRet__EnterLoop;
+				if (whileGuardCount > int(g_WhileGuardLimit)) {
+					std::string err = "Potentially endless while-loop detected in Token "
+						+ std::to_string(m_originalIndex+1) + " with condition <" + m_rawExpression
+						+ "> - looped " + std::to_string(whileGuardCount) + " times.";
+					MYTHROW(err);
+				}
 			} else {
 				pState.observeWhile();
 			}
