@@ -1696,10 +1696,10 @@ defaults to
 Outputs more information when something goes wrong.
 .IP "--stats"
 Output statistics on run time, and records read, and on records written to standard error.
-.IP "--unthreaded or -u" 3
+.IP "--threaded or -t" 3
 Run 
 .B specs 
-in a single thread. The default is to have separate threads for processing, readers, and writers.
+in separate threads for processing, for readers, and for writers. This was the default until version 0.9.5. Now the default is to run it all in a single thread.
 .IP "--inFile or -i" 3
 Makes the program read the input records from a file rather than from standard input.
 .IP "--outFile or -o" 3

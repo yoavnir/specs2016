@@ -24,7 +24,7 @@ Using files also allows you to include comments. The rules for comments are that
 You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by OS-specific path separator character. On Linux and Mac OS this is a colon (`:`). On Windows this is a semicolon (`;`).  If neither the environment variable nor the configuration string are set, the **SPECSPATH** defaults to `$HOME/specs` on Linux and Mac OS, and to `%APPDATA%\specs` on Windows.
 * `--verbose` or `-v` -- outputs more information when something goes wrong.
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
-The resulting stats look something like this:
+The resulting stats look something like this when running in threaded mode (see below):
 ```
 Read  608913 lines.
 Wrote 608913 lines.
@@ -49,7 +49,19 @@ Writer Thread:
 	Waiting on input queue: 5.979 seconds (51.880%)
 	Draining: 48.686 us (0.000%)
 ```
-* `--unthreaded` or `-u` -- run **specs** in a single thread. The default is to have separate threads for processing, readers, and writers.
+When running in the default non-threaded mode, it will look something like this:
+```
+Read  38502 lines.
+Wrote 38502 lines.
+Run Time: 0.513283 seconds.
+CPU Time: 0.810503 seconds.
+Main Thread:
+	Initializing: 686.218 us (0.134%)
+	Processing: 120.042 ms (23.363%)
+	Waiting on IO: 393.068 ms (76.501%)
+	Draining: 11.257 us (0.002%)
+```
+* `--threaded` or `-t` -- run **specs** in separate threads for processing, for readers, and for writers. This was the default until version 0.9.5. Now the default is to run everything in a single thread.
 * `--inFile` **filename** or `-i` **filename** -- get the input records from a file rather than standard input.
 * `--inCmd` **cmd** or ``-C` **cmd** -- get the input records from the output of a command specified following this switch.
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.

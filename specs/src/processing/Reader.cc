@@ -57,7 +57,7 @@ PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 		m_bRanDry = true;
 		return nullptr;
 	}
-	if (g_bUnthreaded) {
+	if (!g_bThreaded) {
 		tmr.changeClass(timeClassIO);
 		ret = getNextRecord();
 		tmr.changeClass(timeClassProcessing);
@@ -104,7 +104,7 @@ void Reader::readIntoQueue()
 }
 
 void Reader::Begin() {
-	if (!g_bUnthreaded)
+	if (g_bThreaded)
 		mp_thread = std::unique_ptr<std::thread>(new std::thread(ReadAllRecordsIntoReaderQueue, this));
 }
 
