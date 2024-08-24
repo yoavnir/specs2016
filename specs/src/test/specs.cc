@@ -457,7 +457,7 @@ int main (int argc, char** argv)
 				std::setfill('0') << std::setw(6) <<
 				u_int64_t((duration-std::floor(duration)+0.5) * 1000000) << " seconds.\n";
 		timer.dump("Main Thread");
-		if (!g_bUnthreaded) {
+		if (g_bThreaded) {
 			if (pRd) {
 				pRd->dumpTimeData();
 				pRd = nullptr;
