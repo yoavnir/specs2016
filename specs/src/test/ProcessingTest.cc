@@ -42,10 +42,12 @@ std::string prettify(std::string src)
 		if (!ps) {                              \
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
 			errorCount++;                       \
+			failedTests.push_back(testCount);      \
 		} else {                                \
-			if (*(ps) != std::string(ex)) {              \
+			if (*(ps) != std::string(ex)) {     \
 				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
 				errorCount++;                   \
+				failedTests.push_back(testCount);  \
 			} else {                            \
 				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
 			}                                   \
@@ -60,10 +62,12 @@ std::string prettify(std::string src)
 		if (!ps) {                              \
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << prettify(ex) << ">\n"; \
 			errorCount++;                       \
+			failedTests.push_back(testCount);      \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {              \
 				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
 				errorCount++;                   \
+				failedTests.push_back(testCount);  \
 			} else {                            \
 				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
 			}                                   \
@@ -71,8 +75,9 @@ std::string prettify(std::string src)
 } while (0);
 
 #define VERIFYCMD(cmd,res) do {                 \
-	std::string actual_res("");                 \
 	testCount++;                                \
+	if (onlyTest!=0 && onlyTest != testCount) break;  \
+	std::string actual_res("");                 \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 	try { cmd; }                                \
 	catch(SpecsException& e) {                  \
@@ -82,6 +87,7 @@ std::string prettify(std::string src)
 		std::cout << "***** OK *****: <" << prettify(actual_res) << ">\n"; \
 	} else {                                    \
 		errorCount++;                           \
+		failedTests.push_back(testCount);          \
 		std::cout << "*** NOT OK ***:\n\tGot <" << prettify(actual_res) << ">\n\tExp <" << prettify(res) << ">\n"; \
 	}                                           \
 } while (0);
@@ -209,6 +215,7 @@ int main(int argc, char** argv)
 	int errorCount = 0;
 	int testCount  = 0;
 	int onlyTest   = 0;
+	std::vector<int> failedTests;
 
 	std::string spec;
 	std::string strm;
@@ -714,12 +721,30 @@ int main(int argc, char** argv)
            "else                                 " \
            "   /NOT OK/ 1                        " \
            "endif                                ";
+
 	VERIFY(spec, "Potentially endless while-loop detected in Token 2 with condition <#0<10000> - looped 101 times.");  // TEST #180
 
+	spec = "SUBSTR WS @/@ WORD 2 of WORD 3";
+	VERIFY2(spec, "The Epoch: 1/Jan/1970 at midnight", "Jan"); // Test #181
 
+    spec = "SUBSTR WS @/@ FS i WORD 2 of WORD 3";
+	VERIFY2(spec, "The Epoch: 1/Jan/1970 at midnight", "Jan"); // Test #182
+
+	VERIFY2(spec, "The Epic 1/Jan/1970 at midnight", "Jan"); // Test #183
+
+    spec = "SUBSTR WS @/@ FS i WORD 2 of FIELD 3";
+	VERIFY2(spec, "The Epic: 1/Jan/1970 at midnight", ""); // Test #184
+
+    spec = "SUBSTR WS @/@ WORD 3 of FS i FIELD 2";
+	VERIFY2(spec, "The Epic: 1/Jan/1970 at midnight", "1970 at m"); // Test #185
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
+		std::cout << "Failed tests: ";
+		for (int i : failedTests) {
+			std::cout << i << " ";
+		}
+		std::cout << "\n";
 	} else {
 		std::cout << "\nAll tests passed.\n";
 	}

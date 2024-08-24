@@ -73,19 +73,22 @@ PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 	std::string subPartFieldSeparator;
 
 	// Check for fs or ws at the start of sub part
-	GET_NEXT_TOKEN_NO_ADVANCE;
+	bool bSeparatorsDone = false;
+	while (!bSeparatorsDone) {
+		GET_NEXT_TOKEN_NO_ADVANCE;
 
-	switch (tokenType) {
-	case TokenListType__WORDSEPARATOR:
-		subPartWordSeparator = token.Literal();
-		index++;
-		break;
-	case TokenListType__FIELDSEPARATOR:
-		subPartFieldSeparator = token.Literal();
-		index++;
-		break;
-	default:
-		;
+		switch (tokenType) {
+		case TokenListType__WORDSEPARATOR:
+			subPartWordSeparator = token.Literal();
+			index++;
+			break;
+		case TokenListType__FIELDSEPARATOR:
+			subPartFieldSeparator = token.Literal();
+			index++;
+			break;
+		default:
+			bSeparatorsDone = true;
+		}
 	}
 
 	_pSub = getInputPart(tokenVec, index, subPartWordSeparator, subPartFieldSeparator);
@@ -109,19 +112,23 @@ PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 	}
 
 	// Check for fs or ws at the start of big part
-	GET_NEXT_TOKEN_NO_ADVANCE;
-
-	switch (tokenType) {
-	case TokenListType__WORDSEPARATOR:
-		subPartWordSeparator = token.Literal()[0];
-		index++;
-		break;
-	case TokenListType__FIELDSEPARATOR:
-		subPartFieldSeparator = token.Literal()[0];
-		index++;
-		break;
-	default:
-		;
+	subPartFieldSeparator = emptyString;
+	subPartWordSeparator = emptyString;
+	bSeparatorsDone = false;
+	while (!bSeparatorsDone) {
+		GET_NEXT_TOKEN_NO_ADVANCE;
+		switch (tokenType) {
+		case TokenListType__WORDSEPARATOR:
+			subPartWordSeparator = token.Literal();
+			index++;
+			break;
+		case TokenListType__FIELDSEPARATOR:
+			subPartFieldSeparator = token.Literal();
+			index++;
+			break;
+		default:
+			bSeparatorsDone = true;
+		}
 	}
 
 	pBig = getInputPart(tokenVec, index, subPartWordSeparator, subPartFieldSeparator);
