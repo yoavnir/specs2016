@@ -41,19 +41,19 @@ void Writer::WriteOutDo(PSpecString ps, classifyingTimer& tmr)
 
 void Writer::Write(PSpecString ps, classifyingTimer& tmr)
 {
-	if (g_bUnthreaded) {
-		WriteOutDo(ps,tmr);
-	} else {
+	if (g_bThreaded) {
 		tmr.changeClass(timeClassOutputQueue);
 		m_queue.push(ps);
 		tmr.changeClass(timeClassProcessing);
+	} else {
+		WriteOutDo(ps,tmr);
 	}
 	m_countGenerated++;
 }
 
 void Writer::Begin()
 {
-	if (!g_bUnthreaded)
+	if (g_bThreaded)
 		mp_thread = std::unique_ptr<std::thread>(new std::thread(WriteAllRecords, this));
 }
 
