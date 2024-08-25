@@ -5,10 +5,66 @@ python_ldflags=""
 python_version=0
 
 def run_the_cmd(cmd):
+	global platform
 	with open("xx.txt","w") as o:
 		rc = subprocess.call(cmd,shell=True,stdout=o.fileno(), stderr=o.fileno())
 	return rc
+
+def get_the_version(doPrint):
+	test_version_cmd = "git branch --show-current > git_output.txt"
+	rc = run_the_cmd(test_version_cmd)
+	if 0==rc:
+		with open("git_output.txt", "r") as output:
+			gittag = output.read().strip()
+			if doPrint:
+				sys.stdout.write("Found git branch <{}>...".format(gittag))
+	else:
+		if doPrint:
+			sys.stdout.write("git not present. Going with <unknown>...")
+		gittag = "unknown"
+
+	if platform=="NT":
+		os.system("del git_output.txt")
+	else:
+		os.system("/bin/rm git_output.txt")
+
+	if gittag.startswith("dev-"):
+		if doPrint:
+			sys.stdout.write("Yes, going with that.")
+		return gittag
 	
+	# Get the version from manpage
+	with open("../../manpage", "r") as manpage:
+		foundVersion = False
+		rdline = "XXX"
+		while (False == foundVersion) & (rdline != ''):
+			rdline = manpage.readline().strip()
+			line = rdline.split(' ')
+			if line[0] == '.TH':
+				if (line[1]!='man') | (line[7]!='"specs'):
+					sys.stderr.write("\nMalformed .TH line: Second word is {}; Eighth is {}\n".format(line[1], line[7]))
+					exit(-4)
+				manpage_version = line[6].strip('"')
+				if doPrint:
+					sys.stdout.write("Found version <{}> in manpage...".format(manpage_version))
+				foundVersion = True
+		if False == foundVersion:
+			sys.stderr.write("\nMalformed manpage file: no .TH line found\n")
+			exit(-4)
+
+	if gittag == "dev":
+		if doPrint:
+			sys.stdout.write("Setting to <v{}-beta>".format(manpage_version))
+		return "v{}-beta".format(manpage_version)
+	elif gittag == "stable":
+		if doPrint:
+			sys.stdout.write("Setting to <v{}>".format(manpage_version))
+		return "v{}".format(manpage_version)
+	else:
+		if doPrint:
+			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,manpage_version))
+		return "{}({})".format(gittag,manpage_version)
+
 def cleanup_after_compile():
 	global compiler_cleanup_cmd,platform
 	with open("yy.txt","w") as o:
@@ -83,9 +139,9 @@ with open("xx.txt","w") as v:
 	sys.stdout.write("Yes.\n")
 	return True
 
-cppflags_gcc = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++17 -I ."
-cppflags_clang = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++17 -I ."
-cppflags_vs = "$(CONDCOMP) /DGITTAG=$(TAG) /std:c++17 /nologo /I."
+cppflags_gcc = "-Werror $(CONDCOMP) --std=c++17 -I ."
+cppflags_clang = "-Werror $(CONDCOMP) -std=c++17 -I ."
+cppflags_vs = "$(CONDCOMP) /std:c++17 /nologo /I."
 
 body1 = \
 """
@@ -349,6 +405,11 @@ else:
 	sys.stdout.write("No.  Aborting...\n")
 	exit(-4)
 
+# Find the version of the code
+sys.stdout.write("Figuring out code version...")
+gittag = get_the_version(True)
+sys.stdout.write("\n")
+
 # Test if the compiler supports put_time
 test_put_time_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
@@ -527,6 +588,8 @@ else:
 # RegEx different grammars
 CFG_regex_grammars = (sys.platform=="darwin")
 	
+condcomp = condcomp + '{}GITTAG="{}"'.format(def_prefix,gittag)
+
 if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
 	
@@ -569,7 +632,7 @@ with open("Makefile", "w") as makefile:
 	makefile.write("CONDLINK={}\n".format(condlink))
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
-	makefile.write("TAG := $(shell git describe --abbrev=0 --tags)\n\n")
+	# makefile.write("TAG := $(shell git describe --abbrev=0 --tags)\n\n")
 	makefile.write("CPPFLAGS = {}\n".format(cppflags))
 	
 	if compiler=="VS":
