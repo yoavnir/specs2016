@@ -24,14 +24,24 @@ static bool is_whitespace(char c) {
 	return (c==' ' || c=='\t');
 }
 
-static bool isPossibleDelimiter(char c) {
-	return (c=='/' || c=='"' || c=='\'');
+static bool isPossibleDelimiter(const char* c, bool bForSeparator) {
+	bool isValidDelimiter = (*c=='/' || *c=='"' || *c=='\'');
+	if (!isValidDelimiter) return false;
+
+	if (bForSeparator) {
+		if (*(c+1)!=*c && *(c+2)==*c) {
+			return true;
+		}
+		return (*c=='"');
+	}
+	return true;
 }
 
 std::vector<Token> parseTokensSplit(const char* arg)
 {
 	std::vector<Token> ret;
 	splitterState st = SpSt__WhiteSpace;
+	bool bSettingSeparator = false;
 
 	unsigned int argindex = 1;
 
@@ -53,13 +63,16 @@ std::vector<Token> parseTokensSplit(const char* arg)
 			delimiter = '\0';
 			/* intentional fall-through */
 		case SpSt__Start:
+			if (ret.size()) {
+				bSettingSeparator = (ret.back().Type()==TokenListType__WORDSEPARATOR || ret.back().Type()==TokenListType__FIELDSEPARATOR);
+			}
 			if (*ptr=='\\') {
 				st = SpSt__Escape;
-			} else if (*ptr=='(') {
+			} else if (*ptr=='(' && !bSettingSeparator) {
 				st = SpSt__GettingChars;
 				delimiter = ')';
 				sarg+=*ptr;
-			} else if (isPossibleDelimiter(*ptr)) {
+			} else if (isPossibleDelimiter(ptr, bSettingSeparator)) {
 				st = SpSt__GettingChars;
 				delimiter = *ptr;
 				sarg+=*ptr;

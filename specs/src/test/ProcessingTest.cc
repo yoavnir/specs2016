@@ -738,6 +738,9 @@ int main(int argc, char** argv)
     spec = "SUBSTR WS @/@ WORD 3 of FS i FIELD 2";
 	VERIFY2(spec, "The Epic: 1/Jan/1970 at midnight", "1970 at m"); // Test #185
 
+    spec = "SUBSTR WS / WORD 3 of FS i FIELD 2";
+	VERIFY2(spec, "The Epic: 1/Jan/1970 at midnight", "1970 at m"); // Test #186
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";
