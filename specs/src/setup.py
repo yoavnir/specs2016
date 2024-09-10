@@ -307,13 +307,13 @@ sys.stderr.write("Platform={}; Compiler={}; Variation={}; Cached Dependencies={}
 if compiler=="GCC":
 	cxx = "g++"
 	if variation=="RELEASE":
-		condlink = "-O3"
+		condlink = "-O3 -lstdc++fs"
 		condcomp = "-O3"
 	elif variation=="DEBUG":
-		condlink = "-g"
+		condlink = "-g -lstdc++fs"
 		condcomp = "-g -DDEBUG -DALU_DUMP"
 	else:
-		condlink = "-O3 -g"
+		condlink = "-O3 -g -lstdc++fs"
 		condcomp = "-O3 -g"	
 elif compiler=="CLANG":
 	cxx = "clang++"
