@@ -6,20 +6,21 @@
 int CompleteIfUnambiguous(std::string& incomplete, std::string& prevToken, std::string& line)
 {
     std::string ret;
-    if (prevToken=="-f" || 0==strcasecmp("specfile", prevToken.c_str())) {
+    if (prevToken=="-f" || 0==strcasecmp("--specfile", prevToken.c_str())) {
         std::filesystem::path specPath(getFullSpecPath());
 
         for (auto const& dir_entry : std::filesystem::directory_iterator{specPath}) {
+            if (!dir_entry.is_regular_file()) continue;
             auto fname = dir_entry.path().stem().string();
-            std::cerr << fname << '\n';
             if (0 == fname.compare(0, incomplete.size(), incomplete)) {
                 if (ret.size()) return 0;  // already found a candidate - this is ambiguous
                 ret = fname;
             }
         }
-        std::cerr << incomplete << " - " << line << " - " << ret << "\n";
         if (ret.size()) std::cout << ret;
         return 0;
+    } else if (incomplete.length()>2 && incomplete[0]=='-' && incomplete[1]=='-') {
+        std::cout << "--fileSpec";
     }
     
     return 0;
@@ -28,12 +29,12 @@ int CompleteIfUnambiguous(std::string& incomplete, std::string& prevToken, std::
 int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::string& line)
 {
     std::string ret;
-    if (prevToken=="-f" || 0==strcasecmp("specfile", prevToken.c_str())) {
+    if (prevToken=="-f" || 0==strcasecmp("--specfile", prevToken.c_str())) {
         std::filesystem::path specPath(getFullSpecPath());
 
         for (auto const& dir_entry : std::filesystem::directory_iterator{specPath}) {
+            if (!dir_entry.is_regular_file()) continue;
             auto fname = dir_entry.path().stem().string();
-            std::cerr << fname << '\n';
             if (0 == fname.compare(0, incomplete.size(), incomplete)) {
                 if (ret.size()) {
                     ret = ret + " " + fname;
@@ -42,9 +43,10 @@ int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::stri
                 }
             }
         }
-        std::cerr << incomplete << " - " << line << " - " << ret << "\n";
         if (ret.size()) std::cout << ret;
         return 0;
+    } else if (incomplete.length()>2 && incomplete[0]=='-' && incomplete[1]=='-') {
+        std::cout << "--fileSpec --outFile";
     }
     
     return 0;
@@ -72,6 +74,7 @@ int main(int argc, char** argv)
         case '?':
             return CompleteUncertain(incomplete, prevToken, line);
         default:
+            std::cerr << "\nType: <" << type << "> (" << int(type) << ")\n";  // TODO Remove before merge
             break;
     }
     return 0;
