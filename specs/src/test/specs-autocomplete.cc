@@ -1,52 +1,60 @@
 #include <string.h>
 #include <iostream>
+#include <vector>
 #include <filesystem>
 #include "processing/Config.h"
 
-int CompleteIfUnambiguous(std::string& incomplete, std::string& prevToken, std::string& line)
-{
-    std::string ret;
-    if (prevToken=="-f" || 0==strcasecmp("--specfile", prevToken.c_str())) {
-        std::filesystem::path specPath(getFullSpecPath());
+typedef std::vector<std::string> StringVector;
 
-        for (auto const& dir_entry : std::filesystem::directory_iterator{specPath}) {
-            if (!dir_entry.is_regular_file()) continue;
-            auto fname = dir_entry.path().stem().string();
-            if (0 == fname.compare(0, incomplete.size(), incomplete)) {
-                if (ret.size()) return 0;  // already found a candidate - this is ambiguous
-                ret = fname;
-            }
+void GetFilesByPrefix(StringVector& sv, const char* path, std::string& prefix)
+{
+    std::filesystem::path specPath(path);
+    
+    for (auto const& dirEnt : std::filesystem::directory_iterator(specPath)) {
+        if (!dirEnt.is_regular_file()) continue;
+        auto fname = dirEnt.path().stem().string();
+        if (prefix.empty() || 0 == fname.compare(0, prefix.size(), prefix)) {
+            sv.push_back(fname);
         }
-        if (ret.size()) std::cout << ret;
-        return 0;
-    } else if (incomplete.length()>2 && incomplete[0]=='-' && incomplete[1]=='-') {
-        std::cout << "--fileSpec";
+    }
+}
+
+int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::string& line)
+{
+    if (prevToken=="-f" || 0==strcasecmp("--specfile", prevToken.c_str())) {
+        StringVector sv;
+        GetFilesByPrefix(sv, getFullSpecPath(), incomplete);
+        if (sv.empty()) {
+            GetFilesByPrefix(sv, ".", incomplete);
+        }
+        
+        bool bFirst = true;
+        for (auto const& s : sv) {
+            if (bFirst) {
+                std::cout << s;
+                bFirst = false;
+            } else std::cout << ' ' << s;
+        }
+        
+        if (!bFirst) std::cout << "\n";
     }
     
     return 0;
 }
 
-int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::string& line)
+int CompleteIfUnambiguous(std::string& incomplete, std::string& prevToken, std::string& line)
 {
     std::string ret;
     if (prevToken=="-f" || 0==strcasecmp("--specfile", prevToken.c_str())) {
-        std::filesystem::path specPath(getFullSpecPath());
-
-        for (auto const& dir_entry : std::filesystem::directory_iterator{specPath}) {
-            if (!dir_entry.is_regular_file()) continue;
-            auto fname = dir_entry.path().stem().string();
-            if (0 == fname.compare(0, incomplete.size(), incomplete)) {
-                if (ret.size()) {
-                    ret = ret + " " + fname;
-                } else {
-                    ret = fname;
-                }
-            }
+        StringVector sv;
+        GetFilesByPrefix(sv, getFullSpecPath(), incomplete);
+        if (sv.empty()) {
+            GetFilesByPrefix(sv, ".", incomplete);
         }
-        if (ret.size()) std::cout << ret;
-        return 0;
-    } else if (incomplete.length()>2 && incomplete[0]=='-' && incomplete[1]=='-') {
-        std::cout << "--fileSpec --outFile";
+        
+        if (sv.size()==1) {
+            std::cout << sv[0] << "\n";
+        }
     }
     
     return 0;
