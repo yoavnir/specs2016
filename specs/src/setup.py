@@ -307,13 +307,13 @@ sys.stderr.write("Platform={}; Compiler={}; Variation={}; Cached Dependencies={}
 if compiler=="GCC":
 	cxx = "g++"
 	if variation=="RELEASE":
-		condlink = "-O3 -lstdc++fs"
+		condlink = "-O3"
 		condcomp = "-O3"
 	elif variation=="DEBUG":
-		condlink = "-g -lstdc++fs"
+		condlink = "-g"
 		condcomp = "-g -DDEBUG -DALU_DUMP"
 	else:
-		condlink = "-O3 -g -lstdc++fs"
+		condlink = "-O3 -g"
 		condcomp = "-O3 -g"	
 elif compiler=="CLANG":
 	cxx = "clang++"
@@ -347,7 +347,7 @@ if platform=="POSIX":
 	mkdir_c = "mkdir -p"
 	exe_dir = "../exe"
 	clear_clean_part = clear_clean_posix
-	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt"
+	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
 elif platform=="NT":
 	mkdir_c = "mkdir"
 	exe_dir = "..\\exe"
@@ -404,6 +404,32 @@ if 0==rc:
 else:
 	sys.stdout.write("No.  Aborting...\n")
 	exit(-4)
+
+# Test if the -lstdc++fs linkage flag is needed
+testprog = """
+#include <iostream>
+#include <filesystem>
+int main(int argc, char** argv)
+{
+    std::filesystem::path sp{"."};
+    for (auto const& d : std::filesystem::directory_iterator(sp)) {
+        std::cout << d.path().stem().string() << "\\n";
+    }
+    return 0;
+}
+"""
+if compiler == "GCC":
+	sys.stdout.write("Testing linkage without the -lstdc++fs flag....")
+	with open("xx.cc", "w") as testfile:
+		testfile.write(testprog)
+	test_fslib_cmd = "g++ --std=c++17 xx.cc"
+	rc = run_the_cmd(test_fslib_cmd)
+	cleanup_after_compile()
+	if 0==rc:
+		sys.stdout.write("Success\n")
+	else:
+		sys.stdout.write("Failed, rc={}\n".format(rc))
+		condlink = condlink + " -lstdc++fs"
 
 # Find the version of the code
 sys.stdout.write("Figuring out code version...")
