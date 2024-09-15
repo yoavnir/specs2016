@@ -169,7 +169,7 @@ std::string ClockPart::Debug()
 
 PSpecString ClockPart::getStr(ProcessingState& pState)
 {
-	clockValue timeStamp;
+	clockValue timeStamp = 0;
 	switch (m_Type) {
 	case ClockType__Static:
 		timeStamp = m_StaticClock;
