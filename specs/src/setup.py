@@ -220,7 +220,7 @@ clear_clean_nt = \
 """
 clean:
 	del /S *.d *.o *.obj
-	del /q $(EXE_DIR)\*
+	del /q $(EXE_DIR)\\*
 	rmdir $(EXE_DIR)
 	
 clear:

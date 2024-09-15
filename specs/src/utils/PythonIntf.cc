@@ -280,14 +280,19 @@ public:
 		// update the python path
 		if (_path && _path[0]) {
 #ifdef PYTHON_VER_3
-			std::wstring wpath(strlen(_path)+1, L'#');
-			mbstowcs(&wpath[0],_path,strlen(_path));
-			wpath.erase(wpath.length()-1);
-			std::wstring newPath =  wpath + std::wstring(PATH_LIST_WSEPARATOR) + std::wstring(Py_GetPath());
-			// Need to finalize and then re-initialize for SetPath to "take"
-			Py_FinalizeEx();
-			Py_SetPath(newPath.data());
-			Py_Initialize();
+			PyObject* pSysMod = PyImport_ImportModule("sys");
+			MYASSERT_NOT_NULL(pSysMod);
+			PyObject* pPath = PyObject_GetAttrString(pSysMod, "path");
+			MYASSERT_NOT_NULL(pPath);
+			auto pPathElement = PyUnicode_FromString(_path);
+			MYASSERT_NOT_NULL(pPathElement);
+			auto rc = PyList_Insert(pPath,0,pPathElement);
+			Py_DECREF(pPathElement);
+			MYASSERT(rc==0);
+			rc = PyObject_SetAttrString(pSysMod, "path", pPath);
+			Py_DECREF(pPath);
+			MYASSERT(rc==0);
+			Py_DECREF(pSysMod);
 #else
 			std::string newPath = std::string(Py_GetPath()) + PATH_LIST_SEPARATOR + std::string(_path);
 			PySys_SetPath((char*)newPath.c_str());
