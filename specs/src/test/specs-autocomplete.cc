@@ -3,6 +3,7 @@
 #include <vector>
 #include <filesystem>
 #include "processing/Config.h"
+#include "utils/platform.h"
 
 typedef std::vector<std::string> StringVector;
 
@@ -19,42 +20,48 @@ void GetFilesByPrefix(StringVector& sv, const char* path, std::string& prefix)
     }
 }
 
-int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::string& line)
+static void getFilenameVector(StringVector& sv, std::string& incomplete, std::string& prevToken)
 {
     if (prevToken=="-f" || 0==strcasecmp("--specfile", prevToken.c_str())) {
-        StringVector sv;
         GetFilesByPrefix(sv, getFullSpecPath(), incomplete);
         if (sv.empty()) {
             GetFilesByPrefix(sv, ".", incomplete);
-        }
-        
-        bool bFirst = true;
-        for (auto const& s : sv) {
-            if (bFirst) {
-                std::cout << s;
-                bFirst = false;
-            } else std::cout << ' ' << s;
-        }
-        
-        if (!bFirst) std::cout << "\n";
+        }        
+    } else if (prevToken=="-i"  || prevToken=="-c" ||
+            0==strcasecmp("--inFile", prevToken.c_str()) ||
+            0==strcasecmp("--config", prevToken.c_str()) ||
+            (prevToken.length()==5 && 0==strncasecmp("--is", prevToken.c_str(),4))) {
+        GetFilesByPrefix(sv, ".", incomplete);
     }
-    
+}
+
+int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::string& line)
+{
+    StringVector sv;
+
+    getFilenameVector(sv, incomplete, prevToken);
+
+    bool bFirst = true;
+    for (auto const& s : sv) {
+       if (bFirst) {
+            std::cout << s;
+            bFirst = false;
+        } else std::cout << ' ' << s;
+    }
+        
+    if (!bFirst) std::cout << "\n";
+
     return 0;
 }
 
 int CompleteIfUnambiguous(std::string& incomplete, std::string& prevToken, std::string& line)
 {
-    std::string ret;
-    if (prevToken=="-f" || 0==strcasecmp("--specfile", prevToken.c_str())) {
-        StringVector sv;
-        GetFilesByPrefix(sv, getFullSpecPath(), incomplete);
-        if (sv.empty()) {
-            GetFilesByPrefix(sv, ".", incomplete);
-        }
+    StringVector sv;
+
+    getFilenameVector(sv, incomplete, prevToken);
         
-        if (sv.size()==1) {
-            std::cout << sv[0] << "\n";
-        }
+    if (sv.size()==1) {
+        std::cout << sv[0] << "\n";
     }
     
     return 0;
