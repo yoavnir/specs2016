@@ -13,7 +13,7 @@ void GetFilesByPrefix(StringVector& sv, const char* path, std::string& prefix)
     
     for (auto const& dirEnt : std::filesystem::directory_iterator(specPath)) {
         if (!dirEnt.is_regular_file()) continue;
-        auto fname = dirEnt.path().stem().string();
+        auto fname = dirEnt.path().filename().string();
         if (prefix.empty() || 0 == fname.compare(0, prefix.size(), prefix)) {
             sv.push_back(fname);
         }
