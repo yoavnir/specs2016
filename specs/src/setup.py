@@ -158,7 +158,7 @@ LIBOBJS = $(CCSRC:.cc=.{})
 TESTOBJS = $(TESTSRC:.cc=.{})
 
 #default goal
-some: directories $(EXE_DIR)/specs
+some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
 
 all: directories $(TEST_EXES)
 
@@ -196,14 +196,22 @@ $(EXE_DIR):
 $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
 	$(LINKER) {}$@{} {} $^ $(CONDLINK)
 		
-install_unix: $(EXE_DIR)/specs specs.1.gz
+install_mac: $(EXE_DIR)/specs specs.1.gz
+	cp $(EXE_DIR)/specs /usr/local/bin/
+	/bin/rm */*.d
+	$(MKDIR_C) /usr/local/share/man/man1
+	cp specs.1.gz /usr/local/share/man/man1/
+	/bin/rm specs.1.gz
+
+install_linux: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
 	cp $(EXE_DIR)/specs-autocomplete /usr/local/bin/
 	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
-	
+	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" /etc/bashrc | /usr/local/bin/specs -o /etc/bashrc 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
+
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
 """
@@ -683,9 +691,11 @@ with open("Makefile", "w") as makefile:
 	makefile.write("{}\n".format(body2fmt))
 	makefile.write("{}\n".format(clear_clean_part))
 	
-	if platform!="NT":
-		makefile.write("{}\n\ninstall: install_unix\n".format(manpart))
-	else:
+	if sys.platform=="darwin":
+		makefile.write("{}\n\ninstall: install_mac\n".format(manpart))
+    elif platform=="NT":
 		makefile.write("install: install_win\n")
-		
+	else:
+		makefile.write("{}\n\ninstall: install_linux\n".format(manpart))
+
 sys.stderr.write("Makefile created.\n")
