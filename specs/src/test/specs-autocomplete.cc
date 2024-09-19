@@ -41,15 +41,9 @@ int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::stri
 
     getFilenameVector(sv, incomplete, prevToken);
 
-    bool bFirst = true;
     for (auto const& s : sv) {
-       if (bFirst) {
-            std::cout << s;
-            bFirst = false;
-        } else std::cout << ' ' << s;
+        std::cout << s << "\n";
     }
-        
-    if (!bFirst) std::cout << "\n";
 
     return 0;
 }
@@ -60,8 +54,31 @@ int CompleteIfUnambiguous(std::string& incomplete, std::string& prevToken, std::
 
     getFilenameVector(sv, incomplete, prevToken);
         
-    if (sv.size()==1) {
+    if (sv.size()==0) {
+        return 0;
+    } else if (sv.size()==1) {
         std::cout << sv[0] << "\n";
+    } else {
+        std::string partial = incomplete;
+        bool stopped = false;
+        while (!stopped) {
+            size_t sz = partial.length();
+            char c = sv[0][sz];
+            if (!c) {
+                stopped = true;
+            } else for (std::string& s : sv) {
+                if (s[sz]!=c) {
+                    stopped = true;
+                }
+            }
+            if (!stopped) {
+                partial += c;
+            }
+        }
+        if (partial.length() > incomplete.length()) {
+            std::cout << partial;
+            return -1;
+        }
     }
     
     return 0;
