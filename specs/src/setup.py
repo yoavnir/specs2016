@@ -690,10 +690,10 @@ with open("Makefile", "w") as makefile:
 		makefile.write("\n{}\n".format(make_depends))
 	makefile.write("{}\n".format(body2fmt))
 	makefile.write("{}\n".format(clear_clean_part))
-	
+
 	if sys.platform=="darwin":
 		makefile.write("{}\n\ninstall: install_mac\n".format(manpart))
-    elif platform=="NT":
+	elif platform=="NT":
 		makefile.write("install: install_win\n")
 	else:
 		makefile.write("{}\n\ninstall: install_linux\n".format(manpart))
