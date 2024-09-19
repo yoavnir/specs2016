@@ -158,7 +158,7 @@ LIBOBJS = $(CCSRC:.cc=.{})
 TESTOBJS = $(TESTSRC:.cc=.{})
 
 #default goal
-some: directories $(EXE_DIR)/specs
+some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
 
 all: directories $(TEST_EXES)
 
@@ -196,13 +196,22 @@ $(EXE_DIR):
 $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
 	$(LINKER) {}$@{} {} $^ $(CONDLINK)
 		
-install_unix: $(EXE_DIR)/specs specs.1.gz
+install_mac: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
 	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
-	
+
+install_linux: $(EXE_DIR)/specs specs.1.gz
+	cp $(EXE_DIR)/specs /usr/local/bin/
+	cp $(EXE_DIR)/specs-autocomplete /usr/local/bin/
+	/bin/rm */*.d
+	$(MKDIR_C) /usr/local/share/man/man1
+	cp specs.1.gz /usr/local/share/man/man1/
+	/bin/rm specs.1.gz
+	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" /etc/bashrc | /usr/local/bin/specs -o /etc/bashrc 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
+
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
 """
@@ -347,7 +356,7 @@ if platform=="POSIX":
 	mkdir_c = "mkdir -p"
 	exe_dir = "../exe"
 	clear_clean_part = clear_clean_posix
-	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt"
+	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
 elif platform=="NT":
 	mkdir_c = "mkdir"
 	exe_dir = "..\\exe"
@@ -404,6 +413,32 @@ if 0==rc:
 else:
 	sys.stdout.write("No.  Aborting...\n")
 	exit(-4)
+
+# Test if the -lstdc++fs linkage flag is needed
+testprog = """
+#include <iostream>
+#include <filesystem>
+int main(int argc, char** argv)
+{
+    std::filesystem::path sp{"."};
+    for (auto const& d : std::filesystem::directory_iterator(sp)) {
+        std::cout << d.path().stem().string() << "\\n";
+    }
+    return 0;
+}
+"""
+if compiler == "GCC":
+	sys.stdout.write("Testing linkage without the -lstdc++fs flag....")
+	with open("xx.cc", "w") as testfile:
+		testfile.write(testprog)
+	test_fslib_cmd = "g++ --std=c++17 xx.cc"
+	rc = run_the_cmd(test_fslib_cmd)
+	cleanup_after_compile()
+	if 0==rc:
+		sys.stdout.write("Success\n")
+	else:
+		sys.stdout.write("Failed, rc={}\n".format(rc))
+		condlink = condlink + " -lstdc++fs"
 
 # Find the version of the code
 sys.stdout.write("Figuring out code version...")
@@ -655,10 +690,12 @@ with open("Makefile", "w") as makefile:
 		makefile.write("\n{}\n".format(make_depends))
 	makefile.write("{}\n".format(body2fmt))
 	makefile.write("{}\n".format(clear_clean_part))
-	
-	if platform!="NT":
-		makefile.write("{}\n\ninstall: install_unix\n".format(manpart))
-	else:
+
+	if sys.platform=="darwin":
+		makefile.write("{}\n\ninstall: install_mac\n".format(manpart))
+	elif platform=="NT":
 		makefile.write("install: install_win\n")
-		
+	else:
+		makefile.write("{}\n\ninstall: install_linux\n".format(manpart))
+
 sys.stderr.write("Makefile created.\n")

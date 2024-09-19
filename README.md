@@ -16,6 +16,7 @@ What's New:
 * Locale support in the `pretty` function
 * The unthreaded mode is now the default
 * While-guard to protect against endless loops in `while` statements
+* Tab-completion for `specs` command (Linux only)
 
 10-May-2024: Version 0.9.2 is here
 What's New:
