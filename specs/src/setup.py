@@ -210,7 +210,7 @@ install_linux: $(EXE_DIR)/specs specs.1.gz
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
-	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" /etc/bashrc | /usr/local/bin/specs -o /etc/bashrc 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
+	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" BASHRC | /usr/local/bin/specs -o BASHRC 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
 
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
@@ -357,15 +357,19 @@ if platform=="POSIX":
 	exe_dir = "../exe"
 	clear_clean_part = clear_clean_posix
 	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
+	bashrc = "/etc/bash.bashrc" if os.path.isfile("/etc/bash.bashrc") else "/etc/bashrc"
 elif platform=="NT":
 	mkdir_c = "mkdir"
 	exe_dir = "..\\exe"
 	clear_clean_part = clear_clean_nt
 	compiler_cleanup_cmd = "del xx.cc xx.o xx.exe xx.txt"
+	bashrc = "/dev/null"
 else:
 	sys.stderr.write("Logic error: platform {} is not supported.\n".format(platform))
 	exit(-4)
-	
+
+body2 = body2.replace("BASHRC", bashrc)
+
 if compiler=="VS":
 	cppflags = cppflags_vs
 	cppflags_test = "/EHsc /nologo /std:c++17"
