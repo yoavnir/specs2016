@@ -312,7 +312,7 @@ s = "print 'fieldrange(2,3)' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
 run_case(s,i,"Functions: fields")
 
-s = "print 'fieldcount()' 1"
+s = "--force-read-input print 'fieldcount()' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t\n"
 run_case(s,i,"Functions: fieldcount")
 
@@ -334,11 +334,11 @@ run_case(s,i,"Functions: number & recno (1)")
 
 s = "print 'number()' 1 print 'recno()' nw READ print 'number()' nw print 'recno()' nw"
 i = "1\n2\n3\n4\n5\n6\n7\n8\n9"
-run_case(s,i,"Functions: number & recno (2)")
+run_case(s,i,"Functions: number & recno (2)",memcheck.RetCode_COMMAND_FAILED)
 
 s = "print 'number()' 1 print 'recno()' nw READSTOP print 'number()' nw print 'recno()' nw"
 i = "1\n2\n3\n4\n5\n6\n7\n8\n9"
-run_case(s,i,"Functions: number & recno (3)")
+run_case(s,i,"Functions: number & recno (3)",memcheck.RetCode_COMMAND_FAILED)
 
 s = "print 'record()' 1"
 i = "1\n\nhello"
@@ -352,7 +352,7 @@ s = "print 'wordrange(2,3)' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
 run_case(s,i,"Functions: wordrange")
 
-s = "print 'wordcount()' 1"
+s = "--force-read-input print 'wordcount()' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
 run_case(s,i,"Functions: wordcount")
 
@@ -596,7 +596,7 @@ ELSE
 ENDIF
 """
 i = input_samples.gitlog
-run_case(s,i,"READ and READSTOP")
+run_case(s,i,"READ and READSTOP",memcheck.RetCode_COMMAND_FAILED)
 
 # UNREAD
 s = \
@@ -615,7 +615,7 @@ DONE
 UNREAD
 """
 i = input_samples.gitlog
-run_case(s,i,"UNREAD")
+run_case(s,i,"UNREAD",memcheck.RetCode_COMMAND_FAILED)
 
 # REDO
 

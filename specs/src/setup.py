@@ -187,6 +187,7 @@ run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
+	python $(TESTS_DIR)/valgrind_specs.py --no_valgrind
 
 directories: $(EXE_DIR)
 
@@ -355,12 +356,14 @@ if platform=="NT":
 if platform=="POSIX":
 	mkdir_c = "mkdir -p"
 	exe_dir = "../exe"
+	tests_dir = "../tests"
 	clear_clean_part = clear_clean_posix
 	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
 	bashrc = "/etc/bash.bashrc" if os.path.isfile("/etc/bash.bashrc") else "/etc/bashrc"
 elif platform=="NT":
 	mkdir_c = "mkdir"
 	exe_dir = "..\\exe"
+	tests_dir = "..\\tests"
 	clear_clean_part = clear_clean_nt
 	compiler_cleanup_cmd = "del xx.cc xx.o xx.exe xx.txt"
 	bashrc = "/dev/null"
@@ -671,7 +674,7 @@ with open("Makefile", "w") as makefile:
 	makefile.write("CONDLINK={}\n".format(condlink))
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
-	# makefile.write("TAG := $(shell git describe --abbrev=0 --tags)\n\n")
+	makefile.write("TESTS_DIR={}\n".format(tests_dir))
 	makefile.write("CPPFLAGS = {}\n".format(cppflags))
 	
 	if compiler=="VS":
