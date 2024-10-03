@@ -19,7 +19,7 @@ Switches
 * --specFile or -f -- reads the specification from a file rather than the command line.
 * --verbose or -v -- outputs more information when something goes wrong.
 * --stats -- output statistics on run time, and records read, and on records written. 
-* `--unthreaded` or `-u` -- run **specs** in a single thread. The default is to have separate threads for processing, readers, and writers.
+* `--threaded` or `-t` -- run **specs** in separate threads for processing, for readers, and for writers. This was the default until version 0.9.5. Now the default is to run everything in a single thread.
 * --inFile or -i -- get the input records from a file rather than standard input.
 * --outFile or -o -- write the output records to a file rather than standard output.
 * --shell or -X -- executes the output records as shell commands rather than emitting them to standard output. 
@@ -48,7 +48,7 @@ The **InputPart** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
 * A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
-* A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` characters -- a tab by default. The field indexing is 1-based.
+* A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based.
 * **TODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch.
 * **DTODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** - A record counter as a 10-digit decimal number.
@@ -98,8 +98,7 @@ There are also other spec units, that may be used:
 * **readstop** - causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
 * **write**- causes the program to write to output and reset the output 
       line.
-* **WordSeparator** and **FieldSeparator** declare a character to be the word of field separator respectively which affects word and field ranges. For **WordSeparator** it is possible to use the special value, *default*,
-to make all whitespace defined by the locale work as a word separator. 
+* **WordSeparator** and **FieldSeparator** declare a string of characters to be the word of field separators respectively which affects word and field ranges. For **WordSeparator** it is possible to use the special value, *default*, to make all whitespace defined by the locale work as a word separator. This keyword can also be used locally in a `SubString` spec unit.
 * **redo** -- causes the current output line to become the new input line.  NOT IMPLEMENTED YET.
 
 MainOptions
@@ -137,6 +136,19 @@ The loop available in specs is a **while** loop.  It begins with the **while** t
                 set /#2 -= 1/
             done
 ```
+While-Guard
+===========
+The **while-guard** feature, available from version 0.9.5 makes an effort to prevent **specs** from entering endless loops. For example, consider this specification.
+```
+            set "#1 := 5"
+            while #1 > 3 do
+                set "#1 += 1"
+            done
+```
+Without **while-guard** this specification will loop forever. To solve this, **specs** keeps a counter for each while statement that it increments each time the loop is entered. This counter is reset to zero if a record is read from any input.  The **specs** program exits when the counter reaches 5000.
+
+**While-Guard** is not perfect. To disable it, you can use the command-line switch `--no-while-guard` or you can override the maximum iteration count at which the program exist by setting the `while-guard-limit` to some integer value.
+
 RunIn and RunOut Cycles
 =========================
 A **cycle** is defined as a single run of the specification, which includes reading an input record, processing it, and outputting one or more records. If the specification contains **read** or **readstop** tokens, a single cycle can consume more than one input records.

@@ -12,6 +12,7 @@
 extern ALUCounters g_counters;
 extern char        g_printonly_rule;
 extern bool        g_keep_suppressed_record;
+extern unsigned int g_WhileGuardLimit;
 
 std::string prettify(std::string src)
 {
@@ -41,10 +42,12 @@ std::string prettify(std::string src)
 		if (!ps) {                              \
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
 			errorCount++;                       \
+			failedTests.push_back(testCount);      \
 		} else {                                \
-			if (*(ps) != std::string(ex)) {              \
+			if (*(ps) != std::string(ex)) {     \
 				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
 				errorCount++;                   \
+				failedTests.push_back(testCount);  \
 			} else {                            \
 				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
 			}                                   \
@@ -59,10 +62,12 @@ std::string prettify(std::string src)
 		if (!ps) {                              \
 			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << prettify(ex) << ">\n"; \
 			errorCount++;                       \
+			failedTests.push_back(testCount);      \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {              \
 				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
 				errorCount++;                   \
+				failedTests.push_back(testCount);  \
 			} else {                            \
 				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
 			}                                   \
@@ -70,8 +75,9 @@ std::string prettify(std::string src)
 } while (0);
 
 #define VERIFYCMD(cmd,res) do {                 \
-	std::string actual_res("");                 \
 	testCount++;                                \
+	if (onlyTest!=0 && onlyTest != testCount) break;  \
+	std::string actual_res("");                 \
 	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 	try { cmd; }                                \
 	catch(SpecsException& e) {                  \
@@ -81,6 +87,7 @@ std::string prettify(std::string src)
 		std::cout << "***** OK *****: <" << prettify(actual_res) << ">\n"; \
 	} else {                                    \
 		errorCount++;                           \
+		failedTests.push_back(testCount);          \
 		std::cout << "*** NOT OK ***:\n\tGot <" << prettify(actual_res) << ">\n\tExp <" << prettify(res) << ">\n"; \
 	}                                           \
 } while (0);
@@ -208,13 +215,16 @@ int main(int argc, char** argv)
 	int errorCount = 0;
 	int testCount  = 0;
 	int onlyTest   = 0;
+	std::vector<int> failedTests;
 
 	std::string spec;
 	std::string strm;
 
 	if (argc > 1) onlyTest = std::stoi(argv[1]);
 
-	readConfigurationFile();
+	std::string key("version");
+	std::string value("1.0");
+	configSpecLiteralSet(key,value);
 
 	specTimeSetTimeZone("UTC-2"); // All the time-format tests were set based on this time zone
 
@@ -448,6 +458,7 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "1\n2\n3\n4\n1\n5\n2\n3\n4\n3\n3", "5 11 3 5 4 0.3636 36.364%"); // TEST #103
 
 	// random and statistics
+	g_WhileGuardLimit = 10050;
 	spec = "while '#0<10000' do                  " \
            "   print 'fmap_sample(a,rand(10))' . " \
            "   set '#0+=1'                       " \
@@ -502,7 +513,7 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "1\n2\n3\n4\n5\n6", "1+2=3\n3+4=7\n5+6=11"); // TEST #110
 
 	// locales
-	VERIFYCMD(specTimeSetLocale("kuku"),"Invalid locale <kuku>");  // TEST #111
+	VERIFYCMD(specTimeSetLocale("kuku",true),"Invalid locale <kuku>");  // TEST #111
 
 #ifdef SPANISH_LOCALE_SUPPORTED
 	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112
@@ -686,8 +697,57 @@ int main(int argc, char** argv)
 	spec = "SET '#0:=word(1);#1+=#0' print #1";
 	VERIFY2(spec, "1\n2\n3\n4", "1\n3\n6\n10"); // TEST #172
 
+	// Multi-char field and word separator
+	VERIFY2("fs :. field 2 1 field 5 nw", "192.168.1.5:443", "168 443"); // Test #173
+	VERIFY2("fs :. field 2 1 field 5 nw", "192.168.1.5:443.5", "168 443"); // Test #174
+	VERIFY2("w1 1 substr fs :. field 3:-2 of w2 nw", "ip:port 192.168.1.5:443.5", "ip:port 1.5:443"); // Test #175
+
+	VERIFY2("ws :. word 2 1 word 5 nw", "192.168.1.5:443", "168 443"); // Test #176
+	VERIFY2("ws :. word 2 1 word 5 nw", "192.168.1:.:.5:443.5", "168 443"); // Test #177
+	VERIFY2("w1 1 substr ws :. word 3:-2 of 9-* nw", "ip:port 192.168.1.5:443.5", "ip:port 1.5:443"); // Test #178
+
+	// Issue #241
+	VERIFY("print '99.2189254761+1'", "100.2189254761");  // Test #179
+
+	// While-guard - similar to 104
+	g_WhileGuardLimit = 100;
+	spec = "while '#0<10000' do                  " \
+           "   print 'fmap_sample(a,rand(10))' . " \
+           "   set '#0+=1'                       " \
+           "done                                 " \
+           "set '#1:=fmap_count(a,7)'            " \
+           "if '#1 > 900 & #1 < 1100' then       " \
+           "   /OK/ 1                            " \
+           "else                                 " \
+           "   /NOT OK/ 1                        " \
+           "endif                                ";
+
+	VERIFY(spec, "Potentially endless while-loop detected in Token 2 with condition <#0<10000> - looped 101 times.");  // TEST #180
+
+	spec = "SUBSTR WS @/@ WORD 2 of WORD 3";
+	VERIFY2(spec, "The Epoch: 1/Jan/1970 at midnight", "Jan"); // Test #181
+
+    spec = "SUBSTR WS @/@ FS i WORD 2 of WORD 3";
+	VERIFY2(spec, "The Epoch: 1/Jan/1970 at midnight", "Jan"); // Test #182
+
+	VERIFY2(spec, "The Epic 1/Jan/1970 at midnight", "Jan"); // Test #183
+
+    spec = "SUBSTR WS @/@ FS i WORD 2 of FIELD 3";
+	VERIFY2(spec, "The Epic: 1/Jan/1970 at midnight", ""); // Test #184
+
+    spec = "SUBSTR WS @/@ WORD 3 of FS i FIELD 2";
+	VERIFY2(spec, "The Epic: 1/Jan/1970 at midnight", "1970 at m"); // Test #185
+
+    spec = "SUBSTR WS / WORD 3 of FS i FIELD 2";
+	VERIFY2(spec, "The Epic: 1/Jan/1970 at midnight", "1970 at m"); // Test #186
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
+		std::cout << "Failed tests: ";
+		for (int i : failedTests) {
+			std::cout << i << " ";
+		}
+		std::cout << "\n";
 	} else {
 		std::cout << "\nAll tests passed.\n";
 	}

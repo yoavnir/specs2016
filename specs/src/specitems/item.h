@@ -21,6 +21,7 @@ public:
 };
 
 typedef std::shared_ptr<InputPart> PPart;
+static std::string emptyString;
 
 class LiteralPart : public InputPart {
 public:
@@ -60,24 +61,24 @@ typedef std::shared_ptr<RegularRangePart> PRegularRangePart;
 
 class WordRangePart : public RangePart {
 public:
-	WordRangePart(int _first, int _last, char sep=0) : RangePart(_first,_last) {m_WordSep = sep;}
+	WordRangePart(int _first, int _last, const std::string& sep) : RangePart(_first,_last) {m_WordSep = sep;}
 	virtual ~WordRangePart() {}
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 private:
-	char m_WordSep;
+	std::string m_WordSep;
 };
 
 typedef std::shared_ptr<WordRangePart> PWordRangePart;
 
 class FieldRangePart : public RangePart {
 public:
-	FieldRangePart(int _first, int _last, char sep=0) : RangePart(_first,_last) {m_FieldSep = sep;}
+	FieldRangePart(int _first, int _last, const std::string& sep) : RangePart(_first,_last) {m_FieldSep = sep;}
 	virtual ~FieldRangePart() {}
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 private:
-	char m_FieldSep;
+	std::string m_FieldSep;
 };
 
 typedef std::shared_ptr<FieldRangePart> PFieldRangePart;
@@ -193,7 +194,7 @@ public:
 	virtual bool isBreak()    {return false;}
 	virtual bool ApplyUnconditionally() {return false;}
 	unsigned int originalIndex() { return m_originalIndex; }
-private:
+protected:
 	unsigned int m_originalIndex;
 };
 
@@ -209,7 +210,7 @@ public:
 	virtual bool readsLines();
 	virtual bool forcesRunoutCycle() {return m_InputPart ? m_InputPart->forcesRunoutCycle() : false;}
 private:
-	PPart getInputPart(std::vector<Token> &tokenVec, unsigned int& index, char _wordSep=0, char _fieldSep=0);
+	PPart getInputPart(std::vector<Token> &tokenVec, unsigned int& index, const std::string& _wordSep=emptyString, const std::string& _fieldSep=emptyString);
 	PSubstringPart getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
 	void stripString(PSpecString &pOrig);
 	void interpretComposedOutputPlacement(std::string& outputPlacement);
@@ -310,6 +311,8 @@ private:
 	bool   m_isAssignment;
 	ALUCounterKey	m_counter;
 	POperator       m_assnOp;
+	int             whileGuardCount{0};
+	uint64_t        whileGuardRecordCounter{0};
 };
 
 typedef std::shared_ptr<ConditionItem> PConditionItem;

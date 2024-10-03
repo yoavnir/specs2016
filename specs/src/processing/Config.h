@@ -7,7 +7,7 @@
 #define CONFIG_PARAMS  \
 	X(bDummy,                       bool,         false,  0,DummyOption,        true)       \
 	X(bSupportUTF8,                 bool,         false,  0,EXP-UTF8,           true)       \
-	X(bUnthreaded,                  bool,         false,  u,unthreaded,         true)       \
+	X(bThreaded,                    bool,         false,  t,threaded,           true)       \
 	X(bOutputTranslatedAscii,       bool,         false,  0,toASCII,            true)       \
 	X(bForceFileRead,               bool,         false,  0,force-read-input,   true)       \
 	X(specFile,                     std::string,  "",     f,specFile,           NEXTARG)    \
@@ -19,6 +19,7 @@
 	X(bLocalWhiteSpace,             bool,         true,   w,spaceWS,            false)      \
 	X(bDebugAluCompile,             bool,         false,  0,debug-alu-comp,     true)       \
 	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
+	X(bNoWhileGuard,                bool,         false,  0,no-while-guard,     true)       \
 	X(configurationFile,            std::string,  "",     c,config,             NEXTARG)    \
 	X(timeZone,                     std::string,  "",     0,timezone,           NEXTARG)    \
 	X(recfm,                        std::string,  "",     0,recfm,              NEXTARG)    \

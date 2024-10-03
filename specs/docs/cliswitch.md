@@ -24,7 +24,7 @@ Using files also allows you to include comments. The rules for comments are that
 You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by OS-specific path separator character. On Linux and Mac OS this is a colon (`:`). On Windows this is a semicolon (`;`).  If neither the environment variable nor the configuration string are set, the **SPECSPATH** defaults to `$HOME/specs` on Linux and Mac OS, and to `%APPDATA%\specs` on Windows.
 * `--verbose` or `-v` -- outputs more information when something goes wrong.
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
-The resulting stats look something like this:
+The resulting stats look something like this when running in threaded mode (see below):
 ```
 Read  608913 lines.
 Wrote 608913 lines.
@@ -49,7 +49,19 @@ Writer Thread:
 	Waiting on input queue: 5.979 seconds (51.880%)
 	Draining: 48.686 us (0.000%)
 ```
-* `--unthreaded` or `-u` -- run **specs** in a single thread. The default is to have separate threads for processing, readers, and writers.
+When running in the default non-threaded mode, it will look something like this:
+```
+Read  38502 lines.
+Wrote 38502 lines.
+Run Time: 0.513283 seconds.
+CPU Time: 0.810503 seconds.
+Main Thread:
+	Initializing: 686.218 us (0.134%)
+	Processing: 120.042 ms (23.363%)
+	Waiting on IO: 393.068 ms (76.501%)
+	Draining: 11.257 us (0.002%)
+```
+* `--threaded` or `-t` -- run **specs** in separate threads for processing, for readers, and for writers. This was the default until version 0.9.5. Now the default is to run everything in a single thread.
 * `--inFile` **filename** or `-i` **filename** -- get the input records from a file rather than standard input.
 * `--inCmd` **cmd** or ``-C` **cmd** -- get the input records from the output of a command specified following this switch.
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.
@@ -57,6 +69,7 @@ Writer Thread:
 * `--spaceWS` -- Makes **specs** only treat spaces as the default word separator. By default all locale-defined whitespace is treated as the word separator.
 * `--debug-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
 * `--debug-alu-run` -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
+* `--no-while-guard` -- Disables **while-guard**, allowing specifications to enter endless loops.
 * `--timezone` **name** -- convert to and from time-formatted strings using the selected timezone. Valid values are from the TZ database and look like `Africa/Dakar`, `America/Chicago`, `Asia/Calcutta`, `Australia/Sydney`, or `Europe/Berlin`.  A full list of such timezones is available on [Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).  Note that the same timezones can also be configured in the config
 * `--config` **filename** or `-c` **filename** -- overrides the default configuration file which is `~/.specs` on POSIX-based operating systems (Mac OS and Linux) or `%HOME%\specs.cfg` on Windows.
 * `--set` **name=value** or `-s` **name=value** -- sets the named string *name* to the value *value*.

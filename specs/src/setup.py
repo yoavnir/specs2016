@@ -5,10 +5,66 @@ python_ldflags=""
 python_version=0
 
 def run_the_cmd(cmd):
+	global platform
 	with open("xx.txt","w") as o:
 		rc = subprocess.call(cmd,shell=True,stdout=o.fileno(), stderr=o.fileno())
 	return rc
+
+def get_the_version(doPrint):
+	test_version_cmd = "git branch --show-current > git_output.txt"
+	rc = run_the_cmd(test_version_cmd)
+	if 0==rc:
+		with open("git_output.txt", "r") as output:
+			gittag = output.read().strip()
+			if doPrint:
+				sys.stdout.write("Found git branch <{}>...".format(gittag))
+	else:
+		if doPrint:
+			sys.stdout.write("git not present. Going with <unknown>...")
+		gittag = "unknown"
+
+	if platform=="NT":
+		os.system("del git_output.txt")
+	else:
+		os.system("/bin/rm git_output.txt")
+
+	if gittag.startswith("dev-"):
+		if doPrint:
+			sys.stdout.write("Yes, going with that.")
+		return gittag
 	
+	# Get the version from manpage
+	with open("../../manpage", "r") as manpage:
+		foundVersion = False
+		rdline = "XXX"
+		while (False == foundVersion) & (rdline != ''):
+			rdline = manpage.readline().strip()
+			line = rdline.split(' ')
+			if line[0] == '.TH':
+				if (line[1]!='man') | (line[7]!='"specs'):
+					sys.stderr.write("\nMalformed .TH line: Second word is {}; Eighth is {}\n".format(line[1], line[7]))
+					exit(-4)
+				manpage_version = line[6].strip('"')
+				if doPrint:
+					sys.stdout.write("Found version <{}> in manpage...".format(manpage_version))
+				foundVersion = True
+		if False == foundVersion:
+			sys.stderr.write("\nMalformed manpage file: no .TH line found\n")
+			exit(-4)
+
+	if gittag == "dev":
+		if doPrint:
+			sys.stdout.write("Setting to <v{}-beta>".format(manpage_version))
+		return "v{}-beta".format(manpage_version)
+	elif gittag == "stable":
+		if doPrint:
+			sys.stdout.write("Setting to <v{}>".format(manpage_version))
+		return "v{}".format(manpage_version)
+	else:
+		if doPrint:
+			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,manpage_version))
+		return "{}({})".format(gittag,manpage_version)
+
 def cleanup_after_compile():
 	global compiler_cleanup_cmd,platform
 	with open("yy.txt","w") as o:
@@ -83,9 +139,9 @@ with open("xx.txt","w") as v:
 	sys.stdout.write("Yes.\n")
 	return True
 
-cppflags_gcc = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) --std=c++17 -I ."
-cppflags_clang = "-Werror $(CONDCOMP) -DGITTAG=$(TAG) -std=c++17 -I ."
-cppflags_vs = "$(CONDCOMP) /DGITTAG=$(TAG) /std:c++17 /nologo /I."
+cppflags_gcc = "-Werror $(CONDCOMP) --std=c++17 -I ."
+cppflags_clang = "-Werror $(CONDCOMP) -std=c++17 -I ."
+cppflags_vs = "$(CONDCOMP) /std:c++17 /nologo /I."
 
 body1 = \
 """
@@ -102,7 +158,7 @@ LIBOBJS = $(CCSRC:.cc=.{})
 TESTOBJS = $(TESTSRC:.cc=.{})
 
 #default goal
-some: directories $(EXE_DIR)/specs
+some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
 
 all: directories $(TEST_EXES)
 
@@ -131,6 +187,7 @@ run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
+	python $(TESTS_DIR)/valgrind_specs.py --no_valgrind
 
 directories: $(EXE_DIR)
 
@@ -140,13 +197,22 @@ $(EXE_DIR):
 $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
 	$(LINKER) {}$@{} {} $^ $(CONDLINK)
 		
-install_unix: $(EXE_DIR)/specs specs.1.gz
+install_mac: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
 	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
-	
+
+install_linux: $(EXE_DIR)/specs specs.1.gz
+	cp $(EXE_DIR)/specs /usr/local/bin/
+	cp $(EXE_DIR)/specs-autocomplete /usr/local/bin/
+	/bin/rm */*.d
+	$(MKDIR_C) /usr/local/share/man/man1
+	cp specs.1.gz /usr/local/share/man/man1/
+	/bin/rm specs.1.gz
+	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" BASHRC | /usr/local/bin/specs -o BASHRC 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
+
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
 """
@@ -164,7 +230,7 @@ clear_clean_nt = \
 """
 clean:
 	del /S *.d *.o *.obj
-	del /q $(EXE_DIR)\*
+	del /q $(EXE_DIR)\\*
 	rmdir $(EXE_DIR)
 	
 clear:
@@ -290,17 +356,23 @@ if platform=="NT":
 if platform=="POSIX":
 	mkdir_c = "mkdir -p"
 	exe_dir = "../exe"
+	tests_dir = "../tests"
 	clear_clean_part = clear_clean_posix
-	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt"
+	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
+	bashrc = "/etc/bash.bashrc" if os.path.isfile("/etc/bash.bashrc") else "/etc/bashrc"
 elif platform=="NT":
 	mkdir_c = "mkdir"
 	exe_dir = "..\\exe"
+	tests_dir = "..\\tests"
 	clear_clean_part = clear_clean_nt
 	compiler_cleanup_cmd = "del xx.cc xx.o xx.exe xx.txt"
+	bashrc = "/dev/null"
 else:
 	sys.stderr.write("Logic error: platform {} is not supported.\n".format(platform))
 	exit(-4)
-	
+
+body2 = body2.replace("BASHRC", bashrc)
+
 if compiler=="VS":
 	cppflags = cppflags_vs
 	cppflags_test = "/EHsc /nologo /std:c++17"
@@ -348,6 +420,37 @@ if 0==rc:
 else:
 	sys.stdout.write("No.  Aborting...\n")
 	exit(-4)
+
+# Test if the -lstdc++fs linkage flag is needed
+testprog = """
+#include <iostream>
+#include <filesystem>
+int main(int argc, char** argv)
+{
+    std::filesystem::path sp{"."};
+    for (auto const& d : std::filesystem::directory_iterator(sp)) {
+        std::cout << d.path().stem().string() << "\\n";
+    }
+    return 0;
+}
+"""
+if compiler == "GCC":
+	sys.stdout.write("Testing linkage without the -lstdc++fs flag....")
+	with open("xx.cc", "w") as testfile:
+		testfile.write(testprog)
+	test_fslib_cmd = "g++ --std=c++17 xx.cc"
+	rc = run_the_cmd(test_fslib_cmd)
+	cleanup_after_compile()
+	if 0==rc:
+		sys.stdout.write("Success\n")
+	else:
+		sys.stdout.write("Failed, rc={}\n".format(rc))
+		condlink = condlink + " -lstdc++fs"
+
+# Find the version of the code
+sys.stdout.write("Figuring out code version...")
+gittag = get_the_version(True)
+sys.stdout.write("\n")
 
 # Test if the compiler supports put_time
 test_put_time_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
@@ -405,7 +508,44 @@ else:
 	sys.stdout.write("Internal error.\n")
 	exit(-4)
 cleanup_after_compile()
-	
+
+# Test what kind of German locale the environment supports.
+test_german_locale_cmd = "{} {} -o xx.exe xx.cc".format(cxx,cppflags_test)
+with open("xx.cc", "w") as testfile:
+	testfile.write('#include <locale>\n')
+	testfile.write('#include <iostream>\n')
+	testfile.write('int main(int argc, char** argv) {\n')
+	testfile.write('    std::locale l("de_DE");\n')
+	testfile.write('    const std::numpunct<char>& facet = std::use_facet<std::numpunct<char> >(l);\n')
+	testfile.write('    std::string s = facet.grouping();\n')
+	testfile.write('    if (s[0] == 127) {\n')
+	testfile.write('        std::cout << "NO-SEP\\n";\n')
+	testfile.write('    } else {\n')
+	testfile.write('        std::cout << "SEP\\n";\n')
+	testfile.write('    }\n')
+	testfile.write('    return 0;\n')
+	testfile.write('}\n')
+sys.stdout.write("Testing German locale (for unit tests)...")
+if 0==run_the_cmd(test_german_locale_cmd):
+	sys.stdout.write("Compiled...")
+	test_spanish_locale_cmd = "./xx.exe" if platform!="NT" else "xx.exe"
+	if 0==run_the_cmd(test_spanish_locale_cmd):
+		with open("xx.txt", "r") as output:
+			sep = output.read().strip()
+			if sep=="NO-SEP":
+				sys.stdout.write("No thousands separator in German locale\n")
+				CFG_german_locale = "nosep"
+			else:
+				sys.stdout.write("Uses thousands separator in German locale\n")
+				CFG_german_locale = "sep"
+	else:
+		sys.stdout.write("Not supported\n")
+		CFG_german_locale = False
+else:
+	sys.stdout.write("Internal error.\n")
+	exit(-4)
+cleanup_after_compile()
+
 # Test if the environment contains a random number generator
 found_random_source = False
 rand_source = "rand"
@@ -490,11 +630,16 @@ else:
 # RegEx different grammars
 CFG_regex_grammars = (sys.platform=="darwin")
 	
+condcomp = condcomp + '{}GITTAG="{}"'.format(def_prefix,gittag)
+
 if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
 	
 if CFG_spanish_locale:
 	condcomp = condcomp + "{}SPANISH_LOCALE_SUPPORTED".format(def_prefix)
+
+if CFG_german_locale == "sep":
+	condcomp = condcomp + "{}GERMAN_LOCALE_HAS_SEP".format(def_prefix)
 
 if CFG_advanced_regex:
 	condcomp = condcomp + "{}ADVANCED_REGEX_FUNCTIONS".format(def_prefix)
@@ -529,7 +674,7 @@ with open("Makefile", "w") as makefile:
 	makefile.write("CONDLINK={}\n".format(condlink))
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
-	makefile.write("TAG := $(shell git describe --abbrev=0 --tags)\n\n")
+	makefile.write("TESTS_DIR={}\n".format(tests_dir))
 	makefile.write("CPPFLAGS = {}\n".format(cppflags))
 	
 	if compiler=="VS":
@@ -552,10 +697,12 @@ with open("Makefile", "w") as makefile:
 		makefile.write("\n{}\n".format(make_depends))
 	makefile.write("{}\n".format(body2fmt))
 	makefile.write("{}\n".format(clear_clean_part))
-	
-	if platform!="NT":
-		makefile.write("{}\n\ninstall: install_unix\n".format(manpart))
-	else:
+
+	if sys.platform=="darwin":
+		makefile.write("{}\n\ninstall: install_mac\n".format(manpart))
+	elif platform=="NT":
 		makefile.write("install: install_win\n")
-		
+	else:
+		makefile.write("{}\n\ninstall: install_linux\n".format(manpart))
+
 sys.stderr.write("Makefile created.\n")

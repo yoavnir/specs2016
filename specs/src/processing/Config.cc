@@ -18,6 +18,7 @@
 #include "utils/TimeUtils.h"
 #include "utils/PythonIntf.h"
 #include "utils/aluRegex.h"
+#include "utils/aluFunctions.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -27,6 +28,7 @@
 CONFIG_PARAMS
 #undef X
 
+extern unsigned int g_WhileGuardLimit;
 
 static std::map<std::string,std::string> ExternalLiterals;
 
@@ -37,9 +39,13 @@ static void useKeyValue(std::string& key, std::string& value)
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
 		} else if (key == "locale") {
+			if (value=="global") value = "";
 			specTimeSetLocale(value);
+			specPrettySetLocale(value);
 		} else if (key == "regexType") {
 			setRegexType(value);
+		} else if (key == "while-guard-limit") {
+			g_WhileGuardLimit = std::stoul(value);
 		}
 		if (ExternalLiterals.find(key) == ExternalLiterals.end()) {
 			ExternalLiterals[key] = value;

@@ -61,6 +61,10 @@ public:
 	StringWriter() {}
 	virtual ~StringWriter() {}
 	virtual void WriteOut() {}
+	virtual void WriteOutDo(PSpecString ps, classifyingTimer& tmr) 
+	{
+		m_queue.push(ps);
+	}
 	virtual PSpecString getString() {
 		if (!m_queue.empty()) {
 			PSpecString ret;

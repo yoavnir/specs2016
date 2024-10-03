@@ -10,19 +10,19 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+01-Oct-2024: Version 0.9.5 alpha is here
+What's New:
+* The `exact()` function prototype for compatibility
+* Locale support in the `pretty` function
+* The unthreaded mode is now the default
+* While-guard to protect against endless loops in `while` statements
+* Tab-completion for `specs` command (Linux only)
+
 10-May-2024: Version 0.9.2 is here
 What's New:
 * An unthreaded mode of operation
 * Compound `SET` statements
 * Reduced necessity of quoting complex conditions for `if` and `while`
-* Bug fixes
-
-29-JAN-2023: Version 0.9.1 is here
-What's New:
-* Allow execution of the output with the `--shell` or `-X` command line parameters
-* New function `pretty`
-* Usability improvements for functions `wordcount`, `fieldcount`.
-* Compiler alignment
 * Bug fixes
 
 
@@ -34,9 +34,9 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.5:
 ```
-git checkout v0.9.2
+git checkout v0.9.5
 ```
 A simple way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```

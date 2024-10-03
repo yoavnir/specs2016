@@ -44,7 +44,7 @@ PSpecString RegularRangePart::getStr(ProcessingState& pState)
 
 std::string WordRangePart::Debug()
 {
-	if (m_WordSep) {
+	if (!m_WordSep.empty()) {
 		return "Words" + RangePart::Debug() + "(separated by /" + m_WordSep + "/)";
 	} else {
 		return "Words" + RangePart::Debug();
@@ -54,10 +54,10 @@ std::string WordRangePart::Debug()
 PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
 	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
-	char keepSeparator = DEFAULT_WORDSEPARATOR;
-	if (m_WordSep) {
-		keepSeparator = pState.getWSChar();
-		pState.setWSChar(m_WordSep);  // as a side-effect, invalidates the current word list
+	std::string keepSeparator(DEFAULT_WORDSEPARATOR);
+	if (!m_WordSep.empty()) {
+		keepSeparator = pState.getWSChars();
+		pState.setWSChars(m_WordSep);  // as a side-effect, invalidates the current word list
 	}
 
 	PSpecString ret;
@@ -68,8 +68,8 @@ PSpecString WordRangePart::getStr(ProcessingState& pState)
 		ret = pState.getFromTo(pState.getWordStart(_from), pState.getWordEnd(_to));
 	}
 
-	if (m_WordSep) {
-		pState.setWSChar(keepSeparator);
+	if (!m_WordSep.empty()) {
+		pState.setWSChars(keepSeparator);
 	}
 
 	return ret;
@@ -77,7 +77,7 @@ PSpecString WordRangePart::getStr(ProcessingState& pState)
 
 std::string FieldRangePart::Debug()
 {
-	if (m_FieldSep) {
+	if (!m_FieldSep.empty()) {
 		return "Fields" + RangePart::Debug() + "(separated by /" + m_FieldSep + "/)";
 	} else {
 		return "Fields" + RangePart::Debug();
@@ -87,10 +87,10 @@ std::string FieldRangePart::Debug()
 PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
 	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
-	char keepSeparator = DEFAULT_FIELDSEPARATOR;
-	if (m_FieldSep) {
-		keepSeparator = pState.getFSChar();
-		pState.setFSChar(m_FieldSep);  // as a side-effect, invalidates the current field list
+	std::string keepSeparator(DEFAULT_FIELDSEPARATOR);
+	if (!m_FieldSep.empty()) {
+		keepSeparator = pState.getFSChars();
+		pState.setFSChars(m_FieldSep);  // as a side-effect, invalidates the current field list
 	}
 
 	PSpecString ret;
@@ -101,8 +101,8 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 		ret = pState.getFromTo(pState.getFieldStart(_from), pState.getFieldEnd(_to));
 	}
 
-	if (m_FieldSep) {
-		pState.setFSChar(keepSeparator);
+	if (!m_FieldSep.empty()) {
+		pState.setFSChars(keepSeparator);
 	}
 
 	return ret;
@@ -128,8 +128,8 @@ PSpecString SubstringPart::getStr(ProcessingState& pState)
 	// Create the special pState for the substring.
 	ProcessingState subState;
 	subState.setString(bigPart);
-	subState.setFSChar(pState.getFSChar());
-	subState.setWSChar(pState.getWSChar());
+	subState.setFSChars(pState.getFSChars());
+	subState.setWSChars(pState.getWSChars());
 
 	PSpecString ret = mp_SubPart->getStr(subState);
 	return ret;
@@ -169,7 +169,7 @@ std::string ClockPart::Debug()
 
 PSpecString ClockPart::getStr(ProcessingState& pState)
 {
-	clockValue timeStamp;
+	clockValue timeStamp = 0;
 	switch (m_Type) {
 	case ClockType__Static:
 		timeStamp = m_StaticClock;

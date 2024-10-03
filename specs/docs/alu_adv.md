@@ -65,7 +65,7 @@
 | `fact(n)` | Returns the factorial function of `n` |
 | `floor(x)` | Returns the largest integer smaller than `x` |
 | `fmt(value,format,digits,decimal,separator)` | formats a floating-point `value` as a string. The `format` argument can be omitted, or it can begin with **f** for a **fixed** number of `digits` after the decimal point, or **s** for **scientific** notation. When omitted, the `digits` argument sets the total number of digits displayed. The `decimal` argument sets the character used for the decimal point (default is a period), while the `separator` argument sets the character used as thousands separator (default is none). |
-| `pretty(value,flimit,ilimit)` | formats the number in `value` as a printable string with commas.  The optional `flimit` and `ilimit` parameters determine how many digits the floating point or integer number should have (to the left of the decimal point) before the function switches to scientific notation. These parameters default to 10 and infinite digits respectively. |
+| `pretty(value,flimit,ilimit,locale)` | formats the number in `value` as a printable string with commas.  The optional `flimit` and `ilimit` parameters determine how many digits the floating point or integer number should have (to the left of the decimal point) before the function switches to scientific notation. These parameters default to 10 and infinite digits respectively. The number is formatted according to the **locale** specified in the `locale` configuration string. The optional `locale` parameter overrides that configuration.|
 | `frombin(x)` | Returns the decimal value of the binary `x`. For example, if `x` is "A", the function returns 65; if `x` is "AB" the function returns 16961. Binary values are assumed to be in little-endian order. |
 | `log(x,base)` | Returns the logarithm of `x`. The default for `base` is to return the natural logarithm. |
 | `permutations(n,k)` | Returns the number of possible choices of `k` elements from a set of `n` elements: <img src="https://render.githubusercontent.com/render/math?math=\frac{n!}{(n-k)!}"/> |
@@ -234,6 +234,7 @@ The parameters for the `fmap_dump` functions are as follows:
 | `s2tf(x,f)` | Returns the string representation of the number `x` treated as seconds since the UNIX epoch and formatted according to the string in `f`. |
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |
 | `next()` | Returns the index of the print position. `w1 "(next())"` should do the same as `w1 next`. |
+| `exact(expression)` | Returns `1` if the evaluation of the `expression` results in an exact value, or `0` if not. For now, it always returns `0`. |
 
 
 
