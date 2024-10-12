@@ -15,7 +15,10 @@ def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, con
         sys.stdout.write("Failed. RC={}; info={}; expected: {}\n".format(memcheck.RetCode_strings[rc],info,memcheck.RetCode_strings[expected_rc]))
         exit(4)
     else:
-        sys.stdout.write("No leaks\n")
+        if memcheck.no_valgrind:
+        	sys.stdout.write("valgrind skipped\n")
+        else:
+	        sys.stdout.write("No leaks\n")
         
 # Parse the one command line options
 parser = argparse.ArgumentParser()
@@ -735,3 +738,5 @@ s = \
 """
 run_case(s,i,"inline variable")
 
+
+sys.stdout.write("\n*** All tests passed.\n")
