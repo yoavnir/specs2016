@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";
 	} else {
-		std::cout << "\nAll tests passed.\n";
+		std::cout << "\n*** All tests passed.\n";
 	}
 
 	return (failedTests==0) ? 0 : 4;

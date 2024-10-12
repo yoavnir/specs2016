@@ -749,7 +749,7 @@ int main(int argc, char** argv)
 		}
 		std::cout << "\n";
 	} else {
-		std::cout << "\nAll tests passed.\n";
+		std::cout << "\n*** All tests passed.\n";
 	}
 
 	return (errorCount==0) ? 0 : 4;
