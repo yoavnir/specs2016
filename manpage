@@ -1720,6 +1720,10 @@ Prints out detailed step-by-step information about the evaluation of expressions
 Disables 
 .I while-guard, 
 allowing specifications to enter endless loops.
+.IP "--progress" 3
+While
+.B specs
+is running, will print once a second a message to stderr telling the user how many records have already been processed.
 .IP "--config or -c" 3
 Changes the configuration file from the default 
 .I ~/.specs

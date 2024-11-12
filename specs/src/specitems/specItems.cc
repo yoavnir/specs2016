@@ -580,6 +580,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 
 void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, classifyingTimer& tmr)
 {
+	static time_t progressTick = 0;
 	PSpecString ps;
 	unsigned int readerCounter = 1;  // we only got 1.
 
@@ -587,6 +588,11 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		pState.setString(ps);
 		pState.setFirst();
 		pState.incrementCycleCounter();
+
+		if (g_bShowProgress && (time(nullptr)!=progressTick)) {
+			progressTick = time(nullptr);
+			std::cerr << "\n\tspecs: Read " << pState.getRecordCount() << " records.\n";
+		}
 
 		if (processDo(sb,pState, &rd, tmr, readerCounter)) {
 			bool bPrintSuppressed = pState.printSuppressed(g_printonly_rule);

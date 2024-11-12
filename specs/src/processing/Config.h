@@ -20,6 +20,7 @@
 	X(bDebugAluCompile,             bool,         false,  0,debug-alu-comp,     true)       \
 	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
 	X(bNoWhileGuard,                bool,         false,  0,no-while-guard,     true)       \
+	X(bShowProgress,                bool,         false,  0,progress,           true)       \
 	X(configurationFile,            std::string,  "",     c,config,             NEXTARG)    \
 	X(timeZone,                     std::string,  "",     0,timezone,           NEXTARG)    \
 	X(recfm,                        std::string,  "",     0,recfm,              NEXTARG)    \
