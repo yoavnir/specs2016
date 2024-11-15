@@ -18,7 +18,8 @@ What's New:
 * The unthreaded mode is now the default.
 * While-guard to protect against endless loops in `while` statements.
 * Improved @version.
-* Tab-completion for `specs` command (Linux only).
+* Tab-completion for the `specs` command (Linux only).
+* A new `--progress` command-line switch to allow the user to monitor progress in reading records.
 * Bug fixes
 
 10-May-2024: Version 0.9.2 is here
