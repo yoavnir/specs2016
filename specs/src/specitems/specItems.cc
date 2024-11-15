@@ -591,7 +591,9 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 
 		if (g_bShowProgress && (time(nullptr)!=progressTick)) {
 			progressTick = time(nullptr);
-			std::cerr << "\n\tspecs: Read " << pState.getRecordCount() << " records.\n";
+			auto pv = mkValue(pState.getRecordCount());
+			auto pvstr = AluFunc_pretty(pv, nullptr, nullptr, nullptr);
+			std::cerr << "\n\tspecs: Read " << pvstr->getStr() << " records.\n";
 		}
 
 		if (processDo(sb,pState, &rd, tmr, readerCounter)) {
