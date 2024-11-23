@@ -324,6 +324,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(center, CENTER);
 	SIMPLETOKEN(centre, CENTER);
 	SIMPLETOKEN(number, NUMBER);
+	SIMPLETOKEN(recno, NUMBER);
 	SIMPLETOKEN(read, READ);
 	SIMPLETOKEN(readstop, READSTOP);
 	SIMPLETOKEN(write, WRITE);
