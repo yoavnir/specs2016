@@ -70,6 +70,8 @@ A range of fields, such as `fields 5` or `f5-7`, where fields are separated by e
 begun, while DTODclock gives the time of producing the current record.
 .P
 .B NUMBER
+or 
+.B RECNO
 -- A record counter as a 10-digit decimal number.
 .P
 .B TIMEDIFF
