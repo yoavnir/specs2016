@@ -27,6 +27,8 @@ Switches
 * --inCmd or -C -- get the input records from the output of a command specified following this switch.
 * --debug-alu-comp -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
 * --debug-alu-run -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
+* --no-while-guard -- Disables **while-guard**, allowing specifications to enter endless loops.
+* --progress -- While **specs**is running, will print once a second a message to stderr telling the user how many records have already been processed.
 * --help -- prints out some help information.
 * --info -- prints out information about this build of **specs**.
    
@@ -51,10 +53,9 @@ The **InputPart** argument may be any of the following:
 * A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based.
 * **TODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch.
 * **DTODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
-* **NUMBER** - A record counter as a 10-digit decimal number.
+* **NUMBER** or **RECNO** - A record counter as a 10-digit decimal number.
 * **TIMEDIFF** - a 12-char decimal number indicating the number of microseconds since the invocation of the program.
 * An **ID** keyword followed by a previously defined **FieldIdentifier**.
-* The **NUMBER** keyword used as a counter for processed records.
 * The **PRINT** keyword followed by a calculated expression
 * A string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the command line requires you to enclose them in double quotes.
 * A **SUBSTring** of another InputPart.
