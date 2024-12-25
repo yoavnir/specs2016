@@ -70,8 +70,6 @@ A range of fields, such as `fields 5` or `f5-7`, where fields are separated by e
 begun, while DTODclock gives the time of producing the current record.
 .P
 .B NUMBER
-or 
-.B RECNO
 -- A record counter as a 10-digit decimal number.
 .P
 .B TIMEDIFF
@@ -1722,10 +1720,6 @@ Prints out detailed step-by-step information about the evaluation of expressions
 Disables 
 .I while-guard, 
 allowing specifications to enter endless loops.
-.IP "--progress" 3
-While
-.B specs
-is running, will print once a second a message to stderr telling the user how many records have already been processed.
 .IP "--config or -c" 3
 Changes the configuration file from the default 
 .I ~/.specs

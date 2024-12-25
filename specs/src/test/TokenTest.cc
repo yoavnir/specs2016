@@ -88,7 +88,6 @@ int main(int argc, char** argv)
 	TESTNS("left center centre right lefta lef cent centrer", "LEFT|CENTER|CENTER|RIGHT|LITERAL; /lefta/|LITERAL; /lef/|LITERAL; /cent/|LITERAL; /centrer/");
 	TESTNS("C2B B2C X2CH C2X", "CONVERSION; /C2B/|CONVERSION; /B2C/|CONVERSION; /X2CH/|CONVERSION; /C2X/");
 	TESTNS("numBER NUMbe numBERa", "NUMBER|LITERAL; /NUMbe/|LITERAL; /numBERa/");
-	TESTNS("recNO RECno RecN ReCnOm", "NUMBER|NUMBER|LITERAL; /RecN/|LITERAL; /ReCnOm/");
 	TESTNS("reAd wrIte ReadStop", "READ|WRITE|READSTOP");
 	TESTNS("a: w1 . ID a 1", "RANGELABEL; /a/|WORDRANGE; S:1|PERIOD|ID; /a/|RANGE; S:1");
 	TESTNS("stop anyeof printonly eof w1 1", "STOP; /any/|PRINTONLY; /EOF/|WORDRANGE; S:1|RANGE; S:1");
@@ -97,7 +96,7 @@ int main(int argc, char** argv)
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";
 	} else {
-		std::cout << "\n*** All tests passed.\n";
+		std::cout << "\nAll tests passed.\n";
 	}
 
 	return (failedTests==0) ? 0 : 4;
