@@ -204,6 +204,8 @@ public:
 				default:
 					if (g_bVerbose) {
 						PyErr_Print();
+					} else {
+						PyErr_Clear();
 					}
 					MYTHROW("Error in external function");
 				}
