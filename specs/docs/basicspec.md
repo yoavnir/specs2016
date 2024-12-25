@@ -39,7 +39,7 @@ The **InputSource** argument may be any of the following:
 * A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based. Negative indexes can be used here as well.
 * **TODclock** - a floating point number, accurate to microseconds and giving seconds since the Unix epoch.
 * **DTODclock** - a floating point number, accurate to microseconds and giving seconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
-* **NUMBER** or **RECNO** - A record counter as a 10-digit decimal number.  Read more about expressions on the [Arithmetic-Logical Unit](alu.md) page.
+* **NUMBER** - A record counter as a 10-digit decimal number.  Read more about expressions on the [Arithmetic-Logical Unit](alu.md) page.
 * **TIMEDIFF** - a 12-char decimal number indicating the number of microseconds since the invocation of the program.
 * An **ID** keyword followed by a previously defined **FieldIdentifier**.
 * The **PRINT** keyword followed by a calculated expression. The keyword **PRINT** can be replaced by a question mark, either as a standalone token as in `specs ? "2+2"` or as a prefix to the expression, as in `specs "?2+2"`. It should be noted that the former does not work in a shell environment such as *zsh* or *tcsh*, where a question mark is a wildcard for a single character, but it does work for *bash*.

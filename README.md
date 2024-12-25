@@ -10,17 +10,13 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-29-Dec-2024: Version 0.9.5 is here
+01-Oct-2024: Version 0.9.5 alpha is here
 What's New:
-* The `exact()` function prototype for compatibility.
-* Locale support in the `pretty` function.
-* Multiple `field` and `word` separators.
-* The unthreaded mode is now the default.
-* While-guard to protect against endless loops in `while` statements.
-* Improved @version.
-* Tab-completion for the `specs` command (Linux only).
-* A new `--progress` command-line switch to allow the user to monitor progress in reading records.
-* Bug fixes
+* The `exact()` function prototype for compatibility
+* Locale support in the `pretty` function
+* The unthreaded mode is now the default
+* While-guard to protect against endless loops in `while` statements
+* Tab-completion for `specs` command (Linux only)
 
 10-May-2024: Version 0.9.2 is here
 What's New:
