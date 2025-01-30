@@ -741,6 +741,11 @@ int main(int argc, char** argv)
     spec = "SUBSTR WS / WORD 3 of FS i FIELD 2";
 	VERIFY2(spec, "The Epic: 1/Jan/1970 at midnight", "1970 at m"); // Test #186
 
+	// RECNO - Issue #277
+	spec = "WORD 1 a: IF a%2==0 THEN RECNO 1";
+	VERIFY2(spec, "1\n2\n3\n4\n5", "         2\n         4"); // Test #187
+
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

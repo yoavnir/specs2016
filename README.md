@@ -10,6 +10,13 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+03-Jan-2025: Version 0.9.5-HF1 is here
+What's new:
+ * Fixes a bug where `RECNO` within a loop returned the number of iterations of the loop rather than the numbers of records read.
+
+NOTE: This is a non-backwards-compatible change. 
+
+
 29-Dec-2024: Version 0.9.5 is here
 What's New:
 * The `exact()` function prototype for compatibility.
@@ -20,13 +27,6 @@ What's New:
 * Improved @version.
 * Tab-completion for the `specs` command (Linux only).
 * A new `--progress` command-line switch to allow the user to monitor progress in reading records.
-* Bug fixes
-
-10-May-2024: Version 0.9.2 is here
-What's New:
-* An unthreaded mode of operation
-* Compound `SET` statements
-* Reduced necessity of quoting complex conditions for `if` and `while`
 * Bug fixes
 
 
@@ -40,7 +40,7 @@ Building
 ========
 If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.5:
 ```
-git checkout v0.9.5
+git checkout dev-0.9.5-hf1
 ```
 A simple way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
