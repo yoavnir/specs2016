@@ -101,13 +101,11 @@ typedef std::shared_ptr<SubstringPart> PSubstringPart;
 #define CLOCKDIFF_PART_FIELD_LEN 12
 class NumberPart : public InputPart {
 public:
-	NumberPart() {m_Num = 0;}
-	virtual ~NumberPart() {}
+	NumberPart() {}
 	virtual std::string Debug();
 	virtual PSpecString getStr(ProcessingState& pState);
 	virtual bool        readsLines() {return true;}
 private:
-	unsigned long m_Num;
 };
 
 typedef std::shared_ptr<NumberPart> PNumberPart;
