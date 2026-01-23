@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 Jan 2025" "0.9.5-HF1" "specs man page"
+.TH man 1 "1 Jan 2025" "0.9.6-dev" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -13,7 +13,7 @@ is a command line utility for parsing and re-arranging text input. It allows re-
 This is a re-writing of the specs pipeline stage from CMS, only changed quite a bit.
 .P 
 This version is liberally based on the CMS Pipelines User's Guide and Reference
-.URL "https://publib.boulder.ibm.com/epubs/pdf/hcsj0c30.pdf"
+.URL "https://www.vm.ibm.com/library/740pdfs/74625200.pdf"
 -- especially chapters 16, 24, and 20.
 
 .SS "Spec Units"
