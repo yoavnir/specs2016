@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <cstring>
 #include <algorithm> // for sort
 #include "utils/ErrorReporting.h"
 
