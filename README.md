@@ -10,13 +10,14 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-
 28-Feb-2026: Version 0.9.6 is here (planned)
+
 What's new:
  * Support for newer Linux distros (newer gcc)
  * Bug fixes (?)
- 
+***
 03-Jan-2025: Version 0.9.5-HF1 is here
+
 What's new:
  * Fixes a bug where `RECNO` within a loop returned the number of iterations of the loop rather than the numbers of records read.
 
