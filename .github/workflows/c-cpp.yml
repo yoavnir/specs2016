@@ -35,4 +35,4 @@ jobs:
     - name: Build specs (Release)
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64
     - name: Test specs executable
-      run: specs/bin/Release/specs.exe --version
+      run: specs/bin/Release/specs.exe @version
