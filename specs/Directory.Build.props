@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <GitTag>0.9.6</GitTag>
+  </PropertyGroup>
+</Project>

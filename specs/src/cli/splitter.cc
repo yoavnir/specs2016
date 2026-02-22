@@ -177,7 +177,8 @@ static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 	// No?  Try the path
 	char* spath = strdup(getFullSpecPath());
 	if (spath && spath[0]) {
-		char* onePath = strtok(spath, PATH_LIST_SEPARATOR);
+		char* spath_ctx = spath;
+		char* onePath = strtok_r(spath, PATH_LIST_SEPARATOR, &spath_ctx);
 		while (onePath) {
 			std::string fullpath = std::string(onePath) + PATHSEP + fileName;
 			theFile.open(fullpath);
@@ -185,7 +186,7 @@ static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 				free(spath);
 				return;
 			}
-			onePath = strtok(nullptr, PATH_LIST_SEPARATOR);
+			onePath = strtok_r(nullptr, PATH_LIST_SEPARATOR, &spath_ctx);
 		}
 	}
 	if (spath) free(spath);
@@ -234,7 +235,8 @@ bool dumpSpecificationsList(std::string specName)
 {
 	char* spath = strdup(getFullSpecPath());
 	if (spath && spath[0]) {
-		char* onePath = strtok(spath, PATH_LIST_SEPARATOR);
+		char* spath_ctx = spath;
+		char* onePath = strtok_r(spath, PATH_LIST_SEPARATOR, &spath_ctx);
 		while (onePath) {
 			auto fileNameList = getDirectoryFileNames(onePath);
 			unsigned int idx;
@@ -249,7 +251,7 @@ bool dumpSpecificationsList(std::string specName)
 					if (specName=="") {
 						if (getline(specFile,line)) {
 							if (line[0]=='#') {
-								std::cerr << ": " << line.substr(1);
+								std::cerr << " - " << line.substr(1);
 							}
 						}
 						std::cerr << std::endl;
@@ -269,7 +271,7 @@ bool dumpSpecificationsList(std::string specName)
 					}
 				}
 			}
-			onePath = strtok(nullptr, PATH_LIST_SEPARATOR);
+			onePath = strtok_r(nullptr, PATH_LIST_SEPARATOR, &spath_ctx);
 		}
 	}
 	if (spath) free(spath);

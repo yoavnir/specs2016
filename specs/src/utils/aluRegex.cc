@@ -58,7 +58,8 @@ void setRegexType(std::string& s) {
 	g_regexType = std::regex_constants::ECMAScript;
 	gs_regexType = s;
 	char* st = strdup(s.c_str());
-	char* p = strtok(st,",");
+	char* st_ctx = st;
+	char* p = strtok_r(st,",", &st_ctx);
 	while (p) {
 		if (0 == strcasecmp(p,"icase")) {
 			g_regexType |= std::regex_constants::icase;
@@ -93,7 +94,7 @@ void setRegexType(std::string& s) {
 		if (bWarnUnsupportedGrammarOption && g_bWarnAboutGrammars) {
 			std::cerr << "\nWarning: syntax option '" << p << "' is not supported on this platform\n";
 		}
-		p = strtok(nullptr, ",");
+		p = strtok_r(nullptr, ",", &st_ctx);
 	}
 	free(st);
 }
@@ -132,7 +133,8 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 			ret = std::regex_constants::match_default;
 
 			char* st = strdup(str.c_str());
-			char* p = strtok(st,",");
+			char* st_ctx = st;
+			char* p = strtok_r(st,",", &st_ctx);
 			while (p) {
 				if (0 == strcasecmp(p,"default")) {
 					ret |= std::regex_constants::match_default;
@@ -162,7 +164,7 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 					std::string err = "Invalid regular expression match option type: " + std::string(p);
 					MYTHROW(err);
 				}
-				p = strtok(nullptr, ",");
+				p = strtok_r(nullptr, ",", &st_ctx);
 			}
 			free(st);
 

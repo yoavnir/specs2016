@@ -1,0 +1,49 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "specs", "src\specs.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F01}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcessingTest", "src\ProcessingTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F02}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TokenTest", "src\TokenTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F03}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALUUnitTest", "src\ALUUnitTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F04}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cacheTest", "src\cacheTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F05}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "itemTest", "src\itemTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F06}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "readWriteTest", "src\readWriteTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F07}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "timeTest", "src\timeTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F08}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F01}.Debug|x64.ActiveCfg = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F01}.Debug|x64.Build.0 = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F01}.Release|x64.ActiveCfg = Release|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F01}.Release|x64.Build.0 = Release|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F02}.Debug|x64.ActiveCfg = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F02}.Release|x64.ActiveCfg = Release|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F03}.Debug|x64.ActiveCfg = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F03}.Release|x64.ActiveCfg = Release|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F04}.Debug|x64.ActiveCfg = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F04}.Release|x64.ActiveCfg = Release|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F05}.Debug|x64.ActiveCfg = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F05}.Release|x64.ActiveCfg = Release|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F06}.Debug|x64.ActiveCfg = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F06}.Release|x64.ActiveCfg = Release|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F07}.Debug|x64.ActiveCfg = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F07}.Release|x64.ActiveCfg = Release|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F08}.Debug|x64.ActiveCfg = Debug|x64
+		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F08}.Release|x64.ActiveCfg = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

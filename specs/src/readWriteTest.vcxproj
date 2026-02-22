@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F07}</ProjectGuid>
+    <RootNamespace>readWriteTest</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\readWriteTest\</IntDir>
+    <TargetName>readWriteTest</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\readWriteTest\</IntDir>
+    <TargetName>readWriteTest</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN64;DEBUG;ALU_DUMP;ALURAND_wincrypt;PUT_TIME__SUPPORTED;ADVANCED_REGEX_FUNCTIONS;SPECS_NO_PYTHON;PYTHON_FULL_VER=N/A;GITTAG="$(GitTag)";LITERAL_PLATFORM="NT (win32) system using the cl.exe compiler - debug variation";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>Sync</ExceptionHandling>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN64;ALURAND_wincrypt;PUT_TIME__SUPPORTED;ADVANCED_REGEX_FUNCTIONS;SPECS_NO_PYTHON;PYTHON_FULL_VER=N/A;GITTAG="$(GitTag)";LITERAL_PLATFORM="NT (win32) system using the cl.exe compiler - release variation";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>Sync</ExceptionHandling>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="cli\splitter.cc" />
+    <ClCompile Include="cli\tokens.cc" />
+    <ClCompile Include="processing\Config.cc" />
+    <ClCompile Include="processing\ProcessingState.cc" />
+    <ClCompile Include="processing\Reader.cc" />
+    <ClCompile Include="processing\StringBuilder.cc" />
+    <ClCompile Include="processing\Writer.cc" />
+    <ClCompile Include="processing\conversions.cc" />
+    <ClCompile Include="processing\persistent.cc" />
+    <ClCompile Include="specitems\InputPart.cc" />
+    <ClCompile Include="specitems\dataField.cc" />
+    <ClCompile Include="specitems\specItems.cc" />
+    <ClCompile Include="utils\ErrorReporting.cc" />
+    <ClCompile Include="utils\PythonIntf.cc" />
+    <ClCompile Include="utils\SpecString.cc" />
+    <ClCompile Include="utils\TimeUtils.cc" />
+    <ClCompile Include="utils\alu.cc" />
+    <ClCompile Include="utils\aluFunctions.cc" />
+    <ClCompile Include="utils\aluRand.cc" />
+    <ClCompile Include="utils\aluRegex.cc" />
+    <ClCompile Include="utils\directives.cc" />
+    <ClCompile Include="utils\platform.cc" />
+    <ClCompile Include="test\readWriteTest.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cli\tokens.h" />
+    <ClInclude Include="processing\Config.h" />
+    <ClInclude Include="processing\ProcessingState.h" />
+    <ClInclude Include="processing\Reader.h" />
+    <ClInclude Include="processing\StringBuilder.h" />
+    <ClInclude Include="processing\Writer.h" />
+    <ClInclude Include="processing\conversions.h" />
+    <ClInclude Include="processing\persistent.h" />
+    <ClInclude Include="specitems\item.h" />
+    <ClInclude Include="specitems\specItems.h" />
+    <ClInclude Include="utils\ErrorReporting.h" />
+    <ClInclude Include="utils\PythonIntf.h" />
+    <ClInclude Include="utils\SpecString.h" />
+    <ClInclude Include="utils\StringQueue.h" />
+    <ClInclude Include="utils\TimeUtils.h" />
+    <ClInclude Include="utils\alu.h" />
+    <ClInclude Include="utils\aluFunctions.h" />
+    <ClInclude Include="utils\aluRand.h" />
+    <ClInclude Include="utils\aluRegex.h" />
+    <ClInclude Include="utils\aluValue.h" />
+    <ClInclude Include="utils\directives.h" />
+    <ClInclude Include="utils\lruCache.h" />
+    <ClInclude Include="utils\platform.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
