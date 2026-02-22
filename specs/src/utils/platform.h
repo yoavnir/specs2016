@@ -22,6 +22,8 @@ int setenv(const char *name, const char *value, int overwrite);
 	//not #if defined(_WIN32) || defined(_WIN64) because we have strncasecmp in mingw
 	#define strncasecmp _strnicmp
 	#define strcasecmp _stricmp
+    #define strdup _strdup
+    #define strtok strtok_s
 	#define ALUFloatPrecision  15
 	#define VISUAL_STUDIO
 	#define NOMINMAX 1
