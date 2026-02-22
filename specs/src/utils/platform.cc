@@ -41,8 +41,8 @@ char** getDirectoryFileNames(const char* spath)
 		enlargeStringArray(pRet, 64, rsize);
 	}
 
-	WIN32_FIND_DATA fdata;
-	HANDLE hfind = FindFirstFile(std::string(spath).append("\\*").c_str(), &fdata);
+	WIN32_FIND_DATAA fdata;
+	HANDLE hfind = FindFirstFileA(std::string(spath).append("\\*").c_str(), &fdata);
 	if (hfind == INVALID_HANDLE_VALUE) {
 		pRet[0] = NULL;
 		return pRet;
@@ -63,7 +63,7 @@ char** getDirectoryFileNames(const char* spath)
 
 			index++;
 		}
-	} while (FindNextFile(hfind, &fdata) != 0);
+	} while (FindNextFileA(hfind, &fdata) != 0);
 
 	return pRet;
 }
