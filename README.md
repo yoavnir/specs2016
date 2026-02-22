@@ -14,6 +14,7 @@ News
 
 What's new:
  * Support for newer Linux distros (newer gcc)
+ * Support for Visual Studio and latest Windows versions
  * Bug fixes (?)
 ***
 03-Jan-2025: Version 0.9.5-HF1 is here
@@ -61,6 +62,14 @@ Anyone can contribute. So far, I have written most of the code, but if you want 
 * Submit bug reports or feature requests at the [Issue Tracker](https://github.com/yoavnir/specs2016/issues).
 * Help solve some existing issue.
 * Submit pull requests
+* Even if you use only Windows or only Linux, make sure to update both the `setup.py` file and the relevant `vcxproj` file or files.
+
+New Versions
+============
+When starting a new version:
+* Update the README file
+* Update the manpage
+* Update specs/Directory.Build.props
 
 Contributors
 ============
