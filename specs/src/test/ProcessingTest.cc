@@ -113,10 +113,11 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	TestReader tRead(100);
 	unsigned int readerCounter = 1;
 	char* example = strdup(_example);
-	char* ln = strtok(example, "\n");
+	char* example_ctx = example;
+	char* ln = strtok_r(example, "\n", &example_ctx);
 	while (ln) {
 		tRead.InsertString(ln);
-		ln = strtok(nullptr, "\n");
+		ln = strtok_r(nullptr, "\n", &example_ctx);
 	}
 
 	char* specList = (char*)_specList;

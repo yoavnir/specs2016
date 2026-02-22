@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="cli">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="processing">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="specitems">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000005}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cli\splitter.cc">
+      <Filter>cli</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\tokens.cc">
+      <Filter>cli</Filter>
+    </ClCompile>
+    <ClCompile Include="processing\Config.cc">
+      <Filter>processing</Filter>
+    </ClCompile>
+    <ClCompile Include="processing\ProcessingState.cc">
+      <Filter>processing</Filter>
+    </ClCompile>
+    <ClCompile Include="processing\Reader.cc">
+      <Filter>processing</Filter>
+    </ClCompile>
+    <ClCompile Include="processing\StringBuilder.cc">
+      <Filter>processing</Filter>
+    </ClCompile>
+    <ClCompile Include="processing\Writer.cc">
+      <Filter>processing</Filter>
+    </ClCompile>
+    <ClCompile Include="processing\conversions.cc">
+      <Filter>processing</Filter>
+    </ClCompile>
+    <ClCompile Include="processing\persistent.cc">
+      <Filter>processing</Filter>
+    </ClCompile>
+    <ClCompile Include="specitems\InputPart.cc">
+      <Filter>specitems</Filter>
+    </ClCompile>
+    <ClCompile Include="specitems\dataField.cc">
+      <Filter>specitems</Filter>
+    </ClCompile>
+    <ClCompile Include="specitems\specItems.cc">
+      <Filter>specitems</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\ErrorReporting.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\PythonIntf.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\SpecString.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\TimeUtils.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\alu.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\aluFunctions.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\aluRand.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\aluRegex.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\directives.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\platform.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="test\specs.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cli\tokens.h">
+      <Filter>cli</Filter>
+    </ClInclude>
+    <ClInclude Include="processing\Config.h">
+      <Filter>processing</Filter>
+    </ClInclude>
+    <ClInclude Include="processing\ProcessingState.h">
+      <Filter>processing</Filter>
+    </ClInclude>
+    <ClInclude Include="processing\Reader.h">
+      <Filter>processing</Filter>
+    </ClInclude>
+    <ClInclude Include="processing\StringBuilder.h">
+      <Filter>processing</Filter>
+    </ClInclude>
+    <ClInclude Include="processing\Writer.h">
+      <Filter>processing</Filter>
+    </ClInclude>
+    <ClInclude Include="processing\conversions.h">
+      <Filter>processing</Filter>
+    </ClInclude>
+    <ClInclude Include="processing\persistent.h">
+      <Filter>processing</Filter>
+    </ClInclude>
+    <ClInclude Include="specitems\item.h">
+      <Filter>specitems</Filter>
+    </ClInclude>
+    <ClInclude Include="specitems\specItems.h">
+      <Filter>specitems</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\ErrorReporting.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\PythonIntf.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\SpecString.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\StringQueue.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\TimeUtils.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\alu.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\aluFunctions.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\aluRand.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\aluRegex.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\aluValue.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\directives.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\lruCache.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\platform.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

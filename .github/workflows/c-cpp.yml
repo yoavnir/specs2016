@@ -7,13 +7,12 @@ on:
     branches: [ dev, stable, dev-0.9.6, dev-0.9.7, dev-0.9.9, dev-1.0.0]
 
 jobs:
-  build:
-
+  build-linux:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
-      with: 
+      with:
         fetch-depth: 0
     - name: configure
       run: cd specs/src ; python setup.py
@@ -21,3 +20,19 @@ jobs:
       run: cd specs/src ; make all
     - name: make check
       run: cd specs/src ; make run_tests
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.3
+    - name: Build specs (Debug)
+      run: msbuild specs/specs.sln /p:Configuration=Debug /p:Platform=x64
+    - name: Build specs (Release)
+      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64
+    - name: Test specs executable
+      run: specs/bin/Release/specs.exe "@version"

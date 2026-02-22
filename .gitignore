@@ -35,5 +35,11 @@ specs/tests/theconf
 specs/tests/memcheck.pyc
 specs/tests/input_samples.pyc
 
+# Visual Studio generated files
+*.vcxproj.user
+specs/bin/
+specs/src/Debug/
+specs/src/Release/
+
 # Mac OS stuff
 .DS_Store
