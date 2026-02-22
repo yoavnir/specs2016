@@ -31,10 +31,11 @@ std::string callParseTokens(const char* _str)
 	static char* str = nullptr;
 	if (str) free(str);
 	str = strdup(_str);
-	char* ptr = strtok(str, " ");
+	char* str2 = str;
+	char* ptr = strtok_r(str, " ", &str2);
 	while (ptr) {
 		argv[argc++] = ptr;
-		ptr = strtok(nullptr, " ");
+		ptr = strtok_r(nullptr, " ", &str2);
 		assert(argc<200);
 	}
 	

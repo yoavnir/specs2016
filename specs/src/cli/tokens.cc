@@ -518,10 +518,11 @@ static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int 
 	localCopy[s.length()-2]=0; // Gets rid of closing parenthesis
 
 	unsigned int idx = 0;
-	itemPtrs[idx] = strtok(localCopy, " ");
+	char* localCopy_ctx = localCopy;
+	itemPtrs[idx] = strtok_r(localCopy, " ", &localCopy_ctx);
 	while (itemPtrs[idx] && idx<MAX_INPUT_RANGES_IN_GROUP) {
 		idx++;
-		itemPtrs[idx] = strtok(nullptr, " ");
+		itemPtrs[idx] = strtok_r(nullptr, " ", &localCopy_ctx);
 	}
 	if (idx==MAX_INPUT_RANGES_IN_GROUP) {
 		std::string err = "Too many items in ranges group at index " + std::to_string(argidx);
