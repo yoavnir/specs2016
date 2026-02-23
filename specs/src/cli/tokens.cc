@@ -1,4 +1,4 @@
-#include <string.h>
+#include <cstring>
 #include <regex>
 #include <cctype>
 #include "utils/platform.h"

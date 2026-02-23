@@ -6,7 +6,7 @@
 #include "processing/Config.h"
 #include "processing/persistent.h"
 #include "processing/ProcessingState.h"
-#include <string.h>
+#include <cstring>
 #include <cmath>
 #include <functional>
 #include <set>
@@ -1806,18 +1806,16 @@ PValue AluFunc_bitand(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char *pBuff = new unsigned char[minlen];
+	std::vector<unsigned char> buff(minlen);
 
-	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
-	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
+	const unsigned char *pc1 = reinterpret_cast<const unsigned char*>(s1.c_str());
+	const unsigned char *pc2 = reinterpret_cast<const unsigned char*>(s2.c_str());
 
 	for (size_t i = 0 ; i < minlen ; i++) {
-		pBuff[i] = pc1[i] & pc2[i];
+		buff[i] = pc1[i] & pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
-
-	delete [] pBuff;
+	PValue pRet = mkValue2(reinterpret_cast<const char*>(buff.data()), int(minlen));
 
 	return pRet;
 }
@@ -1831,18 +1829,16 @@ PValue AluFunc_bitor(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char *pBuff = new unsigned char[minlen];
+	std::vector<unsigned char> buff(minlen);
 
-	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
-	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
+	const unsigned char *pc1 = reinterpret_cast<const unsigned char*>(s1.c_str());
+	const unsigned char *pc2 = reinterpret_cast<const unsigned char*>(s2.c_str());
 
 	for (size_t i = 0 ; i < minlen ; i++) {
-		pBuff[i] = pc1[i] | pc2[i];
+		buff[i] = pc1[i] | pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
-
-	delete [] pBuff;
+	PValue pRet = mkValue2(reinterpret_cast<const char*>(buff.data()), int(minlen));
 
 	return pRet;
 }
@@ -1856,18 +1852,16 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 
 	size_t minlen = (s1.length() > s2.length()) ? s2.length() : s1.length();
 
-	unsigned char *pBuff = new unsigned char[minlen];
+	std::vector<unsigned char> buff(minlen);
 
-	const unsigned char *pc1 = (const unsigned char*)(s1.c_str());
-	const unsigned char *pc2 = (const unsigned char*)(s2.c_str());
+	const unsigned char *pc1 = reinterpret_cast<const unsigned char*>(s1.c_str());
+	const unsigned char *pc2 = reinterpret_cast<const unsigned char*>(s2.c_str());
 
 	for (size_t i = 0 ; i < minlen ; i++) {
-		pBuff[i] = pc1[i] ^ pc2[i];
+		buff[i] = pc1[i] ^ pc2[i];
 	}
 
-	PValue pRet = mkValue2((const char*)(pBuff), int(minlen));
-
-	delete [] pBuff;
+	PValue pRet = mkValue2(reinterpret_cast<const char*>(buff.data()), int(minlen));
 
 	return pRet;
 }

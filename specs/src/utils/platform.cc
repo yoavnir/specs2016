@@ -1,10 +1,10 @@
-#include <stdlib.h>
+#include <cstdlib>
 #include "platform.h"
 #include "utils/ErrorReporting.h"
 #ifdef VISUAL_STUDIO
 #else
 #include <dirent.h>
-#include <string.h>
+#include <cstring>
 #endif
 
 #ifdef WIN64
@@ -33,7 +33,7 @@ static void enlargeStringArray(char**& pRet, unsigned int newSize, unsigned int&
 
 char** getDirectoryFileNames(const char* spath)
 {
-	static char** pRet = NULL;
+	static char** pRet = nullptr;
 	static unsigned int rsize = 0;
 	unsigned int index = 0;
 
@@ -44,7 +44,7 @@ char** getDirectoryFileNames(const char* spath)
 	WIN32_FIND_DATAA fdata;
 	HANDLE hfind = FindFirstFileA(std::string(spath).append("\\*").c_str(), &fdata);
 	if (hfind == INVALID_HANDLE_VALUE) {
-		pRet[0] = NULL;
+		pRet[0] = nullptr;
 		return pRet;
 	}
 

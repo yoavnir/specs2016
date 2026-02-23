@@ -15,7 +15,7 @@ News
 What's new:
  * Support for newer Linux distros (newer gcc)
  * Support for Visual Studio and latest Windows versions
- * Bug fixes (?)
+ * Alignment with C++ coding standards
 ***
 03-Jan-2025: Version 0.9.5-HF1 is here
 

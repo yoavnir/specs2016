@@ -1,4 +1,4 @@
-#include <string.h>  // for memcpy
+#include <cstring>  // for memcpy
 #include "processing/Config.h"
 #include "ErrorReporting.h"
 #include "SpecString.h"

@@ -3,7 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <locale>
-#include <stdlib.h> // defines setenv
+#include <cstdlib> // defines setenv
 #include "utils/ErrorReporting.h"
 #include "platform.h"  // For put_time and get_time vs strftime and strptime
 #include "TimeUtils.h"

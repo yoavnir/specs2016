@@ -42,34 +42,34 @@ public:
 	void    setStringInPlace(PSpecString ps);
 
 	// The stateQueryAgent interface
-	virtual unsigned int getWordCount();
-	virtual unsigned int getFieldCount();
-	virtual int     getWordStart(int idx);
-	virtual int     getWordEnd(int idx);
-	virtual int     getFieldStart(int idx);
-	virtual int     getFieldEnd(int idx);
-	virtual PSpecString getFromTo(int from, int to);
-	virtual bool    isRunIn()   { return (m_CycleCounter==1); }
-	virtual bool    isRunOut()  { return (m_ps==nullptr); } // NOTE: will return true before first record
-	virtual ALUInt  getRecordCount()    { return ALUInt(m_CycleCounter + m_ExtraReads); }
-	virtual ALUInt  getIterationCount() { return ALUInt(m_CycleCounter); }
-	virtual bool    breakEstablished(char id);
-	virtual PAluValueStats valueStatistics(char id);
-	virtual PFrequencyMap  getFrequencyMap(char id);
+	unsigned int getWordCount() override;
+	unsigned int getFieldCount() override;
+	int     getWordStart(int idx) override;
+	int     getWordEnd(int idx) override;
+	int     getFieldStart(int idx) override;
+	int     getFieldEnd(int idx) override;
+	PSpecString getFromTo(int from, int to) override;
+	bool    isRunIn() override   { return (m_CycleCounter==1); }
+	bool    isRunOut() override  { return (m_ps==nullptr); } // NOTE: will return true before first record
+	ALUInt  getRecordCount() override    { return ALUInt(m_CycleCounter + m_ExtraReads); }
+	ALUInt  getIterationCount() override { return ALUInt(m_CycleCounter); }
+	bool    breakEstablished(char id) override;
+	PAluValueStats valueStatistics(char id) override;
+	PFrequencyMap  getFrequencyMap(char id) override;
 
 	void fieldIdentifierSet(char id, PSpecString ps);
 	void incrementCycleCounter() { m_CycleCounter++; }
 	void incrementExtraReads()   { m_ExtraReads++; }
 	PSpecString fieldIdentifierGet(char id);
-	bool fieldIdentifierIsSet(char id);
+	bool fieldIdentifierIsSet(char id) override;
 	PSpecString extractCurrentRecord();
 	void fieldIdentifierClear();
 	void fieldIdentifierStatsClear();
 
-	void alterFieldSeparator(const std::string& sep);
-	std::string& getFieldSeparator();
-	void alterWordSeparator(const std::string& sep);
-	std::string& getWordSeparator();
+	void alterFieldSeparator(const std::string& sep) override;
+	std::string& getFieldSeparator() override;
+	void alterWordSeparator(const std::string& sep) override;
+	std::string& getWordSeparator() override;
 
 	void breakValuesClear();
 	void resetBreaks();
@@ -88,7 +88,7 @@ public:
 	void setSecond();
 	void setStream(int i);
 	int  getActiveInputStation() { return m_inputStation; }
-	virtual PSpecString currRecord() { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
+	PSpecString currRecord() override { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
 	bool recordNotAvailable() { return nullptr==currRecord(); }
 	bool inputStreamHasChanged() { return m_inputStreamChanged; }
 	void resetInputStreamFlag() { m_inputStreamChanged = false; }
@@ -144,8 +144,8 @@ private:
 class ProcessingStateFieldIdentifierGetter : public fieldIdentifierGetter {
 public:
 	ProcessingStateFieldIdentifierGetter(ProcessingState* _ps) : m_ps(_ps) {}
-	~ProcessingStateFieldIdentifierGetter()                               {}
-	std::string Get(char id);
+	~ProcessingStateFieldIdentifierGetter() override                               {}
+	std::string Get(char id) override;
 private:
 	ProcessingState*	m_ps;
 };

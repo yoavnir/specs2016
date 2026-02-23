@@ -25,10 +25,10 @@ static std::string emptyString;
 
 class LiteralPart : public InputPart {
 public:
-	LiteralPart(std::string& s) {m_Str = s;}
-	virtual ~LiteralPart() {}
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
+	explicit LiteralPart(std::string& s) {m_Str = s;}
+	~LiteralPart() override {}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
 private:
 	std::string m_Str;
 };
@@ -38,10 +38,10 @@ typedef std::shared_ptr<LiteralPart> PLiteralPart;
 class RangePart : public InputPart {
 public:
 	RangePart(int _first, int _last) {_from=_first; _to=_last;}
-	virtual ~RangePart() {}
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState) = 0;
-	virtual bool        readsLines() {return true;}
+	~RangePart() override {}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override = 0;
+	bool        readsLines() override {return true;}
 protected:
 	int _from;
 	int _to;
@@ -52,9 +52,9 @@ typedef std::shared_ptr<RangePart> PRangePart;
 class RegularRangePart : public RangePart {
 public:
 	RegularRangePart(int _first, int _last) : RangePart(_first,_last) {}
-	virtual ~RegularRangePart() {}
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
+	~RegularRangePart() override {}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
 };
 
 typedef std::shared_ptr<RegularRangePart> PRegularRangePart;
@@ -62,9 +62,9 @@ typedef std::shared_ptr<RegularRangePart> PRegularRangePart;
 class WordRangePart : public RangePart {
 public:
 	WordRangePart(int _first, int _last, const std::string& sep) : RangePart(_first,_last) {m_WordSep = sep;}
-	virtual ~WordRangePart() {}
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
+	~WordRangePart() override {}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
 private:
 	std::string m_WordSep;
 };
@@ -74,9 +74,9 @@ typedef std::shared_ptr<WordRangePart> PWordRangePart;
 class FieldRangePart : public RangePart {
 public:
 	FieldRangePart(int _first, int _last, const std::string& sep) : RangePart(_first,_last) {m_FieldSep = sep;}
-	virtual ~FieldRangePart() {}
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
+	~FieldRangePart() override {}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
 private:
 	std::string m_FieldSep;
 };
@@ -86,10 +86,10 @@ typedef std::shared_ptr<FieldRangePart> PFieldRangePart;
 class SubstringPart : public InputPart {
 public:
 	SubstringPart(PRangePart _sub, PPart _big) {mp_SubPart = _sub; mp_BigPart = _big;}
-	virtual ~SubstringPart();
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
-	virtual bool        readsLines() {return mp_BigPart->readsLines();}
+	~SubstringPart() override;
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
+	bool        readsLines() override {return mp_BigPart->readsLines();}
 private:
 	PRangePart mp_SubPart;
 	PPart      mp_BigPart;
@@ -102,9 +102,9 @@ typedef std::shared_ptr<SubstringPart> PSubstringPart;
 class NumberPart : public InputPart {
 public:
 	NumberPart() {}
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
-	virtual bool        readsLines() {return true;}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
+	bool        readsLines() override {return true;}
 private:
 };
 
@@ -118,10 +118,10 @@ enum clockType {
 
 class ClockPart : public InputPart {
 public:
-	ClockPart(clockType _type);
-	virtual ~ClockPart() {}
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
+	explicit ClockPart(clockType _type);
+	~ClockPart() override {}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
 private:
 	clockType    m_Type;
 	clockValue   m_StaticClock;
@@ -131,10 +131,10 @@ typedef std::shared_ptr<ClockPart> PClockPart;
 
 class IDPart : public InputPart {
 public:
-	IDPart(std::string _fieldIdentifier) {m_fieldIdentifier = _fieldIdentifier;}
-	virtual ~IDPart() {}
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
+	explicit IDPart(std::string _fieldIdentifier) {m_fieldIdentifier = _fieldIdentifier;}
+	~IDPart() override {}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
 private:
 	std::string m_fieldIdentifier;
 };
@@ -143,12 +143,12 @@ typedef std::shared_ptr<IDPart> PIDPart;
 
 class ExpressionPart : public InputPart {
 public:
-	ExpressionPart(std::string& _expr);
-	virtual ~ExpressionPart();
-	virtual std::string Debug();
-	virtual PSpecString getStr(ProcessingState& pState);
-	virtual bool        readsLines();
-	virtual bool        forcesRunoutCycle() {return expressionForcesRunoutCycle(m_RPNExpr);}
+	explicit ExpressionPart(std::string& _expr);
+	~ExpressionPart() override;
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
+	bool        readsLines() override;
+	bool        forcesRunoutCycle() override {return expressionForcesRunoutCycle(m_RPNExpr);}
 private:
 	AluVec m_RPNExpr;
 	bool   m_isAssignment;
@@ -201,12 +201,12 @@ typedef std::shared_ptr<Item> PItem;
 class DataField : public Item {
 public:
 	DataField();
-	virtual ~DataField();
+	~DataField() override;
 	void parse(std::vector<Token> &tokenVec, unsigned int& index);
-	virtual std::string Debug();
-	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
-	virtual bool readsLines();
-	virtual bool forcesRunoutCycle() {return m_InputPart ? m_InputPart->forcesRunoutCycle() : false;}
+	std::string Debug() override;
+	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+	bool readsLines() override;
+	bool forcesRunoutCycle() override {return m_InputPart ? m_InputPart->forcesRunoutCycle() : false;}
 private:
 	PPart getInputPart(std::vector<Token> &tokenVec, unsigned int& index, const std::string& _wordSep=emptyString, const std::string& _fieldSep=emptyString);
 	PSubstringPart getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
@@ -230,12 +230,12 @@ typedef std::shared_ptr<DataField> PDataField;
 
 class TokenItem : public Item {
 public:
-	TokenItem(Token& t);
-	virtual ~TokenItem();
+	explicit TokenItem(Token& t);
+	~TokenItem() override;
 	std::shared_ptr<Token> getToken()   {return mp_Token;}
-	virtual std::string Debug();
-	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
-	virtual bool readsLines();
+	std::string Debug() override;
+	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+	bool readsLines() override;
 private:
 	std::shared_ptr<Token> mp_Token;
 };
@@ -244,12 +244,12 @@ typedef std::shared_ptr<TokenItem> PTokenItem;
 
 class SetItem : public Item {
 public:
-	SetItem(std::string& _statement);
-	virtual ~SetItem();
-	virtual std::string Debug()		{return m_rawExpression;}
-	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
-	virtual bool readsLines();
-	virtual bool forcesRunoutCycle() { return expressionForcesRunoutCycle(m_RPNExpression);}
+	explicit SetItem(std::string& _statement);
+	~SetItem() override;
+	std::string Debug() override		{return m_rawExpression;}
+	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+	bool readsLines() override;
+	bool forcesRunoutCycle() override { return expressionForcesRunoutCycle(m_RPNExpression);}
 private:
 	std::string     m_rawExpression;
 	ALUCounterKey   m_key;
@@ -262,11 +262,11 @@ typedef std::shared_ptr<SetItem> PSetItem;
 class SkipItem : public Item {
 public:
 	SkipItem(std::string& _statement, bool bIsUntil);
-	virtual ~SkipItem();
-	virtual std::string Debug()		{return m_rawExpression;}
-	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
-	virtual bool readsLines();
-	virtual bool forcesRunoutCycle() { return expressionForcesRunoutCycle(m_RPNExpression);}
+	~SkipItem() override;
+	std::string Debug() override		{return m_rawExpression;}
+	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+	bool readsLines() override;
+	bool forcesRunoutCycle() override { return expressionForcesRunoutCycle(m_RPNExpression);}
 private:
 	std::string     m_rawExpression;
 	AluVec          m_RPNExpression;
@@ -291,16 +291,16 @@ public:
 	};
 	ConditionItem(std::string& _statement);
 	ConditionItem(ConditionItem::predicate _p);
-	virtual ~ConditionItem();
-	virtual std::string Debug();
-	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
-	virtual bool ApplyUnconditionally() {return true;}
+	~ConditionItem() override;
+	std::string Debug() override;
+	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+	bool ApplyUnconditionally() override {return true;}
 	void    setElseIf();
 	void    setWhile();
 	void    setAssert();
 	predicate pred() { return m_pred;}
-	virtual bool readsLines();
-	virtual bool forcesRunoutCycle() { return expressionForcesRunoutCycle(m_RPNExpression);}
+	bool readsLines() override;
+	bool forcesRunoutCycle() override { return expressionForcesRunoutCycle(m_RPNExpression);}
 private:
 	bool        evaluate();
 	std::string m_rawExpression;
@@ -317,11 +317,11 @@ typedef std::shared_ptr<ConditionItem> PConditionItem;
 
 class BreakItem : public Item {
 public:
-	BreakItem(char identifier);
-	virtual ~BreakItem()  {}
-	virtual std::string Debug();
-	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
-	virtual bool isBreak() { return true;}
+	explicit BreakItem(char identifier);
+	~BreakItem() override  {}
+	std::string Debug() override;
+	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+	bool isBreak() override { return true;}
 private:
 	char m_identifier;
 };
@@ -331,9 +331,9 @@ typedef std::shared_ptr<BreakItem> PBreakItem;
 class SelectItem : public Item {
 public:
 	SelectItem(std::string& st, bool bIsOutput);
-	virtual ~SelectItem() {}
-	virtual std::string Debug();
-	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB);
+	~SelectItem() override {}
+	std::string Debug() override;
+	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool    isSelectSecond()  {return m_stream==STATION_SECOND;}
 private:
 	int  m_stream;
