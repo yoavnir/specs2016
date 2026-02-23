@@ -70,7 +70,7 @@ void processPlusDirective(std::string& dirline)
 	std::string directive;
 	try {
 		directive = breakOffOneToken(dirline);
-	} catch (SpecsException& e) {
+	} catch (SpecsException&) {
 		std::string err = "Invalid directive: <" + dirline + ">";
 		MYTHROW(err);
 	}
@@ -79,7 +79,7 @@ void processPlusDirective(std::string& dirline)
 		std::string variable;
 		try {
 			variable = breakOffOneToken(dirline);
-		} catch (SpecsException& e) {
+		} catch (SpecsException&) {
 			std::string err = "Invalid +SET directive: <" + dirline + ">";
 			MYTHROW(err);
 		}
@@ -91,7 +91,7 @@ void processPlusDirective(std::string& dirline)
 		}
 
 		std::string line("");
-		if (nullptr != fgets(buffer.data(), buffer.size(), pipe.get())) {
+		if (nullptr != fgets(buffer.data(), int(buffer.size()), pipe.get())) {
 			line = buffer.data();
 			while (line.back()=='\n' || line.back()=='\r') {
 				line.erase(line.length()-1);

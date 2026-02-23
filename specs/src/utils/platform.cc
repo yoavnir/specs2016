@@ -51,7 +51,7 @@ char** getDirectoryFileNames(const char* spath)
 	do {
 		std::string fname(fdata.cFileName);
 
-		if (fname != "." && fname != ".." && (fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY == 0) &&
+		if ((fname != ".") && (fname != "..") && (((fdata.dwFileAttributes) & FILE_ATTRIBUTE_DIRECTORY) == 0) &&
 				((fdata.dwFileAttributes==FILE_ATTRIBUTE_NORMAL) || (fdata.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) || (fdata.dwFileAttributes & FILE_ATTRIBUTE_READONLY))) {
 			if (index + 1 > rsize) {
 				enlargeStringArray(pRet, rsize + 64, rsize);

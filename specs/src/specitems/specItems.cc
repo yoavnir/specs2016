@@ -96,7 +96,7 @@ std::vector<std::string> SplitSetSpecification(std::string setSpec)
 		try {
 			bIsValid = CheckValiditySetStatement(oneItem);
 		}
-		catch(const SpecsException& e) {
+		catch(const SpecsException&) {
 			bIsValid = false;
 		}
 		if (bIsValid) {
@@ -371,14 +371,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			} else {
 				try {
 					g_stop_stream = std::stoi(tokenVec[index].Literal());
-				} catch (std::invalid_argument& e) {
+				} catch (std::invalid_argument&) {
 					std::string err = "STOP condition requires a parameter: ANYEOF, ALLEOF, or a valid input stream. Got <" +
 							tokenVec[index].Literal() + ">";
 					MYTHROW(err);
 				}
-				std::string err = "Input stream "+tokenVec[index].Literal()+" from STOP condition is not defined";
-				MYASSERT_WITH_MSG(inputStreamIsDefined(g_stop_stream), err);
 			}
+			std::string err = "Input stream "+tokenVec[index].Literal()+" from STOP condition is not defined";
+			MYASSERT_WITH_MSG(inputStreamIsDefined(g_stop_stream), err);
 			index++;
 			break;
 		}

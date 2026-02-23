@@ -176,7 +176,7 @@ static PTokenFieldRange parseAsSingleNumber(std::string s)
 	long int l;
 	try {
 		l = std::stol(s);
-	} catch(std::invalid_argument& e) {
+	} catch(std::invalid_argument&) {
 		return nullptr;
 	}
 	if (l==0 || s!=std::to_string(l)) {
@@ -195,7 +195,7 @@ static PTokenFieldRange parseAsFromToRange(std::string s)
 	long int _from, _to;
 	try {
 		_from = std::stol(s, &posOfHyphen);
-	} catch(std::invalid_argument& e) {
+	} catch(std::invalid_argument&) {
 		return nullptr;
 	}
 	if (_from==0 || s.substr(0,posOfHyphen)!=std::to_string(_from)
@@ -215,7 +215,7 @@ static PTokenFieldRange parseAsFromToRange(std::string s)
 				return nullptr;
 			}
 		}
-	} catch (std::invalid_argument& e) {
+	} catch (std::invalid_argument&) {
 		if (s.substr(posOfHyphen+1)=="*") {
 			_to = LAST_POS_END;
 		} else {
@@ -232,7 +232,7 @@ static PTokenFieldRange parseAsFromLenRange(std::string s)
 	long int _from, _to, _len;
 	try {
 		_from = std::stol(s, &posOfDot);
-	} catch(std::invalid_argument& e) {
+	} catch(std::invalid_argument&) {
 		return nullptr;
 	}
 	if (_from==0 || s.substr(0,posOfDot)!=std::to_string(_from) || s[posOfDot]!='.') {
@@ -240,7 +240,7 @@ static PTokenFieldRange parseAsFromLenRange(std::string s)
 	}
 	try {
 		_len = std::stol(s.substr(posOfDot+1));
-	} catch (std::invalid_argument& e) {
+	} catch (std::invalid_argument&) {
 		return nullptr;
 	}
 	if (_len<=0 || s.substr(posOfDot+1)!=std::to_string(_len)) {
@@ -436,9 +436,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 				} else {
 					goto CONT1;
 				}
-			} catch (std::invalid_argument& e) {
-				goto CONT1;
-			} catch (std::out_of_range& e) {
+			} catch (...) {
 				goto CONT1;
 			}
 		}
@@ -479,7 +477,7 @@ CONT1:
 				Token(TokenListType__LITERAL, nullptr /* range */,
 						literal, argidx, arg));
 			NEXT_TOKEN;
-		} catch(ConversionException& e) {
+		} catch(ConversionException&) {
 			;  // Do nothing. It just wasn't a hex string
 		}
 	}

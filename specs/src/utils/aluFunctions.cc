@@ -57,7 +57,7 @@ void specPrettySetLocale(std::string& value)
 		} 
 		g_localeName = value;
 		g_localeSpecified = true;
-	} catch(std::runtime_error& e) {
+	} catch(std::runtime_error&) {
 		std::string err = "Invalid locale <" + value + ">";
 		std::cerr << err << std::endl;
 	}
@@ -582,7 +582,7 @@ PValue AluFunc_tf2s(PValue pTimeFormatted, PValue pFormat)
 	ASSERT_NOT_ELIDED(pTimeFormatted,1,formatted_time);
 	ASSERT_NOT_ELIDED(pFormat,2,format);
 	int64_t tm = specTimeConvertFromPrintable(pTimeFormatted->getStr(), pFormat->getStr());
-        ALUFloat seconds = (tm/MICROSECONDS_PER_SECOND);
+        ALUFloat seconds = ALUFloat(tm/MICROSECONDS_PER_SECOND);
         ALUFloat microseconds = (ALUFloat)(tm%MICROSECONDS_PER_SECOND)/MICROSECONDS_PER_SECOND;
         return mkValue(ALUFloat(seconds+microseconds));
 }
@@ -592,12 +592,11 @@ PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
 	ASSERT_NOT_ELIDED(pValue,1,time_value);
 	ASSERT_NOT_ELIDED(pFormat,2,format);
         ALUFloat seconds = pValue->getFloat();
-        int64_t microseconds = seconds * MICROSECONDS_PER_SECOND;
-	PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
-	PValue ret = mkValue2(printable->data(), int(printable->length()));
-	return ret;
+        int64_t microseconds = (int64_t)(seconds * MICROSECONDS_PER_SECOND);
+        PSpecString printable = specTimeConvertToPrintable(microseconds, pFormat->getStr());
+        PValue ret = mkValue2(printable->data(), int(printable->length()));
+        return ret;
 }
-
 
 // Substring functions
 
@@ -741,7 +740,7 @@ PValue AluFunc_wplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,searchString);
 	ASSERT_NOT_ELIDED(_pOffset,2,offset);
-	int count = _pCount ? _pCount->getInt() : 1;
+	int count = _pCount ? int(_pCount->getInt()) : 1;
 	
 	auto wordCount = int(g_pStateQueryAgent->getWordCount());
 
@@ -778,7 +777,7 @@ PValue AluFunc_fplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 {
 	ASSERT_NOT_ELIDED(_pNeedle,1,searchString);
 	ASSERT_NOT_ELIDED(_pOffset,2,offset);
-	int count = _pCount ? _pCount->getInt() : 1;
+	int count = _pCount ? int(_pCount->getInt()) : 1;
 	
 	auto fieldCount = int(g_pStateQueryAgent->getWordCount());
 
@@ -2187,9 +2186,9 @@ static PValue justify_do(std::string& str, size_t len, char pad)
 		ret += wordVector[i];
 		auto countGaps = wordVector.size() - i - 1;
 		if (0 < countGaps) {
-			auto spacesThisGap = numOfSpaces / countGaps;
+			auto spacesThisGap = size_t(numOfSpaces) / countGaps;
 			for (size_t j=0 ; j < spacesThisGap ; j++) ret += pad;
-			numOfSpaces -= spacesThisGap;
+			numOfSpaces -= int(spacesThisGap);
 		}
 	}
 
@@ -2715,7 +2714,7 @@ PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit, PValue pLocal
 		try {
 			myLocale = std::locale(pLocale->getStr());
 			myPunct = new std::numpunct_byname<char>(pLocale->getStr());
-		} catch(std::runtime_error& e) {
+		} catch(std::runtime_error&) {
 			std::string err = "Invalid locale <" + pLocale->getStr() + "> passed to pretty function";
 			MYTHROW(err);
 		}
