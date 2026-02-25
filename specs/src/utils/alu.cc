@@ -77,9 +77,9 @@ ALUInt ALUValue::getInt() const
 			}
 		}
 		return std::stoll(m_value);
-	} catch (std::invalid_argument& e) {
+	} catch (std::invalid_argument&) {
 		return 0;
-	} catch (std::out_of_range& e) {
+	} catch (std::out_of_range&) {
 		std::string err = "Out of range trying to convert " + m_value + " to Int";
 		MYTHROW(err);
 	}
@@ -89,7 +89,7 @@ ALUInt ALUValue::getHex() const
 {
 	try {
 		return (counterType__None==m_type) ? 0 : std::stoll(m_value, nullptr, 16);
-	} catch (std::invalid_argument& e) {
+	} catch (std::invalid_argument&) {
 		return 0;
 	}
 }
@@ -98,7 +98,7 @@ ALUFloat ALUValue::getFloat() const
 {
 	try {
 		return (counterType__None==m_type) ? 0.0 : std::stold(m_value);
-	} catch (std::invalid_argument& e) {
+	} catch (std::invalid_argument&) {
 		return 0;
 	}
 }
@@ -133,9 +133,9 @@ bool ALUValue::isNumeric() const
 		long double discardedRetValue = std::stold(m_value, &pos);
 		SUPPRESS_UNUSED_WARNING(discardedRetValue);
 		return m_value.length() == pos;
-	} catch (std::out_of_range& e) {
+	} catch (std::out_of_range&) {
 		return false;
-	} catch (std::invalid_argument& e) {
+	} catch (std::invalid_argument&) {
 		return false;
 	}
 	}
@@ -1827,7 +1827,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				try {
 					computeStack.push(pUnit->compute(arg1));
 				}
-				catch (const SpecsException& e) {
+				catch (const SpecsException&) {
 					throw;
 				}
 				break;
@@ -1835,7 +1835,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				try {
 					computeStack.push(pUnit->compute(arg1, arg2));
 				}
-				catch (const SpecsException& e) {
+				catch (const SpecsException&) {
 					throw;
 				}
 				break;
@@ -1843,7 +1843,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				try {
 					computeStack.push(pUnit->compute(arg1, arg2, arg3));
 				}
-				catch (const SpecsException& e) {
+				catch (const SpecsException&) {
 					throw;
 				}
 				break;
@@ -1851,7 +1851,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				try {
 					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4));
 				}
-				catch (const SpecsException& e) {
+				catch (const SpecsException&) {
 					throw;
 				}
 				break;
@@ -1859,7 +1859,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				try {
 					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4, arg5));
 				}
-				catch (const SpecsException& e) {
+				catch (const SpecsException&) {
 					throw;
 				}
 				break;

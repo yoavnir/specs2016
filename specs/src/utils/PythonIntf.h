@@ -8,6 +8,7 @@ bool pythonInterfaceEnabled();
 
 class ExternalFunctionRec {
 public:
+	virtual ~ExternalFunctionRec() = default;
 	virtual size_t    GetArgCount() = 0;
 	virtual void      ResetArgs() = 0;
 	virtual void      setArgValue(size_t idx, PValue pValue) = 0;
@@ -18,6 +19,7 @@ typedef std::shared_ptr<ExternalFunctionRec> PExternalFunctionRec;
 
 class ExternalFunctionCollection {
 public:
+	virtual ~ExternalFunctionCollection() = default;
 	virtual bool                 IsInitialized() = 0;
 	virtual void                 Initialize(const char* _path) = 0;
 	virtual void                 Debug() = 0;

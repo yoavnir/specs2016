@@ -42,12 +42,12 @@ public:
 		writerType__SHELL,
 		writerType__FILE
 	};
-	SimpleWriter(writerType typ);
-	SimpleWriter(const std::string& fn);
-	virtual ~SimpleWriter();
-	virtual void WriteOut();
+	explicit SimpleWriter(writerType typ);
+	explicit SimpleWriter(const std::string& fn);
+	~SimpleWriter() override;
+	void WriteOut() override;
 private:
-	virtual void WriteOutDo(PSpecString ps, classifyingTimer& tmr);
+	void WriteOutDo(PSpecString ps, classifyingTimer& tmr) override;
 	std::shared_ptr<std::ostream> m_File;
 	writerType m_WriterType;
 };
@@ -59,9 +59,9 @@ typedef std::shared_ptr<SimpleWriter> PSimpleWriter;
 class StringWriter : public Writer {
 public:
 	StringWriter() {}
-	virtual ~StringWriter() {}
-	virtual void WriteOut() {}
-	virtual void WriteOutDo(PSpecString ps, classifyingTimer& tmr) 
+	~StringWriter() override {}
+	void WriteOut() override {}
+	void WriteOutDo(PSpecString ps, classifyingTimer& tmr) override 
 	{
 		m_queue.push(ps);
 	}

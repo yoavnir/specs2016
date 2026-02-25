@@ -1,26 +1,27 @@
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include "ErrorReporting.h"
 
 #define RETSIZE 1024
 
-const char* SpecsException::what(bool concise) const throw ()
+const char* SpecsException::what(bool concise) const noexcept
 {
-	static char ret[RETSIZE];
+	thread_local char ret[RETSIZE];
 	if (concise) {
-		strcpy(ret,msg.c_str());
+		std::strncpy(ret, msg.c_str(), RETSIZE - 1);
+		ret[RETSIZE - 1] = '\0';
 	} else {
 #ifdef DEBUG
-		snprintf(ret, RETSIZE, "\nException: %s  (at: %s:%u)",
+		std::snprintf(ret, RETSIZE, "\nException: %s  (at: %s:%u)",
 			msg.c_str(), fn, ln);
 #else
-		snprintf(ret, RETSIZE, "\nSPECS Exception: %s", msg.c_str());
+		std::snprintf(ret, RETSIZE, "\nSPECS Exception: %s", msg.c_str());
 #endif
 	}
-	return (const char*)(ret);
+	return ret;
 }
 
-const bool SpecsException::isAbend() const throw()
+const bool SpecsException::isAbend() const noexcept
 {
-	return (const bool)(bIsAbend);
+	return bIsAbend;
 }

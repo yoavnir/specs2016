@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <regex>
-#include <string.h>
+#include <cstring>
 #include "utils/platform.h"
 #include "utils/aluRegex.h"
 #include "utils/lruCache.h"

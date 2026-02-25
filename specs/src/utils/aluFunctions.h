@@ -393,12 +393,13 @@ public:
 	std::string      dump(fmap_format f, fmap_sortOrder o, bool includePercentage);
 private:
 	freqMapImpl      map;
-	ALUInt           counter;
+	ALUInt           counter = 0;
 };
 typedef std::shared_ptr<frequencyMap> PFrequencyMap;
 
 class stateQueryAgent {
 public:
+	virtual ~stateQueryAgent() = default;
 	virtual unsigned int getWordCount() = 0;
 	virtual unsigned int getFieldCount() = 0;
 	virtual int     getWordStart(int idx) = 0;
@@ -438,6 +439,7 @@ public:
 
 class positionGetter {
 public:
+	virtual ~positionGetter() = default;
 	virtual size_t pos() = 0;
 };
 

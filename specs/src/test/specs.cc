@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <cmath>
 #include <ctime>
-#include <string.h>
+#include <cstring>
 #include "utils/platform.h"
 #include "cli/tokens.h"
 #include "processing/Config.h"

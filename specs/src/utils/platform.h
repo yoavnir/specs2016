@@ -46,7 +46,7 @@ int setenv(const char *name, const char *value, int overwrite);
 #endif
 
 #ifdef ALURAND_rand48
-  #include <stdlib.h>
+  #include <cstdlib>
   #define AluRandContext    drand48_data
   #define AluRandSeedType   long int
   #define AluRandSeed(s)    srand48_r(s,&AluRandCtxBuffer_G)
@@ -59,7 +59,7 @@ int setenv(const char *name, const char *value, int overwrite);
   #include <wincrypt.h>
   #define AluRandContext    HCRYPTPROV
   #define AluRandSeedType   char
-  #define AluRandSeed(s)    if (0==CryptAcquireContext(&AluRandCtxBuffer_G, NULL, \
+  #define AluRandSeed(s)    if (0==CryptAcquireContext(&AluRandCtxBuffer_G, nullptr, \
 		  nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {                            \
 		      std::string err = "CryptAquireContext() failed. GetLastError() returns " + std::to_string(GetLastError()); \
 		      MYTHROW(err);   \
@@ -73,7 +73,7 @@ int setenv(const char *name, const char *value, int overwrite);
 #endif
 
 #ifdef ALURAND_rand
-  #include <stdlib.h>
+  #include <cstdlib>
   #define AluRandContext    unsigned int
   #define AluRandSeedType   unsigned int
   #define AluRandSeed(s)    srand(s)
