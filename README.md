@@ -10,7 +10,7 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-28-Feb-2026: Version 0.9.6 is here (planned)
+28-Feb-2026: Version 0.9.6 is here
 
 What's new:
  * Support for newer Linux distros (newer gcc)
@@ -34,9 +34,9 @@ Building
 ========
 If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.5:
 ```
-git checkout dev-0.9.6
+git checkout v0.9.6
 ```
-A simple way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
+A good way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
 git checkout stable
 git rebase
@@ -48,7 +48,7 @@ After that, _cd_ to the specs/src directory, and run the following three command
 * `sudo make install`
 
 *Note:* Windows does not need `sudo`. 
-
+*Note:* Only Python 3 is supported at this point.
 *Note:* On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
 
 Known Issues
