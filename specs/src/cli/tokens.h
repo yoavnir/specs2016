@@ -133,7 +133,7 @@ public:
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
 	std::string&    HelpIdentify();
-	void            deallocDynamic() {/* - TODO: ERASE -- if (m_pRange) {m_pRange = NULL;} */} // do we even need this method?
+	void            deallocDynamic() {/* - TODO: ERASE -- if (m_pRange) {m_pRange = nullptr;} */} // do we even need this method?
 private:
 	TokenListTypes  m_type;
 	PTokenFieldRange m_pRange;

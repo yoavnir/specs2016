@@ -121,11 +121,11 @@ typedef std::shared_ptr<AluUnit> PUnit;
 class AluUnitLiteral : public AluUnit {
 public:
 	AluUnitLiteral(std::string& s, bool hintNumerical=false):m_literal(s),m_hintNumerical(hintNumerical)	{}
-	virtual ~AluUnitLiteral()					{}
-	virtual void				_serialize(std::ostream& os) const;
-	virtual std::string			_identify();
-	virtual AluUnitType			type()			{return UT_LiteralNumber;}
-	virtual PValue			evaluate();
+	~AluUnitLiteral() override					{}
+	void				_serialize(std::ostream& os) const override;
+	std::string			_identify() override;
+	AluUnitType			type() override			{return UT_LiteralNumber;}
+	PValue			evaluate() override;
 private:
 	ALUValue	m_literal;
 	bool        m_hintNumerical;
@@ -134,22 +134,22 @@ private:
 class AluUnitNull : public AluUnit {
 public:
 	AluUnitNull() {}
-	~AluUnitNull()             {}
-	virtual void				_serialize(std::ostream& os) const;
-	virtual std::string			_identify();
-	virtual AluUnitType			type()			{return UT_Null;}
-	virtual PValue			evaluate();
+	~AluUnitNull() override             {}
+	void				_serialize(std::ostream& os) const override;
+	std::string			_identify() override;
+	AluUnitType			type() override			{return UT_Null;}
+	PValue			evaluate() override;
 };
 
 class AluUnitCounter : public AluUnit {
 public:
-	AluUnitCounter(ALUCounterKey ctrNumber):m_ctrNumber(ctrNumber) {};
-	~AluUnitCounter()			{}
-	virtual void				_serialize(std::ostream& os) const;
-	virtual std::string			_identify();
-	virtual AluUnitType			type()			{return UT_Counter;}
+	explicit AluUnitCounter(ALUCounterKey ctrNumber):m_ctrNumber(ctrNumber) {};
+	~AluUnitCounter() override			{}
+	void				_serialize(std::ostream& os) const override;
+	std::string			_identify() override;
+	AluUnitType			type() override			{return UT_Counter;}
 	using AluUnit::compute;  // prevent a warning about overloading
-	virtual PValue			compute(ALUCounters* pCtrs);
+	PValue			compute(ALUCounters* pCtrs);
 	ALUCounterKey				getKey()		{return m_ctrNumber;}
 private:
 	ALUCounterKey m_ctrNumber;
@@ -165,12 +165,12 @@ void setFieldIdentifierGetter(fieldIdentifierGetter* getter);
 
 class AluUnitFieldIdentifier : public AluUnit {
 public:
-	AluUnitFieldIdentifier(char _fId):m_id(_fId),m_ReturnIdentifier(false) {};
-	~AluUnitFieldIdentifier()			{}
-	virtual void				_serialize(std::ostream& os) const;
-	virtual std::string			_identify();
-	virtual AluUnitType			type()			{return UT_FieldIdentifier;}
-	virtual PValue			evaluate();
+	explicit AluUnitFieldIdentifier(char _fId):m_id(_fId),m_ReturnIdentifier(false) {};
+	~AluUnitFieldIdentifier() override			{}
+	void				_serialize(std::ostream& os) const override;
+	std::string			_identify() override;
+	AluUnitType			type() override			{return UT_FieldIdentifier;}
+	PValue			evaluate() override;
 	void                        setEvaluateToName()  {m_ReturnIdentifier = true;}
 private:
 	char         m_id;
@@ -188,12 +188,12 @@ class AluUnitUnaryOperator : public AluUnit {
 public:
 	AluUnitUnaryOperator(std::string& s);
 	AluUnitUnaryOperator(const char* str);
-	virtual ~AluUnitUnaryOperator()			{}
-	virtual unsigned int	countOperands()		{return 1;}
-	virtual void			_serialize(std::ostream& os) const;
-	virtual std::string		_identify();
-	virtual AluUnitType		type()			{return UT_UnaryOp;}
-	virtual PValue		compute(PValue operand);
+	~AluUnitUnaryOperator() override			{}
+	unsigned int	countOperands() override		{return 1;}
+	void			_serialize(std::ostream& os) const override;
+	std::string		_identify() override;
+	AluUnitType		type() override			{return UT_UnaryOp;}
+	PValue		compute(PValue operand) override;
 private:
 	void               setOpByName(std::string& s);
 	ALU_UOP_LIST
@@ -212,12 +212,12 @@ class AluBinaryOperator : public AluUnit {
 public:
 	AluBinaryOperator(std::string& s);
 	AluBinaryOperator(const char* str);
-	virtual ~AluBinaryOperator()			{}
-	virtual unsigned int	countOperands()		{return 2;}
-	virtual void			_serialize(std::ostream& os) const;
-	virtual std::string		_identify();
-	virtual AluUnitType		type()			{return UT_BinaryOp;}
-	virtual PValue		compute(PValue op1, PValue op2);
+	~AluBinaryOperator() override			{}
+	unsigned int	countOperands() override		{return 2;}
+	void			_serialize(std::ostream& os) const override;
+	std::string		_identify() override;
+	AluUnitType		type() override			{return UT_BinaryOp;}
+	PValue		compute(PValue op1, PValue op2) override;
 	unsigned int			priority()	{return m_priority;}
 private:
 	void				setOpByName(std::string& s);
@@ -239,11 +239,11 @@ public:
 	AluAssnOperator()				{m_op = AssnOp__Let;}
 	AluAssnOperator(std::string& s);
 	AluAssnOperator(const char* str);
-	virtual ~AluAssnOperator()			{}
-	virtual unsigned int		countOperands()	{return 1;}
-	virtual void				_serialize(std::ostream& os) const;
-	virtual std::string 		_identify();
-	virtual AluUnitType			type()			{return UT_AssignmentOp;}
+	~AluAssnOperator() override			{}
+	unsigned int		countOperands() override	{return 1;}
+	void				_serialize(std::ostream& os) const override;
+	std::string 		_identify() override;
+	AluUnitType			type() override			{return UT_AssignmentOp;}
 	void	perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, PValue operand);
 private:
 	void               setOpByName(std::string& s);
@@ -256,19 +256,19 @@ typedef std::shared_ptr<AluAssnOperator> POperator;
 
 class AluFunction : public AluUnit {
 public:
-	AluFunction(std::string& s);
-	virtual ~AluFunction()		{}
-	virtual unsigned int		countOperands()		{return m_ArgCount;}
-	virtual void				_serialize(std::ostream& os) const;
-	virtual std::string			_identify()	{return "FUNC("+m_FuncName+")";}
-	virtual AluUnitType			type()		{return UT_Identifier;}
-	virtual PValue			evaluate();
-	virtual PValue			compute(PValue op);
-	virtual PValue			compute(PValue op1, PValue op2);
-	virtual PValue			compute(PValue op1, PValue op2, PValue op3);
-	virtual PValue			compute(PValue op1, PValue op2, PValue op3, PValue op4);
-	virtual PValue			compute(PValue op1, PValue op2, PValue op3, PValue op4, PValue op5);
-	virtual bool                requiresRead()  { return m_reliesOnInput; }
+	explicit AluFunction(std::string& s);
+	~AluFunction() override		{}
+	unsigned int		countOperands() override		{return m_ArgCount;}
+	void				_serialize(std::ostream& os) const override;
+	std::string			_identify() override	{return "FUNC("+m_FuncName+")";}
+	AluUnitType			type() override		{return UT_Identifier;}
+	PValue			evaluate() override;
+	PValue			compute(PValue op) override;
+	PValue			compute(PValue op1, PValue op2) override;
+	PValue			compute(PValue op1, PValue op2, PValue op3) override;
+	PValue			compute(PValue op1, PValue op2, PValue op3, PValue op4) override;
+	PValue			compute(PValue op1, PValue op2, PValue op3, PValue op4, PValue op5) override;
+	bool                requiresRead() override  { return m_reliesOnInput; }
 	std::string&                getName()       { return m_FuncName; }
 	static unsigned char        functionTypes() { return m_flags; }
 private:
@@ -285,21 +285,21 @@ private:
 class AluInputRecord : public AluUnit {
 public:
 	AluInputRecord() 					{}
-	virtual ~AluInputRecord()			{}
-	virtual void   			_serialize(std::ostream& os) const;
-	virtual std::string     _identify()	{return "@@";}
-	virtual AluUnitType		type()	{return UT_InputRecord;}
-	virtual PValue		evaluate();
-	virtual bool            requiresRead() {return true;}
+	~AluInputRecord() override			{}
+	void   			_serialize(std::ostream& os) const override;
+	std::string     _identify() override	{return "@@";}
+	AluUnitType		type() override	{return UT_InputRecord;}
+	PValue		evaluate() override;
+	bool            requiresRead() override {return true;}
 };
 
 class AluOtherToken : public AluUnit {
 public:
-	AluOtherToken(AluUnitType _t)		{m_type = _t;}
-	virtual ~AluOtherToken()			{}
-	virtual void				_serialize(std::ostream& os) const;
-	virtual std::string 		_identify();
-	virtual AluUnitType			type()	{return m_type;}
+	explicit AluOtherToken(AluUnitType _t)		{m_type = _t;}
+	~AluOtherToken() override			{}
+	void				_serialize(std::ostream& os) const override;
+	std::string 		_identify() override;
+	AluUnitType			type() override	{return m_type;}
 private:
 	AluUnitType		m_type;
 };

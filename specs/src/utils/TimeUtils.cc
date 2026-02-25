@@ -3,7 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <locale>
-#include <stdlib.h> // defines setenv
+#include <cstdlib> // defines setenv
 #include "utils/ErrorReporting.h"
 #include "platform.h"  // For put_time and get_time vs strftime and strptime
 #include "TimeUtils.h"
@@ -118,7 +118,7 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 				fractionalSeconds *= 10;
 				extraZeros--;
 			}
-		} catch (std::invalid_argument& e) {
+		} catch (std::invalid_argument&) {
 			fractionalSeconds = 0;
 		}
 	}
@@ -138,7 +138,7 @@ void specTimeSetLocale(const std::string& _locale, bool throwIfInvalid)
 {
 	try {
 		g_locale = std::locale(_locale);
-	} catch(std::runtime_error& e) {
+	} catch(std::runtime_error&) {
 		std::string err = "Invalid locale <" + _locale + ">";
 		if (throwIfInvalid) {
 			MYTHROW(err);

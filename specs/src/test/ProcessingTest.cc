@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <iomanip>
 #include "utils/platform.h"
 #include "cli/tokens.h"

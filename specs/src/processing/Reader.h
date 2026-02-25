@@ -46,7 +46,7 @@ protected:
 	unsigned long m_countRead;
 	unsigned long m_countUsed;
 	bool          m_bAbort;
-	bool          m_bRanDry;    // true *after* the reader returned NULL once
+	bool          m_bRanDry;    // true *after* the reader returned nullptr once
 	classifyingTimer m_Timer;
 };
 
@@ -54,13 +54,13 @@ typedef std::shared_ptr<Reader> PReader;
 
 class TestReader : public Reader {
 public:
-	TestReader(size_t maxLineCount);
-	virtual ~TestReader();
+	explicit TestReader(size_t maxLineCount);
+	~TestReader() override;
 	void    InsertString(const char* s);
 	void    InsertString(PSpecString ps);
-	virtual bool endOfSource() {return m_bAbort || (m_idx >= m_count); }
-	virtual PSpecString getNextRecord() {return mp_arr[m_idx++];}
-	virtual PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter) {return getNextRecord();}
+	bool endOfSource() override {return m_bAbort || (m_idx >= m_count); }
+	PSpecString getNextRecord() override {return mp_arr[m_idx++];}
+	PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter) override {return getNextRecord();}
 private:
 	PSpecString  *mp_arr;
 	size_t       m_count;
@@ -78,14 +78,14 @@ enum recordFormat {
 class StandardReader : public Reader {
 public:
 	StandardReader();	      /* simple constructor - stdin becomes the source */
-	StandardReader(std::istream* f);
-	StandardReader(std::string& fn);
-	StandardReader(pipeType pipe);
-	virtual ~StandardReader();
-	virtual bool endOfSource();
-	virtual PSpecString getNextRecord();
-	virtual void setFormatFixed(unsigned int lrecl, bool blocked);
-	virtual void setLineDelimiter(char c);
+	explicit StandardReader(std::istream* f);
+	explicit StandardReader(std::string& fn);
+	explicit StandardReader(pipeType pipe);
+	~StandardReader() override;
+	bool endOfSource() override;
+	PSpecString getNextRecord() override;
+	void setFormatFixed(unsigned int lrecl, bool blocked) override;
+	void setLineDelimiter(char c) override;
 private:
 	std::shared_ptr<std::istream> m_File;
 	pipeType  m_pipe;
@@ -104,16 +104,16 @@ typedef std::shared_ptr<StandardReader> PStandardReader;
 
 class multiReader : public Reader {
 public:
-	multiReader(PReader pDefaultReader);   // Please don't initiate with another multiReader...
-	virtual ~multiReader();
+	explicit multiReader(PReader pDefaultReader);   // Please don't initiate with another multiReader...
+	~multiReader() override;
 	void addStream(unsigned char idx, std::istream* f);
 	void addStream(unsigned char idx, std::string& fn);
 	using Reader::selectStream;  // prevent a warning about overloading
-	virtual void selectStream(unsigned char idx, PSpecString* ppRecord);
-	virtual bool        endOfSource();
-	virtual PSpecString getNextRecord();
-	virtual PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter);
-	virtual void        Begin();
+	void selectStream(unsigned char idx, PSpecString* ppRecord);
+	bool        endOfSource() override;
+	PSpecString getNextRecord() override;
+	PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter) override;
+	void        Begin() override;
 	void                End();
 	unsigned int        getReaderIdx()  { return readerIdx+1; }
 	void                setStopReader(int idx) { stopReaderIdx = idx; }

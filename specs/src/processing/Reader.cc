@@ -1,4 +1,4 @@
-#include <string.h>
+#include <cstring>
 #include <fstream>
 #include "utils/ErrorReporting.h"
 #include "Config.h"
