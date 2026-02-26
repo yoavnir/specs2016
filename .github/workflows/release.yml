@@ -2,7 +2,7 @@ name: Release Packages
 
 on:
   release:
-    types: [created]
+    types: [created, edited, prereleased, published, released]
 
 env:
   SPECS_VERSION: ${{ github.event.release.tag_name }}
