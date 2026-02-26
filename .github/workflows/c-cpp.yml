@@ -21,6 +21,26 @@ jobs:
     - name: make check
       run: cd specs/src ; make run_tests
 
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: configure
+      working-directory: specs/src
+      run: python3 setup.py -c CLANG --python no
+
+    - name: make
+      working-directory: specs/src
+      run: make all
+
+    - name: make check
+      working-directory: specs/src
+      run: make run_tests      
+
   build-windows:
     runs-on: windows-latest
 
