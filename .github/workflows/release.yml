@@ -1,0 +1,174 @@
+name: Release Packages
+
+on:
+  release:
+    types: [created]
+
+env:
+  SPECS_VERSION: ${{ github.event.release.tag_name }}
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Configure
+      working-directory: specs/src
+      run: python setup.py --python no
+
+    - name: Build
+      working-directory: specs/src
+      run: make some
+
+    - name: Verify binary
+      run: specs/exe/specs "@version"
+
+    - name: Prepare manpage
+      run: |
+        cp manpage specs.1
+        gzip specs.1
+
+    - name: Install rpm-build
+      run: sudo apt-get update && sudo apt-get install -y rpm
+
+    - name: Strip version prefix
+      id: version
+      run: echo "ver=${SPECS_VERSION#v}" >> "$GITHUB_OUTPUT"
+
+    - name: Create RPM build tree
+      run: |
+        mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        mkdir -p rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}
+        cp specs/exe/specs rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
+        cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
+        cp specs.1.gz rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
+        cd rpmbuild/SOURCES
+        tar czf specs-${{ steps.version.outputs.ver }}.tar.gz specs-${{ steps.version.outputs.ver }}
+
+    - name: Create RPM spec file
+      run: sed 's/@VERSION@/${{ steps.version.outputs.ver }}/g' .github/packaging/specs.spec.in > rpmbuild/SPECS/specs.spec
+
+    - name: Build RPM
+      run: |
+        rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/specs.spec
+
+    - name: Upload RPM artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-rpm
+        path: rpmbuild/RPMS/**/*.rpm
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Configure
+      working-directory: specs/src
+      run: python3 setup.py -c CLANG --python no
+
+    - name: Build
+      working-directory: specs/src
+      run: make some
+
+    - name: Verify binary
+      run: specs/exe/specs "@version"
+
+    - name: Prepare manpage
+      run: |
+        cp manpage specs.1
+        gzip specs.1
+
+    - name: Strip version prefix
+      id: version
+      run: echo "ver=${SPECS_VERSION#v}" >> "$GITHUB_OUTPUT"
+
+    - name: Create pkg payload
+      run: |
+        mkdir -p pkg-root/usr/local/bin
+        mkdir -p pkg-root/usr/local/share/man/man1
+        cp specs/exe/specs pkg-root/usr/local/bin/
+        cp specs/exe/specs-autocomplete pkg-root/usr/local/bin/
+        chmod 755 pkg-root/usr/local/bin/specs
+        chmod 755 pkg-root/usr/local/bin/specs-autocomplete
+        cp specs.1.gz pkg-root/usr/local/share/man/man1/
+
+    - name: Build .pkg
+      run: |
+        pkgbuild \
+          --root pkg-root \
+          --identifier com.github.yoavnir.specs \
+          --version "${{ steps.version.outputs.ver }}" \
+          --install-location / \
+          specs-${{ steps.version.outputs.ver }}.pkg
+
+    - name: Upload pkg artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-pkg
+        path: specs-*.pkg
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build specs (Release)
+      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64
+
+    - name: Verify binary
+      run: specs\bin\Release\specs.exe "@version"
+
+    - name: Strip version prefix
+      id: version
+      shell: bash
+      run: echo "ver=${SPECS_VERSION#v}" >> "$GITHUB_OUTPUT"
+
+    - name: Install WiX Toolset
+      run: dotnet tool install --global wix --version 4.0.6
+
+    - name: Create WiX source
+      shell: bash
+      run: sed "s/@VERSION@/${{ steps.version.outputs.ver }}/g" .github/packaging/specs.wxs.in > specs.wxs
+
+    - name: Build MSI
+      shell: bash
+      run: wix build -o specs-${{ steps.version.outputs.ver }}.msi specs.wxs
+
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-msi
+        path: specs-*.msi
+
+  publish:
+    needs: [build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: List artifacts
+      run: find artifacts -type f
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          artifacts/linux-rpm/**/*.rpm
+          artifacts/macos-pkg/*.pkg
+          artifacts/windows-msi/*.msi
