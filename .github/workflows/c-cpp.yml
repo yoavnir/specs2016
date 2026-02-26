@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ dev, stable, dev-0.9.6, dev-0.9.7, dev-0.9.9, dev-1.0.0]
+    branches: [ dev, stable, dev-0.9.6, dev-0.9.9, dev-1.0.0, dev-packaging]
   pull_request:
-    branches: [ dev, stable, dev-0.9.6, dev-0.9.7, dev-0.9.9, dev-1.0.0]
+    branches: [ dev, stable, dev-0.9.6, dev-0.9.9, dev-1.0.0, dev-packaging]
 
 jobs:
   build-linux:
@@ -20,6 +20,26 @@ jobs:
       run: cd specs/src ; make all
     - name: make check
       run: cd specs/src ; make run_tests
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: configure
+      working-directory: specs/src
+      run: python3 setup.py -c CLANG --python no
+
+    - name: make
+      working-directory: specs/src
+      run: make all
+
+    - name: make check
+      working-directory: specs/src
+      run: make run_tests      
 
   build-windows:
     runs-on: windows-latest
