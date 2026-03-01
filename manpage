@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 Mar 2026" "0.9.6" "specs man page"
+.TH man 1 "1 May 2026" "0.9.9-in-development" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS

@@ -18,11 +18,8 @@ What's new:
  * RPM for Linux
  * Homebrew formula
 
-# LIMITATION
-The packaged `specs` does not support Python.
-
+*Note:* Installing from packages will not include Python support 
 ***
-
 28-Feb-2026: Version 0.9.6 is here
 
 What's new:
