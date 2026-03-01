@@ -16,7 +16,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     container: 
-      image: quay.io/centos/centos:stream8
+      image: rockylinux:8
     steps:
     - uses: actions/checkout@v4
       with:
