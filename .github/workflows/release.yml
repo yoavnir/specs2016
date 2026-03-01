@@ -1,6 +1,11 @@
 name: Release Packages
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v1.0.0)'
+        required: true
   release:
     types: [created, edited, prereleased, published, released]
 
@@ -15,9 +20,12 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Install Python dev headers
+      run: sudo apt-get install -y python3-dev
+
     - name: Configure
       working-directory: specs/src
-      run: python setup.py --python no
+      run: python3 setup.py --python python3
 
     - name: Build
       working-directory: specs/src
@@ -70,7 +78,7 @@ jobs:
 
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py -c CLANG --python no
+      run: python3 setup.py -c CLANG --python python3
 
     - name: Build
       working-directory: specs/src
