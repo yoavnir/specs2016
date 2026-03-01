@@ -18,7 +18,8 @@ What's new:
  * RPM for Linux
  * Homebrew formula
 
-*Note:* Installing from packages will not include Python support 
+*Note:* Installing from package does not include Python support on Windows.
+*Note:* On Linux, the `specs` binary is bigger when installed from package, as it is statically linked with libstdc++.
 ***
 28-Feb-2026: Version 0.9.6 is here
 
