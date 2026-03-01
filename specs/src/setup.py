@@ -272,6 +272,8 @@ parser.add_argument("--fast_random", dest="nocrypt", action="store_true", defaul
 					help="Avoid cryptographic random number generators")
 parser.add_argument("--os_version", dest="osversion", action="store", default="",
 					help="OS version to link against. Available only in Mac OS")
+parser.add_argument("--static", dest="static_link", action="store_true", default=False,
+                    help="Statically link libstdc++")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
 args = parser.parse_args()
@@ -347,6 +349,9 @@ elif compiler=="VS":
 	else:
 		condlink = "/Zi /MAP /DEBUG"
 		condcomp = "/O2 /Zi /EHsc"	
+
+if args.static_link:
+	condlink = condlink + " -static-libstdc++"
 	
 if platform=="NT":
 	condcomp = condcomp + "{}WIN64".format(def_prefix)
