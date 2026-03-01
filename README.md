@@ -10,19 +10,19 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+1-May-2026: Version 0.9.9 is here
+
+What's new:
+ * Packages for Windows, Mac OS, and Linux
+
+*Note:* Installing from packages will not include Python support 
+***
 28-Feb-2026: Version 0.9.6 is here
 
 What's new:
  * Support for newer Linux distros (newer gcc)
  * Support for Visual Studio and latest Windows versions
  * Alignment with C++ coding standards
-***
-03-Jan-2025: Version 0.9.5-HF1 is here
-
-What's new:
- * Fixes a bug where `RECNO` within a loop returned the number of iterations of the loop rather than the numbers of records read.
-
-NOTE: This is a non-backwards-compatible change. 
 
 Sources
 =======
