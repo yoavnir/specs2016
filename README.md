@@ -13,7 +13,10 @@ News
 1-May-2026: Version 0.9.9 is here
 
 What's new:
- * Packages for Windows, Mac OS, and Linux
+ * MSI package for Windows
+ * .pkg package for Mac OS
+ * RPM for Linux
+ * Homebrew formula
 
 *Note:* Installing from packages will not include Python support 
 ***
