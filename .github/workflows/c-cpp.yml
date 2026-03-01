@@ -33,7 +33,7 @@ jobs:
 
     - name: configure
       working-directory: specs/src
-      run: python3 setup.py -c CLANG --python no
+      run: python3 setup.py -c CLANG --python python3
 
     - name: make
       working-directory: specs/src
