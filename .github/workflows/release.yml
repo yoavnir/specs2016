@@ -23,7 +23,7 @@ jobs:
         fetch-depth: 0
 
     - name: Install build tools
-      run: dnf install -y gcc-c++ make python3-devel git
+      run: dnf install -y gcc-c++ make python3-devel git libstdc++-static
 
     - name: Configure
       working-directory: specs/src
