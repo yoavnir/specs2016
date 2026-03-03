@@ -672,6 +672,9 @@ if CFG_python:
 				static_pyldflags.append("-Wl,-Bdynamic")
 			else:
 				static_pyldflags.append(flag)
+		# The static libpython archive includes built-in extension modules
+		# (pyexpat, zlib, etc.) that depend on these system libraries.
+		static_pyldflags.extend(["-lexpat", "-lz"])
 		condlink = condlink + " " + " ".join(static_pyldflags)
 	else:
 		condlink = condlink + " " + python_ldflags
