@@ -16,6 +16,7 @@ What's new:
  * MSI package for Windows
  * .pkg package for Mac OS
  * RPM for Linux
+ * .deb package for Ubuntu/Debian
  * Homebrew formula
 
 *Note:* Installing from package does not include Python support on Windows.
