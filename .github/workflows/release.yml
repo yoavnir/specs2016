@@ -163,8 +163,65 @@ jobs:
         name: windows-msi
         path: specs-*.msi
 
+  build-deb:
+    runs-on: ubuntu-latest
+    container: ubuntu:22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install build tools
+      run: |
+        apt-get update
+        apt-get install -y gcc g++ make python3 python3-dev dpkg-dev git
+
+    - name: Configure
+      working-directory: specs/src
+      run: python3 setup.py --python python3 --static
+
+    - name: Build
+      working-directory: specs/src
+      run: make some
+
+    - name: Verify binary
+      run: specs/exe/specs "@version"
+
+    - name: Prepare manpage
+      run: |
+        cp manpage specs.1
+        gzip specs.1
+
+    - name: Strip version prefix
+      id: version
+      run: echo "ver=${SPECS_VERSION#v}" >> "$GITHUB_OUTPUT"
+
+    - name: Create DEB build tree
+      run: |
+        mkdir -p deb-root/usr/local/bin
+        mkdir -p deb-root/usr/share/specs
+        mkdir -p deb-root/DEBIAN
+        cp specs/exe/specs deb-root/usr/local/bin/
+        cp specs/exe/specs-autocomplete deb-root/usr/local/bin/
+        chmod 755 deb-root/usr/local/bin/specs
+        chmod 755 deb-root/usr/local/bin/specs-autocomplete
+        cp specs.1.gz deb-root/usr/share/specs/
+        sed 's/@VERSION@/${{ steps.version.outputs.ver }}/g' .github/packaging/control.in > deb-root/DEBIAN/control
+        cp .github/packaging/postinst deb-root/DEBIAN/
+        cp .github/packaging/postrm deb-root/DEBIAN/
+
+    - name: Build DEB
+      run: |
+        dpkg-deb --build deb-root specs-${{ steps.version.outputs.ver }}.deb
+
+    - name: Upload DEB artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-deb
+        path: specs-*.deb
+
   publish:
-    needs: [build-linux, build-macos, build-windows]
+    needs: [build-linux, build-macos, build-windows, build-deb]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -182,5 +239,6 @@ jobs:
       with:
         files: |
           artifacts/linux-rpm/**/*.rpm
+          artifacts/linux-deb/*.deb
           artifacts/macos-pkg/*.pkg
           artifacts/windows-msi/*.msi

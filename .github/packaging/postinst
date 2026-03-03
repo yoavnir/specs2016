@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+# Find the best man directory and copy the manpage
+MANPATH_OUTPUT=$(manpath 2>/dev/null || echo "/usr/local/share/man:/usr/share/man")
+IFS=':' read -ra PATHS <<< "$MANPATH_OUTPUT"
+
+# First priority: directories starting with /usr/share
+for path in "${PATHS[@]}"; do
+    if [[ "$path" == /usr/share* ]]; then
+        MANDIR="$path"
+        break
+    fi
+done
+
+# Second priority: directories starting with /usr (but not /usr/share)
+if [ -z "$MANDIR" ]; then
+    for path in "${PATHS[@]}"; do
+        if [[ "$path" == /usr* && "$path" != /usr/share* ]]; then
+            MANDIR="$path"
+            break
+        fi
+    done
+fi
+
+# Fallback
+if [ -z "$MANDIR" ]; then
+    MANDIR="/usr/local/share/man"
+fi
+
+mkdir -p "$MANDIR/man1"
+cp /usr/share/specs/specs.1.gz "$MANDIR/man1/specs.1.gz"
+
+exit 0
