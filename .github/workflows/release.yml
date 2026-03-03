@@ -38,6 +38,15 @@ jobs:
     - name: Verify binary
       run: specs/exe/specs "@version"
 
+    - name: Verify no dynamic libpython dependency
+      run: |
+        if ldd specs/exe/specs | grep -q libpython; then
+          echo "ERROR: specs still dynamically links libpython"
+          ldd specs/exe/specs | grep libpython
+          exit 1
+        fi
+        echo "OK: no dynamic libpython dependency"
+
     - name: Prepare manpage
       run: |
         cp manpage specs.1
@@ -199,6 +208,15 @@ jobs:
 
     - name: Verify binary
       run: specs/exe/specs "@version"
+
+    - name: Verify no dynamic libpython dependency
+      run: |
+        if ldd specs/exe/specs | grep -q libpython; then
+          echo "ERROR: specs still dynamically links libpython"
+          ldd specs/exe/specs | grep libpython
+          exit 1
+        fi
+        echo "OK: no dynamic libpython dependency"
 
     - name: Prepare manpage
       run: |
