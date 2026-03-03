@@ -166,9 +166,14 @@ jobs:
   build-deb:
     strategy:
       matrix:
-        arch: [amd64, arm64]
-    runs-on: ubuntu-latest
-    container: ubuntu:22.04
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            container: ubuntu:22.04
+          - arch: arm64
+            runner: ubuntu-latest-arm64
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container || '' }}
     steps:
     - uses: actions/checkout@v4
       with:
