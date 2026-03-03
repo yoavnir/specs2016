@@ -164,6 +164,9 @@ jobs:
         path: specs-*.msi
 
   build-deb:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
     runs-on: ubuntu-latest
     container: ubuntu:22.04
     steps:
@@ -206,19 +209,19 @@ jobs:
         chmod 755 deb-root/usr/local/bin/specs
         chmod 755 deb-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz deb-root/usr/share/specs/
-        sed 's/@VERSION@/${{ steps.version.outputs.ver }}/g' .github/packaging/control.in > deb-root/DEBIAN/control
+        sed "s/@VERSION@/${{ steps.version.outputs.ver }}/g; s/Architecture: amd64/Architecture: ${{ matrix.arch }}/g" .github/packaging/control.in > deb-root/DEBIAN/control
         cp .github/packaging/postinst deb-root/DEBIAN/
         cp .github/packaging/postrm deb-root/DEBIAN/
 
     - name: Build DEB
       run: |
-        dpkg-deb --build deb-root specs-${{ steps.version.outputs.ver }}.deb
+        dpkg-deb --build deb-root specs_${{ steps.version.outputs.ver }}_${{ matrix.arch }}.deb
 
     - name: Upload DEB artifact
       uses: actions/upload-artifact@v4
       with:
-        name: linux-deb
-        path: specs-*.deb
+        name: linux-deb-${{ matrix.arch }}
+        path: specs_*.deb
 
   publish:
     needs: [build-linux, build-macos, build-windows, build-deb]
@@ -239,6 +242,7 @@ jobs:
       with:
         files: |
           artifacts/linux-rpm/**/*.rpm
-          artifacts/linux-deb/*.deb
+          artifacts/linux-deb-amd64/*.deb
+          artifacts/linux-deb-arm64/*.deb
           artifacts/macos-pkg/*.pkg
           artifacts/windows-msi/*.msi
