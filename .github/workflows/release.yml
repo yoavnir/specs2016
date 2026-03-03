@@ -25,7 +25,7 @@ jobs:
     - name: Install build tools
       run: |
         DEBIAN_FRONTEND=noninteractive apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
 
     - name: Configure
       working-directory: specs/src
@@ -58,7 +58,11 @@ jobs:
 
     - name: Create RPM build tree
       run: |
-        mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        mkdir -p rpmbuild/BUILD
+        mkdir -p rpmbuild/RPMS
+        mkdir -p rpmbuild/SOURCES
+        mkdir -p rpmbuild/SPECS
+        mkdir -p rpmbuild/SRPMS
         mkdir -p rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}
         cp specs/exe/specs rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
         cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
