@@ -21,7 +21,7 @@ mkdir -p %{buildroot}/usr/lib/specs
 install -m 755 specs %{buildroot}/usr/local/bin/specs
 install -m 755 specs-autocomplete %{buildroot}/usr/local/bin/specs-autocomplete
 install -m 644 specs.1.gz %{buildroot}/usr/share/specs/specs.1.gz
-cp -r python3.8.10 %{buildroot}/usr/lib/specs/
+cp -r python %{buildroot}/usr/lib/specs/
 
 %post
 # Find the best man directory and copy the manpage
@@ -88,4 +88,4 @@ fi
 /usr/local/bin/specs
 /usr/local/bin/specs-autocomplete
 /usr/share/specs/specs.1.gz
-/usr/lib/specs/python3.8.10
+/usr/lib/specs/python
