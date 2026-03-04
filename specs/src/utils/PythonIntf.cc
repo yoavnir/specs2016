@@ -277,6 +277,10 @@ public:
 			return;
 		}
 		// Initialize Python environment
+#ifdef PYTHON_STDLIB_PATH
+		// When Python is statically linked, set the home directory to our bundled stdlib
+		Py_SetPythonHome(Py_DecodeLocale(PYTHON_STDLIB_PATH, NULL));
+#endif
 		Py_Initialize();
 
 		// update the python path

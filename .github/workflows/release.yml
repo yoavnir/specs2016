@@ -25,7 +25,7 @@ jobs:
     - name: Install build tools
       run: |
         DEBIAN_FRONTEND=noninteractive apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev
 
     - name: Configure
       working-directory: specs/src
@@ -67,6 +67,20 @@ jobs:
         cp specs/exe/specs rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
         cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
         cp specs.1.gz rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
+        
+    - name: Bundle Python stdlib for RPM
+      run: |
+        mkdir -p rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10
+        cp -r /usr/lib/python3.8/* rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10/
+        # Remove unnecessary files to reduce package size
+        find rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10 -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10 -type f -name "*.pyc" -delete
+        find rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10 -type f -name "*.pyo" -delete
+        rm -rf rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10/site-packages
+        rm -rf rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10/dist-packages
+        
+    - name: Create RPM tarball
+      run: |
         cd rpmbuild/SOURCES
         tar czf specs-${{ steps.version.outputs.ver }}.tar.gz specs-${{ steps.version.outputs.ver }}
 
@@ -232,6 +246,7 @@ jobs:
       run: |
         mkdir -p deb-root/usr/local/bin
         mkdir -p deb-root/usr/share/specs
+        mkdir -p deb-root/usr/lib/specs
         mkdir -p deb-root/DEBIAN
         cp specs/exe/specs deb-root/usr/local/bin/
         cp specs/exe/specs-autocomplete deb-root/usr/local/bin/
@@ -241,6 +256,17 @@ jobs:
         sed "s/@VERSION@/${{ steps.version.outputs.ver }}/g; s/Architecture: amd64/Architecture: ${{ matrix.arch }}/g" .github/packaging/control.in > deb-root/DEBIAN/control
         cp .github/packaging/postinst deb-root/DEBIAN/
         cp .github/packaging/postrm deb-root/DEBIAN/
+        
+    - name: Bundle Python stdlib for DEB
+      run: |
+        mkdir -p deb-root/usr/lib/specs/python3.10.12
+        cp -r /usr/lib/python3.10/* deb-root/usr/lib/specs/python3.10.12/
+        # Remove unnecessary files to reduce package size
+        find deb-root/usr/lib/specs/python3.10.12 -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find deb-root/usr/lib/specs/python3.10.12 -type f -name "*.pyc" -delete
+        find deb-root/usr/lib/specs/python3.10.12 -type f -name "*.pyo" -delete
+        rm -rf deb-root/usr/lib/specs/python3.10.12/site-packages
+        rm -rf deb-root/usr/lib/specs/python3.10.12/dist-packages
 
     - name: Build DEB
       run: |
