@@ -661,7 +661,28 @@ condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatfor
 if CFG_python:
 	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
 	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)
-	condlink = condlink + " " + python_ldflags
+	if args.static_link and platform!="NT":
+		# Statically link libpython so the binary works regardless of the
+		# Python version installed on the target system.
+		# Also define the path where the bundled stdlib will be installed.
+		# Py_SetPythonHome expects a prefix; Python looks for lib/python3.X/ under it.
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"/usr/lib/specs/python\\"'.format(def_prefix)
+		static_pyldflags = []
+		for flag in python_ldflags.split():
+			if flag.startswith("-lpython"):
+				static_pyldflags.append("-Wl,-Bstatic")
+				static_pyldflags.append(flag)
+				static_pyldflags.append("-Wl,-Bdynamic")
+			else:
+				static_pyldflags.append(flag)
+		# The static libpython archive includes built-in extension modules
+		# (pyexpat, zlib, etc.) that depend on these system libraries.
+		static_pyldflags.extend(["-lexpat", "-lz"])
+		# Ubuntu 20.04's libpython3.8.a is not PIE-compatible, so disable PIE
+		static_pyldflags.append("-no-pie")
+		condlink = condlink + " " + " ".join(static_pyldflags)
+	else:
+		condlink = condlink + " " + python_ldflags
 else:
 	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix) \
 	                                   + "{}PYTHON_FULL_VER=N/A".format(def_prefix)

@@ -16,7 +16,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     container: 
-      image: rockylinux:8
+      image: ubuntu:20.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -24,8 +24,8 @@ jobs:
 
     - name: Install build tools
       run: |
-        dnf install -y gcc-c++ make python3-devel git
-        dnf install -y --enablerepo=powertools libstdc++-static
+        DEBIAN_FRONTEND=noninteractive apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
 
     - name: Configure
       working-directory: specs/src
@@ -38,13 +38,19 @@ jobs:
     - name: Verify binary
       run: specs/exe/specs "@version"
 
+    - name: Verify no dynamic libpython dependency
+      run: |
+        if ldd specs/exe/specs | grep -q libpython; then
+          echo "ERROR: specs still dynamically links libpython"
+          ldd specs/exe/specs | grep libpython
+          exit 1
+        fi
+        echo "OK: no dynamic libpython dependency"
+
     - name: Prepare manpage
       run: |
         cp manpage specs.1
         gzip specs.1
-
-    - name: Install rpm-build
-      run: dnf install -y rpm-build
 
     - name: Strip version prefix
       id: version
@@ -52,11 +58,31 @@ jobs:
 
     - name: Create RPM build tree
       run: |
-        mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        mkdir -p rpmbuild/BUILD
+        mkdir -p rpmbuild/RPMS
+        mkdir -p rpmbuild/SOURCES
+        mkdir -p rpmbuild/SPECS
+        mkdir -p rpmbuild/SRPMS
         mkdir -p rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}
         cp specs/exe/specs rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
         cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
         cp specs.1.gz rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
+        
+    - name: Bundle Python stdlib for RPM
+      run: |
+        PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        SRCDIR=rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}
+        mkdir -p ${SRCDIR}/python/lib/python${PYVER}
+        cp -r /usr/lib/python${PYVER}/* ${SRCDIR}/python/lib/python${PYVER}/
+        # Remove unnecessary files to reduce package size
+        find ${SRCDIR}/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyc" -delete
+        find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyo" -delete
+        rm -rf ${SRCDIR}/python/lib/python${PYVER}/site-packages
+        rm -rf ${SRCDIR}/python/lib/python${PYVER}/dist-packages
+        
+    - name: Create RPM tarball
+      run: |
         cd rpmbuild/SOURCES
         tar czf specs-${{ steps.version.outputs.ver }}.tar.gz specs-${{ steps.version.outputs.ver }}
 
@@ -187,7 +213,7 @@ jobs:
           APT="sudo apt-get"
         fi
         $APT update
-        $APT install -y gcc g++ make python3 python3-dev dpkg-dev git
+        $APT install -y gcc g++ make python3 python3-dev dpkg-dev git libexpat1-dev zlib1g-dev
 
     - name: Configure
       working-directory: specs/src
@@ -199,6 +225,15 @@ jobs:
 
     - name: Verify binary
       run: specs/exe/specs "@version"
+
+    - name: Verify no dynamic libpython dependency
+      run: |
+        if ldd specs/exe/specs | grep -q libpython; then
+          echo "ERROR: specs still dynamically links libpython"
+          ldd specs/exe/specs | grep libpython
+          exit 1
+        fi
+        echo "OK: no dynamic libpython dependency"
 
     - name: Prepare manpage
       run: |
@@ -213,6 +248,7 @@ jobs:
       run: |
         mkdir -p deb-root/usr/local/bin
         mkdir -p deb-root/usr/share/specs
+        mkdir -p deb-root/usr/lib/specs
         mkdir -p deb-root/DEBIAN
         cp specs/exe/specs deb-root/usr/local/bin/
         cp specs/exe/specs-autocomplete deb-root/usr/local/bin/
@@ -222,6 +258,18 @@ jobs:
         sed "s/@VERSION@/${{ steps.version.outputs.ver }}/g; s/Architecture: amd64/Architecture: ${{ matrix.arch }}/g" .github/packaging/control.in > deb-root/DEBIAN/control
         cp .github/packaging/postinst deb-root/DEBIAN/
         cp .github/packaging/postrm deb-root/DEBIAN/
+        
+    - name: Bundle Python stdlib for DEB
+      run: |
+        PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        mkdir -p deb-root/usr/lib/specs/python/lib/python${PYVER}
+        cp -r /usr/lib/python${PYVER}/* deb-root/usr/lib/specs/python/lib/python${PYVER}/
+        # Remove unnecessary files to reduce package size
+        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyc" -delete
+        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyo" -delete
+        rm -rf deb-root/usr/lib/specs/python/lib/python${PYVER}/site-packages
+        rm -rf deb-root/usr/lib/specs/python/lib/python${PYVER}/dist-packages
 
     - name: Build DEB
       run: |
