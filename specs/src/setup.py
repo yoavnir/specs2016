@@ -664,8 +664,9 @@ if CFG_python:
 	if args.static_link and platform!="NT":
 		# Statically link libpython so the binary works regardless of the
 		# Python version installed on the target system.
-		# Also define the path where the bundled stdlib will be installed
-		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"/usr/lib/specs/python{}\\"'.format(def_prefix,full_python_version)
+		# Also define the path where the bundled stdlib will be installed.
+		# Py_SetPythonHome expects a prefix; Python looks for lib/python3.X/ under it.
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"/usr/lib/specs/python\\"'.format(def_prefix)
 		static_pyldflags = []
 		for flag in python_ldflags.split():
 			if flag.startswith("-lpython"):
