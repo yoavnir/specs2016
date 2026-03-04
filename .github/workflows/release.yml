@@ -70,14 +70,16 @@ jobs:
         
     - name: Bundle Python stdlib for RPM
       run: |
-        mkdir -p rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10
-        cp -r /usr/lib/python3.8/* rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10/
+        PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        SRCDIR=rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}
+        mkdir -p ${SRCDIR}/python/lib/python${PYVER}
+        cp -r /usr/lib/python${PYVER}/* ${SRCDIR}/python/lib/python${PYVER}/
         # Remove unnecessary files to reduce package size
-        find rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10 -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-        find rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10 -type f -name "*.pyc" -delete
-        find rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10 -type f -name "*.pyo" -delete
-        rm -rf rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10/site-packages
-        rm -rf rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/python3.8.10/dist-packages
+        find ${SRCDIR}/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyc" -delete
+        find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyo" -delete
+        rm -rf ${SRCDIR}/python/lib/python${PYVER}/site-packages
+        rm -rf ${SRCDIR}/python/lib/python${PYVER}/dist-packages
         
     - name: Create RPM tarball
       run: |
@@ -259,14 +261,15 @@ jobs:
         
     - name: Bundle Python stdlib for DEB
       run: |
-        mkdir -p deb-root/usr/lib/specs/python3.10.12
-        cp -r /usr/lib/python3.10/* deb-root/usr/lib/specs/python3.10.12/
+        PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        mkdir -p deb-root/usr/lib/specs/python/lib/python${PYVER}
+        cp -r /usr/lib/python${PYVER}/* deb-root/usr/lib/specs/python/lib/python${PYVER}/
         # Remove unnecessary files to reduce package size
-        find deb-root/usr/lib/specs/python3.10.12 -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-        find deb-root/usr/lib/specs/python3.10.12 -type f -name "*.pyc" -delete
-        find deb-root/usr/lib/specs/python3.10.12 -type f -name "*.pyo" -delete
-        rm -rf deb-root/usr/lib/specs/python3.10.12/site-packages
-        rm -rf deb-root/usr/lib/specs/python3.10.12/dist-packages
+        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyc" -delete
+        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyo" -delete
+        rm -rf deb-root/usr/lib/specs/python/lib/python${PYVER}/site-packages
+        rm -rf deb-root/usr/lib/specs/python/lib/python${PYVER}/dist-packages
 
     - name: Build DEB
       run: |
