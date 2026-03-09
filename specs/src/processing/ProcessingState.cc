@@ -51,6 +51,11 @@ void ProcessingState::Reset()
 	m_ExtraReads = 0;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
+	m_pendingSplitRecords.clear();
+	m_splitPrefix = nullptr;
+	m_splitPos = 1;
+	m_splitPad = DEFAULT_PAD_CHAR;
+	m_splitOutStart = 0;
 }
 ProcessingState::ProcessingState()
 {
@@ -71,20 +76,35 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_wordSeparatorLocal = ps.m_wordSeparatorLocal;
 	m_wordSeparator = ps.m_wordSeparator;
 	m_fieldSeparator = ps.m_fieldSeparator;
-	m_fieldCount = 0;
-	m_wordCount = 0;
-	m_CycleCounter = 0;
-	m_ExtraReads = 0;
-	m_ps = nullptr;
-	m_prevPs = nullptr;
-	m_inputStation = STATION_FIRST;
-	m_breakLevel = 0;
-	m_inputStream = DEFAULT_READER_IDX;
-	m_inputStreamChanged = false;
-	m_bNoWrite = false;
-	m_bEOF = false;
-	m_outputIndex = 1;
-	m_Writers = nullptr;
+	m_ps = ps.m_ps ? std::make_shared<std::string>(*ps.m_ps) : nullptr;
+	m_prevPs = ps.m_prevPs ? std::make_shared<std::string>(*ps.m_prevPs) : nullptr;
+	m_wordCount = ps.m_wordCount;
+	m_fieldCount = ps.m_fieldCount;
+	m_CycleCounter = ps.m_CycleCounter;
+	m_ExtraReads = ps.m_ExtraReads;
+	m_wordStart = ps.m_wordStart;
+	m_wordEnd = ps.m_wordEnd;
+	m_fieldStart = ps.m_fieldStart;
+	m_fieldEnd = ps.m_fieldEnd;
+	m_fieldIdentifiers = ps.m_fieldIdentifiers;
+	m_fiStatistics = ps.m_fiStatistics;
+	m_breakValues = ps.m_breakValues;
+	m_freqMaps = ps.m_freqMaps;
+	m_breakLevel = ps.m_breakLevel;
+	m_Conditions = ps.m_Conditions;
+	m_Loops = ps.m_Loops;
+	m_inputStation = ps.m_inputStation;
+	m_inputStream = ps.m_inputStream;
+	m_inputStreamChanged = ps.m_inputStreamChanged;
+	m_pendingSplitRecords = ps.m_pendingSplitRecords;
+	m_splitPrefix = ps.m_splitPrefix ? std::make_shared<std::string>(*ps.m_splitPrefix) : nullptr;
+	m_splitPos = ps.m_splitPos;
+	m_splitPad = ps.m_splitPad;
+	m_splitOutStart = ps.m_splitOutStart;
+	m_Writers = ps.m_Writers;
+	m_outputIndex = ps.m_outputIndex;
+	m_bNoWrite = ps.m_bNoWrite;
+	m_bEOF = ps.m_bEOF;
 }
 
 ProcessingState::ProcessingState(ProcessingState* pPS)
@@ -93,20 +113,35 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_wordSeparatorLocal = pPS->m_wordSeparatorLocal;
 	m_wordSeparator = pPS->m_wordSeparator;
 	m_fieldSeparator = pPS->m_fieldSeparator;
-	m_fieldCount = 0;
-	m_wordCount = 0;
-	m_CycleCounter = 0;
-	m_ExtraReads = 0;
-	m_ps = nullptr;
-	m_prevPs = nullptr;
-	m_inputStation = STATION_FIRST;
-	m_breakLevel = 0;
-	m_inputStream = DEFAULT_READER_IDX;
-	m_inputStreamChanged = false;
-	m_bNoWrite = false;
-	m_bEOF = false;
-	m_outputIndex = 1;
-	m_Writers = nullptr;
+	m_ps = pPS->m_ps ? std::make_shared<std::string>(*pPS->m_ps) : nullptr;
+	m_prevPs = pPS->m_prevPs ? std::make_shared<std::string>(*pPS->m_prevPs) : nullptr;
+	m_wordCount = pPS->m_wordCount;
+	m_fieldCount = pPS->m_fieldCount;
+	m_CycleCounter = pPS->m_CycleCounter;
+	m_ExtraReads = pPS->m_ExtraReads;
+	m_wordStart = pPS->m_wordStart;
+	m_wordEnd = pPS->m_wordEnd;
+	m_fieldStart = pPS->m_fieldStart;
+	m_fieldEnd = pPS->m_fieldEnd;
+	m_fieldIdentifiers = pPS->m_fieldIdentifiers;
+	m_fiStatistics = pPS->m_fiStatistics;
+	m_breakValues = pPS->m_breakValues;
+	m_freqMaps = pPS->m_freqMaps;
+	m_breakLevel = pPS->m_breakLevel;
+	m_Conditions = pPS->m_Conditions;
+	m_Loops = pPS->m_Loops;
+	m_inputStation = pPS->m_inputStation;
+	m_inputStream = pPS->m_inputStream;
+	m_inputStreamChanged = pPS->m_inputStreamChanged;
+	m_pendingSplitRecords = pPS->m_pendingSplitRecords;
+	m_splitPrefix = pPS->m_splitPrefix ? std::make_shared<std::string>(*pPS->m_splitPrefix) : nullptr;
+	m_splitPos = pPS->m_splitPos;
+	m_splitPad = pPS->m_splitPad;
+	m_splitOutStart = pPS->m_splitOutStart;
+	m_Writers = pPS->m_Writers;
+	m_outputIndex = pPS->m_outputIndex;
+	m_bNoWrite = pPS->m_bNoWrite;
+	m_bEOF = pPS->m_bEOF;
 }
 
 ProcessingState::~ProcessingState()
@@ -127,6 +162,11 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
+	m_pendingSplitRecords.clear();
+	m_splitPrefix = nullptr;
+	m_splitPos = 1;
+	m_splitPad = DEFAULT_PAD_CHAR;
+	m_splitOutStart = 0;
 	if (bResetState) {
 		fieldIdentifierClear();
 		resetBreaks();
@@ -136,6 +176,31 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 void ProcessingState::setStringInPlace(PSpecString ps)
 {
 	m_ps = ps;
+}
+
+void ProcessingState::registerSplitResults(const std::vector<PSpecString>& records)
+{
+	m_pendingSplitRecords = records;
+}
+
+bool ProcessingState::hasPendingSplitResults()
+{
+	return !m_pendingSplitRecords.empty();
+}
+
+std::vector<PSpecString> ProcessingState::consumeSplitResults()
+{
+	auto ret = m_pendingSplitRecords;
+	m_pendingSplitRecords.clear();
+	return ret;
+}
+
+void ProcessingState::setSplitContext(PSpecString prefix, size_t pos, char pad, size_t outStart)
+{
+	m_splitPrefix = prefix ? std::make_shared<std::string>(*prefix) : nullptr;
+	m_splitPos = pos;
+	m_splitPad = pad;
+	m_splitOutStart = outStart;
 }
 
 void ProcessingState::setFirst()

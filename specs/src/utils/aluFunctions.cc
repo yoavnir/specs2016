@@ -2913,20 +2913,21 @@ PValue AluFunc_split(PValue pSep, PValue pHdr, PValue pFtr)
 		g_pStateQueryAgent->alterFieldSeparator(pSep->getStr());
 	}
 
-	std::string res;
-
-	bool first = true;
+	MYASSERT_WITH_MSG(!g_pStateQueryAgent->hasPendingSplitResults(), "Multiple split/splitw calls in the same branch without REDO are undefined");
+	std::vector<PSpecString> results;
 	for (auto i=hdr+1; i<=g_pStateQueryAgent->getFieldCount()-ftr; i++) {
-		if (!first) res += '\n';
-		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i)).get();
-		first = false;
+		results.push_back(g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getFieldStart(i), g_pStateQueryAgent->getFieldEnd(i)));
 	}
+	if (results.empty()) {
+		results.push_back(std::make_shared<std::string>());
+	}
+	g_pStateQueryAgent->registerSplitResults(results);
 
 	if (!restoreFieldSeparator.empty()) {
 		g_pStateQueryAgent->alterFieldSeparator(restoreFieldSeparator);
 	}
 
-	return mkValue(res);
+	return mkValue(*results.front());
 }
 
 PValue AluFunc_splitw(PValue pSep, PValue pHdr, PValue pFtr)
@@ -2943,20 +2944,21 @@ PValue AluFunc_splitw(PValue pSep, PValue pHdr, PValue pFtr)
 		g_pStateQueryAgent->alterWordSeparator(pSep->getStr());
 	}
 
-	std::string res;
-
-	bool first = true;
+	MYASSERT_WITH_MSG(!g_pStateQueryAgent->hasPendingSplitResults(), "Multiple split/splitw calls in the same branch without REDO are undefined");
+	std::vector<PSpecString> results;
 	for (auto i=hdr+1; i<=g_pStateQueryAgent->getWordCount()-ftr; i++) {
-		if (!first) res += '\n';
-		res += *g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i)).get();
-		first = false;
+		results.push_back(g_pStateQueryAgent->getFromTo(g_pStateQueryAgent->getWordStart(i), g_pStateQueryAgent->getWordEnd(i)));
 	}
+	if (results.empty()) {
+		results.push_back(std::make_shared<std::string>());
+	}
+	g_pStateQueryAgent->registerSplitResults(results);
 
 	if (!restoreWordSeparator.empty()) {
 		g_pStateQueryAgent->alterWordSeparator(restoreWordSeparator);
 	}
 
-	return mkValue(res);
+	return mkValue(*results.front());
 }
 
 PValue AluFunc_wordwith(PValue pSubStr)

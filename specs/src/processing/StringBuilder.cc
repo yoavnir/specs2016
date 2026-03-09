@@ -91,9 +91,29 @@ StringBuilder::StringBuilder()
 	m_pad = 0;
 }
 
+StringBuilder::StringBuilder(const StringBuilder& other)
+{
+	mp_str = other.mp_str ? std::make_shared<std::string>(*other.mp_str) : nullptr;
+	m_pos = other.m_pos;
+	m_pad = other.m_pad;
+}
+
 StringBuilder::~StringBuilder()
 {
 }
+
+PSpecString StringBuilder::Snapshot() const
+{
+	return mp_str ? std::make_shared<std::string>(*mp_str) : nullptr;
+}
+
+void StringBuilder::Restore(PSpecString str, size_t pos, char pad)
+{
+	mp_str = str ? std::make_shared<std::string>(*str) : nullptr;
+	m_pos = pos;
+	m_pad = pad;
+}
+
 PSpecString StringBuilder::GetStringUnsafe()
 {
 	if (!mp_str) return nullptr;

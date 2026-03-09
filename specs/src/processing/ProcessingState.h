@@ -89,6 +89,14 @@ public:
 	void setStream(int i);
 	int  getActiveInputStation() { return m_inputStation; }
 	PSpecString currRecord() override { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
+	void registerSplitResults(const std::vector<PSpecString>& records) override;
+	bool hasPendingSplitResults() override;
+	std::vector<PSpecString> consumeSplitResults() override;
+	void setSplitContext(PSpecString prefix, size_t pos, char pad, size_t outStart);
+	PSpecString splitPrefix() { return m_splitPrefix; }
+	size_t splitPos() { return m_splitPos; }
+	char splitPad() { return m_splitPad; }
+	size_t splitOutStart() { return m_splitOutStart; }
 	bool recordNotAvailable() { return nullptr==currRecord(); }
 	bool inputStreamHasChanged() { return m_inputStreamChanged; }
 	void resetInputStreamFlag() { m_inputStreamChanged = false; }
@@ -133,6 +141,11 @@ private:
 	int             m_inputStation;
 	int             m_inputStream;
 	bool            m_inputStreamChanged;
+	std::vector<PSpecString> m_pendingSplitRecords;
+	PSpecString      m_splitPrefix;
+	size_t           m_splitPos;
+	char             m_splitPad;
+	size_t           m_splitOutStart;
 	PWriter         *m_Writers;
 	int             m_outputIndex;
 	bool            m_bNoWrite;

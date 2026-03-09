@@ -448,6 +448,7 @@ void DataField::stripString(PSpecString &pOrig)
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	bool bWritingWasDone = false;
+	bool hasPendingSplit = false;
 	PValue pComposedStartingPosition = nullptr;
 	PSpecString pInput = m_InputPart->getStr(pState);
 	size_t outputWidth = m_maxLength;
@@ -552,6 +553,13 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 
 	pSB->setPadChar(pState.getPadChar());
 
+	if (nullptr == pInput || pInput->empty()) {
+		goto FINISH;
+	}
+	hasPendingSplit = pState.hasPendingSplitResults();
+	if (hasPendingSplit) {
+		pState.setSplitContext(pSB->Snapshot(), pSB->pos(), pSB->pad(), m_outStart);
+	}
 	if (m_outStart==POS_SPECIAL_VALUE_NEXT) {
 		pSB->insertNext(pInput);
 	} else if (m_outStart==POS_SPECIAL_VALUE_NEXTWORD) {
@@ -577,6 +585,9 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	}
 
 	bWritingWasDone = true;
+	if (hasPendingSplit) {
+		return ApplyRet__Split;
+	}
 
 FINISH:
 	return bWritingWasDone ? ApplyRet__ContinueWithDataWritten : ApplyRet__Continue;

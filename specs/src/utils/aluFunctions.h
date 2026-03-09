@@ -427,6 +427,9 @@ public:
 		return getFromTo(int(from), int(to));
 	}
 	virtual PSpecString currRecord() = 0;
+	virtual void registerSplitResults(const std::vector<PSpecString>& records) = 0;
+	virtual bool hasPendingSplitResults() = 0;
+	virtual std::vector<PSpecString> consumeSplitResults() = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;
 	virtual ALUInt  getRecordCount() = 0;

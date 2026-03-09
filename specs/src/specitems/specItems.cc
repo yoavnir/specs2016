@@ -461,7 +461,6 @@ std::string itemGroup::Debug()
 		ret += pIt->Debug();
 		ret += "\n";
 	}
-
 	return ret;
 }
 
@@ -511,6 +510,149 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			bSomethingWasDone = true;
 		case ApplyRet__Continue:
 			break;
+		case ApplyRet__Split:
+		{
+			bSomethingWasDone = true;
+			auto splitRecords = pState.consumeSplitResults();
+			MYASSERT_WITH_MSG(!splitRecords.empty(), "Split branch requested with no split results");
+			size_t prefixPos = pState.splitPos();
+			char prefixPad = pState.splitPad();
+			size_t splitOutStart = pState.splitOutStart();
+			PSpecString prefix = pState.splitPrefix();
+			for (size_t splitIdx = 0; splitIdx < splitRecords.size(); splitIdx++) {
+				ProcessingState branchState(pState);
+				branchState.setString(splitRecords[splitIdx], false);
+				branchState.setFirst();
+				StringBuilder branchSb;
+				branchSb.Restore(prefix, prefixPos, prefixPad);
+				branchSb.setPadChar(branchState.getPadChar());
+				if (splitOutStart==POS_SPECIAL_VALUE_NEXT) {
+					branchSb.insertNext(splitRecords[splitIdx]);
+				} else if (splitOutStart==POS_SPECIAL_VALUE_NEXTWORD) {
+					branchSb.insertNextWord(splitRecords[splitIdx]);
+				} else if (splitOutStart==POS_SPECIAL_VALUE_NEXTFIELD) {
+					branchSb.insertNextField(splitRecords[splitIdx]);
+				} else if (splitOutStart <= MAX_OUTPUT_POSITION) {
+					branchSb.insert(splitRecords[splitIdx], splitOutStart);
+				} else {
+					MYTHROW("Unsupported split output mode");
+				}
+				setStateQueryAgent(&branchState);
+				setPositionGetter(&branchSb);
+				bool branchProcessingContinue = true;
+				bool branchSuspendUntilBreak = suspendUntilBreak;
+				bool branchSomethingWasDone = true;
+				for (size_t branchI = i + 1; branchProcessingContinue && branchI < m_items.size(); branchI++) {
+					if (branchState.inputStreamHasChanged()) {
+						multiReader* pmRead = dynamic_cast<multiReader*>(pRd);
+						MYASSERT_WITH_MSG(nullptr != pmRead, "Stream selected in non-multi-stream specification");
+						branchState.setFirst();
+						PSpecString branchPs = branchState.currRecord();
+						pmRead->selectStream(branchState.getActiveInputStream(), &branchPs);
+						branchState.resetInputStreamFlag();
+						branchState.setStringInPlace(branchPs);
+					}
+					PItem branchItem = m_items[branchI];
+					if (!branchItem->ApplyUnconditionally() && !branchState.needToEvaluate()) {
+						continue;
+					}
+					if (branchSuspendUntilBreak && !branchItem->isBreak()) {
+						continue;
+					}
+					if (branchItem->isBreak()) {
+						branchSuspendUntilBreak = false;
+					}
+					ApplyRet branchRet = branchItem->apply(branchState, &branchSb);
+					switch (branchRet) {
+					case ApplyRet__ContinueWithDataWritten:
+						branchSomethingWasDone = true;
+					case ApplyRet__Continue:
+						break;
+					case ApplyRet__Write:
+						if (branchState.shouldWrite() && !branchState.printSuppressed(g_printonly_rule)) {
+							if (branchSomethingWasDone) {
+								branchState.getCurrentWriter()->Write(branchSb.GetString(), tmr);
+							} else {
+								branchState.getCurrentWriter()->Write(std::make_shared<std::string>(), tmr);
+							}
+						}
+						branchSomethingWasDone = false;
+						break;
+					case ApplyRet__ReDo:
+						if (branchSomethingWasDone) {
+							PSpecString branchRedo = branchSb.GetString();
+							ps = branchRedo ? std::make_shared<std::string>(*branchRedo) : std::make_shared<std::string>();
+							branchSomethingWasDone = false;
+						} else {
+							ps = std::make_shared<std::string>();
+						}
+						branchState.setString(ps, false);
+						branchState.setFirst();
+						break;
+					case ApplyRet__SkipToNext:
+						branchProcessingContinue = false;
+						break;
+					case ApplyRet__Read:
+					case ApplyRet__ReadStop:
+					{
+						MYASSERT_WITH_MSG(branchState.getActiveInputStation() != STATION_SECOND, "Cannot READ or READSTOP during SELECT SECOND");
+						ps = pRd->get(tmr, rdrCounter);
+						if (!ps) {
+							if (branchRet==ApplyRet__Read) {
+								ps = std::make_shared<std::string>();
+							} else {
+								branchProcessingContinue = false;
+							}
+						} else {
+							branchState.incrementExtraReads();
+						}
+						branchState.setString(ps, false);
+						break;
+					}
+					case ApplyRet__EnterLoop:
+						branchState.pushLoop(int(branchI));
+						break;
+					case ApplyRet__DoneLoop:
+						branchI = size_t(branchState.getLoopStart() - 1);
+						break;
+					case ApplyRet__EOF:
+						branchProcessingContinue = false;
+						break;
+					case ApplyRet__UNREAD:
+						if (!pRd->hasRunDry()) {
+							pRd->pushBack(branchState.extractCurrentRecord());
+						}
+						break;
+					case ApplyRet__Break:
+						branchSuspendUntilBreak = true;
+						break;
+					case ApplyRet__Split:
+						setStateQueryAgent(&pState);
+						setPositionGetter(&sb);
+						MYTHROW("Multiple split/splitw calls in the same branch without REDO are undefined");
+					default:
+						setStateQueryAgent(&pState);
+						setPositionGetter(&sb);
+						MYTHROW("Unexpected return code from split branch");
+					}
+				}
+				setStateQueryAgent(&pState);
+				setPositionGetter(&sb);
+				if (branchSomethingWasDone) {
+					bool bPrintSuppressed = branchState.printSuppressed(g_printonly_rule);
+					if (!(bPrintSuppressed && g_keep_suppressed_record)) {
+						PSpecString branchOutString = branchSb.GetString();
+						if (!bPrintSuppressed && branchState.shouldWrite()) {
+							branchState.getCurrentWriter()->Write(branchOutString, tmr);
+						} else {
+							branchState.resetNoWrite();
+						}
+					}
+				}
+			}
+			bSomethingWasDone = false;
+			return false;
+		}
 		case ApplyRet__Write:
 			if (pState.shouldWrite() && !pState.printSuppressed(g_printonly_rule)) {
 				if (bSomethingWasDone) {

@@ -162,6 +162,7 @@ typedef std::shared_ptr<ExpressionPart> PExpressionPart;
 enum ApplyRet {
 	ApplyRet__Continue,
 	ApplyRet__ContinueWithDataWritten,
+	ApplyRet__Split,
 	ApplyRet__Write,
 	ApplyRet__Read,
 	ApplyRet__ReadStop,

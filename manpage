@@ -1447,7 +1447,11 @@ defaults to 0x00, and
 .I end
 defaults to 0xff.
 .IP "split([sep], [hdr], [ftr])" 3
-Returns all fields in the input line, one on each output line.  If 
+Splits the input line into multiple output records at the point where the function is evaluated. Any output already accumulated in the current output buffer is duplicated into each generated record, and the remainder of the specification continues independently for each generated record. This makes it possible to use 
+.B REDO 
+after 
+.B split() 
+to continue processing each split result as its own record. If 
 .I sep 
 is specified, it will be used instead of the active field separator. If 
 .I hdr 
@@ -1457,9 +1461,15 @@ are specified, the first
 .I hdr 
 fields and last 
 .I ftr 
-fields are omitted.
+fields are omitted. Multiple calls to 
+.B split() 
+or 
+.B splitw() 
+in the same branch without an intervening 
+.B REDO 
+are undefined behavior.
 .IP "splitw([sep], [hdr], [ftr])" 3
-Returns all words in the input line, one on each output line.  If 
+Splits the input line into multiple output records at the point where the function is evaluated, using words instead of fields. Any output already accumulated in the current output buffer is duplicated into each generated record, and the remainder of the specification continues independently for each generated record. If 
 .I sep 
 is specified, it will be used instead of the active word separator. If 
 .I hdr 
@@ -1469,8 +1479,26 @@ are specified, the first
 .I hdr 
 words and last 
 .I ftr 
-words are omitted.
-
+words are omitted. Multiple calls to 
+.B split() 
+or 
+.B splitw() 
+in the same branch without an intervening 
+.B REDO 
+are undefined behavior.
+.IP "countocc(n,h)" 3
+Returns the number of matches for this particular 
+.B needle 
+so far.
+.IP "countocc_get(n)" 3
+Returns the number of matches for this particular 
+.B needle 
+so far. No match is made here.
+.IP "countocc_dump(format,sortOrder,showPct)" 3
+Returns a string containing a dump of the 
+.I frequency map 
+used in 
+.B countocc`.
 
 .SS "Built-In Statistical Pseudo-Functions" 
 All of the below functions work on the values stored in field identifiers. You cannot place a proper expression inside the parenthesis.
@@ -1774,7 +1802,7 @@ is running, will print once a second a message to stderr telling the user how ma
 Changes the configuration file from the default 
 .I ~/.specs
 to whatever the parameter says
-.IP "--set" or "-s" 3
+.IP "--set or -s" 3
 The following argument sets a configured string. For example: 
 .B specs --set hello=goodbye
 will set the configured string

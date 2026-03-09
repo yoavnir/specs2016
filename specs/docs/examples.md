@@ -34,3 +34,43 @@ ELSE
    /NOT OK/ 1
 ENDIF
 ```
+
+## Split with Prefix, Suffix, and `REDO`
+
+The `split()` and `splitw()` functions now create multiple output records immediately. Any text already written to the output buffer is copied into each generated record, and the rest of the specification continues independently for each split result.
+
+This means you can put text before the split, add more text after the split, and then use `REDO` so that the generated line becomes the new input record for additional processing.
+
+For example, this specification starts each line with `This is a`, inserts each field from the input separated by `:`, and then uses `REDO` so the partially built output line becomes the new input record. After the `REDO`, it extracts the first four words and appends `right?`:
+
+```
+/This is a/ 1 PRINT "split(':')" NW REDO WORD 1:4 1 /right?/ NW
+```
+
+If the input record is:
+
+```
+cat:dog:horse
+```
+
+the output is:
+
+```
+This is a cat right?
+This is a dog right?
+This is a horse right?
+```
+
+Without the `REDO`, later spec units still continue independently for each generated record, but they keep working on the original input record rather than on the generated output line. For example:
+
+```
+/This is a/ 1 PRINT "split(':')" NW /here/ NW
+```
+
+produces:
+
+```
+This is a cat here
+This is a dog here
+This is a horse here
+```

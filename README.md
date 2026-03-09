@@ -18,7 +18,8 @@ What's new:
  * RPM for Linux
  * .deb package for Ubuntu/Debian
  * Homebrew formula
-
+ * Non-backwards-compatible change: `split()` and `splitw()` now create multiple output records during processing instead of embedding `\n` characters inside a single output record
+ 
 *Note:* Installing from package does not include Python support on Windows.
 *Note:* On Linux, the `specs` binary is bigger when installed from package, as it is statically linked with libstdc++.
 ***

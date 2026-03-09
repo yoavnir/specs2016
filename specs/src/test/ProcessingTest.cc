@@ -34,6 +34,24 @@ std::string prettify(std::string src)
 	return ret;
 }
 
+PSpecString drainWriter(PStringWriter writer)
+{
+	PSpecString combined = nullptr;
+	while (true) {
+		PSpecString next = writer->getString();
+		if (!next) {
+			break;
+		}
+		if (combined) {
+			*combined += '\n';
+			*combined += *next;
+		} else {
+			combined = std::make_shared<std::string>(*next);
+		}
+	}
+	return combined;
+}
+
 #define VERIFY(sp,ex) do {          \
 		testCount++;                            \
 		if (onlyTest!=0 && onlyTest != testCount) break;  \
@@ -149,8 +167,8 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				if (ps.printSuppressed(g_printonly_rule) && g_keep_suppressed_record) {
 					continue;
 				}
-				PSpecString pWritten = pwr1->getString();
-				PSpecString pOut = sb.GetStringUnsafe();
+				PSpecString pWritten = drainWriter(pwr1);
+				PSpecString pOut = bSomethingWasDone ? sb.GetStringUnsafe() : nullptr;
 				if (!pOut && bSomethingWasDone) {
 					pOut = std::make_shared<std::string>();
 				}
@@ -181,9 +199,9 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		ps.setString(nullptr);
 		ps.setFirst();
 		try {
-			ig.processDo(sb, ps, nullptr, tmr, readerCounter);
-			PSpecString pWritten = pwr1->getString();
-			PSpecString pOut = sb.GetStringUnsafe();
+			bool bSomethingWasDone = ig.processDo(sb, ps, nullptr, tmr, readerCounter);
+			PSpecString pWritten = drainWriter(pwr1);
+			PSpecString pOut = bSomethingWasDone ? sb.GetStringUnsafe() : nullptr;
 			if (pWritten) {
 				if (result) *result = *result + '\n' + *pWritten;
 				else result = pWritten;
@@ -249,8 +267,8 @@ int main(int argc, char** argv)
 	VERIFY("w1 1.8 right w2 n.8 center w3 n left", "     The quick  brown"); // Test #18
 	VERIFY("33.6 strip 1.6 right", "   the"); // Test #19
 	VERIFY("w1 C2X 1 w7 C2B nw /30313233/ X2CH nw","546865 011101000110100001100101 0123"); // Test #20
-	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "a=b", "a    b         "); // Test #21
-	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "=a", "     a         ");  // Test #22
+	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "a=b", "a    b"); // Test #21
+	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "=a", "     a");  // Test #22
 	VERIFY2("fs = field 1 1 field 2 6 field 3 11 field 4 16", "==a=b", "          a    b"); // Test #23
 	VERIFY("word -2 1", "lazy"); // Test #24
 	VERIFY("word 2;-2 1", "quick brown fox jumped over the   lazy"); // Test #25
@@ -424,6 +442,9 @@ int main(int argc, char** argv)
 	VERIFY("w3-* 1 REDO w1 1", "brown");     // Test  #98
 	VERIFY("6-* 1 REDO w1 1", "uick");       // Test  #99
 	VERIFY("1-* BSWAP 1 REDO w2 1", "yzal"); // Test #100
+	VERIFY2("/This is a/ 1 print \"split(':')\" nw REDO word 1:4 1 /right?/ nw", "cat:dog:horse", "This is a cat right?\nThis is a dog right?\nThis is a horse right?"); // Test #101
+	VERIFY2("/This is a/ 1 print \"split(':')\" nw /here/ nw", "cat:dog:horse", "This is a cat here\nThis is a dog here\nThis is a horse here"); // Test #102
+	VERIFY2("print \"split(':')\" nw print \"split(':')\" nw", "cat:dog:horse", "Multiple split/splitw calls in the same branch without REDO are undefined"); // Test #103
 
 	// SELECT SECOND
 	spec =  "WORD 1        1 " \
@@ -433,7 +454,7 @@ int main(int argc, char** argv)
 			"WORD 2 NEXTWORD " \
 			"SELECT SECOND   " \
 			"WORD 2 NEXTWORD ";
-	VERIFY2(spec, "first record\nsecond line\nlast one", "first record\nsecond first line record\nlast second one line\nlast one"); // Test #101
+	VERIFY2(spec, "first record\nsecond line\nlast one", "first record\nsecond first line record\nlast second one line\nlast one"); // Test #104
 
 	// Statistics Pseudo-Functions
 	spec =  "a: WORD 1 .                               " \
