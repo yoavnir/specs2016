@@ -214,7 +214,7 @@ spec unit will read it back.  This is useful when looping with READ searching fo
 .IP "WRITE" 3
 Causes the program to write to output and reset the output line.
 .IP "NOWRITE" 3
-Causes the program not to suppress the write at the end of the cycle.
+Suppresses the output record for the current processing cycle. The specification continues to execute normally, but no output record is written at the end of the cycle.
 .I NOPRINT
 is a synonym for 
 .I NOWRITE
