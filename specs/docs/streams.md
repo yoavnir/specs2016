@@ -25,7 +25,11 @@ specs    /Filename:/ 1
 Every WRITE resets the output record to empty and it can get filled again from scratch.
 
 ## No Output Records At All
-Sometimes we would like to not produce any output record at all. For that we use the `NOWRITE` keyword or its synonym `NOPRINT`. So why do we have data fields at all if we don't want to output them?  There can be several reasons:
+Sometimes we would like to produce no output record for a cycle. For that we use the `NOWRITE` keyword or its synonym `NOPRINT`.
+
+`NOWRITE` suppresses the output record for the current processing cycle. The specification continues to execute normally, but no output record is written at the end of the cycle.
+
+So why do we have data fields at all if we don't want to output them? There can be several reasons:
 1. We may be writing a specification whose only output is in the run-out phase, but we have some output for each record as debugging output. When the specification works as we want it to, we add the `NOWRITE` token, eliminating all per-record output.
 1. We may want to write the record or not write it based on some condition. The `NOWRITE` token can appear within an `IF` statement.
 
