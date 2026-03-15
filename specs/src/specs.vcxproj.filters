@@ -51,6 +51,9 @@
     <ClCompile Include="specitems\dataField.cc">
       <Filter>specitems</Filter>
     </ClCompile>
+    <ClCompile Include="specitems\splitItem.cc">
+      <Filter>specitems</Filter>
+    </ClCompile>
     <ClCompile Include="specitems\specItems.cc">
       <Filter>specitems</Filter>
     </ClCompile>
