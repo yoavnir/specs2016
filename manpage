@@ -265,6 +265,62 @@ to make all whitespace defined by the locale work as a word separator. This keyw
 spec unit.
 .IP "REDO" 3
 Causes the current output line to become the new input line.
+.IP "SPLITW" 3
+Splits the current input record by words and produces one output record for each word. 
+Any spec units before the 
+.B SPLITW
+form a prefix that is replicated in each output record.
+Any spec units after the 
+.B SPLITW
+(such as
+.B REDO
+) are applied to each output record individually.
+An optional 
+.B WORDSEPARATOR
+may follow the 
+.B SPLITW
+keyword to specify a custom word separator for splitting.
+An optional 
+.B OF
+clause may follow to specify which part of the input record to split. The 
+.B OF
+clause accepts the same input parts as 
+.B SUBSTRING:
+a character range, a word range, or a field range.
+.P
+Example:
+.P
+    echo "one two three" | specs splitw 1
+.P
+produces three output records: "one", "two", "three".
+.P
+    echo "one two three" | specs 'prefix:' 1 splitw nextword
+.P
+produces: "prefix: one", "prefix: two", "prefix: three".
+.P
+    echo "a:b:c are items" | specs splitf fs : of word 1 1
+.P
+produces: "a", "b", "c" (splitting only the first word by field separator).
+.P
+Nested 
+.B SPLITW
+or
+.B SPLITF
+units in the same specification are not allowed.
+.IP "SPLITF" 3
+Splits the current input record by fields and produces one output record for each field. 
+Works like 
+.B SPLITW
+but splits by field separator instead of word separator. Empty fields are preserved.
+An optional 
+.B FIELDSEPARATOR
+may follow the 
+.B SPLITF
+keyword to specify a custom field separator for splitting.
+An optional 
+.B OF
+clause may follow to specify which part of the input record to split, accepting the same input parts as 
+.B SUBSTRING.
 .IP "SET" 3
 Followed by a single assignment operation or multiple assignment operations separated by semicolons, SET implements this and assigns a value to the system counters. See the Expressions and Assignments section.
 .IP "CONTINUE" 3

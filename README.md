@@ -18,6 +18,7 @@ What's new:
  * RPM for Linux
  * .deb package for Ubuntu/Debian
  * Homebrew formula
+ * New spec units: SPLITW and SPLITF for splitting input records by words or fields into multiple output records. Support optional custom separators, an OF clause (accepting the same input parts as SUBSTRING), and range output placement (e.g. `splitw 1-10`).
 
 *Note:* Installing from package does not include Python support on Windows.
 *Note:* On Linux, the `specs` binary is bigger when installed from package, as it is statically linked with libstdc++.

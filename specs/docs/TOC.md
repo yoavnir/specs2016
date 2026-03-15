@@ -36,6 +36,7 @@ Basic Functionality
   * [>1 Input Record in Each Iteration](streams.md#1-input-record-in-each-iteration)
   * [Pushing Back The Last Record](streams.md#pushing-back-the-last-record)
   * [Process a Record in Two Phases](streams.md#process-a-record-in-two-phases)
+  * [Splitting Records by Word or Field](streams.md#splitting-records-by-word-or-field)
 
 Advanced Topics
 ===============

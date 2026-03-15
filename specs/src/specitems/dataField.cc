@@ -389,32 +389,7 @@ std::string DataField::Debug() {
 	ret += m_InputPart->Debug();
 	/* conversion and stripping go here */
 	ret += ";Dest=";
-	if (m_outStart==LAST_POS_END) {
-		if (m_tailLabel) {
-			ret = ret + m_tailLabel + ":";
-		} else {
-			ret += "None";
-		}
-	} else {
-		if (m_outStart==POS_SPECIAL_VALUE_NEXT) {
-			ret += "Next";
-		} else if (m_outStart==POS_SPECIAL_VALUE_NEXTWORD) {
-			ret += "NextWord";
-		} else if (m_outStart==POS_SPECIAL_VALUE_NEXTFIELD) {
-			ret += "NextField";
-		} else {
-			ret += std::to_string(m_outStart);
-		}
-		if (m_maxLength!=LAST_POS_END) {
-			ret += '.' + std::to_string(m_maxLength);
-		}
-	}
-
-	switch (m_alignment) {
-	case outputAlignmentCenter: ret += " (centered)"; break;
-	case outputAlignmentRight:  ret += " (right)"; break;
-	default: ;
-	}
+	ret += debugOutputPlacement(m_outStart, m_maxLength, m_alignment, m_tailLabel);
 
 	if (m_strip) ret += " STRIP";
 	if (m_conversion!=StringConversion__identity) ret += " " + StringConversion__2str(m_conversion);
