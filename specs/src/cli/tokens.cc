@@ -359,6 +359,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(requires, REQUIRES);
 	SIMPLETOKEN(skip-while, SKIPWHILE);
 	SIMPLETOKEN(skip-until, SKIPUNTIL);
+	SIMPLETOKEN(splitw, SPLITW);
+	SIMPLETOKEN(splitf, SPLITF);
 
 	/* question mark to replace PRINT */
 	if (arg[0]=='?') {
@@ -857,6 +859,47 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					MYTHROW(err);
 				}
 			}
+			break;
+		}
+		case TokenListType__SPLITW:
+		case TokenListType__SPLITF:
+		{
+			std::string separator;
+			
+			// Check for optional separator (WS for SPLITW, FS for SPLITF)
+			if (i+1 < tokList->size()) {
+				Token& maybeSep = tokList->at(i+1);
+				if (TokenListType__WORDSEPARATOR == maybeSep.Type()) {
+					if (TokenListType__SPLITF == tok.Type()) {
+						std::string err = "SPLITF cannot be followed by WORDSEPARATOR at index " + std::to_string(maybeSep.argIndex());
+						MYTHROW(err);
+					}
+					separator = maybeSep.Literal();
+					tokList->erase(tokList->begin()+(i+1));
+					// If the WS token's literal was empty, it hasn't absorbed its value yet
+					if (separator.empty() && i+1 < tokList->size() && mayBeLiteral(tokList->at(i+1))) {
+						separator = getLiteral(tokList->at(i+1));
+						tokList->erase(tokList->begin()+(i+1));
+					}
+				} else if (TokenListType__FIELDSEPARATOR == maybeSep.Type()) {
+					if (TokenListType__SPLITW == tok.Type()) {
+						std::string err = "SPLITW cannot be followed by FIELDSEPARATOR at index " + std::to_string(maybeSep.argIndex());
+						MYTHROW(err);
+					}
+					separator = maybeSep.Literal();
+					tokList->erase(tokList->begin()+(i+1));
+					// If the FS token's literal was empty, it hasn't absorbed its value yet
+					if (separator.empty() && i+1 < tokList->size() && mayBeLiteral(tokList->at(i+1))) {
+						separator = getLiteral(tokList->at(i+1));
+						tokList->erase(tokList->begin()+(i+1));
+					}
+				}
+			}
+			
+			// Store separator in literal field
+			// Note: OF clause is NOT consumed here; it is parsed at compile time
+			// by SplitItem::parse using full InputPart support (like SUBSTRING)
+			tok.setLiteral(separator);
 			break;
 		}
 		default:

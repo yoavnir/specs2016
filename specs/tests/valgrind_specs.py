@@ -10,7 +10,7 @@ def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, con
     if tests_to_run is not None and str(case_counter) not in tests_to_run:
     	return
     (rc,info) = memcheck.leak_check_specs(spec,input,case_counter,conf,inp2)
-    sys.stdout.write("Test case #{} - {} - ".format(case_counter,description))
+    sys.stdout.write("\nTest case #{} - {} - ".format(case_counter,description))
     if rc!=expected_rc:
         sys.stdout.write("Failed. RC={}; info={}; expected: {}\n".format(memcheck.RetCode_strings[rc],info,memcheck.RetCode_strings[expected_rc]))
         exit(4)
@@ -737,6 +737,91 @@ s = \
 'The file name is' 1 w1 nw
 """
 run_case(s,i,"inline variable")
+
+# SPLITW and SPLITF test cases
+
+# Basic SPLITW
+s = "splitw 1"
+i = "one two three"
+run_case(s,i,"SPLITW - basic word splitting")
+
+# SPLITW with elided output placement
+s = "splitw"
+i = "one two three"
+run_case(s,i,"SPLITW - elided output placement")
+
+# SPLITW with prefix
+s = "'prefix:' 1 splitw nextword"
+i = "one two three"
+run_case(s,i,"SPLITW - with prefix")
+
+# SPLITW with REDO
+s = "splitw 1 redo 'WORD:' 1 1-* next"
+i = "the boy went to the store"
+run_case(s,i,"SPLITW - with REDO")
+
+# SPLITW with custom word separator
+s = "splitw ws , 1"
+i = "a,b,c"
+run_case(s,i,"SPLITW - with custom word separator")
+
+# SPLITW with OF clause (word range)
+s = "splitw of w2-3 1"
+i = "one two three four"
+run_case(s,i,"SPLITW - with OF word range")
+
+# SPLITW with range output placement (width-constrained)
+s = "splitw 1-5"
+i = "one two three"
+run_case(s,i,"SPLITW - with range output placement")
+
+# SPLITW single word
+s = "splitw 1"
+i = "hello"
+run_case(s,i,"SPLITW - single word")
+
+# Basic SPLITF
+s = "fs : splitf 1"
+i = "a:b:c"
+run_case(s,i,"SPLITF - basic field splitting")
+
+# SPLITF with prefix
+s = "fs : 'F:' 1 splitf nextword"
+i = "x:y:z"
+run_case(s,i,"SPLITF - with prefix")
+
+# SPLITF with custom field separator
+s = "splitf fs , 1"
+i = "a,b,c"
+run_case(s,i,"SPLITF - with custom field separator")
+
+# SPLITF with empty fields
+s = "fs : splitf 1"
+i = "a::c"
+run_case(s,i,"SPLITF - with empty fields")
+
+# SPLITF with OF clause (character range)
+s = "splitf fs : of 17:29 1"
+i = "The numbers are one:two:three and that is all"
+run_case(s,i,"SPLITF - with OF character range")
+
+# SPLITF with OF clause (word)
+s = "splitf fs : of word 4 1"
+i = "The numbers are one:two:three and that is all"
+run_case(s,i,"SPLITF - with OF word")
+
+# Error cases
+s = "splitw 1 splitf 1"
+i = "test"
+run_case(s,i,"SPLITW/SPLITF - nested splits error")
+
+s = "splitw fs x 1"
+i = "test"
+run_case(s,i,"SPLITW - mismatched separator error")
+
+s = "splitf ws x 1"
+i = "test"
+run_case(s,i,"SPLITF - mismatched separator error")
 
 
 sys.stdout.write("\n*** All tests passed.\n")

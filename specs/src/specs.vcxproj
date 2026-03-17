@@ -99,6 +99,7 @@
     <ClCompile Include="processing\persistent.cc" />
     <ClCompile Include="specitems\InputPart.cc" />
     <ClCompile Include="specitems\dataField.cc" />
+    <ClCompile Include="specitems\splitItem.cc" />
     <ClCompile Include="specitems\specItems.cc" />
     <ClCompile Include="utils\ErrorReporting.cc" />
     <ClCompile Include="utils\PythonIntf.cc" />

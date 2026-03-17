@@ -122,8 +122,6 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 
 	char* specList = (char*)_specList;
 
-	std::vector<Token> vec = parseTokens(1, &specList);
-	normalizeTokenList(&vec);
 	itemGroup ig;
 
 	PSpecString result = nullptr;
@@ -131,6 +129,16 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	setPositionGetter(&sb);
 
 	unsigned int index = 0;
+
+	std::vector<Token> vec = parseTokens(1, &specList);
+
+	try {
+		normalizeTokenList(&vec);
+	} catch (const SpecsException& e) {
+		result = std::make_shared<std::string>(e.what(true));
+		goto end;
+	}
+
 	try {
 		ig.Compile(vec,index);
 	} catch (const SpecsException& e) {
@@ -155,9 +163,10 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 					pOut = std::make_shared<std::string>();
 				}
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
-					if (pWritten) {
-						if (result) *result += *pWritten;
+					while (pWritten) {
+						if (result) *result = *result + '\n' + *pWritten;
 						else result = pWritten;
+						pWritten = pwr1->getString();
 					}
 					if (result) {
 						if (pOut) *result = *result + '\n' + *pOut;
@@ -746,6 +755,50 @@ int main(int argc, char** argv)
 	spec = "WORD 1 a: IF a%2==0 THEN RECNO 1";
 	VERIFY2(spec, "1\n2\n3\n4\n5", "         2\n         4"); // Test #187
 
+	// SPLITW - basic word splitting
+	VERIFY2("splitw 1", "one two three", "one\ntwo\nthree"); // Test #188
+	VERIFY2("splitw", "one two three", "one\ntwo\nthree"); // Test #189 - elided output placement
+	VERIFY2("splitw nextword", "one two three", "one\ntwo\nthree"); // Test #190
+
+	// SPLITW with prefix
+	VERIFY2("'prefix' 1 splitw nextword", "one two three", "prefix one\nprefix two\nprefix three"); // Test #191
+
+	// SPLITW with REDO
+	VERIFY2("splitw 1 redo 'WORD:' 1 1-* next", "the boy went", "WORD:the\nWORD:boy\nWORD:went"); // Test #192
+
+	// SPLITW with custom separator
+	VERIFY2("splitw ws , 1", "a,b,c", "a\nb\nc"); // Test #193
+
+	// SPLITW with OF range (word range)
+	VERIFY2("splitw of w2-3 1", "one two three four", "two\nthree"); // Test #194
+
+	// SPLITF - basic field splitting
+	VERIFY2("fs : splitf 1", "a:b:c", "a\nb\nc"); // Test #195
+
+	// SPLITF with prefix
+	VERIFY2("fs : 'F:' 1 splitf nextword", "x:y:z", "F: x\nF: y\nF: z"); // Test #196
+
+	// SPLITF with custom separator
+	VERIFY2("splitf fs , 1", "a,b,c", "a\nb\nc"); // Test #197
+
+	// SPLITF with empty fields
+	VERIFY2("fs : splitf 1", "a::c", "a\n\nc"); // Test #198
+
+	// SPLITW with range output placement (width-constrained)
+	VERIFY2("splitw 1-5", "one two three", "one  \ntwo  \nthree"); // Test #199
+
+	// SPLITW single word - produces one record
+	VERIFY2("splitw 1", "hello", "hello"); // Test #200
+
+
+	// Error: nested splits
+	VERIFY2("splitw 1 splitf 1", "test", "Nested SPLITW/SPLITF is not allowed at index 3"); // Test #201
+
+	// Error: mismatched separator - SPLITW with FS
+	VERIFY2("splitw fs x 1", "test", "SPLITW cannot be followed by FIELDSEPARATOR at index 2"); // Test #202
+
+	// Error: mismatched separator - SPLITF with WS
+	VERIFY2("splitf ws x 1", "test", "SPLITF cannot be followed by WORDSEPARATOR at index 2"); // Test #203
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
