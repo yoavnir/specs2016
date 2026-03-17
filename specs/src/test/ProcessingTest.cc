@@ -122,8 +122,6 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 
 	char* specList = (char*)_specList;
 
-	std::vector<Token> vec = parseTokens(1, &specList);
-	normalizeTokenList(&vec);
 	itemGroup ig;
 
 	PSpecString result = nullptr;
@@ -131,6 +129,16 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	setPositionGetter(&sb);
 
 	unsigned int index = 0;
+
+	std::vector<Token> vec = parseTokens(1, &specList);
+
+	try {
+		normalizeTokenList(&vec);
+	} catch (const SpecsException& e) {
+		result = std::make_shared<std::string>(e.what(true));
+		goto end;
+	}
+
 	try {
 		ig.Compile(vec,index);
 	} catch (const SpecsException& e) {
@@ -787,10 +795,10 @@ int main(int argc, char** argv)
 	VERIFY2("splitw 1 splitf 1", "test", "Nested SPLITW/SPLITF is not allowed at index 3"); // Test #201
 
 	// Error: mismatched separator - SPLITW with FS
-	VERIFYCMD(runTestOnExample("splitw fs x 1", "test"), "SPLITW cannot be followed by FIELDSEPARATOR at index 2"); // Test #202
+	VERIFY2("splitw fs x 1", "test", "SPLITW cannot be followed by FIELDSEPARATOR at index 2"); // Test #202
 
 	// Error: mismatched separator - SPLITF with WS
-	VERIFYCMD(runTestOnExample("splitf ws x 1", "test"), "SPLITF cannot be followed by WORDSEPARATOR at index 2"); // Test #203
+	VERIFY2("splitf ws x 1", "test", "SPLITF cannot be followed by WORDSEPARATOR at index 2"); // Test #203
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
