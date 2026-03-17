@@ -800,6 +800,10 @@ int main(int argc, char** argv)
 	// Error: mismatched separator - SPLITF with WS
 	VERIFY2("splitf ws x 1", "test", "SPLITF cannot be followed by WORDSEPARATOR at index 2"); // Test #203
 
+	// Bounds checking tests for WHILE and IF as last tokens
+	VERIFY("while", "Missing DO after WHILE at index 1"); // Test #204
+	VERIFY("if", "Missing THEN after IF at index 1"); // Test #205
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";
