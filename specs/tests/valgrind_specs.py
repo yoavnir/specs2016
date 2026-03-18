@@ -823,5 +823,14 @@ s = "splitf ws x 1"
 i = "test"
 run_case(s,i,"SPLITF - mismatched separator error")
 
+# Bounds checking tests for WHILE and IF as last tokens
+s = "while"
+i = None
+run_case(s,i,"Bounds checking - WHILE as last token")
+
+s = "if"
+i = None
+run_case(s,i,"Bounds checking - IF as last token")
+
 
 sys.stdout.write("\n*** All tests passed.\n")

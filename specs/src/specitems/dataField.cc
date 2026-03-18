@@ -561,3 +561,13 @@ bool DataField::readsLines()
 {
 	return m_InputPart->readsLines();
 }
+
+bool DataField::producesOutput()
+{
+	return m_outStart != LAST_POS_END && !(m_outStart == 0 && m_maxLength == 0);
+}
+
+bool DataField::countsBeforeEOF()
+{
+	return producesOutput() || m_label != '\0' || m_tailLabel != '\0';
+}
