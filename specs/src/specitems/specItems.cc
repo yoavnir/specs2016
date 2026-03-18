@@ -135,6 +135,8 @@ static void ValidateRedoAndEOFPlacement(const std::vector<PItem>& items)
 				MYTHROW(err);
 			}
 			stateStack[stateStackIdx].waitingForOutput = true;
+			stateStack[stateStackIdx].sawOutputBeforeRedo = false;
+			stateStack[stateStackIdx].sawDataBeforeEOF = false;
 			stateStack[stateStackIdx].pendingTokenType = TokenListType__REDO;
 			stateStack[stateStackIdx].pendingArgIndex = pToken->getToken()->argIndex();
 			continue;

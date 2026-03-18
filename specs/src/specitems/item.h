@@ -256,6 +256,7 @@ public:
 	std::string Debug() override		{return m_rawExpression;}
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool readsLines() override;
+	bool countsBeforeEOF() override {return true;}
 	bool forcesRunoutCycle() override { return expressionForcesRunoutCycle(m_RPNExpression);}
 private:
 	std::string     m_rawExpression;
