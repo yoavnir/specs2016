@@ -814,7 +814,8 @@ int main(int argc, char** argv)
 	VERIFY2("w1 a: EOF print 'sum(a)'", "1\n2\n3\n4", "10"); // Test #212
 	VERIFY("w1 1 REDO w1 a: REDO hello", "REDO at index 6 must be preceded by output-producing spec units"); // Test #213
 	VERIFY("w1 1 REDO EOF bye", "EOF at index 4 must be preceded by data-providing spec units"); // Test #214
-	VERIFY2("w1 1 REDO set '#0:=7' EOF print '#0'", "x", "7"); // Test #215
+	VERIFY("w1 REDO w1 1", "The"); // Test #215
+	VERIFY2("w1 1 REDO set '#0:=7' EOF print '#0'", "x", "7"); // Test #216
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
