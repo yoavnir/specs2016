@@ -297,6 +297,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	case TokenListType__READ:
 	case TokenListType__READSTOP:
 	case TokenListType__EOF:
+	case TokenListType__REDO:
 		/* This is a control structure?  Assume NEXTWORD and re-use this one */
 		REUSE_CURRENT_TOKEN;
 	case TokenListType__DUMMY:
