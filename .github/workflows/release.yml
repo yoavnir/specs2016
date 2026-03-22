@@ -184,8 +184,19 @@ jobs:
         echo "file=${major},${minor},${patch},${extra}" >> "$GITHUB_OUTPUT"
         echo "msi=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
 
+    - name: Generate Windows version header
+      shell: bash
+      run: |
+        cat > specs/src/specs_version.h <<EOF
+        #define SPEC_PRODUCT_NAME "specs"
+        #define SPEC_FILE_DESCRIPTION "A re-writing of the specs pipeline stage from CMS, only changed quite a bit"
+        #define SPEC_PRODUCT_VERSION "${{ steps.version.outputs.display }}"
+        #define SPEC_COPYRIGHT "Copyright (c) 2018-2026 Yoav Nir"
+        #define SPEC_FILE_VERSION ${{ steps.version.outputs.file }}
+        EOF
+
     - name: Build specs (Release)
-      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }} /p:SpecsProductVersion=${{ steps.version.outputs.display }} /p:SpecsFileVersion=${{ steps.version.outputs.file }}
+      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }}
 
     - name: Verify binary
       run: specs\bin\Release\specs.exe "@version"

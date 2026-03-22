@@ -60,9 +60,6 @@
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>SPEC_PRODUCT_NAME="$(SpecsProductName)";SPEC_FILE_DESCRIPTION="$(SpecsFileDescription)";SPEC_PRODUCT_VERSION="$(SpecsProductVersion)";SPEC_COPYRIGHT="$(SpecsCopyright)";SPEC_FILE_VERSION=$(SpecsFileVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -83,9 +80,6 @@
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>SPEC_PRODUCT_NAME="$(SpecsProductName)";SPEC_FILE_DESCRIPTION="$(SpecsFileDescription)";SPEC_PRODUCT_VERSION="$(SpecsProductVersion)";SPEC_COPYRIGHT="$(SpecsCopyright)";SPEC_FILE_VERSION=$(SpecsFileVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -144,6 +138,7 @@
     <ClInclude Include="utils\directives.h" />
     <ClInclude Include="utils\lruCache.h" />
     <ClInclude Include="utils\platform.h" />
+    <ClInclude Include="specs_version.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="specs.rc" />
