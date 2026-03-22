@@ -8,6 +8,9 @@
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of specs is already installed." />
     <MediaTemplate EmbedCab="yes" />
+    <Property Id="ARPCONTACT" Value="Yoav Nir" />
+    <Property Id="ARPCOMMENTS" Value="A re-writing of the specs pipeline stage from CMS, only changed quite a bit" />
+    <Property Id="ARPDISPLAYVERSION" Value="@DISPLAY_VERSION@" />
 
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="specs">
