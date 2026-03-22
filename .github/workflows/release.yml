@@ -172,6 +172,10 @@ jobs:
       shell: bash
       run: echo "ver=${SPECS_VERSION#v}" >> "$GITHUB_OUTPUT"
 
+    - name: Prepare standalone executable
+      shell: bash
+      run: cp specs/bin/Release/specs.exe specs-${{ steps.version.outputs.ver }}-windows-x64.exe
+
     - name: Install WiX Toolset
       run: dotnet tool install --global wix --version 4.0.6
 
@@ -188,6 +192,12 @@ jobs:
       with:
         name: windows-msi
         path: specs-*.msi
+
+    - name: Upload standalone executable artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-exe
+        path: specs-*-windows-x64.exe
 
   build-deb:
     strategy:
@@ -304,3 +314,4 @@ jobs:
           artifacts/linux-deb-arm64/*.deb
           artifacts/macos-pkg/*.pkg
           artifacts/windows-msi/*.msi
+          artifacts/windows-exe/*.exe
