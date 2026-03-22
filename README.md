@@ -13,14 +13,16 @@ News
 1-May-2026: Version 0.9.9 is here
 
 What's new:
- * MSI package for Windows
+ * MSI package & standalone executable for Windows
  * .pkg package for Mac OS
  * RPM for Linux
  * .deb package for Ubuntu/Debian
  * Homebrew formula
+ * Improved guessing of Python version
  * New spec units: SPLITW and SPLITF for splitting input records by words or fields into multiple output records. Support optional custom separators, an OF clause (accepting the same input parts as SUBSTRING), and range output placement (e.g. `splitw 1-10`).
 
 *Note:* Installing from package does not include Python support on Windows.
+
 *Note:* On Linux, the `specs` binary is bigger when installed from package, as it is statically linked with libstdc++.
 ***
 28-Feb-2026: Version 0.9.6 is here
@@ -38,9 +40,9 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.5:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.9:
 ```
-git checkout v0.9.6
+git checkout v0.9.9
 ```
 A good way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
@@ -49,12 +51,14 @@ git rebase
 ```
 
 After that, _cd_ to the specs/src directory, and run the following three commands:
-* `python setup.py`
+* `python setup.py` - use `python3` or `python3.x` if your default Python version is 2.7
 * `make some`
 * `sudo make install`
 
 *Note:* Windows does not need `sudo`. 
-*Note:* Only Python 3 is supported at this point.
+
+*Note:* Only Python 3 is supported at this point. To enable Python support, you need to have the `python3-devel` package that matches your python version installed.
+
 *Note:* On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
 
 Known Issues

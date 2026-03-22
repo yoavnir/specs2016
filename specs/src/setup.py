@@ -93,7 +93,7 @@ with open("xx.txt","w") as v:
 	with open("test_script.py","w") as scriptf:
 		scriptf.write(script)
 	cmd = "{} test_script.py".format(arg)
-	rc = os.system(cmd)
+	rc = run_the_cmd(cmd)
 	cleanup_after_python()
 	if rc!=0:
 		sys.stdout.write("No -- could not get python version from {}.\n".format(arg))
@@ -612,18 +612,25 @@ if platform=="NT":
 		sys.stdout.write("configured for Python version {}.\n".format(cv['py_version']))
 		CFG_python = True
 else:
-	if python_prefix=="": # default: python is optional and prefix is 'python'
-		CFG_python = python_search("python")
+	python_yes = (python_prefix=="yes")
+	if python_prefix=="" or python_prefix=="yes":
+		try:
+			python_prefix = sys.executable.split('/')[-1]
+			if len(python_prefix) < len("python"):
+				python_prefix = "python"
+		except:
+			python_prefix = "python"
+		CFG_python = python_search(python_prefix)
 		os.system("/bin/rm xx.txt")
+		if python_yes and not CFG_python:
+			sys.stdout.write("Python support not found.\n")
+			exit(-4)
 
 	elif python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
 		CFG_python = False
 		full_python_version = "N/A"
 	else:
-		if python_prefix=="yes":
-			python_prefix = "python"
-
 		rc = python_search(python_prefix)
 		run_the_cmd("/bin/rm xx.txt")
 		if rc:
