@@ -161,31 +161,53 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
+    - name: Normalize Windows version metadata
+      id: version
+      shell: bash
+      run: |
+        raw_version="${SPECS_VERSION:-${{ github.event.inputs.version }}}"
+        if [ -z "$raw_version" ]; then
+          echo "Missing release version" >&2
+          exit 1
+        fi
+
+        display_version="${raw_version#v}"
+        numeric_base="${display_version%%[-+]*}"
+        IFS='.' read -r major minor patch extra <<< "$numeric_base"
+        major="${major:-0}"
+        minor="${minor:-0}"
+        patch="${patch:-0}"
+        extra="${extra:-0}"
+
+        echo "raw=$raw_version" >> "$GITHUB_OUTPUT"
+        echo "display=$display_version" >> "$GITHUB_OUTPUT"
+        echo "file=${major},${minor},${patch},${extra}" >> "$GITHUB_OUTPUT"
+        echo "msi=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+
     - name: Build specs (Release)
-      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64
+      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }} /p:SpecsProductVersion=${{ steps.version.outputs.display }} /p:SpecsFileVersion=${{ steps.version.outputs.file }}
 
     - name: Verify binary
       run: specs\bin\Release\specs.exe "@version"
 
-    - name: Strip version prefix
-      id: version
-      shell: bash
-      run: echo "ver=${SPECS_VERSION#v}" >> "$GITHUB_OUTPUT"
-
     - name: Prepare standalone executable
       shell: bash
-      run: cp specs/bin/Release/specs.exe specs-${{ steps.version.outputs.ver }}-windows-x64.exe
+      run: cp specs/bin/Release/specs.exe specs-${{ steps.version.outputs.display }}-windows-x64.exe
 
     - name: Install WiX Toolset
       run: dotnet tool install --global wix --version 4.0.6
 
     - name: Create WiX source
       shell: bash
-      run: sed "s/@VERSION@/${{ steps.version.outputs.ver }}/g" .github/packaging/specs.wxs.in > specs.wxs
+      run: |
+        sed \
+          -e "s/@VERSION@/${{ steps.version.outputs.msi }}/g" \
+          -e "s/@DISPLAY_VERSION@/${{ steps.version.outputs.display }}/g" \
+          .github/packaging/specs.wxs.in > specs.wxs
 
     - name: Build MSI
       shell: bash
-      run: wix build -o specs-${{ steps.version.outputs.ver }}.msi specs.wxs
+      run: wix build -o specs-${{ steps.version.outputs.display }}.msi specs.wxs
 
     - name: Upload MSI artifact
       uses: actions/upload-artifact@v4
