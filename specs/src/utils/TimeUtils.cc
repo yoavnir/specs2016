@@ -26,7 +26,8 @@ PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 	SClock::duration dur = std::chrono::microseconds(sinceEpoch);
 	STimePoint tp(dur);
 	auto tmc = SClock::to_time_t(tp);
-	std::tm bt = *std::localtime(&tmc);
+	std::tm bt;
+	localtime_r(&tmc, &bt);
 	unsigned int fractionalSecond = (unsigned int)(sinceEpoch % MICROSECONDS_PER_SECOND);
 	std::ostringstream oss;
 	unsigned char fractionalSecondLength = 0;
@@ -45,7 +46,10 @@ PSpecString specTimeConvertToPrintable(int64_t sinceEpoch, std::string format)
 	oss << std::put_time(&bt, format.c_str());
 #else
 	char timeFormatterString[256];
-	strftime(timeFormatterString, 255, format.c_str(), &bt);
+	size_t fmtret = strftime(timeFormatterString, 255, format.c_str(), &bt);
+	if (fmtret == 0) {
+		timeFormatterString[0] = '\0';
+	}
 	oss << timeFormatterString;
 #endif
 	if (fractionalSecondLength) {
@@ -64,7 +68,8 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 {
 	// initialize t in case of missing fields
 	std::time_t now = std::time(nullptr);
-	std::tm t = *(std::localtime(&now));
+	std::tm t;
+	localtime_r(&now, &t);
 
 	unsigned int fractionalSeconds = 0;
 	unsigned char fractionalSecondLength = 0;
@@ -119,6 +124,8 @@ int64_t specTimeConvertFromPrintable(std::string printable, std::string format)
 				extraZeros--;
 			}
 		} catch (std::invalid_argument&) {
+			fractionalSeconds = 0;
+		} catch (std::out_of_range&) {
 			fractionalSeconds = 0;
 		}
 	}

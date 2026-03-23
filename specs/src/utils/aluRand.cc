@@ -42,6 +42,10 @@ static ALUInt AluRandGetInt()
 
 ALUInt AluRandGetIntUpTo(ALUInt limit)
 {
+	if (limit <= 0) {
+		return 0;
+	}
+
 	if (!AluRand_RandomSeeded_G) {
 		AluRand_Seed();
 		AluRand_RandomSeeded_G = true;

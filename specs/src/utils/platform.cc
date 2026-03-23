@@ -21,8 +21,9 @@ int setenv(const char *name, const char *value, int overwrite)
 
 static void enlargeStringArray(char**& pRet, unsigned int newSize, unsigned int& rsize)
 {
-	pRet = (char**)realloc(pRet, sizeof(char*)*newSize);
-	MYASSERT_NOT_NULL_WITH_DESC(pRet,"Failed to allocate string array");
+	char** pNew = (char**)realloc(pRet, sizeof(char*)*newSize);
+	MYASSERT_NOT_NULL_WITH_DESC(pNew,"Failed to allocate string array");
+	pRet = pNew;
 
 	unsigned int i;
 	for (i=rsize; i<newSize; i++) pRet[i] = nullptr;
@@ -65,6 +66,8 @@ char** getDirectoryFileNames(const char* spath)
 		}
 	} while (FindNextFileA(hfind, &fdata) != 0);
 
+	if (pRet[index]) { free(pRet[index]); pRet[index] = nullptr; }
+
 	return pRet;
 }
 #else
@@ -100,6 +103,8 @@ char** getDirectoryFileNames(const char* spath)
 	}
 
 	closedir(pdir);
+
+	if (pRet[index]) { free(pRet[index]); pRet[index] = nullptr; }
 
 	return pRet;
 }

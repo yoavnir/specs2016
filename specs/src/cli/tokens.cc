@@ -520,7 +520,7 @@ static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int 
 	unsigned int idx = 0;
 	char* localCopy_ctx = localCopy;
 	itemPtrs[idx] = strtok_r(localCopy, " ", &localCopy_ctx);
-	while (itemPtrs[idx] && idx<MAX_INPUT_RANGES_IN_GROUP) {
+	while (idx<MAX_INPUT_RANGES_IN_GROUP && itemPtrs[idx]) {
 		idx++;
 		itemPtrs[idx] = strtok_r(nullptr, " ", &localCopy_ctx);
 	}
@@ -711,6 +711,9 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					std::string expression = "(";
 					do {
 						tokList->erase(tokList->begin()+(i+1));
+						if (i+1 >= tokList->size()) {
+							MYTHROW("Unterminated group expression");
+						}
 						nextTok = tokList->at(i+1);
 						expression += getLiteral(nextTok);
 					} while (TokenListType__GROUPEND != nextTok.Type());
@@ -747,7 +750,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					PTokenFieldRange pRange = nextTok.Range();
 					// We just want one number between 1 and 8. Anything else causes an exception.
 					if (!pRange || !pRange->isSingleNumber()) {
-						std::string err = "Invalid input stream descriptor: " + pRange->Debug();
+						std::string err = "Invalid input stream descriptor: " + (pRange ? pRange->Debug() : nextTok.Orig());
 						MYTHROW(err);
 					}
 					int streamIndex = pRange->getSingleNumber();
@@ -781,7 +784,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					PTokenFieldRange pRange = nextTok.Range();
 					// We just want one number between 1 and 8. Anything else causes an exception.
 					if (!pRange || !pRange->isSingleNumber()) {
-						std::string err = "Invalid input stream descriptor: " + pRange->Debug();
+						std::string err = "Invalid input stream descriptor: " + (pRange ? pRange->Debug() : nextTok.Orig());
 						MYTHROW(err);
 					}
 					int streamIndex = pRange->getSingleNumber();

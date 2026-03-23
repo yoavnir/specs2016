@@ -52,7 +52,15 @@ bool parseSwitches(int& argc, char**& argv)
 	while (argc>0) {
 		if (argv[0][0]!='-') break;
 
-		CONFIG_PARAMS
+		try {
+			CONFIG_PARAMS
+		} catch (std::invalid_argument&) {
+			std::cerr << "Invalid numeric value for switch <" << argv[0] << ">\n";
+			return false;
+		} catch (std::out_of_range&) {
+			std::cerr << "Numeric value out of range for switch <" << argv[0] << ">\n";
+			return false;
+		}
 
 		std::cerr << "Unrecognized switch <" << argv[0] << ">\n";
 		return false;

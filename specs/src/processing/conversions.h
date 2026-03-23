@@ -45,6 +45,8 @@ static std::string StringConversionStrArr[StringConversion__COUNT_ITEMS] = {\
 #undef Y
 
 static inline std::string& StringConversion__2str(StringConversions tok) {
+	static std::string unknown = "UNKNOWN";
+	if (tok < 0 || tok >= StringConversion__COUNT_ITEMS) return unknown;
 	return StringConversionStrArr[tok];
 }
 
