@@ -821,6 +821,22 @@ int main(int argc, char** argv)
 	VERIFY2("print 'rand(0)' 1", "x", "rand: limit must be a positive integer"); // Test #217
 	VERIFY2("print 'rand(-5)' 1", "x", "rand: limit must be a positive integer"); // Test #218
 
+	// Security fix regression tests (Issue #336)
+	// strip() on all-whitespace string (was crash due to npos in substr)
+	VERIFY2("print 'strip(\"   \",\"B\")' 1", "x", ""); // Test #219
+
+	// sword() with negative count on all-separator string (was pointer underflow)
+	VERIFY2("print 'sword(\"xxx\",-1,\"x\")' 1", "x", ""); // Test #220
+
+	// sfield() with out-of-range negative count (was pointer underflow)
+	VERIFY2("print 'sfield(\"a\",-2,\",\")' 1", "x", ""); // Test #221
+
+	// fact() argument exceeding 64-bit overflow limit (was silent overflow)
+	VERIFY2("print 'fact(21)' 1", "x", "fact: argument too large (max 20 for 64-bit integers)"); // Test #222
+	
+	// STRIP modifier on all-whitespace input (was out-of-bounds read in stripString)
+	VERIFY2("1-* strip 1", "   ", ""); // Test #223
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

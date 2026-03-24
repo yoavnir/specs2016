@@ -832,6 +832,27 @@ s = "if"
 i = None
 run_case(s,i,"Bounds checking - IF as last token")
 
+# Security fix regression tests (Issue #336)
+s = 'print \'strip("   ","B")\' 1'
+i = "test"
+run_case(s,i,"Security: strip() on all-whitespace string")
+
+s = 'print \'sword("xxx",-1,"x")\' 1'
+i = "test"
+run_case(s,i,"Security: sword() negative count on all-separator string")
+
+s = 'print \'sfield("a",-2,",")\' 1'
+i = "test"
+run_case(s,i,"Security: sfield() out-of-range negative count")
+
+s = "1-* strip 1"
+i = "   "
+run_case(s,i,"Security: STRIP on all-whitespace input")
+
+s = "print 'fact(21)' 1"
+i = "test"
+run_case(s,i,"Security: fact() overflow limit", memcheck.RetCode_COMMAND_FAILED)
+
 
 sys.stdout.write("\n*** All tests passed.\n\n")
 memcheck.cleanup()
