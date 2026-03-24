@@ -64,6 +64,12 @@ DataField::~DataField() {
 
 PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index)
 {
+	static unsigned int substringDepth = 0;
+	substringDepth++;
+	if (substringDepth > 50) {
+		substringDepth = 0;
+		MYTHROW("SUBSTRING nesting too deep (limit: 50)");
+	}
 	Token token = dummyToken;
 	TokenListTypes tokenType;
 	PPart      _pSub;
@@ -138,6 +144,7 @@ PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 		MYTHROW(err);
 	}
 
+	substringDepth--;
 	return std::make_shared<SubstringPart>(pSub, pBig);
 }
 
@@ -230,6 +237,9 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 
 	/* handle letter prefix for an input range */
 	if (tokenType==TokenListType__RANGELABEL) {
+		if (token.Literal().empty()) {
+			MYTHROW("Empty range label");
+		}
 		m_label = token.Literal()[0];
 		index++;
 		GET_NEXT_TOKEN_NO_ADVANCE;
@@ -277,7 +287,12 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 			m_outStart = token.Range()->getSingleNumber();
 		} else {
 			m_outStart = token.Range()->getSimpleFirst();
-			m_maxLength = token.Range()->getSimpleLast() - m_outStart + 1;
+			if (token.Range()->getSimpleLast() >= token.Range()->getSimpleFirst()) {
+				m_maxLength = token.Range()->getSimpleLast() - m_outStart + 1;
+			} else {
+				std::string err = "Bad output placement range " + token.HelpIdentify();
+				MYTHROW(err);
+			}
 		}
 		break;
 	case TokenListType__PERIOD:
@@ -285,6 +300,9 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		break;
 	case TokenListType__RANGELABEL:
 		m_outStart = LAST_POS_END;
+		if (token.Literal().empty()) {
+			MYTHROW("Empty range label");
+		}
 		m_tailLabel = token.Literal()[0];
 		break;
 	case TokenListType__IF:
@@ -410,6 +428,7 @@ void DataField::stripString(PSpecString &pOrig)
 
 	if (!len) {
 		pOrig = std::make_shared<std::string>();
+		return;
 	}
 
 	const char* sEnd = s + len - 1;
@@ -484,11 +503,14 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 			outputAlignment al = outputAlignmentLeft;
 			ellipsisSpec es = ellipsisSpecNone;
 			PValue res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
+			if (!res) {
+				MYTHROW("Alignment expression evaluated to null");
+			}
 			std::string s = res->getStr();
 
-			if (s[0]=='c' || s[0]=='C') {
+			if (!s.empty() && (s[0]=='c' || s[0]=='C')) {
 				al = outputAlignmentCenter;
-			} else if (s[0]=='r' || s[0]=='R') {
+			} else if (!s.empty() && (s[0]=='r' || s[0]=='R')) {
 				al = outputAlignmentRight;
 			}
 

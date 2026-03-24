@@ -224,8 +224,9 @@ static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = nullptr)
 		break;
 	}
 	case 2: {
-		uint16_t* pVal = (uint16_t*)str.c_str();
-		value = *pVal;
+		uint16_t tmp;
+		memcpy(&tmp, str.c_str(), sizeof(tmp));
+		value = tmp;
 		if (pNumBits) *pNumBits = 2;
 		break;
 	}
@@ -236,8 +237,9 @@ static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = nullptr)
 		/* intentional fall-through */
 	}
 	case 4: {
-		uint32_t* pVal = (uint32_t*)str.c_str();
-		value = *pVal;
+		uint32_t tmp;
+		memcpy(&tmp, str.c_str(), sizeof(tmp));
+		value = tmp;
 		if (pNumBits) *pNumBits = 4;
 		break;
 	}
@@ -250,8 +252,9 @@ static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = nullptr)
 		/* intentional fall-through */
 	}
 	case 8: {
-		uint64_t* pVal = (uint64_t*)str.c_str();
-		value = *pVal;
+		uint64_t tmp;
+		memcpy(&tmp, str.c_str(), sizeof(tmp));
+		value = tmp;
 		if (pNumBits) *pNumBits = 8;
 		break;
 	}
@@ -309,14 +312,17 @@ PValue AluFunc_c2f(PValue op)
 	std::string str = op->getStr();
 
 	if (str.length() == sizeof(float)) {
-		float* pf = (float*) str.c_str();
-		return mkValue(ALUFloat(*pf));
+		float f;
+		memcpy(&f, str.c_str(), sizeof(float));
+		return mkValue(ALUFloat(f));
 	} else if (str.length() == sizeof(double)) {
-		double *pd = (double*) str.c_str();
-		return mkValue(ALUFloat(*pd));
+		double d;
+		memcpy(&d, str.c_str(), sizeof(double));
+		return mkValue(ALUFloat(d));
 	} else if (str.length() == sizeof(long double)) {
-		long double *pld = (long double*) str.c_str();
-		return mkValue(ALUFloat(*pld));
+		long double ld;
+		memcpy(&ld, str.c_str(), sizeof(long double));
+		return mkValue(ALUFloat(ld));
 	} else {
 		std::string err = "c2f: Invalid floating point length: " + std::to_string(str.length()) +
 				". Supported lengths: " + std::to_string(sizeof(float));
@@ -728,9 +734,10 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 		return mkValue("");
 	}
 	
-	char* resultStart = (char*)(pHaystack->c_str()) + size_t(int(pos) + _pOffset->getInt());
-	if (size_t(int(pos) + _pOffset->getInt() + count) > pHaystack->length()) {
-		count = size_t(pHaystack->length() - pos - _pOffset->getInt()); 
+	ALUInt offset = _pOffset->getInt();
+	char* resultStart = (char*)(pHaystack->c_str()) + size_t(ALUInt(pos) + offset);
+	if (size_t(ALUInt(pos) + offset + ALUInt(count)) > pHaystack->length()) {
+		count = size_t(pHaystack->length() - pos - offset); 
 	}
 		
 	return mkValue2(resultStart, int(count));
@@ -1225,8 +1232,12 @@ PValue AluFunc_fact(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	ALUInt i,res = 1;
+	ALUInt x = pX->getInt();
+	if (x > 20) {
+		MYTHROW("fact: argument too large (max 20 for 64-bit integers)");
+	}
 
-	for (i=2; i <= pX->getInt(); i++) {
+	for (i=2; i <= x; i++) {
 		res *= i;
 	}
 
@@ -1661,10 +1672,10 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 			while ((pc>pStart) && (*pc!=sep)) pc--;
 			if (*pc==sep) {
 				count++;
-				pc--;
+				if (pc > pStart) pc--;
 			}
 		}
-		if (count < -1 || pc==pStart) {
+		if (count < -1 || pc<=pStart) {
 			return mkValue("");
 		} else {
 			char *pBegin = pc;
@@ -1752,15 +1763,18 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 		char *pStart = (char*)(str.c_str());
 		char* pc = pStart + str.length();
 		pc--; // that's where the non-zero-length assumption comes in
-		while (sep==*pc) pc--;  // The last word may be followed by word separators
+		while (pc > pStart && sep==*pc) pc--;  // The last word may be followed by word separators
+		if (sep==*pc) {
+			return mkValue("");  // entire string is separators
+		}
 		while ((count < -1) && (pc > pStart)) {
 			while ((pc>pStart) && (*pc!=sep)) pc--;
 			if (sep==*pc) {
 				count++;
-				while (sep==*pc) pc--;
+				while (pc > pStart && sep==*pc) pc--;
 			}
 		}
-		if (count < -1 || pc==pStart) {
+		if (count < -1 || pc<=pStart) {
 			return mkValue("");
 		} else {
 			char *pBegin = pc;
@@ -2340,6 +2354,9 @@ PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 	std::string ret;
 	auto first = str.find_first_not_of(sPad);
 	auto last = str.find_last_not_of(sPad);
+	if (first == std::string::npos) {
+		return mkValue(std::string());
+	}
 	switch (option) {
 	case 'B':
 		ret = str.substr(first, last-first+1);

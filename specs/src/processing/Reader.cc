@@ -349,6 +349,10 @@ multiReader::~multiReader()
 void multiReader::addStream(unsigned char idx, std::istream* f)
 {
 	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
+	if (idx==0 || idx > MAX_INPUT_STREAMS) {
+		std::string err = "Invalid input stream number: " + std::to_string(idx);
+		MYTHROW(err);
+	}
 	idx--;  // Set to C-style index
 	MYASSERT_WITH_MSG(nullptr==readerArray[idx], "Input stream is already defined");
 
@@ -360,6 +364,10 @@ void multiReader::addStream(unsigned char idx, std::istream* f)
 void multiReader::addStream(unsigned char idx, std::string& fn)
 {
 	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
+	if (idx==0 || idx > MAX_INPUT_STREAMS) {
+		std::string err = "Invalid input stream number: " + std::to_string(idx);
+		MYTHROW(err);
+	}
 	idx--;  // Set to C-style index
 	MYASSERT_WITH_MSG(nullptr==readerArray[idx], "Input stream is already defined");
 
@@ -371,6 +379,10 @@ void multiReader::addStream(unsigned char idx, std::string& fn)
 void multiReader::selectStream(unsigned char idx, PSpecString* ppRecord)
 {
 	MYASSERT_WITH_MSG(idx>0 && idx <= MAX_INPUT_STREAMS, "Invalid input stream number");
+	if (idx==0 || idx > MAX_INPUT_STREAMS) {
+		std::string err = "Invalid input stream number: " + std::to_string(idx);
+		MYTHROW(err);
+	}
 	idx--;  // Set to C-style index
 	MYASSERT_WITH_MSG(nullptr!=readerArray[idx], "Invalid input stream");
 

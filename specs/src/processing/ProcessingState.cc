@@ -172,6 +172,10 @@ void ProcessingState::setActiveWriter(int idx)
 {
 	MYASSERT(idx==STATION_STDERR || idx >= DEFAULT_READER_IDX);
 	MYASSERT(idx <= MAX_INPUT_STREAMS);
+	if (idx!=STATION_STDERR && (idx < DEFAULT_READER_IDX || idx > MAX_INPUT_STREAMS)) {
+		std::string err = "Output stream index " + std::to_string(idx) + " is out of range.";
+		MYTHROW(err);
+	}
 	if (idx==STATION_STDERR) {
 		m_outputIndex = 0;
 	} else {

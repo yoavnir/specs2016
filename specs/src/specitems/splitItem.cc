@@ -91,7 +91,12 @@ void SplitItem::parseOutputPlacement(std::vector<Token> &tokenVec, unsigned int&
 			m_outStart = pRange->getSingleNumber();
 		} else {
 			m_outStart = pRange->getSimpleFirst();
-			m_maxLength = pRange->getSimpleLast() - m_outStart + 1;
+			if (pRange->getSimpleLast() >= pRange->getSimpleFirst()) {
+				m_maxLength = pRange->getSimpleLast() - m_outStart + 1;
+			} else {
+				std::string err = "Bad output placement range " + outTok.HelpIdentify();
+				MYTHROW(err);
+			}
 		}
 		index++;
 		break;

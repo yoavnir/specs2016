@@ -95,9 +95,15 @@ int main(int argc, char** argv)
     char* safe = getenv("COMP_LINE");
     std::string line(safe ? safe : "");
     safe = getenv("COMP_POINT");
-    auto cursorPos = safe ? std::stoul(safe) : line.length();
+    size_t cursorPos = line.length();
+    if (safe) {
+        try { cursorPos = std::stoul(safe); } catch (const std::exception&) {}
+    }
     safe = getenv("COMP_TYPE");
-    char type = safe ? char(std::stoi(safe)) : '\t';
+    char type = '\t';
+    if (safe) {
+        try { type = char(std::stoi(safe)); } catch (const std::exception&) {}
+    }
 
     // Only auto-complete when in the last position
     if (cursorPos < line.length()) return 0;
