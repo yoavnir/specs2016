@@ -3,6 +3,7 @@
 #include <sstream>
 #include <regex>
 #include <cstring>
+#include <memory>
 #include "utils/platform.h"
 #include "utils/aluRegex.h"
 #include "utils/lruCache.h"
@@ -57,7 +58,8 @@ void setRegexType(std::string& s) {
 	bool bWarnUnsupportedGrammarOption = false;
 	g_regexType = std::regex_constants::ECMAScript;
 	gs_regexType = s;
-	char* st = strdup(s.c_str());
+	std::unique_ptr<char, decltype(&free)> st_guard(strdup(s.c_str()), free);
+	char* st = st_guard.get();
 	char* st_ctx = st;
 	char* p = strtok_r(st,",", &st_ctx);
 	while (p) {
@@ -89,7 +91,6 @@ void setRegexType(std::string& s) {
 			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else {
 			std::string err = "Invalid regular expression syntax option type: " + std::string(p);
-			free(st);
 			MYTHROW(err);
 		}
 		if (bWarnUnsupportedGrammarOption && g_bWarnAboutGrammars) {
@@ -97,7 +98,6 @@ void setRegexType(std::string& s) {
 		}
 		p = strtok_r(nullptr, ",", &st_ctx);
 	}
-	free(st);
 }
 
 PRegEx regexCalculator(std::string& s)
@@ -133,7 +133,8 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 			static std::regex_constants::match_flag_type ret;
 			ret = std::regex_constants::match_default;
 
-			char* st = strdup(str.c_str());
+			std::unique_ptr<char, decltype(&free)> st_guard(strdup(str.c_str()), free);
+			char* st = st_guard.get();
 			char* st_ctx = st;
 			char* p = strtok_r(st,",", &st_ctx);
 			while (p) {
@@ -163,12 +164,10 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 					ret |= std::regex_constants::format_first_only;
 				} else {
 					std::string err = "Invalid regular expression match option type: " + std::string(p);
-					free(st);
 					MYTHROW(err);
 				}
 				p = strtok_r(nullptr, ",", &st_ctx);
 			}
-			free(st);
 
 			pFlags = std::make_shared<std::regex_constants::match_flag_type>(ret);
 			g_matchFlagsCache.set(str,pFlags);

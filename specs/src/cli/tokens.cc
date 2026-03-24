@@ -1,4 +1,5 @@
 #include <cstring>
+#include <climits>
 #include <regex>
 #include <cctype>
 #include "utils/platform.h"
@@ -247,6 +248,11 @@ static PTokenFieldRange parseAsFromLenRange(std::string s)
 		return nullptr;
 	}
 
+	// Check for overflow before computing _to
+	if ((_from > 0 && _len > LONG_MAX - _from + 1) ||
+	    (_from < 0 && _len > LONG_MAX)) {
+		return nullptr;
+	}
 	_to = _from + _len - 1;
 	if (_from<0 && _to>=0) {
 		_to++;  // skipping the zero
@@ -513,6 +519,10 @@ CONT1:
 #define MAX_INPUT_RANGES_IN_GROUP 256
 static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int argidx)
 {
+	if (s.length() < 2) {
+		std::string err = "Invalid ranges group at index " + std::to_string(argidx);
+		MYTHROW(err);
+	}
 	char* localCopy = strdup(s.c_str()+1); // +2 to get rid of opening parenthesis
 	char* itemPtrs[MAX_INPUT_RANGES_IN_GROUP];
 	localCopy[s.length()-2]=0; // Gets rid of closing parenthesis
@@ -522,6 +532,7 @@ static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int 
 	itemPtrs[idx] = strtok_r(localCopy, " ", &localCopy_ctx);
 	while (idx<MAX_INPUT_RANGES_IN_GROUP && itemPtrs[idx]) {
 		idx++;
+		if (idx >= MAX_INPUT_RANGES_IN_GROUP) break;
 		itemPtrs[idx] = strtok_r(nullptr, " ", &localCopy_ctx);
 	}
 	if (idx==MAX_INPUT_RANGES_IN_GROUP) {

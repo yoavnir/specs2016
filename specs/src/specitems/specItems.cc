@@ -72,10 +72,10 @@ bool CheckValiditySetStatement(std::string& setSpec)
 
 static void Strip(std::string& s)
 {
-	while (std::isspace(s[0])) {
+	while (!s.empty() && std::isspace(s[0])) {
 		s.erase(0,1);
 	}
-	while (std::isspace(s.back())) {
+	while (!s.empty() && std::isspace(s.back())) {
 		s.erase(s.size()-1);
 	}
 }
@@ -177,7 +177,7 @@ static void ValidateRedoAndEOFPlacement(const std::vector<PItem>& items)
 
 std::vector<std::string> SplitSetSpecification(std::string setSpec)
 {
-	while (setSpec[0]=='(' && setSpec[setSpec.size()-1]==')') {
+	while (setSpec.size() >= 2 && setSpec[0]=='(' && setSpec[setSpec.size()-1]==')') {
 		setSpec.erase(setSpec.size()-1);
 		setSpec.erase(0,1);
 	}
@@ -427,6 +427,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__BREAK:
 		{
+			MYASSERT_WITH_MSG(!tokenVec[index].Literal().empty(), "Empty BREAK literal");
 			auto pItem = std::make_shared<BreakItem>(tokenVec[index].Literal()[0]);
 			index++;
 			addItem(pItem);
@@ -503,6 +504,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			if (tokenVec[index].Literal()=="EOF") {
 				g_printonly_rule = PRINTONLY_EOF;
 			} else {
+				MYASSERT_WITH_MSG(!tokenVec[index].Literal().empty(), "Empty PRINTONLY literal");
 				char c = tokenVec[index].Literal()[0];
 				MYASSERT_WITH_MSG((c>='a' && c<='z') || (c>='A' && c<='Z'), \
 						"PRINTONLY instruction must specify EOF or a valid break level - an uppercase or lowercase letter");

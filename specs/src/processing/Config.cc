@@ -34,7 +34,7 @@ static std::map<std::string,std::string> ExternalLiterals;
 
 static void useKeyValue(std::string& key, std::string& value)
 {
-	if (':'==key.at(key.length() - 1)) {
+	if (!key.empty() && ':'==key.at(key.length() - 1)) {
 		key = key.substr(0,key.length() - 1);
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
