@@ -13,13 +13,15 @@ bool              AluRand_RandomSeeded_G = false;
 
 void AluRand_Seed()
 {
-	if (sizeof(AluRandSeedType) > 8) {
+	if (sizeof(AluRandSeedType) >= 8) {
 		AluRandSeedType   AluRandSeed;
 		std::ifstream     devRandom("/dev/random");
 		devRandom.read((char*)&AluRandSeed, sizeof(AluRandSeedType));
+		AluRandSeed_G = AluRandSeed;
 	}
 	
 	AluRandSeed(AluRandSeed_G);
+	AluRand_RandomSeeded_G = true;
 }
 
 #ifdef ALU_RAND_FUNC_WITH_LEN
@@ -42,13 +44,8 @@ static ALUInt AluRandGetInt()
 
 ALUInt AluRandGetIntUpTo(ALUInt limit)
 {
-	if (limit <= 0) {
-		return 0;
-	}
-
 	if (!AluRand_RandomSeeded_G) {
 		AluRand_Seed();
-		AluRand_RandomSeeded_G = true;
 	}
 
 	ALUInt rndValue = AluRandGetInt();
