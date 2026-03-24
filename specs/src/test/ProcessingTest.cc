@@ -817,6 +817,10 @@ int main(int argc, char** argv)
 	VERIFY("w1 REDO w1 1", "The"); // Test #215
 	VERIFY2("w1 1 REDO set '#0:=7' EOF print '#0'", "x", "7"); // Test #216
 
+	// rand() with non-positive limit
+	VERIFY2("print 'rand(0)' 1", "x", "rand: limit must be a positive integer"); // Test #217
+	VERIFY2("print 'rand(-5)' 1", "x", "rand: limit must be a positive integer"); // Test #218
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

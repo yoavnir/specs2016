@@ -143,10 +143,10 @@ SimpleWriter::~SimpleWriter() {
 				std::cout << *rec << "\n";
 			}
 		}
-		break;
 #ifdef WIN64
 		std::remove(temporaryBatchFileName_g.c_str());
-#endif		
+#endif
+		break;
 	}
 	default:
 		;

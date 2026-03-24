@@ -63,16 +63,18 @@ int CompleteIfUnambiguous(std::string& incomplete, std::string& prevToken, std::
         bool stopped = false;
         while (!stopped) {
             size_t sz = partial.length();
-            char c = sv[0][sz];
-            if (!c) {
+            if (sz >= sv[0].length()) {
                 stopped = true;
-            } else for (std::string& s : sv) {
-                if (s[sz]!=c) {
-                    stopped = true;
+            } else {
+                char c = sv[0][sz];
+                for (std::string& s : sv) {
+                    if (sz >= s.length() || s[sz]!=c) {
+                        stopped = true;
+                    }
                 }
-            }
-            if (!stopped) {
-                partial += c;
+                if (!stopped) {
+                    partial += c;
+                }
             }
         }
         if (partial.length() > incomplete.length()) {

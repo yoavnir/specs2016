@@ -1087,6 +1087,9 @@ PValue AluFunc_stderrmean(PValue _pFieldIdentifier)
 PValue AluFunc_rand(PValue pLimit)
 {
 	if (pLimit) {
+		if (pLimit->getInt() <= 0) {
+			MYTHROW("rand: limit must be a positive integer");
+		}
 		ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
 		return mkValue(res);
 	} else {

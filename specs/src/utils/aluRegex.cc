@@ -89,6 +89,7 @@ void setRegexType(std::string& s) {
 			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
 		} else {
 			std::string err = "Invalid regular expression syntax option type: " + std::string(p);
+			free(st);
 			MYTHROW(err);
 		}
 		if (bWarnUnsupportedGrammarOption && g_bWarnAboutGrammars) {
@@ -162,6 +163,7 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 					ret |= std::regex_constants::format_first_only;
 				} else {
 					std::string err = "Invalid regular expression match option type: " + std::string(p);
+					free(st);
 					MYTHROW(err);
 				}
 				p = strtok_r(nullptr, ",", &st_ctx);

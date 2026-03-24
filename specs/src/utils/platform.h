@@ -24,6 +24,7 @@ int setenv(const char *name, const char *value, int overwrite);
 	#define strcasecmp _stricmp
   #define strdup _strdup
   #define strtok_r(str, delim, saveptr) strtok_s((str), (delim), (saveptr))
+  #define localtime_r(timer, buf) localtime_s((buf), (timer))
 	#define ALUFloatPrecision  15
 	#define VISUAL_STUDIO
 	#define NOMINMAX 1

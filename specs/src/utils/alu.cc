@@ -91,6 +91,8 @@ ALUInt ALUValue::getHex() const
 		return (counterType__None==m_type) ? 0 : std::stoll(m_value, nullptr, 16);
 	} catch (std::invalid_argument&) {
 		return 0;
+	} catch (std::out_of_range&) {
+		return 0;
 	}
 }
 
@@ -524,6 +526,9 @@ PValue		AluBinaryOperator::computeIntDiv(PValue op1, PValue op2)
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
 		return mkValue0();
 	}
+	if (0 == op2->getInt()) {
+		return mkValue0();
+	}
 
 	return mkValue(op1->getInt() / op2->getInt());
 }
@@ -533,6 +538,9 @@ PValue		AluBinaryOperator::computeRemDiv(PValue op1, PValue op2)
 {
 	// guard against divide-by-zero: return NaN
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
+		return mkValue0();
+	}
+	if (0 == op2->getInt()) {
 		return mkValue0();
 	}
 
@@ -811,6 +819,9 @@ PValue AluAssnOperator::computeIntDiv(PValue operand, PValue prevOp)
 	if (0.0==operand->getFloat()) {
 		return mkValue0();
 	}
+	if (0 == operand->getInt()) {
+		return mkValue0();
+	}
 
 	return mkValue(prevOp->getInt() / operand->getInt());
 }
@@ -819,6 +830,9 @@ PValue AluAssnOperator::computeRemDiv(PValue operand, PValue prevOp)
 {
 	// guard against divide-by-zero: return NaN
 	if (0.0==operand->getFloat()) {
+		return mkValue0();
+	}
+	if (0 == operand->getInt()) {
 		return mkValue0();
 	}
 

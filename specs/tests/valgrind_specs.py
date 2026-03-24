@@ -833,4 +833,5 @@ i = None
 run_case(s,i,"Bounds checking - IF as last token")
 
 
-sys.stdout.write("\n*** All tests passed.\n")
+sys.stdout.write("\n*** All tests passed.\n\n")
+memcheck.cleanup()

@@ -93,7 +93,7 @@ void processPlusDirective(std::string& dirline)
 		std::string line("");
 		if (nullptr != fgets(buffer.data(), int(buffer.size()), pipe.get())) {
 			line = buffer.data();
-			while (line.back()=='\n' || line.back()=='\r') {
+			while (!line.empty() && (line.back()=='\n' || line.back()=='\r')) {
 				line.erase(line.length()-1);
 			}
 		}

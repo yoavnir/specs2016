@@ -29,7 +29,7 @@ static bool isPossibleDelimiter(const char* c, bool bForSeparator) {
 	if (!isValidDelimiter) return false;
 
 	if (bForSeparator) {
-		if (*(c+1)!=*c && *(c+2)==*c) {
+		if (*(c+1) && *(c+2) && *(c+1)!=*c && *(c+2)==*c) {
 			return true;
 		}
 		return (*c=='"');

@@ -201,6 +201,7 @@ void ProcessingState::identifyWords()
 	m_wordStart.clear();
 	m_wordEnd.clear();
 	m_wordCount = 0;
+	if (!currRecord()) return;
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 is not yet supported");
 	}
@@ -223,6 +224,7 @@ void ProcessingState::identifyFields()
 	m_fieldStart.clear();
 	m_fieldEnd.clear();
 	m_fieldCount = 0;
+	if (!currRecord()) return;
 	if (g_bSupportUTF8) {
 		MYTHROW("UTF-8 is not yet supported");
 	}

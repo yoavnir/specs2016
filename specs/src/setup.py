@@ -187,7 +187,8 @@ run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
-	python $(TESTS_DIR)/valgrind_specs.py --no_valgrind
+	python3 $(TESTS_DIR)/valgrind_specs.py --no_valgrind
+	python3 $(TESTS_DIR)/recfm_tests.py
 
 directories: $(EXE_DIR)
 
