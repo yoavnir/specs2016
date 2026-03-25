@@ -402,7 +402,28 @@ if 0==rc:
 else:
 	sys.stdout.write("No.  Aborting...\n")
 	exit(-4)
-	
+
+# Get compiler version
+sys.stdout.write("Getting compiler version...")
+if compiler == "VS":
+	version_cmd = cxx
+else:
+	version_cmd = "{} --version".format(cxx)
+run_the_cmd(version_cmd)
+cxx_version = ""
+try:
+	import re
+	with open("xx.txt", "r") as f:
+		version_output = f.read()
+	m = re.search(r'(\d+\.\d+(?:\.\d+)*)', version_output)
+	if m:
+		cxx_version = m.group(1)
+		sys.stdout.write("{}\n".format(cxx_version))
+	else:
+		sys.stdout.write("unknown\n")
+except:
+	sys.stdout.write("unknown\n")
+
 # Test if the compiler supports C++17
 test_cpp11_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 testprog = """
@@ -660,10 +681,11 @@ if CFG_advanced_regex:
 if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
 
+cxx_display = "{} {}".format(cxx, cxx_version) if cxx_version else cxx
 if (CFG_python==True) & (full_python_version!="N/A"):
-	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx,full_python_version,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx_display,full_python_version,variation.lower())
 else:
-	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
 condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatform)
 
 if CFG_python:
