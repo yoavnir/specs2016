@@ -51,7 +51,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.3
+      uses: microsoft/setup-msbuild@v2
     - name: Build specs (Debug)
       run: msbuild specs/specs.sln /p:Configuration=Debug /p:Platform=x64
     - name: Build specs (Release)
