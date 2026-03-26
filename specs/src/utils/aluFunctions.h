@@ -285,7 +285,7 @@
 	X(next,           0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns the column of the next character to print if a spec unit specifies the NEXT position.","") \
 	X(exact,          1, ALUFUNC_REGULAR,     false,  \
-	        "(expression) - Returns one(1) if evaluating 'expression' would result in an exact value, or zero(0) if not. Currently always returns zero.","") \
+	        "(expression) - Returns one(1) if evaluating 'expression' would result in an exact value, or zero(0) if not.","Literals, field identifiers, and input records are exact. Integer arithmetic preserves exactness.\nDivision producing a float, trigonometric functions, logarithms, and persistent variables are inexact.\nMultiplication by zero is always exact. Integer division and remainder are always exact.") \
 	X(rest,           0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns the number of columns from the current position to the end of the line.","") \
 	X(countocc,       2, ALUFUNC_REGULAR,     true,   \

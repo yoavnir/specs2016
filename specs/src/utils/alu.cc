@@ -23,12 +23,14 @@ void ALUValue::set(std::string& s)
 {
 	m_value = s;
 	m_type = counterType__Str;
+	m_exact = true;
 }
 
 void ALUValue::set(const std::string& s)
 {
 	m_value = s;
 	m_type = counterType__Str;
+	m_exact = true;
 }
 
 void ALUValue::set(const char* st)
@@ -41,12 +43,14 @@ void ALUValue::set(ALUInt l)
 {
 	m_value = std::to_string(l);
 	m_type = counterType__Int;
+	m_exact = true;
 }
 
 void ALUValue::set(ALUFloat f)
 {
 	if (std::isnan(f)) {
 		m_type = counterType__None;  /* NaN */
+		m_exact = false;
 		return;
 	}
     std::ostringstream ost;
@@ -54,11 +58,13 @@ void ALUValue::set(ALUFloat f)
     ost << f;
 	m_value = ost.str();
 	m_type = counterType__Float;
+	m_exact = false;
 }
 
 void ALUValue::set()
 {
 	m_type = counterType__None;
+	m_exact = false;
 }
 
 ALUInt ALUValue::getInt() const
@@ -113,6 +119,7 @@ bool ALUValue::getBool() const
 bool ALUValue::isWholeNumber() const
 {
 	if (!isNumeric()) return false;
+	if (m_type == counterType__Int) return true;
 	ALUFloat f = getFloat();
 	return (f==std::floor(f));
 }
@@ -356,9 +363,9 @@ PValue 	AluUnitUnaryOperator::computePlus(PValue operand)
 		return mkValue(*operand);
 	case counterType__Str:
 		if (operand->isFloat()) {
-			return mkValue(operand->getFloat());
+			return mkValueE(operand->getFloat(), operand->isExact());
 		} else {
-			return mkValue(operand->getInt());
+			return mkValueE(operand->getInt(), operand->isExact());
 		}
 	default:
 		MYTHROW("Invalid operand type");
@@ -369,14 +376,14 @@ PValue 	AluUnitUnaryOperator::computeMinus(PValue operand)
 {
 	switch (operand->getType()) {
 	case counterType__Float:
-		return mkValue(-operand->getFloat());
+		return mkValueE(-operand->getFloat(), operand->isExact());
 	case counterType__Int:
-		return mkValue(-operand->getInt());
+		return mkValueE(-operand->getInt(), operand->isExact());
 	case counterType__Str:
 		if (operand->isFloat()) {
-			return mkValue(-operand->getFloat());
+			return mkValueE(-operand->getFloat(), operand->isExact());
 		} else {
-			return mkValue(-operand->getInt());
+			return mkValueE(-operand->getInt(), operand->isExact());
 		}
 	default:
 		MYTHROW("Invalid operand type");
@@ -447,70 +454,76 @@ PValue		AluBinaryOperator::compute(PValue op1, PValue op2)
 // Simple floating point or integer addition
 PValue		AluBinaryOperator::computeAdd(PValue op1, PValue op2)
 {
+	bool bothExact = op1->isExact() && op2->isExact();
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return mkValue(op1->getFloat() + op2->getFloat());
+		return mkValueE(op1->getFloat() + op2->getFloat(), false);
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return mkValue(op1->getInt() + op2->getInt());
+		return mkValueE(op1->getInt() + op2->getInt(), bothExact);
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return mkValue(op1->getInt() + op2->getInt());
+		return mkValueE(op1->getInt() + op2->getInt(), bothExact);
 	}
-	return mkValue(op1->getFloat() + op2->getFloat());
+	return mkValueE(op1->getFloat() + op2->getFloat(), false);
 }
 
 // Simple floating point or integer subtraction
 PValue		AluBinaryOperator::computeSub(PValue op1, PValue op2)
 {
+	bool bothExact = op1->isExact() && op2->isExact();
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return mkValue(op1->getFloat() - op2->getFloat());
+		return mkValueE(op1->getFloat() - op2->getFloat(), false);
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return mkValue(op1->getInt() - op2->getInt());
+		return mkValueE(op1->getInt() - op2->getInt(), bothExact);
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return mkValue(op1->getInt() - op2->getInt());
+		return mkValueE(op1->getInt() - op2->getInt(), bothExact);
 	}
-	return mkValue(op1->getFloat() - op2->getFloat());
+	return mkValueE(op1->getFloat() - op2->getFloat(), false);
 }
 
 // Floating point or integer multiplication
 PValue		AluBinaryOperator::computeMult(PValue op1, PValue op2)
 {
+	bool bothExact = op1->isExact() && op2->isExact();
+	bool eitherZero = IS_EXACT_ZERO(op1) || IS_EXACT_ZERO(op2);
+	bool resultExact = bothExact || eitherZero;
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return mkValue(op1->getFloat() * op2->getFloat());
+		return mkValueE(op1->getFloat() * op2->getFloat(), eitherZero);
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
-		return mkValue(op1->getInt() * op2->getInt());
+		return mkValueE(op1->getInt() * op2->getInt(), resultExact);
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
-		return mkValue(op1->getInt() * op2->getInt());
+		return mkValueE(op1->getInt() * op2->getInt(), resultExact);
 	}
-	return mkValue(op1->getFloat() * op2->getFloat());
+	return mkValueE(op1->getFloat() * op2->getFloat(), eitherZero);
 }
 
 // Numeric division. The result quotient may be floating point even when the
 // dividend and divisor are both integers.
 PValue		AluBinaryOperator::computeDiv(PValue op1, PValue op2)
 {
+	bool bothExact = op1->isExact() && op2->isExact();
 	// guard against divide-by-zero: return NaN
 	if (counterType__None!=op2->getType() && 0.0==op2->getFloat()) {
 		return mkValue0();
 	}
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return mkValue(op1->getFloat() / op2->getFloat());
+		return mkValueE(op1->getFloat() / op2->getFloat(), false);
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		if (0==(op1->getInt() % op2->getInt())) {
-			return mkValue(op1->getInt() / op2->getInt());
+			return mkValueE(op1->getInt() / op2->getInt(), bothExact);
 		} else {
-			return mkValue(op1->getFloat() / op2->getFloat());
+			return mkValueE(op1->getFloat() / op2->getFloat(), false);
 		}
 	}
 	if (op1->isWholeNumber() && op2->isWholeNumber() && (0==(op1->getInt() % op2->getInt()))) {
-		return mkValue(op1->getInt() / op2->getInt());
+		return mkValueE(op1->getInt() / op2->getInt(), bothExact);
 	}
-	return mkValue(op1->getFloat() / op2->getFloat());
+	return mkValueE(op1->getFloat() / op2->getFloat(), false);
 }
 
 // String concatenation ||
@@ -740,6 +753,7 @@ void		AluAssnOperator::perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, PValu
 	default:
 		MYTHROW("Invalid assignment result");
 	}
+	ctrs->setExactness(ctrNumber, result->isExact());
 }
 #undef X
 
@@ -752,7 +766,7 @@ PValue AluAssnOperator::computeLet(PValue operand, PValue prevOp)
 PValue AluAssnOperator::computeAdd(PValue operand, PValue prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return mkValue(prevOp->getFloat() + operand->getFloat());
+		return mkValueE(prevOp->getFloat() + operand->getFloat(), false);
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		return mkValue(prevOp->getInt() + operand->getInt());
@@ -760,13 +774,13 @@ PValue AluAssnOperator::computeAdd(PValue operand, PValue prevOp)
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
 		return mkValue(prevOp->getInt() + operand->getInt());
 	}
-	return mkValue(prevOp->getFloat() + operand->getFloat());
+	return mkValueE(prevOp->getFloat() + operand->getFloat(), false);
 }
 
 PValue AluAssnOperator::computeSub(PValue operand, PValue prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return mkValue(prevOp->getFloat() - operand->getFloat());
+		return mkValueE(prevOp->getFloat() - operand->getFloat(), false);
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		return mkValue(prevOp->getInt() - operand->getInt());
@@ -774,13 +788,13 @@ PValue AluAssnOperator::computeSub(PValue operand, PValue prevOp)
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
 		return mkValue(prevOp->getInt() - operand->getInt());
 	}
-	return mkValue(prevOp->getFloat() - operand->getFloat());
+	return mkValueE(prevOp->getFloat() - operand->getFloat(), false);
 }
 
 PValue AluAssnOperator::computeMult(PValue operand, PValue prevOp)
 {
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return mkValue(prevOp->getFloat() * operand->getFloat());
+		return mkValueE(prevOp->getFloat() * operand->getFloat(), false);
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		return mkValue(prevOp->getInt() * operand->getInt());
@@ -788,7 +802,7 @@ PValue AluAssnOperator::computeMult(PValue operand, PValue prevOp)
 	if (operand->isWholeNumber() && prevOp->isWholeNumber()) {
 		return mkValue(prevOp->getInt() * operand->getInt());
 	}
-	return mkValue(prevOp->getFloat() * operand->getFloat());
+	return mkValueE(prevOp->getFloat() * operand->getFloat(), false);
 }
 
 PValue AluAssnOperator::computeDiv(PValue operand, PValue prevOp)
@@ -798,19 +812,19 @@ PValue AluAssnOperator::computeDiv(PValue operand, PValue prevOp)
 		return mkValue0();
 	}
 	if (counterType__Float==operand->getType() || counterType__Float==prevOp->getType()) {
-		return mkValue(prevOp->getFloat() / operand->getFloat());
+		return mkValueE(prevOp->getFloat() / operand->getFloat(), false);
 	}
 	if (counterType__Int==operand->getType() && counterType__Int==prevOp->getType()) {
 		if (0==(prevOp->getInt() % operand->getInt())) {
 			return mkValue(prevOp->getInt() / operand->getInt());
 		} else {
-			return mkValue(prevOp->getFloat() / operand->getFloat());
+			return mkValueE(prevOp->getFloat() / operand->getFloat(), false);
 		}
 	}
 	if (operand->isWholeNumber() && prevOp->isWholeNumber() && (0==(prevOp->getInt() % operand->getInt()))) {
 		return mkValue(prevOp->getInt() / operand->getInt());
 	}
-	return mkValue(prevOp->getFloat() / operand->getFloat());
+	return mkValueE(prevOp->getFloat() / operand->getFloat(), false);
 }
 
 PValue AluAssnOperator::computeIntDiv(PValue operand, PValue prevOp)
@@ -1946,6 +1960,10 @@ void AluValueStats::initialize()
 	m_maxFloat = 0.0;
 	m_runningAverage = 0.0;
 	m_runningSn = 0.0;
+	m_sumIntExact = true;
+	m_minIntExact = true;
+	m_maxIntExact = true;
+	m_runningExact = true;
 }
 
 AluValueStats::AluValueStats()
@@ -1963,6 +1981,7 @@ void AluValueStats::AddValue(char id)
 {
 	ALUValue v(g_fieldIdentifierGetter->Get(id));
 	auto type = v.getDivinedType();
+	bool exact = v.isExact();
 	switch (type) {
 	case counterType__Int:
 	{
@@ -1972,10 +1991,14 @@ void AluValueStats::AddValue(char id)
 			m_sumInt = value;
 			m_minInt = value;
 			m_maxInt = value;
+			m_sumIntExact = exact;
+			m_minIntExact = exact;
+			m_maxIntExact = exact;
 		} else {
-			if (value > m_maxInt) m_maxInt = value;
-			if (value < m_minInt) m_minInt = value;
+			if (value > m_maxInt) { m_maxInt = value; m_maxIntExact = exact; }
+			if (value < m_minInt) { m_minInt = value; m_minIntExact = exact; }
 			m_sumInt += value;
+			if (!exact) m_sumIntExact = false;
 		}
 		/* intentional fall-through */
 	}
@@ -1987,10 +2010,12 @@ void AluValueStats::AddValue(char id)
 		if (0 == m_totalCount++) {
 			m_runningAverage = value;
 			m_runningSn = 0.0;
+			m_runningExact = exact;
 		} else {
 			ALUFloat diffFromPreviousAverage = value - m_runningAverage;
 			m_runningAverage += (diffFromPreviousAverage / m_totalCount);
 			m_runningSn += (diffFromPreviousAverage * (value - m_runningAverage));
+			if (!exact) m_runningExact = false;
 		}
 
 		if (type != counterType__Float) break;
@@ -2015,29 +2040,29 @@ void AluValueStats::AddValue(char id)
 PValue AluValueStats::sum()
 {
 	if (0 < m_floatCount) {
-		return mkValue(m_sumFloat + m_sumInt);
+		return mkValueE(m_sumFloat + m_sumInt, false);
 	} else {
-		return mkValue(m_sumInt);
+		return mkValueE(m_sumInt, m_sumIntExact);
 	}
 }
 
 PValue AluValueStats::sumi()
 {
-	return mkValue(m_sumInt);
+	return mkValueE(m_sumInt, m_sumIntExact);
 }
 
 PValue AluValueStats::sumf()
 {
-	return mkValue(m_sumFloat);
+	return mkValueE(m_sumFloat, false);
 }
 
 PValue AluValueStats::_min()
 {
 	if (0 < m_floatCount) {
 		if (0 < m_intCount && m_minInt < m_minFloat) {
-			return mkValue(ALUFloat(m_minInt));
+			return mkValueE(ALUFloat(m_minInt), false);
 		} else {
-			return mkValue(m_minFloat);
+			return mkValueE(m_minFloat, false);
 		}
 	} else {
 		return mini();
@@ -2047,7 +2072,7 @@ PValue AluValueStats::_min()
 PValue AluValueStats::mini()
 {
 	if (0 < m_intCount) {
-		return mkValue(m_minInt);
+		return mkValueE(m_minInt, m_minIntExact);
 	} else {
 		return mkValue0(); /* returns NaN */
 	}
@@ -2056,7 +2081,7 @@ PValue AluValueStats::mini()
 PValue AluValueStats::minf()
 {
 	if (0 < m_floatCount) {
-		return mkValue(m_minFloat);
+		return mkValueE(m_minFloat, false);
 	} else {
 		return mkValue0(); /* returns NaN */
 	}
@@ -2066,9 +2091,9 @@ PValue AluValueStats::_max()
 {
 	if (0 < m_floatCount) {
 		if (0 < m_intCount && m_maxInt < m_maxFloat) {
-			return mkValue(ALUFloat(m_maxInt));
+			return mkValueE(ALUFloat(m_maxInt), false);
 		} else {
-			return mkValue(m_maxFloat);
+			return mkValueE(m_maxFloat, false);
 		}
 	} else {
 		return maxi();
@@ -2078,7 +2103,7 @@ PValue AluValueStats::_max()
 PValue AluValueStats::maxi()
 {
 	if (0 < m_intCount) {
-		return mkValue(m_maxInt);
+		return mkValueE(m_maxInt, m_maxIntExact);
 	} else {
 		return mkValue0(); /* returns NaN */
 	}
@@ -2087,7 +2112,7 @@ PValue AluValueStats::maxi()
 PValue AluValueStats::maxf()
 {
 	if (0 < m_floatCount) {
-		return mkValue(m_maxFloat);
+		return mkValueE(m_maxFloat, false);
 	} else {
 		return mkValue0(); /* returns NaN */
 	}
@@ -2099,7 +2124,7 @@ PValue AluValueStats::average()
 		return mkValue0(); /* returns NaN */
 	}
 
-	return mkValue(m_runningAverage);
+	return mkValueE(m_runningAverage, m_runningExact && m_totalCount==1);
 }
 
 PValue AluValueStats::variance()
@@ -2108,7 +2133,7 @@ PValue AluValueStats::variance()
 		return mkValue0(); /* returns NaN */
 	}
 
-	return mkValue(m_runningSn / m_totalCount);
+	return mkValueE(m_runningSn / m_totalCount, false);
 }
 
 PValue AluValueStats::stddev()
@@ -2117,7 +2142,7 @@ PValue AluValueStats::stddev()
 		return mkValue0(); /* returns NaN */
 	}
 
-	return mkValue(std::sqrt(m_runningSn / m_totalCount));
+	return mkValueE(std::sqrt(m_runningSn / m_totalCount), false);
 }
 
 PValue AluValueStats::stderrmean()
@@ -2126,7 +2151,7 @@ PValue AluValueStats::stderrmean()
 		return mkValue0(); /* returns NaN */
 	}
 
-	return mkValue(std::sqrt(m_runningSn / m_totalCount) / (m_totalCount-1));
+	return mkValueE(std::sqrt(m_runningSn / m_totalCount) / (m_totalCount-1), false);
 }
 
 std::ostream& operator<< (std::ostream& os, const ALUValue &c)
