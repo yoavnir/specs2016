@@ -200,10 +200,10 @@ void readConfigurationFile()
 
 	// Some built-in stuff
 #ifdef GITTAG
-	ExternalLiterals["version"] = STRINGIFY(GITTAG);
+	ExternalLiterals["version"] = dequote(STRINGIFY(GITTAG));
 #endif
 #ifdef LITERAL_PLATFORM
-	ExternalLiterals["platform"] = STRINGIFY(LITERAL_PLATFORM);
+	ExternalLiterals["platform"] = dequote(STRINGIFY(LITERAL_PLATFORM));
 #endif
 	ExternalLiterals["python"] = pythonInterfaceEnabled() ? "Enabled" : "Disabled";
 	if (0==ExternalLiterals.count("cols")) {
