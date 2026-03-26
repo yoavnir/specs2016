@@ -7,6 +7,13 @@
 #include <cstring>
 #endif
 
+std::string dequote(const char* s) {
+	std::string str(s);
+	if (str.size() >= 2 && str.front() == '"' && str.back() == '"')
+		return str.substr(1, str.size() - 2);
+	return str;
+}
+
 #ifdef WIN64
 int setenv(const char *name, const char *value, int overwrite)
 {

@@ -60,6 +60,10 @@ def get_the_version(doPrint):
 		if doPrint:
 			sys.stdout.write("Setting to <v{}>".format(manpage_version))
 		return "v{}".format(manpage_version)
+	elif gittag == "":
+		if doPrint:
+			sys.stdout.write("No git branch; Going with {}".format(manpage_version))
+		return manpage_version
 	else:
 		if doPrint:
 			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,manpage_version))

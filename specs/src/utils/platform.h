@@ -1,6 +1,8 @@
 #ifndef SPECS2016__UTILS_PLATFORM__H
 #define SPECS2016__UTILS_PLATFORM__H
 
+#include <string>
+
 /*
  * This file contains every platform-dependent and compiler-dependent
  * define.
@@ -113,5 +115,6 @@ int setenv(const char *name, const char *value, int overwrite);
 #endif
 
 char** getDirectoryFileNames(const char* spath);
+std::string dequote(const char* s);
 
 #endif
