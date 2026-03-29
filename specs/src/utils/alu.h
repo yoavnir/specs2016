@@ -35,6 +35,7 @@ public:
 	bool         	isWholeNumber(ALUCounterKey i) {return m_map[i].isWholeNumber();}
 	bool          	isNumeric(ALUCounterKey i) {return m_map[i].isNumeric();}
 	void            clearAll() { m_map.clear(); }
+	void            setExactness(ALUCounterKey i, bool exact) {m_map[i].setExact(exact);}
 private:
 	std::map<ALUCounterKey, ALUValue> m_map;
 };
@@ -340,6 +341,10 @@ private:
 	ALUFloat     m_maxFloat;
 	ALUFloat     m_runningAverage;
 	ALUFloat     m_runningSn;  // Sn is the variance multiplied by n
+	bool         m_sumIntExact;
+	bool         m_minIntExact;
+	bool         m_maxIntExact;
+	bool         m_runningExact;
 };
 
 typedef std::shared_ptr<AluValueStats> PAluValueStats;

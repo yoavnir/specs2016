@@ -837,6 +837,38 @@ int main(int argc, char** argv)
 	// STRIP modifier on all-whitespace input (was out-of-bounds read in stripString)
 	VERIFY2("1-* strip 1", "   ", ""); // Test #223
 
+	// Exactness of statistical functions with integer input
+	spec =  "a: WORD 1 .                               " \
+			" EOF                                      " \
+			"   PRINT 'exact(sum(a))'                 1" \
+			"   PRINT 'exact(min(a))'                NW" \
+			"   PRINT 'exact(max(a))'                NW";
+	VERIFY2(spec, "1\n2\n3\n4\n5", "1 1 1"); // TEST #224
+
+	// average of a single integer should be exact
+	spec =  "a: WORD 1 . EOF PRINT 'exact(average(a))' 1";
+	VERIFY2(spec, "42", "1"); // TEST #225
+
+	// average of multiple integers is inexact (division)
+	spec =  "a: WORD 1 . EOF PRINT 'exact(average(a))' 1";
+	VERIFY2(spec, "1\n2\n3", "0"); // TEST #226
+
+	// variance, stddev, stderrmean are always inexact
+	spec =  "a: WORD 1 .                               " \
+			" EOF                                      " \
+			"   PRINT 'exact(variance(a))'            1" \
+			"   PRINT 'exact(stddev(a))'             NW" \
+			"   PRINT 'exact(stderrmean(a))'         NW";
+	VERIFY2(spec, "1\n2\n3\n4\n5", "0 0 0"); // TEST #227
+
+	// Statistical functions with float input are inexact
+	spec =  "a: WORD 1 .                               " \
+			" EOF                                      " \
+			"   PRINT 'exact(sum(a))'                 1" \
+			"   PRINT 'exact(min(a))'                NW" \
+			"   PRINT 'exact(max(a))'                NW";
+	VERIFY2(spec, "1.5\n2.5\n3.5", "0 0 0"); // TEST #228
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

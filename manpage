@@ -991,7 +991,9 @@ Returns whether the evaluation of
 .I expression
 results in an exact result (1) or not (0). 
 .B NOTE:
-This function currently just returns zero.
+This function has some limitations. For example, Python functions are always taken to return an exact value when they return an integer or a string, but an inexact value when they return a float, which may or may not be correct. When unsure, the
+.B exact
+function errs on the side of returning 0.
 
 .SS "Built-In String Functions"
 .IP "abbrev(information, info, len)" 3

@@ -1017,7 +1017,7 @@ int runALUUnitTests10(unsigned int onlyTest)
 	VERIFY_EXPR_RES("round(arctan(-0.2),8)", "-0.19739556");
 
 	VERIFY_EXPR_RES("round(dsin(30),8)", "0.5");
-	VERIFY_EXPR_RES("round(dsin(180),8)", "-0");
+	VERIFY_EXPR_RES("round(dsin(180),8)", "0");
 	VERIFY_EXPR_RES("round(dcos(30),8)", "0.8660254");
 	VERIFY_EXPR_RES("round(dcos(180),8)", "-1");
 	VERIFY_EXPR_RES("round(dtan(30),8)", "0.57735027");
@@ -1071,6 +1071,7 @@ int runALUUnitTests10(unsigned int onlyTest)
 	VERIFY_EXPR_RES("c2d('גגג')", "161454579225303");
 	VERIFY_EXPR_RES("c2d('גגגג')", "-7865656769600056617");
 	VERIFY_EXPR_RES("c2d('גגגגג')", "c2u/c2d: Invalid input length: 10");
+
 	return 0;
 }
 
@@ -1447,6 +1448,8 @@ int runALUUnitTests14(unsigned int onlyTest)
 
 int runALUUnitTests15(unsigned int onlyTest)
 {
+	std::string persistentVarName("unitTestVar");
+	persistentVarClear(persistentVarName);
 	VERIFY_EXPR_RES("pget(unitTestVar)","NaN");
 	VERIFY_EXPR_RES("#unitTestVar","NaN");
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
@@ -1527,6 +1530,125 @@ int runALUUnitTests16(unsigned int onlyTest)
 	counters.set(6,std::numeric_limits<ALUFloat>::quiet_NaN());
 	VERIFY_ASSN_RES("#6+=5", "NaN");
 	VERIFY_ASSN_RES("#6:=1", "1");   // Let can fix a NaN
+
+	// exact() function
+	std::cout << "\nThe exact() function\n======================\n\n";
+	// Exact literals
+	VERIFY_EXPR_RES("exact(5)", "1");
+	VERIFY_EXPR_RES("exact(3.14)", "1");
+	VERIFY_EXPR_RES("exact('hello')", "1");
+
+	// Exact arithmetic
+	VERIFY_EXPR_RES("exact(2+2)", "1");
+	VERIFY_EXPR_RES("exact(20//3)", "1");
+	VERIFY_EXPR_RES("exact(20/4)", "1");
+	VERIFY_EXPR_RES("exact(20%3)", "1");
+
+	// Inexact arithmetic
+	VERIFY_EXPR_RES("exact(20/3)", "0");
+	VERIFY_EXPR_RES("exact(20/3+4)", "0");
+
+	// Multiply by zero special case
+	VERIFY_EXPR_RES("exact((20/3)*0)", "1");
+	VERIFY_EXPR_RES("exact(0*(20/3))", "1");
+
+	// IntDiv/RemDiv always exact (even with inexact operands)
+	VERIFY_EXPR_RES("exact((20/3)//2)", "1");
+	VERIFY_EXPR_RES("exact((20/3)%2)", "1");
+
+	// NaN is inexact
+	VERIFY_EXPR_RES("exact(1/0)", "0");
+
+	// Unary operators
+	VERIFY_EXPR_RES("exact(-5)", "1");
+	VERIFY_EXPR_RES("exact(-(20/3))", "0");
+	VERIFY_EXPR_RES("exact(!0)", "1");
+
+	// Functions that are always inexact
+	VERIFY_EXPR_RES("exact(sqrt(5))", "0");
+	VERIFY_EXPR_RES("exact(sin(1))", "0");
+	VERIFY_EXPR_RES("exact(cos(1))", "0");
+	VERIFY_EXPR_RES("exact(log(2))", "0");
+	VERIFY_EXPR_RES("exact(exp(1))", "0");
+	VERIFY_EXPR_RES("exact(pow(3.1415,1))", "0");
+
+	// Functions that are always exact
+	VERIFY_EXPR_RES("exact(floor(3.4))", "1");
+	VERIFY_EXPR_RES("exact(floor(20/3))", "1");
+	VERIFY_EXPR_RES("exact(ceil(3.4))", "1");
+	VERIFY_EXPR_RES("exact(round(3.14))", "1");
+	VERIFY_EXPR_RES("exact(abs(-5))", "1");
+	VERIFY_EXPR_RES("exact(fact(6))", "1");
+	VERIFY_EXPR_RES("exact(length('hello'))", "1");
+	VERIFY_EXPR_RES("exact(pow(3.1415,0))", "1");
+	VERIFY_EXPR_RES("exact(sqrt(0))", "1");
+	VERIFY_EXPR_RES("exact(sqrt(9))", "1");
+	VERIFY_EXPR_RES("exact(sin(0))", "1");
+	VERIFY_EXPR_RES("exact(cos(0))", "1");
+	VERIFY_EXPR_RES("exact(tan(0))", "1");
+	VERIFY_EXPR_RES("exact(arcsin(0))", "1");
+	VERIFY_EXPR_RES("exact(arccos(1))", "1");
+	VERIFY_EXPR_RES("exact(arctan(0))", "1");
+	VERIFY_EXPR_RES("exact(dsin(0))", "1");
+	VERIFY_EXPR_RES("exact(dsin(90))", "1");
+	VERIFY_EXPR_RES("exact(dsin(180))", "1");
+	VERIFY_EXPR_RES("exact(dsin(270))", "1");
+	VERIFY_EXPR_RES("exact(dsin(-90))", "1");
+	VERIFY_EXPR_RES("exact(dsin(450))", "1");
+	VERIFY_EXPR_RES("exact(dcos(0))", "1");
+	VERIFY_EXPR_RES("exact(dcos(90))", "1");
+	VERIFY_EXPR_RES("exact(dcos(180))", "1");
+	VERIFY_EXPR_RES("exact(dcos(270))", "1");
+	VERIFY_EXPR_RES("exact(dtan(0))", "1");
+	VERIFY_EXPR_RES("exact(dtan(180))", "1");
+	VERIFY_EXPR_RES("exact(dtan(-180))", "1");
+	VERIFY_EXPR_RES("exact(arcdsin(0))", "1");
+	VERIFY_EXPR_RES("exact(arcdsin(1))", "1");
+	VERIFY_EXPR_RES("exact(arcdsin(-1))", "1");
+	VERIFY_EXPR_RES("exact(arcdcos(0))", "1");
+	VERIFY_EXPR_RES("exact(arcdcos(1))", "1");
+	VERIFY_EXPR_RES("exact(arcdcos(-1))", "1");
+	VERIFY_EXPR_RES("exact(arcdtan(0))", "1");
+	VERIFY_EXPR_RES("exact(arcdtan(1))", "1");
+	VERIFY_EXPR_RES("exact(arcdtan(-1))", "1");
+	VERIFY_EXPR_RES("dsin(90)", "1");
+	VERIFY_EXPR_RES("dsin(270)", "-1");
+	VERIFY_EXPR_RES("dcos(0)", "1");
+	VERIFY_EXPR_RES("dcos(180)", "-1");
+	VERIFY_EXPR_RES("arcdsin(1)", "90");
+	VERIFY_EXPR_RES("arcdsin(-1)", "-90");
+	VERIFY_EXPR_RES("arcdcos(0)", "90");
+	VERIFY_EXPR_RES("arcdcos(-1)", "180");
+	VERIFY_EXPR_RES("arcdtan(1)", "45");
+	VERIFY_EXPR_RES("arcdtan(-1)", "-45");
+	VERIFY_EXPR_RES("exact(exp(0))", "1");
+	VERIFY_EXPR_RES("exact(log(1))", "1");
+	VERIFY_EXPR_RES("exact(log(10,10))", "1");
+	VERIFY_EXPR_RES("exact(log(7,7))", "1");
+
+	// exact() with counters
+#if ALUFloatPrecision == 15
+	VERIFY_ASSN_RES("#7:=20/3", "6.66666666666667");
+#elif ALUFloatPrecision == 16
+	VERIFY_ASSN_RES("#7:=20/3", "6.666666666666667");
+#elif ALUFloatPrecision == 18
+	VERIFY_ASSN_RES("#7:=20/3", "6.66666666666666667");
+#elif ALUFloatPrecision == 33
+	VERIFY_ASSN_RES("#7:=20/3", "6.66666666666666666666666666666667");
+#else
+#warning "Dropping test case because of unsupported precision"
+#endif
+	VERIFY_EXPR_RES("exact(#7)", "0");
+	VERIFY_ASSN_RES("#8:=2+2", "4");
+	VERIFY_EXPR_RES("exact(#8)", "1");
+
+	// exact() with persistent varaibles
+	VERIFY_ASSN_RES("#9:=10/5", "2");
+	VERIFY_EXPR_RES("exact(#9)", "1");
+	VERIFY_EXPR_RES("pset(unitTestVar, #9)", "2");
+	VERIFY_EXPR_RES("pget(unitTestVar)", "2");
+	VERIFY_ASSN_RES("#10:=pget(unitTestVar)", "2");
+	VERIFY_EXPR_RES("exact(#10)", "0");
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
