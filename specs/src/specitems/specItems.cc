@@ -72,17 +72,112 @@ bool CheckValiditySetStatement(std::string& setSpec)
 
 static void Strip(std::string& s)
 {
-	while (std::isspace(s[0])) {
+	while (!s.empty() && std::isspace(s[0])) {
 		s.erase(0,1);
 	}
-	while (std::isspace(s.back())) {
+	while (!s.empty() && std::isspace(s.back())) {
 		s.erase(s.size()-1);
+	}
+}
+
+static std::string MissingOutputAfterMessage(TokenListTypes type, unsigned int argIndex)
+{
+	std::string tokenName = (TokenListType__REDO == type) ? "REDO" : "EOF";
+	return tokenName + " at index " + std::to_string(argIndex)
+		+ " must be followed by output-producing spec units";
+}
+
+static void ValidateRedoAndEOFPlacement(const std::vector<PItem>& items)
+{
+	struct placementState {
+		bool waitingForOutput;
+		bool sawOutputBeforeRedo;
+		bool sawDataBeforeEOF;
+		TokenListTypes pendingTokenType;
+		unsigned int pendingArgIndex;
+	};
+
+	placementState stateStack[MAX_DEPTH_CONDITION_STATEMENTS];
+	unsigned int stateStackIdx = 0;
+	stateStack[stateStackIdx] = {false, false, false, TokenListType__DUMMY, 0};
+
+	for (PItem pItem : items) {
+		PConditionItem pCond = std::dynamic_pointer_cast<ConditionItem>(pItem);
+		if (pCond) {
+			switch (pCond->pred()) {
+			case ConditionItem::PRED_THEN:
+			case ConditionItem::PRED_DO:
+				MYASSERT_WITH_MSG((stateStackIdx+1)<MAX_DEPTH_CONDITION_STATEMENTS, "Too many nested conditions");
+				stateStackIdx++;
+				stateStack[stateStackIdx] = stateStack[stateStackIdx-1];
+				break;
+			case ConditionItem::PRED_DONE:
+			case ConditionItem::PRED_ENDIF:
+				MYASSERT_WITH_MSG(stateStackIdx>0, "Too many ends of conditions");
+				if (stateStack[stateStackIdx].waitingForOutput) {
+					std::string err = MissingOutputAfterMessage(stateStack[stateStackIdx].pendingTokenType,
+						stateStack[stateStackIdx].pendingArgIndex);
+					MYTHROW(err);
+				}
+				stateStack[stateStackIdx-1] = stateStack[stateStackIdx];
+				stateStackIdx--;
+				break;
+			default:
+				break;
+			}
+		}
+
+		PTokenItem pToken = std::dynamic_pointer_cast<TokenItem>(pItem);
+		if (pToken && TokenListType__REDO==pToken->getToken()->Type()) {
+			if (!stateStack[stateStackIdx].sawOutputBeforeRedo) {
+				std::string err = "REDO at index " + std::to_string(pToken->getToken()->argIndex())
+					+ " must be preceded by output-producing spec units";
+				MYTHROW(err);
+			}
+			stateStack[stateStackIdx].waitingForOutput = true;
+			stateStack[stateStackIdx].sawOutputBeforeRedo = false;
+			stateStack[stateStackIdx].sawDataBeforeEOF = false;
+			stateStack[stateStackIdx].pendingTokenType = TokenListType__REDO;
+			stateStack[stateStackIdx].pendingArgIndex = pToken->getToken()->argIndex();
+			continue;
+		}
+
+		if (pToken && TokenListType__EOF==pToken->getToken()->Type()) {
+			if (!stateStack[stateStackIdx].sawDataBeforeEOF) {
+				std::string err = "EOF at index " + std::to_string(pToken->getToken()->argIndex())
+					+ " must be preceded by data-providing spec units";
+				MYTHROW(err);
+			}
+			stateStack[stateStackIdx].waitingForOutput = true;
+			stateStack[stateStackIdx].pendingTokenType = TokenListType__EOF;
+			stateStack[stateStackIdx].pendingArgIndex = pToken->getToken()->argIndex();
+			continue;
+		}
+
+		if (pItem->producesOutput()) {
+			if (stateStack[stateStackIdx].waitingForOutput) {
+				stateStack[stateStackIdx].waitingForOutput = false;
+				stateStack[stateStackIdx].pendingTokenType = TokenListType__DUMMY;
+				stateStack[stateStackIdx].pendingArgIndex = 0;
+			}
+			stateStack[stateStackIdx].sawOutputBeforeRedo = true;
+		}
+
+		if (pItem->countsBeforeEOF()) {
+			stateStack[stateStackIdx].sawDataBeforeEOF = true;
+		}
+	}
+
+	if (stateStack[stateStackIdx].waitingForOutput) {
+		std::string err = MissingOutputAfterMessage(stateStack[stateStackIdx].pendingTokenType,
+			stateStack[stateStackIdx].pendingArgIndex);
+		MYTHROW(err);
 	}
 }
 
 std::vector<std::string> SplitSetSpecification(std::string setSpec)
 {
-	while (setSpec[0]=='(' && setSpec[setSpec.size()-1]==')') {
+	while (setSpec.size() >= 2 && setSpec[0]=='(' && setSpec[setSpec.size()-1]==')') {
 		setSpec.erase(setSpec.size()-1);
 		setSpec.erase(0,1);
 	}
@@ -204,7 +299,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__IF:
 		{
-			if ((index+1) == tokenVec.size()) {
+			if ((index+1) == tokenVec.size() && tokenVec[index].Literal().length() > 0) {
 				tokenVec.insert(tokenVec.end(), Token(TokenListType__THEN, nullptr, "", index+2, "then"));
 				tokenVec.insert(tokenVec.end(), Token(TokenListType__RANGE,
 						GetUniversalRange(), "", index+3, "1-*"));
@@ -217,7 +312,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			MYASSERT(index < tokenVec.size());
 			if (TokenListType__WHILE == tokenVec[index].Type()) {
-				if (TokenListType__DO != tokenVec[index+1].Type()) {
+				if (index + 1 >= tokenVec.size() || TokenListType__DO != tokenVec[index+1].Type()) {
 					std::string err = "Missing DO after WHILE at index " + std::to_string(tokenVec[index].argIndex());
 					if (tokenVec[index].Literal().length() > 0) {
 						err += " with condition \"" + tokenVec[index].Literal() + "\"";
@@ -225,7 +320,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 					MYTHROW(err);
 				}
 			} else if (TokenListType__ASSERT != tokenVec[index].Type()) {
-				if (TokenListType__THEN != tokenVec[index+1].Type()) {
+				if (index + 1 >= tokenVec.size() || TokenListType__THEN != tokenVec[index+1].Type()) {
 					std::string err = "Missing THEN after IF at index " + std::to_string(tokenVec[index].argIndex());
 					if (tokenVec[index].Literal().length() > 0) {
 						err += " with condition \"" + tokenVec[index].Literal() + "\"";
@@ -332,6 +427,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__BREAK:
 		{
+			MYASSERT_WITH_MSG(!tokenVec[index].Literal().empty(), "Empty BREAK literal");
 			auto pItem = std::make_shared<BreakItem>(tokenVec[index].Literal()[0]);
 			index++;
 			addItem(pItem);
@@ -349,6 +445,25 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			auto pItem = std::make_shared<SelectItem>(tokenVec[index].Literal(), true /* bIsOutput */);
 			index++;
+			addItem(pItem);
+			break;
+		}
+		case TokenListType__SPLITW:
+		case TokenListType__SPLITF:
+		{
+			// Check for nested splits
+			for (auto& item : m_items) {
+				auto pSplitItem = std::dynamic_pointer_cast<SplitItem>(item);
+				if (pSplitItem) {
+					std::string err = "Nested SPLITW/SPLITF is not allowed at index " + std::to_string(tokenVec[index].argIndex());
+					MYTHROW(err);
+				}
+			}
+			
+			bool isField = (TokenListType__SPLITF == tokenVec[index].Type());
+			auto pItem = std::make_shared<SplitItem>(isField);
+			index++;
+			pItem->parse(tokenVec, index);
 			addItem(pItem);
 			break;
 		}
@@ -389,6 +504,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			if (tokenVec[index].Literal()=="EOF") {
 				g_printonly_rule = PRINTONLY_EOF;
 			} else {
+				MYASSERT_WITH_MSG(!tokenVec[index].Literal().empty(), "Empty PRINTONLY literal");
 				char c = tokenVec[index].Literal()[0];
 				MYASSERT_WITH_MSG((c>='a' && c<='z') || (c>='A' && c<='Z'), \
 						"PRINTONLY instruction must specify EOF or a valid break level - an uppercase or lowercase letter");
@@ -449,6 +565,8 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				" is not terminated";
 		MYTHROW(err);
 	}
+
+	ValidateRedoAndEOFPlacement(m_items);
 }
 
 std::string itemGroup::Debug()
@@ -472,6 +590,8 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 	PSpecString ps; // Used for processing READ and READSTOP tokens
 	bool processingContinue = true;
 	bool suspendUntilBreak = false;
+	PSplitItem activeSplitItem = nullptr;
+	size_t splitPosition = 0;
 
 	if (pState.isRunOut()) {
 		// Find the EOF token
@@ -485,7 +605,8 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 	}
 
 	processingContinue = true;
-	for ( ; processingContinue && i<m_items.size(); i++) {
+	do {
+		for ( ; processingContinue && i<m_items.size(); i++) {
 		if (pState.inputStreamHasChanged()) {
 			multiReader* pmRead = dynamic_cast<multiReader*>(pRd);
 			MYASSERT_WITH_MSG(nullptr != pmRead, "Stream selected in non-multi-stream specification");
@@ -568,12 +689,49 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 		case ApplyRet__Break:
 			suspendUntilBreak = true;
 			break;
+		case ApplyRet__SplitStart:
+		{
+			auto pSplitItem = std::dynamic_pointer_cast<SplitItem>(pit);
+			MYASSERT(pSplitItem);
+			activeSplitItem = pSplitItem;
+			splitPosition = i;
+			bSomethingWasDone = true;
+			break;
+		}
+		case ApplyRet__SplitContinue:
+			bSomethingWasDone = true;
+			break;
 		default:
 			std::string err = "Unexpected return code from TokenItem::apply: ";
 			err += std::to_string(aRet);
 			MYTHROW(err);
 		}
 	}
+	
+	// Check if we need to continue split iteration
+	if (activeSplitItem && activeSplitItem->hasMorePieces()) {
+		// Write current output record
+		if (pState.shouldWrite() && !pState.printSuppressed(g_printonly_rule)) {
+			pState.getCurrentWriter()->Write(sb.GetString(), tmr);
+		}
+		
+		// Advance to next piece and restore prefix
+		activeSplitItem->nextPiece();
+		activeSplitItem->restorePrefix(&sb);
+		
+		// Reset for next iteration - restart from the split item itself
+		bSomethingWasDone = false;
+		processingContinue = true;
+		i = splitPosition;
+	} else {
+		// No more split pieces, clean up and exit loop
+		if (activeSplitItem) {
+			activeSplitItem->resetSplit();
+			activeSplitItem = nullptr;
+		}
+		break;
+	}
+	} while (true);
 
 	return bSomethingWasDone;
 }
@@ -673,6 +831,37 @@ bool itemGroup::readsLines()
 
 Item::Item() : m_originalIndex(g_currentTokenArgIndex)  {}
 
+std::string Item::debugOutputPlacement(size_t outStart, size_t maxLength, outputAlignment alignment, char tailLabel)
+{
+	std::string ret;
+	if (outStart==LAST_POS_END) {
+		if (tailLabel) {
+			ret = ret + tailLabel + ":";
+		} else {
+			ret += "None";
+		}
+	} else {
+		if (outStart==POS_SPECIAL_VALUE_NEXT) {
+			ret += "Next";
+		} else if (outStart==POS_SPECIAL_VALUE_NEXTWORD) {
+			ret += "NextWord";
+		} else if (outStart==POS_SPECIAL_VALUE_NEXTFIELD) {
+			ret += "NextField";
+		} else {
+			ret += std::to_string(outStart);
+		}
+		if (maxLength!=LAST_POS_END) {
+			ret += '.' + std::to_string(maxLength);
+		}
+	}
+
+	switch (alignment) {
+	case outputAlignmentCenter: ret += " (centered)"; break;
+	case outputAlignmentRight:  ret += " (right)"; break;
+	default: ;
+	}
+	return ret;
+}
 
 TokenItem::TokenItem(Token& t)
 {

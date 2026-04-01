@@ -17,6 +17,11 @@ public:
 	void           insertNextField(PSpecString str);
 	void           setPadChar(char c)     {m_pad = c;}
 	size_t         pos()                  {return m_pos;}
+	size_t         getPosition() const    {return m_pos;}
+	void           setPosition(size_t p)  {m_pos = p;}
+	void           setString(PSpecString s) {mp_str = s;}
+	void           clear()                {mp_str = nullptr; m_pos = 1;}
+	PSpecString    PeekString() const     {return mp_str;}
 private:
 	PSpecString     mp_str;
 	size_t          m_pos; // for Next, NextWord, NextField

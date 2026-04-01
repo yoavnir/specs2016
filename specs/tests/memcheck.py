@@ -64,7 +64,7 @@ def leak_check(cmd, test_id="0"):
 
 
 def cleanup():
-    os.system("/bin/rm valgrind.out* cmd.out* 2> /dev/null")
+    os.system("/bin/rm valgrind.out* cmd.out* thespec* theinp* theinp2* theout* theconf* 2> /dev/null")
 
 def cleanup_valgrind():
     os.system("/bin/rm valgrind.out* 2> /dev/null")

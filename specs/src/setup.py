@@ -60,6 +60,10 @@ def get_the_version(doPrint):
 		if doPrint:
 			sys.stdout.write("Setting to <v{}>".format(manpage_version))
 		return "v{}".format(manpage_version)
+	elif gittag == "":
+		if doPrint:
+			sys.stdout.write("No git branch; Going with {}".format(manpage_version))
+		return manpage_version
 	else:
 		if doPrint:
 			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,manpage_version))
@@ -93,7 +97,7 @@ with open("xx.txt","w") as v:
 	with open("test_script.py","w") as scriptf:
 		scriptf.write(script)
 	cmd = "{} test_script.py".format(arg)
-	rc = os.system(cmd)
+	rc = run_the_cmd(cmd)
 	cleanup_after_python()
 	if rc!=0:
 		sys.stdout.write("No -- could not get python version from {}.\n".format(arg))
@@ -187,7 +191,8 @@ run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
-	python $(TESTS_DIR)/valgrind_specs.py --no_valgrind
+	python3 $(TESTS_DIR)/valgrind_specs.py --no_valgrind
+	python3 $(TESTS_DIR)/recfm_tests.py
 
 directories: $(EXE_DIR)
 
@@ -272,6 +277,8 @@ parser.add_argument("--fast_random", dest="nocrypt", action="store_true", defaul
 					help="Avoid cryptographic random number generators")
 parser.add_argument("--os_version", dest="osversion", action="store", default="",
 					help="OS version to link against. Available only in Mac OS")
+parser.add_argument("--static", dest="static_link", action="store_true", default=False,
+                    help="Statically link libstdc++")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
 args = parser.parse_args()
@@ -347,6 +354,9 @@ elif compiler=="VS":
 	else:
 		condlink = "/Zi /MAP /DEBUG"
 		condcomp = "/O2 /Zi /EHsc"	
+
+if args.static_link:
+	condlink = condlink + " -static-libstdc++"
 	
 if platform=="NT":
 	condcomp = condcomp + "{}WIN64".format(def_prefix)
@@ -396,7 +406,28 @@ if 0==rc:
 else:
 	sys.stdout.write("No.  Aborting...\n")
 	exit(-4)
-	
+
+# Get compiler version
+sys.stdout.write("Getting compiler version...")
+if compiler == "VS":
+	version_cmd = cxx
+else:
+	version_cmd = "{} --version".format(cxx)
+run_the_cmd(version_cmd)
+cxx_version = ""
+try:
+	import re
+	with open("xx.txt", "r") as f:
+		version_output = f.read()
+	m = re.search(r'(\d+\.\d+(?:\.\d+)*)', version_output)
+	if m:
+		cxx_version = m.group(1)
+		sys.stdout.write("{}\n".format(cxx_version))
+	else:
+		sys.stdout.write("unknown\n")
+except:
+	sys.stdout.write("unknown\n")
+
 # Test if the compiler supports C++17
 test_cpp11_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 testprog = """
@@ -607,18 +638,25 @@ if platform=="NT":
 		sys.stdout.write("configured for Python version {}.\n".format(cv['py_version']))
 		CFG_python = True
 else:
-	if python_prefix=="": # default: python is optional and prefix is 'python'
-		CFG_python = python_search("python")
+	python_yes = (python_prefix=="yes")
+	if python_prefix=="" or python_prefix=="yes":
+		try:
+			python_prefix = sys.executable.split('/')[-1]
+			if len(python_prefix) < len("python"):
+				python_prefix = "python"
+		except:
+			python_prefix = "python"
+		CFG_python = python_search(python_prefix)
 		os.system("/bin/rm xx.txt")
+		if python_yes and not CFG_python:
+			sys.stdout.write("Python support not found.\n")
+			exit(-4)
 
 	elif python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
 		CFG_python = False
 		full_python_version = "N/A"
 	else:
-		if python_prefix=="yes":
-			python_prefix = "python"
-
 		rc = python_search(python_prefix)
 		run_the_cmd("/bin/rm xx.txt")
 		if rc:
@@ -647,16 +685,38 @@ if CFG_advanced_regex:
 if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
 
-if full_python_version!="N/A":
-	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx,full_python_version,variation.lower())
+cxx_display = "{} {}".format(cxx, cxx_version) if cxx_version else cxx
+if (CFG_python==True) & (full_python_version!="N/A"):
+	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx_display,full_python_version,variation.lower())
 else:
-	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
 condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatform)
 
 if CFG_python:
 	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
 	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)
-	condlink = condlink + " " + python_ldflags
+	if args.static_link and platform!="NT":
+		# Statically link libpython so the binary works regardless of the
+		# Python version installed on the target system.
+		# Also define the path where the bundled stdlib will be installed.
+		# Py_SetPythonHome expects a prefix; Python looks for lib/python3.X/ under it.
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"/usr/lib/specs/python\\"'.format(def_prefix)
+		static_pyldflags = []
+		for flag in python_ldflags.split():
+			if flag.startswith("-lpython"):
+				static_pyldflags.append("-Wl,-Bstatic")
+				static_pyldflags.append(flag)
+				static_pyldflags.append("-Wl,-Bdynamic")
+			else:
+				static_pyldflags.append(flag)
+		# The static libpython archive includes built-in extension modules
+		# (pyexpat, zlib, etc.) that depend on these system libraries.
+		static_pyldflags.extend(["-lexpat", "-lz"])
+		# Ubuntu 20.04's libpython3.8.a is not PIE-compatible, so disable PIE
+		static_pyldflags.append("-no-pie")
+		condlink = condlink + " " + " ".join(static_pyldflags)
+	else:
+		condlink = condlink + " " + python_ldflags
 else:
 	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix) \
 	                                   + "{}PYTHON_FULL_VER=N/A".format(def_prefix)

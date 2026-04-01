@@ -165,10 +165,14 @@ StandardReader::~StandardReader() {
 
 void StandardReader::setFormatFixed(unsigned int lrecl, bool delimited)
 {
+	if (lrecl == 0) MYTHROW("lrecl must be greater than zero");
 	m_recfm = delimited ? RECFM_FIXED_DELIMITED : RECFM_FIXED;
 	m_lrecl = lrecl;
 	if (!delimited) {
 		m_buffer = (char*)malloc(lrecl);
+		if (!m_buffer) {
+			MYTHROW("Failed to allocate read buffer");
+		}
 	}
 }
 
@@ -192,8 +196,8 @@ PSpecString StandardReader::getNextRecord() {
 			if (m_NeedToClose) {
 				ok = std::getline(*m_File, line, m_lineDelimiter) ? true : false;
 			} else if (m_pipe) {
-				char c = fgetc(m_pipe.get());
-				ok = feof(m_pipe.get());
+				int c = fgetc(m_pipe.get());
+				ok = !feof(m_pipe.get());
 				if (ok) {
 					line = "";
 					while (c!=EOF && c!=m_lineDelimiter) {
@@ -216,7 +220,7 @@ PSpecString StandardReader::getNextRecord() {
 			if (m_NeedToClose) {
 				ok = std::getline(*m_File, line) ? true : false;
 			} else if (m_pipe) {
-				char c = fgetc(m_pipe.get());
+				int c = fgetc(m_pipe.get());
 				ok = !feof(m_pipe.get());
 				if (ok) {
 					line = "";

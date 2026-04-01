@@ -122,8 +122,6 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 
 	char* specList = (char*)_specList;
 
-	std::vector<Token> vec = parseTokens(1, &specList);
-	normalizeTokenList(&vec);
 	itemGroup ig;
 
 	PSpecString result = nullptr;
@@ -131,6 +129,16 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	setPositionGetter(&sb);
 
 	unsigned int index = 0;
+
+	std::vector<Token> vec = parseTokens(1, &specList);
+
+	try {
+		normalizeTokenList(&vec);
+	} catch (const SpecsException& e) {
+		result = std::make_shared<std::string>(e.what(true));
+		goto end;
+	}
+
 	try {
 		ig.Compile(vec,index);
 	} catch (const SpecsException& e) {
@@ -155,9 +163,10 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 					pOut = std::make_shared<std::string>();
 				}
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
-					if (pWritten) {
-						if (result) *result += *pWritten;
+					while (pWritten) {
+						if (result) *result = *result + '\n' + *pWritten;
 						else result = pWritten;
+						pWritten = pwr1->getString();
 					}
 					if (result) {
 						if (pOut) *result = *result + '\n' + *pOut;
@@ -746,6 +755,119 @@ int main(int argc, char** argv)
 	spec = "WORD 1 a: IF a%2==0 THEN RECNO 1";
 	VERIFY2(spec, "1\n2\n3\n4\n5", "         2\n         4"); // Test #187
 
+	// SPLITW - basic word splitting
+	VERIFY2("splitw 1", "one two three", "one\ntwo\nthree"); // Test #188
+	VERIFY2("splitw", "one two three", "one\ntwo\nthree"); // Test #189 - elided output placement
+	VERIFY2("splitw nextword", "one two three", "one\ntwo\nthree"); // Test #190
+
+	// SPLITW with prefix
+	VERIFY2("'prefix' 1 splitw nextword", "one two three", "prefix one\nprefix two\nprefix three"); // Test #191
+
+	// SPLITW with REDO
+	VERIFY2("splitw 1 redo 'WORD:' 1 1-* next", "the boy went", "WORD:the\nWORD:boy\nWORD:went"); // Test #192
+
+	// SPLITW with custom separator
+	VERIFY2("splitw ws , 1", "a,b,c", "a\nb\nc"); // Test #193
+
+	// SPLITW with OF range (word range)
+	VERIFY2("splitw of w2-3 1", "one two three four", "two\nthree"); // Test #194
+
+	// SPLITF - basic field splitting
+	VERIFY2("fs : splitf 1", "a:b:c", "a\nb\nc"); // Test #195
+
+	// SPLITF with prefix
+	VERIFY2("fs : 'F:' 1 splitf nextword", "x:y:z", "F: x\nF: y\nF: z"); // Test #196
+
+	// SPLITF with custom separator
+	VERIFY2("splitf fs , 1", "a,b,c", "a\nb\nc"); // Test #197
+
+	// SPLITF with empty fields
+	VERIFY2("fs : splitf 1", "a::c", "a\n\nc"); // Test #198
+
+	// SPLITW with range output placement (width-constrained)
+	VERIFY2("splitw 1-5", "one two three", "one  \ntwo  \nthree"); // Test #199
+
+	// SPLITW single word - produces one record
+	VERIFY2("splitw 1", "hello", "hello"); // Test #200
+
+
+	// Error: nested splits
+	VERIFY2("splitw 1 splitf 1", "test", "Nested SPLITW/SPLITF is not allowed at index 3"); // Test #201
+
+	// Error: mismatched separator - SPLITW with FS
+	VERIFY2("splitw fs x 1", "test", "SPLITW cannot be followed by FIELDSEPARATOR at index 2"); // Test #202
+
+	// Error: mismatched separator - SPLITF with WS
+	VERIFY2("splitf ws x 1", "test", "SPLITF cannot be followed by WORDSEPARATOR at index 2"); // Test #203
+
+	// Bounds checking tests for WHILE and IF as last tokens
+	VERIFY("while", "Missing DO after WHILE at index 1"); // Test #204
+	VERIFY("if", "Missing THEN after IF at index 1"); // Test #205
+
+	// REDO output validation
+	VERIFY("w1 1 REDO", "REDO at index 3 must be followed by output-producing spec units"); // Test #206
+	VERIFY("REDO w1 1", "REDO at index 1 must be preceded by output-producing spec units"); // Test #207
+	VERIFY("w1 a: REDO w1 1", "REDO at index 3 must be preceded by output-producing spec units"); // Test #208
+	VERIFY("SPLITW REDO w1 1", "The\nquick\nbrown\nfox\njumped\nover\nthe\nlazy\ndog"); // Test #209
+	VERIFY("EOF print '2+2'", "EOF at index 1 must be preceded by data-providing spec units"); // Test #210
+	VERIFY("w1 a: EOF", "EOF at index 3 must be followed by output-producing spec units"); // Test #211
+	VERIFY2("w1 a: EOF print 'sum(a)'", "1\n2\n3\n4", "10"); // Test #212
+	VERIFY("w1 1 REDO w1 a: REDO hello", "REDO at index 6 must be preceded by output-producing spec units"); // Test #213
+	VERIFY("w1 1 REDO EOF bye", "EOF at index 4 must be preceded by data-providing spec units"); // Test #214
+	VERIFY("w1 REDO w1 1", "The"); // Test #215
+	VERIFY2("w1 1 REDO set '#0:=7' EOF print '#0'", "x", "7"); // Test #216
+
+	// rand() with non-positive limit
+	VERIFY2("print 'rand(0)' 1", "x", "rand: limit must be a positive integer"); // Test #217
+	VERIFY2("print 'rand(-5)' 1", "x", "rand: limit must be a positive integer"); // Test #218
+
+	// Security fix regression tests (Issue #336)
+	// strip() on all-whitespace string (was crash due to npos in substr)
+	VERIFY2("print 'strip(\"   \",\"B\")' 1", "x", ""); // Test #219
+
+	// sword() with negative count on all-separator string (was pointer underflow)
+	VERIFY2("print 'sword(\"xxx\",-1,\"x\")' 1", "x", ""); // Test #220
+
+	// sfield() with out-of-range negative count (was pointer underflow)
+	VERIFY2("print 'sfield(\"a\",-2,\",\")' 1", "x", ""); // Test #221
+
+	// fact() argument exceeding 64-bit overflow limit (was silent overflow)
+	VERIFY2("print 'fact(21)' 1", "x", "fact: argument too large (max 20 for 64-bit integers)"); // Test #222
+	
+	// STRIP modifier on all-whitespace input (was out-of-bounds read in stripString)
+	VERIFY2("1-* strip 1", "   ", ""); // Test #223
+
+	// Exactness of statistical functions with integer input
+	spec =  "a: WORD 1 .                               " \
+			" EOF                                      " \
+			"   PRINT 'exact(sum(a))'                 1" \
+			"   PRINT 'exact(min(a))'                NW" \
+			"   PRINT 'exact(max(a))'                NW";
+	VERIFY2(spec, "1\n2\n3\n4\n5", "1 1 1"); // TEST #224
+
+	// average of a single integer should be exact
+	spec =  "a: WORD 1 . EOF PRINT 'exact(average(a))' 1";
+	VERIFY2(spec, "42", "1"); // TEST #225
+
+	// average of multiple integers is inexact (division)
+	spec =  "a: WORD 1 . EOF PRINT 'exact(average(a))' 1";
+	VERIFY2(spec, "1\n2\n3", "0"); // TEST #226
+
+	// variance, stddev, stderrmean are always inexact
+	spec =  "a: WORD 1 .                               " \
+			" EOF                                      " \
+			"   PRINT 'exact(variance(a))'            1" \
+			"   PRINT 'exact(stddev(a))'             NW" \
+			"   PRINT 'exact(stderrmean(a))'         NW";
+	VERIFY2(spec, "1\n2\n3\n4\n5", "0 0 0"); // TEST #227
+
+	// Statistical functions with float input are inexact
+	spec =  "a: WORD 1 .                               " \
+			" EOF                                      " \
+			"   PRINT 'exact(sum(a))'                 1" \
+			"   PRINT 'exact(min(a))'                NW" \
+			"   PRINT 'exact(max(a))'                NW";
+	VERIFY2(spec, "1.5\n2.5\n3.5", "0 0 0"); // TEST #228
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

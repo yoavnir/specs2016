@@ -64,6 +64,12 @@ DataField::~DataField() {
 
 PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index)
 {
+	static unsigned int substringDepth = 0;
+	substringDepth++;
+	if (substringDepth > 50) {
+		substringDepth = 0;
+		MYTHROW("SUBSTRING nesting too deep (limit: 50)");
+	}
 	Token token = dummyToken;
 	TokenListTypes tokenType;
 	PPart      _pSub;
@@ -138,6 +144,7 @@ PSubstringPart DataField::getSubstringPart(std::vector<Token> &tokenVec, unsigne
 		MYTHROW(err);
 	}
 
+	substringDepth--;
 	return std::make_shared<SubstringPart>(pSub, pBig);
 }
 
@@ -230,6 +237,9 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 
 	/* handle letter prefix for an input range */
 	if (tokenType==TokenListType__RANGELABEL) {
+		if (token.Literal().empty()) {
+			MYTHROW("Empty range label");
+		}
 		m_label = token.Literal()[0];
 		index++;
 		GET_NEXT_TOKEN_NO_ADVANCE;
@@ -277,7 +287,12 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 			m_outStart = token.Range()->getSingleNumber();
 		} else {
 			m_outStart = token.Range()->getSimpleFirst();
-			m_maxLength = token.Range()->getSimpleLast() - m_outStart + 1;
+			if (token.Range()->getSimpleLast() >= token.Range()->getSimpleFirst()) {
+				m_maxLength = token.Range()->getSimpleLast() - m_outStart + 1;
+			} else {
+				std::string err = "Bad output placement range " + token.HelpIdentify();
+				MYTHROW(err);
+			}
 		}
 		break;
 	case TokenListType__PERIOD:
@@ -285,6 +300,9 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 		break;
 	case TokenListType__RANGELABEL:
 		m_outStart = LAST_POS_END;
+		if (token.Literal().empty()) {
+			MYTHROW("Empty range label");
+		}
 		m_tailLabel = token.Literal()[0];
 		break;
 	case TokenListType__IF:
@@ -297,6 +315,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	case TokenListType__READ:
 	case TokenListType__READSTOP:
 	case TokenListType__EOF:
+	case TokenListType__REDO:
 		/* This is a control structure?  Assume NEXTWORD and re-use this one */
 		REUSE_CURRENT_TOKEN;
 	case TokenListType__DUMMY:
@@ -389,32 +408,7 @@ std::string DataField::Debug() {
 	ret += m_InputPart->Debug();
 	/* conversion and stripping go here */
 	ret += ";Dest=";
-	if (m_outStart==LAST_POS_END) {
-		if (m_tailLabel) {
-			ret = ret + m_tailLabel + ":";
-		} else {
-			ret += "None";
-		}
-	} else {
-		if (m_outStart==POS_SPECIAL_VALUE_NEXT) {
-			ret += "Next";
-		} else if (m_outStart==POS_SPECIAL_VALUE_NEXTWORD) {
-			ret += "NextWord";
-		} else if (m_outStart==POS_SPECIAL_VALUE_NEXTFIELD) {
-			ret += "NextField";
-		} else {
-			ret += std::to_string(m_outStart);
-		}
-		if (m_maxLength!=LAST_POS_END) {
-			ret += '.' + std::to_string(m_maxLength);
-		}
-	}
-
-	switch (m_alignment) {
-	case outputAlignmentCenter: ret += " (centered)"; break;
-	case outputAlignmentRight:  ret += " (right)"; break;
-	default: ;
-	}
+	ret += debugOutputPlacement(m_outStart, m_maxLength, m_alignment, m_tailLabel);
 
 	if (m_strip) ret += " STRIP";
 	if (m_conversion!=StringConversion__identity) ret += " " + StringConversion__2str(m_conversion);
@@ -434,6 +428,7 @@ void DataField::stripString(PSpecString &pOrig)
 
 	if (!len) {
 		pOrig = std::make_shared<std::string>();
+		return;
 	}
 
 	const char* sEnd = s + len - 1;
@@ -508,11 +503,14 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 			outputAlignment al = outputAlignmentLeft;
 			ellipsisSpec es = ellipsisSpecNone;
 			PValue res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
+			if (!res) {
+				MYTHROW("Alignment expression evaluated to null");
+			}
 			std::string s = res->getStr();
 
-			if (s[0]=='c' || s[0]=='C') {
+			if (!s.empty() && (s[0]=='c' || s[0]=='C')) {
 				al = outputAlignmentCenter;
-			} else if (s[0]=='r' || s[0]=='R') {
+			} else if (!s.empty() && (s[0]=='r' || s[0]=='R')) {
 				al = outputAlignmentRight;
 			}
 
@@ -585,4 +583,14 @@ FINISH:
 bool DataField::readsLines()
 {
 	return m_InputPart->readsLines();
+}
+
+bool DataField::producesOutput()
+{
+	return m_outStart != LAST_POS_END && !(m_outStart == 0 && m_maxLength == 0);
+}
+
+bool DataField::countsBeforeEOF()
+{
+	return producesOutput() || m_label != '\0' || m_tailLabel != '\0';
 }

@@ -172,6 +172,8 @@ enum ApplyRet {
 	ApplyRet__ReDo,
 	ApplyRet__Break,
 	ApplyRet__SkipToNext,
+	ApplyRet__SplitStart,
+	ApplyRet__SplitContinue,
 	ApplyRet__Last
 };
 
@@ -188,10 +190,13 @@ public:
 	virtual std::string Debug() = 0;
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
 	virtual bool readsLines() {return false;}
+	virtual bool producesOutput() {return false;}
+	virtual bool countsBeforeEOF() {return producesOutput();}
 	virtual bool forcesRunoutCycle() {return false;}
 	virtual bool isBreak()    {return false;}
 	virtual bool ApplyUnconditionally() {return false;}
 	unsigned int originalIndex() { return m_originalIndex; }
+	static std::string debugOutputPlacement(size_t outStart, size_t maxLength, outputAlignment alignment, char tailLabel = '\0');
 protected:
 	unsigned int m_originalIndex;
 };
@@ -203,12 +208,14 @@ public:
 	DataField();
 	~DataField() override;
 	void parse(std::vector<Token> &tokenVec, unsigned int& index);
-	std::string Debug() override;
-	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
-	bool readsLines() override;
-	bool forcesRunoutCycle() override {return m_InputPart ? m_InputPart->forcesRunoutCycle() : false;}
+ 	std::string Debug() override;
+ 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+ 	bool readsLines() override;
+	bool producesOutput() override;
+	bool countsBeforeEOF() override;
+ 	bool forcesRunoutCycle() override {return m_InputPart ? m_InputPart->forcesRunoutCycle() : false;}
 private:
-	PPart getInputPart(std::vector<Token> &tokenVec, unsigned int& index, const std::string& _wordSep=emptyString, const std::string& _fieldSep=emptyString);
+ 	PPart getInputPart(std::vector<Token> &tokenVec, unsigned int& index, const std::string& _wordSep=emptyString, const std::string& _fieldSep=emptyString);
 	PSubstringPart getSubstringPart(std::vector<Token> &tokenVec, unsigned int& index);
 	void stripString(PSpecString &pOrig);
 	void interpretComposedOutputPlacement(std::string& outputPlacement);
@@ -249,6 +256,7 @@ public:
 	std::string Debug() override		{return m_rawExpression;}
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool readsLines() override;
+	bool countsBeforeEOF() override {return true;}
 	bool forcesRunoutCycle() override { return expressionForcesRunoutCycle(m_RPNExpression);}
 private:
 	std::string     m_rawExpression;
@@ -341,5 +349,45 @@ private:
 };
 
 typedef std::shared_ptr<SelectItem> PSelectItem;
+
+class SplitItem : public Item {
+public:
+	SplitItem(bool isField);
+ 	~SplitItem() override;
+ 	void parse(std::vector<Token> &tokenVec, unsigned int& index);
+ 	std::string Debug() override;
+ 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+ 	bool readsLines() override {return true;}
+	bool producesOutput() override {return true;}
+ 	bool countsBeforeEOF() override {return true;}
+ 	bool isSplitting() const {return m_splitting;}
+ 	bool hasMorePieces() const;
+ 	void nextPiece();
+ 	void resetSplit();
+	void restorePrefix(StringBuilder* pSB);
+private:
+	void parseOutputPlacement(std::vector<Token> &tokenVec, unsigned int& index);
+	void interpretComposedOutputPlacement(std::string& outputPlacement);
+	PPart getInputPart(std::vector<Token> &tokenVec, unsigned int& index);
+	
+	bool m_isField;
+	std::string m_separator;
+	PPart m_ofInputPart;
+	
+	size_t m_outStart;
+	size_t m_maxLength;
+	outputAlignment m_alignment;
+	AluVec m_outputStartExpression;
+	AluVec m_outputWidthExpression;
+	AluVec m_outputAlignmentExpression;
+	
+	bool m_splitting;
+	std::vector<PSpecString> m_pieces;
+	size_t m_currentPiece;
+	PSpecString m_savedPrefix;
+	size_t m_savedSBPos;
+};
+
+typedef std::shared_ptr<SplitItem> PSplitItem;
 
 #endif

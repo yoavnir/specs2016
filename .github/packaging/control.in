@@ -1,0 +1,12 @@
+Package: specs
+Version: @VERSION@
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Yoav Nir <yoav@yoav.com>
+Description: Command-line utility for parsing and re-arranging text input
+ specs is a command line utility for parsing and re-arranging text input.
+ It allows re-alignment of fields, some format conversion, and re-formatting
+ multiple lines into single lines or vice versa.
+ .
+ This is a re-writing of the specs pipeline stage from CMS.
