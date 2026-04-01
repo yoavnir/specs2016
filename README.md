@@ -19,7 +19,7 @@ What's new:
  * .deb package for Ubuntu/Debian
  * Homebrew formula
  * Improved guessing of Python version
- * New spec units: SPLITW and SPLITF for splitting input records by words or fields into multiple output records. Support optional custom separators, an OF clause (accepting the same input parts as SUBSTRING), and range output placement (e.g. `splitw 1-10`).
+ * New spec units: `SPLITW` and `SPLITF` for splitting input records by words or fields into multiple output records. These new spec units support optional custom separators, `OF` clauses (with the same semantics as SUBSTRING), and range output placement (e.g. `splitw 1-10`).
  * A more exact `exact()` function
 
 *Note:* Installing from package does not include Python support on Windows.
