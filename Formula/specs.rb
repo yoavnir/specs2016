@@ -1,7 +1,7 @@
 class Specs < Formula
   desc "Command-line utility for parsing and re-arranging text input"
   homepage "https://github.com/yoavnir/specs2016"
-  url "https://github.com/yoavnir/specs2016/archive/refs/tags/v0.9.6.tar.gz"
+  url "https://github.com/yoavnir/specs2016/archive/refs/tags/v0.9.9.tar.gz"
   # sha256 "UPDATE_WITH_ACTUAL_SHA256_AFTER_RELEASE"
   license "MIT"
 
