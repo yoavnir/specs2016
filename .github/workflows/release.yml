@@ -69,15 +69,15 @@ jobs:
         mkdir -p rpmbuild/SOURCES
         mkdir -p rpmbuild/SPECS
         mkdir -p rpmbuild/SRPMS
-        mkdir -p rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}
-        cp specs/exe/specs rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
-        cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
-        cp specs.1.gz rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}/
+        mkdir -p rpmbuild/SOURCES/specs-${SPECS_VERSION#v}
+        cp specs/exe/specs rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
+        cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
+        cp specs.1.gz rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         
     - name: Bundle Python stdlib for RPM
       run: |
         PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-        SRCDIR=rpmbuild/SOURCES/specs-${{ steps.version.outputs.ver }}
+        SRCDIR=rpmbuild/SOURCES/specs-${SPECS_VERSION#v}
         mkdir -p ${SRCDIR}/python/lib/python${PYVER}
         cp -r /usr/lib/python${PYVER}/* ${SRCDIR}/python/lib/python${PYVER}/
         # Remove unnecessary files to reduce package size
@@ -90,10 +90,10 @@ jobs:
     - name: Create RPM tarball
       run: |
         cd rpmbuild/SOURCES
-        tar czf specs-${{ steps.version.outputs.ver }}.tar.gz specs-${{ steps.version.outputs.ver }}
+        tar czf specs-${SPECS_VERSION#v}.tar.gz specs-${SPECS_VERSION#v}
 
     - name: Create RPM spec file
-      run: sed 's/@VERSION@/${{ steps.version.outputs.ver }}/g' .github/packaging/specs.spec.in > rpmbuild/SPECS/specs.spec
+      run: sed 's/@VERSION@/${SPECS_VERSION#v}/g' .github/packaging/specs.spec.in > rpmbuild/SPECS/specs.spec
 
     - name: Build RPM
       run: |
@@ -147,9 +147,9 @@ jobs:
         pkgbuild \
           --root pkg-root \
           --identifier com.github.yoavnir.specs \
-          --version "${{ steps.version.outputs.ver }}" \
+          --version "${SPECS_VERSION#v}" \
           --install-location / \
-          specs-${{ steps.version.outputs.ver }}.pkg
+          specs-${SPECS_VERSION#v}.pkg
 
     - name: Upload pkg artifact
       uses: actions/upload-artifact@v4
@@ -304,7 +304,7 @@ jobs:
         chmod 755 deb-root/usr/local/bin/specs
         chmod 755 deb-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz deb-root/usr/share/specs/
-        sed "s/@VERSION@/${{ steps.version.outputs.ver }}/g; s/Architecture: amd64/Architecture: ${{ matrix.arch }}/g" .github/packaging/control.in > deb-root/DEBIAN/control
+        sed "s/@VERSION@/${SPECS_VERSION#v}/g; s/Architecture: amd64/Architecture: ${{ matrix.arch }}/g" .github/packaging/control.in > deb-root/DEBIAN/control
         cp .github/packaging/postinst deb-root/DEBIAN/
         cp .github/packaging/postrm deb-root/DEBIAN/
         
@@ -322,7 +322,7 @@ jobs:
 
     - name: Build DEB
       run: |
-        dpkg-deb --build deb-root specs_${{ steps.version.outputs.ver }}_${{ matrix.arch }}.deb
+        dpkg-deb --build deb-root specs_${SPECS_VERSION#v}_${{ matrix.arch }}.deb
 
     - name: Upload DEB artifact
       uses: actions/upload-artifact@v4
