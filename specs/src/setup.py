@@ -11,22 +11,27 @@ def run_the_cmd(cmd):
 	return rc
 
 def get_the_version(doPrint):
-	test_version_cmd = "git branch --show-current > git_output.txt"
-	rc = run_the_cmd(test_version_cmd)
-	if 0==rc:
-		with open("git_output.txt", "r") as output:
-			gittag = output.read().strip()
+	global explicit_branch
+	if explicit_branch == "":
+		test_version_cmd = "git branch --show-current > git_output.txt"
+		rc = run_the_cmd(test_version_cmd)
+		if 0==rc:
+			with open("git_output.txt", "r") as output:
+				gittag = output.read().strip()
+				if doPrint:
+					sys.stdout.write("Found git branch <{}>...".format(gittag))
+		else:
 			if doPrint:
-				sys.stdout.write("Found git branch <{}>...".format(gittag))
-	else:
-		if doPrint:
-			sys.stdout.write("git not present. Going with <unknown>...")
-		gittag = "unknown"
+				sys.stdout.write("git not present. Going with <unknown>...")
+			gittag = "unknown"
 
-	if platform=="NT":
-		os.system("del git_output.txt")
+		if platform=="NT":
+			os.system("del git_output.txt")
+		else:
+			os.system("/bin/rm git_output.txt")
 	else:
-		os.system("/bin/rm git_output.txt")
+		gittag = explicit_branch
+		sys.stdout.write("Set explicitly to {}...".format(explicit_branch))
 
 	if gittag.startswith("dev-"):
 		if doPrint:
@@ -281,6 +286,8 @@ parser.add_argument("--static", dest="static_link", action="store_true", default
                     help="Statically link libstdc++")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
+parser.add_argument("--branch", dest="expbranch", action="store", default="",
+                    help="branch to use. Useful when building without git. Examples: 'dev', 'stable', 'dev-1.2.0')")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
@@ -290,6 +297,7 @@ osversion = args.osversion if sys.platform=="darwin" else ""
 use_cached_depends = args.ucd
 avoid_cryptographic_random = args.nocrypt
 python_prefix = args.pyprefix
+explicit_branch = args.expbranch
 
 # default for use_cached_depends depends on the choice of compiler
 if use_cached_depends is None:
