@@ -93,7 +93,7 @@ jobs:
         tar czf specs-${SPECS_VERSION#v}.tar.gz specs-${SPECS_VERSION#v}
 
     - name: Create RPM spec file
-      run: sed 's/@VERSION@/${SPECS_VERSION#v}/g' .github/packaging/specs.spec.in > rpmbuild/SPECS/specs.spec
+      run: sed 's/@VERSION@/${{ steps.version.outputs.ver }}/g' .github/packaging/specs.spec.in > rpmbuild/SPECS/specs.spec
 
     - name: Build RPM
       run: |
