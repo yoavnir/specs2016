@@ -59,12 +59,12 @@ def get_the_version(doPrint):
 
 	if gittag == "dev":
 		if doPrint:
-			sys.stdout.write("Setting to <v{}-beta>".format(manpage_version))
-		return "v{}-beta".format(manpage_version)
+			sys.stdout.write("Setting to <{}-beta>".format(manpage_version))
+		return "{}-beta".format(manpage_version)
 	elif gittag == "stable":
 		if doPrint:
-			sys.stdout.write("Setting to <v{}>".format(manpage_version))
-		return "v{}".format(manpage_version)
+			sys.stdout.write("Setting to <{}>".format(manpage_version))
+		return "{}".format(manpage_version)
 	elif gittag == "":
 		if doPrint:
 			sys.stdout.write("No git branch; Going with {}".format(manpage_version))
