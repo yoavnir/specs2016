@@ -31,7 +31,7 @@ def get_the_version(doPrint):
 			os.system("/bin/rm git_output.txt")
 	else:
 		gittag = explicit_branch
-		sys.stdout.write("Set explicitly to {}...".format(explicit_branch))
+		sys.stdout.write("Set explicitly to <{}>...".format(explicit_branch))
 
 	if gittag.startswith("dev-"):
 		if doPrint:
