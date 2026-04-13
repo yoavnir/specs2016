@@ -10,6 +10,11 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+11-Sep-2026: Version 1.0.0 is here
+
+What's new:
+ * Various TBD improvements
+***
 1-May-2026: Version 0.9.9 is here
 
 What's new:
@@ -25,13 +30,6 @@ What's new:
 *Note:* Installing from package does not include Python support on Windows.
 
 *Note:* On Linux, the `specs` binary is bigger when installed from package, as it is statically linked with libstdc++.
-***
-28-Feb-2026: Version 0.9.6 is here
-
-What's new:
- * Support for newer Linux distros (newer gcc)
- * Support for Visual Studio and latest Windows versions
- * Alignment with C++ coding standards
 
 Sources
 =======
