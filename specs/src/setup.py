@@ -132,10 +132,9 @@ with open("xx.txt","w") as v:
 		filtered_cflags = [f for f in cflags if f not in filter]
 		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
 	
-	# Get the result of python-config --cflags
-	with open("xx.txt","w") as o:
-		cmd = "{}-config --ldflags --embed".format(arg)  # first try with --embed needed for python 3.8
-		rc = run_the_cmd(cmd)
+	# Get the result of python-config --ldflags
+	cmd = "{}-config --ldflags --embed".format(arg)  # first try with --embed needed for python 3.8
+	rc = run_the_cmd(cmd)
 	if rc!=0:
 		cmd = "{}-config --ldflags".format(arg)
 		rc = run_the_cmd(cmd)
@@ -145,7 +144,7 @@ with open("xx.txt","w") as v:
 	with open("xx.txt", "r") as flags:
 		python_ldflags=flags.read().strip()
 	
-	sys.stdout.write("Yes.\n")
+	sys.stdout.write("Yes - found version {}.\n".format(full_python_version))
 	return True
 
 cppflags_gcc = "-Werror $(CONDCOMP) --std=c++17 -I ."
@@ -630,7 +629,7 @@ cleanup_after_compile()
 	
 #
 # Python support
-sys.stdout.write("Testing if python support is available...")	
+sys.stdout.write("Testing if Python support is available...")	
 if platform=="NT":
 	if python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
@@ -666,7 +665,7 @@ else:
 		full_python_version = "N/A"
 	else:
 		rc = python_search(python_prefix)
-		run_the_cmd("/bin/rm xx.txt")
+		os.system("/bin/rm xx.txt")
 		if rc:
 			CFG_python = True
 		else:
