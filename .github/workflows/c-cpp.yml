@@ -27,6 +27,8 @@ jobs:
       run: cd specs/src ; python3 setup.py --branch ${SPECS_BRANCH} --python python3 
     - name: make
       run: cd specs/src ; make all
+    - name: Test specs executable
+      run:  specs/exe/specs "@version" WRITE "@platform"
     - name: make check
       run: cd specs/src ; make run_tests
 
@@ -46,6 +48,9 @@ jobs:
       working-directory: specs/src
       run: make all
 
+    - name: Test specs executable
+      run:  specs/exe/specs "@version" WRITE "@platform"
+
     - name: make check
       working-directory: specs/src
       run: make run_tests      
@@ -64,4 +69,4 @@ jobs:
     - name: Build specs (Release)
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64
     - name: Test specs executable
-      run: specs/bin/Release/specs.exe "@version"
+      run: specs/bin/Release/specs.exe "@version" WRITE "@platform"

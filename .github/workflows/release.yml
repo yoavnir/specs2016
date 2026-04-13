@@ -42,7 +42,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version"
+      run: specs/exe/specs "@version" WRITE "@platform"
 
     - name: Verify no dynamic libpython dependency
       run: |
@@ -121,7 +121,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version"
+      run: specs/exe/specs "@version" WRITE "@platform"
 
     - name: Prepare manpage
       run: |
@@ -273,7 +273,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version"
+      run: specs/exe/specs "@version" WRITE "@platform"
 
     - name: Verify no dynamic libpython dependency
       run: |
