@@ -7,7 +7,7 @@ on:
     branches: [ dev, stable, dev-0.9.9, dev-1.0.0]
 
 env:
-  SPECS_BRANCH: ${{ github.event.pull_request.base.ref }}
+  SPECS_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
 
 jobs:
   build-linux:
@@ -18,10 +18,12 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Dump event pull_request payload
+    - name: Dump event info
       env:
-        EVENT: ${{ toJSON(github.event.pull_request) }}
-      run: echo "$EVENT"
+        PR_EVENT: ${{ toJSON(github.event.pull_request) }}
+      run: |
+        echo "Event: ${{ github.event_name }}, Ref: ${{ github.ref }}, SPECS_BRANCH: ${SPECS_BRANCH}"
+        echo "$PR_EVENT"
 
     - name: Install Python dev headers
       run: sudo apt-get install -y python3-dev
