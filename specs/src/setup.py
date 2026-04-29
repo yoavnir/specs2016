@@ -11,22 +11,27 @@ def run_the_cmd(cmd):
 	return rc
 
 def get_the_version(doPrint):
-	test_version_cmd = "git branch --show-current > git_output.txt"
-	rc = run_the_cmd(test_version_cmd)
-	if 0==rc:
-		with open("git_output.txt", "r") as output:
-			gittag = output.read().strip()
+	global explicit_branch
+	if explicit_branch == "":
+		test_version_cmd = "git branch --show-current > git_output.txt"
+		rc = run_the_cmd(test_version_cmd)
+		if 0==rc:
+			with open("git_output.txt", "r") as output:
+				gittag = output.read().strip()
+				if doPrint:
+					sys.stdout.write("Found git branch <{}>...".format(gittag))
+		else:
 			if doPrint:
-				sys.stdout.write("Found git branch <{}>...".format(gittag))
-	else:
-		if doPrint:
-			sys.stdout.write("git not present. Going with <unknown>...")
-		gittag = "unknown"
+				sys.stdout.write("git not present. Going with <unknown>...")
+			gittag = "unknown"
 
-	if platform=="NT":
-		os.system("del git_output.txt")
+		if platform=="NT":
+			os.system("del git_output.txt")
+		else:
+			os.system("/bin/rm git_output.txt")
 	else:
-		os.system("/bin/rm git_output.txt")
+		gittag = explicit_branch
+		sys.stdout.write("Set explicitly to <{}>...".format(explicit_branch))
 
 	if gittag.startswith("dev-"):
 		if doPrint:
@@ -54,12 +59,16 @@ def get_the_version(doPrint):
 
 	if gittag == "dev":
 		if doPrint:
-			sys.stdout.write("Setting to <v{}-beta>".format(manpage_version))
-		return "v{}-beta".format(manpage_version)
+			sys.stdout.write("Setting to <{}-beta>".format(manpage_version))
+		return "{}-beta".format(manpage_version)
 	elif gittag == "stable":
 		if doPrint:
-			sys.stdout.write("Setting to <v{}>".format(manpage_version))
-		return "v{}".format(manpage_version)
+			sys.stdout.write("Setting to <{}>".format(manpage_version))
+		return "{}".format(manpage_version)
+	elif gittag == "":
+		if doPrint:
+			sys.stdout.write("No git branch; Going with {}".format(manpage_version))
+		return manpage_version
 	else:
 		if doPrint:
 			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,manpage_version))
@@ -93,7 +102,7 @@ with open("xx.txt","w") as v:
 	with open("test_script.py","w") as scriptf:
 		scriptf.write(script)
 	cmd = "{} test_script.py".format(arg)
-	rc = os.system(cmd)
+	rc = run_the_cmd(cmd)
 	cleanup_after_python()
 	if rc!=0:
 		sys.stdout.write("No -- could not get python version from {}.\n".format(arg))
@@ -123,10 +132,9 @@ with open("xx.txt","w") as v:
 		filtered_cflags = [f for f in cflags if f not in filter]
 		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
 	
-	# Get the result of python-config --cflags
-	with open("xx.txt","w") as o:
-		cmd = "{}-config --ldflags --embed".format(arg)  # first try with --embed needed for python 3.8
-		rc = run_the_cmd(cmd)
+	# Get the result of python-config --ldflags
+	cmd = "{}-config --ldflags --embed".format(arg)  # first try with --embed needed for python 3.8
+	rc = run_the_cmd(cmd)
 	if rc!=0:
 		cmd = "{}-config --ldflags".format(arg)
 		rc = run_the_cmd(cmd)
@@ -136,7 +144,7 @@ with open("xx.txt","w") as v:
 	with open("xx.txt", "r") as flags:
 		python_ldflags=flags.read().strip()
 	
-	sys.stdout.write("Yes.\n")
+	sys.stdout.write("Yes - found version {}.\n".format(full_python_version))
 	return True
 
 cppflags_gcc = "-Werror $(CONDCOMP) --std=c++17 -I ."
@@ -187,7 +195,8 @@ run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
-	python $(TESTS_DIR)/valgrind_specs.py --no_valgrind
+	python3 $(TESTS_DIR)/valgrind_specs.py --no_valgrind
+	python3 $(TESTS_DIR)/recfm_tests.py
 
 directories: $(EXE_DIR)
 
@@ -272,8 +281,12 @@ parser.add_argument("--fast_random", dest="nocrypt", action="store_true", defaul
 					help="Avoid cryptographic random number generators")
 parser.add_argument("--os_version", dest="osversion", action="store", default="",
 					help="OS version to link against. Available only in Mac OS")
+parser.add_argument("--static", dest="static_link", action="store_true", default=False,
+                    help="Statically link libstdc++")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
+parser.add_argument("--branch", dest="expbranch", action="store", default="",
+                    help="branch to use. Useful when building without git. Examples: 'dev', 'stable', 'dev-1.2.0')")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
@@ -283,6 +296,7 @@ osversion = args.osversion if sys.platform=="darwin" else ""
 use_cached_depends = args.ucd
 avoid_cryptographic_random = args.nocrypt
 python_prefix = args.pyprefix
+explicit_branch = args.expbranch
 
 # default for use_cached_depends depends on the choice of compiler
 if use_cached_depends is None:
@@ -347,6 +361,9 @@ elif compiler=="VS":
 	else:
 		condlink = "/Zi /MAP /DEBUG"
 		condcomp = "/O2 /Zi /EHsc"	
+
+if args.static_link:
+	condlink = condlink + " -static-libstdc++"
 	
 if platform=="NT":
 	condcomp = condcomp + "{}WIN64".format(def_prefix)
@@ -396,7 +413,28 @@ if 0==rc:
 else:
 	sys.stdout.write("No.  Aborting...\n")
 	exit(-4)
-	
+
+# Get compiler version
+sys.stdout.write("Getting compiler version...")
+if compiler == "VS":
+	version_cmd = cxx
+else:
+	version_cmd = "{} --version".format(cxx)
+run_the_cmd(version_cmd)
+cxx_version = ""
+try:
+	import re
+	with open("xx.txt", "r") as f:
+		version_output = f.read()
+	m = re.search(r'(\d+\.\d+(?:\.\d+)*)', version_output)
+	if m:
+		cxx_version = m.group(1)
+		sys.stdout.write("{}\n".format(cxx_version))
+	else:
+		sys.stdout.write("unknown\n")
+except:
+	sys.stdout.write("unknown\n")
+
 # Test if the compiler supports C++17
 test_cpp11_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 testprog = """
@@ -591,7 +629,7 @@ cleanup_after_compile()
 	
 #
 # Python support
-sys.stdout.write("Testing if python support is available...")	
+sys.stdout.write("Testing if Python support is available...")	
 if platform=="NT":
 	if python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
@@ -607,20 +645,27 @@ if platform=="NT":
 		sys.stdout.write("configured for Python version {}.\n".format(cv['py_version']))
 		CFG_python = True
 else:
-	if python_prefix=="": # default: python is optional and prefix is 'python'
-		CFG_python = python_search("python")
+	python_yes = (python_prefix=="yes")
+	if python_prefix=="" or python_prefix=="yes":
+		try:
+			python_prefix = sys.executable.split('/')[-1]
+			if len(python_prefix) < len("python"):
+				python_prefix = "python"
+		except:
+			python_prefix = "python"
+		CFG_python = python_search(python_prefix)
 		os.system("/bin/rm xx.txt")
+		if python_yes and not CFG_python:
+			sys.stdout.write("Python support not found.\n")
+			exit(-4)
 
 	elif python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
 		CFG_python = False
 		full_python_version = "N/A"
 	else:
-		if python_prefix=="yes":
-			python_prefix = "python"
-
 		rc = python_search(python_prefix)
-		run_the_cmd("/bin/rm xx.txt")
+		os.system("/bin/rm xx.txt")
 		if rc:
 			CFG_python = True
 		else:
@@ -647,16 +692,38 @@ if CFG_advanced_regex:
 if rand_source is not None:
 	condcomp = condcomp + "{}ALURAND_{}".format(def_prefix,rand_source)
 
-if full_python_version!="N/A":
-	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx,full_python_version,variation.lower())
+cxx_display = "{} {}".format(cxx, cxx_version) if cxx_version else cxx
+if (CFG_python==True) & (full_python_version!="N/A"):
+	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx_display,full_python_version,variation.lower())
 else:
-	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
 condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatform)
 
 if CFG_python:
 	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
 	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)
-	condlink = condlink + " " + python_ldflags
+	if args.static_link and platform!="NT":
+		# Statically link libpython so the binary works regardless of the
+		# Python version installed on the target system.
+		# Also define the path where the bundled stdlib will be installed.
+		# Py_SetPythonHome expects a prefix; Python looks for lib/python3.X/ under it.
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"/usr/lib/specs/python\\"'.format(def_prefix)
+		static_pyldflags = []
+		for flag in python_ldflags.split():
+			if flag.startswith("-lpython"):
+				static_pyldflags.append("-Wl,-Bstatic")
+				static_pyldflags.append(flag)
+				static_pyldflags.append("-Wl,-Bdynamic")
+			else:
+				static_pyldflags.append(flag)
+		# The static libpython archive includes built-in extension modules
+		# (pyexpat, zlib, etc.) that depend on these system libraries.
+		static_pyldflags.extend(["-lexpat", "-lz"])
+		# Ubuntu 20.04's libpython3.8.a is not PIE-compatible, so disable PIE
+		static_pyldflags.append("-no-pie")
+		condlink = condlink + " " + " ".join(static_pyldflags)
+	else:
+		condlink = condlink + " " + python_ldflags
 else:
 	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix) \
 	                                   + "{}PYTHON_FULL_VER=N/A".format(def_prefix)

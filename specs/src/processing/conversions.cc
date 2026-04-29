@@ -143,9 +143,9 @@ std::string conv_X2D(std::string& s) {
 std::string conv_BSWAP(std::string& s) {
 	std::string ret(s.size(), 0);
 	const char* sStart = s.c_str();
-	char* retPtr = (char*)(ret.c_str());
+	char* retPtr = &ret[0];
 	char* sIt = (char*)(sStart + s.size());
-	while (sIt >= sStart) {
+	while (sIt > sStart) {
 		*retPtr++ = *(--sIt);
 	}
 	return ret;
@@ -166,7 +166,8 @@ std::string conv_UCASE(std::string& s) {
 static std::string conv_ti2f(std::string& s, std::string& parm)
 {
 	if (s.length()!=8) return std::string();
-	int64_t internal = *((int64_t*)(s.c_str()));
+	int64_t internal;
+	memcpy(&internal, s.c_str(), sizeof(int64_t));
 	PSpecString pRet = specTimeConvertToPrintable(internal, parm);
 	std::string ret = std::string(pRet->data());
 	return ret;

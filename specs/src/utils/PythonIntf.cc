@@ -41,7 +41,7 @@ public:
 	PythonFuncArg(char* name, double def) :
 		m_name(name),m_default(counterType__Float),m_defFloat(def) {}
 	std::string     getStr() {
-		std::string dequoted_name = m_name.substr(1,m_name.size()-2);
+		std::string dequoted_name = m_name.size() >= 2 ? m_name.substr(1,m_name.size()-2) : m_name;
 		switch (m_default) {
 		case counterType__Str:
 			return dequoted_name + "='" + m_defStr + "'";
@@ -174,7 +174,13 @@ public:
 				pRet = mkValue(ALUFloat(PyFloat_AsDouble(pResult)));
 			} else if (PyUnicode_Check(pResult)) {
 				PyObject* pDefBytes = PyUnicode_AsASCIIString(pResult);
-				pRet = mkValue(PyBytes_AS_STRING(pDefBytes));
+				if (pDefBytes) {
+					pRet = mkValue(PyBytes_AS_STRING(pDefBytes));
+					Py_DECREF(pDefBytes);
+				} else {
+					PyErr_Clear();
+					pRet = mkValue(std::string(""));
+				}
 			} else if (PyString_Check(pResult)) {
 				pRet = mkValue(PyString_AS_STRING(pResult));
 			} else if (Py_None == pResult){
@@ -277,6 +283,10 @@ public:
 			return;
 		}
 		// Initialize Python environment
+#ifdef PYTHON_STDLIB_PATH
+		// When Python is statically linked, set the home directory to our bundled stdlib
+		Py_SetPythonHome(Py_DecodeLocale(PYTHON_STDLIB_PATH, NULL));
+#endif
 		Py_Initialize();
 
 		// update the python path
@@ -372,6 +382,7 @@ public:
 
 				// Set up arguments for the getargspec function
 				PyObject *pTuple = PyTuple_New(1);
+				Py_INCREF(pFunc);
 				PyTuple_SetItem(pTuple, 0, pFunc);
 
 				PyObject* pArgSpec = PyObject_CallObject(pArgSpecFunc, pTuple);
@@ -407,7 +418,13 @@ public:
 							pFuncRec->addArg(pArgName, PyFloat_AsDouble(pDef));
 						} else if (PyUnicode_Check(pDef)) {
 							PyObject* pDefBytes = PyUnicode_AsASCIIString(pDef);
-							pFuncRec->addArg(pArgName, PyBytes_AS_STRING(pDefBytes));
+							if (pDefBytes) {
+								pFuncRec->addArg(pArgName, PyBytes_AS_STRING(pDefBytes));
+								Py_DECREF(pDefBytes);
+							} else {
+								PyErr_Clear();
+								pFuncRec->addArg(pArgName, (char*)"");
+							}
 						} else if (PyString_Check(pDef)) {
 							pFuncRec->addArg(pArgName, PyString_AS_STRING(pDef));
 						} else {

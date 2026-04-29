@@ -34,7 +34,7 @@ static std::map<std::string,std::string> ExternalLiterals;
 
 static void useKeyValue(std::string& key, std::string& value)
 {
-	if (':'==key.at(key.length() - 1)) {
+	if (!key.empty() && ':'==key.at(key.length() - 1)) {
 		key = key.substr(0,key.length() - 1);
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
@@ -45,7 +45,10 @@ static void useKeyValue(std::string& key, std::string& value)
 		} else if (key == "regexType") {
 			setRegexType(value);
 		} else if (key == "while-guard-limit") {
-			g_WhileGuardLimit = std::stoul(value);
+			try {
+				g_WhileGuardLimit = std::stoul(value);
+			} catch (...) {
+			}
 		}
 		if (ExternalLiterals.find(key) == ExternalLiterals.end()) {
 			ExternalLiterals[key] = value;
@@ -58,22 +61,28 @@ static std::string getConfigFileName() {
 	if (g_configurationFile!="") {
 		return g_configurationFile;
 	}
-	return std::string(std::getenv("HOMEDRIVE")) + std::getenv("HOMEPATH") + "\\specs.cfg";
+	const char* hd = std::getenv("HOMEDRIVE");
+	const char* hp = std::getenv("HOMEPATH");
+	return std::string(hd ? hd : "") + (hp ? hp : "") + "\\specs.cfg";
 }
 
 std::string getPersistneceFileName() {
-	return std::string(std::getenv("HOMEDRIVE")) + std::getenv("HOMEPATH") + "\\specs_persistent.sav";
+	const char* hd = std::getenv("HOMEDRIVE");
+	const char* hp = std::getenv("HOMEPATH");
+	return std::string(hd ? hd : "") + (hp ? hp : "") + "\\specs_persistent.sav";
 }
 #else
 static std::string getConfigFileName() {
 	if (g_configurationFile!="") {
 		return g_configurationFile;
 	}
-	return std::string(std::getenv("HOME")) + "/.specs";
+	const char* home = std::getenv("HOME");
+	return std::string(home ? home : "") + "/.specs";
 }
 
 std::string getPersistneceFileName() {
-	return std::string(std::getenv("HOME")) + "/.specs_persistent";
+	const char* home = std::getenv("HOME");
+	return std::string(home ? home : "") + "/.specs_persistent";
 }
 #endif
 
@@ -191,10 +200,10 @@ void readConfigurationFile()
 
 	// Some built-in stuff
 #ifdef GITTAG
-	ExternalLiterals["version"] = STRINGIFY(GITTAG);
+	ExternalLiterals["version"] = dequote(STRINGIFY(GITTAG));
 #endif
 #ifdef LITERAL_PLATFORM
-	ExternalLiterals["platform"] = STRINGIFY(LITERAL_PLATFORM);
+	ExternalLiterals["platform"] = dequote(STRINGIFY(LITERAL_PLATFORM));
 #endif
 	ExternalLiterals["python"] = pythonInterfaceEnabled() ? "Enabled" : "Disabled";
 	if (0==ExternalLiterals.count("cols")) {
@@ -207,7 +216,8 @@ void readConfigurationFile()
 
 bool configSpecLiteralExists(std::string& key)
 {
-	return !ExternalLiterals[key].empty();
+	auto it = ExternalLiterals.find(key);
+	return it != ExternalLiterals.end() && !it->second.empty();
 }
 
 std::string& configSpecLiteralGet(std::string& key)

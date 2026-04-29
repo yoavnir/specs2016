@@ -1,0 +1,94 @@
+Name:           specs
+Version:        @VERSION@
+Release:        1
+Summary:        A command-line utility for parsing and re-arranging text input
+License:        MIT
+URL:            https://github.com/yoavnir/specs2016
+Source0:        specs-%{version}.tar.gz
+
+# Disable automatic dependency detection since Python is statically linked
+AutoReqProv: no
+
+%description
+specs is a command line utility for parsing and re-arranging text input.
+It allows re-alignment of fields, some format conversion, and re-formatting
+multiple lines into single lines or vice versa.
+
+%prep
+%setup -q
+
+%install
+mkdir -p %{buildroot}/usr/local/bin
+mkdir -p %{buildroot}/usr/share/specs
+mkdir -p %{buildroot}/usr/lib/specs
+install -m 755 specs %{buildroot}/usr/local/bin/specs
+install -m 755 specs-autocomplete %{buildroot}/usr/local/bin/specs-autocomplete
+install -m 644 specs.1.gz %{buildroot}/usr/share/specs/specs.1.gz
+cp -r python %{buildroot}/usr/lib/specs/
+
+%post
+# Find the best man directory and copy the manpage
+MANPATH_OUTPUT=$(manpath 2>/dev/null || echo "/usr/local/share/man:/usr/share/man")
+IFS=':' read -ra PATHS <<< "$MANPATH_OUTPUT"
+
+# First priority: directories starting with /usr/share
+for path in "${PATHS[@]}"; do
+    if [[ "$path" == /usr/share* ]]; then
+        MANDIR="$path"
+        break
+    fi
+done
+
+# Second priority: directories starting with /usr (but not /usr/share)
+if [ -z "$MANDIR" ]; then
+    for path in "${PATHS[@]}"; do
+        if [[ "$path" == /usr* && "$path" != /usr/share* ]]; then
+            MANDIR="$path"
+            break
+        fi
+    done
+fi
+
+# Fallback
+if [ -z "$MANDIR" ]; then
+    MANDIR="/usr/local/share/man"
+fi
+
+mkdir -p "$MANDIR/man1"
+cp /usr/share/specs/specs.1.gz "$MANDIR/man1/specs.1.gz"
+
+%postun
+if [ "$1" -eq 0 ]; then
+    # Package is being removed (not upgraded)
+    MANPATH_OUTPUT=$(manpath 2>/dev/null || echo "/usr/local/share/man:/usr/share/man")
+    IFS=':' read -ra PATHS <<< "$MANPATH_OUTPUT"
+
+    # Same logic as %post to find the man directory
+    for path in "${PATHS[@]}"; do
+        if [[ "$path" == /usr/share* ]]; then
+            MANDIR="$path"
+            break
+        fi
+    done
+
+    if [ -z "$MANDIR" ]; then
+        for path in "${PATHS[@]}"; do
+            if [[ "$path" == /usr* && "$path" != /usr/share* ]]; then
+                MANDIR="$path"
+                break
+            fi
+        done
+    fi
+
+    if [ -z "$MANDIR" ]; then
+        MANDIR="/usr/local/share/man"
+    fi
+
+    rm -f "$MANDIR/man1/specs.1.gz"
+fi
+
+%files
+/usr/local/bin/specs
+/usr/local/bin/specs-autocomplete
+/usr/share/specs/specs.1.gz
+/usr/lib/specs/python

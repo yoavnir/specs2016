@@ -180,11 +180,11 @@ PValue AluFunc_abs(PValue op)
 	if (op->getType()==counterType__Int) {
 		ALUInt i = op->getInt();
 		if (i<0) i = -i;
-		return mkValue(i);
+		return mkValueE(i, op->isExact());
 	} else {
 		ALUFloat f = op->getFloat();
 		if (f<0) f = -f;
-		return mkValue(f);
+		return mkValueE(f, op->isExact());
 	}
 }
 
@@ -192,8 +192,12 @@ PValue AluFunc_pow(PValue op1, PValue op2)
 {
 	ASSERT_NOT_ELIDED(op1,1,base);
 	ASSERT_NOT_ELIDED(op2,2,exponent);
+	// x^0 = 1 exactly, if the exponent is an exact zero
+	if (IS_EXACT_ZERO(op2)) {
+		return mkValue(ALUInt(1));
+	}
 	if (counterType__Float==op1->getType() || counterType__Float==op2->getType()) {
-		return mkValue(std::pow(op1->getFloat(), op2->getFloat()));
+		return mkValueE(std::pow(op1->getFloat(), op2->getFloat()), false);
 	}
 	if (counterType__Int==op1->getType() && counterType__Int==op2->getType()) {
 		return mkValue(ALUInt(std::pow(op1->getInt(), op2->getInt())));
@@ -201,13 +205,22 @@ PValue AluFunc_pow(PValue op1, PValue op2)
 	if (op1->isWholeNumber() && op2->isWholeNumber()) {
 		return mkValue(ALUInt(std::pow(op1->getInt(), op2->getInt())));
 	}
-	return mkValue(std::pow(op1->getFloat(), op2->getFloat()));
+	return mkValueE(std::pow(op1->getFloat(), op2->getFloat()), false);
 }
 
 PValue AluFunc_sqrt(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,square);
-	return mkValue(std::sqrt(op->getFloat()));
+
+	ALUFloat f = op->getFloat();
+	if (op->isWholeNumber()) {
+		ALUFloat sq = std::sqrt(f);
+		if (sq==std::floor(sq)) {
+			return mkValueE(ALUInt(sq), true);
+		}
+	}
+
+	return mkValueE(std::sqrt(f), false);
 }
 
 // Both of the following functions assume little-endian architecture
@@ -224,8 +237,9 @@ static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = nullptr)
 		break;
 	}
 	case 2: {
-		uint16_t* pVal = (uint16_t*)str.c_str();
-		value = *pVal;
+		uint16_t tmp;
+		memcpy(&tmp, str.c_str(), sizeof(tmp));
+		value = tmp;
 		if (pNumBits) *pNumBits = 2;
 		break;
 	}
@@ -236,8 +250,9 @@ static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = nullptr)
 		/* intentional fall-through */
 	}
 	case 4: {
-		uint32_t* pVal = (uint32_t*)str.c_str();
-		value = *pVal;
+		uint32_t tmp;
+		memcpy(&tmp, str.c_str(), sizeof(tmp));
+		value = tmp;
 		if (pNumBits) *pNumBits = 4;
 		break;
 	}
@@ -250,8 +265,9 @@ static uint64_t binary2uint64(PValue op, unsigned char *pNumBits = nullptr)
 		/* intentional fall-through */
 	}
 	case 8: {
-		uint64_t* pVal = (uint64_t*)str.c_str();
-		value = *pVal;
+		uint64_t tmp;
+		memcpy(&tmp, str.c_str(), sizeof(tmp));
+		value = tmp;
 		if (pNumBits) *pNumBits = 8;
 		break;
 	}
@@ -309,14 +325,17 @@ PValue AluFunc_c2f(PValue op)
 	std::string str = op->getStr();
 
 	if (str.length() == sizeof(float)) {
-		float* pf = (float*) str.c_str();
-		return mkValue(ALUFloat(*pf));
+		float f;
+		memcpy(&f, str.c_str(), sizeof(float));
+		return mkValue(ALUFloat(f));
 	} else if (str.length() == sizeof(double)) {
-		double *pd = (double*) str.c_str();
-		return mkValue(ALUFloat(*pd));
+		double d;
+		memcpy(&d, str.c_str(), sizeof(double));
+		return mkValue(ALUFloat(d));
 	} else if (str.length() == sizeof(long double)) {
-		long double *pld = (long double*) str.c_str();
-		return mkValue(ALUFloat(*pld));
+		long double ld;
+		memcpy(&ld, str.c_str(), sizeof(long double));
+		return mkValue(ALUFloat(ld));
 	} else {
 		std::string err = "c2f: Invalid floating point length: " + std::to_string(str.length()) +
 				". Supported lengths: " + std::to_string(sizeof(float));
@@ -728,9 +747,10 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 		return mkValue("");
 	}
 	
-	char* resultStart = (char*)(pHaystack->c_str()) + size_t(int(pos) + _pOffset->getInt());
-	if (size_t(int(pos) + _pOffset->getInt() + count) > pHaystack->length()) {
-		count = size_t(pHaystack->length() - pos - _pOffset->getInt()); 
+	ALUInt offset = _pOffset->getInt();
+	char* resultStart = (char*)(pHaystack->c_str()) + size_t(ALUInt(pos) + offset);
+	if (size_t(ALUInt(pos) + offset + ALUInt(count)) > pHaystack->length()) {
+		count = size_t(pHaystack->length() - pos - offset); 
 	}
 		
 	return mkValue2(resultStart, int(count));
@@ -1087,6 +1107,9 @@ PValue AluFunc_stderrmean(PValue _pFieldIdentifier)
 PValue AluFunc_rand(PValue pLimit)
 {
 	if (pLimit) {
+		if (pLimit->getInt() <= 0) {
+			MYTHROW("rand: limit must be a positive integer");
+		}
 		ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
 		return mkValue(res);
 	} else {
@@ -1094,14 +1117,16 @@ PValue AluFunc_rand(PValue pLimit)
 		ALUInt randomDecimal = AluRandGetIntUpTo(decimalLimit);
 		std::ostringstream str;
 		str << "0." << std::setw(17) << std::setfill('0') << randomDecimal;
-		return mkValue(str.str());
+		auto ret = mkValue(str.str());
+		ret->setExact(false);
+		return ret;
 	}
 }
 
 PValue AluFunc_floor(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(floor(pX->getFloat())));
+	return mkValueE(ALUFloat(floor(pX->getFloat())), true);
 }
 
 PValue AluFunc_round(PValue pX, PValue pDecimals)
@@ -1112,52 +1137,58 @@ PValue AluFunc_round(PValue pX, PValue pDecimals)
 			MYTHROW("round: value for 'decimals' must not be negative");
 		}
 		ALUFloat scale = pow(((ALUFloat)(10.0)), pDecimals->getInt());
-		return mkValue(ALUFloat((round(scale * pX->getFloat())) / scale));
+		return mkValueE(ALUFloat((round(scale * pX->getFloat())) / scale), false);
 	} else {
-		return mkValue(ALUFloat(round(pX->getFloat())));
+		return mkValueE(ALUFloat(round(pX->getFloat())), true);
 	}
 }
 
 PValue AluFunc_ceil(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(ceil(pX->getFloat())));
+	return mkValueE(ALUFloat(ceil(pX->getFloat())), true);
 }
 
 PValue AluFunc_sin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(sin(pX->getFloat())));
+	if (IS_EXACT_ZERO(pX)) return mkValue(ALUInt(0));
+	return mkValueE(ALUFloat(sin(pX->getFloat())), false);
 }
 
 PValue AluFunc_cos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(cos(pX->getFloat())));
+	if (IS_EXACT_ZERO(pX)) return mkValue(ALUInt(1));
+	return mkValueE(ALUFloat(cos(pX->getFloat())), false);
 }
 
 PValue AluFunc_tan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(tan(pX->getFloat())));
+	if (IS_EXACT_ZERO(pX)) return mkValue(ALUInt(0));
+	return mkValueE(ALUFloat(tan(pX->getFloat())), false);
 }
 
 PValue AluFunc_arcsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(asin(pX->getFloat())));
+	if (IS_EXACT_ZERO(pX)) return mkValue(ALUInt(0));
+	return mkValueE(ALUFloat(asin(pX->getFloat())), false);
 }
 
 PValue AluFunc_arccos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(acos(pX->getFloat())));
+	if (IS_EXACT_VALUE(pX, 1)) return mkValue(ALUInt(0));
+	return mkValueE(ALUFloat(acos(pX->getFloat())), false);
 }
 
 PValue AluFunc_arctan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(atan(pX->getFloat())));
+	if (IS_EXACT_ZERO(pX)) return mkValue(ALUInt(0));
+	return mkValueE(ALUFloat(atan(pX->getFloat())), false);
 }
 
 static ALUFloat degrees_to_radians = 0.0174532925199433;
@@ -1166,68 +1197,101 @@ static ALUFloat radians_to_degrees = 57.29577951308232;
 PValue AluFunc_dsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(sin(degrees_to_radians*pX->getFloat())));
+	if (pX->isExact() && pX->isWholeNumber() && (pX->getInt() % 90 == 0)) {
+		static const ALUInt table[] = {0, 1, 0, -1};
+		ALUInt r = ((pX->getInt() % 360) + 360) % 360;
+		return mkValue(table[r / 90]);
+	}
+	return mkValueE(ALUFloat(sin(degrees_to_radians*pX->getFloat())), false);
 }
 
 PValue AluFunc_dcos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(cos(degrees_to_radians*pX->getFloat())));
+	if (pX->isExact() && pX->isWholeNumber() && (pX->getInt() % 90 == 0)) {
+		static const ALUInt table[] = {1, 0, -1, 0};
+		ALUInt r = ((pX->getInt() % 360) + 360) % 360;
+		return mkValue(table[r / 90]);
+	}
+	return mkValueE(ALUFloat(cos(degrees_to_radians*pX->getFloat())), false);
 }
 
 PValue AluFunc_dtan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(tan(degrees_to_radians*pX->getFloat())));
+	if (pX->isExact() && pX->isWholeNumber() && (pX->getInt() % 180 == 0)) {
+		return mkValue(ALUInt(0));
+	}
+	return mkValueE(ALUFloat(tan(degrees_to_radians*pX->getFloat())), false);
 }
 
 PValue AluFunc_arcdsin(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(radians_to_degrees*asin(pX->getFloat())));
+	if (IS_EXACT_ZERO(pX))      return mkValue(ALUInt(0));
+	if (IS_EXACT_VALUE(pX, 1))  return mkValue(ALUInt(90));
+	if (IS_EXACT_VALUE(pX, -1)) return mkValue(ALUInt(-90));
+	return mkValueE(ALUFloat(radians_to_degrees*asin(pX->getFloat())), false);
 }
 
 PValue AluFunc_arcdcos(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(radians_to_degrees*acos(pX->getFloat())));
+	if (IS_EXACT_ZERO(pX))      return mkValue(ALUInt(90));
+	if (IS_EXACT_VALUE(pX, 1))  return mkValue(ALUInt(0));
+	if (IS_EXACT_VALUE(pX, -1)) return mkValue(ALUInt(180));
+	return mkValueE(ALUFloat(radians_to_degrees*acos(pX->getFloat())), false);
 }
 
 PValue AluFunc_arcdtan(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(ALUFloat(radians_to_degrees*atan(pX->getFloat())));
+	if (IS_EXACT_ZERO(pX))      return mkValue(ALUInt(0));
+	if (IS_EXACT_VALUE(pX, 1))  return mkValue(ALUInt(45));
+	if (IS_EXACT_VALUE(pX, -1)) return mkValue(ALUInt(-45));
+	return mkValueE(ALUFloat(radians_to_degrees*atan(pX->getFloat())), false);
 }
 
 static ALUFloat e(2.71828182845904523536028747135266249775724709369995);
 PValue AluFunc_exp(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	return mkValue(std::pow(e, pX->getFloat()));
+	if (IS_EXACT_ZERO(pX)) return mkValue(ALUInt(1));
+	return mkValueE(std::pow(e, pX->getFloat()), false);
 }
 
 PValue AluFunc_log(PValue pX, PValue pBase)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
+	if (IS_EXACT_VALUE(pX, 1)) return mkValue(ALUInt(0));
+	if (pBase && pX->isExact() && pBase->isExact()
+		&& pX->isWholeNumber() && pBase->isWholeNumber()
+		&& pX->getInt() == pBase->getInt()) {
+		return mkValue(ALUInt(1));
+	}
 	ALUFloat res;
 	if (pBase) {
 		res = std::log(pX->getFloat()) / std::log(pBase->getFloat());
 	} else {
 		res = std::log(pX->getFloat());
 	}
-	return mkValue(res);
+	return mkValueE(res, false);
 }
 
 PValue AluFunc_fact(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
 	ALUInt i,res = 1;
+	ALUInt x = pX->getInt();
+	if (x > 20) {
+		MYTHROW("fact: argument too large (max 20 for 64-bit integers)");
+	}
 
-	for (i=2; i <= pX->getInt(); i++) {
+	for (i=2; i <= x; i++) {
 		res *= i;
 	}
 
-	return mkValue(res);
+	return mkValueE(res, pX->isExact());
 }
 
 PValue AluFunc_combinations(PValue pN, PValue pK)
@@ -1496,7 +1560,7 @@ PValue AluFunc_fmap_frac(PValue _pFieldIdentifier, PValue pVal)
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
 	ALUFloat frac = ALUFloat((*pfMap)[s]) / ALUFloat(pfMap->count());
-	return mkValue(frac);
+	return mkValueE(frac, false);
 }
 
 PValue AluFunc_fmap_pct(PValue _pFieldIdentifier, PValue pVal)
@@ -1507,7 +1571,7 @@ PValue AluFunc_fmap_pct(PValue _pFieldIdentifier, PValue pVal)
 	PFrequencyMap pfMap = g_pStateQueryAgent->getFrequencyMap(fId);
 	std::string s = pVal->getStr();
 	ALUFloat frac = ALUFloat((*pfMap)[s]) / ALUFloat(pfMap->count());
-	return mkValue(PERCENTS * frac);
+	return mkValueE(PERCENTS * frac, false);
 }
 
 PValue AluFunc_fmap_common(PValue _pFieldIdentifier)
@@ -1658,10 +1722,10 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 			while ((pc>pStart) && (*pc!=sep)) pc--;
 			if (*pc==sep) {
 				count++;
-				pc--;
+				if (pc > pStart) pc--;
 			}
 		}
-		if (count < -1 || pc==pStart) {
+		if (count < -1 || pc<=pStart) {
 			return mkValue("");
 		} else {
 			char *pBegin = pc;
@@ -1749,15 +1813,18 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 		char *pStart = (char*)(str.c_str());
 		char* pc = pStart + str.length();
 		pc--; // that's where the non-zero-length assumption comes in
-		while (sep==*pc) pc--;  // The last word may be followed by word separators
+		while (pc > pStart && sep==*pc) pc--;  // The last word may be followed by word separators
+		if (sep==*pc) {
+			return mkValue("");  // entire string is separators
+		}
 		while ((count < -1) && (pc > pStart)) {
 			while ((pc>pStart) && (*pc!=sep)) pc--;
 			if (sep==*pc) {
 				count++;
-				while (sep==*pc) pc--;
+				while (pc > pStart && sep==*pc) pc--;
 			}
 		}
-		if (count < -1 || pc==pStart) {
+		if (count < -1 || pc<=pStart) {
 			return mkValue("");
 		} else {
 			char *pBegin = pc;
@@ -2337,6 +2404,9 @@ PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 	std::string ret;
 	auto first = str.find_first_not_of(sPad);
 	auto last = str.find_last_not_of(sPad);
+	if (first == std::string::npos) {
+		return mkValue(std::string());
+	}
 	switch (option) {
 	case 'B':
 		ret = str.substr(first, last-first+1);
@@ -2761,7 +2831,7 @@ PValue AluFunc_next()
 
 PValue AluFunc_exact(PValue pval)
 {
-	return mkValue(ALUInt(0));
+	return mkValue(ALUInt(pval->isExact() ? 1 : 0));
 }
 
 PValue AluFunc_rest()
@@ -2847,9 +2917,16 @@ PValue AluFunc_pget(PValue pName, PValue pDefault)
 	auto name = pName->getStr();
 	if (persistentVarDefined(name)) {
 		std::string res = persistentVarGet(name);
-		return mkValue(res);
+		auto ret = mkValue(res);
+		ret->setExact(false);
+		return ret;
 	} else {
-		return pDefault ? pDefault : mkValue0();
+		if (pDefault) {
+			auto ret = mkValue(*pDefault);
+			ret->setExact(false);
+			return ret;
+		}
+		return mkValue0();
 	}
 }
 
@@ -2870,6 +2947,7 @@ PValue AluFunc_pclear(PValue pName)
 	auto name = pName->getStr();
 	if (persistentVarDefined(name)) {
 		auto ret = mkValue(persistentVarGet(name));
+		ret->setExact(false);
 		persistentVarClear(name);
 		return ret;
 	} else {
@@ -2885,7 +2963,9 @@ PValue AluFunc_pset(PValue pName, PValue pValue)
 	std::string varName = pName->getStr();
 	std::string varValue = pValue->getStr();
 	persistentVarSet(varName, varValue);
-	return pValue;
+	auto ret = mkValue(*pValue);
+	ret->setExact(false);
+	return ret;
 }
 
 PValue AluFunc_getenv(PValue pName)

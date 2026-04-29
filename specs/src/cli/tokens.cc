@@ -1,4 +1,5 @@
 #include <cstring>
+#include <climits>
 #include <regex>
 #include <cctype>
 #include "utils/platform.h"
@@ -247,6 +248,11 @@ static PTokenFieldRange parseAsFromLenRange(std::string s)
 		return nullptr;
 	}
 
+	// Check for overflow before computing _to
+	if ((_from > 0 && _len > LONG_MAX - _from + 1) ||
+	    (_from < 0 && _len > LONG_MAX)) {
+		return nullptr;
+	}
 	_to = _from + _len - 1;
 	if (_from<0 && _to>=0) {
 		_to++;  // skipping the zero
@@ -359,6 +365,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(requires, REQUIRES);
 	SIMPLETOKEN(skip-while, SKIPWHILE);
 	SIMPLETOKEN(skip-until, SKIPUNTIL);
+	SIMPLETOKEN(splitw, SPLITW);
+	SIMPLETOKEN(splitf, SPLITF);
 
 	/* question mark to replace PRINT */
 	if (arg[0]=='?') {
@@ -511,6 +519,10 @@ CONT1:
 #define MAX_INPUT_RANGES_IN_GROUP 256
 static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int argidx)
 {
+	if (s.length() < 2) {
+		std::string err = "Invalid ranges group at index " + std::to_string(argidx);
+		MYTHROW(err);
+	}
 	char* localCopy = strdup(s.c_str()+1); // +2 to get rid of opening parenthesis
 	char* itemPtrs[MAX_INPUT_RANGES_IN_GROUP];
 	localCopy[s.length()-2]=0; // Gets rid of closing parenthesis
@@ -518,8 +530,9 @@ static void parseInputRangesTokens(std::vector<Token> *pVec, std::string s, int 
 	unsigned int idx = 0;
 	char* localCopy_ctx = localCopy;
 	itemPtrs[idx] = strtok_r(localCopy, " ", &localCopy_ctx);
-	while (itemPtrs[idx] && idx<MAX_INPUT_RANGES_IN_GROUP) {
+	while (idx<MAX_INPUT_RANGES_IN_GROUP && itemPtrs[idx]) {
 		idx++;
+		if (idx >= MAX_INPUT_RANGES_IN_GROUP) break;
 		itemPtrs[idx] = strtok_r(nullptr, " ", &localCopy_ctx);
 	}
 	if (idx==MAX_INPUT_RANGES_IN_GROUP) {
@@ -709,6 +722,9 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					std::string expression = "(";
 					do {
 						tokList->erase(tokList->begin()+(i+1));
+						if (i+1 >= tokList->size()) {
+							MYTHROW("Unterminated group expression");
+						}
 						nextTok = tokList->at(i+1);
 						expression += getLiteral(nextTok);
 					} while (TokenListType__GROUPEND != nextTok.Type());
@@ -745,7 +761,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					PTokenFieldRange pRange = nextTok.Range();
 					// We just want one number between 1 and 8. Anything else causes an exception.
 					if (!pRange || !pRange->isSingleNumber()) {
-						std::string err = "Invalid input stream descriptor: " + pRange->Debug();
+						std::string err = "Invalid input stream descriptor: " + (pRange ? pRange->Debug() : nextTok.Orig());
 						MYTHROW(err);
 					}
 					int streamIndex = pRange->getSingleNumber();
@@ -779,7 +795,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					PTokenFieldRange pRange = nextTok.Range();
 					// We just want one number between 1 and 8. Anything else causes an exception.
 					if (!pRange || !pRange->isSingleNumber()) {
-						std::string err = "Invalid input stream descriptor: " + pRange->Debug();
+						std::string err = "Invalid input stream descriptor: " + (pRange ? pRange->Debug() : nextTok.Orig());
 						MYTHROW(err);
 					}
 					int streamIndex = pRange->getSingleNumber();
@@ -857,6 +873,47 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					MYTHROW(err);
 				}
 			}
+			break;
+		}
+		case TokenListType__SPLITW:
+		case TokenListType__SPLITF:
+		{
+			std::string separator;
+			
+			// Check for optional separator (WS for SPLITW, FS for SPLITF)
+			if (i+1 < tokList->size()) {
+				Token& maybeSep = tokList->at(i+1);
+				if (TokenListType__WORDSEPARATOR == maybeSep.Type()) {
+					if (TokenListType__SPLITF == tok.Type()) {
+						std::string err = "SPLITF cannot be followed by WORDSEPARATOR at index " + std::to_string(maybeSep.argIndex());
+						MYTHROW(err);
+					}
+					separator = maybeSep.Literal();
+					tokList->erase(tokList->begin()+(i+1));
+					// If the WS token's literal was empty, it hasn't absorbed its value yet
+					if (separator.empty() && i+1 < tokList->size() && mayBeLiteral(tokList->at(i+1))) {
+						separator = getLiteral(tokList->at(i+1));
+						tokList->erase(tokList->begin()+(i+1));
+					}
+				} else if (TokenListType__FIELDSEPARATOR == maybeSep.Type()) {
+					if (TokenListType__SPLITW == tok.Type()) {
+						std::string err = "SPLITW cannot be followed by FIELDSEPARATOR at index " + std::to_string(maybeSep.argIndex());
+						MYTHROW(err);
+					}
+					separator = maybeSep.Literal();
+					tokList->erase(tokList->begin()+(i+1));
+					// If the FS token's literal was empty, it hasn't absorbed its value yet
+					if (separator.empty() && i+1 < tokList->size() && mayBeLiteral(tokList->at(i+1))) {
+						separator = getLiteral(tokList->at(i+1));
+						tokList->erase(tokList->begin()+(i+1));
+					}
+				}
+			}
+			
+			// Store separator in literal field
+			// Note: OF clause is NOT consumed here; it is parsed at compile time
+			// by SplitItem::parse using full InputPart support (like SUBSTRING)
+			tok.setLiteral(separator);
 			break;
 		}
 		default:

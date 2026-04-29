@@ -10,19 +10,28 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+1-May-2026: Version 0.9.9 is here
+
+What's new:
+ * MSI package & standalone executable for Windows
+ * .pkg package for Mac OS
+ * RPM for Linux
+ * .deb package for Ubuntu/Debian
+ * Visual Studio infra for building for Windows
+ * Improved guessing of Python version
+ * New spec units: `SPLITW` and `SPLITF` for splitting input records by words or fields into multiple output records. These new spec units support optional custom separators, `OF` clauses (with the same semantics as SUBSTRING), and range output placement (e.g. `splitw 1-10`).
+ * A more exact `exact()` function
+
+*Note:* Installing from package does not include Python support on Windows.
+
+*Note:* On Linux, the `specs` binary is bigger when installed from package, as it is statically linked with libstdc++.
+***
 28-Feb-2026: Version 0.9.6 is here
 
 What's new:
  * Support for newer Linux distros (newer gcc)
  * Support for Visual Studio and latest Windows versions
  * Alignment with C++ coding standards
-***
-03-Jan-2025: Version 0.9.5-HF1 is here
-
-What's new:
- * Fixes a bug where `RECNO` within a loop returned the number of iterations of the loop rather than the numbers of records read.
-
-NOTE: This is a non-backwards-compatible change. 
 
 Sources
 =======
@@ -30,11 +39,20 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 1. Using git: `git clone https://github.com/yoavnir/specs2016.git`
 2. Using http: `wget https://github.com/yoavnir/specs2016/archive/dev.zip`
 
+Installation from binaries
+==========================
+The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v0.9.9)
+
+Limitations:
+ * You will not get any Python support for Python integration on Windows
+ * You may get an older version of Python for Python integration on other platforms
+ * No support for exotic OS-es like Windows on ARM.
+
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.5:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.9:
 ```
-git checkout v0.9.6
+git checkout v0.9.9
 ```
 A good way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
@@ -43,12 +61,17 @@ git rebase
 ```
 
 After that, _cd_ to the specs/src directory, and run the following three commands:
-* `python setup.py`
+* `python setup.py` - use `python3` or `python3.x` if your default Python version is 2.7
 * `make some`
 * `sudo make install`
 
-*Note:* Windows does not need `sudo`. 
-*Note:* Only Python 3 is supported at this point.
+*Note:* For Microsoft Windows, you can use **MSBuild** as follows:
+* Start from the repository directory (do not _cd_ to specs/src)
+* `msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64`
+* Now copy the resulting `specs.exe` to a target directory in the path. 
+
+*Note:* Only Python 3 is supported at this point. To enable Python support, you need to have the `python3-devel` package that matches your python version installed.
+
 *Note:* On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
 
 Known Issues

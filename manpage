@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 Mar 2026" "0.9.6" "specs man page"
+.TH man 1 "1 May 2026" "0.9.9" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -142,7 +142,33 @@ The
 .B OutputPart
 argument can also be specified as a 
 .B Composed Output Placement
-argument. It is enclosed in non-optional parenthesis and includes 1, 2, or 3 comma-separated expressions. Those expressions are evaluated at each cycle to produce the starting column, the field width, and the alignment of the field.  If the parenthesis include only one expression, that expression is the starting column. If it contains two expressions, those expressions are the starting column and the width. A width of zero is a special value denoting the normal width of the output. If all three expressions are present, the last one is evaluated as a string, and the alignment will be determined by the value. It will be centered if the argument begins with a capital or lower-case 'c', right-aligned if the value begins with a capital or lower-case 'r', and left-aligned in all other cases.  If the alignment field is two characters in length, the second character is a digit between
+argument. It is enclosed in non-optional parenthesis and contains 1, 2, or 3 comma-separated expressions. The expressions are evaluated at each cycle to produce the starting column, the field width, and the alignment of the field.
+.P
+With one expression, that expression is the starting column. For example:
+.P
+    specs w1 (@cols)
+.P
+places the first word at the column given by the
+.I @cols
+label.
+.P
+With two expressions, they are the starting column and the width. A width of zero is a special value denoting the natural width of the output. For example:
+.P
+    specs w1 (1,10)
+.P
+places the first word in columns 1-10.
+.P
+With three expressions, the third expression is evaluated as a string and determines the alignment. If that value begins with a capital or lower-case
+.I c
+the field is centered; if it begins with a capital or lower-case
+.I r
+the field is right-aligned; otherwise it is left-aligned. For example:
+.P
+    specs /hello/ (1,@cols,'R')
+.P
+right-aligns the string in the available display width.
+.P
+If the alignment field is two characters in length, the second character is a digit between
 .I 1-5,
 and the content is longer than the output field, the truncation will use an ellipsis as follows: For a value of
 .I 1, 
@@ -161,7 +187,7 @@ If that is done, the default for the output start is the next place, equivalent 
 .I next(), 
 while the default for the second argument is the rest of the line, based on the 
 .I @cols
-label.
+label. In other words, omitted arguments default the same way they would if the field were placed at the next available position and allowed to use the remaining width.
 
 The conversion argument can specify any of the following conversions:
 .IP "rot13" 3
@@ -212,9 +238,9 @@ or
 .I READSTOP
 spec unit will read it back.  This is useful when looping with READ searching for the next line to run the specification on.
 .IP "WRITE" 3
-Causes the program to write to output and reset the output line.
+Immediately writes the current output record and resets the output buffer to empty so that subsequent spec units in the same cycle can build a new output record.
 .IP "NOWRITE" 3
-Causes the program not to suppress the write at the end of the cycle.
+Suppresses the output record for the current processing cycle. The specification continues to execute normally, but no output record is written at the end of the cycle.
 .I NOPRINT
 is a synonym for 
 .I NOWRITE
@@ -239,24 +265,98 @@ to make all whitespace defined by the locale work as a word separator. This keyw
 spec unit.
 .IP "REDO" 3
 Causes the current output line to become the new input line.
+.IP "SPLITW" 3
+Splits the current input record by words and produces one output record for each word. 
+Any spec units before the 
+.B SPLITW
+form a prefix that is replicated in each output record.
+Any spec units after the 
+.B SPLITW
+(such as
+.B REDO
+) are applied to each output record individually.
+An optional 
+.B WORDSEPARATOR
+may follow the 
+.B SPLITW
+keyword to specify a custom word separator for splitting.
+An optional 
+.B OF
+clause may follow to specify which part of the input record to split. The 
+.B OF
+clause accepts the same input parts as 
+.B SUBSTRING:
+a character range, a word range, or a field range.
+.P
+Example:
+.P
+    echo "one two three" | specs splitw 1
+.P
+produces three output records: "one", "two", "three".
+.P
+    echo "one two three" | specs 'prefix:' 1 splitw nextword
+.P
+produces: "prefix: one", "prefix: two", "prefix: three".
+.P
+    echo "a:b:c are items" | specs splitf fs : of word 1 1
+.P
+produces: "a", "b", "c" (splitting only the first word by field separator).
+.P
+Nested 
+.B SPLITW
+or
+.B SPLITF
+units in the same specification are not allowed.
+.IP "SPLITF" 3
+Splits the current input record by fields and produces one output record for each field. 
+Works like 
+.B SPLITW
+but splits by field separator instead of word separator. Empty fields are preserved.
+An optional 
+.B FIELDSEPARATOR
+may follow the 
+.B SPLITF
+keyword to specify a custom field separator for splitting.
+An optional 
+.B OF
+clause may follow to specify which part of the input record to split, accepting the same input parts as 
+.B SUBSTRING.
 .IP "SET" 3
 Followed by a single assignment operation or multiple assignment operations separated by semicolons, SET implements this and assigns a value to the system counters. See the Expressions and Assignments section.
 .IP "CONTINUE" 3
-Causes the specification to stop and go on to the next record. If any output has been made, it is dumped to output.  This is typically used in an 
+Stops execution of the current cycle immediately and goes on to the next record. Any output already accumulated for the current cycle remains in the output buffer, and is handled by the normal end-of-cycle logic: it is written, unless suppressed by 
+.B NOWRITE
+or by 
+.B PRINTONLY,
+and if 
+.B PRINTONLY KEEP
+is in effect, the buffered output may be carried forward instead of being discarded. This is typically used within an 
 .B IF
 block.
 .IP "SKIP-WHILE and SKIP-UNTIL" 3
-Either of these statements causes the specification to skip input lines
+These statements are one-time gates for the beginning of a specification. They cause the specification to skip input lines
 .B while
 a condition is true, or
 .B until
-if becomes false. More precisely, the specification stops and goes to the next record, similar to the 
+the condition becomes true. More precisely, each of them stops the current cycle and goes on to the next record, similar to the 
 .B CONTINUE
-unit, but once the condition for passing occurs once, the condition is never evaluated again and future records are passed unchecked. It usually only makes sense to place 
+unit, but once the pass condition occurs once, the condition is never evaluated again and future records are passed unchecked. It usually only makes sense to place 
 .B SKIP-WHILE
 and
 .B SKIP-UNTIL
 units at the beginning of the specification.
+.P
+For example:
+.P
+    specs w1 a: SKIP-WHILE "a<20200701" 1-* 1
+.P
+skips records until the first record whose first word is at least 20200701, then processes that record and all subsequent records normally.
+.P
+Similarly:
+.P
+    specs w1 a: SKIP-UNTIL "a=BEGIN" 1-* 1
+.P
+skips records until the first record whose first word is BEGIN, then processes that record and all subsequent records normally.
 
 .SS "MainOptions"
 These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
@@ -435,15 +535,15 @@ sorted by department name. You can print this out without repeating the departme
 .SS "RunIn and RunOut Cycles"
 A 
 .B cycle 
-is defined as a single run of the specification, which includes reading an input record, processing it, and outputting one or more records. If the specification contains 
+is a single run of the specification on the current active input record. A cycle may read additional input records, produce zero output records, or produce multiple output records. If the specification contains 
 .B read 
 or 
 .B readstop 
-tokens, a single cycle can consume more than one input records.
+tokens, a single cycle can consume more than one input record.
 
 The 
 .B runin 
-cycle is the first one to run. In the runin cycle, the function 
+cycle is the first cycle. In the runin cycle, the function 
 .B first()
 returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
 
@@ -451,7 +551,7 @@ The
 .B runout 
 cycle happens 
 .I after 
-the last line has been read.  It consists of the spec items that follow the 
+the last line has been read, but only when the specification requires a runout cycle. It consists of the spec items that follow the 
 .B EOF 
 token, or (when 
 .I select second 
@@ -763,7 +863,7 @@ Returns the range of characters from
 .B s
 (default first) to 
 .B e 
-(default last) from the input record. If the end of the range exceeds the end, truncates the result at the end. If the start of the range exceeds the end, or if the start is smaller than the end, returns NaN.
+(default last) from the input record. If the end of the range exceeds the end of the input, the result is truncated at the end. If the start of the range exceeds the end of the input, the result is the empty string. If the start is greater than the end, the function returns NaN.
 .IP "wordcount(s,p)" 3
 Returns the number of words in the string 
 .B s, 
@@ -890,7 +990,9 @@ Returns whether the evaluation of
 .I expression
 results in an exact result (1) or not (0). 
 .B NOTE:
-This function currently just returns zero.
+This function has some limitations. For example, Python functions are always taken to return an exact value when they return an integer or a string, but an inexact value when they return a float, which may or may not be correct. When unsure, the
+.B exact
+function errs on the side of returning 0.
 
 .SS "Built-In String Functions"
 .IP "abbrev(information, info, len)" 3

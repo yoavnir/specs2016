@@ -25,7 +25,11 @@ specs    /Filename:/ 1
 Every WRITE resets the output record to empty and it can get filled again from scratch.
 
 ## No Output Records At All
-Sometimes we would like to not produce any output record at all. For that we use the `NOWRITE` keyword or its synonym `NOPRINT`. So why do we have data fields at all if we don't want to output them?  There can be several reasons:
+Sometimes we would like to produce no output record for a cycle. For that we use the `NOWRITE` keyword or its synonym `NOPRINT`.
+
+`NOWRITE` suppresses the output record for the current processing cycle. The specification continues to execute normally, but no output record is written at the end of the cycle.
+
+So why do we have data fields at all if we don't want to output them? There can be several reasons:
 1. We may be writing a specification whose only output is in the run-out phase, but we have some output for each record as debugging output. When the specification works as we want it to, we add the `NOWRITE` token, eliminating all per-record output.
 1. We may want to write the record or not write it based on some condition. The `NOWRITE` token can appear within an `IF` statement.
 
@@ -129,6 +133,83 @@ But this seems inelegant. **specs** includes the `REDO` spec unit just for this.
 ```
 grep shuttle test* | specs fs : f2-* 1 REDO /source:/ 1 w1 nw
 ```
+
+## Splitting Records by Word or Field
+The `SPLITW` and `SPLITF` spec units split the current input record into multiple output records, one for each word or field respectively. Any spec units that appear *before* the split unit form a prefix that is replicated in every output record. Any spec units that appear *after* the split unit (such as `REDO`) are applied to each output record individually.
+
+### SPLITW
+`SPLITW` splits by words. Here is a simple example:
+```
+echo "one two three" | specs splitw 1
+```
+Output:
+```
+one
+two
+three
+```
+
+A prefix can be added:
+```
+echo "one two three" | specs 'prefix:' 1 splitw nextword
+```
+Output:
+```
+prefix: one
+prefix: two
+prefix: three
+```
+
+`SPLITW` can be combined with `REDO`:
+```
+echo "the boy went to the store" | specs splitw 1 redo 'WORD:' 1 1-* next
+```
+Output:
+```
+WORD:the
+WORD:boy
+WORD:went
+WORD:to
+WORD:the
+WORD:store
+```
+
+### SPLITF
+`SPLITF` works the same way but splits by field separator instead of word separator. Empty fields are preserved:
+```
+echo "a:b::d" | specs fs : splitf 1
+```
+Output:
+```
+a
+b
+
+d
+```
+
+### Optional Separator and OF Clause
+Both `SPLITW` and `SPLITF` accept an optional separator and an `OF` clause:
+- `SPLITW WS ,` splits by comma as the word separator.
+- `SPLITF FS ,` splits by comma as the field separator.
+- The `OF` clause specifies which part of the input record to split, and accepts the same input parts as `SUBSTRING`: character ranges, word ranges, or field ranges.
+
+For example:
+```
+echo "The numbers are one:two:three and that is all" | specs splitf fs : of 17:29 1
+```
+produces: "one", "two", "three" (splitting characters 17-29 by field separator).
+```
+echo "The numbers are one:two:three and that is all" | specs splitf fs : of word 4 1
+```
+also produces: "one", "two", "three" (splitting the 4th word by field separator).
+
+A mismatched separator (e.g., `SPLITW` with `FIELDSEPARATOR` or `SPLITF` with `WORDSEPARATOR`) is an error.
+
+### Restrictions
+Nested `SPLITW`/`SPLITF` units in the same specification are not allowed.
+
+### Output Placement
+Like other spec units, the output placement for `SPLITW`/`SPLITF` can be elided (defaulting to `NEXTWORD`), specified explicitly as a column number, `NEXT`, `NEXTWORD`, or `NEXTFIELD`.
 
 ## The Second Reading Station
 At the conclusion of each cycle, **specs** loads the record from the primary input into a buffer, called the *second reading station*, that can be accessed during the next cycle.  Similar to the `EOF` token and the `eof()` function, any access to the second reading forces a *run-out cycle*.
