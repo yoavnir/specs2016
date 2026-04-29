@@ -17,7 +17,7 @@ What's new:
  * .pkg package for Mac OS
  * RPM for Linux
  * .deb package for Ubuntu/Debian
- * Homebrew formula
+ * Visual Studio infra for building for Windows
  * Improved guessing of Python version
  * New spec units: `SPLITW` and `SPLITF` for splitting input records by words or fields into multiple output records. These new spec units support optional custom separators, `OF` clauses (with the same semantics as SUBSTRING), and range output placement (e.g. `splitw 1-10`).
  * A more exact `exact()` function
@@ -39,6 +39,15 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 1. Using git: `git clone https://github.com/yoavnir/specs2016.git`
 2. Using http: `wget https://github.com/yoavnir/specs2016/archive/dev.zip`
 
+Installation from binaries
+==========================
+The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v0.9.9)
+
+Limitations:
+ * You will not get any Python support for Python integration on Windows
+ * You may get an older version of Python for Python integration on other platforms
+ * No support for exotic OS-es like Windows on ARM.
+
 Building
 ========
 If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.9:
@@ -56,7 +65,7 @@ After that, _cd_ to the specs/src directory, and run the following three command
 * `make some`
 * `sudo make install`
 
-*Note:* Windows does not need `sudo`. 
+*Note:* For Microsoft Windows, you can use `msbuild specs/specs.sln /p:Configuration=Debug /p:Platform=x64` instead of `make`. 
 
 *Note:* Only Python 3 is supported at this point. To enable Python support, you need to have the `python3-devel` package that matches your python version installed.
 
