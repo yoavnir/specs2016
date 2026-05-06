@@ -93,4 +93,4 @@ Known Issues
 * Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
 * On Windows with Python support, the appropriate DLL (like `python312.dll`) must be in the PATH.
 
-*Note:* Although Windows for ARM64 is not officially supported, that platform will run the x64 version just fine.
+*Note:* Although Windows for ARM64 is not officially supported, that platform will run the x64 version just fine. For Python integration, you'll need to install the x64 version of Python.

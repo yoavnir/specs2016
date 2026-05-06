@@ -238,6 +238,92 @@ jobs:
         name: windows-exe
         path: specs-*-windows-x64.exe
 
+  build-windows-python:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Normalize Windows version metadata
+      id: version
+      shell: bash
+      run: |
+        raw_version="${SPECS_VERSION:-${{ github.event.inputs.version }}}"
+        if [ -z "$raw_version" ]; then
+          echo "Missing release version" >&2
+          exit 1
+        fi
+
+        display_version="${raw_version#v}"
+        numeric_base="${display_version%%[-+]*}"
+        IFS='.' read -r major minor patch extra <<< "$numeric_base"
+        major="${major:-0}"
+        minor="${minor:-0}"
+        patch="${patch:-0}"
+        extra="${extra:-0}"
+
+        echo "raw=$raw_version" >> "$GITHUB_OUTPUT"
+        echo "display=$display_version" >> "$GITHUB_OUTPUT"
+        echo "file=${major},${minor},${patch},${extra}" >> "$GITHUB_OUTPUT"
+        echo "msi=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+
+    - name: Generate Windows version header
+      shell: bash
+      run: |
+        cat > specs/src/specs_version.h <<EOF
+        #define SPEC_PRODUCT_NAME "specs"
+        #define SPEC_FILE_DESCRIPTION "A re-writing of the specs pipeline stage from CMS, only changed quite a bit"
+        #define SPEC_PRODUCT_VERSION "${{ steps.version.outputs.display }}"
+        #define SPEC_COPYRIGHT "Copyright (c) 2018-2026 Yoav Nir"
+        #define SPEC_FILE_VERSION ${{ steps.version.outputs.file }}
+        EOF
+
+    - name: Build specs with Python (Release)
+      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }} /p:EnablePython=true
+
+    - name: Verify binary
+      run: specs\bin\Release\specs.exe "@version" WRITE "@platform"
+
+    - name: Prepare standalone executable
+      shell: bash
+      run: cp specs/bin/Release/specs.exe specs-${{ steps.version.outputs.display }}-python312-windows-x64.exe
+
+    - name: Install WiX Toolset
+      run: dotnet tool install --global wix --version 4.0.6
+
+    - name: Create WiX source
+      shell: bash
+      run: |
+        sed \
+          -e "s/@VERSION@/${{ steps.version.outputs.msi }}/g" \
+          -e "s/@DISPLAY_VERSION@/${{ steps.version.outputs.display }}/g" \
+          .github/packaging/specs-python.wxs.in > specs-python.wxs
+
+    - name: Build MSI
+      shell: bash
+      run: wix build -o specs-${{ steps.version.outputs.display }}-python312.msi specs-python.wxs
+
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-msi-python
+        path: specs-*-python312.msi
+
+    - name: Upload standalone executable artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-exe-python
+        path: specs-*-python312-windows-x64.exe
+
   build-deb:
     strategy:
       matrix:
@@ -331,7 +417,7 @@ jobs:
         path: specs_*.deb
 
   publish:
-    needs: [build-linux, build-macos, build-windows, build-deb]
+    needs: [build-linux, build-macos, build-windows, build-windows-python, build-deb]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -353,4 +439,6 @@ jobs:
           artifacts/linux-deb-arm64/*.deb
           artifacts/macos-pkg/*.pkg
           artifacts/windows-msi/*.msi
+          artifacts/windows-msi-python/*.msi
           artifacts/windows-exe/*.exe
+          artifacts/windows-exe-python/*.exe
