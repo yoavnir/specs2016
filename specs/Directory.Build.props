@@ -6,5 +6,11 @@
     <SpecsCopyright>Copyright (c) 2018-2026 Yoav Nir</SpecsCopyright>
     <SpecsProductVersion Condition="'$(SpecsProductVersion)' == ''">$(GitTag)</SpecsProductVersion>
     <SpecsFileVersion Condition="'$(SpecsFileVersion)' == ''">1,0,0,0</SpecsFileVersion>
+    <!-- Python support: pass /p:EnablePython=true on the MSBuild command line to enable -->
+    <EnablePython Condition="'$(EnablePython)' == ''">false</EnablePython>
+    <SpecsPythonDefs Condition="'$(EnablePython)' != 'true'">SPECS_NO_PYTHON;PYTHON_FULL_VER=N/A;</SpecsPythonDefs>
+    <SpecsPythonDefs Condition="'$(EnablePython)' == 'true'">PYTHON_VER_3;</SpecsPythonDefs>
+    <SpecsPythonPlatformNote Condition="'$(EnablePython)' == 'true'"> with Python</SpecsPythonPlatformNote>
+    <SpecsPythonPlatformNote Condition="'$(EnablePython)' != 'true'"></SpecsPythonPlatformNote>
   </PropertyGroup>
 </Project>

@@ -48,29 +48,7 @@ Limitations:
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.9:
-```
-git checkout v0.9.9
-```
-A good way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
-```
-git checkout stable
-git rebase
-```
-
-After that, _cd_ to the specs/src directory, and run the following three commands:
-* `python setup.py` - use `python3` or `python3.x` if your default Python version is 2.7
-* `make some`
-* `sudo make install`
-
-*Note:* For Microsoft Windows, you can use **MSBuild** as follows:
-* Start from the repository directory (do not _cd_ to specs/src)
-* `msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64`
-* Now copy the resulting `specs.exe` to a target directory in the path. 
-
-*Note:* Only Python 3 is supported at this point. To enable Python support, you need to have the `python3-devel` package that matches your python version installed.
-
-*Note:* On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
+For detailed build instructions covering Linux, Mac OS, and Windows (both `make` and MSBuild), see [BUILDING.md](BUILDING.md).
 
 Known Issues
 ============

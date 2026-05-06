@@ -1,0 +1,71 @@
+<Project>
+  <!--
+    Python support for MSBuild.
+    When EnablePython is true, this file auto-detects the Python installation
+    (or uses values provided on the command line) and injects the necessary
+    compiler and linker options into every project in the solution.
+
+    Usage:
+      msbuild specs.sln /p:Configuration=Release /p:Platform=x64 /p:EnablePython=true
+
+    Optional overrides (if Python is not in PATH):
+      /p:PythonDir=C:\Python312
+      /p:PythonVerNoDot=312
+      /p:PythonFullVer=3.12.0
+  -->
+
+  <!-- Auto-detect Python installation -->
+  <Target Name="DetectPython" BeforeTargets="ClCompile" Condition="'$(EnablePython)' == 'true'">
+    <PropertyGroup>
+      <_PythonExe Condition="'$(PythonDir)' != ''">$(PythonDir)\python.exe</_PythonExe>
+      <_PythonExe Condition="'$(PythonDir)' == ''">python</_PythonExe>
+    </PropertyGroup>
+
+    <!-- Detect Python prefix if not provided -->
+    <Exec Command="&quot;$(_PythonExe)&quot; -c &quot;import sysconfig; print(sysconfig.get_config_var('prefix'))&quot;"
+          ConsoleToMsBuild="true" StandardOutputImportance="low"
+          Condition="'$(PythonDir)' == ''">
+      <Output TaskParameter="ConsoleOutput" PropertyName="PythonDir" />
+    </Exec>
+
+    <!-- Detect Python version (no dots) if not provided -->
+    <Exec Command="&quot;$(_PythonExe)&quot; -c &quot;import sysconfig; print(sysconfig.get_config_var('py_version_nodot'))&quot;"
+          ConsoleToMsBuild="true" StandardOutputImportance="low"
+          Condition="'$(PythonVerNoDot)' == ''">
+      <Output TaskParameter="ConsoleOutput" PropertyName="PythonVerNoDot" />
+    </Exec>
+
+    <!-- Detect full Python version if not provided -->
+    <Exec Command="&quot;$(_PythonExe)&quot; -c &quot;import sysconfig; print(sysconfig.get_config_var('py_version'))&quot;"
+          ConsoleToMsBuild="true" StandardOutputImportance="low"
+          Condition="'$(PythonFullVer)' == ''">
+      <Output TaskParameter="ConsoleOutput" PropertyName="PythonFullVer" />
+    </Exec>
+
+    <Message Text="Python support enabled: dir=$(PythonDir), version=$(PythonFullVer)" Importance="high" />
+  </Target>
+
+  <!-- Add Python include directory and version define to all compiled files -->
+  <Target Name="AddPythonCompileOptions" BeforeTargets="ClCompile" DependsOnTargets="DetectPython"
+          Condition="'$(EnablePython)' == 'true'">
+    <ItemGroup>
+      <ClCompile>
+        <AdditionalIncludeDirectories>$(PythonDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        <PreprocessorDefinitions>PYTHON_FULL_VER=$(PythonFullVer);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      </ClCompile>
+    </ItemGroup>
+  </Target>
+
+  <!-- Add Python library to the linker -->
+  <Target Name="AddPythonLinkOptions" BeforeTargets="Link" DependsOnTargets="DetectPython"
+          Condition="'$(EnablePython)' == 'true'">
+    <PropertyGroup>
+      <_PythonLib>$(PythonDir)\libs\python$(PythonVerNoDot).lib</_PythonLib>
+    </PropertyGroup>
+    <ItemGroup>
+      <Link>
+        <AdditionalDependencies>$(_PythonLib);%(AdditionalDependencies)</AdditionalDependencies>
+      </Link>
+    </ItemGroup>
+  </Target>
+</Project>
