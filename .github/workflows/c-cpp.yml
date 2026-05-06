@@ -12,6 +12,8 @@ env:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+    container: 
+      image: ubuntu:24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -26,11 +28,13 @@ jobs:
         echo "$PR_EVENT"
 
     - name: Install Python dev headers
-      run: sudo apt-get install -y python3-dev
+      run: |
+        apt update
+        apt install -y python3.12-dev
 
     - name: configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 
+      run: python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12 
 
     - name: make
       working-directory: specs/src
