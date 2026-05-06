@@ -13,7 +13,9 @@ News
 11-Sep-2026: Version 1.0.0 is here
 
 What's new:
- * Various TBD improvements
+ * Support Python in `MSBuild` builds
+ * Added MSI and stand-alone Windows executable with Python 3.12 support
+
 ***
 1-May-2026: Version 0.9.9 is here
 
@@ -42,9 +44,9 @@ Installation from binaries
 The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v0.9.9)
 
 Limitations:
- * You will not get any Python support for Python integration on Windows
- * You may get an older version of Python for Python integration on other platforms
- * No support for exotic OS-es like Windows on ARM.
+ * You may get an older version of Python for Python integration.
+ * On Windows, you need to have Python 3.12 (exactly!) to get Python integration.
+ * On Windows for ARM, you need to install the x64 version of Python 3.12.
 
 Building
 ========
