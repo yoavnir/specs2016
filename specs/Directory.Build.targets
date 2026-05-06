@@ -24,9 +24,14 @@
     <!-- Detect Python prefix if not provided -->
     <Exec Command="&quot;$(_PythonExe)&quot; -c &quot;import sysconfig; print(sysconfig.get_config_var('prefix'))&quot;"
           ConsoleToMsBuild="true" StandardOutputImportance="low"
-          Condition="'$(PythonDir)' == ''">
+          Condition="'$(PythonDir)' == ''"
+          IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="PythonDir" />
+      <Output TaskParameter="ExitCode" PropertyName="_PythonDetectExitCode" />
     </Exec>
+
+    <Error Text="EnablePython=true but Python was not found. Either install Python and ensure it is in your PATH, or pass /p:PythonDir=&lt;path-to-python-installation&gt; on the MSBuild command line."
+           Condition="('$(PythonDir)' == '') or ('$(_PythonDetectExitCode)' != '' and '$(_PythonDetectExitCode)' != '0')" />
 
     <!-- Detect Python version (no dots) if not provided -->
     <Exec Command="&quot;$(_PythonExe)&quot; -c &quot;import sysconfig; print(sysconfig.get_config_var('py_version_nodot'))&quot;"
@@ -41,6 +46,14 @@
           Condition="'$(PythonFullVer)' == ''">
       <Output TaskParameter="ConsoleOutput" PropertyName="PythonFullVer" />
     </Exec>
+
+    <!-- Validate that the Python include directory exists -->
+    <Error Text="Python include directory not found at '$(PythonDir)\include'. Ensure that Python development files are installed, or correct the PythonDir property."
+           Condition="!Exists('$(PythonDir)\include')" />
+
+    <!-- Validate that the Python library exists -->
+    <Error Text="Python library not found at '$(PythonDir)\libs\python$(PythonVerNoDot).lib'. Ensure that Python development files are installed, or correct the PythonDir and PythonVerNoDot properties."
+           Condition="!Exists('$(PythonDir)\libs\python$(PythonVerNoDot).lib')" />
 
     <Message Text="Python support enabled: dir=$(PythonDir), version=$(PythonFullVer)" Importance="high" />
   </Target>
