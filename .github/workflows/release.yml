@@ -17,7 +17,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     container: 
-      image: ubuntu:24.04
+      image: ubuntu:22.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -28,18 +28,18 @@ jobs:
         EVENT: ${{ toJSON(github.event.release) }}
       run: echo "$EVENT"
 
-    - name: Install build tools
+    - name: Install build tools and Python 3.12
       run: |
         DEBIAN_FRONTEND=noninteractive apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
+        DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
+        add-apt-repository -y ppa:deadsnakes/ppa
+        DEBIAN_FRONTEND=noninteractive apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3.12 python3.12-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
 
     - name: Configure
       working-directory: specs/src
       run: |
-        # Ubuntu 24.04's libpython3.12.a has incomplete HACL* symbols (CPython issue #131298)
-        # Static linking is not possible without building HACL from source.
-        # Use dynamic linking instead.
-        python3 setup.py --branch ${SPECS_BRANCH} --python python3
+        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12
 
     - name: Build
       working-directory: specs/src
@@ -330,10 +330,10 @@ jobs:
         include:
           - arch: amd64
             runner: ubuntu-22.04
-            container: ubuntu:24.04
+            container: ubuntu:22.04
           - arch: arm64
             runner: ubuntu-22.04-arm
-            container: ubuntu:24.04
+            container: ubuntu:22.04
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container || '' }}
     steps:
@@ -341,7 +341,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install build tools
+    - name: Install build tools and Python 3.12
       run: |
         if [ "$(id -u)" -eq 0 ]; then
           APT="apt-get"
@@ -349,15 +349,15 @@ jobs:
           APT="sudo apt-get"
         fi
         $APT update
-        $APT install -y gcc g++ make python3 python3-dev dpkg-dev git libexpat1-dev zlib1g-dev
+        $APT install -y software-properties-common
+        add-apt-repository -y ppa:deadsnakes/ppa
+        $APT update
+        $APT install -y gcc g++ make python3.12 python3.12-dev dpkg-dev git libexpat1-dev zlib1g-dev
 
     - name: Configure
       working-directory: specs/src
       run: |
-        # Ubuntu 24.04's libpython3.12.a has incomplete HACL* symbols (CPython issue #131298)
-        # Static linking is not possible without building HACL from source.
-        # Use dynamic linking instead.
-        python3 setup.py --branch ${SPECS_BRANCH} --python python3
+        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12
 
     - name: Build
       working-directory: specs/src
