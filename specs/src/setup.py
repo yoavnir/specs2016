@@ -709,10 +709,23 @@ if CFG_python:
 		# Py_SetPythonHome expects a prefix; Python looks for lib/python3.X/ under it.
 		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"/usr/lib/specs/python\\"'.format(def_prefix)
 		static_pyldflags = []
+		# Python 3.12+ uses HACL* for SHA-2 hashing. When statically linking,
+		# libHacl_Hash_SHA2.a must also be linked. Check the -L directories
+		# from ldflags for this library.
+		hacl_needed = False
+		for flag in python_ldflags.split():
+			if flag.startswith("-L"):
+				if os.path.exists(os.path.join(flag[2:], "libHacl_Hash_SHA2.a")):
+					hacl_needed = True
+					break
+		if hacl_needed:
+			sys.stdout.write("Found HACL library for static linking.\n")
 		for flag in python_ldflags.split():
 			if flag.startswith("-lpython"):
 				static_pyldflags.append("-Wl,-Bstatic")
 				static_pyldflags.append(flag)
+				if hacl_needed:
+					static_pyldflags.append("-lHacl_Hash_SHA2")
 				static_pyldflags.append("-Wl,-Bdynamic")
 			else:
 				static_pyldflags.append(flag)
