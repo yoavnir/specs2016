@@ -33,46 +33,13 @@ jobs:
         DEBIAN_FRONTEND=noninteractive apt-get update
         DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
 
-    - name: Build HACL library for Python static linking
-      run: |
-        python3 << 'PYEOF'
-        import urllib.request, sysconfig, os, subprocess, sys
-        config_dir = sysconfig.get_config_var('LIBPL')
-        target = os.path.join(config_dir, 'libHacl_Hash_SHA2.a')
-        if os.path.exists(target):
-            print(f"HACL library already present at {config_dir}")
-            sys.exit(0)
-        print("HACL library not found; building from CPython source")
-        ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-        base = f"https://raw.githubusercontent.com/python/cpython/v{ver}/Modules/_hacl"
-        work = '/tmp/hacl_build'
-        os.makedirs(f"{work}/internal", exist_ok=True)
-        os.makedirs(f"{work}/include/krml/internal", exist_ok=True)
-        files = {
-            'Hacl_Hash_SHA2.c': '',
-            'Hacl_Hash_SHA2.h': '',
-            'python_hacl_namespaces.h': '',
-            'internal/Hacl_Hash_SHA2.h': 'internal/',
-            'include/krml/internal/target.h': 'include/krml/internal/',
-            'include/krml/types.h': 'include/krml/',
-            'include/krml/lowstar_endianness.h': 'include/krml/',
-        }
-        for remote, subdir in files.items():
-            url = f"{base}/{remote}"
-            local = os.path.join(work, subdir, os.path.basename(remote))
-            print(f"  Downloading {remote}")
-            urllib.request.urlretrieve(url, local)
-        os.chdir(work)
-        subprocess.check_call(['gcc', '-O2', '-I.', '-Iinclude', '-c',
-                                'Hacl_Hash_SHA2.c', '-o', 'Hacl_Hash_SHA2.o'])
-        subprocess.check_call(['ar', 'rcs', 'libHacl_Hash_SHA2.a', 'Hacl_Hash_SHA2.o'])
-        subprocess.check_call(['cp', 'libHacl_Hash_SHA2.a', config_dir])
-        print(f"Installed libHacl_Hash_SHA2.a to {config_dir}")
-        PYEOF
-
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 --static
+      run: |
+        # Ubuntu 24.04's libpython3.12.a has incomplete HACL* symbols (CPython issue #131298)
+        # Static linking is not possible without building HACL from source.
+        # Use dynamic linking instead.
+        python3 setup.py --branch ${SPECS_BRANCH} --python python3
 
     - name: Build
       working-directory: specs/src
@@ -393,46 +360,13 @@ jobs:
         $APT update
         $APT install -y gcc g++ make python3 python3-dev dpkg-dev git libexpat1-dev zlib1g-dev
 
-    - name: Build HACL library for Python static linking
-      run: |
-        python3 << 'PYEOF'
-        import urllib.request, sysconfig, os, subprocess, sys
-        config_dir = sysconfig.get_config_var('LIBPL')
-        target = os.path.join(config_dir, 'libHacl_Hash_SHA2.a')
-        if os.path.exists(target):
-            print(f"HACL library already present at {config_dir}")
-            sys.exit(0)
-        print("HACL library not found; building from CPython source")
-        ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-        base = f"https://raw.githubusercontent.com/python/cpython/v{ver}/Modules/_hacl"
-        work = '/tmp/hacl_build'
-        os.makedirs(f"{work}/internal", exist_ok=True)
-        os.makedirs(f"{work}/include/krml/internal", exist_ok=True)
-        files = {
-            'Hacl_Hash_SHA2.c': '',
-            'Hacl_Hash_SHA2.h': '',
-            'python_hacl_namespaces.h': '',
-            'internal/Hacl_Hash_SHA2.h': 'internal/',
-            'include/krml/internal/target.h': 'include/krml/internal/',
-            'include/krml/types.h': 'include/krml/',
-            'include/krml/lowstar_endianness.h': 'include/krml/',
-        }
-        for remote, subdir in files.items():
-            url = f"{base}/{remote}"
-            local = os.path.join(work, subdir, os.path.basename(remote))
-            print(f"  Downloading {remote}")
-            urllib.request.urlretrieve(url, local)
-        os.chdir(work)
-        subprocess.check_call(['gcc', '-O2', '-I.', '-Iinclude', '-c',
-                                'Hacl_Hash_SHA2.c', '-o', 'Hacl_Hash_SHA2.o'])
-        subprocess.check_call(['ar', 'rcs', 'libHacl_Hash_SHA2.a', 'Hacl_Hash_SHA2.o'])
-        subprocess.check_call(['cp', 'libHacl_Hash_SHA2.a', config_dir])
-        print(f"Installed libHacl_Hash_SHA2.a to {config_dir}")
-        PYEOF
-
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 --static
+      run: |
+        # Ubuntu 24.04's libpython3.12.a has incomplete HACL* symbols (CPython issue #131298)
+        # Static linking is not possible without building HACL from source.
+        # Use dynamic linking instead.
+        python3 setup.py --branch ${SPECS_BRANCH} --python python3
 
     - name: Build
       working-directory: specs/src
