@@ -348,6 +348,8 @@ jobs:
         else
           APT="sudo apt-get"
         fi
+        # Set timezone non-interactively to avoid tzdata prompts
+        ln -fs /usr/share/zoneinfo/UTC /etc/localtime
         $APT update
         $APT install -y software-properties-common
         add-apt-repository -y ppa:deadsnakes/ppa
