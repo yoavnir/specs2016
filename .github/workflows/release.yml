@@ -17,7 +17,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     container: 
-      image: ubuntu:20.04
+      image: ubuntu:24.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -111,6 +111,11 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
 
     - name: Configure
       working-directory: specs/src
@@ -330,9 +335,10 @@ jobs:
         include:
           - arch: amd64
             runner: ubuntu-22.04
-            container: ubuntu:22.04
+            container: ubuntu:24.04
           - arch: arm64
             runner: ubuntu-22.04-arm
+            container: ubuntu:24.04
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container || '' }}
     steps:
