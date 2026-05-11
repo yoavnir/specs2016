@@ -17,7 +17,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     container: 
-      image: ubuntu:20.04
+      image: ubuntu:22.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -28,14 +28,18 @@ jobs:
         EVENT: ${{ toJSON(github.event.release) }}
       run: echo "$EVENT"
 
-    - name: Install build tools
+    - name: Install build tools and Python 3.12
       run: |
         DEBIAN_FRONTEND=noninteractive apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
+        DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
+        add-apt-repository -y ppa:deadsnakes/ppa
+        DEBIAN_FRONTEND=noninteractive apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3.12 python3.12-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
 
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 --static
+      run: |
+        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12
 
     - name: Build
       working-directory: specs/src
@@ -43,15 +47,6 @@ jobs:
 
     - name: Verify binary
       run: specs/exe/specs "@version" WRITE "@platform"
-
-    - name: Verify no dynamic libpython dependency
-      run: |
-        if ldd specs/exe/specs | grep -q libpython; then
-          echo "ERROR: specs still dynamically links libpython"
-          ldd specs/exe/specs | grep libpython
-          exit 1
-        fi
-        echo "OK: no dynamic libpython dependency"
 
     - name: Prepare manpage
       run: |
@@ -112,9 +107,14 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py -c CLANG --branch ${SPECS_BRANCH} --python python3
+      run: python3.12 setup.py -c CLANG --branch ${SPECS_BRANCH} --python python3.12
 
     - name: Build
       working-directory: specs/src
@@ -238,6 +238,92 @@ jobs:
         name: windows-exe
         path: specs-*-windows-x64.exe
 
+  build-windows-python:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Normalize Windows version metadata
+      id: version
+      shell: bash
+      run: |
+        raw_version="${SPECS_VERSION:-${{ github.event.inputs.version }}}"
+        if [ -z "$raw_version" ]; then
+          echo "Missing release version" >&2
+          exit 1
+        fi
+
+        display_version="${raw_version#v}"
+        numeric_base="${display_version%%[-+]*}"
+        IFS='.' read -r major minor patch extra <<< "$numeric_base"
+        major="${major:-0}"
+        minor="${minor:-0}"
+        patch="${patch:-0}"
+        extra="${extra:-0}"
+
+        echo "raw=$raw_version" >> "$GITHUB_OUTPUT"
+        echo "display=$display_version" >> "$GITHUB_OUTPUT"
+        echo "file=${major},${minor},${patch},${extra}" >> "$GITHUB_OUTPUT"
+        echo "msi=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+
+    - name: Generate Windows version header
+      shell: bash
+      run: |
+        cat > specs/src/specs_version.h <<EOF
+        #define SPEC_PRODUCT_NAME "specs"
+        #define SPEC_FILE_DESCRIPTION "A re-writing of the specs pipeline stage from CMS, only changed quite a bit"
+        #define SPEC_PRODUCT_VERSION "${{ steps.version.outputs.display }}"
+        #define SPEC_COPYRIGHT "Copyright (c) 2018-2026 Yoav Nir"
+        #define SPEC_FILE_VERSION ${{ steps.version.outputs.file }}
+        EOF
+
+    - name: Build specs with Python (Release)
+      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }} /p:EnablePython=true
+
+    - name: Verify binary
+      run: specs\bin\Release\specs.exe "@version" WRITE "@platform"
+
+    - name: Prepare standalone executable
+      shell: bash
+      run: cp specs/bin/Release/specs.exe specs-${{ steps.version.outputs.display }}-python312-windows-x64.exe
+
+    - name: Install WiX Toolset
+      run: dotnet tool install --global wix --version 4.0.6
+
+    - name: Create WiX source
+      shell: bash
+      run: |
+        sed \
+          -e "s/@VERSION@/${{ steps.version.outputs.msi }}/g" \
+          -e "s/@DISPLAY_VERSION@/${{ steps.version.outputs.display }}/g" \
+          .github/packaging/specs-python.wxs.in > specs-python.wxs
+
+    - name: Build MSI
+      shell: bash
+      run: wix build -o specs-${{ steps.version.outputs.display }}-python312.msi specs-python.wxs
+
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-msi-python
+        path: specs-*-python312.msi
+
+    - name: Upload standalone executable artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-exe-python
+        path: specs-*-python312-windows-x64.exe
+
   build-deb:
     strategy:
       matrix:
@@ -247,6 +333,7 @@ jobs:
             container: ubuntu:22.04
           - arch: arm64
             runner: ubuntu-22.04-arm
+            container: ubuntu:22.04
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container || '' }}
     steps:
@@ -254,19 +341,25 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install build tools
+    - name: Install build tools and Python 3.12
       run: |
         if [ "$(id -u)" -eq 0 ]; then
           APT="apt-get"
         else
           APT="sudo apt-get"
         fi
+        # Set timezone non-interactively to avoid tzdata prompts
+        ln -fs /usr/share/zoneinfo/UTC /etc/localtime
         $APT update
-        $APT install -y gcc g++ make python3 python3-dev dpkg-dev git libexpat1-dev zlib1g-dev
+        $APT install -y software-properties-common
+        add-apt-repository -y ppa:deadsnakes/ppa
+        $APT update
+        $APT install -y gcc g++ make python3.12 python3.12-dev dpkg-dev git libexpat1-dev zlib1g-dev
 
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 --static
+      run: |
+        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12
 
     - name: Build
       working-directory: specs/src
@@ -274,15 +367,6 @@ jobs:
 
     - name: Verify binary
       run: specs/exe/specs "@version" WRITE "@platform"
-
-    - name: Verify no dynamic libpython dependency
-      run: |
-        if ldd specs/exe/specs | grep -q libpython; then
-          echo "ERROR: specs still dynamically links libpython"
-          ldd specs/exe/specs | grep libpython
-          exit 1
-        fi
-        echo "OK: no dynamic libpython dependency"
 
     - name: Prepare manpage
       run: |
@@ -331,7 +415,7 @@ jobs:
         path: specs_*.deb
 
   publish:
-    needs: [build-linux, build-macos, build-windows, build-deb]
+    needs: [build-linux, build-macos, build-windows, build-windows-python, build-deb]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -353,4 +437,6 @@ jobs:
           artifacts/linux-deb-arm64/*.deb
           artifacts/macos-pkg/*.pkg
           artifacts/windows-msi/*.msi
+          artifacts/windows-msi-python/*.msi
           artifacts/windows-exe/*.exe
+          artifacts/windows-exe-python/*.exe
