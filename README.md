@@ -44,7 +44,10 @@ The binaries for the latest release can be downloaded from [**the release page**
 
 **Requirements:**
  * **Python 3.12 must be installed on your target machine.** All pre-built binaries (Linux RPM, Linux DEB, macOS .pkg, and Windows MSI/executable) are dynamically linked against Python 3.12.
- * On Windows for ARM, you need to install the x64 version of Python 3.12.
+
+**Notes:**
+ * On Windows for ARM, you may install the x64 version of Python 3.12.
+ * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.0.0.pkg`
 
 Building
 ========
