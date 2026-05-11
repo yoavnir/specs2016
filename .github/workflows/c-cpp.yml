@@ -32,7 +32,7 @@ jobs:
 
     - name: configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 
+      run: python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12 
 
     - name: make
       working-directory: specs/src
@@ -60,7 +60,7 @@ jobs:
 
     - name: configure
       working-directory: specs/src
-      run: python3 setup.py -c CLANG --branch ${SPECS_BRANCH} --python python3
+      run: python3.12 setup.py -c CLANG --branch ${SPECS_BRANCH} --python python3.12
 
     - name: make
       working-directory: specs/src
