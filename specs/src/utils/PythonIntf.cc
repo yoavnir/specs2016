@@ -330,7 +330,7 @@ public:
 			} else {
 				std::cerr << "Python Interface: Error loading local functions: " << std::endl;
 				PyErr_Print();
-				MYTHROW("Error loading local functions");
+				exit(0);
 			}
 		}
 
