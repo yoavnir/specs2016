@@ -328,10 +328,8 @@ public:
 				m_Initialized = true;
 				return;
 			} else {
-				if (g_bVerbose) {
-					std::cerr << "Python Interface: Error loading local functions: ";
-					PyErr_Print();
-				}
+				std::cerr << "Python Interface: Error loading local functions: " << std::endl;
+				PyErr_Print();
 				MYTHROW("Error loading local functions");
 			}
 		}
