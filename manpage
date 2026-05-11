@@ -1771,6 +1771,52 @@ clause.  The following two are equivalent:
 .P
     specs IF "word(1)=='UU'"
     
+
+.SH PYTHON FUNCTIONS
+When compiled with Python support,
+.I specs
+can load user-defined functions from a Python file named
+.B localfuncs.py.
+The file is searched on
+.B SPECSPATH,
+the same path used for specification files.
+It should be a normal importable Python module.
+.PP
+Functions whose names do not start with an underscore are made available to
+.I specs
+expressions. Helper functions can be kept private by starting their names with
+an underscore.
+.PP
+For example, a
+.B localfuncs.py
+file can define a small formatting function:
+.RS
+.nf
+def commas(value):
+    value = int(value)
+    return f"{value:,}"
+.fi
+.RE
+.PP
+It can then be called from a specification expression:
+.RS
+.nf
+specs print "commas(word(1))" 1.12 RIGHT
+.fi
+.RE
+.PP
+Python functions may return an integer, floating-point number, string, or
+.B None.
+Docstrings are used by
+.B specs --help pyfuncs
+when listing loaded Python functions. Use
+.B --pythonFuncs on
+to force loading Python functions,
+.B --pythonFuncs off
+to disable them, or
+.B --pythonFuncs auto
+to load them only after an unknown function is encountered.
+
 .SH OPTIONS
 .B specs 
 supports the following switches:
