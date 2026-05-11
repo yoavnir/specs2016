@@ -40,32 +40,11 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Installation from binaries
 ==========================
-The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v0.9.9)
-
-Limitations:
- * You will not get any Python support for Python integration on Windows
- * You may get an older version of Python for Python integration on other platforms
- * No support for exotic OS-es like Windows on ARM.
-
-Building
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.9:
-```
-git checkout v0.9.9
-```
-A good way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
-```
-git checkout stable
-git rebase
-```
 The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v1.0.0)
 
 **Requirements:**
  * **Python 3.12 must be installed on your target machine.** All pre-built binaries (Linux RPM, Linux DEB, macOS .pkg, and Windows MSI/executable) are dynamically linked against Python 3.12.
 
-*Note:* For Microsoft Windows, you can use **MSBuild** as follows:
-* Start from the repository directory (do not _cd_ to specs/src)
-* `msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64`
-* Now copy the resulting `specs.exe` to a target directory in the path. 
 **Notes:**
  * On Windows for ARM, you may install the x64 version of Python 3.12.
  * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.0.0.pkg`
