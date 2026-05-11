@@ -284,10 +284,17 @@ public:
 		}
 		// Initialize Python environment
 #ifdef PYTHON_STDLIB_PATH
-		// When Python is statically linked, set the home directory to our bundled stdlib
-		Py_SetPythonHome(Py_DecodeLocale(PYTHON_STDLIB_PATH, NULL));
-#endif
+		// When Python is statically linked, use PyConfig to set the home
+		// directory to our bundled stdlib (Py_SetPythonHome was deprecated
+		// in Python 3.11).
+		PyConfig config;
+		PyConfig_InitPythonConfig(&config);
+		PyConfig_SetBytesString(&config, &config.home, PYTHON_STDLIB_PATH);
+		Py_InitializeFromConfig(&config);
+		PyConfig_Clear(&config);
+#else
 		Py_Initialize();
+#endif
 
 		// update the python path
 		if (_path && _path[0]) {

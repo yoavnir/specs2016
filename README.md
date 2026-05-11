@@ -13,6 +13,7 @@ News
 11-Sep-2026: Version 1.0.0 is here
 
 What's new:
+ * All pre-built binaries now work with Python 3.12
  * Support Python in `MSBuild` builds
  * Added MSI and stand-alone Windows executable with Python 3.12 support
 
@@ -31,8 +32,6 @@ What's new:
 
 *Note:* Installing from package does not include Python support on Windows.
 
-*Note:* On Linux, the `specs` binary is bigger when installed from package, as it is statically linked with libstdc++.
-
 Sources
 =======
 To download your copy of *specs*, you can get it from [github](https://github.com/yoavnir/specs2016) in either of two ways:
@@ -41,21 +40,25 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Installation from binaries
 ==========================
-The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v0.9.9)
+The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v1.0.0)
 
-Limitations:
- * You may get an older version of Python for Python integration.
- * On Windows, you need to have Python 3.12 (exactly!) to get Python integration.
- * On Windows for ARM, you need to install the x64 version of Python 3.12.
+**Requirements:**
+ * **Python 3.12 must be installed on your target machine.** All pre-built binaries (Linux RPM, Linux DEB, macOS .pkg, and Windows MSI/executable) are dynamically linked against Python 3.12.
+
+**Notes:**
+ * On Windows for ARM, you may install the x64 version of Python 3.12.
+ * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.0.0.pkg`
 
 Building
 ========
 For detailed build instructions covering Linux, Mac OS, and Windows (both `make` and MSBuild), see [BUILDING.md](BUILDING.md).
 
+**Note on Python versions:** The pre-built binaries are linked against Python 3.12. If you need to use a different version of Python, or if Python 3.12 is not available on your target platform, you must build `specs` locally from source. When building, you can specify which Python version to use via the `--python` option to `setup.py` (on Linux/macOS) or by setting the appropriate Python version in your Visual Studio environment (on Windows).
+
 Known Issues
 ============
 * Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
-* On Windows with Python support the appropriate dll (like `python38.dll`) must be in the path.
+* On Windows with Python support, `python312.dll` must be in the path (or Python 3.12 must be installed).
 
 Contributing
 ============

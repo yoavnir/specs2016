@@ -719,7 +719,7 @@ if CFG_python:
 		# The static libpython archive includes built-in extension modules
 		# (pyexpat, zlib, etc.) that depend on these system libraries.
 		static_pyldflags.extend(["-lexpat", "-lz"])
-		# Ubuntu 20.04's libpython3.8.a is not PIE-compatible, so disable PIE
+		# Older libpython static archives may not be PIE-compatible, so disable PIE
 		static_pyldflags.append("-no-pie")
 		condlink = condlink + " " + " ".join(static_pyldflags)
 	else:

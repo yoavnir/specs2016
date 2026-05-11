@@ -25,12 +25,14 @@ jobs:
         echo "Event: ${{ github.event_name }}, Ref: ${{ github.ref }}, SPECS_BRANCH: ${SPECS_BRANCH}"
         echo "$PR_EVENT"
 
-    - name: Install Python dev headers
-      run: sudo apt-get install -y python3-dev
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
 
     - name: configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 
+      run: python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12 
 
     - name: make
       working-directory: specs/src
@@ -51,9 +53,14 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
     - name: configure
       working-directory: specs/src
-      run: python3 setup.py -c CLANG --branch ${SPECS_BRANCH} --python python3
+      run: python3.12 setup.py -c CLANG --branch ${SPECS_BRANCH} --python python3.12
 
     - name: make
       working-directory: specs/src
