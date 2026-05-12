@@ -182,15 +182,20 @@ public:
 					pRet = mkValue(std::string(""));
 				}
 			} else if (PyString_Check(pResult)) {
-				pRet = mkValue(PyString_AS_STRING(pResult));
+				pRet = mkValue(PyUnicode_AsUTF8(pResult));
 			} else if (Py_None == pResult){
 				pRet = mkValue0();  // NaN
 			} else {
-				PyObject* pRepr = PyObject_Repr(pResult);
-				std::string err = "Invalid return type from function ";
-				err += m_name + ": ";
-				err += PyString_AS_STRING(pRepr);
-				Py_DECREF(pRepr);
+				std::string err = "Invalid return type <";
+				err += Py_TYPE(pResult)->tp_name;
+				err += "> from function ";
+				err += m_name;
+				if (g_bVerbose) {
+					PyObject* pRepr = PyObject_Repr(pResult);
+					err += " with content ";
+					err += PyUnicode_AsUTF8(pRepr);
+					Py_DECREF(pRepr);
+				}
 				Py_DECREF(pResult);
 				MYTHROW(err);
 			}
