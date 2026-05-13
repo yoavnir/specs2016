@@ -207,6 +207,27 @@ document bp_compile
   Set a breakpoint on itemGroup::Compile to debug specification compilation.
 end
 
+define bp_pfc_initialize
+  break PythonFunctionCollection::Initialize
+end
+document bp_pfc_initialize
+  Set a breakpoint on PythonFunctionCollection::Initialize to debug the initialization of the Python Function Collection.
+end
+
+define bp_func_setargvalue
+  break PythonFuncRec::setArgValue
+end
+document bp_func_setargvalue
+  Set a breakpoint on PythonFuncRec::setArgValue to debug setting external function arguments.
+end
+
+define bp_func_call
+  break PythonFuncRec::Call
+end
+document bp_func_call
+  Set a breakpoint on PythonFuncRec::Call to debug calling external functions.
+end
+
 # ============================================================================
 # USEFUL GDB SETTINGS FOR SPECS DEBUGGING
 # ============================================================================
@@ -245,6 +266,9 @@ echo Breakpoint helpers:\n
 echo   bp_apply                       - Break on Item::apply\n
 echo   bp_getstr                      - Break on InputPart::getStr\n
 echo   bp_compile                     - Break on itemGroup::Compile\n
+echo   bp_pfc_initialize              - Break on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized\n
+echo   bp_func_setargvalue            - Break on PythonFuncRec::setArgValue, where an argument for an external function is set\n
+echo   bp_func_call                   - Break on PythonFuncRec::Call, where an external function is invoked\n
 echo \n
 echo For more help, type: help dump-processing-state\n
 echo \n
