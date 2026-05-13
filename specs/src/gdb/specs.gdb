@@ -152,6 +152,31 @@ define dump_freq_map
   dump-frequency-map $arg0
 end
 
+# Python interface
+define dump_alu_function
+  dump-alu-function $arg0
+end
+
+define dump_external_func_rec
+  dump-external-function-rec $arg0
+end
+
+define dump_external_func_collection
+  dump-external-function-collection $arg0
+end
+
+define dump_python_func_collection
+  dump-python-function-collection $arg0
+end
+
+define dump_python_func_rec
+  dump-python-func-rec $arg0
+end
+
+define dump_python_func_arg
+  dump-python-func-arg $arg0
+end
+
 # Utilities
 define dump_exception
   dump-exception $arg0
@@ -202,20 +227,24 @@ echo specs GDB debugging macros loaded\n
 echo ========================================\n
 echo \n
 echo Available commands:\n
-echo   dump_pstate <var>         - Dump ProcessingState\n
-echo   dump_sb <var>             - Dump StringBuilder\n
-echo   dump_item <var>           - Dump Item (polymorphic)\n
-echo   dump_items <var>          - Dump itemGroup\n
-echo   dump_token <var>          - Dump Token\n
-echo   dump_alu_value <var>      - Dump ALUValue\n
-echo   dump_alu_counters <var>   - Dump ALUCounters\n
-echo   dump_alu_vec <var>        - Dump AluVec\n
-echo   dump_exception <var>      - Dump SpecsException\n
+echo   dump_pstate <var>              - Dump ProcessingState\n
+echo   dump_sb <var>                  - Dump StringBuilder\n
+echo   dump_item <var>                - Dump Item (polymorphic)\n
+echo   dump_items <var>               - Dump itemGroup\n
+echo   dump_token <var>               - Dump Token\n
+echo   dump_alu_value <var>           - Dump ALUValue\n
+echo   dump_alu_counters <var>        - Dump ALUCounters\n
+echo   dump_alu_vec <var>             - Dump AluVec\n
+echo   dump_alu_function <var>        - Dump AluFunction\n
+echo   dump_external_func_rec <var>   - Dump ExternalFunctionRec\n
+echo   dump_python_func_rec <var>     - Dump PythonFuncRec\n
+echo   dump_python_func_arg <var>     - Dump PythonFuncArg\n
+echo   dump_exception <var>           - Dump SpecsException\n
 echo \n
 echo Breakpoint helpers:\n
-echo   bp_apply                  - Break on Item::apply\n
-echo   bp_getstr                 - Break on InputPart::getStr\n
-echo   bp_compile                - Break on itemGroup::Compile\n
+echo   bp_apply                       - Break on Item::apply\n
+echo   bp_getstr                      - Break on InputPart::getStr\n
+echo   bp_compile                     - Break on itemGroup::Compile\n
 echo \n
 echo For more help, type: help dump-processing-state\n
 echo \n

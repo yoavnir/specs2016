@@ -141,6 +141,17 @@ Available commands:
 | `dump_writer <var>` | Dump a Writer (output count) |
 | `dump_exception <var>` | Dump a SpecsException (file, line, message) |
 
+### Python Interface Commands
+
+|| Command | Purpose |
+||---------|----------|
+|| `dump_alu_function <var>` | Dump an AluFunction (name, arg count, input dependency) |
+|| `dump_external_func_rec <var>` | Dump an ExternalFunctionRec (polymorphic base class) |
+|| `dump_external_func_collection <var>` | Dump an ExternalFunctionCollection (initialization state) |
+|| `dump_python_func_collection <var>` | Dump a PythonFunctionCollection (internal Python function registry) |
+|| `dump_python_func_rec <var>` | Dump a PythonFuncRec (Python function record with name and args) |
+|| `dump_python_func_arg <var>` | Dump a PythonFuncArg (function argument with default value) |
+
 ### Breakpoint Helpers
 
 | Command | Purpose |
@@ -270,6 +281,38 @@ ProcessingState @ 0x...
 ```
 
 This is useful for debugging issues that only occur on specific records.
+
+### Example 6: Debugging Python Function Integration
+
+When debugging Python function calls and integration:
+
+```
+(gdb) break PythonIntf.cc:167
+Breakpoint 1 at 0x...
+
+(gdb) run -f myspec.txt < input.txt
+...
+Breakpoint 1, PyObject_CallObject (...) at PythonIntf.cc:167
+
+(gdb) dump_python_func_collection g_PythonFunctions
+PythonFunctionCollection @ 0x...
+  m_Initialized: true
+  m_Functions @ 0x...
+
+(gdb) dump_python_func_rec g_PythonFunctions.m_Functions[0]
+PythonFuncRec @ 0x...
+  m_name: my_custom_function
+  m_pFuncPtr: 0x...
+  m_doc: Computes the custom value based on input
+  m_pTuple: 0x...
+  m_args (2 items):
+    [0] input_value (default: counterType__Int)
+         = 0
+    [1] multiplier (default: counterType__Float)
+         = 1.5
+```
+
+This shows you the complete function signature, documentation, and argument defaults. The `m_pTuple` field shows whether arguments have been prepared for the function call.
 
 ---
 

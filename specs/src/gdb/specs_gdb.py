@@ -151,6 +151,13 @@ WRITER_TYPE = {
     3: "FILE",
 }
 
+EXTERNAL_FUNC_ERROR_HANDLING = {
+    0: "Throw",
+    1: "NaN",
+    2: "Zero",
+    3: "NullStr",
+}
+
 # Token types (X-macro generated, simplified list)
 TOKEN_TYPES = {
     0: "STOP",
@@ -1136,6 +1143,255 @@ class DumpException(gdb.Command):
             print(f"Error: {e}")
 
 # ============================================================================
+# DUMP COMMANDS - Python Interface
+# ============================================================================
+
+class DumpAluFunction(gdb.Command):
+    """Dump an AluFunction."""
+    
+    def __init__(self):
+        super(DumpAluFunction, self).__init__("dump-alu-function", gdb.COMMAND_DATA)
+    
+    def invoke(self, arg, from_tty):
+        try:
+            val = gdb.parse_and_eval(arg)
+            func_name = std_string_to_str(val["m_FuncName"])
+            arg_count = int(val["m_ArgCount"])
+            relies_on_input = bool(val["m_reliesOnInput"])
+            
+            print(f"AluFunction @ {val.address}")
+            print(f"  m_FuncName: {func_name}")
+            print(f"  m_ArgCount: {arg_count}")
+            print(f"  m_reliesOnInput: {relies_on_input}")
+        except Exception as e:
+            print(f"Error: {e}")
+
+class DumpExternalFunctionRec(gdb.Command):
+    """Dump an ExternalFunctionRec (polymorphic) - calls virtual methods."""
+    
+    def __init__(self):
+        super(DumpExternalFunctionRec, self).__init__("dump-external-function-rec", gdb.COMMAND_DATA)
+    
+    def invoke(self, arg, from_tty):
+        try:
+            val = gdb.parse_and_eval(arg)
+            
+            print(f"ExternalFunctionRec @ {val.address}")
+            
+            # Try to call virtual methods to get information
+            try:
+                arg_count = call_method_safe(val, "GetArgCount")
+                print(f"  GetArgCount(): {arg_count}")
+            except Exception as e:
+                print(f"  GetArgCount(): (error: {e})")
+            
+            try:
+                func_ptr = call_method_safe(val, "GetFuncPtr")
+                print(f"  GetFuncPtr(): {func_ptr}")
+            except Exception as e:
+                print(f"  GetFuncPtr(): (error: {e})")
+            
+            # Try to detect actual derived type
+            try:
+                actual_type = identify_dynamic_type(val)
+                if actual_type and actual_type != "ExternalFunctionRec":
+                    print(f"  Actual type: {actual_type}")
+            except:
+                pass
+        except Exception as e:
+            print(f"Error: {e}")
+
+class DumpExternalFunctionCollection(gdb.Command):
+    """Dump an ExternalFunctionCollection."""
+    
+    def __init__(self):
+        super(DumpExternalFunctionCollection, self).__init__("dump-external-function-collection", gdb.COMMAND_DATA)
+    
+    def invoke(self, arg, from_tty):
+        try:
+            val = gdb.parse_and_eval(arg)
+            
+            # Try to call virtual methods
+            try:
+                is_init = call_method_safe(val, "IsInitialized")
+                print(f"ExternalFunctionCollection @ {val.address}")
+                print(f"  IsInitialized: {bool(is_init)}")
+            except:
+                try:
+                    count = call_method_safe(val, "CountFunctions")
+                    print(f"ExternalFunctionCollection @ {val.address}")
+                    print(f"  CountFunctions: {count}")
+                except:
+                    print(f"ExternalFunctionCollection @ {val.address}")
+        except Exception as e:
+            print(f"Error: {e}")
+
+class DumpPythonFunctionCollection(gdb.Command):
+    """Dump a PythonFunctionCollection (internal class from PythonIntf.cc)."""
+    
+    def __init__(self):
+        super(DumpPythonFunctionCollection, self).__init__("dump-python-function-collection", gdb.COMMAND_DATA)
+    
+    def invoke(self, arg, from_tty):
+        try:
+            val = gdb.parse_and_eval(arg)
+            
+            # Access m_Initialized
+            try:
+                m_initialized = bool(val["m_Initialized"])
+                print(f"PythonFunctionCollection @ {val.address}")
+                print(f"  m_Initialized: {m_initialized}")
+                
+                # Try to access m_Functions map (simplified)
+                try:
+                    m_functions = val["m_Functions"]
+                    print(f"  m_Functions @ {m_functions.address}")
+                except:
+                    pass
+            except:
+                print(f"PythonFunctionCollection @ {val.address}")
+        except Exception as e:
+            print(f"Error: {e}")
+
+class DumpPythonFuncRec(gdb.Command):
+    """Dump a PythonFuncRec (internal class from PythonIntf.cc)."""
+    
+    def __init__(self):
+        super(DumpPythonFuncRec, self).__init__("dump-python-func-rec", gdb.COMMAND_DATA)
+    
+    def invoke(self, arg, from_tty):
+        try:
+            val = gdb.parse_and_eval(arg)
+            
+            print(f"PythonFuncRec @ {val.address}")
+            
+            # Access members
+            try:
+                m_name = std_string_to_str(val["m_name"])
+                print(f"  m_name: {m_name}")
+            except Exception as e:
+                print(f"  m_name: (error: {e})")
+            
+            try:
+                m_pFuncPtr = val["m_pFuncPtr"]
+                print(f"  m_pFuncPtr: {m_pFuncPtr}")
+            except Exception as e:
+                print(f"  m_pFuncPtr: (error: {e})")
+            
+            # Show m_doc
+            try:
+                m_doc = std_string_to_str(val["m_doc"])
+                if m_doc:
+                    # Format multi-line docs nicely
+                    if "\n" in m_doc:
+                        print(f"  m_doc:")
+                        for line in m_doc.split("\n"):
+                            print(f"    {line}")
+                    else:
+                        print(f"  m_doc: {m_doc}")
+                else:
+                    print(f"  m_doc: (empty)")
+            except Exception as e:
+                print(f"  m_doc: (error: {e})")
+            
+            # Show m_pTuple
+            try:
+                m_pTuple = val["m_pTuple"]
+                if m_pTuple == 0:
+                    print(f"  m_pTuple: nullptr")
+                else:
+                    print(f"  m_pTuple: {m_pTuple}")
+            except Exception as e:
+                print(f"  m_pTuple: (error: {e})")
+            
+            # Expand m_args vector
+            try:
+                m_args = val["m_args"]
+                arg_size = std_vector_size(m_args)
+                print(f"  m_args ({arg_size} items):")
+                
+                # Try to iterate and dump each argument
+                for i in range(arg_size):
+                    try:
+                        arg_elem = m_args[i]
+                        arg_name = std_string_to_str(arg_elem["m_name"])
+                        arg_default = int(arg_elem["m_default"])
+                        arg_default_str = ALU_COUNTER_TYPE.get(arg_default, f"Unknown({arg_default})")
+                        
+                        print(f"    [{i}] {arg_name} (default: {arg_default_str})")
+                        
+                        # Show default value if present
+                        if arg_default == 1:  # counterType__Str
+                            try:
+                                defStr = std_string_to_str(arg_elem["m_defStr"])
+                                print(f"         = \"{defStr}\"")
+                            except:
+                                pass
+                        elif arg_default == 2:  # counterType__Int
+                            try:
+                                defInt = int(arg_elem["m_defInt"])
+                                print(f"         = {defInt}")
+                            except:
+                                pass
+                        elif arg_default == 3:  # counterType__Float
+                            try:
+                                defFloat = float(arg_elem["m_defFloat"])
+                                print(f"         = {defFloat}")
+                            except:
+                                pass
+                    except Exception as arg_e:
+                        print(f"    [{i}] (error: {arg_e})")
+            except Exception as e:
+                print(f"  m_args: (error: {e})")
+        except Exception as e:
+            print(f"Error: {e}")
+
+class DumpPythonFuncArg(gdb.Command):
+    """Dump a PythonFuncArg (internal class from PythonIntf.cc)."""
+    
+    def __init__(self):
+        super(DumpPythonFuncArg, self).__init__("dump-python-func-arg", gdb.COMMAND_DATA)
+    
+    def invoke(self, arg, from_tty):
+        try:
+            val = gdb.parse_and_eval(arg)
+            
+            # Access members
+            try:
+                m_name = std_string_to_str(val["m_name"])
+                m_default = int(val["m_default"])
+                m_default_str = ALU_COUNTER_TYPE.get(m_default, f"Unknown({m_default})")
+                
+                print(f"PythonFuncArg @ {val.address}")
+                print(f"  m_name: {m_name}")
+                print(f"  m_default: {m_default_str}")
+                
+                # Try to get default value
+                if m_default == 1:  # counterType__Str
+                    try:
+                        m_defStr = std_string_to_str(val["m_defStr"])
+                        print(f"  m_defStr: \"{m_defStr}\"")
+                    except:
+                        pass
+                elif m_default == 2:  # counterType__Int
+                    try:
+                        m_defInt = int(val["m_defInt"])
+                        print(f"  m_defInt: {m_defInt}")
+                    except:
+                        pass
+                elif m_default == 3:  # counterType__Float
+                    try:
+                        m_defFloat = float(val["m_defFloat"])
+                        print(f"  m_defFloat: {m_defFloat}")
+                    except:
+                        pass
+            except Exception as inner_e:
+                print(f"PythonFuncArg @ {val.address}")
+                print(f"  (Error reading members: {inner_e})")
+        except Exception as e:
+            print(f"Error: {e}")
+
+# ============================================================================
 # CONVENIENCE COMMAND
 # ============================================================================
 
@@ -1197,6 +1453,14 @@ def register_commands():
     DumpAluVec()
     DumpAluValueStats()
     DumpFrequencyMap()
+    
+    # Python interface commands
+    DumpAluFunction()
+    DumpExternalFunctionRec()
+    DumpExternalFunctionCollection()
+    DumpPythonFunctionCollection()
+    DumpPythonFuncRec()
+    DumpPythonFuncArg()
     
     # Utility commands
     DumpException()
