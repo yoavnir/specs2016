@@ -207,6 +207,13 @@ document bp_compile
   Set a breakpoint on itemGroup::Compile to debug specification compilation.
 end
 
+define bp_parseAluExpression
+  break parseAluExpression
+end
+document bp_parseAluExpression
+  Set a breakpoint on parseAluExpression to debug parsing of mathematical expressions.
+end
+
 define bp_pfc_initialize
   break PythonFunctionCollection::Initialize
 end
@@ -266,6 +273,7 @@ echo Breakpoint helpers:\n
 echo   bp_apply                       - Break on Item::apply\n
 echo   bp_getstr                      - Break on InputPart::getStr\n
 echo   bp_compile                     - Break on itemGroup::Compile\n
+echo   bp_parseAluExpression          - Break on parseAluExpression, where expressions are parsed\n
 echo   bp_pfc_initialize              - Break on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized\n
 echo   bp_func_setargvalue            - Break on PythonFuncRec::setArgValue, where an argument for an external function is set\n
 echo   bp_func_call                   - Break on PythonFuncRec::Call, where an external function is invoked\n

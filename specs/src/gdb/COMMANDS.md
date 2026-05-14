@@ -86,6 +86,7 @@
 || `bp_apply` | Set breakpoint on Item::apply |
 || `bp_getstr` | Set breakpoint on InputPart::getStr |
 || `bp_compile` | Set breakpoint on itemGroup::Compile |
+|| `bp_parseAluExpression` | Set breakpoint on parseAluExpression, where expressions are parsed |
 || `bp_pfc_initialize` | Set breakpoint on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized |
 || `bp_func_setargvalue` | Set breakpoint on PythonFuncRec::setArgValue, where an argument for an external function is set |
 || `bp_func_call` | Set breakpoint on PythonFuncRec::Call, where an external function is invoked |
