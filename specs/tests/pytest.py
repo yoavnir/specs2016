@@ -149,3 +149,67 @@ if ret=="120":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+
+# Test exactness feature - exact float
+lff = '''
+def exact_float():
+	"""Return an exact floating-point value"""
+	return (3.14159, True)
+
+def inexact_float():
+	"""Return an inexact floating-point value"""
+	return (3.14159, False)
+
+def inexact_int():
+	"""Return an inexact integer (overriding default)"""
+	return (42, False)
+
+def bad_tuple_size():
+	"""Return a tuple with wrong size"""
+	return (1, 2, 3)
+
+def bad_exactness_type():
+	"""Return a tuple with non-bool exactness"""
+	return (1.5, 1)
+'''
+set_localfuncs(lff)
+
+# Test exact float with True
+sys.stdout.write("Test 13 (exact float with True) -- ")
+ret = run_cmd('print "exact(exact_float())" 1')
+if ret=="1":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+
+# Test exact float with False
+sys.stdout.write("Test 14 (inexact float with False) -- ")
+ret = run_cmd('print "exact(inexact_float())" 1')
+if ret=="0":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+
+# Test overriding default exact int with False
+sys.stdout.write("Test 15 (inexact int override) -- ")
+ret = run_cmd('print "exact(inexact_int())" 1')
+if ret=="0":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+
+# Test bad tuple size
+sys.stdout.write("Test 16 (bad tuple size) -- ")
+ret = run_cmd('print "bad_tuple_size()" 1')
+if "Invalid tuple returned from function bad_tuple_size" in ret:
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+
+# Test bad exactness type
+sys.stdout.write("Test 17 (bad exactness type) -- ")
+ret = run_cmd('print "bad_exactness_type()" 1')
+if "Invalid exactness value returned from function bad_exactness_type" in ret:
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")

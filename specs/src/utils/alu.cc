@@ -1111,7 +1111,13 @@ void dumpAluStack(const char* title, std::stack<PValue>& stk)
 	while (!stk.empty()) {
 		PValue v = stk.top();
 		stk.pop();
-		std::cerr << "   > " << (v ? v->getStr() : "(nil)") << std::endl;
+		if (v) {
+			std::cerr << "   > " << v->getStr() << "  ("
+			    << ((v->isExact()) ? "exact " : "inexact ")
+				<< ALUCounterType2Str[v->getType()] << ")" << std::endl;
+		} else {
+			std::cerr << "   > (nil)" << std::endl;
+		}
 		tmp.push(v);
 	}
 	std::cerr << std::endl;
