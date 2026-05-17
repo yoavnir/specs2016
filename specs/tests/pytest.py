@@ -1,21 +1,34 @@
-import os,sys
+import os,sys,subprocess
 
 # Change to the tests directory so relative paths work correctly
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def run_cmd(spec, force=False):
+	args = ["../exe/specs"]
 	if force:
-		cmd = "../exe/specs --pythonFuncs on --set SPECSPATH=/tmp -o theout '" + spec + "' &> theerr"
-	else:
-		cmd = "../exe/specs --set SPECSPATH=/tmp -o theout '" + spec + "' &> theerr"
-	sys.stdout.write("\nCommand: {}\n".format(cmd))
+		args.append("--pythonFuncs")
+		args.append("on")
+	args.extend(["--set", "SPECSPATH=/tmp", "-o", "theout", spec])
+	
+	sys.stdout.write("\nCommand: {}\n".format(" ".join(args)))
 	sys.stdout.write("CWD: {}\n".format(os.getcwd()))
 	sys.stdout.write("../exe/specs exists: {}\n".format(os.path.exists("../exe/specs")))
-	rc = os.system(cmd)
+	sys.stdout.write("Files before: theout={}, theerr={}\n".format(os.path.exists("theout"), os.path.exists("theerr")))
+	
+	with open("theerr", "w") as err_file:
+		rc = subprocess.call(args, stdout=subprocess.DEVNULL, stderr=err_file)
+	
+	sys.stdout.write("Files after: theout={}, theerr={}\n".format(os.path.exists("theout"), os.path.exists("theerr")))
+	if os.path.exists("theerr"):
+		with open("theerr", "r") as f:
+			theerr_content = f.read()
+		sys.stdout.write("theerr content (len={}): {}\n".format(len(theerr_content), repr(theerr_content)))
 	sys.stdout.write("\n{}\n".format(spec))
 	sys.stdout.write("Result: rc={}...theout={}...theerr={}...".format(rc,os.path.exists("theout"),os.path.exists("theerr")))
-	if rc!=0 and rc!=2048:
-		sys.stdout.write("not 0/2048...")
+	# subprocess.call returns actual exit code, not os.system format
+	# os.system returns exit_code << 8, so 8 becomes 2048
+	if rc!=0 and rc!=8:
+		sys.stdout.write("not 0/8...")
 		ret = "RC="+str(rc)
 	elif rc==0 and os.path.exists("theout"):
 		with open("theout","r") as out:
