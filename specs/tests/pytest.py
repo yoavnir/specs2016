@@ -5,11 +5,17 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def run_cmd(spec, force=False):
 	if force:
-		cmd = "../exe/specs --pythonFuncs on --set SPECSPATH=/tmp -o theout " + spec + "&> theerr"
+		cmd = "../exe/specs --pythonFuncs on --set SPECSPATH=/tmp -o theout '" + spec + "' &> theerr"
 	else:
-		cmd = "../exe/specs --set SPECSPATH=/tmp -o theout " + spec + "&> theerr"
+		cmd = "../exe/specs --set SPECSPATH=/tmp -o theout '" + spec + "' &> theerr"
+	sys.stdout.write("\nCommand: {}\n".format(cmd))
+	sys.stdout.write("CWD: {}\n".format(os.getcwd()))
+	sys.stdout.write("../exe/specs exists: {}\n".format(os.path.exists("../exe/specs")))
 	rc = os.system(cmd)
+	sys.stdout.write("\n{}\n".format(spec))
+	sys.stdout.write("Result: rc={}...theout={}...theerr={}...".format(rc,os.path.exists("theout"),os.path.exists("theerr")))
 	if rc!=0 and rc!=2048:
+		sys.stdout.write("not 0/2048...")
 		ret = "RC="+str(rc)
 	elif rc==0 and os.path.exists("theout"):
 		with open("theout","r") as out:
@@ -17,7 +23,11 @@ def run_cmd(spec, force=False):
 		os.system("/bin/rm theout")
 	elif os.path.exists("theerr"):
 		with open("theerr","r") as err:
-			ret = err.readlines()[-1]
+			errbuf = err.readlines()
+			if len(errbuf) > 0:
+				ret = errbuf[-1]
+			else:
+				ret = "empty error"
 		os.system("/bin/rm theerr")
 	else:
 		ret = "something happened"
