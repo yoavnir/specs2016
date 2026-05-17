@@ -100,11 +100,13 @@ else:
 
 # Now for a valid file
 lff = '''
+from math import factorial as _factorial
+
 def plus1(a):
 	return a+1
 
-def times2(a):
-	return a*2
+def factorial(n):
+	return _factorial(int(n))
 	
 calling_count = 0
 def called_how_many_times():
@@ -168,10 +170,10 @@ else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
 	exit(4)
 	
-# call a python function with multiple calls
-sys.stdout.write("Test 12 (function with multiple calls) -- ")
-ret = run_cmd('print "times2(5)" 1')
-if ret=="10":
+# call a python imported function
+sys.stdout.write("Test 12 (imported function) -- ")
+ret = run_cmd('print "factorial(5)" 1')
+if ret=="120":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")

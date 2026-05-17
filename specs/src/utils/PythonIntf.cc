@@ -464,7 +464,16 @@ public:
 				PyTuple_SetItem(pTuple, 0, pFunc);
 
 				PyObject* pArgSpec = PyObject_CallObject(pArgSpecFunc, pTuple);
-				MYASSERT_NOT_NULL_WITH_DESC(pArgSpec,funcName);
+				if (!pArgSpec) {
+					// getargspec failed (e.g., for built-in C functions) - skip this function
+					PyErr_Clear();
+					Py_DECREF(pRepr);
+#ifdef PYTHON_VER_3
+					Py_DECREF(pStr);
+#endif
+					Py_DECREF(pTuple);
+					continue;
+				}
 
 				PyObject* pArgList = PyObject_GetAttrString(pArgSpec, "args");
 				MYASSERT_NOT_NULL(pArgList);
