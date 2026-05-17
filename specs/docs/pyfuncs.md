@@ -185,13 +185,14 @@ def lowindex(x):
 lowindex.arg_type = "exact"
 
 def highindex(x):
-    '''Returns the top 16 bits'''
+    '''Returns the top 16 bits - assuming x is limited to 32 bits'''
     return int(x) // 65536
 ```
 
 In this example:
 - `lowindex` receives its argument as a 2-tuple `(value, exactness)` and returns a 2-tuple preserving the exactness
 - `highindex` receives a plain value (no `arg_type` set) and returns a plain integer
+- Note that there is no requirement to combine argument exactness and return exactness. The value returned from `highindex` is an integer, and therefore defaults to exact, even if the value passed to this function was originally marked as inexact.
 
 You can verify the behavior with:
 
@@ -219,6 +220,7 @@ add_exact.arg_type = "exact"
 This function:
 1. Receives both arguments as 2-tuples (because `arg_type = "exact"`)
 2. Returns a 2-tuple with the sum and a boolean indicating exactness (both inputs must be exact)
+3. Is incorrect. If `a` and `b` are floats, and one is significantly bigger than the other in absolute value, there is going to be some rounding. In general float addition results in an inexact value.
 
 ### Error Handling
 
