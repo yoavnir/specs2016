@@ -734,6 +734,13 @@ if CFG_regex_grammars:
 if osversion != "":
 	condlink = condlink + " -mmacosx-version-min={}".format(osversion)
 
+# Add pytest.py to run_tests if Python support is available
+if CFG_python:
+	body2 = body2.replace(
+		"python3 $(TESTS_DIR)/recfm_tests.py",
+		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
+	)
+
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))
 	makefile.write("LINKER={}\n".format("link.exe" if (compiler=="VS") else cxx))

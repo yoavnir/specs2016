@@ -303,4 +303,5 @@ if fail_counter > 0:
     sys.stdout.write("*** {} out of {} tests FAILED.\n".format(fail_counter, case_counter))
     sys.exit(1)
 else:
-    sys.stdout.write("*** All {} tests passed.\n".format(case_counter))
+    sys.stdout.write("*** All {} tests passed.\n\n".format(case_counter))
+

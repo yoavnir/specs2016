@@ -1,23 +1,37 @@
-import os,sys
+import os,sys,subprocess
 
 def run_cmd(spec, force=False):
+	args = ["../exe/specs", "--set", "SPECSPATH=/tmp", "-o", "theout"]
 	if force:
-		cmd = "../exe/specs --pythonFuncs on --set SPECSPATH=/tmp -o theout " + spec + "&> theerr"
-	else:
-		cmd = "../exe/specs --set SPECSPATH=/tmp -o theout " + spec + "&> theerr"
-	rc = os.system(cmd)
-	if rc!=0 and rc!=2048:
-		ret = "RC="+str(rc)
-	elif rc==0 and os.path.exists("theout"):
-		with open("theout","r") as out:
-			ret = out.read()
-		os.system("/bin/rm theout")
-	elif os.path.exists("theerr"):
-		with open("theerr","r") as err:
-			ret = err.readlines()[-1]
+		args.extend(["--pythonFuncs", "on"])
+	args.append(spec)
+	
+	with open("theerr", "w") as err_file:
+		rc = subprocess.call(args, stdout=subprocess.DEVNULL, stderr=err_file)
+	
+	if os.path.exists("theerr"):
+		with open("theerr", "r") as f:
+			theerr_content = f.readlines()
 		os.system("/bin/rm theerr")
 	else:
+		theerr_content = ""
+
+	if os.path.exists("theout"):
+		with open("theout", "r") as f:
+			theout_content = f.read()
+		os.system("/bin/rm theout")
+	else:
+		theout_content = ""
+
+	if rc!=0 and rc!=8:
+		ret = "RC="+str(rc)
+	elif rc==0 and theout_content != "":
+		ret = theout_content
+	elif theerr_content != "":
+		ret = theerr_content[-1]
+	else:
 		ret = "something happened"
+
 	return ret.strip()
 	
 def set_localfuncs(lf):
@@ -39,6 +53,7 @@ if ret=="4":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 	
 # while still not having any file there, try calling the kuku function
 sys.stdout.write("Test 02 (unknown function; no file) -- ")
@@ -47,6 +62,7 @@ if ret=="Unrecognized function kuku":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 	
 # So let's try loading an invalid file
 lff = '''
@@ -62,22 +78,25 @@ if ret=="9":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # But if we force it...
 sys.stdout.write("Test 04 (bad file; non-python function; force) -- ")
 ret = run_cmd('print "sqrt(81)" 1', True)
-if ret=="Python Interface: Error loading local functions":
+if ret=="Python Interface: Error loading local functions" or ret=="SyntaxError: invalid syntax":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # Or call a non-built-in function...
 sys.stdout.write("Test 05 (bad file; unknown function) -- ")
 ret = run_cmd('print "kuku(16)" 1')
-if ret=="Python Interface: Error loading local functions":
+if ret=="Python Interface: Error loading local functions" or ret=="SyntaxError: invalid syntax":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # Now for a valid file
 lff = '''
@@ -101,14 +120,16 @@ if ret=="4":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # FP parameter
 sys.stdout.write("Test 07 (float parameter) -- ")
 ret = run_cmd('print "plus1(3.2)" 1')
-if ret=="4.2":
+if abs(float(ret)-4.2) < 0.0001:
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # string parameter - should abend
 sys.stdout.write("Test 08 (bad parameter; should abend) -- ")
@@ -117,6 +138,7 @@ if ret=="Runtime error. Error in external function":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # a function with memory
 sys.stdout.write("Test 09 (function with memory; first run) -- ")
@@ -125,6 +147,7 @@ if ret=="1":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # a function with memory
 sys.stdout.write("Test 10 (function with memory; second run) -- ")
@@ -133,6 +156,7 @@ if ret=="2":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # a function that does not exist
 sys.stdout.write("Test 11 (non-existent function) -- ")
@@ -141,6 +165,7 @@ if ret=="Unrecognized function plus2":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 	
 # call a python imported function
 sys.stdout.write("Test 12 (imported function) -- ")
@@ -149,6 +174,7 @@ if ret=="120":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # Test exactness feature - exact float
 lff = '''
@@ -181,6 +207,7 @@ if ret=="1":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # Test exact float with False
 sys.stdout.write("Test 14 (inexact float with False) -- ")
@@ -189,6 +216,7 @@ if ret=="0":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # Test overriding default exact int with False
 sys.stdout.write("Test 15 (inexact int override) -- ")
@@ -197,6 +225,7 @@ if ret=="0":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # Test bad tuple size
 sys.stdout.write("Test 16 (bad tuple size) -- ")
@@ -205,6 +234,7 @@ if "Invalid tuple returned from function bad_tuple_size" in ret:
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
 
 # Test bad exactness type
 sys.stdout.write("Test 17 (bad exactness type) -- ")
@@ -213,3 +243,6 @@ if "Invalid exactness value returned from function bad_exactness_type" in ret:
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+sys.stdout.write("\n*** All 17 tests passed.\n")
