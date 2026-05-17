@@ -1829,9 +1829,9 @@ By default, Python functions receive their arguments as plain values with exactn
 To allow a function to receive exactness information with its arguments, set the
 .B arg_type
 attribute on the function to the string
-.B "exact".
+.B \[dq]exact\[dq].
 When
-.B arg_type = "exact"
+.B arg_type = \[dq]exact\[dq]
 is set, every argument is passed as a 2-tuple
 .B (value, exactness)
 where
