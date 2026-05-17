@@ -106,6 +106,9 @@ public:
 
 	void setDoc(const char* cstr) { m_doc = cstr; }
 
+	void setArgTypeExact(bool v) { m_argTypeExact = v; }
+	bool isArgTypeExact() const { return m_argTypeExact; }
+
 	void setArgValue(size_t idx, PValue pValue) {
 		PyObject* pValObj;
 		size_t argCount = GetArgCount();
@@ -149,6 +152,16 @@ public:
 		default:
 			pValObj = Py_None;
 			Py_INCREF(Py_None);
+		}
+
+		// If arg_type=exact, wrap the value as a (value, exactness) tuple
+		if (m_argTypeExact) {
+			PyObject* pExactness = pValue->isExact() ? Py_True : Py_False;
+			Py_INCREF(pExactness);
+			PyObject* pArgTuple = PyTuple_New(2);
+			PyTuple_SetItem(pArgTuple, 0, pValObj);
+			PyTuple_SetItem(pArgTuple, 1, pExactness);
+			pValObj = pArgTuple;
 		}
 
 		PyTuple_SetItem(m_pTuple, idx, pValObj);
@@ -291,6 +304,9 @@ public:
 			strm << arg.getStr();
 		}
 		strm << ")";
+		if (m_argTypeExact) {
+			strm << " [arg_type=exact]";
+		}
 		if (m_doc.length() > 0) {
 			if (m_doc.find("\n") != std::string::npos) {
 				strm << " :\n" << m_doc << "\n";
@@ -306,6 +322,7 @@ private:
 	std::vector<PythonFuncArg> m_args;
 	PyObject*                  m_pTuple;
 	std::string                m_doc;
+	bool                       m_argTypeExact = false;
 };
 
 typedef std::shared_ptr<PythonFuncRec> PPythonFuncRec;
@@ -516,6 +533,50 @@ public:
 #endif
 					}
 					Py_DECREF(pDoc);
+				}
+
+				// Check for arg_type attribute
+				if (PyObject_HasAttrString(pFunc, "arg_type")) {
+					PyObject* pArgType = PyObject_GetAttrString(pFunc, "arg_type");
+					MYASSERT_NOT_NULL(pArgType);
+					
+					// Check if it's a string equal to "exact"
+					bool isExact = false;
+#ifdef PYTHON_VER_2
+					if (PyString_Check(pArgType)) {
+						if (0 == strcmp(PyString_AS_STRING(pArgType), "exact")) {
+							isExact = true;
+						}
+					}
+#else
+					if (PyUnicode_Check(pArgType)) {
+						PyObject* pArgTypeBytes = PyUnicode_AsASCIIString(pArgType);
+						if (pArgTypeBytes) {
+							if (0 == strcmp(PyBytes_AS_STRING(pArgTypeBytes), "exact")) {
+								isExact = true;
+							}
+							Py_DECREF(pArgTypeBytes);
+						}
+					}
+#endif
+					
+					if (isExact) {
+						pFuncRec->setArgTypeExact(true);
+					} else {
+						// arg_type exists but is not "exact" - error
+						std::string err = "Invalid arg_type value for function ";
+						err += funcName;
+						err += " - must be \"exact\"";
+						if (g_bVerbose) {
+							PyObject* pRepr = PyObject_Repr(pArgType);
+							err += ". Got: ";
+							err += PyUnicode_AsUTF8(pRepr);
+							Py_DECREF(pRepr);
+						}
+						Py_DECREF(pArgType);
+						MYTHROW(err);
+					}
+					Py_DECREF(pArgType);
 				}
 			}
 			Py_DECREF(pRepr);

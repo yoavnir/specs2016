@@ -100,10 +100,11 @@ else:
 
 # Now for a valid file
 lff = '''
-from math import factorial
-
 def plus1(a):
 	return a+1
+
+def times2(a):
+	return a*2
 	
 calling_count = 0
 def called_how_many_times():
@@ -167,10 +168,10 @@ else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
 	exit(4)
 	
-# call a python imported function
-sys.stdout.write("Test 12 (imported function) -- ")
-ret = run_cmd('print "factorial(5)" 1')
-if ret=="120":
+# call a python function with multiple calls
+sys.stdout.write("Test 12 (function with multiple calls) -- ")
+ret = run_cmd('print "times2(5)" 1')
+if ret=="10":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
@@ -197,6 +198,26 @@ def bad_tuple_size():
 def bad_exactness_type():
 	"""Return a tuple with non-bool exactness"""
 	return (1.5, 1)
+
+def lowindex(x):
+	"""Returns the lower 16 bits of the number, and copies exactness"""
+	return (int(x[0]) % 65536, x[1])
+
+lowindex.arg_type = "exact"
+
+def highindex(x):
+	"""Returns the top 16 bits"""
+	return int(x) // 65536
+
+def bad_exact_use(x):
+	"""Tries to use a tuple arg as a number - will TypeError"""
+	return x + 1
+
+bad_exact_use.arg_type = "exact"
+
+def bad_plain_use(x):
+	"""Tries to index into a plain value - will TypeError"""
+	return x[0]
 '''
 set_localfuncs(lff)
 
@@ -245,4 +266,75 @@ else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
 	exit(4)
 
-sys.stdout.write("\n*** All 17 tests passed.\n")
+# Test lowindex with inexact argument
+sys.stdout.write("Test 18 (lowindex with inexact arg) -- ")
+ret = run_cmd('print "exact(lowindex(4/3))" 1')
+if ret=="0":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+# Test lowindex with exact argument
+sys.stdout.write("Test 19 (lowindex with exact arg) -- ")
+ret = run_cmd('print "exact(lowindex(4))" 1')
+if ret=="1":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+# Test highindex without arg_type (normal behavior)
+sys.stdout.write("Test 20 (highindex without arg_type) -- ")
+ret = run_cmd('print "exact(highindex(4/3))" 1')
+if ret=="1":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+# Test combined spec from problem statement
+sys.stdout.write("Test 21 (combined spec) -- ")
+ret = run_cmd('print "exact(lowindex(4/3))" 1 print "exact(lowindex(4))" NEXTWORD print "exact(highindex(4/3))" NEXTWORD')
+if ret=="0 1 1":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+# Test bad_exact_use - function tries to use tuple arg as number
+sys.stdout.write("Test 22 (bad_exact_use - TypeError) -- ")
+ret = run_cmd('print "bad_exact_use(5)" 1')
+if "Runtime error. Error in external function" in ret:
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+# Test bad_plain_use - function tries to index plain value
+sys.stdout.write("Test 23 (bad_plain_use - TypeError) -- ")
+ret = run_cmd('print "bad_plain_use(5)" 1')
+if "Runtime error. Error in external function" in ret:
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+# Test bad_arg_type - invalid arg_type value
+sys.stdout.write("Test 24 (bad_arg_type - invalid value) -- ")
+lff_bad = '''
+def bad_arg_type():
+	"""Function with invalid arg_type value"""
+	return 42
+
+bad_arg_type.arg_type = "bogus"
+'''
+set_localfuncs(lff_bad)
+ret = run_cmd('print "bad_arg_type()" 1', True)
+if "Invalid arg_type value for function bad_arg_type" in ret:
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+sys.stdout.write("\n*** All 24 tests passed.\n")

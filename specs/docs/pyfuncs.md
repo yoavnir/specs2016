@@ -153,3 +153,92 @@ specs print "exact(inexact_sqrt())" 1
 ```
 would print `0` (false).
 
+## Argument Exactness
+
+By default, Python functions receive their arguments as plain values, and exactness information is discarded. However, you can configure a function to receive exactness information with its arguments by setting the `arg_type` attribute to `"exact"`.
+
+### Setting `arg_type = "exact"`
+
+To enable argument exactness, add this line after your function definition:
+
+```python
+def my_function(x, y):
+    # function body
+    pass
+
+my_function.arg_type = "exact"
+```
+
+When `arg_type = "exact"` is set, **all arguments** are passed as 2-tuples instead of plain values:
+- The first element is the argument value (integer, float, string, or None)
+- The second element is a Python boolean: `True` if the value is exact, `False` if inexact
+
+### Example: Propagating Exactness
+
+Here's a practical example that propagates exactness information:
+
+```python
+def lowindex(x):
+    '''Returns the lower 16 bits of the number, and copies exactness'''
+    return (int(x[0]) % 65536, x[1])
+
+lowindex.arg_type = "exact"
+
+def highindex(x):
+    '''Returns the top 16 bits'''
+    return int(x) // 65536
+```
+
+In this example:
+- `lowindex` receives its argument as a 2-tuple `(value, exactness)` and returns a 2-tuple preserving the exactness
+- `highindex` receives a plain value (no `arg_type` set) and returns a plain integer
+
+You can verify the behavior with:
+
+```
+specs print "exact(lowindex(4/3))" 1 print "exact(lowindex(4))" NEXTWORD print "exact(highindex(4/3))" NEXTWORD
+```
+
+This prints `0 1 1`:
+- `lowindex(4/3)` receives an inexact value (4/3), returns it with exactness=0
+- `lowindex(4)` receives an exact value (4), returns it with exactness=1
+- `highindex(4/3)` receives a plain value, returns an integer (which is exact by default), so exactness=1
+
+### Combining Argument and Return Exactness
+
+A function can both receive argument exactness and return exactness information. For example:
+
+```python
+def add_exact(a, b):
+    '''Add two numbers, exact only if both inputs are exact'''
+    return (a[0] + b[0], a[1] and b[1])
+
+add_exact.arg_type = "exact"
+```
+
+This function:
+1. Receives both arguments as 2-tuples (because `arg_type = "exact"`)
+2. Returns a 2-tuple with the sum and a boolean indicating exactness (both inputs must be exact)
+
+### Error Handling
+
+If `arg_type` is set to a value other than `"exact"`, **specs** will report an error during initialization:
+
+```python
+def bad_function(x):
+    pass
+
+bad_function.arg_type = "bogus"  # ERROR: Invalid arg_type value
+```
+
+Also, if a function has `arg_type = "exact"` but tries to use an argument as a plain value (or vice versa), Python will raise a `TypeError`:
+
+```python
+def bad_use(x):
+    return x + 1  # ERROR: can't add tuple + int
+
+bad_use.arg_type = "exact"
+```
+
+When such errors occur, **specs** will report them as external function errors.
+
