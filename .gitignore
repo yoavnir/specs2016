@@ -44,3 +44,7 @@ specs/src/Release/
 
 # Mac OS stuff
 .DS_Store
+
+# GDB-related
+specs/src/.gdbinit
+specs/src/gdb/__pycache__

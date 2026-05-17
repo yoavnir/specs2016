@@ -40,6 +40,7 @@ Basic Functionality
 
 Advanced Topics
 ===============
+* [Debugging specs with GDB](debugging.md)
 * [Command-Line Switches](cliswitch.md)
 * [Advanced ALU](alu_adv.md)
   * [Table of Operands](alu_adv.md#table-of-operands)
