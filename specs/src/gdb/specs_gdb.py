@@ -1294,6 +1294,13 @@ class DumpPythonFuncRec(gdb.Command):
             except Exception as e:
                 print(f"  m_doc: (error: {e})")
             
+            # Show m_argTypeExact
+            try:
+                m_argTypeExact = bool(val["m_argTypeExact"])
+                print(f"  m_argTypeExact: {m_argTypeExact}")
+            except Exception as e:
+                print(f"  m_argTypeExact: (error: {e})")
+            
             # Show m_pTuple
             try:
                 m_pTuple = val["m_pTuple"]

@@ -1825,6 +1825,34 @@ For example,
 .B return (3.14159, True)
 returns an exact floating-point value.
 .PP
+By default, Python functions receive their arguments as plain values with exactness information stripped.
+To allow a function to receive exactness information with its arguments, set the
+.B arg_type
+attribute on the function to the string
+.B \[dq]exact\[dq].
+When
+.B arg_type = \[dq]exact\[dq]
+is set, every argument is passed as a 2-tuple
+.B (value, exactness)
+where
+.I value
+is the argument value and
+.I exactness
+is a Python boolean
+.B True
+or
+.B False
+indicating whether the value is exact. This allows functions to inspect and propagate exactness information.
+For example:
+.RS
+.nf
+def lowindex(x):
+    return (int(x[0]) % 65536, x[1])
+
+lowindex.arg_type = "exact"
+.fi
+.RE
+.PP
 Docstrings are used by
 .B specs --help pyfuncs
 when listing loaded Python functions. Use
