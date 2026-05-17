@@ -990,7 +990,9 @@ Returns whether the evaluation of
 .I expression
 results in an exact result (1) or not (0). 
 .B NOTE:
-This function has some limitations. For example, Python functions are always taken to return an exact value when they return an integer or a string, but an inexact value when they return a float, which may or may not be correct. When unsure, the
+Python functions use a heuristic where integer and string returns are exact, while float returns are inexact. This may not always be correct. Python functions can override this by returning a 2-tuple
+.B (value, exactness)
+to explicitly specify exactness. When unsure, the
 .B exact
 function errs on the side of returning 0.
 
@@ -1807,6 +1809,22 @@ specs print "commas(word(1))" 1.12 RIGHT
 .PP
 Python functions may return an integer, floating-point number, string, or
 .B None.
+By default, integer and string returns are marked as exact, while floating-point
+returns are marked as inexact. To override this heuristic, a function may instead
+return a 2-tuple
+.B (value, exactness)
+where
+.I value
+is the return value (integer, float, string, or None) and
+.I exactness
+is a Python boolean
+.B True
+or
+.B False.
+For example,
+.B return (3.14159, True)
+returns an exact floating-point value.
+.PP
 Docstrings are used by
 .B specs --help pyfuncs
 when listing loaded Python functions. Use

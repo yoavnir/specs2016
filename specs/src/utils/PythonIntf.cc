@@ -156,6 +156,8 @@ public:
 
 	PValue Call() {
 		PValue pRet = nullptr;
+		bool exactnessSpecified = false;
+		bool exactness = true;
 
 		// Check that all values were passed, complete those that haven't
 		for (size_t i=0 ; i<GetArgCount() ; i++) {
@@ -166,6 +168,50 @@ public:
 
 		PyObject* pResult = PyObject_CallObject(m_pFuncPtr, m_pTuple);
 		if (pResult) {
+			// Check if result is a tuple that might contain (value, exactness)
+			if (PyTuple_Check(pResult)) {
+				Py_ssize_t tupleSize = PyTuple_Size(pResult);
+				if (tupleSize == 2) {
+					PyObject* pSecond = PyTuple_GetItem(pResult, 1);
+					if (PyBool_Check(pSecond)) {
+						// Valid (value, exactness) tuple - unwrap it
+						PyObject* pValue = PyTuple_GetItem(pResult, 0);
+						Py_INCREF(pValue);
+						Py_DECREF(pResult);
+						pResult = pValue;
+						exactnessSpecified = true;
+						exactness = (pSecond == Py_True);
+					} else {
+						// Tuple with 2 elements but second is not bool
+						std::string err = "Invalid exactness value returned from function ";
+						err += m_name;
+						err += " - must be Bool";
+						if (g_bVerbose) {
+							PyObject* pRepr = PyObject_Repr(pResult);
+							err += ". Content is ";
+							err += PyUnicode_AsUTF8(pRepr);
+							Py_DECREF(pRepr);
+						}
+						Py_DECREF(pResult);
+						MYTHROW(err);
+					}
+				} else {
+					// Tuple with wrong number of elements
+					std::string err = "Invalid tuple returned from function ";
+					err += m_name;
+					err += " - only a (value, exactness) pair is supported";
+					if (g_bVerbose) {
+						PyObject* pRepr = PyObject_Repr(pResult);
+						err += ". Content is ";
+						err += PyUnicode_AsUTF8(pRepr);
+						Py_DECREF(pRepr);
+					}
+					Py_DECREF(pResult);
+					MYTHROW(err);
+				}
+			}
+
+			// Now process the (possibly unwrapped) result
 			if (PyLong_Check(pResult)) {
 				pRet = mkValue(ALUInt(PyLong_AsLong(pResult)));
 			} else if (PyInt_Check(pResult)) {
@@ -200,6 +246,11 @@ public:
 				MYTHROW(err);
 			}
 			Py_DECREF(pResult);
+
+			// Apply exactness if it was specified in the tuple
+			if (exactnessSpecified && pRet) {
+				pRet->setExact(exactness);
+			}
 		} else {
 			if (PyErr_Occurred()) {
 				switch (g_errorHandling) {

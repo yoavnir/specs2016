@@ -102,3 +102,54 @@ specs set "#0:=countocc(@@,'hello')"  EOF print "#0" 1
 ```
 This counts the lines in the input that included the word 'hello'.
 
+## Exactness
+
+By default, **specs** applies a heuristic to determine whether a Python function's return value is exact or inexact:
+- Integer returns are marked as **exact**
+- String returns are marked as **exact**
+- Floating-point returns are marked as **inexact**
+
+This heuristic may not always be correct. For example, a function that computes π should return an inexact value, but a function that computes a well-defined mathematical constant might return an exact value.
+
+To override the default heuristic, a Python function can return a 2-tuple instead of a plain value:
+```python
+def exact_pi():
+    '''Return an exact value of pi'''
+    return (3.141592653589793, True)
+
+def inexact_sqrt():
+    '''Return an inexact square root'''
+    return (2.23606797749979, False)
+```
+
+The tuple must have exactly 2 elements:
+1. The first element is the return value (integer, float, string, or None)
+2. The second element is a Python boolean: `True` for exact, `False` for inexact
+
+If the tuple is malformed (wrong number of elements, or second element is not a boolean), **specs** will report an error.
+
+For example:
+```python
+def good_exact():
+    return (42, True)  # OK: exact integer
+
+def good_inexact():
+    return (3.14, False)  # OK: inexact float
+
+def bad_tuple_size():
+    return (1, 2, 3)  # ERROR: tuple has 3 elements, not 2
+
+def bad_exactness_type():
+    return (1.5, 1)  # ERROR: second element is int, not bool
+```
+
+The `exact()` built-in function can be used to check whether a value is exact:
+```python
+specs print "exact(exact_pi())" 1
+```
+would print `1` (true), while:
+```python
+specs print "exact(inexact_sqrt())" 1
+```
+would print `0` (false).
+
