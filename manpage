@@ -726,7 +726,7 @@ The syntax
 .B @+n
 and
 .B @-n
-(where n is a non-negative integer) accesses nearby records from the rolling context buffer.
+(where n is a natural number) accesses nearby records from the rolling context buffer.
 .B @+1
 is the next record,
 .B @-1

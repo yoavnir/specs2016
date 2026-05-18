@@ -280,6 +280,9 @@ int main (int argc, char** argv)
 			std::cerr << "Error: Rolling context (CONTEXT / @+n / @-n) is not supported with multiple input streams.\n";
 			exit(0);
 		}
+		if (g_bVerbose) {
+			std::cerr << "specs: Using a " << g_forwardContext + g_backwardContext + 1 << "-record rolling context: " << g_forwardContext << " records forward and " << g_backwardContext << " records backward.\n"; 
+		}
 	}
 
 	// After the compilation, the token vector contents are no longer necessary
