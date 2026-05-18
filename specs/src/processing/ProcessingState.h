@@ -87,6 +87,7 @@ public:
 	void setFirst();
 	void setSecond();
 	void setStream(int i);
+	void setContextString(PSpecString ps);
 	int  getActiveInputStation() { return m_inputStation; }
 	PSpecString currRecord() override { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
 	bool recordNotAvailable() { return nullptr==currRecord(); }

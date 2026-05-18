@@ -367,6 +367,7 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(skip-until, SKIPUNTIL);
 	SIMPLETOKEN(splitw, SPLITW);
 	SIMPLETOKEN(splitf, SPLITF);
+	SIMPLETOKEN(context, CONTEXT);
 
 	/* question mark to replace PRINT */
 	if (arg[0]=='?') {
@@ -914,6 +915,38 @@ void normalizeTokenList(std::vector<Token> *tokList)
 			// Note: OF clause is NOT consumed here; it is parsed at compile time
 			// by SplitItem::parse using full InputPart support (like SUBSTRING)
 			tok.setLiteral(separator);
+			break;
+		}
+		case TokenListType__CONTEXT:
+		{
+			if (tok.Literal()=="" && i+1 < tokList->size()) {
+				std::string offsetStr;
+				if (TokenListType__RANGE == nextTok.Type() && nextTok.Range() && nextTok.Range()->isSingleNumber()) {
+					offsetStr = std::to_string(nextTok.Range()->getSingleNumber());
+					nextTok.deallocDynamic();
+				} else if (mayBeLiteral(nextTok)) {
+					offsetStr = getLiteral(nextTok);
+				} else {
+					std::string err = "CONTEXT at index " + std::to_string(tok.argIndex()) +
+						" must be followed by an integer offset, got <" + nextTok.Orig() + ">";
+					MYTHROW(err);
+				}
+				// Validate that offsetStr is a valid integer
+				try {
+					std::stoi(offsetStr);
+				} catch (...) {
+					std::string err = "CONTEXT at index " + std::to_string(tok.argIndex()) +
+						" must be followed by an integer offset, got <" + offsetStr + ">";
+					MYTHROW(err);
+				}
+				tok.setLiteral(offsetStr);
+				tokList->erase(tokList->begin()+(i+1));
+			}
+			if (tok.Literal()=="") {
+				std::string err = "CONTEXT at index " + std::to_string(tok.argIndex()) +
+					" must be followed by an integer offset";
+				MYTHROW(err);
+			}
 			break;
 		}
 		default:

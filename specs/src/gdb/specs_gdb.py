@@ -730,6 +730,21 @@ class DumpBreakItem(gdb.Command):
         except Exception as e:
             print(f"Error: {e}")
 
+class DumpContextItem(gdb.Command):
+    """Dump a ContextItem."""
+    
+    def __init__(self):
+        super(DumpContextItem, self).__init__("dump-context-item", gdb.COMMAND_DATA)
+    
+    def invoke(self, arg, from_tty):
+        try:
+            val = gdb.parse_and_eval(arg)
+            offset = int(val["m_offset"])
+            print(f"ContextItem @ {val.address}")
+            print(f"  m_offset: {offset}")
+        except Exception as e:
+            print(f"Error: {e}")
+
 class DumpSelectItem(gdb.Command):
     """Dump a SelectItem."""
     
@@ -1437,6 +1452,7 @@ def register_commands():
     DumpSkipItem()
     DumpConditionItem()
     DumpBreakItem()
+    DumpContextItem()
     DumpSelectItem()
     DumpSplitItem()
     

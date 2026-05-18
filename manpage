@@ -357,6 +357,48 @@ Similarly:
     specs w1 a: SKIP-UNTIL "a=BEGIN" 1-* 1
 .P
 skips records until the first record whose first word is BEGIN, then processes that record and all subsequent records normally.
+.IP "CONTEXT" 3
+Temporarily changes the working string to a nearby record without consuming it.
+.B CONTEXT
+is followed by an integer offset:
+.B CONTEXT 0
+resets the working string to the current record,
+.B CONTEXT 1
+sets it to the next record,
+.B CONTEXT -1
+sets it to the previous record, and so on.
+The required buffer sizes are computed at parse time from the largest positive and negative offsets used. If the offset refers to a record beyond the beginning or end of the input, the working string is set to the empty string.
+.P
+.B CONTEXT
+must not be abbreviated. It is not supported with threading or multiple input streams.
+.P
+Example:
+.P
+    echo -e "A\\nB\\nC" | specs 1-* 1 CONTEXT 1 1-* NW
+.P
+produces: "A B", "B C", "C" -- each line shows the current record followed by the next.
+.P
+In expressions, the syntax
+.B @+n
+and
+.B @-n
+provides access to nearby records without changing the working string. For example,
+.B @+1
+refers to the next record and
+.B @-1
+refers to the previous record.
+.B @+0
+and
+.B @-0
+are equivalent to
+.B @@
+(the current record).
+.P
+Example:
+.P
+    echo -e "A\\nB\\nC" | specs print @+1 1
+.P
+produces: "B", "C", "" -- each line shows the next record (empty for the last).
 
 .SS "MainOptions"
 These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
@@ -680,6 +722,21 @@ will output 4.  The assignment is performed and the value stored in the counter.
 
 .IP "At-sign (@) Operator" 3
 The at-sign allows the inclusion of user-defined and system-defined labels as strings in expressions. The double at-sign (@@) substitutes for the entire input record.
+The syntax
+.B @+n
+and
+.B @-n
+(where n is a non-negative integer) accesses nearby records from the rolling context buffer.
+.B @+1
+is the next record,
+.B @-1
+is the previous record.
+.B @+0
+and
+.B @-0
+are equivalent to
+.B @@.
+Out-of-bounds offsets return the empty string. The forward and backward buffer sizes are computed automatically at parse time. This feature requires non-threaded mode and a single input stream.
 
 .SS "Built-In Functions"
 .IP "abs(x)" 3

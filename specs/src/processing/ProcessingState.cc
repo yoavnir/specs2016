@@ -138,6 +138,13 @@ void ProcessingState::setStringInPlace(PSpecString ps)
 	m_ps = ps;
 }
 
+void ProcessingState::setContextString(PSpecString ps)
+{
+	m_ps = std::make_shared<std::string>(*ps);
+	m_wordCount = -1;
+	m_fieldCount = -1;
+}
+
 void ProcessingState::setFirst()
 {
 	if (m_inputStation != STATION_FIRST) {
