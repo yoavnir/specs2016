@@ -932,6 +932,28 @@ int main(int argc, char** argv)
 	spec = "CONTEXT -1 PRINT '@@' 1 WRITE PRINT '@-1' 1 WRITE";
 	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\n\nbeta\nalpha\ngamma\nbeta"); // TEST #242
 
+	// === ctxrecno tests ===
+
+	// ctxrecno without CONTEXT returns same as recno
+	spec = "PRINT 'ctxrecno()' 1";
+	VERIFY2(spec, "a\nb\nc", "1\n2\n3"); // TEST #243
+
+	// ctxrecno with CONTEXT 1 returns recno + 1
+	spec = "CONTEXT 1 PRINT 'ctxrecno()' 1";
+	VERIFY2(spec, "a\nb\nc", "2\n3\n4"); // TEST #244
+
+	// ctxrecno with CONTEXT -1 returns recno - 1
+	spec = "CONTEXT -1 PRINT 'ctxrecno()' 1";
+	VERIFY2(spec, "a\nb\nc", "0\n1\n2"); // TEST #245
+
+	// ctxrecno with CONTEXT 0 returns same as recno
+	spec = "CONTEXT 0 PRINT 'ctxrecno()' 1";
+	VERIFY2(spec, "a\nb\nc", "1\n2\n3"); // TEST #246
+
+	// ctxrecno resets after CONTEXT changes
+	spec = "PRINT 'ctxrecno()' 1 CONTEXT 1 PRINT 'ctxrecno()' NW";
+	VERIFY2(spec, "a\nb\nc", "1 2\n2 3\n3 4"); // TEST #247
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";
