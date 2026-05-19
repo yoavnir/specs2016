@@ -427,6 +427,7 @@ public:
 		return getFromTo(int(from), int(to));
 	}
 	virtual PSpecString currRecord() = 0;
+	virtual PSpecString inputRecord() = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;
 	virtual ALUInt  getRecordCount() = 0;

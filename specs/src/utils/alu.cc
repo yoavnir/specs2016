@@ -884,7 +884,7 @@ PValue AluInputRecord::evaluate()
 {
 	PSpecString ps;
 	if (m_offset == 0) {
-		ps = g_pStateQueryAgent->getFromTo(1,-1);
+		ps = g_pStateQueryAgent->inputRecord();
 	} else {
 		MYASSERT_WITH_MSG(g_pReader != nullptr, "Rolling context requires a reader");
 		ps = g_pReader->peek(m_offset);
