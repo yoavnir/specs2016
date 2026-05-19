@@ -83,7 +83,7 @@ else:
 # But if we force it...
 sys.stdout.write("Test 04 (bad file; non-python function; force) -- ")
 ret = run_cmd('print "sqrt(81)" 1', True)
-if ret=="Python Interface: Error loading local functions" or ret=="SyntaxError: invalid syntax":
+if ret=="Python Interface: Error loading local functions" or ret.startswith("SyntaxError: invalid syntax"):
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
@@ -92,7 +92,7 @@ else:
 # Or call a non-built-in function...
 sys.stdout.write("Test 05 (bad file; unknown function) -- ")
 ret = run_cmd('print "kuku(16)" 1')
-if ret=="Python Interface: Error loading local functions" or ret=="SyntaxError: invalid syntax":
+if ret=="Python Interface: Error loading local functions" or ret.startswith("SyntaxError: invalid syntax"):
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")

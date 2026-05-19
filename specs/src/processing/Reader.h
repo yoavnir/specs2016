@@ -1,6 +1,7 @@
 #ifndef SPECS2016__PROCESSING__READER__H
 #define SPECS2016__PROCESSING__READER__H
 
+#include <deque>
 #include <fstream>
 #include <memory>
 #include "utils/StringQueue.h"
@@ -39,6 +40,8 @@ public:
 	virtual void        setLineDelimiter(char c) {
 		MYTHROW("Reader::setLineDelimiter: should not be called");
 	}
+	virtual PSpecString peek(int offset);
+	virtual void        setContextSizes(unsigned int forward, unsigned int backward) {}
 protected:
 	StringQueue m_queue;
 	std::unique_ptr<std::thread> mp_thread;
@@ -61,6 +64,7 @@ public:
 	bool endOfSource() override {return m_bAbort || (m_idx >= m_count); }
 	PSpecString getNextRecord() override {return mp_arr[m_idx++];}
 	PSpecString get(classifyingTimer& tmr, unsigned int& _readerCounter) override {return getNextRecord();}
+	PSpecString peek(int offset) override;
 private:
 	PSpecString  *mp_arr;
 	size_t       m_count;
@@ -86,7 +90,10 @@ public:
 	PSpecString getNextRecord() override;
 	void setFormatFixed(unsigned int lrecl, bool blocked) override;
 	void setLineDelimiter(char c) override;
+	PSpecString peek(int offset) override;
+	void        setContextSizes(unsigned int forward, unsigned int backward) override;
 private:
+	PSpecString getNextRecordInternal();
 	std::shared_ptr<std::istream> m_File;
 	pipeType  m_pipe;
     char* m_buffer;
@@ -95,6 +102,13 @@ private:
 	recordFormat m_recfm;
 	unsigned int m_lrecl;
 	char         m_lineDelimiter;
+	// Rolling context buffers
+	unsigned int m_forwardContextSize;
+	unsigned int m_backwardContextSize;
+	std::deque<PSpecString> m_forwardBuffer;
+	std::deque<PSpecString> m_backwardBuffer;
+	PSpecString m_currentRecord;
+	bool        m_contextInitialized;
 };
 
 typedef std::shared_ptr<StandardReader> PStandardReader;
@@ -129,5 +143,6 @@ private:
 
 typedef std::shared_ptr<multiReader> PMultiReader;
 
+extern Reader* g_pReader;
 
 #endif

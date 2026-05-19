@@ -79,6 +79,7 @@
 	X(SKIPWHILE,      false, true)  \
 	X(SPLITW,         false, false) \
 	X(SPLITF,         false, false) \
+	X(CONTEXT,        false, true)  \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

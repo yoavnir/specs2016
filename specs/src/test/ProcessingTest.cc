@@ -8,6 +8,7 @@
 #include "processing/Config.h"
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
+#include "processing/Reader.h"
 
 extern ALUCounters g_counters;
 extern char        g_printonly_rule;
@@ -109,8 +110,11 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	g_counters.clearAll();
 	g_keep_suppressed_record = false;
 	g_printonly_rule = PRINTONLY_PRINTALL;
+	g_forwardContext = 0;
+	g_backwardContext = 0;
 
 	TestReader tRead(100);
+	g_pReader = &tRead;
 	unsigned int readerCounter = 1;
 	char* example = strdup(_example);
 	char* example_ctx = example;
@@ -206,6 +210,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	}
 
 end:
+	g_pReader = nullptr;
 	free(example);
 	while (!vec.empty()) {
 		vec[0].deallocDynamic();
@@ -868,6 +873,60 @@ int main(int argc, char** argv)
 			"   PRINT 'exact(min(a))'                NW" \
 			"   PRINT 'exact(max(a))'                NW";
 	VERIFY2(spec, "1.5\n2.5\n3.5", "0 0 0"); // TEST #228
+
+	// === Rolling Context tests ===
+
+	// CONTEXT 0 resets to current record
+	spec = "CONTEXT 0 1-* 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #229
+
+	// CONTEXT +1 peeks at next record
+	spec = "1-* 1 CONTEXT 1 1-* NW";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha beta\nbeta gamma\ngamma"); // TEST #230
+
+	// CONTEXT -1 peeks at previous record
+	spec = "1-* 1 CONTEXT -1 1-* NW";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta alpha\ngamma beta"); // TEST #231
+
+	// @+1 in expression peeks at next record
+	spec = "print @+1 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "beta\ngamma\n"); // TEST #232
+
+	// @-1 in expression peeks at previous record
+	spec = "print @-1 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "\nalpha\nbeta"); // TEST #233
+
+	// @+0 is the same as @@
+	spec = "print @+0 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #234
+
+	// @-0 is the same as @@
+	spec = "print @-0 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #235
+
+	// CONTEXT with larger forward offset
+	spec = "1-* 1 CONTEXT 2 1-* NW";
+	VERIFY2(spec, "A\nB\nC\nD\nE", "A C\nB D\nC E\nD\nE"); // TEST #236
+
+	// CONTEXT with larger backward offset
+	spec = "1-* 1 CONTEXT -2 1-* NW";
+	VERIFY2(spec, "A\nB\nC\nD\nE", "A\nB\nC A\nD B\nE C"); // TEST #237
+
+	// Combined forward and backward in one spec
+	spec = "CONTEXT -1 1-* 1 CONTEXT 0 1-* NW CONTEXT 1 1-* NW";
+	VERIFY2(spec, "A\nB\nC", "A B\nA B C\nB C"); // TEST #238
+
+	// @+n in expression with function
+	spec = "PRINT 'length(@+1)' 1";
+	VERIFY2(spec, "AB\nCDE\nF", "3\n1\n0"); // TEST #239
+
+	// Out-of-range forward context returns empty string
+	spec = "print @+5 1";
+	VERIFY2(spec, "only", ""); // TEST #240
+
+	// Out-of-range backward context returns empty string
+	spec = "print @-5 1";
+	VERIFY2(spec, "only", ""); // TEST #241
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

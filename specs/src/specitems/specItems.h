@@ -11,6 +11,9 @@
 
 #define MAX_DEPTH_CONDITION_STATEMENTS  64
 
+extern unsigned int g_forwardContext;
+extern unsigned int g_backwardContext;
+
 class itemGroup {
 public:
 	itemGroup();

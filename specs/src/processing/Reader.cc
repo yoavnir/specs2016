@@ -5,6 +5,7 @@
 #include "Reader.h"
 
 uint64_t g_readRecordCounter = 0;
+Reader* g_pReader = nullptr;
 
 void ReadAllRecordsIntoReaderQueue(Reader* r)
 {
@@ -108,6 +109,12 @@ void Reader::Begin() {
 		mp_thread = std::unique_ptr<std::thread>(new std::thread(ReadAllRecordsIntoReaderQueue, this));
 }
 
+PSpecString Reader::peek(int offset)
+{
+	MYTHROW("Rolling context is not supported for this reader type");
+	return nullptr;
+}
+
 
 StandardReader::StandardReader() {
 	m_NeedToClose = false;
@@ -115,6 +122,10 @@ StandardReader::StandardReader() {
 	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
+	m_forwardContextSize = 0;
+	m_backwardContextSize = 0;
+	m_currentRecord = nullptr;
+	m_contextInitialized = false;
 }
 
 StandardReader::StandardReader(std::istream* f) {
@@ -128,6 +139,10 @@ StandardReader::StandardReader(std::istream* f) {
 	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
+	m_forwardContextSize = 0;
+	m_backwardContextSize = 0;
+	m_currentRecord = nullptr;
+	m_contextInitialized = false;
 }
 
 StandardReader::StandardReader(std::string& fn) {
@@ -142,6 +157,10 @@ StandardReader::StandardReader(std::string& fn) {
 	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
+	m_forwardContextSize = 0;
+	m_backwardContextSize = 0;
+	m_currentRecord = nullptr;
+	m_contextInitialized = false;
 }
 
 StandardReader::StandardReader(pipeType pipe) {
@@ -151,6 +170,10 @@ StandardReader::StandardReader(pipeType pipe) {
 	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
+	m_forwardContextSize = 0;
+	m_backwardContextSize = 0;
+	m_currentRecord = nullptr;
+	m_contextInitialized = false;
 }
 
 StandardReader::~StandardReader() {
@@ -181,11 +204,68 @@ void StandardReader::setLineDelimiter(char c)
 	m_lineDelimiter = c;
 }
 
+void StandardReader::setContextSizes(unsigned int forward, unsigned int backward)
+{
+	m_forwardContextSize = forward;
+	m_backwardContextSize = backward;
+}
+
+PSpecString StandardReader::peek(int offset)
+{
+	if (offset == 0) {
+		return m_currentRecord ? m_currentRecord : std::make_shared<std::string>();
+	}
+	if (offset < 0) {
+		unsigned int idx = (unsigned int)(-offset) - 1;
+		if (idx >= m_backwardBuffer.size()) return std::make_shared<std::string>();
+		return m_backwardBuffer[m_backwardBuffer.size() - 1 - idx];
+	}
+	// offset > 0
+	unsigned int idx = (unsigned int)offset - 1;
+	if (idx >= m_forwardBuffer.size()) return std::make_shared<std::string>();
+	return m_forwardBuffer[idx];
+}
+
 bool StandardReader::endOfSource() {
-	return m_bAbort || m_EOF;
+	if (m_bAbort) return true;
+	if (m_contextInitialized && !m_forwardBuffer.empty()) return false;
+	return m_EOF;
 }
 
 PSpecString StandardReader::getNextRecord() {
+	if (m_forwardContextSize == 0 && m_backwardContextSize == 0)
+		return getNextRecordInternal();
+
+	if (!m_contextInitialized) {
+		m_currentRecord = getNextRecordInternal();
+		if (!m_currentRecord) return nullptr;
+		for (unsigned int i = 0; i < m_forwardContextSize; i++) {
+			PSpecString rec = getNextRecordInternal();
+			if (!rec) break;
+			m_forwardBuffer.push_back(rec);
+		}
+		m_contextInitialized = true;
+		return m_currentRecord;
+	}
+
+	// Shift window forward
+	m_backwardBuffer.push_back(m_currentRecord);
+	if (m_backwardBuffer.size() > m_backwardContextSize)
+		m_backwardBuffer.pop_front();
+
+	if (!m_forwardBuffer.empty()) {
+		m_currentRecord = m_forwardBuffer.front();
+		m_forwardBuffer.pop_front();
+		PSpecString rec = getNextRecordInternal();
+		if (rec) m_forwardBuffer.push_back(rec);
+	} else {
+		m_currentRecord = getNextRecordInternal();
+	}
+
+	return m_currentRecord;
+}
+
+PSpecString StandardReader::getNextRecordInternal() {
 	std::string line;
 	bool ok;
 	switch (m_recfm) {
@@ -308,6 +388,16 @@ void TestReader::InsertString(PSpecString ps)
 		MYTHROW("Attempting to insert too many lines into TestReader");
 	}
 	mp_arr[m_count++] = ps;
+}
+
+PSpecString TestReader::peek(int offset)
+{
+	// m_idx points to the *next* record to read, so current record is m_idx-1
+	int target = int(m_idx) - 1 + offset;
+	if (target < 0 || target >= int(m_count)) {
+		return std::make_shared<std::string>();  // empty string for out-of-bounds
+	}
+	return mp_arr[target];
 }
 
 // #include <cstring>  // for memset

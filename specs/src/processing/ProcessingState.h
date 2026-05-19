@@ -87,6 +87,7 @@ public:
 	void setFirst();
 	void setSecond();
 	void setStream(int i);
+	void setContextString(PSpecString ps);
 	int  getActiveInputStation() { return m_inputStation; }
 	PSpecString currRecord() override { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
 	bool recordNotAvailable() { return nullptr==currRecord(); }
@@ -113,6 +114,7 @@ private:
 	std::string m_fieldSeparator;
 	PSpecString m_ps;  // The current record
 	PSpecString m_prevPs; // The previous record
+	PSpecString m_inputRecord; // The real input record (unaffected by CONTEXT)
 	int  m_wordCount;
 	int  m_fieldCount;
 	unsigned int m_CycleCounter;

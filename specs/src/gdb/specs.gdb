@@ -88,6 +88,10 @@ define dump_break_item
   dump-break-item $arg0
 end
 
+define dump_context_item
+  dump-context-item $arg0
+end
+
 define dump_select_item
   dump-select-item $arg0
 end
@@ -212,6 +216,13 @@ define bp_parseAluExpression
 end
 document bp_parseAluExpression
   Set a breakpoint on parseAluExpression to debug parsing of mathematical expressions.
+end
+
+define bp_context_apply
+  break ContextItem::apply
+end
+document bp_context_apply
+  Set a breakpoint on ContextItem::apply to debug rolling context operations.
 end
 
 define bp_pfc_initialize

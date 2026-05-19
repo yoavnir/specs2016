@@ -605,6 +605,8 @@ class DumpItem(gdb.Command):
                 print(f"  isBreak: {bool(is_break)}")
             except:
                 pass
+            
+            print("----- end of 'Item' dump")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -613,9 +615,16 @@ class DumpDataField(gdb.Command):
     
     def __init__(self):
         super(DumpDataField, self).__init__("dump-data-field", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
             val = gdb.parse_and_eval(arg)
             label = chr(int(val["m_label"])) if int(val["m_label"]) > 0 else "none"
             out_start = int(val["m_outStart"])
@@ -627,7 +636,6 @@ class DumpDataField(gdb.Command):
             conv_str = STRING_CONVERSIONS.get(conv, f"Unknown({conv})")
             align_str = OUTPUT_ALIGNMENT.get(align, f"Unknown({align})")
             
-            print(f"DataField @ {val.address}")
             print(f"  m_label: {label}")
             print(f"  m_outStart: {out_start}")
             print(f"  m_maxLength: {max_len}")
@@ -642,18 +650,23 @@ class DumpTokenItem(gdb.Command):
     
     def __init__(self):
         super(DumpTokenItem, self).__init__("dump-token-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
             val = gdb.parse_and_eval(arg)
             token = deref_shared_ptr(val["mp_Token"])
             if token:
                 type_val = int(token["m_type"])
                 type_str = TOKEN_TYPES.get(type_val, f"Unknown({type_val})")
-                print(f"TokenItem @ {val.address}")
                 print(f"  Token type: {type_str}")
             else:
-                print(f"TokenItem @ {val.address}")
                 print(f"  mp_Token: <nullptr>")
         except Exception as e:
             print(f"Error: {e}")
@@ -663,13 +676,19 @@ class DumpSetItem(gdb.Command):
     
     def __init__(self):
         super(DumpSetItem, self).__init__("dump-set-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
             val = gdb.parse_and_eval(arg)
             raw_expr = std_string_to_str(val["m_rawExpression"])
             key = int(val["m_key"])
-            print(f"SetItem @ {val.address}")
             print(f"  m_rawExpression: \"{raw_expr}\"")
             print(f"  m_key: {key}")
         except Exception as e:
@@ -680,15 +699,21 @@ class DumpSkipItem(gdb.Command):
     
     def __init__(self):
         super(DumpSkipItem, self).__init__("dump-skip-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
             val = gdb.parse_and_eval(arg)
             raw_expr = std_string_to_str(val["m_rawExpression"])
             is_until = bool(val["m_bIsUntil"])
             satisfied = bool(val["m_bSatisfied"])
             skip_type = "SKIPUNTIL" if is_until else "SKIPWHILE"
-            print(f"SkipItem @ {val.address}")
             print(f"  Type: {skip_type}")
             print(f"  m_rawExpression: \"{raw_expr}\"")
             print(f"  m_bSatisfied: {satisfied}")
@@ -700,15 +725,21 @@ class DumpConditionItem(gdb.Command):
     
     def __init__(self):
         super(DumpConditionItem, self).__init__("dump-condition-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
             val = gdb.parse_and_eval(arg)
             pred = int(val["m_pred"])
             pred_str = CONDITION_PREDICATE.get(pred, f"Unknown({pred})")
             raw_expr = std_string_to_str(val["m_rawExpression"])
             is_assn = bool(val["m_isAssignment"])
-            print(f"ConditionItem @ {val.address}")
             print(f"  m_pred: {pred_str}")
             print(f"  m_rawExpression: \"{raw_expr}\"")
             print(f"  m_isAssignment: {is_assn}")
@@ -720,13 +751,40 @@ class DumpBreakItem(gdb.Command):
     
     def __init__(self):
         super(DumpBreakItem, self).__init__("dump-break-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
             val = gdb.parse_and_eval(arg)
             ident = chr(int(val["m_identifier"]))
-            print(f"BreakItem @ {val.address}")
             print(f"  m_identifier: {ident}")
+        except Exception as e:
+            print(f"Error: {e}")
+
+class DumpContextItem(gdb.Command):
+    """Dump a ContextItem."""
+    
+    def __init__(self):
+        super(DumpContextItem, self).__init__("dump-context-item", gdb.COMMAND_DATA)
+        self.dump_item = None
+    
+    def invoke(self, arg, from_tty):
+        try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            val = gdb.parse_and_eval(arg)
+            offset = int(val["m_offset"])
+            print(f"  m_offset: {offset}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -735,13 +793,19 @@ class DumpSelectItem(gdb.Command):
     
     def __init__(self):
         super(DumpSelectItem, self).__init__("dump-select-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
             val = gdb.parse_and_eval(arg)
             stream = int(val["m_stream"])
             b_output = bool(val["bOutput"])
-            print(f"SelectItem @ {val.address}")
             print(f"  m_stream: {stream}")
             print(f"  bOutput: {b_output}")
         except Exception as e:
@@ -752,16 +816,22 @@ class DumpSplitItem(gdb.Command):
     
     def __init__(self):
         super(DumpSplitItem, self).__init__("dump-split-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
             val = gdb.parse_and_eval(arg)
             is_field = bool(val["m_isField"])
             sep = std_string_to_str(val["m_separator"])
             splitting = bool(val["m_splitting"])
             current_piece = int(val["m_currentPiece"])
             split_type = "SPLITF" if is_field else "SPLITW"
-            print(f"SplitItem @ {val.address}")
             print(f"  Type: {split_type}")
             print(f"  m_separator: \"{sep}\"")
             print(f"  m_splitting: {splitting}")
@@ -1437,6 +1507,7 @@ def register_commands():
     DumpSkipItem()
     DumpConditionItem()
     DumpBreakItem()
+    DumpContextItem()
     DumpSelectItem()
     DumpSplitItem()
     
