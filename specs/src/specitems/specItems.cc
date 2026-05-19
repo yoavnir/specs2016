@@ -472,6 +472,11 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		}
 		case TokenListType__CONTEXT:
 		{
+			if (tokenVec[index].Literal().empty()) {
+				std::string err = "CONTEXT at index " + std::to_string(tokenVec[index].argIndex()) +
+					" must be followed by an integer offset";
+				MYTHROW(err);
+			}
 			int offset = std::stoi(tokenVec[index].Literal());
 			auto pItem = std::make_shared<ContextItem>(offset);
 			addItem(pItem);

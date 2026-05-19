@@ -919,7 +919,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		}
 		case TokenListType__CONTEXT:
 		{
-			if (tok.Literal()=="" && i+1 < tokList->size()) {
+			if (i+1 < tokList->size()) {
 				std::string offsetStr;
 				if (TokenListType__RANGE == nextTok.Type() && nextTok.Range() && nextTok.Range()->isSingleNumber()) {
 					offsetStr = std::to_string(nextTok.Range()->getSingleNumber());
