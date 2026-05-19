@@ -218,10 +218,10 @@ document bp_parseAluExpression
   Set a breakpoint on parseAluExpression to debug parsing of mathematical expressions.
 end
 
-define bp_context
+define bp_context_apply
   break ContextItem::apply
 end
-document bp_context
+document bp_context_apply
   Set a breakpoint on ContextItem::apply to debug rolling context operations.
 end
 
