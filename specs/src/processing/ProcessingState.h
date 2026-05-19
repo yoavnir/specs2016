@@ -114,6 +114,7 @@ private:
 	std::string m_fieldSeparator;
 	PSpecString m_ps;  // The current record
 	PSpecString m_prevPs; // The previous record
+	PSpecString m_inputRecord; // The real input record (unaffected by CONTEXT)
 	int  m_wordCount;
 	int  m_fieldCount;
 	unsigned int m_CycleCounter;
