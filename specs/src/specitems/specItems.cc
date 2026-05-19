@@ -1298,7 +1298,7 @@ ApplyRet ContextItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	MYASSERT_WITH_MSG(g_pReader != nullptr, "Rolling context requires a reader");
 	PSpecString ps = g_pReader->peek(m_offset);
-	pState.setContextString(ps);
+	pState.setContextString(ps, m_offset);
 	return ApplyRet__Continue;
 }
 

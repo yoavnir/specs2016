@@ -912,6 +912,15 @@ or
 spec units, then this number will be equal to the result of 
 .B number().
 Otherwise, it will be higher.
+.IP "ctxrecno()" 3
+Returns the record number of the record that input parts work on. This is similar to
+.B recno(),
+but considers rolling context, which
+.B recno()
+does not. When no
+.I CONTEXT
+is active, returns the same value as
+.B recno().
 .IP "record()" 3
 Returns the entire input record. Equivalent to 
 .B range(1,-1)

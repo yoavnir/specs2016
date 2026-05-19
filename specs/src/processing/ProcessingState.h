@@ -52,6 +52,7 @@ public:
 	bool    isRunIn() override   { return (m_CycleCounter==1); }
 	bool    isRunOut() override  { return (m_ps==nullptr); } // NOTE: will return true before first record
 	ALUInt  getRecordCount() override    { return ALUInt(m_CycleCounter + m_ExtraReads); }
+	ALUInt  getContextOffset() override  { return ALUInt(m_contextOffset); }
 	ALUInt  getIterationCount() override { return ALUInt(m_CycleCounter); }
 	bool    breakEstablished(char id) override;
 	PAluValueStats valueStatistics(char id) override;
@@ -87,7 +88,7 @@ public:
 	void setFirst();
 	void setSecond();
 	void setStream(int i);
-	void setContextString(PSpecString ps);
+	void setContextString(PSpecString ps, int offset = 0);
 	int  getActiveInputStation() { return m_inputStation; }
 	PSpecString currRecord() override { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
 	PSpecString inputRecord() override { return m_inputRecord; }
@@ -120,6 +121,7 @@ private:
 	int  m_fieldCount;
 	unsigned int m_CycleCounter;
 	unsigned int m_ExtraReads;
+	int  m_contextOffset;
 	std::vector<int> m_wordStart;
 	std::vector<int> m_wordEnd;
 	std::vector<int> m_fieldStart;

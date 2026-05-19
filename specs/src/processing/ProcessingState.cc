@@ -49,6 +49,7 @@ void ProcessingState::Reset()
 	m_wordCount = -1;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 }
@@ -76,6 +77,7 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_ps = nullptr;
 	m_prevPs = nullptr;
 	m_inputRecord = nullptr;
@@ -99,6 +101,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_ps = nullptr;
 	m_prevPs = nullptr;
 	m_inputRecord = nullptr;
@@ -130,6 +133,7 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
+	m_contextOffset = 0;
 	if (bResetState) {
 		fieldIdentifierClear();
 		resetBreaks();
@@ -141,11 +145,12 @@ void ProcessingState::setStringInPlace(PSpecString ps)
 	m_ps = ps;
 }
 
-void ProcessingState::setContextString(PSpecString ps)
+void ProcessingState::setContextString(PSpecString ps, int offset)
 {
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
+	m_contextOffset = offset;
 }
 
 void ProcessingState::setFirst()
