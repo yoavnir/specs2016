@@ -928,6 +928,10 @@ int main(int argc, char** argv)
 	spec = "print @-5 1";
 	VERIFY2(spec, "only", ""); // TEST #241
 
+	// @@ returns the real input record, not the CONTEXT-modified one
+	spec = "CONTEXT -1 PRINT '@@' 1 WRITE PRINT '@-1' 1 WRITE";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\n\nbeta\nalpha\ngamma\nbeta"); // TEST #242
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

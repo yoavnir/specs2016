@@ -90,6 +90,7 @@ public:
 	void setContextString(PSpecString ps);
 	int  getActiveInputStation() { return m_inputStation; }
 	PSpecString currRecord() override { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
+	PSpecString inputRecord() override { return m_inputRecord; }
 	bool recordNotAvailable() { return nullptr==currRecord(); }
 	bool inputStreamHasChanged() { return m_inputStreamChanged; }
 	void resetInputStreamFlag() { m_inputStreamChanged = false; }
