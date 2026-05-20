@@ -79,8 +79,10 @@ When starting a new version:
 
 Contributors
 ============
-* Yoav Nir ([yoavnir](https://github.com/yoavnir))
-* Jean-Baptiste Jouband ([Gawesomer](https://github.com/Gawesomer))
+- Yoav Nir ([yoavnir](https://github.com/yoavnir))
+- Jean-Baptiste Jouband ([Gawesomer](https://github.com/Gawesomer))
+- donglrd ([donglrd](https://github.com/donglrd))
+- Miriam-R-coder ([Miriam-R-coder](https://github.com/Miriam))
 
 Documentation
 =============
