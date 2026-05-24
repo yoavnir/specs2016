@@ -1338,15 +1338,15 @@ class DumpPythonFuncRec(gdb.Command):
             # Access members
             try:
                 m_name = std_string_to_str(val["m_name"])
-                print(f"  m_name: {m_name}")
+                print(f"  Name: {m_name}")
             except Exception as e:
-                print(f"  m_name: (error: {e})")
+                print(f"  Name: (error: {e})")
             
             try:
                 m_pFuncPtr = val["m_pFuncPtr"]
-                print(f"  m_pFuncPtr: {m_pFuncPtr}")
+                print(f"  Func Ptr: {m_pFuncPtr}")
             except Exception as e:
-                print(f"  m_pFuncPtr: (error: {e})")
+                print(f"  Func Ptr: (error: {e})")
             
             # Show m_doc
             try:
@@ -1354,22 +1354,22 @@ class DumpPythonFuncRec(gdb.Command):
                 if m_doc:
                     # Format multi-line docs nicely
                     if "\n" in m_doc:
-                        print(f"  m_doc:")
+                        print(f"  doc:")
                         for line in m_doc.split("\n"):
                             print(f"    {line}")
                     else:
-                        print(f"  m_doc: {m_doc}")
+                        print(f"  doc: {m_doc}")
                 else:
-                    print(f"  m_doc: (empty)")
+                    print(f"  doc: (empty)")
             except Exception as e:
-                print(f"  m_doc: (error: {e})")
+                print(f"  doc: (error: {e})")
             
             # Show m_argTypeExact
             try:
                 m_argTypeExact = bool(val["m_argTypeExact"])
-                print(f"  m_argTypeExact: {m_argTypeExact}")
+                print("  Arg Type: {}".format("exact" if m_argTypeExact else "no exactness information"))
             except Exception as e:
-                print(f"  m_argTypeExact: (error: {e})")
+                print(f"  Arg Type: (error: {e})")
             
             # Show m_pTuple
             try:
@@ -1385,7 +1385,7 @@ class DumpPythonFuncRec(gdb.Command):
             try:
                 m_args = val["m_args"]
                 arg_size = std_vector_size(m_args)
-                print(f"  m_args ({arg_size} items):")
+                print(f"  Args ({arg_size} items):")
                 
                 # Try to iterate and dump each argument
                 for i in range(arg_size):
