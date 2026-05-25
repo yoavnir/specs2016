@@ -84,7 +84,7 @@
 
 || Command | Description |
 ||---------|-------------|
-|| `bp_apply` | Set breakpoint on Item::apply |
+|| `bp_apply` | Set breakpoints on all 9 Item subclass apply methods |
 || `bp_getstr` | Set breakpoint on InputPart::getStr |
 || `bp_compile` | Set breakpoint on itemGroup::Compile |
 || `bp_parseAluExpression` | Set breakpoint on parseAluExpression, where expressions are parsed |
@@ -127,12 +127,20 @@ ALUValue @ 0x...
   m_exact: true
 ```
 
-### Set Breakpoint on Item::apply
+### Set Breakpoints on Item::apply
 ```gdb
 (gdb) bp_apply
-Breakpoint 1 at 0x...
+Breakpoint 1 at 0x...: DataField::apply
+Breakpoint 2 at 0x...: TokenItem::apply
+Breakpoint 3 at 0x...: SetItem::apply
+Breakpoint 4 at 0x...: SkipItem::apply
+Breakpoint 5 at 0x...: ConditionItem::apply
+Breakpoint 6 at 0x...: BreakItem::apply
+Breakpoint 7 at 0x...: SelectItem::apply
+Breakpoint 8 at 0x...: SplitItem::apply
+Breakpoint 9 at 0x...: ContextItem::apply
 (gdb) run
-Breakpoint 1, Item::apply (this=0x..., pState=0x..., pSB=0x...) at specitems/specItems.cc:...
+Breakpoint 1, DataField::apply (this=0x..., pState=..., pSB=0x...) at specitems/dataField.cc:...
 (gdb) dump_pstate pState
 ```
 

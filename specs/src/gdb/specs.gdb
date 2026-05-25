@@ -195,10 +195,18 @@ end
 # ============================================================================
 
 define bp_apply
-  break Item::apply
+  break DataField::apply
+  break TokenItem::apply
+  break SetItem::apply
+  break SkipItem::apply
+  break ConditionItem::apply
+  break BreakItem::apply
+  break SelectItem::apply
+  break SplitItem::apply
+  break ContextItem::apply
 end
 document bp_apply
-  Set a breakpoint on Item::apply to debug item application.
+  Set breakpoints on every Item subclass's apply method (9 breakpoints).
 end
 
 define bp_getstr
@@ -287,7 +295,7 @@ echo   dump_python_func_arg <var>     - Dump PythonFuncArg\n
 echo   dump_exception <var>           - Dump SpecsException\n
 echo \n
 echo Breakpoint helpers:\n
-echo   bp_apply                       - Break on Item::apply\n
+echo   bp_apply                       - Break on all 9 Item subclass apply methods\n
 echo   bp_getstr                      - Break on InputPart::getStr\n
 echo   bp_compile                     - Break on itemGroup::Compile\n
 echo   bp_parseAluExpression          - Break on parseAluExpression, where expressions are parsed\n
