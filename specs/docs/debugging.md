@@ -21,7 +21,7 @@ To debug specs effectively, you must build with debug symbols enabled.
 
 ```bash
 cd specs/src
-python setup.py -v DEBUG
+python3 setup.py -v DEBUG
 make clean all
 ```
 
@@ -30,11 +30,9 @@ The `-v DEBUG` flag tells the setup script to enable debug symbols and disable o
 ### On Windows
 
 ```cmd
-cd specs\src
-python setup.py -v DEBUG -c VS
 msbuild specs\specs.sln /p:Configuration=Debug /p:Platform=x64
 ```
-
+However, `gdb` is not normally the debugger that you use on Windows.
 ---
 
 ## Loading the GDB Macros
@@ -45,23 +43,15 @@ When you run GDB from the `specs/src/` directory, the `.gdbinit` file is automat
 
 ```bash
 cd specs/src
-gdb ./specs
+gdb ../exe/specs -x gdb/specs.gdb
 ```
-
-GDB will automatically source `gdb/specs.gdb`, which loads the Python extension and registers all dump commands.
 
 ### Manual Loading
 
-If you're running GDB from a different directory, you can manually load the macros:
-
-```bash
-gdb ./specs -x specs/src/gdb/specs.gdb
-```
-
-Or from within GDB:
+If you're running GDB from a different directory, you can manually load the macros from within GDB:
 
 ```
-(gdb) source specs/src/gdb/specs.gdb
+(gdb) source gdb/specs.gdb
 ```
 
 ### Verify Loading
@@ -69,15 +59,39 @@ Or from within GDB:
 After loading, you should see a welcome message:
 
 ```
+specs GDB extension loaded successfully
+
 ========================================
 specs GDB debugging macros loaded
 ========================================
 
 Available commands:
-  dump_pstate <var>         - Dump ProcessingState
-  dump_sb <var>             - Dump StringBuilder
-  dump_item <var>           - Dump Item (polymorphic)
-  ...
+dump_pstate <var>              - Dump ProcessingState
+dump_sb <var>                  - Dump StringBuilder
+dump_item <var>                - Dump Item (polymorphic)
+dump_items <var>               - Dump itemGroup
+dump_token <var>               - Dump Token
+dump_alu_value <var>           - Dump ALUValue
+dump_alu_counters <var>        - Dump ALUCounters
+dump_alu_vec <var>             - Dump AluVec
+dump_alu_function <var>        - Dump AluFunction
+dump_external_func_rec <var>   - Dump ExternalFunctionRec
+dump_python_func_collection <var> - Dump PythonFunctionCollection
+dump_python_func_by_name <col> <name> - Dump PythonFuncRec by name
+dump_python_func_rec <var>     - Dump PythonFuncRec
+dump_python_func_arg <var>     - Dump PythonFuncArg
+dump_exception <var>           - Dump SpecsException
+
+Breakpoint helpers:
+bp_apply                       - Break on all 9 Item subclass apply methods
+bp_getstr                      - Break on InputPart::getStr
+bp_compile                     - Break on itemGroup::Compile
+bp_parseAluExpression          - Break on parseAluExpression, where expressions are parsed
+bp_pfc_initialize              - Break on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized
+bp_func_setargvalue            - Break on PythonFuncRec::setArgValue, where an argument for an external function is set
+bp_func_call                   - Break on PythonFuncRec::Call, where an external function is invoked
+
+For more help, type: help dump-processing-state
 ```
 
 ---
