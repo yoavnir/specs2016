@@ -158,6 +158,18 @@ EXTERNAL_FUNC_ERROR_HANDLING = {
     3: "NullStr",
 }
 
+EXTREME_BOOL = {
+    0: "False",
+    1: "True",
+    2: "DontCare",
+}
+
+INPUT_STATION = {
+    -1: "FIRST",
+    -2: "SECOND",
+    0: "STDERR",
+}
+
 # Token types (X-macro generated, simplified list)
 TOKEN_TYPES = {
     0: "STOP",
@@ -314,6 +326,33 @@ def std_map_items(val):
                 value = children[i + 1][1]  # the gdb.Value for the value
                 items.append((key, value))
         return items
+    except:
+        return []
+
+def std_vector_int_items(val):
+    """
+    Extract all elements from a std::vector<int> as a Python list.
+    Returns an empty list on failure.
+    """
+    try:
+        size = std_vector_size(val)
+        start = val["_M_impl"]["_M_start"]
+        return [int(start[i]) for i in range(size)]
+    except:
+        return []
+
+def std_stack_items(val):
+    """
+    Extract all elements from a std::stack as a Python list (bottom to top).
+    std::stack wraps a deque in its 'c' member.  Uses GDB's pretty-printer
+    for the underlying deque to iterate.
+    """
+    try:
+        deque = val["c"]
+        pp = gdb.default_visualizer(deque)
+        if pp and hasattr(pp, 'children'):
+            return [child[1] for child in pp.children()]
+        return []
     except:
         return []
 
@@ -1103,53 +1142,279 @@ class DumpProcessingState(gdb.Command):
     def __init__(self):
         super(DumpProcessingState, self).__init__("dump-processing-state", gdb.COMMAND_DATA)
     
+    @staticmethod
+    def _fmt_record(shared_str):
+        """Format a PSpecString (shared_ptr<string>) for display."""
+        obj = deref_shared_ptr(shared_str)
+        if obj is None:
+            return "<nullptr>"
+        s = std_string_to_str(obj)
+        if len(s) > 60:
+            return f"\"{s[:60]}...\" (len={len(s)})"
+        return f"\"{s}\""
+    
     def invoke(self, arg, from_tty):
         try:
             val = gdb.parse_and_eval(arg)
-            
-            # Current record
-            ps = deref_shared_ptr(val["m_ps"])
-            if ps:
-                record_str = std_string_to_str(ps)
-            else:
-                record_str = "<nullptr>"
-            
-            # Previous record
-            prev_ps = deref_shared_ptr(val["m_prevPs"])
-            if prev_ps:
-                prev_record_str = std_string_to_str(prev_ps)
-            else:
-                prev_record_str = "<nullptr>"
-            
-            pad = chr(int(val["m_pad"]))
-            word_sep = std_string_to_str(val["m_wordSeparator"])
-            field_sep = std_string_to_str(val["m_fieldSeparator"])
-            cycle = int(val["m_CycleCounter"])
-            extra_reads = int(val["m_ExtraReads"])
-            word_count = int(val["m_wordCount"])
-            field_count = int(val["m_fieldCount"])
-            input_station = int(val["m_inputStation"])
-            input_stream = int(val["m_inputStream"])
-            output_idx = int(val["m_outputIndex"])
-            no_write = bool(val["m_bNoWrite"])
-            eof = bool(val["m_bEOF"])
-            
             print(f"ProcessingState @ {val.address}")
-            print(f"  Current Record:    \"{record_str[:50]}{'...' if len(record_str) > 50 else ''}\"")
-            print(f"  Previous Record:   \"{prev_record_str[:50]}{'...' if len(prev_record_str) > 50 else ''}\"")
-            print(f"  Pad Char:          '{pad}' (0x{ord(pad):02x})")
-            print(f"  Word Separator:    \"{word_sep}\"")
-            print(f"  Field Separator:   \"{field_sep}\"")
-            print(f"  Cycle Counter:     {cycle}")
-            print(f"  Extra Reads:       {extra_reads}")
-            print(f"  Record Count:      {cycle + extra_reads}")
-            print(f"  Word Count:        {word_count}")
-            print(f"  Field Count:       {field_count}")
-            print(f"  Input Station:     {input_station}")
-            print(f"  Input Stream:      {input_stream}")
-            print(f"  Output Index:      {output_idx}")
-            print(f"  No Write:          {no_write}")
-            print(f"  EOF:               {eof}")
+            
+            # --- Records ---
+            print(f"  Current Record:    {self._fmt_record(val['m_ps'])}")
+            print(f"  Previous Record:   {self._fmt_record(val['m_prevPs'])}")
+            print(f"  Input Record:      {self._fmt_record(val['m_inputRecord'])}")
+            
+            # --- Separators & Padding ---
+            try:
+                pad = chr(int(val["m_pad"]))
+                print(f"  Pad Char:          '{pad}' (0x{ord(pad):02x})")
+            except Exception as e:
+                print(f"  Pad Char:          (error: {e})")
+            
+            try:
+                ws_local = bool(val["m_wordSeparatorLocal"])
+                word_sep = std_string_to_str(val["m_wordSeparator"])
+                local_tag = " (local)" if ws_local else ""
+                print(f"  Word Separator:    \"{word_sep}\"{local_tag}")
+            except Exception as e:
+                print(f"  Word Separator:    (error: {e})")
+            
+            try:
+                field_sep = std_string_to_str(val["m_fieldSeparator"])
+                print(f"  Field Separator:   \"{field_sep}\"")
+            except Exception as e:
+                print(f"  Field Separator:   (error: {e})")
+            
+            # --- Counters ---
+            try:
+                cycle = int(val["m_CycleCounter"])
+                extra_reads = int(val["m_ExtraReads"])
+                context_offset = int(val["m_contextOffset"])
+                print(f"  Cycle Counter:     {cycle}")
+                print(f"  Extra Reads:       {extra_reads}")
+                print(f"  Record Count:      {cycle + extra_reads}")
+                print(f"  Context Offset:    {context_offset}")
+            except Exception as e:
+                print(f"  Counters:          (error: {e})")
+            
+            # --- Word / Field Caches ---
+            try:
+                word_count = int(val["m_wordCount"])
+                field_count = int(val["m_fieldCount"])
+                print(f"  Word Count:        {word_count}")
+                print(f"  Field Count:       {field_count}")
+            except Exception as e:
+                print(f"  Word/Field Count:  (error: {e})")
+            
+            try:
+                ws = std_vector_int_items(val["m_wordStart"])
+                we = std_vector_int_items(val["m_wordEnd"])
+                n = len(ws)
+                print(f"  Word Positions ({n} cached):")
+                if n == 0:
+                    print(f"    (none)")
+                else:
+                    limit = min(n, 20)
+                    for i in range(limit):
+                        end_val = we[i] if i < len(we) else "?"
+                        print(f"    [{i}] {ws[i]}-{end_val}")
+                    if n > 20:
+                        print(f"    ... and {n - 20} more")
+            except Exception as e:
+                print(f"  Word Positions:    (error: {e})")
+            
+            try:
+                fs = std_vector_int_items(val["m_fieldStart"])
+                fe = std_vector_int_items(val["m_fieldEnd"])
+                n = len(fs)
+                print(f"  Field Positions ({n} cached):")
+                if n == 0:
+                    print(f"    (none)")
+                else:
+                    limit = min(n, 20)
+                    for i in range(limit):
+                        end_val = fe[i] if i < len(fe) else "?"
+                        print(f"    [{i}] {fs[i]}-{end_val}")
+                    if n > 20:
+                        print(f"    ... and {n - 20} more")
+            except Exception as e:
+                print(f"  Field Positions:   (error: {e})")
+            
+            # --- Field Identifiers ---
+            try:
+                fi = val["m_fieldIdentifiers"]
+                fi_size = std_map_size(fi)
+                print(f"  Field Identifiers ({fi_size} entries):")
+                if fi_size == 0:
+                    print(f"    (none)")
+                else:
+                    items = std_map_items(fi)
+                    for key, value in items:
+                        try:
+                            k = chr(int(key))
+                            s = deref_shared_ptr(value)
+                            v = std_string_to_str(s) if s else "<nullptr>"
+                            if len(v) > 40:
+                                v = v[:40] + "..."
+                            print(f"    '{k}' = \"{v}\"")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"  Field Identifiers: (error: {e})")
+            
+            # --- FI Statistics ---
+            try:
+                fis = val["m_fiStatistics"]
+                fis_size = std_map_size(fis)
+                print(f"  FI Statistics ({fis_size} entries):")
+                if fis_size == 0:
+                    print(f"    (none)")
+                else:
+                    items = std_map_items(fis)
+                    for key, value in items:
+                        try:
+                            k = chr(int(key))
+                            stats = deref_shared_ptr(value)
+                            if stats:
+                                total = int(stats["m_totalCount"])
+                                int_count = int(stats["m_intCount"])
+                                float_count = int(stats["m_floatCount"])
+                                print(f"    '{k}': {total} values ({int_count} int, {float_count} float)")
+                            else:
+                                print(f"    '{k}': <nullptr>")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"  FI Statistics:     (error: {e})")
+            
+            # --- Break Values ---
+            try:
+                bv = val["m_breakValues"]
+                bv_size = std_map_size(bv)
+                print(f"  Break Values ({bv_size} entries):")
+                if bv_size == 0:
+                    print(f"    (none)")
+                else:
+                    items = std_map_items(bv)
+                    for key, value in items:
+                        try:
+                            k = chr(int(key))
+                            s = deref_shared_ptr(value)
+                            v = std_string_to_str(s) if s else "<nullptr>"
+                            if len(v) > 40:
+                                v = v[:40] + "..."
+                            print(f"    '{k}' = \"{v}\"")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"  Break Values:      (error: {e})")
+            
+            try:
+                bl = int(val["m_breakLevel"])
+                if bl == 0:
+                    print(f"  Break Level:       (none)")
+                else:
+                    print(f"  Break Level:       '{chr(bl)}' (0x{bl:02x})")
+            except Exception as e:
+                print(f"  Break Level:       (error: {e})")
+            
+            # --- Frequency Maps ---
+            try:
+                fm = val["m_freqMaps"]
+                fm_size = std_map_size(fm)
+                print(f"  Frequency Maps ({fm_size} entries):")
+                if fm_size == 0:
+                    print(f"    (none)")
+                else:
+                    items = std_map_items(fm)
+                    for key, value in items:
+                        try:
+                            k = chr(int(key))
+                            fmap = deref_shared_ptr(value)
+                            if fmap:
+                                nelem = int(fmap["map"]["_M_element_count"])
+                                counter = int(fmap["counter"])
+                                print(f"    '{k}': {nelem} unique elements, {counter} total")
+                            else:
+                                print(f"    '{k}': <nullptr>")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"  Frequency Maps:    (error: {e})")
+            
+            # --- Conditions Stack ---
+            try:
+                cond_items = std_stack_items(val["m_Conditions"])
+                depth = len(cond_items)
+                print(f"  Conditions ({depth} deep):")
+                if depth == 0:
+                    print(f"    (empty)")
+                else:
+                    for i in range(depth - 1, -1, -1):
+                        label = "top -> " if i == depth - 1 else "       "
+                        v = int(cond_items[i])
+                        name = EXTREME_BOOL.get(v, f"Unknown({v})")
+                        print(f"    {label}{name}")
+            except Exception as e:
+                print(f"  Conditions:        (error: {e})")
+            
+            # --- Loops Stack ---
+            try:
+                loop_items = std_stack_items(val["m_Loops"])
+                depth = len(loop_items)
+                print(f"  Loops ({depth} deep):")
+                if depth == 0:
+                    print(f"    (empty)")
+                else:
+                    for i in range(depth - 1, -1, -1):
+                        label = "top -> " if i == depth - 1 else "       "
+                        v = int(loop_items[i])
+                        print(f"    {label}token #{v}")
+            except Exception as e:
+                print(f"  Loops:             (error: {e})")
+            
+            # --- I/O State ---
+            try:
+                input_station = int(val["m_inputStation"])
+                station_name = INPUT_STATION.get(input_station, f"Stream({input_station})")
+                print(f"  Input Station:     {station_name}")
+            except Exception as e:
+                print(f"  Input Station:     (error: {e})")
+            
+            try:
+                input_stream = int(val["m_inputStream"])
+                print(f"  Input Stream:      {input_stream}")
+            except Exception as e:
+                print(f"  Input Stream:      (error: {e})")
+            
+            try:
+                stream_changed = bool(val["m_inputStreamChanged"])
+                print(f"  Stream Changed:    {stream_changed}")
+            except Exception as e:
+                print(f"  Stream Changed:    (error: {e})")
+            
+            try:
+                writers = val["m_Writers"]
+                print(f"  Writers:           {writers}")
+            except Exception as e:
+                print(f"  Writers:           (error: {e})")
+            
+            try:
+                output_idx = int(val["m_outputIndex"])
+                print(f"  Output Index:      {output_idx}")
+            except Exception as e:
+                print(f"  Output Index:      (error: {e})")
+            
+            try:
+                no_write = bool(val["m_bNoWrite"])
+                print(f"  No Write:          {no_write}")
+            except Exception as e:
+                print(f"  No Write:          (error: {e})")
+            
+            try:
+                eof = bool(val["m_bEOF"])
+                print(f"  EOF:               {eof}")
+            except Exception as e:
+                print(f"  EOF:               (error: {e})")
         except Exception as e:
             print(f"Error: {e}")
 
