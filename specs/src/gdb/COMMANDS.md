@@ -68,7 +68,8 @@
 || `dump-alu-function` | `dump_alu_function` | Dump an AluFunction (name, arg count, input dependency) |
 || `dump-external-function-rec` | `dump_external_func_rec` | Dump an ExternalFunctionRec (calls virtual methods GetArgCount/GetFuncPtr) |
 || `dump-external-function-collection` | `dump_external_func_collection` | Dump an ExternalFunctionCollection (initialization state) |
-|| `dump-python-function-collection` | `dump_python_func_collection` | Dump a PythonFunctionCollection (registry state and function count) |
+|| `dump-python-function-collection` | `dump_python_func_collection` | Dump a PythonFunctionCollection (registry state, function count, and function list) |
+|| `dump-python-func-by-name` | `dump_python_func_by_name` | Dump a PythonFuncRec by looking it up in a collection by name |
 || `dump-python-func-rec` | `dump_python_func_rec` | Dump a PythonFuncRec (name, pointer, doc, and expanded argument list) |
 || `dump-python-func-arg` | `dump_python_func_arg` | Dump a PythonFuncArg (name, default type, and default value) |
 
@@ -83,7 +84,7 @@
 
 || Command | Description |
 ||---------|-------------|
-|| `bp_apply` | Set breakpoint on Item::apply |
+|| `bp_apply` | Set breakpoints on all 9 Item subclass apply methods |
 || `bp_getstr` | Set breakpoint on InputPart::getStr |
 || `bp_compile` | Set breakpoint on itemGroup::Compile |
 || `bp_parseAluExpression` | Set breakpoint on parseAluExpression, where expressions are parsed |
@@ -126,12 +127,20 @@ ALUValue @ 0x...
   m_exact: true
 ```
 
-### Set Breakpoint on Item::apply
+### Set Breakpoints on Item::apply
 ```gdb
 (gdb) bp_apply
-Breakpoint 1 at 0x...
+Breakpoint 1 at 0x...: DataField::apply
+Breakpoint 2 at 0x...: TokenItem::apply
+Breakpoint 3 at 0x...: SetItem::apply
+Breakpoint 4 at 0x...: SkipItem::apply
+Breakpoint 5 at 0x...: ConditionItem::apply
+Breakpoint 6 at 0x...: BreakItem::apply
+Breakpoint 7 at 0x...: SelectItem::apply
+Breakpoint 8 at 0x...: SplitItem::apply
+Breakpoint 9 at 0x...: ContextItem::apply
 (gdb) run
-Breakpoint 1, Item::apply (this=0x..., pState=0x..., pSB=0x...) at specitems/specItems.cc:...
+Breakpoint 1, DataField::apply (this=0x..., pState=..., pSB=0x...) at specitems/dataField.cc:...
 (gdb) dump_pstate pState
 ```
 

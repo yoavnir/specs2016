@@ -173,6 +173,10 @@ define dump_python_func_collection
   dump-python-function-collection $arg0
 end
 
+define dump_python_func_by_name
+  dump-python-func-by-name $arg0 $arg1
+end
+
 define dump_python_func_rec
   dump-python-func-rec $arg0
 end
@@ -191,10 +195,18 @@ end
 # ============================================================================
 
 define bp_apply
-  break Item::apply
+  break DataField::apply
+  break TokenItem::apply
+  break SetItem::apply
+  break SkipItem::apply
+  break ConditionItem::apply
+  break BreakItem::apply
+  break SelectItem::apply
+  break SplitItem::apply
+  break ContextItem::apply
 end
 document bp_apply
-  Set a breakpoint on Item::apply to debug item application.
+  Set breakpoints on every Item subclass's apply method (9 breakpoints).
 end
 
 define bp_getstr
@@ -276,12 +288,14 @@ echo   dump_alu_counters <var>        - Dump ALUCounters\n
 echo   dump_alu_vec <var>             - Dump AluVec\n
 echo   dump_alu_function <var>        - Dump AluFunction\n
 echo   dump_external_func_rec <var>   - Dump ExternalFunctionRec\n
+echo   dump_python_func_collection <var> - Dump PythonFunctionCollection\n
+echo   dump_python_func_by_name <col> <name> - Dump PythonFuncRec by name\n
 echo   dump_python_func_rec <var>     - Dump PythonFuncRec\n
 echo   dump_python_func_arg <var>     - Dump PythonFuncArg\n
 echo   dump_exception <var>           - Dump SpecsException\n
 echo \n
 echo Breakpoint helpers:\n
-echo   bp_apply                       - Break on Item::apply\n
+echo   bp_apply                       - Break on all 9 Item subclass apply methods\n
 echo   bp_getstr                      - Break on InputPart::getStr\n
 echo   bp_compile                     - Break on itemGroup::Compile\n
 echo   bp_parseAluExpression          - Break on parseAluExpression, where expressions are parsed\n
