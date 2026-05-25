@@ -63,34 +63,34 @@
 
 ## Python Interface Commands
 
-|| Command | Alias | Description |
-||---------|-------|-------------|
-|| `dump-alu-function` | `dump_alu_function` | Dump an AluFunction (name, arg count, input dependency) |
-|| `dump-external-function-rec` | `dump_external_func_rec` | Dump an ExternalFunctionRec (calls virtual methods GetArgCount/GetFuncPtr) |
-|| `dump-external-function-collection` | `dump_external_func_collection` | Dump an ExternalFunctionCollection (initialization state) |
-|| `dump-python-function-collection` | `dump_python_func_collection` | Dump a PythonFunctionCollection (registry state, function count, and function list) |
-|| `dump-python-func-by-name` | `dump_python_func_by_name` | Dump a PythonFuncRec by looking it up in a collection by name |
-|| `dump-python-func-rec` | `dump_python_func_rec` | Dump a PythonFuncRec (name, pointer, doc, and expanded argument list) |
-|| `dump-python-func-arg` | `dump_python_func_arg` | Dump a PythonFuncArg (name, default type, and default value) |
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `dump-alu-function` | `dump_alu_function` | Dump an AluFunction (name, arg count, input dependency) |
+| `dump-external-function-rec` | `dump_external_func_rec` | Dump an ExternalFunctionRec (calls virtual methods GetArgCount/GetFuncPtr) |
+| `dump-external-function-collection` | `dump_external_func_collection` | Dump an ExternalFunctionCollection (initialization state) |
+| `dump-python-function-collection` | `dump_python_func_collection` | Dump a PythonFunctionCollection (registry state, function count, and function list) |
+| `dump-python-func-by-name` | `dump_python_func_by_name` | Dump a PythonFuncRec by looking it up in a collection by name |
+| `dump-python-func-rec` | `dump_python_func_rec` | Dump a PythonFuncRec (name, pointer, doc, and expanded argument list) |
+| `dump-python-func-arg` | `dump_python_func_arg` | Dump a PythonFuncArg (name, default type, and default value) |
 
 ## Utility Commands
 
-|| Command | Alias | Description |
-||---------|-------|-------------|
-|| `dump-exception` | `dump_exception` | Dump a SpecsException |
-|| `dump-all` | — | Dump all relevant debugging info |
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `dump-exception` | `dump_exception` | Dump a SpecsException |
+| `dump-all` | — | Dump all relevant debugging info |
 
 ## Breakpoint Helpers
 
-|| Command | Description |
-||---------|-------------|
-|| `bp_apply` | Set breakpoints on all 9 Item subclass apply methods |
-|| `bp_getstr` | Set breakpoint on InputPart::getStr |
-|| `bp_compile` | Set breakpoint on itemGroup::Compile |
-|| `bp_parseAluExpression` | Set breakpoint on parseAluExpression, where expressions are parsed |
-|| `bp_pfc_initialize` | Set breakpoint on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized |
-|| `bp_func_setargvalue` | Set breakpoint on PythonFuncRec::setArgValue, where an argument for an external function is set |
-|| `bp_func_call` | Set breakpoint on PythonFuncRec::Call, where an external function is invoked |
+| Command | Description |
+|---------|-------------|
+| `bp_apply` | Set breakpoints on all 9 Item subclass apply methods |
+| `bp_getstr` | Set breakpoint on InputPart::getStr |
+| `bp_compile` | Set breakpoint on itemGroup::Compile |
+| `bp_parseAluExpression` | Set breakpoint on parseAluExpression, where expressions are parsed |
+| `bp_pfc_initialize` | Set breakpoint on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized |
+| `bp_func_setargvalue` | Set breakpoint on PythonFuncRec::setArgValue, where an argument for an external function is set |
+| `bp_func_call` | Set breakpoint on PythonFuncRec::Call, where an external function is invoked |
 
 ## Usage Examples
 
