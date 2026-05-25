@@ -173,6 +173,10 @@ define dump_python_func_collection
   dump-python-function-collection $arg0
 end
 
+define dump_python_func_by_name
+  dump-python-func-by-name $arg0 $arg1
+end
+
 define dump_python_func_rec
   dump-python-func-rec $arg0
 end
@@ -276,6 +280,8 @@ echo   dump_alu_counters <var>        - Dump ALUCounters\n
 echo   dump_alu_vec <var>             - Dump AluVec\n
 echo   dump_alu_function <var>        - Dump AluFunction\n
 echo   dump_external_func_rec <var>   - Dump ExternalFunctionRec\n
+echo   dump_python_func_collection <var> - Dump PythonFunctionCollection\n
+echo   dump_python_func_by_name <col> <name> - Dump PythonFuncRec by name\n
 echo   dump_python_func_rec <var>     - Dump PythonFuncRec\n
 echo   dump_python_func_arg <var>     - Dump PythonFuncArg\n
 echo   dump_exception <var>           - Dump SpecsException\n

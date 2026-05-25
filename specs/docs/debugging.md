@@ -294,25 +294,29 @@ Breakpoint 1 at 0x...
 ...
 Breakpoint 1, PyObject_CallObject (...) at PythonIntf.cc:167
 
-(gdb) dump_python_func_collection g_PythonFunctions
+(gdb) dump_python_func_collection gFunctionCollection
 PythonFunctionCollection @ 0x...
-  m_Initialized: true
-  m_Functions @ 0x...
+  Initialized: true
+  Functions (3 entries):
+    my_custom_function @ 0x... (2 args)
+    another_func @ 0x... (exact, 1 args)
+    third_func @ 0x... (0 args)
 
-(gdb) dump_python_func_rec g_PythonFunctions.m_Functions[0]
+(gdb) dump_python_func_by_name gFunctionCollection my_custom_function
 PythonFuncRec @ 0x...
-  m_name: my_custom_function
-  m_pFuncPtr: 0x...
-  m_doc: Computes the custom value based on input
-  m_pTuple: 0x...
-  m_args (2 items):
-    [0] input_value (default: counterType__Int)
+  Name: my_custom_function
+  Func Ptr: 0x...
+  doc: Computes the custom value based on input
+  Arg Type: no exactness information
+  Tuple: 0x...
+  Args (2 items):
+    [0] input_value (default: Int)
          = 0
-    [1] multiplier (default: counterType__Float)
+    [1] multiplier (default: Float)
          = 1.5
 ```
 
-This shows you the complete function signature, documentation, and argument defaults. The `m_pTuple` field shows whether arguments have been prepared for the function call.
+This shows you the complete function signature, documentation, and argument defaults. The `Tuple` field shows whether arguments have been prepared for the function call. The collection dump now lists all functions with their key properties (exactness and argument count).
 
 ---
 

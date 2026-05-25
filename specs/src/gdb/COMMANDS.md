@@ -68,7 +68,8 @@
 || `dump-alu-function` | `dump_alu_function` | Dump an AluFunction (name, arg count, input dependency) |
 || `dump-external-function-rec` | `dump_external_func_rec` | Dump an ExternalFunctionRec (calls virtual methods GetArgCount/GetFuncPtr) |
 || `dump-external-function-collection` | `dump_external_func_collection` | Dump an ExternalFunctionCollection (initialization state) |
-|| `dump-python-function-collection` | `dump_python_func_collection` | Dump a PythonFunctionCollection (registry state and function count) |
+|| `dump-python-function-collection` | `dump_python_func_collection` | Dump a PythonFunctionCollection (registry state, function count, and function list) |
+|| `dump-python-func-by-name` | `dump_python_func_by_name` | Dump a PythonFuncRec by looking it up in a collection by name |
 || `dump-python-func-rec` | `dump_python_func_rec` | Dump a PythonFuncRec (name, pointer, doc, and expanded argument list) |
 || `dump-python-func-arg` | `dump_python_func_arg` | Dump a PythonFuncArg (name, default type, and default value) |
 
