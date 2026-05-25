@@ -32,14 +32,16 @@ The `-v DEBUG` flag tells the setup script to enable debug symbols and disable o
 ```cmd
 msbuild specs\specs.sln /p:Configuration=Debug /p:Platform=x64
 ```
+
 However, `gdb` is not normally the debugger that you use on Windows.
+
 ---
 
 ## Loading the GDB Macros
 
 ### Automatic Loading (Recommended)
 
-When you run GDB from the `specs/src/` directory, the `.gdbinit` file is automatically loaded:
+When you run GDB from the `specs/src/` directory, the `.gdbinit` file is automatically loaded. So you can add the `specs.gdb` file to `.gdbinit`. Or you can specify it on the command line:
 
 ```bash
 cd specs/src
