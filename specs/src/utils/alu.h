@@ -285,13 +285,17 @@ private:
 
 class AluInputRecord : public AluUnit {
 public:
-	AluInputRecord() 					{}
+	AluInputRecord() : m_offset(0)			{}
+	explicit AluInputRecord(int offset) : m_offset(offset)	{}
 	~AluInputRecord() override			{}
 	void   			_serialize(std::ostream& os) const override;
-	std::string     _identify() override	{return "@@";}
+	std::string     _identify() override;
 	AluUnitType		type() override	{return UT_InputRecord;}
 	PValue		evaluate() override;
 	bool            requiresRead() override {return true;}
+	int             offset() const {return m_offset;}
+private:
+	int m_offset;
 };
 
 class AluOtherToken : public AluUnit {

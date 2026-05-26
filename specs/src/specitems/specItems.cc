@@ -12,6 +12,9 @@ bool g_keep_suppressed_record = false;
 extern uint64_t g_readRecordCounter;
 unsigned int g_WhileGuardLimit = 5000;
 
+unsigned int g_forwardContext = 0;
+unsigned int g_backwardContext = 0;
+
 struct predicateStackItem {
 	PConditionItem pred;
 	unsigned int   argIndex;
@@ -465,6 +468,23 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			index++;
 			pItem->parse(tokenVec, index);
 			addItem(pItem);
+			break;
+		}
+		case TokenListType__CONTEXT:
+		{
+			if (tokenVec[index].Literal().empty()) {
+				std::string err = "CONTEXT at index " + std::to_string(tokenVec[index].argIndex()) +
+					" must be followed by an integer offset";
+				MYTHROW(err);
+			}
+			int offset = std::stoi(tokenVec[index].Literal());
+			auto pItem = std::make_shared<ContextItem>(offset);
+			addItem(pItem);
+			if (offset > 0 && (unsigned int)offset > g_forwardContext)
+				g_forwardContext = (unsigned int)offset;
+			if (offset < 0 && (unsigned int)(-offset) > g_backwardContext)
+				g_backwardContext = (unsigned int)(-offset);
+			index++;
 			break;
 		}
 		case TokenListType__REQUIRES:
@@ -1261,6 +1281,24 @@ ApplyRet SelectItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	} else {
 		MYTHROW("Invalid SelectItem");
 	}
+	return ApplyRet__Continue;
+}
+
+ContextItem::ContextItem(int offset) : m_offset(offset) {}
+
+std::string ContextItem::Debug()
+{
+	std::string ret = "CONTEXT ";
+	if (m_offset >= 0) ret += "+";
+	ret += std::to_string(m_offset);
+	return ret;
+}
+
+ApplyRet ContextItem::apply(ProcessingState& pState, StringBuilder* pSB)
+{
+	MYASSERT_WITH_MSG(g_pReader != nullptr, "Rolling context requires a reader");
+	PSpecString ps = g_pReader->peek(m_offset);
+	pState.setContextString(ps, m_offset);
 	return ApplyRet__Continue;
 }
 

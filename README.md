@@ -17,6 +17,7 @@ What's new:
  * Support Python in `MSBuild` builds
  * Added MSI and stand-alone Windows executable to release artifacts
  * Debugging aids for GDB
+ * Rolling context support
 
 ***
 1-May-2026: Version 0.9.9 is here

@@ -88,6 +88,10 @@ define dump_break_item
   dump-break-item $arg0
 end
 
+define dump_context_item
+  dump-context-item $arg0
+end
+
 define dump_select_item
   dump-select-item $arg0
 end
@@ -169,6 +173,10 @@ define dump_python_func_collection
   dump-python-function-collection $arg0
 end
 
+define dump_python_func_by_name
+  dump-python-func-by-name $arg0 $arg1
+end
+
 define dump_python_func_rec
   dump-python-func-rec $arg0
 end
@@ -187,10 +195,18 @@ end
 # ============================================================================
 
 define bp_apply
-  break Item::apply
+  break DataField::apply
+  break TokenItem::apply
+  break SetItem::apply
+  break SkipItem::apply
+  break ConditionItem::apply
+  break BreakItem::apply
+  break SelectItem::apply
+  break SplitItem::apply
+  break ContextItem::apply
 end
 document bp_apply
-  Set a breakpoint on Item::apply to debug item application.
+  Set breakpoints on every Item subclass's apply method (9 breakpoints).
 end
 
 define bp_getstr
@@ -214,25 +230,25 @@ document bp_parseAluExpression
   Set a breakpoint on parseAluExpression to debug parsing of mathematical expressions.
 end
 
-define bp_pfc_initialize
+define bp_context_apply
+  break ContextItem::apply
+end
+document bp_context_apply
+  Set a breakpoint on ContextItem::apply to debug rolling context operations.
+end
+
+define bp_pyfuncs
   break PythonFunctionCollection::Initialize
-end
-document bp_pfc_initialize
-  Set a breakpoint on PythonFunctionCollection::Initialize to debug the initialization of the Python Function Collection.
-end
-
-define bp_func_setargvalue
+  break PythonFunctionCollection::GetFunctionByName
   break PythonFuncRec::setArgValue
-end
-document bp_func_setargvalue
-  Set a breakpoint on PythonFuncRec::setArgValue to debug setting external function arguments.
-end
-
-define bp_func_call
   break PythonFuncRec::Call
 end
-document bp_func_call
-  Set a breakpoint on PythonFuncRec::Call to debug calling external functions.
+document bp_pyfuncs
+  Set breakpoints on all Python function-related methods. This includes: 
+   - PythonFunctionCollection::Initialize, where the Python Function Collection is initialized 
+   - PythonFunctionCollection::GetFunctionByName where the function record is retrieved based on name 
+   - PythonFuncRec::setArgValue, where an argument for an external function is set
+   - PythonFuncRec::Call, where an external function is invoked
 end
 
 # ============================================================================
@@ -265,18 +281,22 @@ echo   dump_alu_counters <var>        - Dump ALUCounters\n
 echo   dump_alu_vec <var>             - Dump AluVec\n
 echo   dump_alu_function <var>        - Dump AluFunction\n
 echo   dump_external_func_rec <var>   - Dump ExternalFunctionRec\n
+echo   dump_python_func_collection <var> - Dump PythonFunctionCollection\n
+echo   dump_python_func_by_name <col> <name> - Dump PythonFuncRec by name\n
 echo   dump_python_func_rec <var>     - Dump PythonFuncRec\n
 echo   dump_python_func_arg <var>     - Dump PythonFuncArg\n
 echo   dump_exception <var>           - Dump SpecsException\n
 echo \n
 echo Breakpoint helpers:\n
-echo   bp_apply                       - Break on Item::apply\n
-echo   bp_getstr                      - Break on InputPart::getStr\n
-echo   bp_compile                     - Break on itemGroup::Compile\n
-echo   bp_parseAluExpression          - Break on parseAluExpression, where expressions are parsed\n
-echo   bp_pfc_initialize              - Break on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized\n
-echo   bp_func_setargvalue            - Break on PythonFuncRec::setArgValue, where an argument for an external function is set\n
-echo   bp_func_call                   - Break on PythonFuncRec::Call, where an external function is invoked\n
+echo   bp_apply               - Break on all 9 Item subclass apply methods\n
+echo   bp_getstr              - Break on InputPart::getStr\n
+echo   bp_compile             - Break on itemGroup::Compile\n
+echo   bp_parseAluExpression  - Break on parseAluExpression, where expressions are parsed\n
+echo   bp_pyfuncs             - Break on the imoprtant functions related to Python functions:\n
+echo   .                         - PythonFunctionCollection::Initialize, where the Python Function Collection is initialized\n
+echo   .                         - PythonFunctionCollection::GetFunctionByName where the function record is retrieved based on name\n
+echo   .                         - PythonFuncRec::setArgValue, where an argument for an external function is set\n
+echo   .                         - PythonFuncRec::Call, where an external function is invoked\n
 echo \n
 echo For more help, type: help dump-processing-state\n
 echo \n

@@ -158,6 +158,18 @@ EXTERNAL_FUNC_ERROR_HANDLING = {
     3: "NullStr",
 }
 
+EXTREME_BOOL = {
+    0: "False",
+    1: "True",
+    2: "DontCare",
+}
+
+INPUT_STATION = {
+    -1: "FIRST",
+    -2: "SECOND",
+    0: "STDERR",
+}
+
 # Token types (X-macro generated, simplified list)
 TOKEN_TYPES = {
     0: "STOP",
@@ -285,6 +297,65 @@ def std_vector_size(val):
     except:
         return 0
 
+def std_map_size(val):
+    """Get the size of a std::map."""
+    try:
+        return int(val["_M_t"]["_M_impl"]["_M_node_count"])
+    except:
+        return 0
+
+def std_map_items(val):
+    """
+    Iterate over key-value pairs in a std::map.
+    Uses GDB's default visualizer (libstdc++ StdMapPrinter).
+    Returns list of (key, value) tuples.
+
+    Note: The libstdc++ StdMapPrinter yields *alternating* children:
+      [0] -> first key,  [1] -> first value,
+      [2] -> second key, [3] -> second value, ...
+    This function pairs them up into (key, value) tuples.
+    """
+    try:
+        items = []
+        pp = gdb.default_visualizer(val)
+        if pp and hasattr(pp, 'children'):
+            children = list(pp.children())
+            # Pair up alternating key/value entries
+            for i in range(0, len(children) - 1, 2):
+                key = children[i][1]        # the gdb.Value for the key
+                value = children[i + 1][1]  # the gdb.Value for the value
+                items.append((key, value))
+        return items
+    except:
+        return []
+
+def std_vector_int_items(val):
+    """
+    Extract all elements from a std::vector<int> as a Python list.
+    Returns an empty list on failure.
+    """
+    try:
+        size = std_vector_size(val)
+        start = val["_M_impl"]["_M_start"]
+        return [int(start[i]) for i in range(size)]
+    except:
+        return []
+
+def std_stack_items(val):
+    """
+    Extract all elements from a std::stack as a Python list (bottom to top).
+    std::stack wraps a deque in its 'c' member.  Uses GDB's pretty-printer
+    for the underlying deque to iterate.
+    """
+    try:
+        deque = val["c"]
+        pp = gdb.default_visualizer(deque)
+        if pp and hasattr(pp, 'children'):
+            return [child[1] for child in pp.children()]
+        return []
+    except:
+        return []
+
 def identify_dynamic_type(val):
     """
     Identify the actual derived type of a polymorphic object by reading the vtable.
@@ -312,6 +383,137 @@ def call_method_safe(val, method_name, *args):
         return result
     except:
         return None
+
+def pyobj_repr(pyobj_ptr):
+    """
+    Given a GDB value that is a PyObject*, return a human-readable string
+    representation of the Python object.  Handles int, float, str, bool,
+    None, and tuple.  Falls back to showing the type name for anything else.
+    """
+    try:
+        if int(pyobj_ptr) == 0:
+            return "NULL"
+
+        # Read ob_type->tp_name to discover the Python type
+        ob_type = pyobj_ptr["ob_type"]
+        tp_name = ob_type["tp_name"].string()
+
+        if tp_name == "NoneType":
+            return "None"
+
+        if tp_name == "bool":
+            # True/False are singletons; compare the pointer value to _Py_TrueStruct
+            try:
+                py_true = gdb.parse_and_eval("(PyObject*)&_Py_TrueStruct")
+                if int(pyobj_ptr) == int(py_true):
+                    return "True"
+                return "False"
+            except:
+                return "<bool>"
+
+        if tp_name == "float":
+            try:
+                float_type = gdb.lookup_type("PyFloatObject").pointer()
+                fval = pyobj_ptr.cast(float_type)["ob_fval"]
+                return str(float(fval))
+            except:
+                return "<float>"
+
+        if tp_name == "int":
+            try:
+                long_type = gdb.lookup_type("PyLongObject").pointer()
+                long_obj = pyobj_ptr.cast(long_type)
+                lv_tag = int(long_obj["long_value"]["lv_tag"])
+                # _PyLong_NON_SIZE_BITS = 3, _PyLong_SIGN_MASK = 3
+                is_compact = lv_tag < (2 << 3)
+                if is_compact:
+                    sign = 1 - (lv_tag & 3)
+                    digit = int(long_obj["long_value"]["ob_digit"][0])
+                    return str(sign * digit)
+                else:
+                    return "<int (multi-digit)>"
+            except:
+                return "<int>"
+
+        if tp_name == "str":
+            try:
+                ascii_type = gdb.lookup_type("PyASCIIObject").pointer()
+                ascii_obj = pyobj_ptr.cast(ascii_type)
+                length = int(ascii_obj["length"])
+                kind = int(ascii_obj["state"]["kind"])
+                is_ascii = int(ascii_obj["state"]["ascii"])
+                is_compact = int(ascii_obj["state"]["compact"])
+                if is_ascii and is_compact and kind == 1:
+                    # Data follows immediately after the PyASCIIObject struct
+                    data_ptr = (ascii_obj + 1).cast(gdb.lookup_type("char").pointer())
+                    s = data_ptr.string(length=min(length, 80))
+                    if length > 80:
+                        return f'"{s}..."'
+                    return f'"{s}"'
+                elif is_compact and kind == 1:
+                    # Latin-1, data after PyCompactUnicodeObject
+                    compact_type = gdb.lookup_type("PyCompactUnicodeObject").pointer()
+                    compact_obj = pyobj_ptr.cast(compact_type)
+                    data_ptr = (compact_obj + 1).cast(gdb.lookup_type("char").pointer())
+                    s = data_ptr.string(length=min(length, 80))
+                    if length > 80:
+                        return f'"{s}..."'
+                    return f'"{s}"'
+                else:
+                    return f'<str (kind={kind}, len={length})>'
+            except Exception as e:
+                return f"<str: {e}>"
+
+        if tp_name == "tuple":
+            try:
+                tuple_type = gdb.lookup_type("PyTupleObject").pointer()
+                tup = pyobj_ptr.cast(tuple_type)
+                # ob_size is in the PyVarObject header
+                var_type = gdb.lookup_type("PyVarObject").pointer()
+                size = int(pyobj_ptr.cast(var_type)["ob_size"])
+                elems = []
+                for i in range(min(size, 10)):
+                    elem = tup["ob_item"][i]
+                    elems.append(pyobj_repr(elem))
+                inner = ", ".join(elems)
+                if size > 10:
+                    inner += ", ..."
+                return f"({inner})"
+            except Exception as e:
+                return f"<tuple: {e}>"
+
+        # Fallback: just show the type name
+        return f"<{tp_name} object at {pyobj_ptr}>"
+    except:
+        return f"<PyObject at {pyobj_ptr}>"
+
+def dump_pytuple(pyobj_ptr, arg_dict, indent="  "):
+    """
+    Given a GDB value that is a PyObject* pointing to a Python tuple, print
+    its contents.  The tuple holds the argument values for a Python function
+    call (populated by setArgValue, freed by ResetArgs).
+    """
+    if not isinstance(arg_dict,dict):
+        arg_dict = dict()
+    try:
+        if int(pyobj_ptr) == 0:
+            print(f"{indent}Tuple: nullptr (no call arguments prepared)")
+            return
+
+        var_type = gdb.lookup_type("PyVarObject").pointer()
+        size = int(pyobj_ptr.cast(var_type)["ob_size"])
+        tuple_type = gdb.lookup_type("PyTupleObject").pointer()
+        tup = pyobj_ptr.cast(tuple_type)
+
+        print(f"{indent}Tuple ({size} call args):")
+        for i in range(size):
+            elem = tup["ob_item"][i]
+            if i in arg_dict.keys():
+                print(f"{indent}  [{i}] {arg_dict[i]} = {pyobj_repr(elem)}")
+            else:
+                print(f"{indent}  [{i}] {pyobj_repr(elem)}")
+    except Exception as e:
+        print(f"{indent}Tuple: {pyobj_ptr} (cannot inspect: {e})")
 
 # ============================================================================
 # PRETTY-PRINTERS
@@ -447,7 +649,7 @@ class DumpLiteralPart(gdb.Command):
             val = gdb.parse_and_eval(arg)
             m_str = std_string_to_str(val["m_Str"])
             print(f"LiteralPart @ {val.address}")
-            print(f"  m_Str: \"{m_str}\"")
+            print(f"  String: \"{m_str}\"")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -463,8 +665,8 @@ class DumpRangePart(gdb.Command):
             from_val = int(val["_from"])
             to_val = int(val["_to"])
             print(f"RangePart @ {val.address}")
-            print(f"  _from: {from_val}")
-            print(f"  _to: {to_val}")
+            print(f"  From: {from_val}")
+            print(f"  To: {to_val}")
             print(f"  readsLines: true")
         except Exception as e:
             print(f"Error: {e}")
@@ -482,9 +684,9 @@ class DumpWordRangePart(gdb.Command):
             to_val = int(val["_to"])
             sep = std_string_to_str(val["m_WordSep"])
             print(f"WordRangePart @ {val.address}")
-            print(f"  _from: {from_val}")
-            print(f"  _to: {to_val}")
-            print(f"  m_WordSep: \"{sep}\"")
+            print(f"  From: {from_val}")
+            print(f"  To: {to_val}")
+            print(f"  Word Separator: \"{sep}\"")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -501,9 +703,9 @@ class DumpFieldRangePart(gdb.Command):
             to_val = int(val["_to"])
             sep = std_string_to_str(val["m_FieldSep"])
             print(f"FieldRangePart @ {val.address}")
-            print(f"  _from: {from_val}")
-            print(f"  _to: {to_val}")
-            print(f"  m_FieldSep: \"{sep}\"")
+            print(f"  From: {from_val}")
+            print(f"  To: {to_val}")
+            print(f"  Field Separator: \"{sep}\"")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -520,8 +722,8 @@ class DumpClockPart(gdb.Command):
             type_str = CLOCK_TYPE.get(type_val, f"Unknown({type_val})")
             clock = int(val["m_StaticClock"])
             print(f"ClockPart @ {val.address}")
-            print(f"  m_Type: {type_str}")
-            print(f"  m_StaticClock: {clock}")
+            print(f"  Type: {type_str}")
+            print(f"  Static Clock: {clock}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -536,7 +738,7 @@ class DumpIDPart(gdb.Command):
             val = gdb.parse_and_eval(arg)
             fid = std_string_to_str(val["m_fieldIdentifier"])
             print(f"IDPart @ {val.address}")
-            print(f"  m_fieldIdentifier: \"{fid}\"")
+            print(f"  Field Identifier: \"{fid}\"")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -552,8 +754,8 @@ class DumpExpressionPart(gdb.Command):
             raw_expr = std_string_to_str(val["m_rawExpression"])
             is_assn = bool(val["m_isAssignment"])
             print(f"ExpressionPart @ {val.address}")
-            print(f"  m_rawExpression: \"{raw_expr}\"")
-            print(f"  m_isAssignment: {is_assn}")
+            print(f"  Expression: \"{raw_expr}\"")
+            print(f"  Is Assignment: {is_assn}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -572,7 +774,7 @@ class DumpItem(gdb.Command):
             val = gdb.parse_and_eval(arg)
             orig_idx = int(val["m_originalIndex"])
             print(f"Item @ {val.address}")
-            print(f"  m_originalIndex: {orig_idx}")
+            print(f"  Original Index: {orig_idx}")
             
             # Try to call virtual methods
             try:
@@ -605,6 +807,8 @@ class DumpItem(gdb.Command):
                 print(f"  isBreak: {bool(is_break)}")
             except:
                 pass
+            
+            print("----- end of 'Item' dump")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -613,9 +817,17 @@ class DumpDataField(gdb.Command):
     
     def __init__(self):
         super(DumpDataField, self).__init__("dump-data-field", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"DataField:")
             val = gdb.parse_and_eval(arg)
             label = chr(int(val["m_label"])) if int(val["m_label"]) > 0 else "none"
             out_start = int(val["m_outStart"])
@@ -627,13 +839,12 @@ class DumpDataField(gdb.Command):
             conv_str = STRING_CONVERSIONS.get(conv, f"Unknown({conv})")
             align_str = OUTPUT_ALIGNMENT.get(align, f"Unknown({align})")
             
-            print(f"DataField @ {val.address}")
-            print(f"  m_label: {label}")
-            print(f"  m_outStart: {out_start}")
-            print(f"  m_maxLength: {max_len}")
-            print(f"  m_strip: {strip}")
-            print(f"  m_conversion: {conv_str}")
-            print(f"  m_alignment: {align_str}")
+            print(f"  Label: {label}")
+            print(f"  Output Start: {out_start}")
+            print(f"  Max Length: {max_len}")
+            print(f"  Strip: {strip}")
+            print(f"  Conversion: {conv_str}")
+            print(f"  Alignment: {align_str}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -642,18 +853,24 @@ class DumpTokenItem(gdb.Command):
     
     def __init__(self):
         super(DumpTokenItem, self).__init__("dump-token-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"TokenItem:")
             val = gdb.parse_and_eval(arg)
             token = deref_shared_ptr(val["mp_Token"])
             if token:
                 type_val = int(token["m_type"])
                 type_str = TOKEN_TYPES.get(type_val, f"Unknown({type_val})")
-                print(f"TokenItem @ {val.address}")
                 print(f"  Token type: {type_str}")
             else:
-                print(f"TokenItem @ {val.address}")
                 print(f"  mp_Token: <nullptr>")
         except Exception as e:
             print(f"Error: {e}")
@@ -663,15 +880,22 @@ class DumpSetItem(gdb.Command):
     
     def __init__(self):
         super(DumpSetItem, self).__init__("dump-set-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"SetItem:")
             val = gdb.parse_and_eval(arg)
             raw_expr = std_string_to_str(val["m_rawExpression"])
             key = int(val["m_key"])
-            print(f"SetItem @ {val.address}")
-            print(f"  m_rawExpression: \"{raw_expr}\"")
-            print(f"  m_key: {key}")
+            print(f"  Expression: \"{raw_expr}\"")
+            print(f"  Key: {key}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -680,18 +904,25 @@ class DumpSkipItem(gdb.Command):
     
     def __init__(self):
         super(DumpSkipItem, self).__init__("dump-skip-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"SkipItem:")
             val = gdb.parse_and_eval(arg)
             raw_expr = std_string_to_str(val["m_rawExpression"])
             is_until = bool(val["m_bIsUntil"])
             satisfied = bool(val["m_bSatisfied"])
             skip_type = "SKIPUNTIL" if is_until else "SKIPWHILE"
-            print(f"SkipItem @ {val.address}")
             print(f"  Type: {skip_type}")
-            print(f"  m_rawExpression: \"{raw_expr}\"")
-            print(f"  m_bSatisfied: {satisfied}")
+            print(f"  Expression: \"{raw_expr}\"")
+            print(f"  Satisfied: {satisfied}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -700,18 +931,25 @@ class DumpConditionItem(gdb.Command):
     
     def __init__(self):
         super(DumpConditionItem, self).__init__("dump-condition-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"ConditionItem:")
             val = gdb.parse_and_eval(arg)
             pred = int(val["m_pred"])
             pred_str = CONDITION_PREDICATE.get(pred, f"Unknown({pred})")
             raw_expr = std_string_to_str(val["m_rawExpression"])
             is_assn = bool(val["m_isAssignment"])
-            print(f"ConditionItem @ {val.address}")
-            print(f"  m_pred: {pred_str}")
-            print(f"  m_rawExpression: \"{raw_expr}\"")
-            print(f"  m_isAssignment: {is_assn}")
+            print(f"  Predicate: {pred_str}")
+            print(f"  Expression: \"{raw_expr}\"")
+            print(f"  Is Assignment: {is_assn}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -720,13 +958,42 @@ class DumpBreakItem(gdb.Command):
     
     def __init__(self):
         super(DumpBreakItem, self).__init__("dump-break-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"BreakItem:")
             val = gdb.parse_and_eval(arg)
             ident = chr(int(val["m_identifier"]))
-            print(f"BreakItem @ {val.address}")
-            print(f"  m_identifier: {ident}")
+            print(f"  Identifier: {ident}")
+        except Exception as e:
+            print(f"Error: {e}")
+
+class DumpContextItem(gdb.Command):
+    """Dump a ContextItem."""
+    
+    def __init__(self):
+        super(DumpContextItem, self).__init__("dump-context-item", gdb.COMMAND_DATA)
+        self.dump_item = None
+    
+    def invoke(self, arg, from_tty):
+        try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"ContextItem:")
+            val = gdb.parse_and_eval(arg)
+            offset = int(val["m_offset"])
+            print(f"  Offset: {offset}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -735,15 +1002,22 @@ class DumpSelectItem(gdb.Command):
     
     def __init__(self):
         super(DumpSelectItem, self).__init__("dump-select-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"SelectItem:")
             val = gdb.parse_and_eval(arg)
             stream = int(val["m_stream"])
             b_output = bool(val["bOutput"])
-            print(f"SelectItem @ {val.address}")
-            print(f"  m_stream: {stream}")
-            print(f"  bOutput: {b_output}")
+            print(f"  Stream: {stream}")
+            print(f"  Output: {b_output}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -752,20 +1026,27 @@ class DumpSplitItem(gdb.Command):
     
     def __init__(self):
         super(DumpSplitItem, self).__init__("dump-split-item", gdb.COMMAND_DATA)
+        self.dump_item = None
     
     def invoke(self, arg, from_tty):
         try:
+            # First, call DumpItem to print base class fields
+            if self.dump_item is None:
+                self.dump_item = DumpItem()
+            self.dump_item.invoke(arg, from_tty)
+            
+            # Then print derived class fields
+            print(f"SplitItem:")
             val = gdb.parse_and_eval(arg)
             is_field = bool(val["m_isField"])
             sep = std_string_to_str(val["m_separator"])
             splitting = bool(val["m_splitting"])
             current_piece = int(val["m_currentPiece"])
             split_type = "SPLITF" if is_field else "SPLITW"
-            print(f"SplitItem @ {val.address}")
             print(f"  Type: {split_type}")
-            print(f"  m_separator: \"{sep}\"")
-            print(f"  m_splitting: {splitting}")
-            print(f"  m_currentPiece: {current_piece}")
+            print(f"  Separator: \"{sep}\"")
+            print(f"  Splitting: {splitting}")
+            print(f"  Current Piece: {current_piece}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -790,8 +1071,8 @@ class DumpItemGroup(gdb.Command):
             item_count = std_vector_size(items_vec)
             
             print(f"itemGroup @ {val.address}")
-            print(f"  bNeedRunoutCycle: {need_runout}")
-            print(f"  bFoundSelectSecond: {found_second}")
+            print(f"  Need Runout Cycle: {need_runout}")
+            print(f"  Found Select Second: {found_second}")
             print(f"  Item count: {item_count}")
             print(f"  Items:")
             
@@ -828,10 +1109,10 @@ class DumpToken(gdb.Command):
             orig = std_string_to_str(val["m_orig"])
             
             print(f"Token @ {val.address}")
-            print(f"  m_type: {type_str}")
-            print(f"  m_literal: \"{literal}\"")
-            print(f"  m_argc: {argc}")
-            print(f"  m_orig: \"{orig}\"")
+            print(f"  Type: {type_str}")
+            print(f"  Literal: \"{literal}\"")
+            print(f"  Arg Count: {argc}")
+            print(f"  Original: \"{orig}\"")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -851,12 +1132,12 @@ class DumpTokenRange(gdb.Command):
                 first = int(val["m_first"])
                 last = int(val["m_last"])
                 print(f"TokenFieldRangeSimple @ {val.address}")
-                print(f"  m_first: {first}")
-                print(f"  m_last: {last}")
-                print(f"  bDone: {b_done}")
+                print(f"  First: {first}")
+                print(f"  Last: {last}")
+                print(f"  Done: {b_done}")
             except:
                 print(f"TokenFieldRange @ {val.address}")
-                print(f"  bDone: {b_done}")
+                print(f"  Done: {b_done}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -870,53 +1151,279 @@ class DumpProcessingState(gdb.Command):
     def __init__(self):
         super(DumpProcessingState, self).__init__("dump-processing-state", gdb.COMMAND_DATA)
     
+    @staticmethod
+    def _fmt_record(shared_str):
+        """Format a PSpecString (shared_ptr<string>) for display."""
+        obj = deref_shared_ptr(shared_str)
+        if obj is None:
+            return "<nullptr>"
+        s = std_string_to_str(obj)
+        if len(s) > 60:
+            return f"\"{s[:60]}...\" (len={len(s)})"
+        return f"\"{s}\""
+    
     def invoke(self, arg, from_tty):
         try:
             val = gdb.parse_and_eval(arg)
-            
-            # Current record
-            ps = deref_shared_ptr(val["m_ps"])
-            if ps:
-                record_str = std_string_to_str(ps)
-            else:
-                record_str = "<nullptr>"
-            
-            # Previous record
-            prev_ps = deref_shared_ptr(val["m_prevPs"])
-            if prev_ps:
-                prev_record_str = std_string_to_str(prev_ps)
-            else:
-                prev_record_str = "<nullptr>"
-            
-            pad = chr(int(val["m_pad"]))
-            word_sep = std_string_to_str(val["m_wordSeparator"])
-            field_sep = std_string_to_str(val["m_fieldSeparator"])
-            cycle = int(val["m_CycleCounter"])
-            extra_reads = int(val["m_ExtraReads"])
-            word_count = int(val["m_wordCount"])
-            field_count = int(val["m_fieldCount"])
-            input_station = int(val["m_inputStation"])
-            input_stream = int(val["m_inputStream"])
-            output_idx = int(val["m_outputIndex"])
-            no_write = bool(val["m_bNoWrite"])
-            eof = bool(val["m_bEOF"])
-            
             print(f"ProcessingState @ {val.address}")
-            print(f"  Current Record:    \"{record_str[:50]}{'...' if len(record_str) > 50 else ''}\"")
-            print(f"  Previous Record:   \"{prev_record_str[:50]}{'...' if len(prev_record_str) > 50 else ''}\"")
-            print(f"  Pad Char:          '{pad}' (0x{ord(pad):02x})")
-            print(f"  Word Separator:    \"{word_sep}\"")
-            print(f"  Field Separator:   \"{field_sep}\"")
-            print(f"  Cycle Counter:     {cycle}")
-            print(f"  Extra Reads:       {extra_reads}")
-            print(f"  Record Count:      {cycle + extra_reads}")
-            print(f"  Word Count:        {word_count}")
-            print(f"  Field Count:       {field_count}")
-            print(f"  Input Station:     {input_station}")
-            print(f"  Input Stream:      {input_stream}")
-            print(f"  Output Index:      {output_idx}")
-            print(f"  No Write:          {no_write}")
-            print(f"  EOF:               {eof}")
+            
+            # --- Records ---
+            print(f"  Current Record:    {self._fmt_record(val['m_ps'])}")
+            print(f"  Previous Record:   {self._fmt_record(val['m_prevPs'])}")
+            print(f"  Input Record:      {self._fmt_record(val['m_inputRecord'])}")
+            
+            # --- Separators & Padding ---
+            try:
+                pad = chr(int(val["m_pad"]))
+                print(f"  Pad Char:          '{pad}' (0x{ord(pad):02x})")
+            except Exception as e:
+                print(f"  Pad Char:          (error: {e})")
+            
+            try:
+                ws_local = bool(val["m_wordSeparatorLocal"])
+                word_sep = std_string_to_str(val["m_wordSeparator"])
+                local_tag = " (local)" if ws_local else ""
+                print(f"  Word Separator:    \"{word_sep}\"{local_tag}")
+            except Exception as e:
+                print(f"  Word Separator:    (error: {e})")
+            
+            try:
+                field_sep = std_string_to_str(val["m_fieldSeparator"])
+                print(f"  Field Separator:   \"{field_sep}\"")
+            except Exception as e:
+                print(f"  Field Separator:   (error: {e})")
+            
+            # --- Counters ---
+            try:
+                cycle = int(val["m_CycleCounter"])
+                extra_reads = int(val["m_ExtraReads"])
+                context_offset = int(val["m_contextOffset"])
+                print(f"  Cycle Counter:     {cycle}")
+                print(f"  Extra Reads:       {extra_reads}")
+                print(f"  Record Count:      {cycle + extra_reads}")
+                print(f"  Context Offset:    {context_offset}")
+            except Exception as e:
+                print(f"  Counters:          (error: {e})")
+            
+            # --- Word / Field Caches ---
+            try:
+                word_count = int(val["m_wordCount"])
+                field_count = int(val["m_fieldCount"])
+                print(f"  Word Count:        {word_count}")
+                print(f"  Field Count:       {field_count}")
+            except Exception as e:
+                print(f"  Word/Field Count:  (error: {e})")
+            
+            try:
+                ws = std_vector_int_items(val["m_wordStart"])
+                we = std_vector_int_items(val["m_wordEnd"])
+                n = len(ws)
+                print(f"  Word Positions ({n} cached):")
+                if n == 0:
+                    print(f"    (none)")
+                else:
+                    limit = min(n, 20)
+                    for i in range(limit):
+                        end_val = we[i] if i < len(we) else "?"
+                        print(f"    [{i}] {ws[i]}-{end_val}")
+                    if n > 20:
+                        print(f"    ... and {n - 20} more")
+            except Exception as e:
+                print(f"  Word Positions:    (error: {e})")
+            
+            try:
+                fs = std_vector_int_items(val["m_fieldStart"])
+                fe = std_vector_int_items(val["m_fieldEnd"])
+                n = len(fs)
+                print(f"  Field Positions ({n} cached):")
+                if n == 0:
+                    print(f"    (none)")
+                else:
+                    limit = min(n, 20)
+                    for i in range(limit):
+                        end_val = fe[i] if i < len(fe) else "?"
+                        print(f"    [{i}] {fs[i]}-{end_val}")
+                    if n > 20:
+                        print(f"    ... and {n - 20} more")
+            except Exception as e:
+                print(f"  Field Positions:   (error: {e})")
+            
+            # --- Field Identifiers ---
+            try:
+                fi = val["m_fieldIdentifiers"]
+                fi_size = std_map_size(fi)
+                print(f"  Field Identifiers ({fi_size} entries):")
+                if fi_size == 0:
+                    print(f"    (none)")
+                else:
+                    items = std_map_items(fi)
+                    for key, value in items:
+                        try:
+                            k = chr(int(key))
+                            s = deref_shared_ptr(value)
+                            v = std_string_to_str(s) if s else "<nullptr>"
+                            if len(v) > 40:
+                                v = v[:40] + "..."
+                            print(f"    '{k}' = \"{v}\"")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"  Field Identifiers: (error: {e})")
+            
+            # --- FI Statistics ---
+            try:
+                fis = val["m_fiStatistics"]
+                fis_size = std_map_size(fis)
+                print(f"  FI Statistics ({fis_size} entries):")
+                if fis_size == 0:
+                    print(f"    (none)")
+                else:
+                    items = std_map_items(fis)
+                    for key, value in items:
+                        try:
+                            k = chr(int(key))
+                            stats = deref_shared_ptr(value)
+                            if stats:
+                                total = int(stats["m_totalCount"])
+                                int_count = int(stats["m_intCount"])
+                                float_count = int(stats["m_floatCount"])
+                                print(f"    '{k}': {total} values ({int_count} int, {float_count} float)")
+                            else:
+                                print(f"    '{k}': <nullptr>")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"  FI Statistics:     (error: {e})")
+            
+            # --- Break Values ---
+            try:
+                bv = val["m_breakValues"]
+                bv_size = std_map_size(bv)
+                print(f"  Break Values ({bv_size} entries):")
+                if bv_size == 0:
+                    print(f"    (none)")
+                else:
+                    items = std_map_items(bv)
+                    for key, value in items:
+                        try:
+                            k = chr(int(key))
+                            s = deref_shared_ptr(value)
+                            v = std_string_to_str(s) if s else "<nullptr>"
+                            if len(v) > 40:
+                                v = v[:40] + "..."
+                            print(f"    '{k}' = \"{v}\"")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"  Break Values:      (error: {e})")
+            
+            try:
+                bl = int(val["m_breakLevel"])
+                if bl == 0:
+                    print(f"  Break Level:       (none)")
+                else:
+                    print(f"  Break Level:       '{chr(bl)}' (0x{bl:02x})")
+            except Exception as e:
+                print(f"  Break Level:       (error: {e})")
+            
+            # --- Frequency Maps ---
+            try:
+                fm = val["m_freqMaps"]
+                fm_size = std_map_size(fm)
+                print(f"  Frequency Maps ({fm_size} entries):")
+                if fm_size == 0:
+                    print(f"    (none)")
+                else:
+                    items = std_map_items(fm)
+                    for key, value in items:
+                        try:
+                            k = chr(int(key))
+                            fmap = deref_shared_ptr(value)
+                            if fmap:
+                                nelem = int(fmap["map"]["_M_element_count"])
+                                counter = int(fmap["counter"])
+                                print(f"    '{k}': {nelem} unique elements, {counter} total")
+                            else:
+                                print(f"    '{k}': <nullptr>")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"  Frequency Maps:    (error: {e})")
+            
+            # --- Conditions Stack ---
+            try:
+                cond_items = std_stack_items(val["m_Conditions"])
+                depth = len(cond_items)
+                print(f"  Conditions ({depth} deep):")
+                if depth == 0:
+                    print(f"    (empty)")
+                else:
+                    for i in range(depth - 1, -1, -1):
+                        label = "top -> " if i == depth - 1 else "       "
+                        v = int(cond_items[i])
+                        name = EXTREME_BOOL.get(v, f"Unknown({v})")
+                        print(f"    {label}{name}")
+            except Exception as e:
+                print(f"  Conditions:        (error: {e})")
+            
+            # --- Loops Stack ---
+            try:
+                loop_items = std_stack_items(val["m_Loops"])
+                depth = len(loop_items)
+                print(f"  Loops ({depth} deep):")
+                if depth == 0:
+                    print(f"    (empty)")
+                else:
+                    for i in range(depth - 1, -1, -1):
+                        label = "top -> " if i == depth - 1 else "       "
+                        v = int(loop_items[i])
+                        print(f"    {label}token #{v}")
+            except Exception as e:
+                print(f"  Loops:             (error: {e})")
+            
+            # --- I/O State ---
+            try:
+                input_station = int(val["m_inputStation"])
+                station_name = INPUT_STATION.get(input_station, f"Stream({input_station})")
+                print(f"  Input Station:     {station_name}")
+            except Exception as e:
+                print(f"  Input Station:     (error: {e})")
+            
+            try:
+                input_stream = int(val["m_inputStream"])
+                print(f"  Input Stream:      {input_stream}")
+            except Exception as e:
+                print(f"  Input Stream:      (error: {e})")
+            
+            try:
+                stream_changed = bool(val["m_inputStreamChanged"])
+                print(f"  Stream Changed:    {stream_changed}")
+            except Exception as e:
+                print(f"  Stream Changed:    (error: {e})")
+            
+            try:
+                writers = val["m_Writers"]
+                print(f"  Writers:           {writers}")
+            except Exception as e:
+                print(f"  Writers:           (error: {e})")
+            
+            try:
+                output_idx = int(val["m_outputIndex"])
+                print(f"  Output Index:      {output_idx}")
+            except Exception as e:
+                print(f"  Output Index:      (error: {e})")
+            
+            try:
+                no_write = bool(val["m_bNoWrite"])
+                print(f"  No Write:          {no_write}")
+            except Exception as e:
+                print(f"  No Write:          (error: {e})")
+            
+            try:
+                eof = bool(val["m_bEOF"])
+                print(f"  EOF:               {eof}")
+            except Exception as e:
+                print(f"  EOF:               (error: {e})")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -962,10 +1469,10 @@ class DumpReader(gdb.Command):
             b_ran_dry = bool(val["m_bRanDry"])
             
             print(f"Reader @ {val.address}")
-            print(f"  m_countRead:  {count_read}")
-            print(f"  m_countUsed:  {count_used}")
-            print(f"  m_bAbort:     {b_abort}")
-            print(f"  m_bRanDry:    {b_ran_dry}")
+            print(f"  Count Read:  {count_read}")
+            print(f"  Count Used:  {count_used}")
+            print(f"  Abort:       {b_abort}")
+            print(f"  Ran Dry:     {b_ran_dry}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -983,9 +1490,9 @@ class DumpWriter(gdb.Command):
             ended = bool(val["m_ended"])
             
             print(f"Writer @ {val.address}")
-            print(f"  m_countGenerated: {count_gen}")
-            print(f"  m_countWritten:   {count_written}")
-            print(f"  m_ended:          {ended}")
+            print(f"  Count Generated: {count_gen}")
+            print(f"  Count Written:   {count_written}")
+            print(f"  Ended:           {ended}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -1008,9 +1515,9 @@ class DumpALUValue(gdb.Command):
             exact = bool(val["m_exact"])
             
             print(f"ALUValue @ {val.address}")
-            print(f"  m_type:  {type_str}")
-            print(f"  m_value: \"{value_str}\"")
-            print(f"  m_exact: {exact}")
+            print(f"  Type:  {type_str}")
+            print(f"  Value: \"{value_str}\"")
+            print(f"  Exact: {exact}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -1023,11 +1530,28 @@ class DumpALUCounters(gdb.Command):
     def invoke(self, arg, from_tty):
         try:
             val = gdb.parse_and_eval(arg)
-            # m_map is a std::map<uint, ALUValue>
+            m_map = val["m_map"]
+            size = std_map_size(m_map)
             print(f"ALUCounters @ {val.address}")
-            print(f"  Counters (map):")
-            # Simplified: just show the address
-            print(f"    m_map @ {val['m_map'].address}")
+            print(f"  Counters ({size} entries):")
+            if size == 0:
+                print(f"    (empty)")
+            else:
+                items = std_map_items(m_map)
+                for key, value in items:
+                    try:
+                        k = int(key)
+                        type_val = int(value["m_type"])
+                        type_str = ALU_COUNTER_TYPE.get(type_val, f"Unknown({type_val})").lower()
+                        val_str = std_string_to_str(value["m_value"])
+                        exact = bool(value["m_exact"])
+                        exact_str = " (exact)" if exact else ""
+                        if type_val == 0:  # counterType__None
+                            print(f"    #{k}: (none)")
+                        else:
+                            print(f"    #{k}: ({type_str}) {val_str}{exact_str}")
+                    except Exception as item_e:
+                        print(f"    (error: {item_e})")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -1093,9 +1617,9 @@ class DumpAluValueStats(gdb.Command):
             total_count = int(val["m_totalCount"])
             
             print(f"AluValueStats @ {val.address}")
-            print(f"  m_intCount:   {int_count}")
-            print(f"  m_floatCount: {float_count}")
-            print(f"  m_totalCount: {total_count}")
+            print(f"  Int Count:   {int_count}")
+            print(f"  Float Count: {float_count}")
+            print(f"  Total Count: {total_count}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -1160,9 +1684,9 @@ class DumpAluFunction(gdb.Command):
             relies_on_input = bool(val["m_reliesOnInput"])
             
             print(f"AluFunction @ {val.address}")
-            print(f"  m_FuncName: {func_name}")
-            print(f"  m_ArgCount: {arg_count}")
-            print(f"  m_reliesOnInput: {relies_on_input}")
+            print(f"  Function Name: {func_name}")
+            print(f"  Arg Count: {arg_count}")
+            print(f"  Relies On Input: {relies_on_input}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -1236,47 +1760,114 @@ class DumpPythonFunctionCollection(gdb.Command):
         try:
             val = gdb.parse_and_eval(arg)
             
+            print(f"PythonFunctionCollection @ {val.address}")
+            
             # Access m_Initialized
             try:
                 m_initialized = bool(val["m_Initialized"])
-                print(f"PythonFunctionCollection @ {val.address}")
-                print(f"  m_Initialized: {m_initialized}")
+                print(f"  Initialized: {m_initialized}")
+            except Exception as e:
+                print(f"  Initialized: (error: {e})")
+            
+            # Try to access m_Functions map and iterate
+            try:
+                m_functions = val["m_Functions"]
+                map_size = std_map_size(m_functions)
+                print(f"  Functions ({map_size} entries):")
                 
-                # Try to access m_Functions map (simplified)
-                try:
-                    m_functions = val["m_Functions"]
-                    print(f"  m_Functions @ {m_functions.address}")
-                except:
-                    pass
-            except:
-                print(f"PythonFunctionCollection @ {val.address}")
+                if map_size == 0:
+                    print(f"    (empty)")
+                else:
+                    # Iterate the map using std_map_items
+                    items = std_map_items(m_functions)
+                    if items:
+                        for key, value in items:
+                            try:
+                                # value is shared_ptr<PythonFuncRec>
+                                func_rec = deref_shared_ptr(value)
+                                if func_rec:
+                                    func_name = std_string_to_str(func_rec["m_name"]).ljust(20)
+                                    func_ptr = func_rec["m_pFuncPtr"]
+                                    arg_type_exact = bool(func_rec["m_argTypeExact"])
+                                    arg_count = std_vector_size(func_rec["m_args"])
+                                    
+                                    exact_str = ", exact arguments" if arg_type_exact else ""
+                                    print(f"    {func_name} @ {func_ptr} ({arg_count} args{exact_str})")
+                            except:
+                                pass
+                    else:
+                        print(f"    (iteration failed)")
+            except Exception as e:
+                print(f"  Functions: (error: {e})")
         except Exception as e:
             print(f"Error: {e}")
 
-class DumpPythonFuncRec(gdb.Command):
-    """Dump a PythonFuncRec (internal class from PythonIntf.cc)."""
+class DumpPythonFuncByName(gdb.Command):
+    """Dump a PythonFuncRec by looking it up in a PythonFunctionCollection by name."""
     
     def __init__(self):
-        super(DumpPythonFuncRec, self).__init__("dump-python-func-rec", gdb.COMMAND_DATA)
+        super(DumpPythonFuncByName, self).__init__("dump-python-func-by-name", gdb.COMMAND_DATA)
     
     def invoke(self, arg, from_tty):
         try:
-            val = gdb.parse_and_eval(arg)
+            # Parse arguments: collection_expr function_name
+            args = arg.split(None, 1)
+            if len(args) < 2:
+                print("Usage: dump-python-func-by-name <collection> <function_name>")
+                return
             
+            collection_expr = args[0]
+            func_name_arg = args[1]
+            
+            # Remove quotes if present
+            if func_name_arg.startswith('"') and func_name_arg.endswith('"'):
+                func_name_arg = func_name_arg[1:-1]
+            elif func_name_arg.startswith("'") and func_name_arg.endswith("'"):
+                func_name_arg = func_name_arg[1:-1]
+            
+            # Evaluate the collection
+            collection = gdb.parse_and_eval(collection_expr)
+            
+            # Access the m_Functions map and find the function by name
+            m_functions = collection["m_Functions"]
+            items = std_map_items(m_functions)
+            
+            found = False
+            if items:
+                for key, value in items:
+                    try:
+                        key_str = std_string_to_str(key)
+                        if key_str == func_name_arg:
+                            func_rec = deref_shared_ptr(value)
+                            if func_rec:
+                                self._dump_python_func_rec(func_rec)
+                                found = True
+                                break
+                    except:
+                        pass
+            
+            if not found:
+                print(f"Function '{func_name_arg}' not found in collection")
+        except Exception as e:
+            print(f"Error: {e}")
+    
+    def _dump_python_func_rec(self, val):
+        """Dump a PythonFuncRec (reuses logic from DumpPythonFuncRec)."""
+        try:
             print(f"PythonFuncRec @ {val.address}")
             
             # Access members
             try:
                 m_name = std_string_to_str(val["m_name"])
-                print(f"  m_name: {m_name}")
+                print(f"  Name: {m_name}")
             except Exception as e:
-                print(f"  m_name: (error: {e})")
+                print(f"  Name: (error: {e})")
             
             try:
                 m_pFuncPtr = val["m_pFuncPtr"]
-                print(f"  m_pFuncPtr: {m_pFuncPtr}")
+                print(f"  Func Ptr: {m_pFuncPtr}")
             except Exception as e:
-                print(f"  m_pFuncPtr: (error: {e})")
+                print(f"  Func Ptr: (error: {e})")
             
             # Show m_doc
             try:
@@ -1284,48 +1875,41 @@ class DumpPythonFuncRec(gdb.Command):
                 if m_doc:
                     # Format multi-line docs nicely
                     if "\n" in m_doc:
-                        print(f"  m_doc:")
+                        print(f"  doc:")
                         for line in m_doc.split("\n"):
                             print(f"    {line}")
                     else:
-                        print(f"  m_doc: {m_doc}")
+                        print(f"  doc: {m_doc}")
                 else:
-                    print(f"  m_doc: (empty)")
+                    print(f"  doc: (empty)")
             except Exception as e:
-                print(f"  m_doc: (error: {e})")
+                print(f"  doc: (error: {e})")
             
             # Show m_argTypeExact
             try:
                 m_argTypeExact = bool(val["m_argTypeExact"])
-                print(f"  m_argTypeExact: {m_argTypeExact}")
+                print("  Arg Type: {}".format("exact" if m_argTypeExact else "no exactness information"))
             except Exception as e:
-                print(f"  m_argTypeExact: (error: {e})")
-            
-            # Show m_pTuple
-            try:
-                m_pTuple = val["m_pTuple"]
-                if m_pTuple == 0:
-                    print(f"  m_pTuple: nullptr")
-                else:
-                    print(f"  m_pTuple: {m_pTuple}")
-            except Exception as e:
-                print(f"  m_pTuple: (error: {e})")
+                print(f"  Arg Type: (error: {e})")
             
             # Expand m_args vector
+            argDict = dict()
             try:
                 m_args = val["m_args"]
                 arg_size = std_vector_size(m_args)
-                print(f"  m_args ({arg_size} items):")
+                print(f"  Args ({arg_size} items):")
                 
                 # Try to iterate and dump each argument
+                args_start = m_args["_M_impl"]["_M_start"]
                 for i in range(arg_size):
                     try:
-                        arg_elem = m_args[i]
+                        arg_elem = args_start[i]
                         arg_name = std_string_to_str(arg_elem["m_name"])
                         arg_default = int(arg_elem["m_default"])
                         arg_default_str = ALU_COUNTER_TYPE.get(arg_default, f"Unknown({arg_default})")
                         
                         print(f"    [{i}] {arg_name} (default: {arg_default_str})")
+                        argDict[i] = arg_name
                         
                         # Show default value if present
                         if arg_default == 1:  # counterType__Str
@@ -1350,6 +1934,128 @@ class DumpPythonFuncRec(gdb.Command):
                         print(f"    [{i}] (error: {arg_e})")
             except Exception as e:
                 print(f"  m_args: (error: {e})")
+
+            # Show m_pTuple (argument values for the current Python function call)
+            try:
+                m_pTuple = val["m_pTuple"]
+                dump_pytuple(m_pTuple, argDict)
+            except Exception as e:
+                print(f"  Tuple: (error: {e})")
+            
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+class DumpPythonFuncRec(gdb.Command):
+    """Dump a PythonFuncRec (internal class from PythonIntf.cc)."""
+    
+    def __init__(self):
+        super(DumpPythonFuncRec, self).__init__("dump-python-func-rec", gdb.COMMAND_DATA)
+    
+    def invoke(self, arg, from_tty):
+        try:
+            val = gdb.parse_and_eval(arg)
+            
+            # Auto-cast: if val is a shared_ptr<ExternalFunctionRec>, extract
+            # _M_ptr and cast to PythonFuncRec* (the derived type).
+            val_type = val.type.strip_typedefs()
+            type_name = str(val_type)
+            if "shared_ptr" in type_name and "ExternalFunctionRec" in type_name:
+                ptr = val["_M_ptr"]
+                if ptr == 0:
+                    print("PythonFuncRec: nullptr")
+                    return
+                python_func_type = gdb.lookup_type("PythonFuncRec").pointer()
+                val = ptr.cast(python_func_type).dereference()
+            
+            print(f"PythonFuncRec @ {val.address}")
+            
+            # Access members
+            try:
+                m_name = std_string_to_str(val["m_name"])
+                print(f"  Name: {m_name}")
+            except Exception as e:
+                print(f"  Name: (error: {e})")
+            
+            try:
+                m_pFuncPtr = val["m_pFuncPtr"]
+                print(f"  Func Ptr: {m_pFuncPtr}")
+            except Exception as e:
+                print(f"  Func Ptr: (error: {e})")
+            
+            # Show m_doc
+            try:
+                m_doc = std_string_to_str(val["m_doc"])
+                if m_doc:
+                    # Format multi-line docs nicely
+                    if "\n" in m_doc:
+                        print(f"  doc:")
+                        for line in m_doc.split("\n"):
+                            print(f"    {line}")
+                    else:
+                        print(f"  doc: {m_doc}")
+                else:
+                    print(f"  doc: (empty)")
+            except Exception as e:
+                print(f"  doc: (error: {e})")
+            
+            # Show m_argTypeExact
+            try:
+                m_argTypeExact = bool(val["m_argTypeExact"])
+                print("  Arg Type: {}".format("exact" if m_argTypeExact else "no exactness information"))
+            except Exception as e:
+                print(f"  Arg Type: (error: {e})")
+            
+            # Expand m_args vector
+            argDict = dict()
+            try:
+                m_args = val["m_args"]
+                arg_size = std_vector_size(m_args)
+                print(f"  Args ({arg_size} items):")
+                
+                # Try to iterate and dump each argument
+                args_start = m_args["_M_impl"]["_M_start"]
+                for i in range(arg_size):
+                    try:
+                        arg_elem = args_start[i]
+                        arg_name = std_string_to_str(arg_elem["m_name"])
+                        arg_default = int(arg_elem["m_default"])
+                        arg_default_str = ALU_COUNTER_TYPE.get(arg_default, f"Unknown({arg_default})")
+                        
+                        print(f"    [{i}] {arg_name} (default: {arg_default_str})")
+                        argDict[i] = arg_name
+                        
+                        # Show default value if present
+                        if arg_default == 1:  # counterType__Str
+                            try:
+                                defStr = std_string_to_str(arg_elem["m_defStr"])
+                                print(f"         = \"{defStr}\"")
+                            except:
+                                pass
+                        elif arg_default == 2:  # counterType__Int
+                            try:
+                                defInt = int(arg_elem["m_defInt"])
+                                print(f"         = {defInt}")
+                            except:
+                                pass
+                        elif arg_default == 3:  # counterType__Float
+                            try:
+                                defFloat = float(arg_elem["m_defFloat"])
+                                print(f"         = {defFloat}")
+                            except:
+                                pass
+                    except Exception as arg_e:
+                        print(f"    [{i}] (error: {arg_e})")
+            except Exception as e:
+                print(f"  Args: (error: {e})")
+            
+            # Show m_pTuple (argument values for the current Python function call)
+            try:
+                m_pTuple = val["m_pTuple"]
+                dump_pytuple(m_pTuple, argDict)
+            except Exception as e:
+                print(f"  Tuple: (error: {e})")
+
         except Exception as e:
             print(f"Error: {e}")
 
@@ -1370,26 +2076,26 @@ class DumpPythonFuncArg(gdb.Command):
                 m_default_str = ALU_COUNTER_TYPE.get(m_default, f"Unknown({m_default})")
                 
                 print(f"PythonFuncArg @ {val.address}")
-                print(f"  m_name: {m_name}")
-                print(f"  m_default: {m_default_str}")
+                print(f"  Name: {m_name}")
+                print(f"  Default Type: {m_default_str}")
                 
                 # Try to get default value
                 if m_default == 1:  # counterType__Str
                     try:
                         m_defStr = std_string_to_str(val["m_defStr"])
-                        print(f"  m_defStr: \"{m_defStr}\"")
+                        print(f"  Default String: \"{m_defStr}\"")
                     except:
                         pass
                 elif m_default == 2:  # counterType__Int
                     try:
                         m_defInt = int(val["m_defInt"])
-                        print(f"  m_defInt: {m_defInt}")
+                        print(f"  Default Int: {m_defInt}")
                     except:
                         pass
                 elif m_default == 3:  # counterType__Float
                     try:
                         m_defFloat = float(val["m_defFloat"])
-                        print(f"  m_defFloat: {m_defFloat}")
+                        print(f"  Default Float: {m_defFloat}")
                     except:
                         pass
             except Exception as inner_e:
@@ -1437,6 +2143,7 @@ def register_commands():
     DumpSkipItem()
     DumpConditionItem()
     DumpBreakItem()
+    DumpContextItem()
     DumpSelectItem()
     DumpSplitItem()
     
@@ -1466,6 +2173,7 @@ def register_commands():
     DumpExternalFunctionRec()
     DumpExternalFunctionCollection()
     DumpPythonFunctionCollection()
+    DumpPythonFuncByName()
     DumpPythonFuncRec()
     DumpPythonFuncArg()
     

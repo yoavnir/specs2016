@@ -49,6 +49,7 @@ void ProcessingState::Reset()
 	m_wordCount = -1;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 }
@@ -57,6 +58,7 @@ ProcessingState::ProcessingState()
 	Reset();
 	m_ps = nullptr;
 	m_prevPs = nullptr;
+	m_inputRecord = nullptr;
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
 	m_bNoWrite = false;
@@ -75,8 +77,10 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_ps = nullptr;
 	m_prevPs = nullptr;
+	m_inputRecord = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
@@ -97,8 +101,10 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_ps = nullptr;
 	m_prevPs = nullptr;
+	m_inputRecord = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
@@ -118,15 +124,16 @@ ProcessingState::~ProcessingState()
 
 void ProcessingState::setString(PSpecString ps, bool bResetState)
 {
-	if (m_ps && ps!=m_ps) {
-		m_prevPs = m_ps;
+	if (m_inputRecord) {
+		m_prevPs = m_inputRecord;
 	} else {
-		MYASSERT(m_prevPs==nullptr);
 		m_prevPs = std::make_shared<std::string>();
 	}
+	m_inputRecord = ps;
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
+	m_contextOffset = 0;
 	if (bResetState) {
 		fieldIdentifierClear();
 		resetBreaks();
@@ -136,6 +143,14 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 void ProcessingState::setStringInPlace(PSpecString ps)
 {
 	m_ps = ps;
+}
+
+void ProcessingState::setContextString(PSpecString ps, int offset)
+{
+	m_ps = ps;
+	m_wordCount = -1;
+	m_fieldCount = -1;
+	m_contextOffset = offset;
 }
 
 void ProcessingState::setFirst()

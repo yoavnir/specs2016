@@ -16,8 +16,11 @@
 #include "alu.h"
 #include "aluFunctions.h"
 #include "processing/Config.h"  // for configured literals
+#include "processing/Reader.h"  // for g_pReader
 
 extern stateQueryAgent* g_pStateQueryAgent;
+extern unsigned int g_forwardContext;
+extern unsigned int g_backwardContext;
 
 void ALUValue::set(std::string& s)
 {
@@ -861,12 +864,31 @@ PValue AluAssnOperator::computeAppnd(PValue operand, PValue prevOp)
 
 void AluInputRecord::_serialize(std::ostream& os) const
 {
-	os << "@@";
+	if (m_offset == 0) {
+		os << "@@";
+	} else if (m_offset > 0) {
+		os << "@+" << m_offset;
+	} else {
+		os << "@" << m_offset;
+	}
+}
+
+std::string AluInputRecord::_identify()
+{
+	if (m_offset == 0) return "@@";
+	if (m_offset > 0) return "@+" + std::to_string(m_offset);
+	return "@" + std::to_string(m_offset);
 }
 
 PValue AluInputRecord::evaluate()
 {
-	PSpecString ps = g_pStateQueryAgent->getFromTo(1,-1);
+	PSpecString ps;
+	if (m_offset == 0) {
+		ps = g_pStateQueryAgent->inputRecord();
+	} else {
+		MYASSERT_WITH_MSG(g_pReader != nullptr, "Rolling context requires a reader");
+		ps = g_pReader->peek(m_offset);
+	}
 	PValue ret;
 	if (ps) {
 		ret = mkValue2(ps->data(), int(ps->length()));
@@ -1230,6 +1252,28 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			prevUnitType = pUnit->type();
 			c = tokEnd+1;
 			mayBeStart = false;
+			continue;
+		}
+
+		// Rolling context: @+n or @-n
+		if (*c=='@' && (c[1]=='+' || c[1]=='-') && isDigit(c[2])) {
+			char sign = c[1];
+			char* tokEnd = c + 2;
+			while (tokEnd<cEnd && isDigit(*tokEnd)) tokEnd++;
+			std::string num(c+2, tokEnd-(c+2));
+			int offset = std::stoi(num);
+			if (sign == '-') offset = -offset;
+			pUnit = std::make_shared<AluInputRecord>(offset);
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c = tokEnd;
+			mayBeStart = false;
+			// Update rolling context size globals
+			if (offset > 0 && (unsigned int)offset > g_forwardContext) {
+				g_forwardContext = (unsigned int)offset;
+			} else if (offset < 0 && (unsigned int)(-offset) > g_backwardContext) {
+				g_backwardContext = (unsigned int)(-offset);
+			}
 			continue;
 		}
 
