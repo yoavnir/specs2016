@@ -85,13 +85,15 @@ dump_python_func_arg <var>     - Dump PythonFuncArg
 dump_exception <var>           - Dump SpecsException
 
 Breakpoint helpers:
-bp_apply                       - Break on all 9 Item subclass apply methods
-bp_getstr                      - Break on InputPart::getStr
-bp_compile                     - Break on itemGroup::Compile
-bp_parseAluExpression          - Break on parseAluExpression, where expressions are parsed
-bp_pfc_initialize              - Break on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized
-bp_func_setargvalue            - Break on PythonFuncRec::setArgValue, where an argument for an external function is set
-bp_func_call                   - Break on PythonFuncRec::Call, where an external function is invoked
+bp_apply               - Break on all 9 Item subclass apply methods
+bp_getstr              - Break on InputPart::getStr
+bp_compile             - Break on itemGroup::Compile
+bp_parseAluExpression  - Break on parseAluExpression, where expressions are parsed
+bp_pyfuncs             - Break on the imoprtant functions related to Python functions:
+.                         - PythonFunctionCollection::Initialize, where the Python Function Collection is initialized
+.                         - PythonFunctionCollection::GetFunctionByName where the function record is retrieved based on name
+.                         - PythonFuncRec::setArgValue, where an argument for an external function is set
+.                         - PythonFuncRec::Call, where an external function is invoked
 
 For more help, type: help dump-processing-state
 ```
@@ -159,22 +161,25 @@ For more help, type: help dump-processing-state
 
 ### Python Interface Commands
 
-|| Command | Purpose |
-||---------|----------|
-|| `dump_alu_function <var>` | Dump an AluFunction (name, arg count, input dependency) |
-|| `dump_external_func_rec <var>` | Dump an ExternalFunctionRec (polymorphic base class) |
-|| `dump_external_func_collection <var>` | Dump an ExternalFunctionCollection (initialization state) |
-|| `dump_python_func_collection <var>` | Dump a PythonFunctionCollection (internal Python function registry) |
-|| `dump_python_func_rec <var>` | Dump a PythonFuncRec (Python function record with name and args) |
-|| `dump_python_func_arg <var>` | Dump a PythonFuncArg (function argument with default value) |
+| Command | Purpose |
+|---------|----------|
+| `dump_alu_function <var>` | Dump an AluFunction (name, arg count, input dependency) |
+| `dump_external_func_rec <var>` | Dump an ExternalFunctionRec (polymorphic base class) |
+| `dump_external_func_collection <var>` | Dump an ExternalFunctionCollection (initialization state) |
+| `dump_python_func_collection <var>` | Dump a PythonFunctionCollection (internal Python function registry) |
+| `dump_python_func_rec <var>` | Dump a PythonFuncRec (Python function record with name and args) |
+| `dump_python_func_by_name <var> <fname>` | Dump a PythonFuncRec (Python function record with name and args) by collection and function name |
+| `dump_python_func_arg <var>` | Dump a PythonFuncArg (function argument with default value) |
 
 ### Breakpoint Helpers
 
-| Command | Purpose |
-|---------|---------|
-| `bp_apply` | Set breakpoint on Item::apply |
-| `bp_getstr` | Set breakpoint on InputPart::getStr |
-| `bp_compile` | Set breakpoint on itemGroup::Compile |
+| Command | Description |
+|---------|-------------|
+| `bp_apply` | Set breakpoints on all 9 `::apply` methods of `Item` subclasses |
+| `bp_getstr` | Set breakpoint on `InputPart::getStr` |
+| `bp_compile` | Set breakpoint on `itemGroup::Compile` |
+| `bp_parseAluExpression` | Set breakpoint on `parseAluExpression`, where expressions are parsed |
+| `bp_pyfuncs` | Set breakpoints on all Python function-related methods. This includes `PythonFunctionCollection::Initialize`, where the Python Function Collection is initialized, `PythonFunctionCollection::GetFunctionByName` where the function record is retrieved based on name, `PythonFuncRec::setArgValue`, where an argument for an external function is set, and `PythonFuncRec::Call`, where an external function is invoked |
 
 ---
 
@@ -185,30 +190,53 @@ For more help, type: help dump-processing-state
 Suppose you're debugging a spec that processes records and you want to see the current state:
 
 ```
-(gdb) break Item::apply
+(gdb) bp_apply
 Breakpoint 1 at 0x...
 
 (gdb) run < input.txt
 Starting program: ./specs ...
-Breakpoint 1, Item::apply (this=0x..., pState=0x..., pSB=0x...) at specitems/specItems.cc:...
+Breakpoint 2, DataField::apply (this=0x5fb8b0, pState=..., pSB=0x7fffffffcf50) at specitems/dataField.cc:444
 
 (gdb) dump_pstate pState
-ProcessingState @ 0x7fffffffde00
-  Current Record:    "hello world"
-  Previous Record:   "goodbye world"
+ProcessingState @ 0x7fffffffd070
+  Current Record:    "How am I doing?"
+  Previous Record:   "well, hello there"
+  Input Record:      "How am I doing?"
   Pad Char:          ' ' (0x20)
-  Word Separator:    " "
-  Field Separator:   "\t"
-  Cycle Counter:     42
+  Word Separator:    "" (local)
+  Field Separator:   "  "
+  Cycle Counter:     2
   Extra Reads:       0
-  Record Count:      42
-  Word Count:        2
-  Field Count:       1
-  Input Station:     -1
+  Record Count:      2
+  Context Offset:    0
+  Word Count:        -1
+  Field Count:       -1
+  Word Positions (3 cached):
+    [0] 1-5
+    [1] 7-11
+    [2] 13-17
+  Field Positions (0 cached):
+    (none)
+  Field Identifiers (0 entries):
+    (none)
+  FI Statistics (0 entries):
+    (none)
+  Break Values (1 entries):
+    'a' = "well,"
+  Break Level:       (none)
+  Frequency Maps (0 entries):
+    (none)
+  Conditions (0 deep):
+    (empty)
+  Loops (0 deep):
+    (empty)
+  Input Station:     FIRST
   Input Stream:      1
+  Stream Changed:    False
+  Writers:           0x7fffffffcfe0
   Output Index:      1
-  No Write:          false
-  EOF:               false
+  No Write:          False
+  EOF:               False
 ```
 
 This shows you exactly what the current record is, how many times we've processed records, and the current separators.
@@ -219,13 +247,19 @@ When debugging a data field specification:
 
 ```
 (gdb) dump_data_field pDataField
-DataField @ 0x...
-  m_label: A
-  m_outStart: 10
-  m_maxLength: 20
-  m_strip: true
-  m_conversion: UCASE
-  m_alignment: Left
+Item @ 0x5fb8b0
+  Original Index: 1
+  readsLines: False
+  producesOutput: False
+  forcesRunoutCycle: False
+  isBreak: False
+----- end of 'Item' dump
+  Label: a
+  Output Start: 10
+  Max Length: 20
+  Strip: True
+  Conversion: UCASE
+  Alignment: Left
 ```
 
 This tells you that the field is labeled 'A', outputs starting at column 10, has a max length of 20 characters, strips whitespace, converts to uppercase, and is left-aligned.
@@ -252,13 +286,13 @@ Then you can inspect individual items:
 
 ```
 (gdb) dump_item pItemGroup.m_items[0]
-Item @ 0x...
-  m_originalIndex: 0
-  Debug: {Source=Range[1:10];Dest=@10L20}
-  readsLines: true
-  producesOutput: true
-  forcesRunoutCycle: false
-  isBreak: false
+Item @ 0x5fb410
+  Original Index: 1
+  readsLines: False
+  producesOutput: False
+  forcesRunoutCycle: False
+  isBreak: False
+----- end of 'Item' dump
 ```
 
 ### Example 4: Examining ALU Expressions
@@ -267,15 +301,16 @@ When debugging expression evaluation:
 
 ```
 (gdb) dump_alu_value myALUValue
-ALUValue @ 0x...
-  m_type: Int
-  m_value: "42"
-  m_exact: true
+ALUValue @ 0x5fdc90
+  Type:  Int
+  Value: "42"
+  Exact: True
 
 (gdb) dump_alu_counters g_counters
-ALUCounters @ 0x...
-  Counters (map):
-    m_map @ 0x...
+ALUCounters @ 0x5e2c60 <g_counters>
+  Counters (2 entries):
+    #1: (int) 117 (exact)
+    #2: (float) -0.019522002761880094
 ```
 
 ### Example 5: Conditional Breakpoints with Cycle Counter
@@ -283,12 +318,12 @@ ALUCounters @ 0x...
 To break only on a specific record number:
 
 ```
-(gdb) break Item::apply if pState.m_CycleCounter == 100
+(gdb) break DataField::apply if pState.m_CycleCounter == 100
 Breakpoint 1 at 0x...
 
 (gdb) run < input.txt
 ...
-Breakpoint 1, Item::apply (this=0x..., pState=0x..., pSB=0x...) at specitems/specItems.cc:...
+Breakpoint 1, DataField::apply (this=0x..., pState=0x..., pSB=0x...) at specitems/specItems.cc:...
 
 (gdb) dump_pstate pState
 ProcessingState @ 0x...
@@ -300,15 +335,18 @@ This is useful for debugging issues that only occur on specific records.
 
 ### Example 6: Debugging Python Function Integration
 
-When debugging Python function calls and integration:
+When debugging Python function calls and integration, there is one macro that sets most of the important python-related breakpoints:
 
 ```
-(gdb) break PythonIntf.cc:167
-Breakpoint 1 at 0x...
+(gdb) bp_pyfuncs
+Breakpoint 2 at 0x50e8ce: file utils/PythonIntf.cc, line 351.
+Breakpoint 3 at 0x51118c: file utils/PythonIntf.cc, line 629.
+Breakpoint 4 at 0x50ce71: file utils/PythonIntf.cc, line 112.
+Breakpoint 5 at 0x50d3c4: file utils/PythonIntf.cc, line 170.
 
-(gdb) run -f myspec.txt < input.txt
-...
-Breakpoint 1, PyObject_CallObject (...) at PythonIntf.cc:167
+(gdb) run -f myspec < input.txt
+
+Breakpoint 2, PythonFunctionCollection::Initialize (this=0x5e6da0 <gFunctionCollection>, _path=0x5e5fd0 <getFullSpecPath()::res+16> "/home/sio/specs") at utils/PythonIntf.cc:351
 
 (gdb) dump_python_func_collection gFunctionCollection
 PythonFunctionCollection @ 0x...
