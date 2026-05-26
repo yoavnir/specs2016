@@ -84,13 +84,11 @@
 
 | Command | Description |
 |---------|-------------|
-| `bp_apply` | Set breakpoints on all 9 Item subclass apply methods |
-| `bp_getstr` | Set breakpoint on InputPart::getStr |
-| `bp_compile` | Set breakpoint on itemGroup::Compile |
-| `bp_parseAluExpression` | Set breakpoint on parseAluExpression, where expressions are parsed |
-| `bp_pfc_initialize` | Set breakpoint on PythonFunctionCollection::Initialize, where the Python Function Collection is initialized |
-| `bp_func_setargvalue` | Set breakpoint on PythonFuncRec::setArgValue, where an argument for an external function is set |
-| `bp_func_call` | Set breakpoint on PythonFuncRec::Call, where an external function is invoked |
+| `bp_apply` | Set breakpoints on all 9 `::apply` methods of `Item` subclasses |
+| `bp_getstr` | Set breakpoint on `InputPart::getStr` |
+| `bp_compile` | Set breakpoint on `itemGroup::Compile` |
+| `bp_parseAluExpression` | Set breakpoint on `parseAluExpression`, where expressions are parsed |
+| `bp_pyfuncs` | Set breakpoints on all Python function-related methods. This includes `PythonFunctionCollection::Initialize`, where the Python Function Collection is initialized, `PythonFunctionCollection::GetFunctionByName` where the function record is retrieved based on name, `PythonFuncRec::setArgValue`, where an argument for an external function is set, and `PythonFuncRec::Call`, where an external function is invoked |
 
 ## Usage Examples
 
@@ -121,10 +119,10 @@ Item @ 0x...
 ### Dump ALUValue
 ```gdb
 (gdb) dump_alu_value myValue
-ALUValue @ 0x...
-  m_type: Int
-  m_value: "42"
-  m_exact: true
+ALUValue @ 0x5fdc30
+  Type:  Int
+  Value: "17"
+  Exact: True
 ```
 
 ### Set Breakpoints on Item::apply

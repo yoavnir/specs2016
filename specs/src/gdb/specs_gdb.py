@@ -827,6 +827,7 @@ class DumpDataField(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"DataField:")
             val = gdb.parse_and_eval(arg)
             label = chr(int(val["m_label"])) if int(val["m_label"]) > 0 else "none"
             out_start = int(val["m_outStart"])
@@ -862,6 +863,7 @@ class DumpTokenItem(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"TokenItem:")
             val = gdb.parse_and_eval(arg)
             token = deref_shared_ptr(val["mp_Token"])
             if token:
@@ -888,6 +890,7 @@ class DumpSetItem(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"SetItem:")
             val = gdb.parse_and_eval(arg)
             raw_expr = std_string_to_str(val["m_rawExpression"])
             key = int(val["m_key"])
@@ -911,6 +914,7 @@ class DumpSkipItem(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"SkipItem:")
             val = gdb.parse_and_eval(arg)
             raw_expr = std_string_to_str(val["m_rawExpression"])
             is_until = bool(val["m_bIsUntil"])
@@ -937,6 +941,7 @@ class DumpConditionItem(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"ConditionItem:")
             val = gdb.parse_and_eval(arg)
             pred = int(val["m_pred"])
             pred_str = CONDITION_PREDICATE.get(pred, f"Unknown({pred})")
@@ -963,6 +968,7 @@ class DumpBreakItem(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"BreakItem:")
             val = gdb.parse_and_eval(arg)
             ident = chr(int(val["m_identifier"]))
             print(f"  Identifier: {ident}")
@@ -984,6 +990,7 @@ class DumpContextItem(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"ContextItem:")
             val = gdb.parse_and_eval(arg)
             offset = int(val["m_offset"])
             print(f"  Offset: {offset}")
@@ -1005,6 +1012,7 @@ class DumpSelectItem(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"SelectItem:")
             val = gdb.parse_and_eval(arg)
             stream = int(val["m_stream"])
             b_output = bool(val["bOutput"])
@@ -1028,6 +1036,7 @@ class DumpSplitItem(gdb.Command):
             self.dump_item.invoke(arg, from_tty)
             
             # Then print derived class fields
+            print(f"SplitItem:")
             val = gdb.parse_and_eval(arg)
             is_field = bool(val["m_isField"])
             sep = std_string_to_str(val["m_separator"])
@@ -1521,11 +1530,28 @@ class DumpALUCounters(gdb.Command):
     def invoke(self, arg, from_tty):
         try:
             val = gdb.parse_and_eval(arg)
-            # m_map is a std::map<uint, ALUValue>
+            m_map = val["m_map"]
+            size = std_map_size(m_map)
             print(f"ALUCounters @ {val.address}")
-            print(f"  Counters (map):")
-            # Simplified: just show the address
-            print(f"    Map @ {val['m_map'].address}")
+            print(f"  Counters ({size} entries):")
+            if size == 0:
+                print(f"    (empty)")
+            else:
+                items = std_map_items(m_map)
+                for key, value in items:
+                    try:
+                        k = int(key)
+                        type_val = int(value["m_type"])
+                        type_str = ALU_COUNTER_TYPE.get(type_val, f"Unknown({type_val})").lower()
+                        val_str = std_string_to_str(value["m_value"])
+                        exact = bool(value["m_exact"])
+                        exact_str = " (exact)" if exact else ""
+                        if type_val == 0:  # counterType__None
+                            print(f"    #{k}: (none)")
+                        else:
+                            print(f"    #{k}: ({type_str}) {val_str}{exact_str}")
+                    except Exception as item_e:
+                        print(f"    (error: {item_e})")
         except Exception as e:
             print(f"Error: {e}")
 
