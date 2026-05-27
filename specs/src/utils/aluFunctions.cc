@@ -421,7 +421,7 @@ PValue AluFunc_ctxrecno()
 
 PValue AluFunc_eof()
 {
-	bool isRunOut = g_pStateQueryAgent->isRunOut();
+	bool isRunOut = g_pStateQueryAgent->isEOF();
 	return mkValue(ALUInt(isRunOut ? 1 : 0));
 }
 

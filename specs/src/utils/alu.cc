@@ -864,7 +864,9 @@ PValue AluAssnOperator::computeAppnd(PValue operand, PValue prevOp)
 
 void AluInputRecord::_serialize(std::ostream& os) const
 {
-	if (m_offset == 0) {
+	if (m_offset == INT_MAX) {
+		os << "@!";
+	} else if (m_offset == 0) {
 		os << "@@";
 	} else if (m_offset > 0) {
 		os << "@+" << m_offset;
@@ -875,6 +877,7 @@ void AluInputRecord::_serialize(std::ostream& os) const
 
 std::string AluInputRecord::_identify()
 {
+	if (m_offset == INT_MAX) return "@!";
 	if (m_offset == 0) return "@@";
 	if (m_offset > 0) return "@+" + std::to_string(m_offset);
 	return "@" + std::to_string(m_offset);
@@ -883,7 +886,9 @@ std::string AluInputRecord::_identify()
 PValue AluInputRecord::evaluate()
 {
 	PSpecString ps;
-	if (m_offset == 0) {
+	if (m_offset == INT_MAX) {
+		ps = g_pStateQueryAgent->currRecord();
+	} else if (m_offset == 0) {
 		ps = g_pStateQueryAgent->inputRecord();
 	} else {
 		MYASSERT_WITH_MSG(g_pReader != nullptr, "Rolling context requires a reader");
@@ -1300,6 +1305,16 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		if (*c=='@' && c[1]=='@')  {
 			c+=2;
 			pUnit = std::make_shared<AluInputRecord>();
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			mayBeStart = false;
+			continue;
+		}
+
+		// A special string @! representing the current record (context-affected)
+		if (*c=='@' && c[1]=='!')  {
+			c+=2;
+			pUnit = std::make_shared<AluInputRecord>(INT_MAX);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			mayBeStart = false;

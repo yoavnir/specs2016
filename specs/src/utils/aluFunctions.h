@@ -432,6 +432,7 @@ public:
 	virtual PSpecString inputRecord() = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;
+	virtual bool    isEOF() = 0;
 	virtual ALUInt  getRecordCount() = 0;
 	virtual ALUInt  getContextOffset() = 0;
 	virtual ALUInt  getIterationCount() = 0;
