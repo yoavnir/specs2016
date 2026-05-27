@@ -500,6 +500,16 @@ PValue AluFunc_record()
 	return AluFunc_range(1,-1);
 }
 
+PValue AluFunc_cfrecord()
+{
+	PSpecString ps = g_pStateQueryAgent->inputRecord();
+	if (ps) {
+		return mkValue(ps->data());
+	} else {
+		return mkValue("");
+	}
+}
+
 PValue AluFunc_range(PValue pStart, PValue pEnd)
 {
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);

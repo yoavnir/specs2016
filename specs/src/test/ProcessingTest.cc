@@ -982,6 +982,14 @@ int main(int argc, char** argv)
 	spec = "CONTEXT -1 PRINT '@!' 1";
 	VERIFY2(spec, "alpha\nbeta\ngamma", "\nalpha\nbeta"); // TEST #253
 
+	// cfrecord() without CONTEXT returns the same as record()
+	spec = "PRINT 'cfrecord()' 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #254
+
+	// cfrecord() with CONTEXT returns the original input record (not context-affected)
+	spec = "CONTEXT 1 PRINT 'cfrecord()' 1 PRINT 'record()' NW";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha beta\nbeta gamma\ngamma"); // TEST #255
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

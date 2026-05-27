@@ -143,6 +143,7 @@ A full list of supported operators can be found in [Advanced ALU Topics](alu_adv
 The specs ALU has a bunch of built-in functions. The full list is available at [Advanced ALU Topics](alu_adv.md), but here are a few examples:
 * len(x) - returns the length of x considered as a string
 * record() - returns the entire input record
+* cfrecord() - returns the entire input record, disregarding rolling context
 * words(start, count) - returns a substring of the input record, similar to what `words start.count` would yield in a data field.
 * tf2mcs(s,f) and mcs2tf(x,f) - convert a formatted date string to the internal representation, which is measured in microseconds since the Unix epoch (1-Jan-1970 at midnight), and convert the other way.  The format is similar to that of the C function strftime(), plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * pos(needle,haystack)

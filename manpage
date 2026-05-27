@@ -941,6 +941,15 @@ is active, returns the same value as
 .IP "record()" 3
 Returns the entire input record. Equivalent to 
 .B range(1,-1)
+.IP "cfrecord()" 3
+Returns the entire input record, disregarding rolling context. When
+.I CONTEXT
+is active,
+.B record()
+returns the context-affected record, while
+.B cfrecord()
+returns the original input record. Equivalent to
+.B @@.
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s

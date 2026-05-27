@@ -50,7 +50,9 @@
 			"(fid) - Returns TRUE (1) if the break for field-identifier 'fid' is established, or FALSE (0) otherwise.","") \
 	H(Record Functions,16) \
 	X(record,         0, ALUFUNC_REGULAR,      true,  \
-			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable.") \
+			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable when CONTEXT is not in effect.") \
+	X(cfrecord,       0, ALUFUNC_REGULAR,      true,  \
+			"() - Returns the entire input record, disregarding rolling context.","Equivalent to the @@ pseudo-variable. Same as record() when CONTEXT is not in effect.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the length of the string s","") \
 	X(wordcount,      2, ALUFUNC_REGULAR,     false,  \

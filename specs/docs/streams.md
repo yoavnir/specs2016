@@ -316,6 +316,8 @@ gamma
 ```
 The first line of each pair comes from `@!` (the context-affected record -- one ahead), while the second comes from `@@` (the original input record). Without `CONTEXT`, `@!` and `@@` are equivalent.
 
+Similarly, the `record()` function returns the context-affected record, while the `cfrecord()` function always returns the original input record regardless of any `CONTEXT` that may be in effect.
+
 ### The ctxrecno() Function
 The `ctxrecno()` function returns the record number that the context record *would* have if it were the current record. Without any `CONTEXT` in effect, `ctxrecno()` is the same as `recno()`. With `CONTEXT 1`, `ctxrecno()` returns `recno() + 1`, and so on:
 ```
