@@ -421,7 +421,7 @@ PValue AluFunc_ctxrecno()
 
 PValue AluFunc_eof()
 {
-	bool isRunOut = g_pStateQueryAgent->isRunOut();
+	bool isRunOut = g_pStateQueryAgent->isEOF();
 	return mkValue(ALUInt(isRunOut ? 1 : 0));
 }
 
@@ -498,6 +498,16 @@ static PValue AluFunc_range(ALUInt start, ALUInt end)
 PValue AluFunc_record()
 {
 	return AluFunc_range(1,-1);
+}
+
+PValue AluFunc_cfrecord()
+{
+	PSpecString ps = g_pStateQueryAgent->inputRecord();
+	if (ps) {
+		return mkValue(ps->data());
+	} else {
+		return mkValue("");
+	}
 }
 
 PValue AluFunc_range(PValue pStart, PValue pEnd)

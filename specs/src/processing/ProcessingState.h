@@ -51,6 +51,7 @@ public:
 	PSpecString getFromTo(int from, int to) override;
 	bool    isRunIn() override   { return (m_CycleCounter==1); }
 	bool    isRunOut() override  { return (m_ps==nullptr); } // NOTE: will return true before first record
+	bool    isEOF() override     { return m_bEOF; }
 	ALUInt  getRecordCount() override    { return ALUInt(m_CycleCounter + m_ExtraReads); }
 	ALUInt  getContextOffset() override  { return ALUInt(m_contextOffset); }
 	ALUInt  getIterationCount() override { return ALUInt(m_CycleCounter); }

@@ -927,7 +927,7 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 	case TokenListType__WRITE:
 		return ApplyRet__Write;
 	case TokenListType__EOF:
-		return ApplyRet__EOF;
+		return pState.isEOF() ? ApplyRet__Continue : ApplyRet__EOF;
 	case TokenListType__UNREAD:
 		return ApplyRet__UNREAD;
 	case TokenListType__REDO:

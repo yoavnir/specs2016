@@ -1054,6 +1054,39 @@ class DumpSplitItem(gdb.Command):
 # DUMP COMMANDS - itemGroup
 # ============================================================================
 
+def _dump_item_detail(ptr_val, index, indent="    "):
+    """
+    Given an Item* (as a gdb.Value integer pointer), print a detailed
+    one-line summary including the dynamic type name and Debug() output.
+    """
+    if int(ptr_val) == 0:
+        print(f"{indent}[{index}] <nullptr>")
+        return
+
+    # Determine the dynamic type name via RTTI
+    type_name = "Item"
+    try:
+        item_obj = ptr_val.dereference()
+        dyn_type = item_obj.dynamic_type
+        type_name = dyn_type.name
+    except:
+        pass
+
+    # Call the virtual Debug() method for a type-specific description
+    debug_str = None
+    try:
+        result = gdb.parse_and_eval(
+            f'((Item*)({int(ptr_val)}))->Debug()')
+        debug_str = std_string_to_str(result)
+    except:
+        pass
+
+    if debug_str:
+        print(f"{indent}[{index}] ({type_name}) {debug_str}")
+    else:
+        print(f"{indent}[{index}] ({type_name}) @ {ptr_val}")
+
+
 class DumpItemGroup(gdb.Command):
     """Dump an itemGroup."""
     
@@ -1064,6 +1097,7 @@ class DumpItemGroup(gdb.Command):
         try:
             val = gdb.parse_and_eval(arg)
             need_runout = bool(val["bNeedRunoutCycle"])
+            need_runout_from_start = bool(val["bNeedRunoutCycleFromStart"])
             found_second = bool(val["bFoundSelectSecond"])
             
             # Get m_items vector
@@ -1072,20 +1106,22 @@ class DumpItemGroup(gdb.Command):
             
             print(f"itemGroup @ {val.address}")
             print(f"  Need Runout Cycle: {need_runout}")
+            print(f"     From start:     {need_runout_from_start}")
             print(f"  Found Select Second: {found_second}")
             print(f"  Item count: {item_count}")
             print(f"  Items:")
             
-            # Try to iterate items (simplified)
-            for i in range(min(item_count, 10)):  # Limit to first 10
+            max_display = 50
+            for i in range(min(item_count, max_display)):
                 try:
-                    item = items_vec["_M_impl"]["_M_start"][i]
-                    print(f"    [{i}] @ {item.address}")
-                except:
-                    pass
+                    shared_ptr = items_vec["_M_impl"]["_M_start"][i]
+                    ptr = shared_ptr["_M_ptr"]
+                    _dump_item_detail(ptr, i)
+                except Exception:
+                    print(f"    [{i}] <error reading item>")
             
-            if item_count > 10:
-                print(f"    ... and {item_count - 10} more items")
+            if item_count > max_display:
+                print(f"    ... and {item_count - max_display} more items")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -1168,9 +1204,11 @@ class DumpProcessingState(gdb.Command):
             print(f"ProcessingState @ {val.address}")
             
             # --- Records ---
-            print(f"  Current Record:    {self._fmt_record(val['m_ps'])}")
+            print(f"  Current Record:    {self._fmt_record(val['m_ps'])}   (CONTEXT-dependent)")
             print(f"  Previous Record:   {self._fmt_record(val['m_prevPs'])}")
-            print(f"  Input Record:      {self._fmt_record(val['m_inputRecord'])}")
+            print(f"  Input Record:      {self._fmt_record(val['m_inputRecord'])}   (CONTEXT-independent)")
+            context_offset = int(val["m_contextOffset"])
+            print(f"  Context Offset:    {context_offset}")
             
             # --- Separators & Padding ---
             try:
@@ -1197,11 +1235,9 @@ class DumpProcessingState(gdb.Command):
             try:
                 cycle = int(val["m_CycleCounter"])
                 extra_reads = int(val["m_ExtraReads"])
-                context_offset = int(val["m_contextOffset"])
                 print(f"  Cycle Counter:     {cycle}")
                 print(f"  Extra Reads:       {extra_reads}")
                 print(f"  Record Count:      {cycle + extra_reads}")
-                print(f"  Context Offset:    {context_offset}")
             except Exception as e:
                 print(f"  Counters:          (error: {e})")
             

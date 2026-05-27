@@ -117,7 +117,14 @@ POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variatio
 ```
 Others are `@cols`, which contains the number of columns in the terminal screen, and `@rows`, which contains the number of rows on that same screen.
 
-Additionally, the `@@` string stands for the entire input record.
+Additionally, the `@@` string stands for the entire input record. When rolling context is in effect (see [Streams and Records](streams.md#rolling-context)), `@@` always refers to the original input record. The `@!` string refers to the current record as affected by `CONTEXT`, which is the same as `@@` when no `CONTEXT` is active. The `@-n` and `@+n` syntax is an alternative to using that is effective within expressions. The following three specifications are equivalent:
+
+```
+# Using @@ syntax            # Using the CONTEXT keyword             # No expression - just data fields
+PRINT @@  1 WRITE                        PRINT @! 1 WRITE                       1-* 1 WRITE
+PRINT @+1 1 WRITE            CONTEXT +1  PRINT @! 1 WRITE            CONTEXT +1 1-* 1 WRITE
+PRINT @+2 1 WRITE            CONTEXT +2  PRINT @! 1 WRITE            CONTEXT +2 1-* 1 WRITE
+```
 
 `@python` contains either "Enabled" or "Disabled" depending on whether python function support is enabled.
 
@@ -143,6 +150,7 @@ A full list of supported operators can be found in [Advanced ALU Topics](alu_adv
 The specs ALU has a bunch of built-in functions. The full list is available at [Advanced ALU Topics](alu_adv.md), but here are a few examples:
 * len(x) - returns the length of x considered as a string
 * record() - returns the entire input record
+* cfrecord() - returns the entire input record, disregarding rolling context
 * words(start, count) - returns a substring of the input record, similar to what `words start.count` would yield in a data field.
 * tf2mcs(s,f) and mcs2tf(x,f) - convert a formatted date string to the internal representation, which is measured in microseconds since the Unix epoch (1-Jan-1970 at midnight), and convert the other way.  The format is similar to that of the C function strftime(), plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * pos(needle,haystack)

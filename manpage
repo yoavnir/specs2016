@@ -736,6 +736,23 @@ and
 .B @-0
 are equivalent to
 .B @@.
+The
+.B @!
+syntax substitutes for the current record as affected by
+.B CONTEXT.
+Without
+.B CONTEXT
+in effect,
+.B @!
+is equivalent to
+.B @@.
+When
+.B CONTEXT
+is active,
+.B @@
+still returns the original input record, while
+.B @!
+returns the context-affected record.
 Out-of-bounds offsets return the empty string. The forward and backward buffer sizes are computed automatically at parse time. This feature requires non-threaded mode and a single input stream.
 
 .SS "Built-In Functions"
@@ -924,6 +941,15 @@ is active, returns the same value as
 .IP "record()" 3
 Returns the entire input record. Equivalent to 
 .B range(1,-1)
+.IP "cfrecord()" 3
+Returns the entire input record, disregarding rolling context. When
+.I CONTEXT
+is active,
+.B record()
+returns the context-affected record, while
+.B cfrecord()
+returns the original input record. Equivalent to
+.B @@.
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s

@@ -191,6 +191,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		if (!ig.readsLines()) {
 			ig.setRegularRunAtEOF();
 		}
+		ps.setEOF();
 		ps.setString(nullptr);
 		ps.setFirst();
 		try {
@@ -953,6 +954,41 @@ int main(int argc, char** argv)
 	// ctxrecno resets after CONTEXT changes
 	spec = "PRINT 'ctxrecno()' 1 CONTEXT 1 PRINT 'ctxrecno()' NW";
 	VERIFY2(spec, "a\nb\nc", "1 2\n2 3\n3 4"); // TEST #247
+
+	// EOF token should not terminate processing during runout cycle
+	// when bNeedRunoutCycleFromStart is set by eof() in a condition
+	spec = "w1 a: EOF if /eof()/ then /hello/ 1 endif";
+	VERIFY2(spec, "test", "hello"); // TEST #248
+
+	// Same with visible pre-EOF output
+	spec = "a: w1 1 EOF if /eof()/ then /done/ 1 endif";
+	VERIFY2(spec, "x\ny", "x\ny\ndone"); // TEST #249
+
+	// CONTEXT + EOF + eof(): CONTEXT changes m_ps during runout,
+	// but eof() should still return true and EOF token should not stop processing
+	spec = "w1 1 CONTEXT 1 if /!eof()/ then 1-* nw endif EOF if /eof()/ then /RUNOUT/ 1 endif";
+	VERIFY2(spec, "a\nb\nc", "a b\nb c\nc\nRUNOUT"); // TEST #250
+
+	// @! returns the context-affected record (same as record() or 1-*)
+	// Without CONTEXT, @! and @@ are equivalent
+	spec = "PRINT '@!' 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #251
+
+	// With CONTEXT, @! returns the context-affected record while @@ returns the original
+	spec = "CONTEXT 1 PRINT '@!' 1 WRITE PRINT '@@' 1 WRITE";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "beta\nalpha\ngamma\nbeta\n\ngamma"); // TEST #252
+
+	// @! with CONTEXT -1 returns the previous record
+	spec = "CONTEXT -1 PRINT '@!' 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "\nalpha\nbeta"); // TEST #253
+
+	// cfrecord() without CONTEXT returns the same as record()
+	spec = "PRINT 'cfrecord()' 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #254
+
+	// cfrecord() with CONTEXT returns the original input record (not context-affected)
+	spec = "CONTEXT 1 PRINT 'cfrecord()' 1 PRINT 'record()' NW";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha beta\nbeta gamma\ngamma"); // TEST #255
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
