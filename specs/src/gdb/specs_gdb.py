@@ -1054,6 +1054,39 @@ class DumpSplitItem(gdb.Command):
 # DUMP COMMANDS - itemGroup
 # ============================================================================
 
+def _dump_item_detail(ptr_val, index, indent="    "):
+    """
+    Given an Item* (as a gdb.Value integer pointer), print a detailed
+    one-line summary including the dynamic type name and Debug() output.
+    """
+    if int(ptr_val) == 0:
+        print(f"{indent}[{index}] <nullptr>")
+        return
+
+    # Determine the dynamic type name via RTTI
+    type_name = "Item"
+    try:
+        item_obj = ptr_val.dereference()
+        dyn_type = item_obj.dynamic_type
+        type_name = dyn_type.name
+    except:
+        pass
+
+    # Call the virtual Debug() method for a type-specific description
+    debug_str = None
+    try:
+        result = gdb.parse_and_eval(
+            f'((Item*)({int(ptr_val)}))->Debug()')
+        debug_str = std_string_to_str(result)
+    except:
+        pass
+
+    if debug_str:
+        print(f"{indent}[{index}] ({type_name}) {debug_str}")
+    else:
+        print(f"{indent}[{index}] ({type_name}) @ {ptr_val}")
+
+
 class DumpItemGroup(gdb.Command):
     """Dump an itemGroup."""
     
@@ -1078,16 +1111,17 @@ class DumpItemGroup(gdb.Command):
             print(f"  Item count: {item_count}")
             print(f"  Items:")
             
-            # Try to iterate items (simplified)
-            for i in range(min(item_count, 10)):  # Limit to first 10
+            max_display = 50
+            for i in range(min(item_count, max_display)):
                 try:
-                    item = items_vec["_M_impl"]["_M_start"][i]
-                    print(f"    [{i}] @ {item.address}")
-                except:
-                    pass
+                    shared_ptr = items_vec["_M_impl"]["_M_start"][i]
+                    ptr = shared_ptr["_M_ptr"]
+                    _dump_item_detail(ptr, i)
+                except Exception:
+                    print(f"    [{i}] <error reading item>")
             
-            if item_count > 25:
-                print(f"    ... and {item_count - 25} more items")
+            if item_count > max_display:
+                print(f"    ... and {item_count - max_display} more items")
         except Exception as e:
             print(f"Error: {e}")
 

@@ -117,7 +117,14 @@ POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variatio
 ```
 Others are `@cols`, which contains the number of columns in the terminal screen, and `@rows`, which contains the number of rows on that same screen.
 
-Additionally, the `@@` string stands for the entire input record. When rolling context is in effect (see [Streams and Records](streams.md#rolling-context)), `@@` always refers to the original input record. The `@!` string refers to the current record as affected by `CONTEXT`, which is the same as `@@` when no `CONTEXT` is active.
+Additionally, the `@@` string stands for the entire input record. When rolling context is in effect (see [Streams and Records](streams.md#rolling-context)), `@@` always refers to the original input record. The `@!` string refers to the current record as affected by `CONTEXT`, which is the same as `@@` when no `CONTEXT` is active. The `@-n` and `@+n` syntax is an alternative to using that is effective within expressions. The following three specifications are equivalent:
+
+```
+# Using @@ syntax            # Using the CONTEXT keyword             # No expression - just data fields
+PRINT @@  1 WRITE                        PRINT @! 1 WRITE                       1-* 1 WRITE
+PRINT @+1 1 WRITE            CONTEXT +1  PRINT @! 1 WRITE            CONTEXT +1 1-* 1 WRITE
+PRINT @+2 1 WRITE            CONTEXT +2  PRINT @! 1 WRITE            CONTEXT +2 1-* 1 WRITE
+```
 
 `@python` contains either "Enabled" or "Disabled" depending on whether python function support is enabled.
 
