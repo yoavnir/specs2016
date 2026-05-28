@@ -574,7 +574,7 @@ sorted by department name. You can print this out without repeating the departme
           BREAK c
               ID c 1
 
-.SS "RunIn and RunOut Cycles"
+.SS "Run-In and Run-Out Cycles"
 A 
 .B cycle 
 is a single run of the specification on the current active input record. A cycle may read additional input records, produce zero output records, or produce multiple output records. If the specification contains 
@@ -584,16 +584,16 @@ or
 tokens, a single cycle can consume more than one input record.
 
 The 
-.B runin 
-cycle is the first cycle. In the runin cycle, the function 
+.B run-in 
+cycle is the first cycle. In the run-in cycle, the function 
 .B first()
 returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
 
 The 
-.B runout 
+.B run-out 
 cycle happens 
 .I after 
-the last line has been read, but only when the specification requires a runout cycle. It consists of the spec items that follow the 
+the last line has been read, but only when the specification requires a run-out cycle. It consists of the spec items that follow the 
 .B EOF 
 token, or (when 
 .I select second 
@@ -612,6 +612,21 @@ function. Example:
         /==========/ 1 write
         /Total:/ 1
         print #0 nw
+
+
+Note that any use of the
+.B eof()
+function anywhere in the specification forces a run-out cycle. This is called a
+.I forced run-out cycle
+and any use of record-reading spec units, such as a 
+.I data field 
+or
+.B ALU
+functions that access records, like
+.B record()
+or
+.B word(i)
+will result in an empty string returned.
         
 .SS "Input Streams"
 The keyword 
@@ -913,12 +928,12 @@ Returns a binary representation of the unsigned integer in x. The field length i
 Returns the length of the argument when viewed as a string. For example, len(37) is 2; len('hello') is 5.
 .IP "first()" 3
 Returns 1 during the 
-.B runin
+.B run-in
 cycle, and zero otherwise.
 .IP "eof()" 3
 Returns 1 during the
-.B runout 
-cycle, and zero otherwise.
+.B run-out 
+cycle, and zero otherwise. Its use in a specification forces a run-out cycle.
 .IP "number()" 3
 Returns the number of times the specification has so far been run on different records.
 .IP "recno()" 3

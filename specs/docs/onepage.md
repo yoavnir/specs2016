@@ -150,13 +150,13 @@ Without **while-guard** this specification will loop forever. To solve this, **s
 
 **While-Guard** is not perfect. To disable it, you can use the command-line switch `--no-while-guard` or you can override the maximum iteration count at which the program exist by setting the `while-guard-limit` to some integer value.
 
-RunIn and RunOut Cycles
+Run-In and Run-Out Cycles
 =========================
 A **cycle** is defined as a single run of the specification, which includes reading an input record, processing it, and outputting one or more records. If the specification contains **read** or **readstop** tokens, a single cycle can consume more than one input records.
 
-The **runin** cycle is the first one to run. In the runin cycle, the function **first()** returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
+The **run-in** cycle is the first one to run. In the run-in cycle, the function **first()** returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
 
-The **runout** cycle happens *after* the last line has been read.  It consists of the spec items that follow the **EOF** token, or (when **select second** is used) conditional specifications with the **eof()** function. Example:
+The **run-out** cycle happens *after* the last line has been read.  It consists of the spec items that follow the **EOF** token, or (when **select second** is used) conditional specifications with the **eof()** function. Example:
 ```
             if first() then
                 /Item/  1  /Square/ nw write
@@ -170,6 +170,9 @@ The **runout** cycle happens *after* the last line has been read.  It consists o
                 /Total:/ 1
                 print #0 nw
 ```
+
+Note that there are two kinds of **run-out** cycle: the **explicit run-out cycle**, where there are spec units after an **EOF** token, and the **forced run-out cycle** which is triggered by the use of the `eof()` function anywhere in the specification. A forced run-out cycle will force an extra run of the specification with apparently an empty input record.
+
 Configuration File
 ==================
 

@@ -990,6 +990,19 @@ int main(int argc, char** argv)
 	spec = "CONTEXT 1 PRINT 'cfrecord()' 1 PRINT 'record()' NW";
 	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha beta\nbeta gamma\ngamma"); // TEST #255
 
+	// record(), word(), field(), range() return empty string during forced run-out cycle
+	spec = "PRINT 'record()' 1 PRINT 'eof()' NEXTWORD";
+	VERIFY2(spec, "hello\nworld", "hello 0\nworld 0\n1"); // TEST #256
+
+	spec = "PRINT 'word(1)' 1 PRINT 'eof()' NEXTWORD";
+	VERIFY2(spec, "hello world", "hello 0\n1"); // TEST #257
+
+	spec = "PRINT 'field(1)' 1 PRINT 'eof()' NEXTWORD";
+	VERIFY2(spec, "hello\tworld", "hello 0\n1"); // TEST #258
+
+	spec = "PRINT 'range(1,3)' 1 PRINT 'eof()' NEXTWORD";
+	VERIFY2(spec, "abcdef", "abc 0\n1"); // TEST #259
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

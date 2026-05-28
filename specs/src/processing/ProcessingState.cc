@@ -357,14 +357,14 @@ int ProcessingState::getWordEnd(int idx) {
 	return m_wordEnd[idx-1];
 }
 
-// Convention: returns NULL for an empty string
 // Convention: from=0 means from the start (same as 1)
 // Convention: to=0 means to the end
 // Convention: from=0 and to=0 -- empty string.
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
-	if (m_inputStation != STATION_SECOND) {
-		MYASSERT_WITH_MSG(nullptr!=m_ps,"Tried to read record in run-out cycle");
+	// In the run-out cycle, return an empty string
+	if (m_inputStation != STATION_SECOND && nullptr==m_ps) {
+		return std::make_shared<std::string>();
 	}
 	int slen = (int)(currRecord()->length());
 
