@@ -107,7 +107,7 @@ specs if "first()" then
 
 ### Run-Out
 The Run-Out cycle runs *after* the last record is processed. It is only run if it has something to do. There are two ways to do things on the run-out cycles:
-1. Using the boolean function `eof()`.
+1. Using the boolean function `eof()`. We call this a **forced run-out cycle**
 2. Using the `EOF` keyword.
 
 The following enhancement of the run-in example will demonstrate both:
@@ -138,7 +138,7 @@ specs
       set #0+=a
    eof
       /Total:/   1
-      print #0   Next
+      print #0   NEXTWORD
 ```
 | Input | Output |
 | ----- | ------ |
@@ -147,6 +147,19 @@ specs
 | 3 | 3 |
 | 4 | 4 |
 | | Total: 10 |
+
+Here's an alternate implementation with a **forced run-out cycle**:
+```
+# Summing
+specs
+   IF "eof()" THEN
+      /Total:/   1
+      print #0   NEXTWORD
+   ELSE
+   a: WORD 1     1
+      SET #0+=a
+   ENDIF
+```
 
 ### Control Breaks
 **Field identifiers** can be used for conditional execution when their value changes from record to record. Consider the following example CSV file containing personnel records:

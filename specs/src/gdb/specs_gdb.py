@@ -830,6 +830,7 @@ class DumpDataField(gdb.Command):
             print(f"DataField:")
             val = gdb.parse_and_eval(arg)
             label = chr(int(val["m_label"])) if int(val["m_label"]) > 0 else "none"
+            tail_label = chr(int(val["m_tailLabel"])) if int(val["m_tailLabel"]) > 0 else "none"
             out_start = int(val["m_outStart"])
             max_len = int(val["m_maxLength"])
             strip = bool(val["m_strip"])
@@ -839,14 +840,57 @@ class DumpDataField(gdb.Command):
             conv_str = STRING_CONVERSIONS.get(conv, f"Unknown({conv})")
             align_str = OUTPUT_ALIGNMENT.get(align, f"Unknown({align})")
             
-            print(f"  Label: {label}")
+            print(f"  Label: {label}/{tail_label}")
             print(f"  Output Start: {out_start}")
             print(f"  Max Length: {max_len}")
             print(f"  Strip: {strip}")
             print(f"  Conversion: {conv_str}")
             print(f"  Alignment: {align_str}")
+            
+            # m_InputPart (shared_ptr<InputPart>)
+            try:
+                ip_ptr = val["m_InputPart"]["_M_ptr"]
+                if int(ip_ptr) == 0:
+                    print(f"  Input Part: <nullptr>")
+                else:
+                    result = gdb.parse_and_eval(
+                        f'((InputPart*)({int(ip_ptr)}))->Debug()')
+                    debug_str = std_string_to_str(result)
+                    print(f"  Input Part: {debug_str}")
+            except Exception as ex:
+                print(f"  Input Part: <error: {ex}>")
+            
+            # AluVec fields
+            self._dump_alu_vec_field(val, "m_outputStartExpression", "Output Start Expression")
+            self._dump_alu_vec_field(val, "m_outputWidthExpression", "Output Width Expression")
+            self._dump_alu_vec_field(val, "m_outputAlignmentExpression", "Output Alignment Expression")
         except Exception as e:
             print(f"Error: {e}")
+    
+    def _dump_alu_vec_field(self, val, field_name, label):
+        """Print an AluVec field on one line, or 'empty' if it has no elements."""
+        try:
+            vec = val[field_name]
+            size = std_vector_size(vec)
+            if size == 0:
+                print(f"  {label}: empty")
+            else:
+                start = vec["_M_impl"]["_M_start"]
+                items = []
+                for i in range(size):
+                    try:
+                        ptr = start[i]["_M_ptr"]
+                        if int(ptr) != 0:
+                            result = gdb.parse_and_eval(
+                                f'((AluUnit*)({int(ptr)}))->_identify()')
+                            items.append(std_string_to_str(result))
+                        else:
+                            items.append("<null>")
+                    except:
+                        items.append("?")
+                print(f"  {label}: {'; '.join(items)}")
+        except Exception as ex:
+            print(f"  {label}: <error: {ex}>")
 
 class DumpTokenItem(gdb.Command):
     """Dump a TokenItem."""
