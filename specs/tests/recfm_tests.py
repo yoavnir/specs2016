@@ -34,7 +34,7 @@ def run_test(description, spec, inp, expected, extra_flags="",
     if tests_to_run is not None and str(case_counter) not in tests_to_run:
         return
 
-    specfile = "recfm_spec"
+    specfile = "./recfm_spec"
     inpfile = "recfm_inp"
     outfile = "recfm_out"
     errfile = "recfm_err"

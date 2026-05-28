@@ -169,12 +169,25 @@ FINISH:
 	return ret;
 }
 
+static bool hasPathComponent(const std::string& name)
+{
+	if (name.find('/') != std::string::npos) return true;
+#ifdef WIN64
+	if (name.find('\\') != std::string::npos) return true;
+	if (name.size() >= 2 && std::isalpha(name[0]) && name[1] == ':') return true;
+#endif
+	return false;
+}
+
 static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 {
-	theFile.open(fileName);
-	if (theFile.is_open()) return;
+	if (hasPathComponent(fileName)) {
+		// Explicit path -- open directly, don't search the spec path
+		theFile.open(fileName);
+		return;
+	}
 
-	// No?  Try the path
+	// Bare name -- search the spec path
 	char* spath = strdup(getFullSpecPath());
 	if (spath && spath[0]) {
 		char* spath_ctx = spath;

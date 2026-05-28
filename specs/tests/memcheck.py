@@ -78,7 +78,7 @@ def leak_check_specs(spec, inp, testid, confFile, inp2=None):
     	outfile = "theout."+str(testid)
     	conffile = "theconf."+str(testid)
     else:
-    	specfile = "thespec"
+    	specfile = "./thespec"
     	inpfile = "theinp"
     	inp2file = "theinp2"
     	outfile = "theout"
