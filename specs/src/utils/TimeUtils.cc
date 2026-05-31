@@ -216,6 +216,7 @@ void classifyingTimer::dump(std::string title)
 queueTimer::queueTimer()
 {
 	m_lastIncDec = m_lastTimePoint = HClock::now();
+	m_capacity = QUEUE_HIGH_WM;
 	m_elements = 0;
 	m_ns_elems = 0;
 	m_currentClass = queueTimeClassEmpty;
@@ -259,7 +260,7 @@ void queueTimer::dump(std::string title)
 
 	// average
 	double averageFill = double(m_ns_elems) / double(totalDuration);
-	oss << "\tAverage: " << averageFill << " (capacity = " << QUEUE_HIGH_WM << ")\n";
+	oss << "\tAverage: " << averageFill << " (capacity = " << m_capacity << ")\n";
 
 	std::cerr << oss.str();
 }
@@ -269,7 +270,7 @@ void queueTimer::increment()
 	auto now = HClock::now();
 	if (m_elements == 1 && m_currentClass == queueTimeClassEmpty) {
 		changeClass(queueTimeClassOther, now);
-	} else if (m_elements == (QUEUE_HIGH_WM-1) && m_currentClass == queueTimeClassOther) {
+	} else if (m_elements == (m_capacity-1) && m_currentClass == queueTimeClassOther) {
 		changeClass(queueTimeClassFull, now);
 	}
 
@@ -286,7 +287,7 @@ void queueTimer::decrement()
 	MYASSERT(m_elements > 0);
 	if (m_elements == 1 && m_currentClass == queueTimeClassOther) {
 		changeClass(queueTimeClassEmpty, now);
-	} else if (m_elements == (QUEUE_HIGH_WM-1) && m_currentClass == queueTimeClassFull) {
+	} else if (m_elements == (m_capacity-1) && m_currentClass == queueTimeClassFull) {
 		changeClass(queueTimeClassOther, now);
 	}
 
