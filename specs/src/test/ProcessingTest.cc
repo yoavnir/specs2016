@@ -15,19 +15,32 @@ extern char        g_printonly_rule;
 extern bool        g_keep_suppressed_record;
 extern unsigned int g_WhileGuardLimit;
 
-// #define DUMP_TO_FILES 1   // Uncomment if you can't find the issue just with the prettify output
+//  DUMP_TO_FILES levels:
+//   0 - Never dump to files
+//   1 - Dump to files only for failed tests (anything but "Res")
+//   2 - Always dump to files - later tests will overwrite previous tests
 
-std::string prettify(std::string src)
+#define DUMP_TO_FILES 1
+
+std::string prettify(std::string label, std::string src)
 {
 #ifdef DUMP_TO_FILES
-    static int filecount = 0;
-	auto f = fopen(filecount % 2 ? "ProcessingTest.result" : "ProcessingTest.expected", "w");
+#if DUMP_TO_FILES > 0
+#if DUMP_TO_FILES == 1
+    if ("Res" != label) {
+#endif
+	std::string fname = std::string("ProcessingTest.")+label;
+	auto f = fopen(fname.c_str(), "w");
 	fprintf(f, "%s", src.c_str());
 	fclose (f);
-	filecount++;
+#if DUMP_TO_FILES == 1
+    }
 #endif
-	std::string ret;
-	int max_chars = 256;
+#endif
+#endif
+	std::string ret(label);
+	int max_chars = (label == "Res") ? 160 : 256;
+	ret += ": <";
 	for (char c : src) {
 		if (max_chars <= 0) {
 			if (max_chars == 0) {
@@ -50,6 +63,7 @@ std::string prettify(std::string src)
 		}
 		max_chars--;
 	}
+	ret += ">";
 	return ret;
 }
 
@@ -59,16 +73,16 @@ std::string prettify(std::string src)
 		PSpecString ps = runTestOnExample(sp, "The quick brown fox jumped over the   lazy dog");  \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
-			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
+			std::cout << "*** NOT OK ***\n\tGot: (NULL)\n\tExpected: <" << ex << ">\n"; \
 			errorCount++;                       \
 			failedTests.push_back(testCount);      \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {     \
-				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
+				std::cout << "*** NOT OK ***\n\t" << prettify("Got", *ps) << "\n\t" << prettify("Expected", ex) << "\n"; \
 				errorCount++;                   \
 				failedTests.push_back(testCount);  \
 			} else {                            \
-				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
+				std::cout << "***** OK *****   " << prettify("Res", ex) << "\n"; \
 			}                                   \
 		}                                       \
 } while (0);
@@ -79,17 +93,16 @@ std::string prettify(std::string src)
 		PSpecString ps = runTestOnExample(sp, ln);  \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
-			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << prettify(ex) << ">\n"; \
+			std::cout << "*** NOT OK ***\n\tGot: (NULL)\n\t" << prettify("Expected", ex) << "\n"; \
 			errorCount++;                       \
 			failedTests.push_back(testCount);      \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {              \
-				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps); \
-				std::cout << ">\n\tExp <" << prettify(ex) << ">\n"; \
+				std::cout << "*** NOT OK ***\n\t" << prettify("Got", *ps) << "\n\t" << prettify("Expected", ex) << "\n"; \
 				errorCount++;                   \
 				failedTests.push_back(testCount);  \
 			} else {                            \
-				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
+				std::cout << "***** OK *****   " << prettify("Res", ex) << "\n"; \
 			}                                   \
 		}                                       \
 } while (0);
@@ -104,11 +117,11 @@ std::string prettify(std::string src)
 		actual_res = e.what(true);              \
 	}                                           \
 	if (res==actual_res) {                      \
-		std::cout << "***** OK *****: <" << prettify(actual_res) << ">\n"; \
+		std::cout << "***** OK *****   " << prettify("Res", actual_res) << "\n"; \
 	} else {                                    \
 		errorCount++;                           \
 		failedTests.push_back(testCount);          \
-		std::cout << "*** NOT OK ***:\n\tGot <" << prettify(actual_res) << ">\n\tExp <" << prettify(res) << ">\n"; \
+		std::cout << "*** NOT OK ***\n\t" << prettify("Got", actual_res) << "\n\t" << prettify("Expected", res) << ">\n"; \
 	}                                           \
 } while (0);
 
@@ -1045,69 +1058,70 @@ int main(int argc, char** argv)
 		"   'Using @!:'         5 PRINT '@!'         25 WRITE"   \
 		"   'Using cfrecord():' 5 PRINT 'cfrecord()' 25 WRITE";
 	strm = "Wise men say\nOnly fools rush in\nBut I can't help falling in love with you";
-	res = "Cycle: 1\n"  \
-"  Context: 1\n"  \
-"    Using Spec Units:   Wise men say\n"  \
-"    Using record():     Wise men say\n"  \
-"    Using @@:           Wise men say\n"  \
-"    Using @!:           Wise men say\n"  \
-"    Using cfrecord():   Wise men say\n"  \
-"  Setting CONTEXT to +1\n"  \
-"  Context: 2\n"  \
-"    Using Spec Units:   Only fools rush in\n"  \
-"    Using record():     Only fools rush in\n"  \
-"    Using @@:           Wise men say\n"  \
-"    Using @!:           Only fools rush in\n"  \
-"    Using cfrecord():   Wise men say\n"  \
-"  Setting CONTEXT to -1\n"  \
-"  Context: 0\n"  \
-"    Using Spec Units:   \n"  \
-"    Using record():     \n"  \
-"    Using @@:           Wise men say\n"  \
-"    Using @!:           \n"  \
-"    Using cfrecord():   Wise men say\n"  \
-"Cycle: 2\n"  \
-"  Context: 2\n"  \
-"    Using Spec Units:   Only fools rush in\n"  \
-"    Using record():     Only fools rush in\n"  \
-"    Using @@:           Only fools rush in\n"  \
-"    Using @!:           Only fools rush in\n"  \
-"    Using cfrecord():   Only fools rush in\n"  \
-"  Setting CONTEXT to +1\n"  \
-"  Context: 3\n"  \
-"    Using Spec Units:   But I can't help falling in love with you\n"  \
-"    Using record():     But I can't help falling in love with you\n"  \
-"    Using @@:           Only fools rush in\n"  \
-"    Using @!:           But I can't help falling in love with you\n"  \
-"    Using cfrecord():   Only fools rush in\n"  \
-"  Setting CONTEXT to -1\n"  \
-"  Context: 1\n"  \
-"    Using Spec Units:   Wise men say\n"  \
-"    Using record():     Wise men say\n"  \
-"    Using @@:           Only fools rush in\n"  \
-"    Using @!:           Wise men say\n"  \
-"    Using cfrecord():   Only fools rush in\n"  \
-"Cycle: 3\n"  \
-"  Context: 3\n"  \
-"    Using Spec Units:   But I can't help falling in love with you\n"  \
-"    Using record():     But I can't help falling in love with you\n"  \
-"    Using @@:           But I can't help falling in love with you\n"  \
-"    Using @!:           But I can't help falling in love with you\n"  \
-"    Using cfrecord():   But I can't help falling in love with you\n"  \
-"  Setting CONTEXT to +1\n"  \
-"  Context: 4\n"  \
-"    Using Spec Units:   \n"  \
-"    Using record():     \n"  \
-"    Using @@:           But I can't help falling in love with you\n"  \
-"    Using @!:           \n"  \
-"    Using cfrecord():   But I can't help falling in love with you\n"  \
-"  Setting CONTEXT to -1\n"  \
-"  Context: 2\n"  \
-"    Using Spec Units:   Only fools rush in\n"  \
-"    Using record():     Only fools rush in\n"  \
-"    Using @@:           But I can't help falling in love with you\n"  \
-"    Using @!:           Only fools rush in\n"  \
-"    Using cfrecord():   But I can't help falling in love with you";
+	res = \
+		"Cycle: 1\n"  \
+		"  Context: 1\n"  \
+		"    Using Spec Units:   Wise men say\n"  \
+		"    Using record():     Wise men say\n"  \
+		"    Using @@:           Wise men say\n"  \
+		"    Using @!:           Wise men say\n"  \
+		"    Using cfrecord():   Wise men say\n"  \
+		"  Setting CONTEXT to +1\n"  \
+		"  Context: 2\n"  \
+		"    Using Spec Units:   Only fools rush in\n"  \
+		"    Using record():     Only fools rush in\n"  \
+		"    Using @@:           Wise men say\n"  \
+		"    Using @!:           Only fools rush in\n"  \
+		"    Using cfrecord():   Wise men say\n"  \
+		"  Setting CONTEXT to -1\n"  \
+		"  Context: 0\n"  \
+		"    Using Spec Units:   \n"  \
+		"    Using record():     \n"  \
+		"    Using @@:           Wise men say\n"  \
+		"    Using @!:           \n"  \
+		"    Using cfrecord():   Wise men say\n"  \
+		"Cycle: 2\n"  \
+		"  Context: 2\n"  \
+		"    Using Spec Units:   Only fools rush in\n"  \
+		"    Using record():     Only fools rush in\n"  \
+		"    Using @@:           Only fools rush in\n"  \
+		"    Using @!:           Only fools rush in\n"  \
+		"    Using cfrecord():   Only fools rush in\n"  \
+		"  Setting CONTEXT to +1\n"  \
+		"  Context: 3\n"  \
+		"    Using Spec Units:   But I can't help falling in love with you\n"  \
+		"    Using record():     But I can't help falling in love with you\n"  \
+		"    Using @@:           Only fools rush in\n"  \
+		"    Using @!:           But I can't help falling in love with you\n"  \
+		"    Using cfrecord():   Only fools rush in\n"  \
+		"  Setting CONTEXT to -1\n"  \
+		"  Context: 1\n"  \
+		"    Using Spec Units:   Wise men say\n"  \
+		"    Using record():     Wise men say\n"  \
+		"    Using @@:           Only fools rush in\n"  \
+		"    Using @!:           Wise men say\n"  \
+		"    Using cfrecord():   Only fools rush in\n"  \
+		"Cycle: 3\n"  \
+		"  Context: 3\n"  \
+		"    Using Spec Units:   But I can't help falling in love with you\n"  \
+		"    Using record():     But I can't help falling in love with you\n"  \
+		"    Using @@:           But I can't help falling in love with you\n"  \
+		"    Using @!:           But I can't help falling in love with you\n"  \
+		"    Using cfrecord():   But I can't help falling in love with you\n"  \
+		"  Setting CONTEXT to +1\n"  \
+		"  Context: 4\n"  \
+		"    Using Spec Units:   \n"  \
+		"    Using record():     \n"  \
+		"    Using @@:           But I can't help falling in love with you\n"  \
+		"    Using @!:           \n"  \
+		"    Using cfrecord():   But I can't help falling in love with you\n"  \
+		"  Setting CONTEXT to -1\n"  \
+		"  Context: 2\n"  \
+		"    Using Spec Units:   Only fools rush in\n"  \
+		"    Using record():     Only fools rush in\n"  \
+		"    Using @@:           But I can't help falling in love with you\n"  \
+		"    Using @!:           Only fools rush in\n"  \
+		"    Using cfrecord():   But I can't help falling in love with you";
 	VERIFY2(spec, strm.c_str(), res.c_str());   // TEST #260
 
 	if (errorCount) {
