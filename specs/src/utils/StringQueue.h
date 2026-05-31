@@ -21,13 +21,24 @@ private:
     std::condition_variable cv_QueueFull;
     queueTimer m_timer;
     bool m_Done;
+    size_t m_highWaterMark;
+    size_t m_lowWaterMark;
+    static size_t computeLowWaterMark(size_t hwm) {
+        return (hwm > 10) ? (hwm - hwm / 10) : (hwm > 2 ? hwm - 2 : 0);
+    }
 public:
-    MTQueue() : m_Done(false) {}
+    MTQueue(size_t highWaterMark = QUEUE_HIGH_WM)
+        : m_Done(false)
+        , m_highWaterMark(highWaterMark)
+        , m_lowWaterMark(computeLowWaterMark(highWaterMark))
+    {
+        m_timer.setCapacity(m_highWaterMark);
+    }
     void push(T const& data)
     {
     	MYASSERT(data!=nullptr);
         uniqueLock lock(m_Mutex);
-        while (m_Queue.size()>=QUEUE_HIGH_WM) {
+        while (m_Queue.size()>=m_highWaterMark) {
         	cv_QueueFull.wait(lock);
         }
         m_Queue.push(data);
@@ -57,7 +68,7 @@ public:
         size_t queueSize = m_Queue.size();
         m_timer.decrement();
         lock.unlock();
-        if (queueSize < QUEUE_LOW_WM) {
+        if (queueSize < m_lowWaterMark) {
         	cv_QueueFull.notify_one();
         }
         return true;
@@ -67,6 +78,12 @@ public:
     	m_Done = true;
     	m_timer.drain();
     	cv_QueueEmpty.notify_one();
+    }
+
+    void setCapacity(size_t highWaterMark) {
+        m_highWaterMark = highWaterMark;
+        m_lowWaterMark = computeLowWaterMark(highWaterMark);
+        m_timer.setCapacity(highWaterMark);
     }
 
     void DumpStats(std::string title) {

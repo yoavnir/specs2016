@@ -15,10 +15,27 @@ extern char        g_printonly_rule;
 extern bool        g_keep_suppressed_record;
 extern unsigned int g_WhileGuardLimit;
 
+// #define DUMP_TO_FILES 1   // Uncomment if you can't find the issue just with the prettify output
+
 std::string prettify(std::string src)
 {
+#ifdef DUMP_TO_FILES
+    static int filecount = 0;
+	auto f = fopen(filecount % 2 ? "ProcessingTest.result" : "ProcessingTest.expected", "w");
+	fprintf(f, "%s", src.c_str());
+	fclose (f);
+	filecount++;
+#endif
 	std::string ret;
+	int max_chars = 256;
 	for (char c : src) {
+		if (max_chars <= 0) {
+			if (max_chars == 0) {
+				ret += "...";
+				max_chars--;
+			}
+			continue;
+		}
 		switch (c) {
 			case '\n':
 				ret.append("\\n");
@@ -31,6 +48,7 @@ std::string prettify(std::string src)
 			default:
 				ret+=c;
 		}
+		max_chars--;
 	}
 	return ret;
 }
@@ -66,7 +84,8 @@ std::string prettify(std::string src)
 			failedTests.push_back(testCount);      \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {              \
-				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
+				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps); \
+				std::cout << ">\n\tExp <" << prettify(ex) << ">\n"; \
 				errorCount++;                   \
 				failedTests.push_back(testCount);  \
 			} else {                            \
@@ -1002,6 +1021,94 @@ int main(int argc, char** argv)
 
 	spec = "PRINT 'range(1,3)' 1 PRINT 'eof()' NEXTWORD";
 	VERIFY2(spec, "abcdef", "abc 0\n1"); // TEST #259
+	
+	// All the ways of accessing a record with and without CONTEXT
+	spec = "'Cycle:' 1 PRINT 'recno()' WRITE "                   \
+		"   'Context:' 3 PRINT 'ctxrecno()' WRITE"               \
+		"   'Using Spec Units:' 5 1-*                25 WRITE"   \
+		"   'Using record():'   5 PRINT 'record()'   25 WRITE"   \
+		"   'Using @@:'         5 PRINT '@@'         25 WRITE"   \
+		"   'Using @!:'         5 PRINT '@!'         25 WRITE"   \
+		"   'Using cfrecord():' 5 PRINT 'cfrecord()' 25 WRITE"   \
+		"   'Setting CONTEXT to +1' 3 CONTEXT +1   WRITE"        \
+		"   'Context:' 3 PRINT 'ctxrecno()' WRITE"               \
+		"   'Using Spec Units:' 5 1-*                25 WRITE"   \
+		"   'Using record():'   5 PRINT 'record()'   25 WRITE"   \
+		"   'Using @@:'         5 PRINT '@@'         25 WRITE"   \
+		"   'Using @!:'         5 PRINT '@!'         25 WRITE"   \
+		"   'Using cfrecord():' 5 PRINT 'cfrecord()' 25 WRITE"   \
+		"   'Setting CONTEXT to -1' 3 CONTEXT -1   WRITE"        \
+		"   'Context:' 3 PRINT 'ctxrecno()' WRITE"               \
+		"   'Using Spec Units:' 5 1-*                25 WRITE"   \
+		"   'Using record():'   5 PRINT 'record()'   25 WRITE"   \
+		"   'Using @@:'         5 PRINT '@@'         25 WRITE"   \
+		"   'Using @!:'         5 PRINT '@!'         25 WRITE"   \
+		"   'Using cfrecord():' 5 PRINT 'cfrecord()' 25 WRITE";
+	strm = "Wise men say\nOnly fools rush in\nBut I can't help falling in love with you";
+	res = "Cycle: 1\n"  \
+"  Context: 1\n"  \
+"    Using Spec Units:   Wise men say\n"  \
+"    Using record():     Wise men say\n"  \
+"    Using @@:           Wise men say\n"  \
+"    Using @!:           Wise men say\n"  \
+"    Using cfrecord():   Wise men say\n"  \
+"  Setting CONTEXT to +1\n"  \
+"  Context: 2\n"  \
+"    Using Spec Units:   Only fools rush in\n"  \
+"    Using record():     Only fools rush in\n"  \
+"    Using @@:           Wise men say\n"  \
+"    Using @!:           Only fools rush in\n"  \
+"    Using cfrecord():   Wise men say\n"  \
+"  Setting CONTEXT to -1\n"  \
+"  Context: 0\n"  \
+"    Using Spec Units:   \n"  \
+"    Using record():     \n"  \
+"    Using @@:           Wise men say\n"  \
+"    Using @!:           \n"  \
+"    Using cfrecord():   Wise men say\n"  \
+"Cycle: 2\n"  \
+"  Context: 2\n"  \
+"    Using Spec Units:   Only fools rush in\n"  \
+"    Using record():     Only fools rush in\n"  \
+"    Using @@:           Only fools rush in\n"  \
+"    Using @!:           Only fools rush in\n"  \
+"    Using cfrecord():   Only fools rush in\n"  \
+"  Setting CONTEXT to +1\n"  \
+"  Context: 3\n"  \
+"    Using Spec Units:   But I can't help falling in love with you\n"  \
+"    Using record():     But I can't help falling in love with you\n"  \
+"    Using @@:           Only fools rush in\n"  \
+"    Using @!:           But I can't help falling in love with you\n"  \
+"    Using cfrecord():   Only fools rush in\n"  \
+"  Setting CONTEXT to -1\n"  \
+"  Context: 1\n"  \
+"    Using Spec Units:   Wise men say\n"  \
+"    Using record():     Wise men say\n"  \
+"    Using @@:           Only fools rush in\n"  \
+"    Using @!:           Wise men say\n"  \
+"    Using cfrecord():   Only fools rush in\n"  \
+"Cycle: 3\n"  \
+"  Context: 3\n"  \
+"    Using Spec Units:   But I can't help falling in love with you\n"  \
+"    Using record():     But I can't help falling in love with you\n"  \
+"    Using @@:           But I can't help falling in love with you\n"  \
+"    Using @!:           But I can't help falling in love with you\n"  \
+"    Using cfrecord():   But I can't help falling in love with you\n"  \
+"  Setting CONTEXT to +1\n"  \
+"  Context: 4\n"  \
+"    Using Spec Units:   \n"  \
+"    Using record():     \n"  \
+"    Using @@:           But I can't help falling in love with you\n"  \
+"    Using @!:           \n"  \
+"    Using cfrecord():   But I can't help falling in love with you\n"  \
+"  Setting CONTEXT to -1\n"  \
+"  Context: 2\n"  \
+"    Using Spec Units:   Only fools rush in\n"  \
+"    Using record():     Only fools rush in\n"  \
+"    Using @@:           But I can't help falling in love with you\n"  \
+"    Using @!:           Only fools rush in\n"  \
+"    Using cfrecord():   But I can't help falling in love with you";
+	VERIFY2(spec, strm.c_str(), res.c_str());   // TEST #260
 
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

@@ -58,7 +58,7 @@ typedef std::shared_ptr<SimpleWriter> PSimpleWriter;
 // Only used by ProcessingTest
 class StringWriter : public Writer {
 public:
-	StringWriter() {}
+	StringWriter() { m_queue.setCapacity(1000); }
 	~StringWriter() override {}
 	void WriteOut() override {}
 	void WriteOutDo(PSpecString ps, classifyingTimer& tmr) override 
