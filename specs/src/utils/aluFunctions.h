@@ -144,7 +144,7 @@
 	X(rvalue,         2, ALUFUNC_REGULAR,     false,  \
 			"(str,[sep]) - Return the right hand part of 'str' separated by 'sep'.","'sep' defaults to an equals sign.") \
 	X(sword,          3, ALUFUNC_REGULAR,     false,  \
-			"(str,n,[sep]) - Returns the n-th word of 'str' if the word separator is 'sep'.","'sep' defaults to a tab.") \
+			"(str,n,[sep]) - Returns the n-th word of 'str' if the word separator is 'sep'.","'sep' defaults to a space.") \
 	X(abbrev,         3, ALUFUNC_REGULAR,     false,  \
 			"(str,s,[len]) - Returns TRUE (1) if 's' is a prefix of 'str', or FALSE (0) otherwise.","If 'len' is specified, only the first 'len' characters of 's' are considered.") \
 	X(compare,        3, ALUFUNC_REGULAR,     false,  \
