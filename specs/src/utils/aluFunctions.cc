@@ -1698,7 +1698,7 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 	if (pSep && pSep->getStrPtr()->length() > 0) {
 		sep = pSep->getStr()[0];
 	} else {
-		sep = '\t';
+		sep = DEFAULT_FIELDSEPARATOR_C;
 	}
 
 	if (0 == count) {
@@ -1792,7 +1792,7 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 	if (pSep && pSep->getStrPtr()->length() > 0) {
 		sep = pSep->getStr()[0];
 	} else {
-		sep = ' ';
+		sep = DEFAULT_WORDSEPARATOR_C;
 	}
 
 	if (0 == count) {
