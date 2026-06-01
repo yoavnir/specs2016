@@ -62,7 +62,11 @@ PSpecString Reader::get(classifyingTimer& tmr, unsigned int& _readerCounter)
 		tmr.changeClass(timeClassIO);
 		ret = getNextRecord();
 		tmr.changeClass(timeClassProcessing);
-		if (!ret) _readerCounter--;
+		if (!ret) {
+			MYASSERT(_readerCounter>0);
+			_readerCounter--;
+			m_bRanDry = true;
+		}
 		else {
 			m_countRead++;
 			m_countUsed++;

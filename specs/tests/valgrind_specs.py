@@ -337,11 +337,11 @@ run_case(s,i,"Functions: number & recno (1)")
 
 s = "print 'number()' 1 print 'recno()' nw READ print 'number()' nw print 'recno()' nw"
 i = "1\n2\n3\n4\n5\n6\n7\n8\n9"
-run_case(s,i,"Functions: number & recno (2)",memcheck.RetCode_COMMAND_FAILED)
+run_case(s,i,"Functions: number & recno (2)")
 
 s = "print 'number()' 1 print 'recno()' nw READSTOP print 'number()' nw print 'recno()' nw"
 i = "1\n2\n3\n4\n5\n6\n7\n8\n9"
-run_case(s,i,"Functions: number & recno (3)",memcheck.RetCode_COMMAND_FAILED)
+run_case(s,i,"Functions: number & recno (3)")
 
 s = "print 'record()' 1"
 i = "1\n\nhello"
@@ -599,7 +599,7 @@ ELSE
 ENDIF
 """
 i = input_samples.gitlog
-run_case(s,i,"READ and READSTOP",memcheck.RetCode_COMMAND_FAILED)
+run_case(s,i,"READ and READSTOP")
 
 # UNREAD
 s = \
@@ -618,7 +618,7 @@ DONE
 UNREAD
 """
 i = input_samples.gitlog
-run_case(s,i,"UNREAD",memcheck.RetCode_COMMAND_FAILED)
+run_case(s,i,"UNREAD")
 
 # REDO
 
