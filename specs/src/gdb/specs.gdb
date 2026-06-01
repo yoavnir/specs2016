@@ -65,39 +65,39 @@ define dump_item
 end
 
 define dump_data_field
-  dump-data-field $arg0
+  dump-data-field ((DataField)($arg0))
 end
 
 define dump_token_item
-  dump-token-item $arg0
+  dump-token-item ((TokenItem)($arg0))
 end
 
 define dump_set_item
-  dump-set-item $arg0
+  dump-set-item ((SetItem)($arg0))
 end
 
 define dump_skip_item
-  dump-skip-item $arg0
+  dump-skip-item ((SkipItem)($arg0))
 end
 
 define dump_condition_item
-  dump-condition-item $arg0
+  dump-condition-item ((ConditionItem)($arg0))
 end
 
 define dump_break_item
-  dump-break-item $arg0
+  dump-break-item ((BreakItem)($arg0))
 end
 
 define dump_context_item
-  dump-context-item $arg0
+  dump-context-item ((ContextItem)($arg0))
 end
 
 define dump_select_item
-  dump-select-item $arg0
+  dump-select-item ((SelectItem)($arg0))
 end
 
 define dump_split_item
-  dump-split-item $arg0
+  dump-split-item ((SplitItem)($arg0))
 end
 
 # itemGroup
@@ -154,6 +154,10 @@ end
 
 define dump_freq_map
   dump-frequency-map $arg0
+end
+
+define dump_compute_stack
+  dump-compute-stack $arg0
 end
 
 # Python interface
@@ -279,6 +283,7 @@ echo   dump_token <var>               - Dump Token\n
 echo   dump_alu_value <var>           - Dump ALUValue\n
 echo   dump_alu_counters <var>        - Dump ALUCounters\n
 echo   dump_alu_vec <var>             - Dump AluVec\n
+echo   dump_compute_stack <var>       - Dump compute stack (std::stack<PValue>)\n
 echo   dump_alu_function <var>        - Dump AluFunction\n
 echo   dump_external_func_rec <var>   - Dump ExternalFunctionRec\n
 echo   dump_python_func_collection <var> - Dump PythonFunctionCollection\n
