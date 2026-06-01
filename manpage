@@ -228,9 +228,17 @@ Convert printable time format to a number, representing microseconds since the e
 .SS "Other Spec Units"
 There are also other spec units, that may be used:
 .IP "READ" 3
-Causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string.
+Causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string. When a
+.B READ
+or
+.B READSTOP
+spec unit is applied, the context offset is reset to zero (the current record).
 .IP "READSTOP" 3
-Causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
+Causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration. When a
+.B READ
+or
+.B READSTOP
+spec unit is applied, the context offset is reset to zero (the current record).
 .IP "UNREAD" 3
 Causes the program to push back the current active record back to the reader, so that the next iteration of the specification or the next 
 .I READ
@@ -367,7 +375,11 @@ resets the working string to the current record,
 sets it to the next record,
 .B CONTEXT -1
 sets it to the previous record, and so on.
-The required buffer sizes are computed at parse time from the largest positive and negative offsets used. If the offset refers to a record beyond the beginning or end of the input, the working string is set to the empty string.
+The required buffer sizes are computed at parse time from the largest positive and negative offsets used. If the offset refers to a record beyond the beginning or end of the input, the working string is set to the empty string. Note that reading beyond the input with
+.B CONTEXT
+does not cause processing to stop, even if a
+.B READSTOP
+token is present in the specification.
 .P
 .B CONTEXT
 must not be abbreviated. It is not supported with threading or multiple input streams.
@@ -399,6 +411,14 @@ Example:
     echo -e "A\\nB\\nC" | specs print @+1 1
 .P
 produces: "B", "C", "" -- each line shows the next record (empty for the last).
+.P
+Note that reading beyond the input with
+.B @+n
+or
+.B @-n
+does not cause processing to stop, even if a
+.B READSTOP
+token is present in the specification.
 
 .SS "MainOptions"
 These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.

@@ -36,7 +36,7 @@ So why do we have data fields at all if we don't want to output them? There can 
 ## >1 Input Records in Each Iteration
 Sometimes we would like to use more than one input record to produce our output record. We use the `READ` or `READSTOP` keywords for that.
 
-Both `READ` and `READSTOP` read the next record from the input stream to be the new active input record. The difference is what to do if the current line was the last. With `READ` the specification continues to be executed as if we have just read an empty record. With `READSTOP` the execution of the specification stops.
+Both `READ` and `READSTOP` read the next record from the input stream to be the new active input record. The difference is what to do if the current line was the last. With `READ` the specification continues to be executed as if we have just read an empty record. With `READSTOP` the execution of the specification stops. When a `READ` or `READSTOP` spec unit is applied, the context offset is reset to zero (the current record).
 
 Below is an example of a specification that handles git log. A git log looks something like this:
 ```
@@ -250,7 +250,7 @@ A few things to note:
 ## Rolling Context
 The `SELECT SECOND` mechanism described above lets us peek one record ahead. But what if we need to look further ahead, or look *behind* at records we've already seen? The `CONTEXT` spec unit provides a general way to do this.
 
-`CONTEXT` takes a single integer argument -- a positive number to look forward, a negative number to look backward, or zero to reset to the current record. When **specs** encounters a `CONTEXT` spec unit, it changes the active input record to the one at the given offset from the current record. Any input parts that follow will read from that record instead of the current one.
+`CONTEXT` takes a single integer argument -- a positive number to look forward, a negative number to look backward, or zero to reset to the current record. When **specs** encounters a `CONTEXT` spec unit, it changes the active input record to the one at the given offset from the current record. Any input parts that follow will read from that record instead of the current one. Note that reading beyond the input with `CONTEXT` does not cause processing to stop, even if a `READSTOP` token is present in the specification.
 
 Consider the following input:
 ```
@@ -294,12 +294,14 @@ gamma
 ```
 The first column comes from `WORD 1` while the *next* record is selected, and the second column comes from `WORD 1` after `CONTEXT 0` resets back to the current record.
 
+Note that when a `READ` or `READSTOP` spec unit is applied, the context offset is automatically reset to zero (the current record). This means that any context offset set by a `CONTEXT` spec unit will be lost when `READ` or `READSTOP` is executed.
+
 ### Context in Expressions
 In addition to the `CONTEXT` spec unit, **specs** supports the `@+n` and `@-n` syntax in expressions, where *n* is a non-negative integer. These evaluate to the full content of the record at the given offset:
 ```
 specs PRINT "length(@+1)" 1
 ```
-Given the input `AB`, `CDE`, `F`, this outputs `3`, `1`, `0` -- the length of the *next* record in each cycle.
+Given the input `AB`, `CDE`, `F`, this outputs `3`, `1`, `0` -- the length of the *next* record in each cycle. Note that reading beyond the input with `@+n` or `@-n` does not cause processing to stop, even if a `READSTOP` token is present in the specification.
 
 Note that `@@` (the current input record) and `@+0` or `@-0` are not quite the same thing when `CONTEXT` is also used: `@@` always returns the real input record, regardless of any `CONTEXT` that may be in effect. To get the context-affected record in an expression, use `@!`:
 ```
