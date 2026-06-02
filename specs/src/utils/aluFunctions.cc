@@ -419,6 +419,11 @@ PValue AluFunc_ctxrecno()
 	return mkValue(g_pStateQueryAgent->getRecordCount() + g_pStateQueryAgent->getContextOffset());
 }
 
+PValue AluFunc_ctxoffset()
+{
+	return mkValue(g_pStateQueryAgent->getContextOffset());
+}
+
 PValue AluFunc_eof()
 {
 	bool isRunOut = g_pStateQueryAgent->isEOF();

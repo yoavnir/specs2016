@@ -973,6 +973,10 @@ does not. When no
 .I CONTEXT
 is active, returns the same value as
 .B recno().
+.IP "ctxoffset()" 3
+Returns the current effective context offset. When no
+.I CONTEXT
+is active, returns 0.
 .IP "record()" 3
 Returns the entire input record. Equivalent to 
 .B range(1,-1)
