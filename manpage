@@ -977,6 +977,14 @@ is active, returns the same value as
 Returns the current effective context offset. When no
 .I CONTEXT
 is active, returns 0.
+.IP "ctxoob()" 3
+Returns 1 if the argument string came from out-of-bounds input (either via
+.I CONTEXT
+or
+.I @±n
+reading past the input edges, or via a
+.I READ
+that ran dry), and 0 otherwise. With no argument, checks the current (context-affected) record.
 .IP "record()" 3
 Returns the entire input record. Equivalent to 
 .B range(1,-1)

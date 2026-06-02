@@ -1128,6 +1128,14 @@ int main(int argc, char** argv)
 	spec = "PRINT 'ctxoffset()' 1  CONTEXT +1  PRINT 'ctxoffset()' NW  CONTEXT -1  PRINT 'ctxoffset()' NW";
 	VERIFY2(spec, "x", "0 1 -1"); // TEST #261
 
+	// ctxoob() function test - CONTEXT-based
+	spec = "PRINT 'ctxoob()' 1  CONTEXT +1  PRINT 'ctxoob()' NW  CONTEXT -1  PRINT 'ctxoob()' NW";
+	VERIFY2(spec, "x", "0 1 1"); // TEST #262
+
+	// ctxoob() function test - @± expression-based
+	spec = "PRINT 'ctxoob(@@)' 1  PRINT 'ctxoob(@+1)' NW  PRINT 'ctxoob(@-1)' NW";
+	VERIFY2(spec, "x", "0 1 1"); // TEST #263
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

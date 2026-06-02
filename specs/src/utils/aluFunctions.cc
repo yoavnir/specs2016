@@ -6,6 +6,7 @@
 #include "processing/Config.h"
 #include "processing/persistent.h"
 #include "processing/ProcessingState.h"
+#include "processing/Reader.h"
 #include <cstring>
 #include <cmath>
 #include <functional>
@@ -422,6 +423,15 @@ PValue AluFunc_ctxrecno()
 PValue AluFunc_ctxoffset()
 {
 	return mkValue(g_pStateQueryAgent->getContextOffset());
+}
+
+PValue AluFunc_ctxoob(PValue pArg)
+{
+	if (nullptr == pArg) {
+		return mkValue(ALUInt(Reader::isOOBRecord(g_pStateQueryAgent->currRecord()) ? 1 : 0));
+	} else {
+		return mkValue(ALUInt(isOOBValue(pArg) ? 1 : 0));
+	}
 }
 
 PValue AluFunc_eof()

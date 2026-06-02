@@ -12,6 +12,10 @@
 
 std::ostream& operator<< (std::ostream& os, const ALUValue &c);
 
+// Sentinel pointer for out-of-bounds values
+extern PValue g_pOOBValue;
+bool isOOBValue(PValue pv);
+
 typedef unsigned int ALUCounterKey;
 
 class ALUCounters {

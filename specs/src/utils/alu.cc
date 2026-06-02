@@ -22,6 +22,14 @@ extern stateQueryAgent* g_pStateQueryAgent;
 extern unsigned int g_forwardContext;
 extern unsigned int g_backwardContext;
 
+// Sentinel pointer for out-of-bounds values
+PValue g_pOOBValue = std::make_shared<ALUValue>(std::string(""));
+
+bool isOOBValue(PValue pv)
+{
+	return pv == g_pOOBValue;
+}
+
 void ALUValue::set(std::string& s)
 {
 	m_value = s;
@@ -893,6 +901,10 @@ PValue AluInputRecord::evaluate()
 	} else {
 		MYASSERT_WITH_MSG(g_pReader != nullptr, "Rolling context requires a reader");
 		ps = g_pReader->peek(m_offset);
+	}
+	// Check if this is an out-of-bounds record
+	if (Reader::isOOBRecord(ps)) {
+		return g_pOOBValue;
 	}
 	PValue ret;
 	if (ps) {
