@@ -165,6 +165,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `range(n,m)` | Returns the substring from the *n*-th character (default first) to the *m*-th character (default last) |
 | `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `number()` |
 | `ctxrecno()` | Returns the record number of the record that input parts work on. This is similar to `recno()`, but considers rolling context, which `recno()` does not. |
+|| `ctxoffset()` | Returns the current effective context offset. Returns 0 when no `CONTEXT` is in effect. |
 | `record()` | Returns the entire input record. Equivalent to `@!`. |
 | `cfrecord()` | Returns the entire input record, disregarding rolling context. Same as `record()` when `CONTEXT` is not in effect. Equivalent to `@@`. |
 | `word(n)` | Returns the *n*-th word |

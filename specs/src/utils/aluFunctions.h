@@ -42,6 +42,8 @@
 			"() - Returns the record number of the current record.","Increments with every READ or READSTOP.") \
 	X(ctxrecno,       0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the record number of the record that input parts work on.","This is similar to recno, but considers rolling context, which recno does not.") \
+	X(ctxoffset,      0, ALUFUNC_REGULAR,      true,  \
+			"() - Returns the current effective context offset.","Returns 0 when no CONTEXT is in effect.") \
 	X(number,         0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the number of times this specification has restarted","Does not increment with READ or READSTOP. Otherwise similar to recno().") \
 	X(eof,            0, ALUFUNC_REGULAR,     false,  \

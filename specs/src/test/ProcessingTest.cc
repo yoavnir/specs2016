@@ -1124,6 +1124,10 @@ int main(int argc, char** argv)
 		"    Using cfrecord():   But I can't help falling in love with you";
 	VERIFY2(spec, strm.c_str(), res.c_str());   // TEST #260
 
+	// ctxoffset() function test
+	spec = "PRINT 'ctxoffset()' 1  CONTEXT +1  PRINT 'ctxoffset()' NW  CONTEXT -1  PRINT 'ctxoffset()' NW";
+	VERIFY2(spec, "x", "0 1 -1"); // TEST #261
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";
