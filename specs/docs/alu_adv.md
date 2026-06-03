@@ -166,7 +166,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `number()` |
 | `ctxrecno()` | Returns the record number of the record that input parts work on. This is similar to `recno()`, but considers rolling context, which `recno()` does not. |
 | `ctxoffset()` | Returns the current effective context offset. Returns 0 when no `CONTEXT` is in effect. |
-| `ctxoob(s)` | Returns 1 if the argument string came from out-of-bounds input, 0 otherwise. With no argument, checks the current (context-affected) record. |
+| `ctxoob(s)` | Returns 1 if the argument string came from out-of-bounds input, 0 otherwise. With no argument, checks the current (context-affected) record. The out-of-bounds property is not preserved by all operations -- see [Out-of-Bounds (OOB) Records](#out-of-bounds-oob-records) below. |
 | `record()` | Returns the entire input record. Equivalent to `@!`. |
 | `cfrecord()` | Returns the entire input record, disregarding rolling context. Same as `record()` when `CONTEXT` is not in effect. Equivalent to `@@`. |
 | `word(n)` | Returns the *n*-th word |
@@ -239,6 +239,25 @@ The parameters for the `fmap_dump` functions are as follows:
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |
 | `next()` | Returns the index of the print position. `w1 "(next())"` should do the same as `w1 next`. |
 | `exact(expression)` | Returns `1` if the evaluation of the `expression` results in an exact value, or `0` if some rounding and/or loss of precision has been involved in the computaion. The function has some limitations and will err on the side of returning `0` when it's unsure. |
+
+## Out-of-Bounds (OOB) Records
+
+When `CONTEXT` or a `@±n` expression refers to a record beyond the beginning or end of the input, or when a `READ` runs dry, the working string becomes an *out-of-bounds* (OOB) record. An OOB record behaves as an empty string, but it additionally carries a hidden flag marking it as out of bounds. This flag lets you distinguish a record that is genuinely empty from one that is empty only because it lies past the edge of the input. The flag can be queried with the `ctxoob()` function.
+
+The OOB flag travels with the working string only as long as the OOB record is read **directly**. It is *preserved* by:
+
+- `ctxoob()` with no argument (it inspects the current working string).
+- The record-access functions `record()`, `range()`, `substr()`, `word()`, `wordrange()`, `field()` and `fieldrange()` when they operate on the current (OOB) record.
+- The `@@`, `@!` and `@±n` input-record expressions.
+- Character, word and field range labels (for example `1-5 a:`, `w1-3 x:` or `f1 y:`) that capture the OOB record. The captured label, e.g. `a`, remains OOB and can be tested with `ctxoob(a)`.
+
+The OOB flag is **not** preserved once the value is copied into a plain-text value that no longer refers to the working string. Known cases where the flag is lost include:
+
+- **Assignment into a numbered counter** with a `SET` spec unit (or any `:=` assignment). For example, after `CONTEXT 1 set "#5:=record()"`, the expression `ctxoob(#5)` returns `0`, because the counter stores only the (empty) text and not the OOB flag.
+- **Values that pass through an output-producing spec unit** such as `PRINT` before being re-captured. For example, in `CONTEXT 1 1-5 a: PRINT "a" b: PRINT "ctxoob(b)"`, the label `b` is no longer OOB and `ctxoob(b)` returns `0`.
+- Other operations that materialize the working string as ordinary text may likewise drop the flag.
+
+In short: query OOB status as close as possible to where the OOB record is read, and do not expect it to survive a round trip through a counter or other plain-text storage.
 
 
 
