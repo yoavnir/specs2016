@@ -127,9 +127,30 @@ with open("xx.txt","w") as v:
 	with open("xx.txt", "r") as flags:
 		filtered_flags = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes']
 		filtered_flags_debug = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes', '-Wp,-D_FORTIFY_SOURCE=2']
+		# Multi-word flags to filter: list of (flag, value) tuples to remove
+		# For example: ('-arch', 'x86_64') will remove "-arch x86_64" but keep "-arch arm64"
+		filtered_multi_flags = [('-arch', 'x86_64')]
 		cflags=flags.read().strip().split()
 		filter = filtered_flags_debug if variation=="DEBUG" else filtered_flags
-		filtered_cflags = [f for f in cflags if f not in filter]
+		filtered_cflags = []
+		i = 0
+		while i < len(cflags):
+			flag = cflags[i]
+			# Check if this flag should be filtered out
+			should_filter = False
+			if flag in filter:
+				should_filter = True
+			else:
+				# Check multi-word flags
+				for multi_flag, multi_value in filtered_multi_flags:
+					if flag == multi_flag and i + 1 < len(cflags) and cflags[i + 1] == multi_value:
+						should_filter = True
+						i += 1  # Skip the next token (the value)
+						break
+			
+			if not should_filter:
+				filtered_cflags.append(flag)
+			i += 1
 		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
 	
 	# Get the result of python-config --ldflags
