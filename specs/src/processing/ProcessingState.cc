@@ -366,6 +366,10 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	if (m_inputStation != STATION_SECOND && nullptr==m_ps) {
 		return std::make_shared<std::string>();
 	}
+	// If current record is OOB, preserve OOB status
+	if (Reader::isOOBRecord(currRecord())) {
+		return currRecord();
+	}
 	int slen = (int)(currRecord()->length());
 
 	if (0==from && 0==to) return std::make_shared<std::string>();
@@ -426,7 +430,8 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 		std::cerr << "WARNING: Field Identifier <" << id << "> redefined.\n";
 	}
 
-	m_fieldIdentifiers[id] = std::make_shared<std::string>(*ps);
+	// Store the PSpecString directly to preserve OOB status
+	m_fieldIdentifiers[id] = ps;
 
 	// Count the statistics of this field value.
 	if (ALUFUNC_STATISTICAL & AluFunction::functionTypes()) {
@@ -593,4 +598,10 @@ std::string ProcessingStateFieldIdentifierGetter::Get(char id)
 {
 	PSpecString ret = m_ps->fieldIdentifierGet(id);
 	return std::string(ret->data(), ret->length());
+}
+
+bool ProcessingStateFieldIdentifierGetter::isOOB(char id)
+{
+	if (!m_ps->fieldIdentifierIsSet(id)) return false;
+	return Reader::isOOBRecord(m_ps->fieldIdentifierGet(id));
 }

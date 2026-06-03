@@ -164,6 +164,7 @@ class fieldIdentifierGetter {
 public:
 	virtual ~fieldIdentifierGetter() {}
 	virtual std::string Get(char id) = 0;
+	virtual bool isOOB(char id) {return false;}
 };
 
 void setFieldIdentifierGetter(fieldIdentifierGetter* getter);

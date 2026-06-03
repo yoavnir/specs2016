@@ -2,6 +2,7 @@
 #include "processing/Config.h"
 #include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
+#include "processing/Reader.h"
 #include "item.h"
 #include <math.h>
 
@@ -54,6 +55,8 @@ std::string WordRangePart::Debug()
 PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
 	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
+	// If current record is OOB, preserve OOB status
+	if (Reader::isOOBRecord(pState.currRecord())) return pState.currRecord();
 	std::string keepSeparator(DEFAULT_WORDSEPARATOR);
 	if (!m_WordSep.empty()) {
 		keepSeparator = pState.getWSChars();
@@ -87,6 +90,8 @@ std::string FieldRangePart::Debug()
 PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
 	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
+	// If current record is OOB, preserve OOB status
+	if (Reader::isOOBRecord(pState.currRecord())) return pState.currRecord();
 	std::string keepSeparator(DEFAULT_FIELDSEPARATOR);
 	if (!m_FieldSep.empty()) {
 		keepSeparator = pState.getFSChars();

@@ -295,6 +295,9 @@ PValue AluUnitFieldIdentifier::evaluate()
 	if (!g_fieldIdentifierGetter) {
 		MYTHROW("Field Identifier Getter is not set")
 	}
+	if (g_fieldIdentifierGetter->isOOB(m_id)) {
+		return g_pOOBValue;
+	}
 	return mkValue(g_fieldIdentifierGetter->Get(m_id));
 }
 
