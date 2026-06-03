@@ -13,6 +13,9 @@
 #define STOP_STREAM_INVALID 99
 #define IS_SPECIFIC_STREAM(x)  ((x)<STOP_STREAM_ALL)
 
+// Sentinel pointer for out-of-bounds records
+extern PSpecString g_pOOBSpecString;
+
 class Reader {
 public:
 	Reader() {mp_thread = nullptr; m_countRead = m_countUsed = 0; m_pUnreadString = nullptr; m_bAbort = false; m_bRanDry = false;}
@@ -42,6 +45,7 @@ public:
 	}
 	virtual PSpecString peek(int offset);
 	virtual void        setContextSizes(unsigned int forward, unsigned int backward) {}
+	static bool         isOOBRecord(PSpecString ps) { return ps == g_pOOBSpecString; }
 protected:
 	StringQueue m_queue;
 	std::unique_ptr<std::thread> mp_thread;

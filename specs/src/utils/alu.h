@@ -12,6 +12,10 @@
 
 std::ostream& operator<< (std::ostream& os, const ALUValue &c);
 
+// Sentinel pointer for out-of-bounds values
+extern PValue g_pOOBValue;
+bool isOOBValue(PValue pv);
+
 typedef unsigned int ALUCounterKey;
 
 class ALUCounters {
@@ -160,6 +164,7 @@ class fieldIdentifierGetter {
 public:
 	virtual ~fieldIdentifierGetter() {}
 	virtual std::string Get(char id) = 0;
+	virtual bool isOOB(char id) {return false;}
 };
 
 void setFieldIdentifierGetter(fieldIdentifierGetter* getter);

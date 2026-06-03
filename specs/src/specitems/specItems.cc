@@ -682,7 +682,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			ps = pRd->get(tmr, rdrCounter);
 			if (!ps) {
 				if (aRet==ApplyRet__Read) {
-					ps = std::make_shared<std::string>();
+					ps = g_pOOBSpecString;
 				} else {
 					processingContinue = false; // Stop processing if no extra record is available
 				}

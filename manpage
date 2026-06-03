@@ -420,6 +420,87 @@ does not cause processing to stop, even if a
 .B READSTOP
 token is present in the specification.
 
+.SS "Out-of-Bounds (OOB) Records"
+When
+.B CONTEXT
+or an
+.B @\(+-n
+expression refers to a record beyond the beginning or end of the input, or when a
+.B READ
+runs dry, the working string becomes an
+.I out-of-bounds
+(OOB) record. An OOB record behaves as an empty string, but it additionally carries a hidden flag marking it as out of bounds. This flag lets you tell the difference between a record that is genuinely empty and one that is empty only because it lies past the edge of the input. The flag is queried with the
+.B ctxoob()
+function (see
+.B "Built-In Functions" ).
+.P
+The OOB flag travels with the working string only as long as the OOB record is read
+.I directly.
+It is preserved by the following:
+.RS
+.IP \(bu 3
+.B ctxoob()
+with no argument (it inspects the current working string).
+.IP \(bu 3
+The record-access functions
+.B record(),
+.B range(),
+.B substr(),
+.B word(),
+.B wordrange(),
+.B field()
+and
+.B fieldrange()
+when they operate on the current (OOB) record.
+.IP \(bu 3
+The
+.B @@,
+.B @!
+and
+.B @\(+-n
+input-record expressions.
+.IP \(bu 3
+Character, word and field range labels (for example
+.B "1-5 a:" ,
+.B "w1-3 x:"
+or
+.B "f1 y:" )
+that capture the OOB record. The captured label, e.g.
+.B a,
+remains OOB and can be tested with
+.B ctxoob(a).
+.RE
+.P
+The OOB flag is
+.B not
+preserved once the value is copied into a plain text value that no longer refers to the working string. Known cases where the flag is lost include:
+.RS
+.IP \(bu 3
+Assigning into a numbered counter with a
+.B SET
+spec unit (or any
+.B :=
+assignment). For example, after
+.B "CONTEXT 1 set #5:=record()" ,
+the expression
+.B ctxoob(#5)
+returns 0, because the counter stores only the (empty) text and not the OOB flag.
+.IP \(bu 3
+Values that pass through an output-producing spec unit such as
+.B PRINT
+before being re-captured. For example, in
+.B "CONTEXT 1 1-5 a: PRINT \(dqa\(dq b: PRINT \(dqctxoob(b)\(dq" ,
+the label
+.B b
+is no longer OOB and
+.B ctxoob(b)
+returns 0.
+.IP \(bu 3
+Other operations that materialize the working string as ordinary text may likewise drop the flag.
+.RE
+.P
+In short: query OOB status as close as possible to where the OOB record is read, and do not expect it to survive a round trip through a counter or other plain-text storage.
+
 .SS "MainOptions"
 These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
 .IP "STOP" 3
@@ -977,6 +1058,16 @@ is active, returns the same value as
 Returns the current effective context offset. When no
 .I CONTEXT
 is active, returns 0.
+.IP "ctxoob()" 3
+Returns 1 if the argument string came from out-of-bounds input (either via
+.I CONTEXT
+or
+.I @±n
+reading past the input edges, or via a
+.I READ
+that ran dry), and 0 otherwise. With no argument, checks the current (context-affected) record. The out-of-bounds property is not preserved by all operations; see the subsection
+.B "Out-of-Bounds (OOB) Records"
+for details and limitations.
 .IP "record()" 3
 Returns the entire input record. Equivalent to 
 .B range(1,-1)

@@ -154,6 +154,7 @@ public:
 	ProcessingStateFieldIdentifierGetter(ProcessingState* _ps) : m_ps(_ps) {}
 	~ProcessingStateFieldIdentifierGetter() override                               {}
 	std::string Get(char id) override;
+	bool isOOB(char id) override;
 private:
 	ProcessingState*	m_ps;
 };

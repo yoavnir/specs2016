@@ -6,6 +6,7 @@
 #include "processing/Config.h"
 #include "processing/persistent.h"
 #include "processing/ProcessingState.h"
+#include "processing/Reader.h"
 #include <cstring>
 #include <cmath>
 #include <functional>
@@ -424,6 +425,15 @@ PValue AluFunc_ctxoffset()
 	return mkValue(g_pStateQueryAgent->getContextOffset());
 }
 
+PValue AluFunc_ctxoob(PValue pArg)
+{
+	if (nullptr == pArg) {
+		return mkValue(ALUInt(Reader::isOOBRecord(g_pStateQueryAgent->currRecord()) ? 1 : 0));
+	} else {
+		return mkValue(ALUInt(isOOBValue(pArg) ? 1 : 0));
+	}
+}
+
 PValue AluFunc_eof()
 {
 	bool isRunOut = g_pStateQueryAgent->isEOF();
@@ -491,6 +501,10 @@ PValue AluFunc_fieldcount(PValue pStr, PValue pSep)
 // Helper function
 static PValue AluFunc_range(ALUInt start, ALUInt end)
 {
+	// If the current record is out-of-bounds, preserve that status
+	if (Reader::isOOBRecord(g_pStateQueryAgent->currRecord())) {
+		return g_pOOBValue;
+	}
 	PSpecString pRange = g_pStateQueryAgent->getFromTo(start, end);
 	if (pRange) {
 		PValue pRet = mkValue(pRange->data());
@@ -672,6 +686,10 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 {
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
+	// If no argument provided and current record is OOB, preserve OOB status
+	if (!pBigString && Reader::isOOBRecord(g_pStateQueryAgent->currRecord())) {
+		return g_pOOBValue;
+	}
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);

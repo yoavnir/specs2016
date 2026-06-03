@@ -1128,6 +1128,70 @@ int main(int argc, char** argv)
 	spec = "PRINT 'ctxoffset()' 1  CONTEXT +1  PRINT 'ctxoffset()' NW  CONTEXT -1  PRINT 'ctxoffset()' NW";
 	VERIFY2(spec, "x", "0 1 -1"); // TEST #261
 
+	// ctxoob() function test - CONTEXT-based
+	spec = "PRINT 'ctxoob()' 1  CONTEXT +1  PRINT 'ctxoob()' NW  CONTEXT -1  PRINT 'ctxoob()' NW";
+	VERIFY2(spec, "x", "0 1 1"); // TEST #262
+
+	// ctxoob() function test - @± expression-based
+	spec = "PRINT 'ctxoob(@@)' 1  PRINT 'ctxoob(@+1)' NW  PRINT 'ctxoob(@-1)' NW";
+	VERIFY2(spec, "x", "0 1 1"); // TEST #263
+
+	// ctxoob() function test - OOB status preserved through record()
+	spec = "CONTEXT +1  PRINT 'ctxoob(record())'";
+	VERIFY2(spec, "hello", "1"); // TEST #264
+
+	// ctxoob() function test - OOB status preserved through word()
+	spec = "CONTEXT +1  PRINT 'ctxoob(word(1))'";
+	VERIFY2(spec, "hello world", "1"); // TEST #265
+
+	// ctxoob() function test - normal record() should return 0
+	spec = "PRINT 'ctxoob(record())'";
+	VERIFY2(spec, "hello", "0"); // TEST #266
+
+	// ctxoob() function test - normal word() should return 0
+	spec = "PRINT 'ctxoob(word(1))'";
+	VERIFY2(spec, "hello world", "0"); // TEST #267
+
+	// ctxoob() function test - OOB status preserved through range()
+	spec = "CONTEXT +1  PRINT 'ctxoob(range(1,3))'";
+	VERIFY2(spec, "hello", "1"); // TEST #268
+
+	// ctxoob() function test - normal range() should return 0
+	spec = "PRINT 'ctxoob(range(1,3))'";
+	VERIFY2(spec, "hello", "0"); // TEST #269
+
+	// ctxoob() function test - OOB status preserved through substr() of current record
+	spec = "CONTEXT +1  PRINT 'ctxoob(substr(,1,5))'";
+	VERIFY2(spec, "hello", "1"); // TEST #270
+
+	// ctxoob() function test - normal substr() should return 0
+	spec = "PRINT 'ctxoob(substr(,1,5))'";
+	VERIFY2(spec, "hello", "0"); // TEST #271
+
+	// ctxoob() function test - OOB status preserved through range-label variable
+	spec = "CONTEXT +1  1-5 a:  PRINT 'ctxoob(a)'";
+	VERIFY2(spec, "hello", "1"); // TEST #272
+
+	// ctxoob() function test - normal range-label variable should return 0
+	spec = "1-5 a:  PRINT 'ctxoob(a)'";
+	VERIFY2(spec, "hello", "0"); // TEST #273
+
+	// ctxoob() function test - OOB status preserved through word-range label
+	spec = "CONTEXT +1  w1-3 x:  PRINT 'ctxoob(x)'";
+	VERIFY2(spec, "a b c", "1"); // TEST #274
+
+	// ctxoob() function test - normal word-range label should return 0
+	spec = "w1-3 x:  PRINT 'ctxoob(x)'";
+	VERIFY2(spec, "a b c", "0"); // TEST #275
+
+	// ctxoob() function test - OOB status preserved through field-range label
+	spec = "fs :  CONTEXT +1  f1 y:  PRINT 'ctxoob(y)'";
+	VERIFY2(spec, "a:b:c", "1"); // TEST #276
+
+	// ctxoob() function test - normal field-range label should return 0
+	spec = "fs :  f1 y:  PRINT 'ctxoob(y)'";
+	VERIFY2(spec, "a:b:c", "0"); // TEST #277
+
 	if (errorCount) {
 		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
 		std::cout << "Failed tests: ";

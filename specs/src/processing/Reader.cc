@@ -6,6 +6,7 @@
 
 uint64_t g_readRecordCounter = 0;
 Reader* g_pReader = nullptr;
+PSpecString g_pOOBSpecString = std::make_shared<std::string>();
 
 void ReadAllRecordsIntoReaderQueue(Reader* r)
 {
@@ -217,16 +218,16 @@ void StandardReader::setContextSizes(unsigned int forward, unsigned int backward
 PSpecString StandardReader::peek(int offset)
 {
 	if (offset == 0) {
-		return m_currentRecord ? m_currentRecord : std::make_shared<std::string>();
+		return m_currentRecord ? m_currentRecord : g_pOOBSpecString;
 	}
 	if (offset < 0) {
 		unsigned int idx = (unsigned int)(-offset) - 1;
-		if (idx >= m_backwardBuffer.size()) return std::make_shared<std::string>();
+		if (idx >= m_backwardBuffer.size()) return g_pOOBSpecString;
 		return m_backwardBuffer[m_backwardBuffer.size() - 1 - idx];
 	}
 	// offset > 0
 	unsigned int idx = (unsigned int)offset - 1;
-	if (idx >= m_forwardBuffer.size()) return std::make_shared<std::string>();
+	if (idx >= m_forwardBuffer.size()) return g_pOOBSpecString;
 	return m_forwardBuffer[idx];
 }
 
@@ -399,7 +400,7 @@ PSpecString TestReader::peek(int offset)
 	// m_idx points to the *next* record to read, so current record is m_idx-1
 	int target = int(m_idx) - 1 + offset;
 	if (target < 0 || target >= int(m_count)) {
-		return std::make_shared<std::string>();  // empty string for out-of-bounds
+		return g_pOOBSpecString;  // sentinel for out-of-bounds
 	}
 	return mp_arr[target];
 }
