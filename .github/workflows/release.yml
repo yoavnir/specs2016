@@ -96,7 +96,7 @@ jobs:
         rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/specs.spec
 
     - name: Upload RPM artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: linux-rpm
         path: rpmbuild/RPMS/**/*.rpm
@@ -153,7 +153,7 @@ jobs:
           specs-${SPECS_VERSION#v}.pkg
 
     - name: Upload pkg artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: macos-pkg
         path: specs-*.pkg
@@ -228,13 +228,13 @@ jobs:
       run: wix build -o specs-${{ steps.version.outputs.display }}.msi specs.wxs
 
     - name: Upload MSI artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-msi
         path: specs-*.msi
 
     - name: Upload standalone executable artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-exe
         path: specs-*-windows-x64.exe
@@ -314,13 +314,13 @@ jobs:
       run: wix build -o specs-${{ steps.version.outputs.display }}-python312.msi specs-python.wxs
 
     - name: Upload MSI artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-msi-python
         path: specs-*-python312.msi
 
     - name: Upload standalone executable artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-exe-python
         path: specs-*-python312-windows-x64.exe
@@ -410,7 +410,7 @@ jobs:
         dpkg-deb --build deb-root specs_${SPECS_VERSION#v}_${{ matrix.arch }}.deb
 
     - name: Upload DEB artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: linux-deb-${{ matrix.arch }}
         path: specs_*.deb
