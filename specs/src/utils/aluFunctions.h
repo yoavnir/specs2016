@@ -206,7 +206,7 @@
 			"(fid,elem) - Notes an occurence of the value in 'elem' for field identifier 'fid', and returns the number of occurences so far.","This is the only one of the fmap_* functions that modifies the frequency map.\nIt also affects the other statistics functions.") \
 	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false,  \
 			"(fid,fmt,order,pct) - Returns a multi-line string with the frequency map of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\n'pct' adds a percentage column if true.") \
-	H(Advanced Math Functions,20) \
+	H(Advanced Math Functions,21) \
 	X(rand,           1, ALUFUNC_REGULAR,     false,  \
 			"([limit]) - Returns a random integer up to (but not including) 'limit'.","If 'limit' is omitted, returns a floating point number between 0 and 1.") \
 	X(floor,          1, ALUFUNC_REGULAR,     false,  \
@@ -258,6 +258,8 @@
 			"(s1,s2) - Returns a bit-wise XOR of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(sign,           1, ALUFUNC_REGULAR,     false,  \
 			"(x) - Returns -1/0/1 for negative/zero/positive x.","") \
+	X(not,            1, ALUFUNC_REGULAR,     false,  \
+			"(x) - Returns 1 if x is zero, or 0 otherwise. Serves as a logical NOT, an alternative to using the unary operator.","") \
 	X(space,          3, ALUFUNC_REGULAR,     false,  \
 			"(str,[len],[pad]) - Formats 'str' by replacing internal blanks with 'len' occurrences of the 'pad' character.","'len' defaults to 1. 'pad' defaults to a space.") \
 	X(strip,          3, ALUFUNC_REGULAR,     false,  \

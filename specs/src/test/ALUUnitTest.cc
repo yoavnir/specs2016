@@ -1650,6 +1650,21 @@ int runALUUnitTests16(unsigned int onlyTest)
 	VERIFY_ASSN_RES("#10:=pget(unitTestVar)", "2");
 	VERIFY_EXPR_RES("exact(#10)", "0");
 
+	// not() function
+	std::cout << "\nThe not() function\n======================\n\n";
+	VERIFY_EXPR_RES("not(1)", "0");
+	VERIFY_EXPR_RES("not(0)", "1");
+	VERIFY_EXPR_RES("not(3.1415)", "0");
+	VERIFY_EXPR_RES("not(0.3333)", "0");
+	VERIFY_EXPR_RES("not('hello')", "0");
+	VERIFY_EXPR_RES("not('')", "0");
+	VERIFY_EXPR_RES("not(2+2==4)", "0");
+	VERIFY_EXPR_RES("not(2>3)", "1");
+	VERIFY_EXPR_RES("not(exact(#10))", "1");
+	VERIFY_EXPR_RES("not(includes(raid,'i'))", "0");
+	VERIFY_EXPR_RES("not(includes(team,'i'))", "1");  // proving that there is really no 'i' in team
+
+
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
 		std::cout << "Failed tests:\n";
