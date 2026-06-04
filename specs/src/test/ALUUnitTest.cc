@@ -1137,6 +1137,7 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','u')", "Just the place for a snark");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','U')", "Justtheplaceforasnark");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','_','U')", "Just_the_place_for_a_snark");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','_')", "Just_the place for a snark");
 
 	VERIFY_EXPR_RES("sfield('Where hae\tya been',0,'')","sfield: Called with count equal to zero");
 	VERIFY_EXPR_RES("sfield('Where hae\tya been',1,'')","Where hae");

@@ -1689,8 +1689,7 @@ PValue AluFunc_substitute(PValue pSrc, PValue pSearchString, PValue pSubstitute,
 	ASSERT_NOT_ELIDED(pSearchString,2,needle);
 	ASSERT_NOT_ELIDED(pSubstitute,3,subst);
 	std::string res = pSrc->getStr();
-	ALUInt count = ARG_INT_WITH_DEFAULT(pMax,1);
-	if (pMax->getStr()=="U") count = MAX_ALUInt;
+	ALUInt count = (ARG_STR_WITH_DEFAULT(pMax,"") == "U") ? MAX_ALUInt : ARG_INT_WITH_DEFAULT(pMax,1);
 
 	size_t findRet = 0;
 
