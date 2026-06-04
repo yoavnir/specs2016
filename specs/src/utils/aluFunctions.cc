@@ -2394,6 +2394,20 @@ PValue AluFunc_sign(PValue pNumber)
 	return mkValue(ret);
 }
 
+PValue AluFunc_not(PValue pNumber)
+{
+	ASSERT_NOT_ELIDED(pNumber,1,number);
+	ALUInt ret = 0;
+	switch (pNumber->getDivinedType()) {
+		case counterType__Int: 
+			ret = (0 == pNumber->getInt() ? 1 : 0);
+			break;
+		default:
+			ret = 0;
+	}
+	return mkValue(ret);
+}
+
 PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pStr,1,string);

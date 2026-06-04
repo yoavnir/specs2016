@@ -799,7 +799,9 @@ Expressions are used in PRINT data units as well as in assignments. Assignments 
 
 Expressions are made up of numbers, field identifiers (no colon needed), and counter numbers preceded by a hash mark. They allow ordinary arithmetic and logical operations as well as function calls for pre-defined functions:
 .IP "Unary Operators" 3
-+ (plus - does nothing), - (minus), ! (logical NOT)
++ (plus - does nothing), - (minus), ! (logical NOT - equivalent to the 
+.I not
+built-in function)
 .IP "Binary Arithmetic Operators" 3
 +, -, *. / (division), // (integer division), % (remainder)
 .IP "Binary String Operator" 3
@@ -1595,6 +1597,12 @@ is positive, 0 if the
 is 0, and -1 if the 
 .I number 
 is negative.
+.IP "not(expression)" 3
+Returns 1 if the 
+.I expression
+is an integer zero, or 0 if it is anything else.  It serves as an alternative to the
+.B unary logical not
+operator (!).
 .IP "space(string,length,pad)" 3
 Formats a 
 .I string 

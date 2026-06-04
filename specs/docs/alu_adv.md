@@ -6,7 +6,7 @@
 | -- | ---- | ------- |
 | `+` | Unary Plus | |
 | `-` | Unary Minus | Negates its operand, so if `a` is 5.3 then `-a` is -5.3 |
-| `!` | Unary Not | Logical Not. If the result is zero, returns `1`, otherwise returns zero |
+| `!` | Unary Not | Logical Not. If the result is zero, returns `1`, otherwise returns zero. Equivalent to the `not` built-in function (see below) |
 | `+` | Binary Plus | Returns the sum of its two operands |
 | `-` | Binary Minus | Returns the difference between the left-hand operand and the right-hand operand |
 | `*` | Binary Multiplication | Returns the product of its two operands |
@@ -42,7 +42,7 @@
 | `%=` | RemDiv | Divides the value of the left-hand counter by the right-hand counter, storing the **remainder** in that counter |
 | `\|\|=` | Appnd | Appends the string value of the right-hand operand to the string value of the left-hand counter, storing the concatenation in that counter |
 
-## Table of Numerical Functions
+## Table of Numerical and Logical Functions
 | Function | Description |
 | -------- | ----------- |
 | `abs(x)` | Returns the absolute value of `x` |
@@ -77,6 +77,8 @@
 | `tan(x)` | Returns the tangent function, treating `x` as an angle expressed in radians |
 | `tobin(x)` | Returns a binary (usually unprintable) representation of the integer number x. For example, if `x` is 65 the function returns "A"; if `x` is 16961 the function returns "AB". |
 | `tobine(x,n)` | Returns a binary representation of the integer number x as an *n*-byte string. |
+| `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
+| `not(expr)` | Returns 1 if the `expr` is an integer zero, or 0 if it is anything else.  It serves as an alternative to the **unary logical not** operator (!). |
 
 ## Table of String Functions
 | Function | Description |
@@ -135,7 +137,6 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `justify(string,length,pad)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string, while `pad` specifies what padding (by default a space) to insert (if necessary). |
 | `overlay(string1, string2 ,start ,length ,pad)` | Returns a copy of `string2`, partially or fully overwritten by `string1`. `start` specifies the starting position of the overlay. `length` truncates or pads `string1` prior to the operation, using `pad` as the pad character. |
 | `reverse(string)` | Returns a copy of a `string` with its characters reversed. |
-| `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
 | `space(string,length,pad)` | Formats a `string` by replacing internal blanks with `length` occurrences of the `pad` character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If `length` is 0, all blanks are removed. |
 | strip(string,option,pad-chars) | Returns `string` stripped of leading and/or trailing blanks or any other character specified in the `pad-chars` string. `Option` values determine the action: *L* for leading, *T* for trailing, and *B* for both (the default) |
 | `subword(string,start,length)` | Returns the substring that begins at blank-delimited word `start`. If `length` is omitted, it defaults to the remainder of the string. |
