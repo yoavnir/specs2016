@@ -2318,15 +2318,12 @@ contains the build number from GitHub Actions (github.run_number). Empty for loc
 .IP "build-info" 3
 contains a composite string with all build information. For example:
 .p
-    commit b74fcb1 on branch dev-1.0.0 built on 2026-06-08T08:22:52 (local)
+    Built locally from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T13:01:18
 .p
 or
 .p
-    commit b74fcb1 on branch dev-1.0.0 built on 2026-06-08T08:22:52 (github) - build 199
+    Built on github (build 217) from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T12:40:01
 .p
-or if the branch is not available:
-.p
-    commit b74fcb1 built on 2026-06-08T08:22:52 (local)
     
 .SH EXAMPLES
 `ls -l` yields this:
