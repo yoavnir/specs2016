@@ -21,6 +21,11 @@ jobs:
     container: 
       image: ubuntu:22.04
     steps:
+    - name: Install git (so checkout creates a real repository in the container)
+      run: |
+        DEBIAN_FRONTEND=noninteractive apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y git
+
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
@@ -339,6 +344,16 @@ jobs:
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container || '' }}
     steps:
+    - name: Install git (so checkout creates a real repository in the container)
+      run: |
+        if [ "$(id -u)" -eq 0 ]; then
+          APT="apt-get"
+        else
+          APT="sudo apt-get"
+        fi
+        DEBIAN_FRONTEND=noninteractive $APT update
+        DEBIAN_FRONTEND=noninteractive $APT install -y git
+
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
