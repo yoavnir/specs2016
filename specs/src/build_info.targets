@@ -26,6 +26,11 @@
       <BuildBranch>$(BuildBranch.Trim())</BuildBranch>
     </PropertyGroup>
 
+    <!-- fall back to getting BuildBranch from env variable -->
+    <PropertyGroup>
+      <BuildBranch Condition="'$(BuildBranch)' == ''">$(SPECS_BRANCH)</BuildBranch>
+    </PropertyGroup>
+
     <!-- Generate build_info.h -->
     <ItemGroup>
       <BuildInfoLines Include="#define SPECS_BUILD_COMMIT &quot;$(BuildCommit)&quot;" />
