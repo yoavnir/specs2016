@@ -126,7 +126,7 @@ Build information is also available via the following labels:
 - `@build-info` — a composite string with all build information, e.g.:
   ```
   Built locally from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T13:01:18
-  Built on github (build 217) from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T12:40:01
+  Built on github (build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T12:40:01
   ```
 
 Additionally, the `@@` string stands for the entire input record. When rolling context is in effect (see [Streams and Records](streams.md#rolling-context)), `@@` always refers to the original input record. The `@!` string refers to the current record as affected by `CONTEXT`, which is the same as `@@` when no `CONTEXT` is active. The `@-n` and `@+n` syntax is an alternative to using that is effective within expressions. Note that reading beyond the input with `@+n` or `@-n` does not cause processing to stop, even if a `READSTOP` token is present in the specification. The following three specifications are equivalent:

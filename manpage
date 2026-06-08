@@ -2272,11 +2272,11 @@ The system also defines some labels:
 .IP "version" 3
 This returns the version of 
 .B specs, 
-for example "v0.6"
+for example "1.0.0"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 
-    specs @version 1
+    specs @version
 .IP "cols" 3
 contains the number of columns in the display. You can override this in the configuration file. For example, the following prints a right-justified string. 
 .P
@@ -2322,7 +2322,7 @@ contains a composite string with all build information. For example:
 .p
 or
 .p
-    Built on github (build 217) from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T12:40:01
+    Built on github (build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T12:40:01
 .p
     
 .SH EXAMPLES

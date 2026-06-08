@@ -234,7 +234,11 @@ void readConfigurationFile()
 	if (!ExternalLiterals["build-commit"].empty()) {
         build_info += " from commit " + ExternalLiterals["build-commit"];
 		if (!ExternalLiterals["build-branch"].empty()) {
-		    build_info += " on branch " + ExternalLiterals["build-branch"];
+			if (ExternalLiterals["build-branch"]=="dev" || ExternalLiterals["build-branch"]=="stable") {
+				build_info += " of version " + ExternalLiterals["version"];
+			} else {
+			    build_info += " on branch " + ExternalLiterals["build-branch"];
+			}
 		}
 	}
 	build_info += " at " + ExternalLiterals["build-time"];
