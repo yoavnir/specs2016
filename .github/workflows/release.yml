@@ -30,6 +30,9 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Mark workspace as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Dump event release payload
       env:
         EVENT: ${{ toJSON(github.event.release) }}
@@ -357,6 +360,9 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+
+    - name: Mark workspace as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Install build tools and Python 3.12
       run: |
