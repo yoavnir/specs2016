@@ -186,10 +186,12 @@ TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
 LIBOBJS = $(CCSRC:.cc=.{})
 TESTOBJS = $(TESTSRC:.cc=.{})
 
-#default goal
-some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
+BUILD_INFO = utils/build_info.h
 
-all: directories $(TEST_EXES)
+#default goal
+some: directories $(BUILD_INFO) $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
+
+all: directories $(BUILD_INFO) $(TEST_EXES)
 
 %.obj : %.cc
 	$(CXX) $(CPPFLAGS) /Fo$@ /c $<
@@ -212,6 +214,11 @@ cached_depends_vs = "-include Makefile.cached_depends_vs"
 
 body2 = \
 """	
+.PHONY: utils/build_info.h
+
+utils/build_info.h:
+	@python3 generate_build_info.py
+
 run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
@@ -761,6 +768,10 @@ if CFG_python:
 		"python3 $(TESTS_DIR)/recfm_tests.py",
 		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
 	)
+
+# Generate build_info.h (so it exists before the first compile; it is
+# regenerated on every build by the utils/build_info.h Makefile target)
+subprocess.call([sys.executable, "generate_build_info.py"])
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))

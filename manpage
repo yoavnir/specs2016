@@ -2272,11 +2272,11 @@ The system also defines some labels:
 .IP "version" 3
 This returns the version of 
 .B specs, 
-for example "v0.6"
+for example "1.0.0"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 
-    specs @version 1
+    specs @version
 .IP "cols" 3
 contains the number of columns in the display. You can override this in the configuration file. For example, the following prints a right-justified string. 
 .P
@@ -2293,6 +2293,37 @@ depending on whether support for python function is available.
 contains a string describing this build. For example:
 .p
     POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
+.IP "build-commit" 3
+contains the git commit hash (short form) of the build. For example:
+.p
+    b74fcb1
+.IP "build-branch" 3
+contains the git branch name of the build. May be empty if not available. For example:
+.p
+    dev-1.0.0
+.IP "build-time" 3
+contains the UTC timestamp of when the build was created. Format is
+.B yyyy-MM-ddTHH:mm:ss.
+For example:
+.p
+    2026-06-08T08:22:52
+.IP "build-source" 3
+contains either
+.B local
+or
+.B github
+depending on where the build was created.
+.IP "build-number" 3
+contains the build number from GitHub Actions (github.run_number). Empty for local builds.
+.IP "build-info" 3
+contains a composite string with all build information. For example:
+.p
+    Built locally from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T13:01:18
+.p
+or
+.p
+    Built on github (build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T12:40:01
+.p
     
 .SH EXAMPLES
 `ls -l` yields this:

@@ -65,6 +65,8 @@ void readConfigurationFile();
 
 bool configSpecLiteralExists(std::string& key);
 
+bool configSpecLiteralDefined(std::string& key);
+
 std::string& configSpecLiteralGet(std::string& key);
 
 std::string& configSpecLiteralGetWithDefault(std::string& key, std::string& _default);

@@ -19,6 +19,7 @@
 #include "utils/PythonIntf.h"
 #include "utils/aluRegex.h"
 #include "utils/aluFunctions.h"
+#include "utils/build_info.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -212,12 +213,48 @@ void readConfigurationFile()
 	if (0==ExternalLiterals.count("rows")) {
 		ExternalLiterals["rows"] = getTerminalRowsAndColumns(true);
 	}
+
+	// Build information
+	ExternalLiterals["build-commit"] = dequote(STRINGIFY(SPECS_BUILD_COMMIT));
+	ExternalLiterals["build-branch"] = dequote(STRINGIFY(SPECS_BUILD_BRANCH));
+	ExternalLiterals["build-time"] = dequote(STRINGIFY(SPECS_BUILD_TIME));
+	ExternalLiterals["build-source"] = dequote(STRINGIFY(SPECS_BUILD_SOURCE));
+	ExternalLiterals["build-number"] = dequote(STRINGIFY(SPECS_BUILD_NUMBER));
+
+	// Compose build-info
+	std::string build_info = "Built ";
+	if (ExternalLiterals["build-source"] == "github") {
+	    build_info += "on github";
+		if (!ExternalLiterals["build-number"].empty()) {
+		    build_info += " (build " + ExternalLiterals["build-number"] + ")";
+		}
+	} else {
+	    build_info += "locally";
+	}
+	if (!ExternalLiterals["build-commit"].empty()) {
+        build_info += " from commit " + ExternalLiterals["build-commit"];
+		if (!ExternalLiterals["build-branch"].empty()) {
+			if (ExternalLiterals["build-branch"]=="dev" || ExternalLiterals["build-branch"]=="stable") {
+				build_info += " of version " + ExternalLiterals["version"];
+			} else {
+			    build_info += " on branch " + ExternalLiterals["build-branch"];
+			}
+		}
+	}
+	build_info += " at " + ExternalLiterals["build-time"];
+	ExternalLiterals["build-info"] = build_info;
 }
 
 bool configSpecLiteralExists(std::string& key)
 {
 	auto it = ExternalLiterals.find(key);
 	return it != ExternalLiterals.end() && !it->second.empty();
+}
+
+bool configSpecLiteralDefined(std::string& key)
+{
+	auto it = ExternalLiterals.find(key);
+	return it != ExternalLiterals.end();
 }
 
 std::string& configSpecLiteralGet(std::string& key)
