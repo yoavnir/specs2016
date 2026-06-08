@@ -200,6 +200,12 @@ There are some pre-configured labels that do not need to be explicitly defined:
 * platform - contains a string with the OS type, the compiler and the variation used to build *specs*
 * cols - contains the number of screen columns - useful for composed output placement.
 * rows - contains the number of screen rows.
+* build-commit - contains the git commit hash (short form) of the build
+* build-branch - contains the git branch name (may be empty)
+* build-time - contains the UTC timestamp when the build was created (format: `yyyy-MM-ddTHH:mm:ss`)
+* build-source - contains either `local` or `github`
+* build-number - contains the GitHub Actions build number (empty for local builds)
+* build-info - contains a composite string with all build information
       
 Examples
 ========

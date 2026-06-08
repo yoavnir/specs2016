@@ -493,7 +493,7 @@ CONT1:
 
 	/* Check for a configuration literal */
 	std::string key = arg.substr(1);
-	if ((arg[0]=='@') && (arg.length() > 1) && (configSpecLiteralExists(key))) {
+	if ((arg[0]=='@') && (arg.length() > 1) && (configSpecLiteralDefined(key))) {
 		std::string literal = configSpecLiteralGet(key);
 		pVec->insert(pVec->end(),
 				Token(TokenListType__LITERAL, nullptr /* range */,
