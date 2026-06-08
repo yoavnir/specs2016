@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Generate build_info.h before compilation -->
+  <Target Name="GenerateBuildInfo" BeforeTargets="ClCompile">
+    <!-- Set build time to current UTC time -->
+    <PropertyGroup>
+      <BuildTime>$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss"))</BuildTime>
+      <BuildSource Condition="'$(SPECS_BUILD_SOURCE)' == ''">local</BuildSource>
+      <BuildSource Condition="'$(SPECS_BUILD_SOURCE)' != ''">$(SPECS_BUILD_SOURCE)</BuildSource>
+      <BuildNumber>$(SPECS_BUILD_NUMBER)</BuildNumber>
+    </PropertyGroup>
+
+    <!-- Get git commit hash -->
+    <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="BuildCommit" />
+    </Exec>
+
+    <!-- Get git branch name -->
+    <Exec Command="git branch --show-current" ConsoleToMSBuild="true" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="BuildBranch" />
+    </Exec>
+
+    <!-- Trim whitespace from outputs -->
+    <PropertyGroup>
+      <BuildCommit>$(BuildCommit.Trim())</BuildCommit>
+      <BuildBranch>$(BuildBranch.Trim())</BuildBranch>
+    </PropertyGroup>
+
+    <!-- Generate build_info.h -->
+    <ItemGroup>
+      <BuildInfoLines Include="#define SPECS_BUILD_COMMIT &quot;$(BuildCommit)&quot;" />
+      <BuildInfoLines Include="#define SPECS_BUILD_BRANCH &quot;$(BuildBranch)&quot;" />
+      <BuildInfoLines Include="#define SPECS_BUILD_TIME   &quot;$(BuildTime)&quot;" />
+      <BuildInfoLines Include="#define SPECS_BUILD_SOURCE &quot;$(BuildSource)&quot;" />
+      <BuildInfoLines Include="#define SPECS_BUILD_NUMBER &quot;$(BuildNumber)&quot;" />
+    </ItemGroup>
+
+    <WriteLinesToFile File="utils\build_info.h" Lines="@(BuildInfoLines)" Overwrite="true" />
+
+    <Message Text="Generated utils\build_info.h" Importance="high" />
+  </Target>
+</Project>
