@@ -186,12 +186,18 @@ TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
 LIBOBJS = $(CCSRC:.cc=.{})
 TESTOBJS = $(TESTSRC:.cc=.{})
 
-BUILD_INFO = utils/build_info.h
+# build_info.h is regenerated only when one of the core objects would be
+# rebuilt (Config.o is excluded to avoid a cycle, since Config.cc includes
+# build_info.h).  This keeps an up-to-date tree a no-op instead of forcing a
+# spurious header regeneration, Config.o recompile and relink on every build.
+BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
 
 #default goal
-some: directories $(BUILD_INFO) $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
+some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
 
-all: directories $(BUILD_INFO) $(TEST_EXES)
+all: directories $(TEST_EXES)
+
+specs: directories $(EXE_DIR)/specs
 
 %.obj : %.cc
 	$(CXX) $(CPPFLAGS) /Fo$@ /c $<
@@ -214,9 +220,9 @@ cached_depends_vs = "-include Makefile.cached_depends_vs"
 
 body2 = \
 """	
-.PHONY: utils/build_info.h
+.PHONY: specs
 
-utils/build_info.h:
+utils/build_info.h: $(BUILD_INFO_DEPS)
 	@python3 generate_build_info.py
 
 run_tests: $(TEST_EXES)
