@@ -1,11 +1,32 @@
 #include <cstring>
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <filesystem>
 #include "processing/Config.h"
 #include "utils/platform.h"
 
 typedef std::vector<std::string> StringVector;
+
+StringVector SystemDefinedLabels = {
+    "@version",
+    "@cols",
+    "@rows",
+    "@python",
+    "@platform",
+    "@build-commit",
+    "@build-branch",
+    "@build-time",
+    "@build-source",
+    "@build-number",
+    "@build-info"
+};
+
+static void AddToSystemDefineLabels(std::string& key, std::string& value)
+{
+    key.pop_back();   // remove the final colon
+    SystemDefinedLabels.push_back("@" + key);
+}
 
 void GetFilesByPrefix(StringVector& sv, const char* path, std::string& prefix)
 {
@@ -35,8 +56,32 @@ static void getFilenameVector(StringVector& sv, std::string& incomplete, std::st
     }
 }
 
+int CompleteUncertain_SystemLabels(std::string& incomplete)
+{
+    readConfigurationFile(AddToSystemDefineLabels);
+    StringVector vec;
+    for (auto s : SystemDefinedLabels) {
+        if (0==s.compare(0, incomplete.size(), incomplete)) {
+            vec.push_back(s);
+        }
+    }
+
+    // sort the vector
+    std::sort(vec.begin(), vec.end());
+
+    for (auto s : vec) {
+        std::cout << s << "\n";
+    }
+
+    return 0;
+}
+
 int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::string& line)
 {
+    if ('@'==incomplete[0]) {
+        return CompleteUncertain_SystemLabels(incomplete);
+    }
+
     StringVector sv;
 
     getFilenameVector(sv, incomplete, prevToken);
@@ -48,8 +93,33 @@ int CompleteUncertain(std::string& incomplete, std::string& prevToken, std::stri
     return 0;
 }
 
+int CompleteIfUnambiguous_SystemLabels(std::string& incomplete)
+{
+    readConfigurationFile(AddToSystemDefineLabels);
+    std::string res;
+    for (auto s : SystemDefinedLabels) {
+        if (0==s.compare(0, incomplete.size(), incomplete)) {
+            if (res.empty()) { // First match
+                res = s;
+            } else { // not-first match
+                // trim non-matching characters
+                while (s.compare(0,res.size(), res)) {
+                    res.pop_back();
+                }
+            }
+        }
+    }
+
+    std::cout << res;
+    return 0;
+}
+
 int CompleteIfUnambiguous(std::string& incomplete, std::string& prevToken, std::string& line)
 {
+    if ('@'==incomplete[0]) {
+        return CompleteIfUnambiguous_SystemLabels(incomplete);
+    }
+
     StringVector sv;
 
     getFilenameVector(sv, incomplete, prevToken);

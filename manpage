@@ -2302,9 +2302,9 @@ contains the git branch name of the build. May be empty if not available. For ex
 .p
     dev-1.0.0
 .IP "build-time" 3
-contains the UTC timestamp of when the build was created. Format is
+contains the timestamp of when the build was created. Format is
 .B yyyy-MM-ddTHH:mm:ss.
-For example:
+It has local time for local builds, and UTC for GitHub builds. For example:
 .p
     2026-06-08T08:22:52
 .IP "build-source" 3
@@ -2318,113 +2318,78 @@ contains the build number from GitHub Actions (github.run_number). Empty for loc
 .IP "build-info" 3
 contains a composite string with all build information. For example:
 .p
-    Built locally from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T13:01:18
+    Built locally from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T13:01:18 local
 .p
 or
 .p
-    Built on github (build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T12:40:01
+    Built on github (build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T10:01:18 UTC
 .p
     
 .SH EXAMPLES
 `ls -l` yields this:
 
-    total 352
-    -rw-r--r--@ 1 ynir  admin    574 Aug 25  2009 Makefile
-    -rw-r--r--@ 1 ynir  admin   3542 Nov 23 00:21 README
-    -rw-r--r--@ 1 ynir  admin    362 Nov 19 08:31 conversion.h
-    -rw-r--r--  1 ynir  admin    984 Nov 11 17:45 ls.txt
-    -rw-r--r--@ 1 ynir  admin   2233 Nov 23 00:03 main.cc
-    -rw-r--r--  1 ynir  admin   9412 Nov 23 00:11 main.o
-    -rw-r--r--@ 1 ynir  admin   6567 Nov 23 00:09 spec_build.cc
-    -rw-r--r--  1 ynir  admin  16776 Nov 23 00:11 spec_build.o
-    -rw-r--r--@ 1 ynir  admin   5494 Nov 19 08:30 spec_convert.cc
-    -rw-r--r--  1 ynir  admin  17004 Nov 23 00:11 spec_convert.o
-    -rw-r--r--@ 1 ynir  admin  11419 Nov 23 00:10 spec_params.cc
-    -rw-r--r--  1 ynir  admin  21080 Nov 23 00:11 spec_params.o
-    -rw-r--r--@ 1 ynir  admin    375 Nov 11 09:29 spec_vars.cc
-    -rw-r--r--  1 ynir  admin   4800 Nov 23 00:11 spec_vars.o
-    -rwxr-xr-x  1 ynir  admin  36740 Nov 23 00:11 specs
-    -rw-r--r--@ 1 ynir  admin   1547 Nov 23 00:10 specs.h
+    total 96
+    -rw-rw-r-- 1 sio sio 16432 Jun  1 12:49 dataField.cc
+    -rw-rw-r-- 1 sio sio  6187 Jun  4 12:16 InputPart.cc
+    -rw-rw-r-- 1 sio sio 11717 Jun  4 12:16 item.h
+    -rw-rw-r-- 1 sio sio 35974 Jun  4 12:16 specItems.cc
+    -rw-rw-r-- 1 sio sio  1144 Jun  4 12:16 specItems.h
+    -rw-rw-r-- 1 sio sio 13953 Jun  1 12:49 splitItem.cc
 
 Let's run it though a spec:
 
-    ls -l | specs 12-* 1 redo w2 1 w4 d2x 8.8 r w8 17
+    ls -l | specs 12-* 1 REDO IF "wordcount()>=8" THEN w2 1 w4 d2x 8.8 RIGHT w8 17
     
 The first spec unit converts it to this:
 
-    1 ynir  admin    574 Aug 25  2009 Makefile
-    1 ynir  admin   3542 Nov 23 00:21 README
-    1 ynir  admin    362 Nov 19 08:31 conversion.h
-    1 ynir  admin    984 Nov 11 17:45 ls.txt
-    1 ynir  admin   2233 Nov 23 00:03 main.cc
-    1 ynir  admin   9412 Nov 23 00:11 main.o
-    1 ynir  admin   6567 Nov 23 00:09 spec_build.cc
-    1 ynir  admin  16776 Nov 23 00:11 spec_build.o
-    1 ynir  admin   5494 Nov 19 08:30 spec_convert.cc
-    1 ynir  admin  17004 Nov 23 00:11 spec_convert.o
-    1 ynir  admin  11419 Nov 23 00:10 spec_params.cc
-    1 ynir  admin  21080 Nov 23 00:11 spec_params.o
-    1 ynir  admin    375 Nov 11 09:29 spec_vars.cc
-    1 ynir  admin   4800 Nov 23 00:11 spec_vars.o
-    1 ynir  admin  36740 Nov 23 00:11 specs
-    1 ynir  admin   1547 Nov 23 00:10 specs.h
+    1 sio sio 16432 Jun  1 12:49 dataField.cc
+    1 sio sio  6187 Jun  4 12:16 InputPart.cc
+    1 sio sio 11717 Jun  4 12:16 item.h
+    1 sio sio 35974 Jun  4 12:16 specItems.cc
+    1 sio sio  1144 Jun  4 12:16 specItems.h
+    1 sio sio 13953 Jun  1 12:49 splitItem.cc
 
-Then after the redo, we get this:
+Then after the REDO arm, we get this:
 
-    ynir        23e Makefile
-    ynir        dd6 README
-    ynir        16a conversion.h
-    ynir        3d8 ls.txt
-    ynir        8b9 main.cc
-    ynir       24c4 main.o
-    ynir       19a7 spec_build.cc
-    ynir       4188 spec_build.o
-    ynir       1576 spec_convert.cc
-    ynir       426c spec_convert.o
-    ynir       2c9b spec_params.cc
-    ynir       5258 spec_params.o
-    ynir        eae spec_vars.cc
-    ynir       12c0 spec_vars.o
-    ynir       8f84 specs
-    ynir        60b specs.h
-
+    sio        4030 dataField.cc
+    sio        182b InputPart.cc
+    sio        2dc5 item.h
+    sio        8c86 specItems.cc
+    sio         478 specItems.h
+    sio        3681 splitItem.cc
       
 Alternatively, let's arrange this on multiple lines:
 
-    ls -l | specs w9 1 write "Owner:" 3 w3 10 write "Size:" 3 w5 10-20 r
+    specs -C "ls -l" w9 1 write "Owner:" 3 w3 10 write "Size:" 3 w5 10-20 r
 
-    Makefile
-      Owner: ynir
-      Size:          574
-    README
-      Owner: ynir
-      Size:         5834
-    conversion.h
-      Owner: ynir
-      Size:          362
-    list.txt
-      Owner: ynir
-      Size:          978
-    ls.txt
-      Owner: ynir
-      Size:          984
-    main.cc
-      Owner: ynir
-      Size:         2233
-    main.o
-      Owner: ynir
-      Size:         9412
+    Owner:
+    Size:              r
+    dataField.cc
+    Owner: sio
+    Size:  16432       r
+    InputPart.cc
+    Owner: sio
+    Size:  6187        r
+    item.h
+    Owner: sio
+    Size:  11717       r
+    specItems.cc
+    Owner: sio
+    Size:  35974       r
+    specItems.h
+    Owner: sio
+    Size:  1144        r
+    splitItem.cc
+    Owner: sio
+    Size:  13953       r
 
 Finally, let's make our own version of the multi-column display:
 
-    ls -l | specs w9 1 read w9 26 read w9 51
-                             Makefile                 README
-    conversion.h             main.cc                  main.o
-    spec_build.cc            spec_build.o             spec_convert.cc
-    spec_convert.o           spec_params.cc           spec_params.o
-    spec_vars.cc             spec_vars.o              specs
-    specs.h
+    specs -C "ls -l" w9 1 read w9 26 read w9 51
 
+                            dataField.cc             InputPart.cc
+    item.h                  specItems.cc             specItems.h
+    splitItem.cc
 
 .SH SEE ALSO
 sed(1), awk(1)

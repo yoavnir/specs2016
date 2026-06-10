@@ -148,7 +148,7 @@ static std::string getTerminalRowsAndColumns(bool bGetRows)
 
 }
 
-void readConfigurationFile()
+void readConfigurationFile(useKeyValueCB cb)
 {
 	std::string line;
 	unsigned int lineCounter = 0;
@@ -194,7 +194,11 @@ void readConfigurationFile()
 				value = line.substr(idx2, idx-idx2);
 			}
 
-			useKeyValue(key, value);
+			if (cb) {
+				(*cb)(key, value);
+			} else {
+				useKeyValue(key, value);
+			}
 		}
 	} else {
 	}
@@ -241,7 +245,7 @@ void readConfigurationFile()
 			}
 		}
 	}
-	build_info += " at " + ExternalLiterals["build-time"];
+	build_info += " at " + ExternalLiterals["build-time"] + (ExternalLiterals["build-source"] == "github" ? " UTC" : " local");
 	ExternalLiterals["build-info"] = build_info;
 }
 
