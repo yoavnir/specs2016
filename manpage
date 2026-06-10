@@ -2302,9 +2302,9 @@ contains the git branch name of the build. May be empty if not available. For ex
 .p
     dev-1.0.0
 .IP "build-time" 3
-contains the UTC timestamp of when the build was created. Format is
+contains the timestamp of when the build was created. Format is
 .B yyyy-MM-ddTHH:mm:ss.
-For example:
+It has local time for local builds, and UTC for GitHub builds. For example:
 .p
     2026-06-08T08:22:52
 .IP "build-source" 3
@@ -2318,11 +2318,11 @@ contains the build number from GitHub Actions (github.run_number). Empty for loc
 .IP "build-info" 3
 contains a composite string with all build information. For example:
 .p
-    Built locally from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T13:01:18
+    Built locally from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T13:01:18 local
 .p
 or
 .p
-    Built on github (build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T12:40:01
+    Built on github (build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T10:01:18 UTC
 .p
     
 .SH EXAMPLES

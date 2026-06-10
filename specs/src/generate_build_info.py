@@ -55,15 +55,18 @@ if build_branch == "":
     if build_branch:
         report_success("SPECS_BUILD_BRANCH (from SPECS_BRANCH env)", build_branch)
 
-# Get UTC build time
-build_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-report_success("SPECS_BUILD_TIME", build_time)
-
 # Get build source and number from environment
 build_source = os.environ.get("SPECS_BUILD_SOURCE", "local")
 report_success("SPECS_BUILD_SOURCE", build_source)
 build_number = os.environ.get("SPECS_BUILD_NUMBER", "")
 report_success("SPECS_BUILD_NUMBER", build_number)
+
+# Get UTC build time
+if build_source == "local":
+    build_time = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+else:
+    build_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+report_success("SPECS_BUILD_TIME", build_time)
 
 # Write the header file
 with open("utils/build_info.h", "w") as f:
