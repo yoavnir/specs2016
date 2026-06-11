@@ -242,10 +242,12 @@ $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
 		
 install_mac: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
+	cp $(EXE_DIR)/specs-autocomplete /usr/local/bin/
 	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
+	cp ../../.github/packaging/specs-completion.zsh /usr/local/share/zsh/site-functions/_specs
 
 install_linux: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
