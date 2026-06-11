@@ -78,6 +78,7 @@ jobs:
         cp specs/exe/specs rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         cp specs.1.gz rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
+        cp .github/packaging/specs-completion.bash rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         
     - name: Bundle Python stdlib for RPM
       run: |
@@ -405,12 +406,14 @@ jobs:
         mkdir -p deb-root/usr/local/bin
         mkdir -p deb-root/usr/share/specs
         mkdir -p deb-root/usr/lib/specs
+        mkdir -p deb-root/etc/bash_completion.d
         mkdir -p deb-root/DEBIAN
         cp specs/exe/specs deb-root/usr/local/bin/
         cp specs/exe/specs-autocomplete deb-root/usr/local/bin/
         chmod 755 deb-root/usr/local/bin/specs
         chmod 755 deb-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz deb-root/usr/share/specs/
+        install -m 644 .github/packaging/specs-completion.bash deb-root/etc/bash_completion.d/specs
         sed "s/@VERSION@/${SPECS_VERSION#v}/g; s/Architecture: amd64/Architecture: ${{ matrix.arch }}/g" .github/packaging/control.in > deb-root/DEBIAN/control
         cp .github/packaging/postinst deb-root/DEBIAN/
         cp .github/packaging/postrm deb-root/DEBIAN/

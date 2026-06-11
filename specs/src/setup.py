@@ -254,7 +254,9 @@ install_linux: $(EXE_DIR)/specs specs.1.gz
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
-	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" BASHRC | /usr/local/bin/specs -o BASHRC 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
+	$(MKDIR_C) /etc/bash_completion.d
+	cp ../../.github/packaging/specs-completion.bash /etc/bash_completion.d/specs
+	if [ -f BASHRC ]; then grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" BASHRC > BASHRC.specs.tmp || true; mv BASHRC.specs.tmp BASHRC; fi
 
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
