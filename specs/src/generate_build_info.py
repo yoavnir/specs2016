@@ -60,6 +60,10 @@ build_source = os.environ.get("SPECS_BUILD_SOURCE", "local")
 report_success("SPECS_BUILD_SOURCE", build_source)
 build_number = os.environ.get("SPECS_BUILD_NUMBER", "")
 report_success("SPECS_BUILD_NUMBER", build_number)
+build_runid = os.environ.get("SPECS_BUILD_RUNID", "")
+report_success("SPECS_BUILD_RUNID", build_runid)
+build_url = os.environ.get("SPECS_BUILD_URL", "")
+report_success("SPECS_BUILD_URL", build_url)
 
 # Get UTC build time
 if build_source == "local":
@@ -75,5 +79,7 @@ with open("utils/build_info.h", "w") as f:
     f.write('#define SPECS_BUILD_TIME   "{}"\n'.format(build_time))
     f.write('#define SPECS_BUILD_SOURCE "{}"\n'.format(build_source))
     f.write('#define SPECS_BUILD_NUMBER "{}"\n'.format(build_number))
+    f.write('#define SPECS_BUILD_RUNID  "{}"\n'.format(build_runid))
+    f.write('#define SPECS_BUILD_URL    "{}"\n'.format(build_url))
 
 print("Generated utils/build_info.h")

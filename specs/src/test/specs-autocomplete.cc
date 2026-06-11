@@ -19,6 +19,8 @@ StringVector SystemDefinedLabels = {
     "@build-time",
     "@build-source",
     "@build-number",
+    "@build-runid",
+    "@build-url",
     "@build-info"
 };
 

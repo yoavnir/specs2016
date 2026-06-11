@@ -8,6 +8,8 @@
       <BuildSource Condition="'$(SPECS_BUILD_SOURCE)' == ''">local</BuildSource>
       <BuildSource Condition="'$(SPECS_BUILD_SOURCE)' != ''">$(SPECS_BUILD_SOURCE)</BuildSource>
       <BuildNumber>$(SPECS_BUILD_NUMBER)</BuildNumber>
+      <BuildRunId>$(SPECS_BUILD_RUNID)</BuildRunId>
+      <BuildUrl>$(SPECS_BUILD_URL)</BuildUrl>
     </PropertyGroup>
 
     <!-- Get git commit hash -->
@@ -38,6 +40,8 @@
       <BuildInfoLines Include="#define SPECS_BUILD_TIME   &quot;$(BuildTime)&quot;" />
       <BuildInfoLines Include="#define SPECS_BUILD_SOURCE &quot;$(BuildSource)&quot;" />
       <BuildInfoLines Include="#define SPECS_BUILD_NUMBER &quot;$(BuildNumber)&quot;" />
+      <BuildInfoLines Include="#define SPECS_BUILD_RUNID  &quot;$(BuildRunId)&quot;" />
+      <BuildInfoLines Include="#define SPECS_BUILD_URL    &quot;$(BuildUrl)&quot;" />
     </ItemGroup>
 
     <WriteLinesToFile File="utils\build_info.h" Lines="@(BuildInfoLines)" Overwrite="true" />

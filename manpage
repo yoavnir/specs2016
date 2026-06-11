@@ -2315,6 +2315,10 @@ or
 depending on where the build was created.
 .IP "build-number" 3
 contains the build number from GitHub Actions (github.run_number). Empty for local builds.
+.IP "build-runid" 3
+contains the 11-digit build id from GitHub Actions (github.run_id). Empty for local builds.
+.IP "build-url" 3
+contains the build URL for the GitHub build. Empty for local builds.
 .IP "build-info" 3
 contains a composite string with all build information. For example:
 .p
@@ -2322,7 +2326,7 @@ contains a composite string with all build information. For example:
 .p
 or
 .p
-    Built on github (build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T10:01:18 UTC
+    Built on github (id 27334782912; build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T10:01:18 UTC
 .p
     
 .SH EXAMPLES
