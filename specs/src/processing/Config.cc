@@ -224,6 +224,8 @@ void readConfigurationFile(useKeyValueCB cb)
 	ExternalLiterals["build-time"] = dequote(STRINGIFY(SPECS_BUILD_TIME));
 	ExternalLiterals["build-source"] = dequote(STRINGIFY(SPECS_BUILD_SOURCE));
 	ExternalLiterals["build-number"] = dequote(STRINGIFY(SPECS_BUILD_NUMBER));
+	ExternalLiterals["build-runid"] = dequote(STRINGIFY(SPECS_BUILD_RUNID));
+	ExternalLiterals["build-url"] = dequote(STRINGIFY(SPECS_BUILD_URL));
 
 	// Compose build-info
 	std::string build_info = "Built ";
