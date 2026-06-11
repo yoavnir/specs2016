@@ -58,7 +58,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
@@ -134,7 +134,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
@@ -218,7 +218,7 @@ jobs:
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }}
 
     - name: Verify binary
-      run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
+      run: specs\bin\Release\specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare standalone executable
       shell: bash
@@ -392,7 +392,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
