@@ -10,7 +10,7 @@ env:
   SPECS_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
   SPECS_BUILD_SOURCE: github
   SPECS_BUILD_RUNID: ${{ github.run_id }}
-  SPECS_BUILD_URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+  SPECS_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
   build-linux:
