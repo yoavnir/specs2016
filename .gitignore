@@ -51,3 +51,7 @@ specs/src/gdb/__pycache__
 
 # Generated build info
 specs/src/utils/build_info.h
+
+# AI agents
+.devin
+
