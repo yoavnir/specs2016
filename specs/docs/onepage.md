@@ -205,6 +205,8 @@ There are some pre-configured labels that do not need to be explicitly defined:
 * build-time - contains the timestamp when the build was created (format: `yyyy-MM-ddTHH:mm:ss`). It's local time for local builds, or UTC for GitHub builds.
 * build-source - contains either `local` or `github`
 * build-number - contains the GitHub Actions build number (empty for local builds)
+* build-runid - contains the 11-digit GitHub Actions run id (empty for local builds)
+* build-url - contains the build URL for the GitHub build (Empty for local builds)
 * build-info - contains a composite string with all build information
       
 Examples

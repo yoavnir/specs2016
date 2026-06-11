@@ -42,7 +42,7 @@ jobs:
       run: make all
 
     - name: Test specs executable
-      run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info"
+      run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: make check
       working-directory: specs/src
