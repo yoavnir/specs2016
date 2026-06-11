@@ -172,7 +172,7 @@ int main(int argc, char** argv)
         try { cursorPos = std::stoul(safe); } catch (const std::exception&) {}
     }
     safe = getenv("COMP_TYPE");
-    char type = '\t';
+    char type = '?';
     if (safe) {
         try { type = char(std::stoi(safe)); } catch (const std::exception&) {}
     }
