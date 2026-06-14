@@ -1,0 +1,30 @@
+#!/bin/bash
+# Enable zsh completion for specs by making sure /etc/zshrc loads the
+# completion functions installed under /usr/local/share/zsh/site-functions.
+#
+# This script is used both by the macOS .pkg installer (as its postinstall
+# script) and by the local "make install" target, so the behaviour stays
+# identical between the two installation paths.
+#
+# It is idempotent: the whole block is wrapped in sentinel markers and is only
+# appended when those markers are not already present, so running it any number
+# of times never produces duplicate fpath entries or duplicate compinit calls.
+set -e
+
+ZSHRC="/etc/zshrc"
+MARKER="# >>> specs completion >>>"
+
+if ! grep -qF "$MARKER" "$ZSHRC" 2>/dev/null; then
+    cat >> "$ZSHRC" <<'EOF'
+
+# >>> specs completion >>>
+typeset -U fpath
+fpath=(/usr/local/share/zsh/site-functions $fpath)
+
+autoload -Uz compinit
+compinit
+# <<< specs completion <<<
+EOF
+fi
+
+exit 0
