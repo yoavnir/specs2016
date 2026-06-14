@@ -149,16 +149,25 @@ jobs:
       run: |
         mkdir -p pkg-root/usr/local/bin
         mkdir -p pkg-root/usr/local/share/man/man1
+        mkdir -p pkg-root/usr/local/share/zsh/site-functions
         cp specs/exe/specs pkg-root/usr/local/bin/
         cp specs/exe/specs-autocomplete pkg-root/usr/local/bin/
         chmod 755 pkg-root/usr/local/bin/specs
         chmod 755 pkg-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz pkg-root/usr/local/share/man/man1/
+        cp .github/packaging/specs-completion.zsh pkg-root/usr/local/share/zsh/site-functions/_specs
+
+    - name: Prepare pkg scripts
+      run: |
+        mkdir -p pkg-scripts
+        cp .github/packaging/postinstall_macos pkg-scripts/postinstall
+        chmod 755 pkg-scripts/postinstall
 
     - name: Build .pkg
       run: |
         pkgbuild \
           --root pkg-root \
+          --scripts pkg-scripts \
           --identifier com.github.yoavnir.specs \
           --version "${SPECS_VERSION#v}" \
           --install-location / \
