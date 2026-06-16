@@ -9,6 +9,9 @@ on:
 env:
   SPECS_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  SPECS_BUILD_SOURCE: github
+  SPECS_BUILD_RUNID: ${{ github.run_id }}
+  SPECS_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
   build-linux:
@@ -40,7 +43,7 @@ jobs:
       run: make all
 
     - name: Test specs executable
-      run:  specs/exe/specs "@version" WRITE "@platform"
+      run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: make check
       working-directory: specs/src
@@ -68,7 +71,7 @@ jobs:
       run: make all
 
     - name: Test specs executable
-      run:  specs/exe/specs "@version" WRITE "@platform"
+      run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info"
 
     - name: make check
       working-directory: specs/src
@@ -92,7 +95,7 @@ jobs:
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64
 
     - name: Test specs executable
-      run: specs/bin/Release/specs.exe "@version" WRITE "@platform"
+      run: specs/bin/Release/specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info"
 
   build-windows-python:
     runs-on: windows-latest
@@ -114,4 +117,4 @@ jobs:
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:EnablePython=true
 
     - name: Test specs executable
-      run: specs/bin/Release/specs.exe "@version" WRITE "@platform"
+      run: specs/bin/Release/specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info"

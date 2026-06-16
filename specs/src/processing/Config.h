@@ -61,9 +61,12 @@ CONFIG_PARAMS
 #define EXTERNAL_FUNC_ERR_ZERO    "zero"
 #define EXTERNAL_FUNC_ERR_NULLSTR "nullstr"
 
-void readConfigurationFile();
+typedef void (*useKeyValueCB)(std::string& key, std::string& value);
+void readConfigurationFile(useKeyValueCB cb = nullptr);
 
 bool configSpecLiteralExists(std::string& key);
+
+bool configSpecLiteralDefined(std::string& key);
 
 std::string& configSpecLiteralGet(std::string& key);
 

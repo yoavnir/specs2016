@@ -186,10 +186,18 @@ TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
 LIBOBJS = $(CCSRC:.cc=.{})
 TESTOBJS = $(TESTSRC:.cc=.{})
 
+# build_info.h is regenerated only when one of the core objects would be
+# rebuilt (Config.o is excluded to avoid a cycle, since Config.cc includes
+# build_info.h).  This keeps an up-to-date tree a no-op instead of forcing a
+# spurious header regeneration, Config.o recompile and relink on every build.
+BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
+
 #default goal
 some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
 
 all: directories $(TEST_EXES)
+
+specs: directories $(EXE_DIR)/specs
 
 %.obj : %.cc
 	$(CXX) $(CPPFLAGS) /Fo$@ /c $<
@@ -212,6 +220,11 @@ cached_depends_vs = "-include Makefile.cached_depends_vs"
 
 body2 = \
 """	
+.PHONY: specs
+
+utils/build_info.h: $(BUILD_INFO_DEPS)
+	@python3 generate_build_info.py
+
 run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
@@ -229,10 +242,14 @@ $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
 		
 install_mac: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
+	cp $(EXE_DIR)/specs-autocomplete /usr/local/bin/
 	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
+	$(MKDIR_C) /usr/local/share/zsh/site-functions
+	cp ../../.github/packaging/specs-completion.zsh /usr/local/share/zsh/site-functions/_specs
+	/bin/bash ../../.github/packaging/postinstall_macos
 
 install_linux: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
@@ -241,7 +258,8 @@ install_linux: $(EXE_DIR)/specs specs.1.gz
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
-	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" BASHRC | /usr/local/bin/specs -o BASHRC 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
+	$(MKDIR_C) /etc/bash_completion.d
+	cp ../../.github/packaging/specs-completion.bash /etc/bash_completion.d/specs
 
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
@@ -761,6 +779,10 @@ if CFG_python:
 		"python3 $(TESTS_DIR)/recfm_tests.py",
 		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
 	)
+
+# Generate build_info.h (so it exists before the first compile; it is
+# regenerated on every build by the utils/build_info.h Makefile target)
+subprocess.call([sys.executable, "generate_build_info.py"])
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))

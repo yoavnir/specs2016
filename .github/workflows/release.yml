@@ -13,6 +13,10 @@ env:
   SPECS_VERSION: ${{ github.event.release.tag_name }}
   SPECS_BRANCH: ${{ github.event.release.target_commitish }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  SPECS_BUILD_SOURCE: github
+  SPECS_BUILD_NUMBER: ${{ github.run_number }}
+  SPECS_BUILD_RUNID: ${{ github.run_id }}
+  SPECS_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
   build-linux:
@@ -20,9 +24,17 @@ jobs:
     container: 
       image: ubuntu:22.04
     steps:
+    - name: Install git (so checkout creates a real repository in the container)
+      run: |
+        DEBIAN_FRONTEND=noninteractive apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y git
+
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
+
+    - name: Mark workspace as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Dump event release payload
       env:
@@ -47,7 +59,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version" WRITE "@platform"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
@@ -69,6 +81,7 @@ jobs:
         cp specs/exe/specs rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         cp specs.1.gz rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
+        cp .github/packaging/specs-completion.bash rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         
     - name: Bundle Python stdlib for RPM
       run: |
@@ -122,7 +135,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version" WRITE "@platform"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
@@ -137,16 +150,25 @@ jobs:
       run: |
         mkdir -p pkg-root/usr/local/bin
         mkdir -p pkg-root/usr/local/share/man/man1
+        mkdir -p pkg-root/usr/local/share/zsh/site-functions
         cp specs/exe/specs pkg-root/usr/local/bin/
         cp specs/exe/specs-autocomplete pkg-root/usr/local/bin/
         chmod 755 pkg-root/usr/local/bin/specs
         chmod 755 pkg-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz pkg-root/usr/local/share/man/man1/
+        cp .github/packaging/specs-completion.zsh pkg-root/usr/local/share/zsh/site-functions/_specs
+
+    - name: Prepare pkg scripts
+      run: |
+        mkdir -p pkg-scripts
+        cp .github/packaging/postinstall_macos pkg-scripts/postinstall
+        chmod 755 pkg-scripts/postinstall
 
     - name: Build .pkg
       run: |
         pkgbuild \
           --root pkg-root \
+          --scripts pkg-scripts \
           --identifier com.github.yoavnir.specs \
           --version "${SPECS_VERSION#v}" \
           --install-location / \
@@ -206,7 +228,7 @@ jobs:
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }}
 
     - name: Verify binary
-      run: specs\bin\Release\specs.exe "@version" WRITE "@platform"
+      run: specs\bin\Release\specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare standalone executable
       shell: bash
@@ -292,7 +314,7 @@ jobs:
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }} /p:EnablePython=true
 
     - name: Verify binary
-      run: specs\bin\Release\specs.exe "@version" WRITE "@platform"
+      run: specs\bin\Release\specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare standalone executable
       shell: bash
@@ -338,9 +360,22 @@ jobs:
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container || '' }}
     steps:
+    - name: Install git (so checkout creates a real repository in the container)
+      run: |
+        if [ "$(id -u)" -eq 0 ]; then
+          APT="apt-get"
+        else
+          APT="sudo apt-get"
+        fi
+        DEBIAN_FRONTEND=noninteractive $APT update
+        DEBIAN_FRONTEND=noninteractive $APT install -y git
+
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
+
+    - name: Mark workspace as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Install build tools and Python 3.12
       run: |
@@ -367,7 +402,7 @@ jobs:
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version" WRITE "@platform"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
@@ -383,12 +418,14 @@ jobs:
         mkdir -p deb-root/usr/local/bin
         mkdir -p deb-root/usr/share/specs
         mkdir -p deb-root/usr/lib/specs
+        mkdir -p deb-root/etc/bash_completion.d
         mkdir -p deb-root/DEBIAN
         cp specs/exe/specs deb-root/usr/local/bin/
         cp specs/exe/specs-autocomplete deb-root/usr/local/bin/
         chmod 755 deb-root/usr/local/bin/specs
         chmod 755 deb-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz deb-root/usr/share/specs/
+        install -m 644 .github/packaging/specs-completion.bash deb-root/etc/bash_completion.d/specs
         sed "s/@VERSION@/${SPECS_VERSION#v}/g; s/Architecture: amd64/Architecture: ${{ matrix.arch }}/g" .github/packaging/control.in > deb-root/DEBIAN/control
         cp .github/packaging/postinst deb-root/DEBIAN/
         cp .github/packaging/postrm deb-root/DEBIAN/
