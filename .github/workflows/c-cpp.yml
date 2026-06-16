@@ -2,12 +2,13 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ dev, stable, dev-0.9.9, dev-1.0.0, dev-rolling-context]
+    branches: [ dev, stable, dev-0.9.9, dev-1.0.0, dev-nodejs-24]
   pull_request:
-    branches: [ dev, stable, dev-0.9.9, dev-1.0.0, dev-rolling-context]
+    branches: [ dev, stable, dev-0.9.9, dev-1.0.0, dev-nodejs-24]
 
 env:
   SPECS_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   SPECS_BUILD_SOURCE: github
   SPECS_BUILD_RUNID: ${{ github.run_id }}
   SPECS_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -17,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -29,7 +30,7 @@ jobs:
         echo "$PR_EVENT"
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -52,12 +53,12 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -80,12 +81,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Build specs (Debug)
       run: msbuild specs/specs.sln /p:Configuration=Debug /p:Platform=x64
@@ -100,17 +101,17 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Build specs with Python (Release)
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:EnablePython=true

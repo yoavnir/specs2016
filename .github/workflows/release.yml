@@ -12,6 +12,7 @@ on:
 env:
   SPECS_VERSION: ${{ github.event.release.tag_name }}
   SPECS_BRANCH: ${{ github.event.release.target_commitish }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   SPECS_BUILD_SOURCE: github
   SPECS_BUILD_NUMBER: ${{ github.run_number }}
   SPECS_BUILD_RUNID: ${{ github.run_id }}
@@ -28,7 +29,7 @@ jobs:
         DEBIAN_FRONTEND=noninteractive apt-get update
         DEBIAN_FRONTEND=noninteractive apt-get install -y git
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -108,7 +109,7 @@ jobs:
         rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/specs.spec
 
     - name: Upload RPM artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: linux-rpm
         path: rpmbuild/RPMS/**/*.rpm
@@ -116,12 +117,12 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -174,7 +175,7 @@ jobs:
           specs-${SPECS_VERSION#v}.pkg
 
     - name: Upload pkg artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: macos-pkg
         path: specs-*.pkg
@@ -182,12 +183,12 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Normalize Windows version metadata
       id: version
@@ -249,13 +250,13 @@ jobs:
       run: wix build -o specs-${{ steps.version.outputs.display }}.msi specs.wxs
 
     - name: Upload MSI artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-msi
         path: specs-*.msi
 
     - name: Upload standalone executable artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-exe
         path: specs-*-windows-x64.exe
@@ -263,17 +264,17 @@ jobs:
   build-windows-python:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Normalize Windows version metadata
       id: version
@@ -335,13 +336,13 @@ jobs:
       run: wix build -o specs-${{ steps.version.outputs.display }}-python312.msi specs-python.wxs
 
     - name: Upload MSI artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-msi-python
         path: specs-*-python312.msi
 
     - name: Upload standalone executable artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-exe-python
         path: specs-*-python312-windows-x64.exe
@@ -369,7 +370,7 @@ jobs:
         DEBIAN_FRONTEND=noninteractive $APT update
         DEBIAN_FRONTEND=noninteractive $APT install -y git
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -446,7 +447,7 @@ jobs:
         dpkg-deb --build deb-root specs_${SPECS_VERSION#v}_${{ matrix.arch }}.deb
 
     - name: Upload DEB artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: linux-deb-${{ matrix.arch }}
         path: specs_*.deb
@@ -458,7 +459,7 @@ jobs:
       contents: write
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         path: artifacts
 
@@ -466,7 +467,7 @@ jobs:
       run: find artifacts -type f
 
     - name: Upload release assets
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: |
           artifacts/linux-rpm/**/*.rpm
