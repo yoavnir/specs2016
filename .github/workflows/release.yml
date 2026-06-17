@@ -83,18 +83,29 @@ jobs:
         cp specs.1.gz rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         cp .github/packaging/specs-completion.bash rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         
-    - name: Bundle Python stdlib for RPM
+    - name: Bundle Python stdlib and shared library for RPM
       run: |
         PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
         SRCDIR=rpmbuild/SOURCES/specs-${SPECS_VERSION#v}
         mkdir -p ${SRCDIR}/python/lib/python${PYVER}
+        mkdir -p ${SRCDIR}/python/lib
         cp -r /usr/lib/python${PYVER}/* ${SRCDIR}/python/lib/python${PYVER}/
+        # Copy the shared libpython library
+        cp -L /usr/lib64/libpython${PYVER}.so.1.0 ${SRCDIR}/python/lib/ 2>/dev/null || \
+        cp -L /usr/lib/x86_64-linux-gnu/libpython${PYVER}.so.1.0 ${SRCDIR}/python/lib/ 2>/dev/null || true
         # Remove unnecessary files to reduce package size
         find ${SRCDIR}/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
         find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyc" -delete
         find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyo" -delete
         rm -rf ${SRCDIR}/python/lib/python${PYVER}/site-packages
         rm -rf ${SRCDIR}/python/lib/python${PYVER}/dist-packages
+
+    - name: Copy license files for RPM
+      run: |
+        SRCDIR=rpmbuild/SOURCES/specs-${SPECS_VERSION#v}
+        mkdir -p ${SRCDIR}/docs
+        cp LICENSE ${SRCDIR}/docs/
+        cp PYTHON_LICENSE ${SRCDIR}/docs/
         
     - name: Create RPM tarball
       run: |
@@ -151,12 +162,15 @@ jobs:
         mkdir -p pkg-root/usr/local/bin
         mkdir -p pkg-root/usr/local/share/man/man1
         mkdir -p pkg-root/usr/local/share/zsh/site-functions
+        mkdir -p pkg-root/usr/local/share/doc/specs
         cp specs/exe/specs pkg-root/usr/local/bin/
         cp specs/exe/specs-autocomplete pkg-root/usr/local/bin/
         chmod 755 pkg-root/usr/local/bin/specs
         chmod 755 pkg-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz pkg-root/usr/local/share/man/man1/
         cp .github/packaging/specs-completion.zsh pkg-root/usr/local/share/zsh/site-functions/_specs
+        cp LICENSE pkg-root/usr/local/share/doc/specs/
+        cp PYTHON_LICENSE pkg-root/usr/local/share/doc/specs/
 
     - name: Prepare pkg scripts
       run: |
@@ -430,11 +444,18 @@ jobs:
         cp .github/packaging/postinst deb-root/DEBIAN/
         cp .github/packaging/postrm deb-root/DEBIAN/
         
-    - name: Bundle Python stdlib for DEB
+    - name: Bundle Python stdlib and shared library for DEB
       run: |
         PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
         mkdir -p deb-root/usr/lib/specs/python/lib/python${PYVER}
+        mkdir -p deb-root/usr/share/doc/specs
         cp -r /usr/lib/python${PYVER}/* deb-root/usr/lib/specs/python/lib/python${PYVER}/
+        # Copy the shared libpython library
+        cp -L /usr/lib/x86_64-linux-gnu/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/lib/ 2>/dev/null || \
+        cp -L /usr/lib/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/lib/ 2>/dev/null || true
+        # Copy license files
+        install -m 644 LICENSE deb-root/usr/share/doc/specs/LICENSE
+        install -m 644 PYTHON_LICENSE deb-root/usr/share/doc/specs/PYTHON_LICENSE
         # Remove unnecessary files to reduce package size
         find deb-root/usr/lib/specs/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
         find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyc" -delete

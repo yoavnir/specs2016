@@ -741,6 +741,10 @@ condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatfor
 if CFG_python:
 	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
 	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)
+	
+	# Determine if we should bundle Python (only on GitHub CI builds)
+	bundle_python = (os.environ.get("SPECS_BUILD_SOURCE", "local") == "github") and CFG_python
+	
 	if args.static_link and platform!="NT":
 		# Statically link libpython so the binary works regardless of the
 		# Python version installed on the target system.
@@ -761,6 +765,12 @@ if CFG_python:
 		# Older libpython static archives may not be PIE-compatible, so disable PIE
 		static_pyldflags.append("-no-pie")
 		condlink = condlink + " " + " ".join(static_pyldflags)
+	elif bundle_python and platform!="NT":
+		# Bundle the shared libpython and stdlib, use rpath to find them
+		# Define the path where the bundled stdlib will be installed
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"/usr/lib/specs/python\\"'.format(def_prefix)
+		# Add rpath so the bundled libpython is found first
+		condlink = condlink + " -Wl,-rpath,/usr/lib/specs/python/lib " + python_ldflags
 	else:
 		condlink = condlink + " " + python_ldflags
 else:
