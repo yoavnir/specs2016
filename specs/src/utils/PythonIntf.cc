@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 // Some defines for compatibility
 #ifdef PYTHON_VER_3
@@ -360,11 +361,17 @@ public:
 		// When Python is bundled (either statically linked or as a shared library
 		// with rpath), use PyConfig to set the home directory to our bundled stdlib
 		// (Py_SetPythonHome was deprecated in Python 3.11).
-		PyConfig config;
-		PyConfig_InitPythonConfig(&config);
-		PyConfig_SetBytesString(&config, &config.home, PYTHON_STDLIB_PATH);
-		Py_InitializeFromConfig(&config);
-		PyConfig_Clear(&config);
+		// Only set the home path if the bundled directory actually exists.
+		bool use_bundled_stdlib = std::filesystem::exists(PYTHON_STDLIB_PATH);
+		if (use_bundled_stdlib) {
+			PyConfig config;
+			PyConfig_InitPythonConfig(&config);
+			PyConfig_SetBytesString(&config, &config.home, PYTHON_STDLIB_PATH);
+			Py_InitializeFromConfig(&config);
+			PyConfig_Clear(&config);
+		} else {
+			Py_Initialize();
+		}
 #else
 		Py_Initialize();
 #endif
