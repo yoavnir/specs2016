@@ -86,19 +86,24 @@ jobs:
     - name: Bundle Python stdlib and shared library for RPM
       run: |
         PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        # Use the platlibdir reported by the bundled Python (e.g. "lib" on
+        # Debian/Ubuntu, "lib64" on Fedora/RHEL-based) so the bundled stdlib
+        # lands in the directory that libpython will actually search.
+        PLATLIBDIR=$(python3 -c "import sys; print(sys.platlibdir)")
         SRCDIR=rpmbuild/SOURCES/specs-${SPECS_VERSION#v}
-        mkdir -p ${SRCDIR}/python/lib/python${PYVER}
-        mkdir -p ${SRCDIR}/python/lib
-        cp -r /usr/lib/python${PYVER}/* ${SRCDIR}/python/lib/python${PYVER}/
-        # Copy the shared libpython library
-        cp -L /usr/lib64/libpython${PYVER}.so.1.0 ${SRCDIR}/python/lib/ 2>/dev/null || \
-        cp -L /usr/lib/x86_64-linux-gnu/libpython${PYVER}.so.1.0 ${SRCDIR}/python/lib/ 2>/dev/null || true
+        mkdir -p ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}
+        cp -r /usr/${PLATLIBDIR}/python${PYVER}/* ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/ 2>/dev/null || \
+        cp -r /usr/lib/python${PYVER}/* ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/
+        # Copy the shared libpython library into the same platlibdir subtree
+        cp -L /usr/${PLATLIBDIR}/libpython${PYVER}.so.1.0 ${SRCDIR}/python/${PLATLIBDIR}/ 2>/dev/null || \
+        cp -L /usr/lib/x86_64-linux-gnu/libpython${PYVER}.so.1.0 ${SRCDIR}/python/${PLATLIBDIR}/ 2>/dev/null || \
+        cp -L /usr/lib/aarch64-linux-gnu/libpython${PYVER}.so.1.0 ${SRCDIR}/python/${PLATLIBDIR}/ 2>/dev/null || true
         # Remove unnecessary files to reduce package size
-        find ${SRCDIR}/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-        find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyc" -delete
-        find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyo" -delete
-        rm -rf ${SRCDIR}/python/lib/python${PYVER}/site-packages
-        rm -rf ${SRCDIR}/python/lib/python${PYVER}/dist-packages
+        find ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER} -type f -name "*.pyc" -delete
+        find ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER} -type f -name "*.pyo" -delete
+        rm -rf ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/site-packages
+        rm -rf ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/dist-packages
 
     - name: Copy license files for RPM
       run: |
@@ -550,21 +555,26 @@ jobs:
     - name: Bundle Python stdlib and shared library for DEB
       run: |
         PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-        mkdir -p deb-root/usr/lib/specs/python/lib/python${PYVER}
+        # Use the platlibdir reported by the bundled Python so the stdlib lands
+        # in the directory that libpython will actually search at runtime.
+        PLATLIBDIR=$(python3 -c "import sys; print(sys.platlibdir)")
+        mkdir -p deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}
         mkdir -p deb-root/usr/share/doc/specs
-        cp -r /usr/lib/python${PYVER}/* deb-root/usr/lib/specs/python/lib/python${PYVER}/
-        # Copy the shared libpython library
-        cp -L /usr/lib/x86_64-linux-gnu/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/lib/ 2>/dev/null || \
-        cp -L /usr/lib/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/lib/ 2>/dev/null || true
+        cp -r /usr/${PLATLIBDIR}/python${PYVER}/* deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/ 2>/dev/null || \
+        cp -r /usr/lib/python${PYVER}/* deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/
+        # Copy the shared libpython library into the same platlibdir subtree
+        cp -L /usr/lib/x86_64-linux-gnu/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/${PLATLIBDIR}/ 2>/dev/null || \
+        cp -L /usr/lib/aarch64-linux-gnu/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/${PLATLIBDIR}/ 2>/dev/null || \
+        cp -L /usr/lib/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/${PLATLIBDIR}/ 2>/dev/null || true
         # Copy license files
         install -m 644 LICENSE deb-root/usr/share/doc/specs/LICENSE
         install -m 644 PYTHON_LICENSE deb-root/usr/share/doc/specs/PYTHON_LICENSE
         # Remove unnecessary files to reduce package size
-        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyc" -delete
-        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyo" -delete
-        rm -rf deb-root/usr/lib/specs/python/lib/python${PYVER}/site-packages
-        rm -rf deb-root/usr/lib/specs/python/lib/python${PYVER}/dist-packages
+        find deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER} -type f -name "*.pyc" -delete
+        find deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER} -type f -name "*.pyo" -delete
+        rm -rf deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/site-packages
+        rm -rf deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/dist-packages
 
     - name: Build DEB
       run: |

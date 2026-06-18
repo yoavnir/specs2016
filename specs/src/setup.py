@@ -773,10 +773,14 @@ if CFG_python:
 			bundle_prefix = "/usr/local/lib/specs/python"
 		else:
 			bundle_prefix = "/usr/lib/specs/python"
+		# The rpath must match the platlibdir of the Python being bundled
+		# (e.g. "lib" on Debian/Ubuntu, "lib64" on Fedora/RHEL) so that the
+		# dynamic linker finds libpython in the correct subdirectory.
+		platlibdir = sys.platlibdir
 		# Define the path where the bundled stdlib will be installed
 		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"{}\\"'.format(def_prefix, bundle_prefix)
 		# Add rpath so the bundled libpython is found first
-		condlink = condlink + " -Wl,-rpath,{}/lib ".format(bundle_prefix) + python_ldflags
+		condlink = condlink + " -Wl,-rpath,{}/{} ".format(bundle_prefix, platlibdir) + python_ldflags
 	else:
 		condlink = condlink + " " + python_ldflags
 else:
