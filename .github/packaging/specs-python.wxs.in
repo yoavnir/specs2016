@@ -13,17 +13,29 @@
     <Property Id="ARPDISPLAYVERSION" Value="@DISPLAY_VERSION@" />
 
     <StandardDirectory Id="ProgramFiles6432Folder">
-      <Directory Id="INSTALLFOLDER" Name="specs">
-        <Component Id="MainExecutable" Guid="B2C3D4E5-F6A7-8901-BCDE-F12345678902">
-          <File Id="SpecsExe" Source="specs\bin\Release\specs.exe" KeyPath="yes" />
-          <Environment Id="PATH" Name="PATH" Value="[INSTALLFOLDER]"
-                       Permanent="no" Part="last" Action="set" System="yes" />
-        </Component>
-      </Directory>
+      <Directory Id="INSTALLFOLDER" Name="specs" />
     </StandardDirectory>
 
+    <!-- The main executable; carries the PATH environment entry. -->
+    <ComponentGroup Id="MainExecutable" Directory="INSTALLFOLDER">
+      <Component Guid="B2C3D4E5-F6A7-8901-BCDE-F12345678902">
+        <File Id="SpecsExe" Source="msi-stage\specs.exe" KeyPath="yes" />
+        <Environment Id="PATH" Name="PATH" Value="[INSTALLFOLDER]"
+                     Permanent="no" Part="last" Action="set" System="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- The bundled Python runtime: pythonXY.dll, the C extension modules in
+         DLLs\, and the standard library in Lib\. specs.exe loads the DLL from
+         its own directory and points Python's home there at runtime, so no
+         system Python installation is required. -->
+    <ComponentGroup Id="PythonRuntime" Directory="INSTALLFOLDER">
+      <Files Include="msi-stage\**" Exclude="msi-stage\specs.exe" />
+    </ComponentGroup>
+
     <Feature Id="MainFeature" Title="specs (Python 3.12)" Level="1">
-      <ComponentRef Id="MainExecutable" />
+      <ComponentGroupRef Id="MainExecutable" />
+      <ComponentGroupRef Id="PythonRuntime" />
     </Feature>
   </Package>
 </Wix>

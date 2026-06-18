@@ -766,11 +766,17 @@ if CFG_python:
 		static_pyldflags.append("-no-pie")
 		condlink = condlink + " " + " ".join(static_pyldflags)
 	elif bundle_python and platform!="NT":
-		# Bundle the shared libpython and stdlib, use rpath to find them
+		# Bundle the shared libpython and stdlib, and point the binary at them.
+		# The install prefix differs per platform: the macOS .pkg installs under
+		# /usr/local, while the Linux RPM/DEB packages install under /usr.
+		if sys.platform=="darwin":
+			bundle_prefix = "/usr/local/lib/specs/python"
+		else:
+			bundle_prefix = "/usr/lib/specs/python"
 		# Define the path where the bundled stdlib will be installed
-		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"/usr/lib/specs/python\\"'.format(def_prefix)
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"{}\\"'.format(def_prefix, bundle_prefix)
 		# Add rpath so the bundled libpython is found first
-		condlink = condlink + " -Wl,-rpath,/usr/lib/specs/python/lib " + python_ldflags
+		condlink = condlink + " -Wl,-rpath,{}/lib ".format(bundle_prefix) + python_ldflags
 	else:
 		condlink = condlink + " " + python_ldflags
 else:

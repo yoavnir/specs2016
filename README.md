@@ -60,7 +60,7 @@ For detailed build instructions covering Linux, Mac OS, and Windows (both `make`
 Known Issues
 ============
 * Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
-* On Windows with Python support, `python312.dll` must be in the path (or Python 3.12 must be installed).
+* The Python-enabled Windows MSI bundles its own Python 3.12 runtime, so no system Python is required. The standalone Python-enabled `.exe` (downloaded on its own, outside the MSI) still needs `python312.dll` on the path (or Python 3.12 installed).
 
 Contributing
 ============

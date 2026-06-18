@@ -172,6 +172,42 @@ jobs:
         cp LICENSE pkg-root/usr/local/share/doc/specs/
         cp PYTHON_LICENSE pkg-root/usr/local/share/doc/specs/
 
+    - name: Bundle Python dylib and stdlib for pkg
+      run: |
+        PYVER=$(python3.12 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        # Resolve the bundled install prefix used by setup.py (-> PYTHON_STDLIB_PATH)
+        BUNDLE_PREFIX=/usr/local/lib/specs/python
+        LIBDIR=$(python3.12 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+        STDLIB=$(python3.12 -c "import sysconfig; print(sysconfig.get_path('stdlib'))")
+        mkdir -p pkg-root${BUNDLE_PREFIX}/lib/python${PYVER}
+        # Locate and copy the shared libpython dylib (cp -L resolves any symlink
+        # into the framework's real Mach-O so the bundled copy is standalone)
+        SRC_DYLIB="${LIBDIR}/libpython${PYVER}.dylib"
+        if [ ! -e "${SRC_DYLIB}" ]; then
+          SRC_DYLIB=$(find "$(python3.12 -c "import sys; print(sys.base_prefix)")" -name "libpython${PYVER}.dylib" | head -n1)
+        fi
+        cp -L "${SRC_DYLIB}" pkg-root${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        # Copy the standard library (includes lib-dynload extension modules)
+        cp -R "${STDLIB}/" pkg-root${BUNDLE_PREFIX}/lib/python${PYVER}/
+        # Trim files that are not needed at runtime to reduce package size
+        find pkg-root${BUNDLE_PREFIX}/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find pkg-root${BUNDLE_PREFIX}/lib/python${PYVER} -type f -name "*.pyc" -delete
+        rm -rf pkg-root${BUNDLE_PREFIX}/lib/python${PYVER}/site-packages
+        rm -rf pkg-root${BUNDLE_PREFIX}/lib/python${PYVER}/test
+        # Repoint the binary at the bundled dylib so it no longer needs system Python
+        OLDREF=$(otool -L pkg-root/usr/local/bin/specs | awk 'NR>1 && (/libpython'${PYVER}'/ || /Python\.framework/){print $1; exit}')
+        NEWREF=${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        echo "Repointing libpython reference: ${OLDREF} -> ${NEWREF}"
+        install_name_tool -change "${OLDREF}" "${NEWREF}" pkg-root/usr/local/bin/specs
+        install_name_tool -id "${NEWREF}" pkg-root${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        chmod 755 pkg-root${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        # install_name_tool invalidates the (ad-hoc) code signature; re-sign so the
+        # dynamic loader will accept the binaries on Apple Silicon.
+        codesign --force --sign - pkg-root${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        codesign --force --sign - pkg-root/usr/local/bin/specs
+        # Sanity check that the reference now points at the bundled copy
+        otool -L pkg-root/usr/local/bin/specs | grep -i "libpython${PYVER}"
+
     - name: Prepare pkg scripts
       run: |
         mkdir -p pkg-scripts
@@ -333,6 +369,33 @@ jobs:
     - name: Prepare standalone executable
       shell: bash
       run: cp specs/bin/Release/specs.exe specs-${{ steps.version.outputs.display }}-python312-windows-x64.exe
+
+    - name: Stage MSI payload (bundle Python runtime)
+      shell: bash
+      run: |
+        # Use forward slashes so the paths are safe to use inside bash
+        PREFIX=$(python -c "import sys; print(sys.base_prefix.replace(chr(92), '/'))")
+        PYVER=$(python -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')")
+        mkdir -p msi-stage
+        cp specs/bin/Release/specs.exe msi-stage/
+        # The Python DLLs must sit next to specs.exe so Windows loads them from
+        # the application directory without any system Python installation.
+        cp "${PREFIX}/python${PYVER}.dll" msi-stage/
+        cp "${PREFIX}/python3.dll" msi-stage/ 2>/dev/null || true
+        cp "${PREFIX}/vcruntime140.dll" msi-stage/ 2>/dev/null || true
+        cp "${PREFIX}/vcruntime140_1.dll" msi-stage/ 2>/dev/null || true
+        # The C extension modules (.pyd) and the pure-Python standard library.
+        cp -r "${PREFIX}/DLLs" msi-stage/DLLs
+        cp -r "${PREFIX}/Lib" msi-stage/Lib
+        cp LICENSE msi-stage/LICENSE.txt
+        cp PYTHON_LICENSE msi-stage/PYTHON_LICENSE.txt
+        # Trim files that are not needed at runtime to reduce package size
+        find msi-stage/Lib -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        rm -rf msi-stage/Lib/site-packages
+        rm -rf msi-stage/Lib/test
+        rm -rf msi-stage/Lib/idlelib
+        rm -rf msi-stage/Lib/tkinter
+        rm -rf msi-stage/Lib/turtledemo
 
     - name: Install WiX Toolset
       run: dotnet tool install --global wix --version 4.0.6
