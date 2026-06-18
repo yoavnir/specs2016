@@ -85,11 +85,11 @@ jobs:
         
     - name: Bundle Python stdlib and shared library for RPM
       run: |
-        PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        PYVER=$(python3.12 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
         # Use the platlibdir reported by the bundled Python (e.g. "lib" on
         # Debian/Ubuntu, "lib64" on Fedora/RHEL-based) so the bundled stdlib
         # lands in the directory that libpython will actually search.
-        PLATLIBDIR=$(python3 -c "import sys; print(sys.platlibdir)")
+        PLATLIBDIR=$(python3.12 -c "import sys; print(sys.platlibdir)")
         SRCDIR=rpmbuild/SOURCES/specs-${SPECS_VERSION#v}
         mkdir -p ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}
         cp -r /usr/${PLATLIBDIR}/python${PYVER}/* ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/ 2>/dev/null || \
@@ -554,10 +554,10 @@ jobs:
         
     - name: Bundle Python stdlib and shared library for DEB
       run: |
-        PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        PYVER=$(python3.12 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
         # Use the platlibdir reported by the bundled Python so the stdlib lands
         # in the directory that libpython will actually search at runtime.
-        PLATLIBDIR=$(python3 -c "import sys; print(sys.platlibdir)")
+        PLATLIBDIR=$(python3.12 -c "import sys; print(sys.platlibdir)")
         mkdir -p deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}
         mkdir -p deb-root/usr/share/doc/specs
         cp -r /usr/${PLATLIBDIR}/python${PYVER}/* deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/ 2>/dev/null || \

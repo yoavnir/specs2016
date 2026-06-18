@@ -779,8 +779,11 @@ if CFG_python:
 		platlibdir = sys.platlibdir
 		# Define the path where the bundled stdlib will be installed
 		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"{}\\"'.format(def_prefix, bundle_prefix)
-		# Add rpath so the bundled libpython is found first
-		condlink = condlink + " -Wl,-rpath,{}/{} ".format(bundle_prefix, platlibdir) + python_ldflags
+		# Add rpath so the bundled libpython is found first.
+		# --disable-new-dtags emits DT_RPATH instead of DT_RUNPATH; DT_RPATH is
+		# searched before ld.so.cache, ensuring the bundled libpython takes
+		# precedence over any system-installed libpython3.12 on the target host.
+		condlink = condlink + " -Wl,--disable-new-dtags,-rpath,{}/{} ".format(bundle_prefix, platlibdir) + python_ldflags
 	else:
 		condlink = condlink + " " + python_ldflags
 else:
