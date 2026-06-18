@@ -780,10 +780,16 @@ if CFG_python:
 		# Define the path where the bundled stdlib will be installed
 		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"{}\\"'.format(def_prefix, bundle_prefix)
 		# Add rpath so the bundled libpython is found first.
-		# --disable-new-dtags emits DT_RPATH instead of DT_RUNPATH; DT_RPATH is
-		# searched before ld.so.cache, ensuring the bundled libpython takes
-		# precedence over any system-installed libpython3.12 on the target host.
-		condlink = condlink + " -Wl,--disable-new-dtags,-rpath,{}/{} ".format(bundle_prefix, platlibdir) + python_ldflags
+		# On Linux, --disable-new-dtags emits DT_RPATH instead of DT_RUNPATH;
+		# DT_RPATH is searched before ld.so.cache, ensuring the bundled
+		# libpython takes precedence over any system-installed libpython3.12.
+		# macOS uses Apple ld which does not support --disable-new-dtags, and
+		# does not need it (install_name_tool rewrites the dylib reference).
+		if sys.platform=="darwin":
+			rpath_flags = "-Wl,-rpath,{}/lib".format(bundle_prefix)
+		else:
+			rpath_flags = "-Wl,--disable-new-dtags,-rpath,{}/{}".format(bundle_prefix, platlibdir)
+		condlink = condlink + " " + rpath_flags + " " + python_ldflags
 	else:
 		condlink = condlink + " " + python_ldflags
 else:
