@@ -28,10 +28,8 @@
     <!-- The bundled Python runtime: pythonXY.dll, the C extension modules in
          DLLs\, and the standard library in Lib\. specs.exe loads the DLL from
          its own directory and points Python's home there at runtime, so no
-         system Python installation is required. -->
-    <ComponentGroup Id="PythonRuntime" Directory="INSTALLFOLDER">
-      <Files Include="msi-stage\**" Exclude="msi-stage\specs.exe" />
-    </ComponentGroup>
+         system Python installation is required. This component group is harvested
+         by heat from the msi-stage directory. -->
 
     <Feature Id="MainFeature" Title="specs (Python 3.12)" Level="1">
       <ComponentGroupRef Id="MainExecutable" />

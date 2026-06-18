@@ -400,6 +400,13 @@ jobs:
     - name: Install WiX Toolset
       run: dotnet tool install --global wix --version 4.0.6
 
+    - name: Harvest Python runtime files with heat
+      shell: bash
+      run: |
+        wix heat dir msi-stage -o msi-stage.wxs -cg PythonRuntime -dr INSTALLFOLDER \
+          -t .github/packaging/heat-transform.xsl \
+          -x "msi-stage\specs.exe"
+
     - name: Create WiX source
       shell: bash
       run: |
@@ -410,7 +417,7 @@ jobs:
 
     - name: Build MSI
       shell: bash
-      run: wix build -o specs-${{ steps.version.outputs.display }}-python312.msi specs-python.wxs
+      run: wix build -o specs-${{ steps.version.outputs.display }}-python312.msi specs-python.wxs msi-stage.wxs
 
     - name: Upload MSI artifact
       uses: actions/upload-artifact@v7
