@@ -400,12 +400,34 @@ jobs:
     - name: Install WiX Toolset
       run: dotnet tool install --global wix --version 4.0.6
 
-    - name: Harvest Python runtime files with heat
-      shell: bash
+    - name: Harvest Python runtime files (generate WiX fragment)
+      shell: pwsh
       run: |
-        wix heat dir msi-stage -o msi-stage.wxs -cg PythonRuntime -dr INSTALLFOLDER \
-          -t .github/packaging/heat-transform.xsl \
-          -x "msi-stage\specs.exe"
+        # Enumerate every file under msi-stage\ except specs.exe and emit a
+        # WiX v4 fragment with one Component per file.  heat.exe is a separate
+        # NuGet package in WiX v4 and not available via the dotnet global tool,
+        # so we generate the fragment ourselves.
+        $root  = "msi-stage"
+        $files = Get-ChildItem -Path $root -Recurse -File |
+                 Where-Object { $_.Name -ne "specs.exe" }
+        $lines = @()
+        $lines += '<?xml version="1.0" encoding="UTF-8"?>'
+        $lines += '<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">'
+        $lines += '  <Fragment>'
+        $lines += '    <ComponentGroup Id="PythonRuntime" Directory="INSTALLFOLDER">'
+        foreach ($f in $files) {
+          # Relative path from workspace root (e.g. msi-stage\Lib\os.py)
+          $rel  = $f.FullName.Substring((Get-Location).Path.Length + 1)
+          # Stable component ID: replace non-alnum chars with underscores
+          $id   = "cmp_" + ($rel -replace '[^A-Za-z0-9]','_')
+          $lines += "      <Component>"
+          $lines += "        <File Source=`"$rel`" />"
+          $lines += "      </Component>"
+        }
+        $lines += '    </ComponentGroup>'
+        $lines += '  </Fragment>'
+        $lines += '</Wix>'
+        $lines | Set-Content -Encoding UTF8 msi-stage.wxs
 
     - name: Create WiX source
       shell: bash
