@@ -404,29 +404,40 @@ jobs:
       shell: pwsh
       run: |
         # Enumerate every file under msi-stage\ except specs.exe and emit a
-        # WiX v4 fragment with one Component per file.  heat.exe is a separate
-        # NuGet package in WiX v4 and not available via the dotnet global tool,
-        # so we generate the fragment ourselves.
-        $root  = "msi-stage"
-        $files = Get-ChildItem -Path $root -Recurse -File |
-                 Where-Object { $_.Name -ne "specs.exe" }
-        $lines = @()
-        $lines += '<?xml version="1.0" encoding="UTF-8"?>'
-        $lines += '<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">'
-        $lines += '  <Fragment>'
-        $lines += '    <ComponentGroup Id="PythonRuntime" Directory="INSTALLFOLDER">'
+        # WiX v4 fragment with one Component/File per file, each with an
+        # explicit unique Id derived from the full relative path so that files
+        # with the same name in different directories (e.g. __init__.py) do not
+        # collide.  heat.exe is a separate NuGet package in WiX v4 and not
+        # available via the dotnet global tool, so we generate the fragment here.
+        $root     = Resolve-Path "msi-stage"
+        $rootLen  = $root.Path.Length
+        $files    = Get-ChildItem -Path $root -Recurse -File |
+                    Where-Object { $_.Name -ne "specs.exe" }
+        $lines = [System.Collections.Generic.List[string]]::new()
+        $lines.Add('<?xml version="1.0" encoding="UTF-8"?>')
+        $lines.Add('<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">')
+        $lines.Add('  <Fragment>')
+        $lines.Add('    <ComponentGroup Id="PythonRuntime" Directory="INSTALLFOLDER">')
         foreach ($f in $files) {
-          # Relative path from workspace root (e.g. msi-stage\Lib\os.py)
-          $rel  = $f.FullName.Substring((Get-Location).Path.Length + 1)
-          # Stable component ID: replace non-alnum chars with underscores
-          $id   = "cmp_" + ($rel -replace '[^A-Za-z0-9]','_')
-          $lines += "      <Component>"
-          $lines += "        <File Source=`"$rel`" />"
-          $lines += "      </Component>"
+          # Path relative to the workspace root, e.g. msi-stage\Lib\os.py
+          $rel = $f.FullName.Substring((Get-Location).Path.Length + 1)
+          # Path relative to msi-stage\, e.g. Lib\os.py  (used as Subdirectory)
+          $sub = $f.FullName.Substring($rootLen + 1)
+          # Unique XML identifier: replace every non-alphanumeric char with '_'
+          $id  = "f_" + ($sub -replace '[^A-Za-z0-9]', '_')
+          # Subdirectory of the file relative to msi-stage (empty for top-level)
+          $dir = Split-Path $sub -Parent
+          if ($dir) {
+            $lines.Add("      <Component Id=`"cmp_$id`" Subdirectory=`"$dir`">")
+          } else {
+            $lines.Add("      <Component Id=`"cmp_$id`">")
+          }
+          $lines.Add("        <File Id=`"$id`" Source=`"$rel`" />")
+          $lines.Add("      </Component>")
         }
-        $lines += '    </ComponentGroup>'
-        $lines += '  </Fragment>'
-        $lines += '</Wix>'
+        $lines.Add('    </ComponentGroup>')
+        $lines.Add('  </Fragment>')
+        $lines.Add('</Wix>')
         $lines | Set-Content -Encoding UTF8 msi-stage.wxs
 
     - name: Create WiX source
