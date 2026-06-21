@@ -1,0 +1,33 @@
+#!/bin/bash
+# Disable the zsh completion for specs that was enabled by postinstall_macos.
+#
+# This script is the counterpart of postinstall_macos. It is used by the local
+# "make uninstall" target to undo the change postinstall_macos made to
+# /etc/zshrc, so the behaviour stays symmetric with installation.
+#
+# It is idempotent: the sentinel-wrapped block is only removed when the markers
+# are present, so running it any number of times never fails or touches an
+# /etc/zshrc that we never modified.
+set -e
+
+ZSHRC="/etc/zshrc"
+MARKER="# >>> specs completion >>>"
+END_MARKER="# <<< specs completion <<<"
+
+if grep -qF "$MARKER" "$ZSHRC" 2>/dev/null; then
+    tmp="$(mktemp)"
+    # Drop the sentinel-wrapped block as well as any blank line(s) that
+    # immediately precede it (postinstall_macos inserts one before the block).
+    awk -v start="$MARKER" -v end="$END_MARKER" '
+        $0 == start { blanks = ""; inblock = 1; next }
+        inblock     { if ($0 == end) inblock = 0; next }
+        /^[[:space:]]*$/ { blanks = blanks $0 "\n"; next }
+        { printf "%s", blanks; blanks = ""; print }
+        END { printf "%s", blanks }
+    ' "$ZSHRC" > "$tmp"
+    cat "$tmp" > "$ZSHRC"
+    /bin/rm -f "$tmp"
+    echo "Disabling auto-complete on this machine"
+fi
+
+exit 0

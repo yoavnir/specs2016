@@ -25,6 +25,7 @@ autoload -Uz compinit
 compinit
 # <<< specs completion <<<
 EOF
+    echo "Enabling auto-complete on this machine. Restarting the terminal many be required."
 fi
 
 exit 0
