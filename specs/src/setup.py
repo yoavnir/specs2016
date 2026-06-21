@@ -263,6 +263,22 @@ install_linux: $(EXE_DIR)/specs specs.1.gz
 
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
+
+uninstall_mac:
+	/bin/rm -f /usr/local/bin/specs
+	/bin/rm -f /usr/local/bin/specs-autocomplete
+	/bin/rm -f /usr/local/share/man/man1/specs.1.gz
+	/bin/rm -f /usr/local/share/zsh/site-functions/_specs
+	/bin/bash ../../.github/packaging/postuninstall_macos
+
+uninstall_linux:
+	/bin/rm -f /usr/local/bin/specs
+	/bin/rm -f /usr/local/bin/specs-autocomplete
+	/bin/rm -f /usr/local/share/man/man1/specs.1.gz
+	/bin/rm -f /etc/bash_completion.d/specs
+
+uninstall_win:
+	echo "Installation on Windows only copies specs.exe to the PATH; nothing to uninstall. Please manually remove specs.exe if desired."
 """
 
 clear_clean_posix = \
@@ -845,10 +861,10 @@ with open("Makefile", "w") as makefile:
 	makefile.write("{}\n".format(clear_clean_part))
 
 	if sys.platform=="darwin":
-		makefile.write("{}\n\ninstall: install_mac\n".format(manpart))
+		makefile.write("{}\n\ninstall: install_mac\n\nuninstall: uninstall_mac\n".format(manpart))
 	elif platform=="NT":
-		makefile.write("install: install_win\n")
+		makefile.write("install: install_win\n\nuninstall: uninstall_win\n")
 	else:
-		makefile.write("{}\n\ninstall: install_linux\n".format(manpart))
+		makefile.write("{}\n\ninstall: install_linux\n\nuninstall: uninstall_linux\n".format(manpart))
 
 sys.stderr.write("Makefile created.\n")
