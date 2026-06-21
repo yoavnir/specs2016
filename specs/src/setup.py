@@ -741,6 +741,10 @@ condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatfor
 if CFG_python:
 	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
 	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)
+	
+	# Determine if we should bundle Python (only on GitHub CI builds)
+	bundle_python = (os.environ.get("SPECS_BUILD_SOURCE", "local") == "github") and CFG_python
+	
 	if args.static_link and platform!="NT":
 		# Statically link libpython so the binary works regardless of the
 		# Python version installed on the target system.
@@ -761,6 +765,31 @@ if CFG_python:
 		# Older libpython static archives may not be PIE-compatible, so disable PIE
 		static_pyldflags.append("-no-pie")
 		condlink = condlink + " " + " ".join(static_pyldflags)
+	elif bundle_python and platform!="NT":
+		# Bundle the shared libpython and stdlib, and point the binary at them.
+		# The install prefix differs per platform: the macOS .pkg installs under
+		# /usr/local, while the Linux RPM/DEB packages install under /usr.
+		if sys.platform=="darwin":
+			bundle_prefix = "/usr/local/lib/specs/python"
+		else:
+			bundle_prefix = "/usr/lib/specs/python"
+		# The rpath must match the platlibdir of the Python being bundled
+		# (e.g. "lib" on Debian/Ubuntu, "lib64" on Fedora/RHEL) so that the
+		# dynamic linker finds libpython in the correct subdirectory.
+		platlibdir = sys.platlibdir
+		# Define the path where the bundled stdlib will be installed
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"{}\\"'.format(def_prefix, bundle_prefix)
+		# Add rpath so the bundled libpython is found first.
+		# On Linux, --disable-new-dtags emits DT_RPATH instead of DT_RUNPATH;
+		# DT_RPATH is searched before ld.so.cache, ensuring the bundled
+		# libpython takes precedence over any system-installed libpython3.12.
+		# macOS uses Apple ld which does not support --disable-new-dtags, and
+		# does not need it (install_name_tool rewrites the dylib reference).
+		if sys.platform=="darwin":
+			rpath_flags = "-Wl,-rpath,{}/lib".format(bundle_prefix)
+		else:
+			rpath_flags = "-Wl,--disable-new-dtags,-rpath,{}/{}".format(bundle_prefix, platlibdir)
+		condlink = condlink + " " + rpath_flags + " " + python_ldflags
 	else:
 		condlink = condlink + " " + python_ldflags
 else:

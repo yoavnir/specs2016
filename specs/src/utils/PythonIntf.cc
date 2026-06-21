@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 // Some defines for compatibility
 #ifdef PYTHON_VER_3
@@ -356,15 +357,46 @@ public:
 			return;
 		}
 		// Initialize Python environment
-#ifdef PYTHON_STDLIB_PATH
-		// When Python is statically linked, use PyConfig to set the home
-		// directory to our bundled stdlib (Py_SetPythonHome was deprecated
-		// in Python 3.11).
-		PyConfig config;
-		PyConfig_InitPythonConfig(&config);
-		PyConfig_SetBytesString(&config, &config.home, PYTHON_STDLIB_PATH);
-		Py_InitializeFromConfig(&config);
-		PyConfig_Clear(&config);
+#if defined(WIN64)
+		// On Windows the MSI bundles the stdlib next to specs.exe (in a "Lib"
+		// subdirectory) together with pythonXY.dll, so the program runs without
+		// any system Python installation. Point Python's home at the executable's
+		// directory when that bundled layout is present; otherwise fall back to
+		// the default search (e.g. a developer build using a system Python).
+		bool bundledStdlibInitialized = false;
+		{
+			wchar_t exePath[MAX_PATH];
+			DWORD exePathLen = GetModuleFileNameW(NULL, exePath, MAX_PATH);
+			if (exePathLen > 0 && exePathLen < MAX_PATH) {
+				std::filesystem::path exeDir = std::filesystem::path(exePath).parent_path();
+				if (std::filesystem::exists(exeDir / "Lib")) {
+					PyConfig config;
+					PyConfig_InitPythonConfig(&config);
+					PyConfig_SetString(&config, &config.home, exeDir.wstring().c_str());
+					Py_InitializeFromConfig(&config);
+					PyConfig_Clear(&config);
+					bundledStdlibInitialized = true;
+				}
+			}
+		}
+		if (!bundledStdlibInitialized) {
+			Py_Initialize();
+		}
+#elif defined(PYTHON_STDLIB_PATH)
+		// When Python is bundled (either statically linked or as a shared library
+		// with rpath), use PyConfig to set the home directory to our bundled stdlib
+		// (Py_SetPythonHome was deprecated in Python 3.11).
+		// Only set the home path if the bundled directory actually exists.
+		bool use_bundled_stdlib = std::filesystem::exists(PYTHON_STDLIB_PATH);
+		if (use_bundled_stdlib) {
+			PyConfig config;
+			PyConfig_InitPythonConfig(&config);
+			PyConfig_SetBytesString(&config, &config.home, PYTHON_STDLIB_PATH);
+			Py_InitializeFromConfig(&config);
+			PyConfig_Clear(&config);
+		} else {
+			Py_Initialize();
+		}
 #else
 		Py_Initialize();
 #endif
