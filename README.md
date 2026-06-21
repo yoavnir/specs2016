@@ -13,26 +13,13 @@ News
 11-Sep-2026: Version 1.0.0 is here
 
 What's new:
- * All pre-built binaries now work with Python 3.12
- * Support Python in `MSBuild` builds
- * Added MSI and stand-alone Windows executable to release artifacts
- * Debugging aids for GDB
- * Rolling context support
+ * Rolling context allows processing previous and future records.
+ * Packages for Linux, Mac OS and Windows, bundled with Python 3.12.
+ * Python support in `MSBuild` builds.
+ * Exactness in Python function arguments and return value.
+ * Build information system-defined labels, such as `@build-info` and `@build-url`.
+ * Debugging aids for GDB.
 
-***
-1-May-2026: Version 0.9.9 is here
-
-What's new:
- * MSI package & standalone executable for Windows
- * .pkg package for Mac OS
- * RPM for Linux
- * .deb package for Ubuntu/Debian
- * Visual Studio infra for building for Windows
- * Improved guessing of Python version
- * New spec units: `SPLITW` and `SPLITF` for splitting input records by words or fields into multiple output records. These new spec units support optional custom separators, `OF` clauses (with the same semantics as SUBSTRING), and range output placement (e.g. `splitw 1-10`).
- * A more exact `exact()` function
-
-*Note:* Installing from package does not include Python support on Windows.
 
 Sources
 =======
@@ -44,9 +31,6 @@ Installation from binaries
 ==========================
 The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v1.0.0)
 
-**Requirements:**
- * **Python 3.12 must be installed on your target machine.** All pre-built binaries (Linux RPM, Linux DEB, macOS .pkg, and Windows MSI/executable) are dynamically linked against Python 3.12.
-
 **Notes:**
  * On Windows for ARM, you may install the x64 version of Python 3.12.
  * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.0.0.pkg`
@@ -55,7 +39,7 @@ Building
 ========
 For detailed build instructions covering Linux, Mac OS, and Windows (both `make` and MSBuild), see [BUILDING.md](BUILDING.md).
 
-**Note on Python versions:** The pre-built binaries are linked against Python 3.12. If you need to use a different version of Python, or if Python 3.12 is not available on your target platform, you must build `specs` locally from source. When building, you can specify which Python version to use via the `--python` option to `setup.py` (on Linux/macOS) or by setting the appropriate Python version in your Visual Studio environment (on Windows).
+**Note on Python versions:** The pre-built binaries are linked against Python 3.12, and bundled with it. If you need to use a different version of Python, you can build `specs` locally from source. When building, you can specify which Python version to use via the `--python` option to `setup.py` (on Linux/macOS) or by setting the appropriate Python version in your Visual Studio environment (on Windows).
 
 Known Issues
 ============
@@ -92,4 +76,5 @@ The documentation for *specs2016* exists in two places:
 
 License
 =======
-*specs2016* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
+* *specs2016* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
+* The *Python 3.12* library bundled with the GitHub-built packages is licensed under the [Python Software Foundation License](https://github.com/yoavnir/specs2016/blob/dev-1.0.0/PYTHON_LICENSE)
