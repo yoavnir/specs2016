@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ dev, stable, dev-0.9.9, dev-1.0.0, dev-nodejs-24]
+    branches: [ dev, stable, dev-1.0.0, dev-1.1.0]
   pull_request:
-    branches: [ dev, stable, dev-0.9.9, dev-1.0.0, dev-nodejs-24]
+    branches: [ dev, stable, dev-1.0.0, dev-1.1.0]
 
 env:
   SPECS_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
