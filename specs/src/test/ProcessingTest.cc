@@ -566,12 +566,19 @@ int main(int argc, char** argv)
 #ifdef SPANISH_LOCALE_SUPPORTED
 	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112
 #ifdef PUT_TIME__SUPPORTED
+	if (onlyTest) {
+		specTimeSetLocale("es_ES");
+	}
 	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #113
 #else
 	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #113
 #endif
 #endif
 	VERIFYCMD(specTimeSetLocale("C"),"");  // TEST #114
+
+	if (onlyTest) {
+		specTimeSetLocale("C");
+	}
 	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
 	
 	VERIFY("print 'next()' 1 /next/ n print 'next()' n", "1next6");  // TEST #116
@@ -1193,14 +1200,18 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "a:b:c", "0"); // TEST #277
 
 	if (errorCount) {
-		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
-		std::cout << "Failed tests: ";
-		for (int i : failedTests) {
-			std::cout << i << " ";
+		if (onlyTest == 0) {
+			std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
+			std::cout << "Failed tests: ";
+			for (int i : failedTests) {
+				std::cout << i << " ";
+			}
+			std::cout << "\n";
 		}
-		std::cout << "\n";
 	} else {
-		std::cout << "\n*** All tests passed.\n";
+		if (onlyTest == 0) {
+			std::cout << "\n*** All tests passed.\n";
+		}
 	}
 
 	return (errorCount==0) ? 0 : 4;
