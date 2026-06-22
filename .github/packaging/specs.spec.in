@@ -1,10 +1,11 @@
+%global upstream_version @UPSTREAM_VERSION@
 Name:           specs
 Version:        @VERSION@
 Release:        1
 Summary:        A command-line utility for parsing and re-arranging text input
 License:        MIT
 URL:            https://github.com/yoavnir/specs2016
-Source0:        specs-%{version}.tar.gz
+Source0:        specs-%{upstream_version}.tar.gz
 
 # Disable automatic dependency detection since Python is bundled
 AutoReqProv: no
@@ -15,7 +16,7 @@ It allows re-alignment of fields, some format conversion, and re-formatting
 multiple lines into single lines or vice versa.
 
 %prep
-%setup -q
+%setup -q -n specs-%{upstream_version}
 
 %install
 mkdir -p %{buildroot}/usr/local/bin

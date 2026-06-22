@@ -68,7 +68,9 @@ jobs:
 
     - name: Strip version prefix
       id: version
-      run: echo "ver=${SPECS_VERSION#v}" >> "$GITHUB_OUTPUT"
+      run: |
+        echo "ver=${SPECS_VERSION#v}" >> "$GITHUB_OUTPUT"
+        echo "rpmver=$(echo "${SPECS_VERSION#v}" | tr '-' '~')" >> "$GITHUB_OUTPUT"
 
     - name: Create RPM build tree
       run: |
@@ -118,7 +120,10 @@ jobs:
         tar czf specs-${SPECS_VERSION#v}.tar.gz specs-${SPECS_VERSION#v}
 
     - name: Create RPM spec file
-      run: sed 's/@VERSION@/${{ steps.version.outputs.ver }}/g' .github/packaging/specs.spec.in > rpmbuild/SPECS/specs.spec
+      run: |
+        sed -e 's/@VERSION@/${{ steps.version.outputs.rpmver }}/g' \
+            -e 's/@UPSTREAM_VERSION@/${{ steps.version.outputs.ver }}/g' \
+            .github/packaging/specs.spec.in > rpmbuild/SPECS/specs.spec
 
     - name: Build RPM
       run: |
