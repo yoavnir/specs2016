@@ -12,6 +12,8 @@
 #define LOCAL_WHITESPACE  ""
 #define DEFAULT_WORDSEPARATOR " "
 #define DEFAULT_FIELDSEPARATOR "\t"
+#define DEFAULT_WORDSEPARATOR_C ' '
+#define DEFAULT_FIELDSEPARATOR_C '\t'
 
 #define STATION_FIRST  -1
 #define STATION_SECOND -2
@@ -51,7 +53,9 @@ public:
 	PSpecString getFromTo(int from, int to) override;
 	bool    isRunIn() override   { return (m_CycleCounter==1); }
 	bool    isRunOut() override  { return (m_ps==nullptr); } // NOTE: will return true before first record
+	bool    isEOF() override     { return m_bEOF; }
 	ALUInt  getRecordCount() override    { return ALUInt(m_CycleCounter + m_ExtraReads); }
+	ALUInt  getContextOffset() override  { return ALUInt(m_contextOffset); }
 	ALUInt  getIterationCount() override { return ALUInt(m_CycleCounter); }
 	bool    breakEstablished(char id) override;
 	PAluValueStats valueStatistics(char id) override;
@@ -87,8 +91,10 @@ public:
 	void setFirst();
 	void setSecond();
 	void setStream(int i);
+	void setContextString(PSpecString ps, int offset = 0);
 	int  getActiveInputStation() { return m_inputStation; }
 	PSpecString currRecord() override { return (m_inputStation==STATION_FIRST) ? m_ps : m_prevPs; }
+	PSpecString inputRecord() override { return m_inputRecord; }
 	bool recordNotAvailable() { return nullptr==currRecord(); }
 	bool inputStreamHasChanged() { return m_inputStreamChanged; }
 	void resetInputStreamFlag() { m_inputStreamChanged = false; }
@@ -113,10 +119,12 @@ private:
 	std::string m_fieldSeparator;
 	PSpecString m_ps;  // The current record
 	PSpecString m_prevPs; // The previous record
+	PSpecString m_inputRecord; // The real input record (unaffected by CONTEXT)
 	int  m_wordCount;
 	int  m_fieldCount;
 	unsigned int m_CycleCounter;
 	unsigned int m_ExtraReads;
+	int  m_contextOffset;
 	std::vector<int> m_wordStart;
 	std::vector<int> m_wordEnd;
 	std::vector<int> m_fieldStart;
@@ -146,6 +154,7 @@ public:
 	ProcessingStateFieldIdentifierGetter(ProcessingState* _ps) : m_ps(_ps) {}
 	~ProcessingStateFieldIdentifierGetter() override                               {}
 	std::string Get(char id) override;
+	bool isOOB(char id) override;
 private:
 	ProcessingState*	m_ps;
 };

@@ -49,6 +49,7 @@ void ProcessingState::Reset()
 	m_wordCount = -1;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 }
@@ -57,6 +58,7 @@ ProcessingState::ProcessingState()
 	Reset();
 	m_ps = nullptr;
 	m_prevPs = nullptr;
+	m_inputRecord = nullptr;
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
 	m_bNoWrite = false;
@@ -75,8 +77,10 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_ps = nullptr;
 	m_prevPs = nullptr;
+	m_inputRecord = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
@@ -97,8 +101,10 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_wordCount = 0;
 	m_CycleCounter = 0;
 	m_ExtraReads = 0;
+	m_contextOffset = 0;
 	m_ps = nullptr;
 	m_prevPs = nullptr;
+	m_inputRecord = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
 	m_inputStream = DEFAULT_READER_IDX;
@@ -118,15 +124,16 @@ ProcessingState::~ProcessingState()
 
 void ProcessingState::setString(PSpecString ps, bool bResetState)
 {
-	if (m_ps && ps!=m_ps) {
-		m_prevPs = m_ps;
+	if (m_inputRecord) {
+		m_prevPs = m_inputRecord;
 	} else {
-		MYASSERT(m_prevPs==nullptr);
 		m_prevPs = std::make_shared<std::string>();
 	}
+	m_inputRecord = ps;
 	m_ps = ps;
 	m_wordCount = -1;
 	m_fieldCount = -1;
+	m_contextOffset = 0;
 	if (bResetState) {
 		fieldIdentifierClear();
 		resetBreaks();
@@ -136,6 +143,14 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 void ProcessingState::setStringInPlace(PSpecString ps)
 {
 	m_ps = ps;
+}
+
+void ProcessingState::setContextString(PSpecString ps, int offset)
+{
+	m_ps = ps;
+	m_wordCount = -1;
+	m_fieldCount = -1;
+	m_contextOffset = offset;
 }
 
 void ProcessingState::setFirst()
@@ -342,14 +357,18 @@ int ProcessingState::getWordEnd(int idx) {
 	return m_wordEnd[idx-1];
 }
 
-// Convention: returns NULL for an empty string
 // Convention: from=0 means from the start (same as 1)
 // Convention: to=0 means to the end
 // Convention: from=0 and to=0 -- empty string.
 PSpecString ProcessingState::getFromTo(int from, int to)
 {
-	if (m_inputStation != STATION_SECOND) {
-		MYASSERT_WITH_MSG(nullptr!=m_ps,"Tried to read record in run-out cycle");
+	// In the run-out cycle, return an empty string
+	if (m_inputStation != STATION_SECOND && nullptr==m_ps) {
+		return std::make_shared<std::string>();
+	}
+	// If current record is OOB, preserve OOB status
+	if (Reader::isOOBRecord(currRecord())) {
+		return currRecord();
 	}
 	int slen = (int)(currRecord()->length());
 
@@ -411,7 +430,8 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 		std::cerr << "WARNING: Field Identifier <" << id << "> redefined.\n";
 	}
 
-	m_fieldIdentifiers[id] = std::make_shared<std::string>(*ps);
+	// Store the PSpecString directly to preserve OOB status
+	m_fieldIdentifiers[id] = ps;
 
 	// Count the statistics of this field value.
 	if (ALUFUNC_STATISTICAL & AluFunction::functionTypes()) {
@@ -578,4 +598,10 @@ std::string ProcessingStateFieldIdentifierGetter::Get(char id)
 {
 	PSpecString ret = m_ps->fieldIdentifierGet(id);
 	return std::string(ret->data(), ret->length());
+}
+
+bool ProcessingStateFieldIdentifierGetter::isOOB(char id)
+{
+	if (!m_ps->fieldIdentifierIsSet(id)) return false;
+	return Reader::isOOBRecord(m_ps->fieldIdentifierGet(id));
 }

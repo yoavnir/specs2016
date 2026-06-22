@@ -270,6 +270,21 @@ int main (int argc, char** argv)
 		exit (0);
 	}
 
+	// Check for rolling context incompatibilities
+	if (g_forwardContext > 0 || g_backwardContext > 0) {
+		if (g_bThreaded) {
+			std::cerr << "Error: Rolling context (CONTEXT / @+n / @-n) is not supported with threading.\n";
+			exit(0);
+		}
+		if (anyNonPrimaryInputStreamDefined()) {
+			std::cerr << "Error: Rolling context (CONTEXT / @+n / @-n) is not supported with multiple input streams.\n";
+			exit(0);
+		}
+		if (g_bVerbose) {
+			std::cerr << "specs: Using a " << g_forwardContext + g_backwardContext + 1 << "-record rolling context: " << g_forwardContext << " records forward and " << g_backwardContext << " records backward.\n"; 
+		}
+	}
+
 	// After the compilation, the token vector contents are no longer necessary
 	for (size_t i=0; i<vec.size(); i++) vec[i].deallocDynamic();
 	vec.clear();
@@ -372,6 +387,11 @@ int main (int argc, char** argv)
 		}
 
 
+		if (g_forwardContext > 0 || g_backwardContext > 0) {
+			pRd->setContextSizes(g_forwardContext, g_backwardContext);
+		}
+		g_pReader = pRd.get();
+
 		pRd->Begin();
 
 		timer.changeClass(timeClassProcessing);
@@ -395,6 +415,7 @@ int main (int argc, char** argv)
 			return -4;
 		}
 
+		g_pReader = nullptr;
 		pRd->End();
 		readLines = pRd->countRead();
 		usedLines = pRd->countUsed();

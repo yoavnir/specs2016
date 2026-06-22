@@ -1137,6 +1137,7 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','u')", "Just the place for a snark");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','U')", "Justtheplaceforasnark");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','_','U')", "Just_the_place_for_a_snark");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','_')", "Just_the place for a snark");
 
 	VERIFY_EXPR_RES("sfield('Where hae\tya been',0,'')","sfield: Called with count equal to zero");
 	VERIFY_EXPR_RES("sfield('Where hae\tya been',1,'')","Where hae");
@@ -1649,6 +1650,21 @@ int runALUUnitTests16(unsigned int onlyTest)
 	VERIFY_EXPR_RES("pget(unitTestVar)", "2");
 	VERIFY_ASSN_RES("#10:=pget(unitTestVar)", "2");
 	VERIFY_EXPR_RES("exact(#10)", "0");
+
+	// not() function
+	std::cout << "\nThe not() function\n======================\n\n";
+	VERIFY_EXPR_RES("not(1)", "0");
+	VERIFY_EXPR_RES("not(0)", "1");
+	VERIFY_EXPR_RES("not(3.1415)", "0");
+	VERIFY_EXPR_RES("not(0.3333)", "0");
+	VERIFY_EXPR_RES("not('hello')", "0");
+	VERIFY_EXPR_RES("not('')", "0");
+	VERIFY_EXPR_RES("not(2+2==4)", "0");
+	VERIFY_EXPR_RES("not(2>3)", "1");
+	VERIFY_EXPR_RES("not(exact(#10))", "1");
+	VERIFY_EXPR_RES("not(includes(raid,'i'))", "0");
+	VERIFY_EXPR_RES("not(includes(team,'i'))", "1");  // proving that there is really no 'i' in team
+
 
 	if (countFailures) {
 		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";

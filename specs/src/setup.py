@@ -127,9 +127,30 @@ with open("xx.txt","w") as v:
 	with open("xx.txt", "r") as flags:
 		filtered_flags = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes']
 		filtered_flags_debug = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes', '-Wp,-D_FORTIFY_SOURCE=2']
+		# Multi-word flags to filter: list of (flag, value) tuples to remove
+		# For example: ('-arch', 'x86_64') will remove "-arch x86_64" but keep "-arch arm64"
+		filtered_multi_flags = [('-arch', 'x86_64')]
 		cflags=flags.read().strip().split()
 		filter = filtered_flags_debug if variation=="DEBUG" else filtered_flags
-		filtered_cflags = [f for f in cflags if f not in filter]
+		filtered_cflags = []
+		i = 0
+		while i < len(cflags):
+			flag = cflags[i]
+			# Check if this flag should be filtered out
+			should_filter = False
+			if flag in filter:
+				should_filter = True
+			else:
+				# Check multi-word flags
+				for multi_flag, multi_value in filtered_multi_flags:
+					if flag == multi_flag and i + 1 < len(cflags) and cflags[i + 1] == multi_value:
+						should_filter = True
+						i += 1  # Skip the next token (the value)
+						break
+			
+			if not should_filter:
+				filtered_cflags.append(flag)
+			i += 1
 		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
 	
 	# Get the result of python-config --ldflags
@@ -165,10 +186,18 @@ TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
 LIBOBJS = $(CCSRC:.cc=.{})
 TESTOBJS = $(TESTSRC:.cc=.{})
 
+# build_info.h is regenerated only when one of the core objects would be
+# rebuilt (Config.o is excluded to avoid a cycle, since Config.cc includes
+# build_info.h).  This keeps an up-to-date tree a no-op instead of forcing a
+# spurious header regeneration, Config.o recompile and relink on every build.
+BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
+
 #default goal
 some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
 
 all: directories $(TEST_EXES)
+
+specs: directories $(EXE_DIR)/specs
 
 %.obj : %.cc
 	$(CXX) $(CPPFLAGS) /Fo$@ /c $<
@@ -191,6 +220,11 @@ cached_depends_vs = "-include Makefile.cached_depends_vs"
 
 body2 = \
 """	
+.PHONY: specs
+
+utils/build_info.h: $(BUILD_INFO_DEPS)
+	@python3 generate_build_info.py
+
 run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
@@ -208,10 +242,14 @@ $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
 		
 install_mac: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
+	cp $(EXE_DIR)/specs-autocomplete /usr/local/bin/
 	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
+	$(MKDIR_C) /usr/local/share/zsh/site-functions
+	cp ../../.github/packaging/specs-completion.zsh /usr/local/share/zsh/site-functions/_specs
+	/bin/bash ../../.github/packaging/postinstall_macos
 
 install_linux: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
@@ -220,10 +258,27 @@ install_linux: $(EXE_DIR)/specs specs.1.gz
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
-	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" BASHRC | /usr/local/bin/specs -o BASHRC 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
+	$(MKDIR_C) /etc/bash_completion.d
+	cp ../../.github/packaging/specs-completion.bash /etc/bash_completion.d/specs
 
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
+
+uninstall_mac:
+	/bin/rm -f /usr/local/bin/specs
+	/bin/rm -f /usr/local/bin/specs-autocomplete
+	/bin/rm -f /usr/local/share/man/man1/specs.1.gz
+	/bin/rm -f /usr/local/share/zsh/site-functions/_specs
+	/bin/bash ../../.github/packaging/postuninstall_macos
+
+uninstall_linux:
+	/bin/rm -f /usr/local/bin/specs
+	/bin/rm -f /usr/local/bin/specs-autocomplete
+	/bin/rm -f /usr/local/share/man/man1/specs.1.gz
+	/bin/rm -f /etc/bash_completion.d/specs
+
+uninstall_win:
+	echo "Installation on Windows only copies specs.exe to the PATH; nothing to uninstall. Please manually remove specs.exe if desired."
 """
 
 clear_clean_posix = \
@@ -702,6 +757,10 @@ condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatfor
 if CFG_python:
 	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
 	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)
+	
+	# Determine if we should bundle Python (only on GitHub CI builds)
+	bundle_python = (os.environ.get("SPECS_BUILD_SOURCE", "local") == "github") and CFG_python
+	
 	if args.static_link and platform!="NT":
 		# Statically link libpython so the binary works regardless of the
 		# Python version installed on the target system.
@@ -719,9 +778,34 @@ if CFG_python:
 		# The static libpython archive includes built-in extension modules
 		# (pyexpat, zlib, etc.) that depend on these system libraries.
 		static_pyldflags.extend(["-lexpat", "-lz"])
-		# Ubuntu 20.04's libpython3.8.a is not PIE-compatible, so disable PIE
+		# Older libpython static archives may not be PIE-compatible, so disable PIE
 		static_pyldflags.append("-no-pie")
 		condlink = condlink + " " + " ".join(static_pyldflags)
+	elif bundle_python and platform!="NT":
+		# Bundle the shared libpython and stdlib, and point the binary at them.
+		# The install prefix differs per platform: the macOS .pkg installs under
+		# /usr/local, while the Linux RPM/DEB packages install under /usr.
+		if sys.platform=="darwin":
+			bundle_prefix = "/usr/local/lib/specs/python"
+		else:
+			bundle_prefix = "/usr/lib/specs/python"
+		# The rpath must match the platlibdir of the Python being bundled
+		# (e.g. "lib" on Debian/Ubuntu, "lib64" on Fedora/RHEL) so that the
+		# dynamic linker finds libpython in the correct subdirectory.
+		platlibdir = sys.platlibdir
+		# Define the path where the bundled stdlib will be installed
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"{}\\"'.format(def_prefix, bundle_prefix)
+		# Add rpath so the bundled libpython is found first.
+		# On Linux, --disable-new-dtags emits DT_RPATH instead of DT_RUNPATH;
+		# DT_RPATH is searched before ld.so.cache, ensuring the bundled
+		# libpython takes precedence over any system-installed libpython3.12.
+		# macOS uses Apple ld which does not support --disable-new-dtags, and
+		# does not need it (install_name_tool rewrites the dylib reference).
+		if sys.platform=="darwin":
+			rpath_flags = "-Wl,-rpath,{}/lib".format(bundle_prefix)
+		else:
+			rpath_flags = "-Wl,--disable-new-dtags,-rpath,{}/{}".format(bundle_prefix, platlibdir)
+		condlink = condlink + " " + rpath_flags + " " + python_ldflags
 	else:
 		condlink = condlink + " " + python_ldflags
 else:
@@ -733,6 +817,17 @@ if CFG_regex_grammars:
 
 if osversion != "":
 	condlink = condlink + " -mmacosx-version-min={}".format(osversion)
+
+# Add pytest.py to run_tests if Python support is available
+if CFG_python:
+	body2 = body2.replace(
+		"python3 $(TESTS_DIR)/recfm_tests.py",
+		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
+	)
+
+# Generate build_info.h (so it exists before the first compile; it is
+# regenerated on every build by the utils/build_info.h Makefile target)
+subprocess.call([sys.executable, "generate_build_info.py"])
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))
@@ -766,10 +861,10 @@ with open("Makefile", "w") as makefile:
 	makefile.write("{}\n".format(clear_clean_part))
 
 	if sys.platform=="darwin":
-		makefile.write("{}\n\ninstall: install_mac\n".format(manpart))
+		makefile.write("{}\n\ninstall: install_mac\n\nuninstall: uninstall_mac\n".format(manpart))
 	elif platform=="NT":
-		makefile.write("install: install_win\n")
+		makefile.write("install: install_win\n\nuninstall: uninstall_win\n")
 	else:
-		makefile.write("{}\n\ninstall: install_linux\n".format(manpart))
+		makefile.write("{}\n\ninstall: install_linux\n\nuninstall: uninstall_linux\n".format(manpart))
 
 sys.stderr.write("Makefile created.\n")

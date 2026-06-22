@@ -12,46 +12,54 @@ on:
 env:
   SPECS_VERSION: ${{ github.event.release.tag_name }}
   SPECS_BRANCH: ${{ github.event.release.target_commitish }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  SPECS_BUILD_SOURCE: github
+  SPECS_BUILD_NUMBER: ${{ github.run_number }}
+  SPECS_BUILD_RUNID: ${{ github.run_id }}
+  SPECS_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
     container: 
-      image: ubuntu:20.04
+      image: ubuntu:22.04
     steps:
-    - uses: actions/checkout@v4
+    - name: Install git (so checkout creates a real repository in the container)
+      run: |
+        DEBIAN_FRONTEND=noninteractive apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y git
+
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
+
+    - name: Mark workspace as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Dump event release payload
       env:
         EVENT: ${{ toJSON(github.event.release) }}
       run: echo "$EVENT"
 
-    - name: Install build tools
+    - name: Install build tools and Python 3.12
       run: |
         DEBIAN_FRONTEND=noninteractive apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3 python3-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
+        DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
+        add-apt-repository -y ppa:deadsnakes/ppa
+        DEBIAN_FRONTEND=noninteractive apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3.12 python3.12-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
 
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 --static
+      run: |
+        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12
 
     - name: Build
       working-directory: specs/src
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version" WRITE "@platform"
-
-    - name: Verify no dynamic libpython dependency
-      run: |
-        if ldd specs/exe/specs | grep -q libpython; then
-          echo "ERROR: specs still dynamically links libpython"
-          ldd specs/exe/specs | grep libpython
-          exit 1
-        fi
-        echo "OK: no dynamic libpython dependency"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
@@ -73,19 +81,36 @@ jobs:
         cp specs/exe/specs rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         cp specs/exe/specs-autocomplete rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         cp specs.1.gz rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
+        cp .github/packaging/specs-completion.bash rpmbuild/SOURCES/specs-${SPECS_VERSION#v}/
         
-    - name: Bundle Python stdlib for RPM
+    - name: Bundle Python stdlib and shared library for RPM
       run: |
-        PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        PYVER=$(python3.12 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        # Use the platlibdir reported by the bundled Python (e.g. "lib" on
+        # Debian/Ubuntu, "lib64" on Fedora/RHEL-based) so the bundled stdlib
+        # lands in the directory that libpython will actually search.
+        PLATLIBDIR=$(python3.12 -c "import sys; print(sys.platlibdir)")
         SRCDIR=rpmbuild/SOURCES/specs-${SPECS_VERSION#v}
-        mkdir -p ${SRCDIR}/python/lib/python${PYVER}
-        cp -r /usr/lib/python${PYVER}/* ${SRCDIR}/python/lib/python${PYVER}/
+        mkdir -p ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}
+        cp -r /usr/${PLATLIBDIR}/python${PYVER}/* ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/ 2>/dev/null || \
+        cp -r /usr/lib/python${PYVER}/* ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/
+        # Copy the shared libpython library into the same platlibdir subtree
+        cp -L /usr/${PLATLIBDIR}/libpython${PYVER}.so.1.0 ${SRCDIR}/python/${PLATLIBDIR}/ 2>/dev/null || \
+        cp -L /usr/lib/x86_64-linux-gnu/libpython${PYVER}.so.1.0 ${SRCDIR}/python/${PLATLIBDIR}/ 2>/dev/null || \
+        cp -L /usr/lib/aarch64-linux-gnu/libpython${PYVER}.so.1.0 ${SRCDIR}/python/${PLATLIBDIR}/ 2>/dev/null || true
         # Remove unnecessary files to reduce package size
-        find ${SRCDIR}/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-        find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyc" -delete
-        find ${SRCDIR}/python/lib/python${PYVER} -type f -name "*.pyo" -delete
-        rm -rf ${SRCDIR}/python/lib/python${PYVER}/site-packages
-        rm -rf ${SRCDIR}/python/lib/python${PYVER}/dist-packages
+        find ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER} -type f -name "*.pyc" -delete
+        find ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER} -type f -name "*.pyo" -delete
+        rm -rf ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/site-packages
+        rm -rf ${SRCDIR}/python/${PLATLIBDIR}/python${PYVER}/dist-packages
+
+    - name: Copy license files for RPM
+      run: |
+        SRCDIR=rpmbuild/SOURCES/specs-${SPECS_VERSION#v}
+        mkdir -p ${SRCDIR}/docs
+        cp LICENSE ${SRCDIR}/docs/
+        cp PYTHON_LICENSE ${SRCDIR}/docs/
         
     - name: Create RPM tarball
       run: |
@@ -100,7 +125,7 @@ jobs:
         rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/specs.spec
 
     - name: Upload RPM artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: linux-rpm
         path: rpmbuild/RPMS/**/*.rpm
@@ -108,20 +133,25 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py -c CLANG --branch ${SPECS_BRANCH} --python python3
+      run: python3.12 setup.py -c CLANG --branch ${SPECS_BRANCH} --python python3.12
 
     - name: Build
       working-directory: specs/src
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version" WRITE "@platform"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
@@ -136,23 +166,71 @@ jobs:
       run: |
         mkdir -p pkg-root/usr/local/bin
         mkdir -p pkg-root/usr/local/share/man/man1
+        mkdir -p pkg-root/usr/local/share/zsh/site-functions
+        mkdir -p pkg-root/usr/local/share/doc/specs
         cp specs/exe/specs pkg-root/usr/local/bin/
         cp specs/exe/specs-autocomplete pkg-root/usr/local/bin/
         chmod 755 pkg-root/usr/local/bin/specs
         chmod 755 pkg-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz pkg-root/usr/local/share/man/man1/
+        cp .github/packaging/specs-completion.zsh pkg-root/usr/local/share/zsh/site-functions/_specs
+        cp LICENSE pkg-root/usr/local/share/doc/specs/
+        cp PYTHON_LICENSE pkg-root/usr/local/share/doc/specs/
+
+    - name: Bundle Python dylib and stdlib for pkg
+      run: |
+        PYVER=$(python3.12 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        # Resolve the bundled install prefix used by setup.py (-> PYTHON_STDLIB_PATH)
+        BUNDLE_PREFIX=/usr/local/lib/specs/python
+        LIBDIR=$(python3.12 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+        STDLIB=$(python3.12 -c "import sysconfig; print(sysconfig.get_path('stdlib'))")
+        mkdir -p pkg-root${BUNDLE_PREFIX}/lib/python${PYVER}
+        # Locate and copy the shared libpython dylib (cp -L resolves any symlink
+        # into the framework's real Mach-O so the bundled copy is standalone)
+        SRC_DYLIB="${LIBDIR}/libpython${PYVER}.dylib"
+        if [ ! -e "${SRC_DYLIB}" ]; then
+          SRC_DYLIB=$(find "$(python3.12 -c "import sys; print(sys.base_prefix)")" -name "libpython${PYVER}.dylib" | head -n1)
+        fi
+        cp -L "${SRC_DYLIB}" pkg-root${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        # Copy the standard library (includes lib-dynload extension modules)
+        cp -R "${STDLIB}/" pkg-root${BUNDLE_PREFIX}/lib/python${PYVER}/
+        # Trim files that are not needed at runtime to reduce package size
+        find pkg-root${BUNDLE_PREFIX}/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find pkg-root${BUNDLE_PREFIX}/lib/python${PYVER} -type f -name "*.pyc" -delete
+        rm -rf pkg-root${BUNDLE_PREFIX}/lib/python${PYVER}/site-packages
+        rm -rf pkg-root${BUNDLE_PREFIX}/lib/python${PYVER}/test
+        # Repoint the binary at the bundled dylib so it no longer needs system Python
+        OLDREF=$(otool -L pkg-root/usr/local/bin/specs | awk 'NR>1 && (/libpython'${PYVER}'/ || /Python\.framework/){print $1; exit}')
+        NEWREF=${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        echo "Repointing libpython reference: ${OLDREF} -> ${NEWREF}"
+        install_name_tool -change "${OLDREF}" "${NEWREF}" pkg-root/usr/local/bin/specs
+        install_name_tool -id "${NEWREF}" pkg-root${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        chmod 755 pkg-root${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        # install_name_tool invalidates the (ad-hoc) code signature; re-sign so the
+        # dynamic loader will accept the binaries on Apple Silicon.
+        codesign --force --sign - pkg-root${BUNDLE_PREFIX}/lib/libpython${PYVER}.dylib
+        codesign --force --sign - pkg-root/usr/local/bin/specs
+        # Sanity check that the reference now points at the bundled copy
+        otool -L pkg-root/usr/local/bin/specs | grep -i "libpython${PYVER}"
+
+    - name: Prepare pkg scripts
+      run: |
+        mkdir -p pkg-scripts
+        cp .github/packaging/postinstall_macos pkg-scripts/postinstall
+        chmod 755 pkg-scripts/postinstall
 
     - name: Build .pkg
       run: |
         pkgbuild \
           --root pkg-root \
+          --scripts pkg-scripts \
           --identifier com.github.yoavnir.specs \
           --version "${SPECS_VERSION#v}" \
           --install-location / \
           specs-${SPECS_VERSION#v}.pkg
 
     - name: Upload pkg artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: macos-pkg
         path: specs-*.pkg
@@ -160,12 +238,12 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Normalize Windows version metadata
       id: version
@@ -205,7 +283,7 @@ jobs:
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }}
 
     - name: Verify binary
-      run: specs\bin\Release\specs.exe "@version" WRITE "@platform"
+      run: specs\bin\Release\specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare standalone executable
       shell: bash
@@ -227,16 +305,169 @@ jobs:
       run: wix build -o specs-${{ steps.version.outputs.display }}.msi specs.wxs
 
     - name: Upload MSI artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-msi
         path: specs-*.msi
 
     - name: Upload standalone executable artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-exe
         path: specs-*-windows-x64.exe
+
+  build-windows-python:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v3
+
+    - name: Normalize Windows version metadata
+      id: version
+      shell: bash
+      run: |
+        raw_version="${SPECS_VERSION:-${{ github.event.inputs.version }}}"
+        if [ -z "$raw_version" ]; then
+          echo "Missing release version" >&2
+          exit 1
+        fi
+
+        display_version="${raw_version#v}"
+        numeric_base="${display_version%%[-+]*}"
+        IFS='.' read -r major minor patch extra <<< "$numeric_base"
+        major="${major:-0}"
+        minor="${minor:-0}"
+        patch="${patch:-0}"
+        extra="${extra:-0}"
+
+        echo "raw=$raw_version" >> "$GITHUB_OUTPUT"
+        echo "display=$display_version" >> "$GITHUB_OUTPUT"
+        echo "file=${major},${minor},${patch},${extra}" >> "$GITHUB_OUTPUT"
+        echo "msi=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+
+    - name: Generate Windows version header
+      shell: bash
+      run: |
+        cat > specs/src/specs_version.h <<EOF
+        #define SPEC_PRODUCT_NAME "specs"
+        #define SPEC_FILE_DESCRIPTION "A re-writing of the specs pipeline stage from CMS, only changed quite a bit"
+        #define SPEC_PRODUCT_VERSION "${{ steps.version.outputs.display }}"
+        #define SPEC_COPYRIGHT "Copyright (c) 2018-2026 Yoav Nir"
+        #define SPEC_FILE_VERSION ${{ steps.version.outputs.file }}
+        EOF
+
+    - name: Build specs with Python (Release)
+      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }} /p:EnablePython=true
+
+    - name: Verify binary
+      run: specs\bin\Release\specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
+
+    - name: Prepare standalone executable
+      shell: bash
+      run: cp specs/bin/Release/specs.exe specs-${{ steps.version.outputs.display }}-python312-windows-x64.exe
+
+    - name: Stage MSI payload (bundle Python runtime)
+      shell: bash
+      run: |
+        # Use forward slashes so the paths are safe to use inside bash
+        PREFIX=$(python -c "import sys; print(sys.base_prefix.replace(chr(92), '/'))")
+        PYVER=$(python -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')")
+        mkdir -p msi-stage
+        cp specs/bin/Release/specs.exe msi-stage/
+        # The Python DLLs must sit next to specs.exe so Windows loads them from
+        # the application directory without any system Python installation.
+        cp "${PREFIX}/python${PYVER}.dll" msi-stage/
+        cp "${PREFIX}/python3.dll" msi-stage/ 2>/dev/null || true
+        cp "${PREFIX}/vcruntime140.dll" msi-stage/ 2>/dev/null || true
+        cp "${PREFIX}/vcruntime140_1.dll" msi-stage/ 2>/dev/null || true
+        # The C extension modules (.pyd) and the pure-Python standard library.
+        cp -r "${PREFIX}/DLLs" msi-stage/DLLs
+        cp -r "${PREFIX}/Lib" msi-stage/Lib
+        cp LICENSE msi-stage/LICENSE.txt
+        cp PYTHON_LICENSE msi-stage/PYTHON_LICENSE.txt
+        # Trim files that are not needed at runtime to reduce package size
+        find msi-stage/Lib -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        rm -rf msi-stage/Lib/site-packages
+        rm -rf msi-stage/Lib/test
+        rm -rf msi-stage/Lib/idlelib
+        rm -rf msi-stage/Lib/tkinter
+        rm -rf msi-stage/Lib/turtledemo
+
+    - name: Install WiX Toolset
+      run: dotnet tool install --global wix --version 4.0.6
+
+    - name: Harvest Python runtime files (generate WiX fragment)
+      shell: pwsh
+      run: |
+        # Enumerate every file under msi-stage\ except specs.exe and emit a
+        # WiX v4 fragment with one Component/File per file, each with an
+        # explicit unique Id derived from the full relative path so that files
+        # with the same name in different directories (e.g. __init__.py) do not
+        # collide.  heat.exe is a separate NuGet package in WiX v4 and not
+        # available via the dotnet global tool, so we generate the fragment here.
+        $root     = Resolve-Path "msi-stage"
+        $rootLen  = $root.Path.Length
+        $files    = Get-ChildItem -Path $root -Recurse -File |
+                    Where-Object { $_.Name -ne "specs.exe" }
+        $lines = [System.Collections.Generic.List[string]]::new()
+        $lines.Add('<?xml version="1.0" encoding="UTF-8"?>')
+        $lines.Add('<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">')
+        $lines.Add('  <Fragment>')
+        $lines.Add('    <ComponentGroup Id="PythonRuntime" Directory="INSTALLFOLDER">')
+        foreach ($f in $files) {
+          # Path relative to the workspace root, e.g. msi-stage\Lib\os.py
+          $rel = $f.FullName.Substring((Get-Location).Path.Length + 1)
+          # Path relative to msi-stage\, e.g. Lib\os.py  (used as Subdirectory)
+          $sub = $f.FullName.Substring($rootLen + 1)
+          # Unique XML identifier: replace every non-alphanumeric char with '_'
+          $id  = "f_" + ($sub -replace '[^A-Za-z0-9]', '_')
+          # Subdirectory of the file relative to msi-stage (empty for top-level)
+          $dir = Split-Path $sub -Parent
+          if ($dir) {
+            $lines.Add("      <Component Id=`"cmp_$id`" Subdirectory=`"$dir`">")
+          } else {
+            $lines.Add("      <Component Id=`"cmp_$id`">")
+          }
+          $lines.Add("        <File Id=`"$id`" Source=`"$rel`" />")
+          $lines.Add("      </Component>")
+        }
+        $lines.Add('    </ComponentGroup>')
+        $lines.Add('  </Fragment>')
+        $lines.Add('</Wix>')
+        $lines | Set-Content -Encoding UTF8 msi-stage.wxs
+
+    - name: Create WiX source
+      shell: bash
+      run: |
+        sed \
+          -e "s/@VERSION@/${{ steps.version.outputs.msi }}/g" \
+          -e "s/@DISPLAY_VERSION@/${{ steps.version.outputs.display }}/g" \
+          .github/packaging/specs-python.wxs.in > specs-python.wxs
+
+    - name: Build MSI
+      shell: bash
+      run: wix build -o specs-${{ steps.version.outputs.display }}-python312.msi specs-python.wxs msi-stage.wxs
+
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: windows-msi-python
+        path: specs-*-python312.msi
+
+    - name: Upload standalone executable artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: windows-exe-python
+        path: specs-*-python312-windows-x64.exe
 
   build-deb:
     strategy:
@@ -247,42 +478,53 @@ jobs:
             container: ubuntu:22.04
           - arch: arm64
             runner: ubuntu-22.04-arm
+            container: ubuntu:22.04
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container || '' }}
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Install build tools
+    - name: Install git (so checkout creates a real repository in the container)
       run: |
         if [ "$(id -u)" -eq 0 ]; then
           APT="apt-get"
         else
           APT="sudo apt-get"
         fi
+        DEBIAN_FRONTEND=noninteractive $APT update
+        DEBIAN_FRONTEND=noninteractive $APT install -y git
+
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Mark workspace as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+    - name: Install build tools and Python 3.12
+      run: |
+        if [ "$(id -u)" -eq 0 ]; then
+          APT="apt-get"
+        else
+          APT="sudo apt-get"
+        fi
+        # Set timezone non-interactively to avoid tzdata prompts
+        ln -fs /usr/share/zoneinfo/UTC /etc/localtime
         $APT update
-        $APT install -y gcc g++ make python3 python3-dev dpkg-dev git libexpat1-dev zlib1g-dev
+        $APT install -y software-properties-common
+        add-apt-repository -y ppa:deadsnakes/ppa
+        $APT update
+        $APT install -y gcc g++ make python3.12 python3.12-dev dpkg-dev git libexpat1-dev zlib1g-dev
 
     - name: Configure
       working-directory: specs/src
-      run: python3 setup.py --branch ${SPECS_BRANCH} --python python3 --static
+      run: |
+        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12
 
     - name: Build
       working-directory: specs/src
       run: make some
 
     - name: Verify binary
-      run: specs/exe/specs "@version" WRITE "@platform"
-
-    - name: Verify no dynamic libpython dependency
-      run: |
-        if ldd specs/exe/specs | grep -q libpython; then
-          echo "ERROR: specs still dynamically links libpython"
-          ldd specs/exe/specs | grep libpython
-          exit 1
-        fi
-        echo "OK: no dynamic libpython dependency"
+      run: specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
 
     - name: Prepare manpage
       run: |
@@ -298,46 +540,60 @@ jobs:
         mkdir -p deb-root/usr/local/bin
         mkdir -p deb-root/usr/share/specs
         mkdir -p deb-root/usr/lib/specs
+        mkdir -p deb-root/etc/bash_completion.d
         mkdir -p deb-root/DEBIAN
         cp specs/exe/specs deb-root/usr/local/bin/
         cp specs/exe/specs-autocomplete deb-root/usr/local/bin/
         chmod 755 deb-root/usr/local/bin/specs
         chmod 755 deb-root/usr/local/bin/specs-autocomplete
         cp specs.1.gz deb-root/usr/share/specs/
+        install -m 644 .github/packaging/specs-completion.bash deb-root/etc/bash_completion.d/specs
         sed "s/@VERSION@/${SPECS_VERSION#v}/g; s/Architecture: amd64/Architecture: ${{ matrix.arch }}/g" .github/packaging/control.in > deb-root/DEBIAN/control
         cp .github/packaging/postinst deb-root/DEBIAN/
         cp .github/packaging/postrm deb-root/DEBIAN/
         
-    - name: Bundle Python stdlib for DEB
+    - name: Bundle Python stdlib and shared library for DEB
       run: |
-        PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-        mkdir -p deb-root/usr/lib/specs/python/lib/python${PYVER}
-        cp -r /usr/lib/python${PYVER}/* deb-root/usr/lib/specs/python/lib/python${PYVER}/
+        PYVER=$(python3.12 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        # Use the platlibdir reported by the bundled Python so the stdlib lands
+        # in the directory that libpython will actually search at runtime.
+        PLATLIBDIR=$(python3.12 -c "import sys; print(sys.platlibdir)")
+        mkdir -p deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}
+        mkdir -p deb-root/usr/share/doc/specs
+        cp -r /usr/${PLATLIBDIR}/python${PYVER}/* deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/ 2>/dev/null || \
+        cp -r /usr/lib/python${PYVER}/* deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/
+        # Copy the shared libpython library into the same platlibdir subtree
+        cp -L /usr/lib/x86_64-linux-gnu/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/${PLATLIBDIR}/ 2>/dev/null || \
+        cp -L /usr/lib/aarch64-linux-gnu/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/${PLATLIBDIR}/ 2>/dev/null || \
+        cp -L /usr/lib/libpython${PYVER}.so.1.0 deb-root/usr/lib/specs/python/${PLATLIBDIR}/ 2>/dev/null || true
+        # Copy license files
+        install -m 644 LICENSE deb-root/usr/share/doc/specs/LICENSE
+        install -m 644 PYTHON_LICENSE deb-root/usr/share/doc/specs/PYTHON_LICENSE
         # Remove unnecessary files to reduce package size
-        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyc" -delete
-        find deb-root/usr/lib/specs/python/lib/python${PYVER} -type f -name "*.pyo" -delete
-        rm -rf deb-root/usr/lib/specs/python/lib/python${PYVER}/site-packages
-        rm -rf deb-root/usr/lib/specs/python/lib/python${PYVER}/dist-packages
+        find deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER} -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        find deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER} -type f -name "*.pyc" -delete
+        find deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER} -type f -name "*.pyo" -delete
+        rm -rf deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/site-packages
+        rm -rf deb-root/usr/lib/specs/python/${PLATLIBDIR}/python${PYVER}/dist-packages
 
     - name: Build DEB
       run: |
         dpkg-deb --build deb-root specs_${SPECS_VERSION#v}_${{ matrix.arch }}.deb
 
     - name: Upload DEB artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: linux-deb-${{ matrix.arch }}
         path: specs_*.deb
 
   publish:
-    needs: [build-linux, build-macos, build-windows, build-deb]
+    needs: [build-linux, build-macos, build-windows, build-windows-python, build-deb]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         path: artifacts
 
@@ -345,7 +601,7 @@ jobs:
       run: find artifacts -type f
 
     - name: Upload release assets
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: |
           artifacts/linux-rpm/**/*.rpm
@@ -353,4 +609,6 @@ jobs:
           artifacts/linux-deb-arm64/*.deb
           artifacts/macos-pkg/*.pkg
           artifacts/windows-msi/*.msi
+          artifacts/windows-msi-python/*.msi
           artifacts/windows-exe/*.exe
+          artifacts/windows-exe-python/*.exe

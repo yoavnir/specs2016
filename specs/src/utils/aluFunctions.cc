@@ -6,6 +6,7 @@
 #include "processing/Config.h"
 #include "processing/persistent.h"
 #include "processing/ProcessingState.h"
+#include "processing/Reader.h"
 #include <cstring>
 #include <cmath>
 #include <functional>
@@ -414,9 +415,28 @@ PValue AluFunc_recno()
 	return mkValue(g_pStateQueryAgent->getRecordCount());
 }
 
+PValue AluFunc_ctxrecno()
+{
+	return mkValue(g_pStateQueryAgent->getRecordCount() + g_pStateQueryAgent->getContextOffset());
+}
+
+PValue AluFunc_ctxoffset()
+{
+	return mkValue(g_pStateQueryAgent->getContextOffset());
+}
+
+PValue AluFunc_ctxoob(PValue pArg)
+{
+	if (nullptr == pArg) {
+		return mkValue(ALUInt(Reader::isOOBRecord(g_pStateQueryAgent->currRecord()) ? 1 : 0));
+	} else {
+		return mkValue(ALUInt(isOOBValue(pArg) ? 1 : 0));
+	}
+}
+
 PValue AluFunc_eof()
 {
-	bool isRunOut = g_pStateQueryAgent->isRunOut();
+	bool isRunOut = g_pStateQueryAgent->isEOF();
 	return mkValue(ALUInt(isRunOut ? 1 : 0));
 }
 
@@ -481,6 +501,10 @@ PValue AluFunc_fieldcount(PValue pStr, PValue pSep)
 // Helper function
 static PValue AluFunc_range(ALUInt start, ALUInt end)
 {
+	// If the current record is out-of-bounds, preserve that status
+	if (Reader::isOOBRecord(g_pStateQueryAgent->currRecord())) {
+		return g_pOOBValue;
+	}
 	PSpecString pRange = g_pStateQueryAgent->getFromTo(start, end);
 	if (pRange) {
 		PValue pRet = mkValue(pRange->data());
@@ -493,6 +517,16 @@ static PValue AluFunc_range(ALUInt start, ALUInt end)
 PValue AluFunc_record()
 {
 	return AluFunc_range(1,-1);
+}
+
+PValue AluFunc_cfrecord()
+{
+	PSpecString ps = g_pStateQueryAgent->inputRecord();
+	if (ps) {
+		return mkValue(ps->data());
+	} else {
+		return mkValue("");
+	}
 }
 
 PValue AluFunc_range(PValue pStart, PValue pEnd)
@@ -652,6 +686,10 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 {
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
+	// If no argument provided and current record is OOB, preserve OOB status
+	if (!pBigString && Reader::isOOBRecord(g_pStateQueryAgent->currRecord())) {
+		return g_pOOBValue;
+	}
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
@@ -1651,8 +1689,7 @@ PValue AluFunc_substitute(PValue pSrc, PValue pSearchString, PValue pSubstitute,
 	ASSERT_NOT_ELIDED(pSearchString,2,needle);
 	ASSERT_NOT_ELIDED(pSubstitute,3,subst);
 	std::string res = pSrc->getStr();
-	ALUInt count = ARG_INT_WITH_DEFAULT(pMax,1);
-	if (pMax->getStr()=="U") count = MAX_ALUInt;
+	ALUInt count = (ARG_STR_WITH_DEFAULT(pMax,"") == "U") ? MAX_ALUInt : ARG_INT_WITH_DEFAULT(pMax,1);
 
 	size_t findRet = 0;
 
@@ -1683,7 +1720,7 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 	if (pSep && pSep->getStrPtr()->length() > 0) {
 		sep = pSep->getStr()[0];
 	} else {
-		sep = '\t';
+		sep = DEFAULT_FIELDSEPARATOR_C;
 	}
 
 	if (0 == count) {
@@ -1777,7 +1814,7 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 	if (pSep && pSep->getStrPtr()->length() > 0) {
 		sep = pSep->getStr()[0];
 	} else {
-		sep = ' ';
+		sep = DEFAULT_WORDSEPARATOR_C;
 	}
 
 	if (0 == count) {
@@ -2353,6 +2390,20 @@ PValue AluFunc_sign(PValue pNumber)
 		ret = -1;
 	}
 
+	return mkValue(ret);
+}
+
+PValue AluFunc_not(PValue pNumber)
+{
+	ASSERT_NOT_ELIDED(pNumber,1,number);
+	ALUInt ret = 0;
+	switch (pNumber->getDivinedType()) {
+		case counterType__Int: 
+			ret = (0 == pNumber->getInt() ? 1 : 0);
+			break;
+		default:
+			ret = 0;
+	}
 	return mkValue(ret);
 }
 
