@@ -360,6 +360,13 @@ void setRegexType(const char* str)
 	setRegexType(s);
 }
 
+void printHeader(unsigned int onlyTest, const std::string& header)
+{
+	if (onlyTest == 0) {
+		std::cout << header;
+	}
+}
+
 class testGetter : public fieldIdentifierGetter {
 public:
 	virtual ~testGetter() {}
@@ -392,7 +399,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	tg.set('z', "0.0");
 	tg.set('n', "-9.8");
 
-	std::cout << "\nCounter Types and Values\n========================\n\n";
+	printHeader(onlyTest, "\nCounter Types and Values\n========================\n\n");
 
 	// All variables are None before they're set
 	VERIFY_TYPE(0,None);
@@ -460,7 +467,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_DIVINED_TYPE(0,None);
 	VERIFY_DIVINED_TYPE(11,Float);  // -8.0 should be considered float
 
-	std::cout << "\nALU Units\n=========\n\n";
+	printHeader(onlyTest, "\nALU Units\n=========\n\n");
 
 	// Some ALU Units
 	std::string s = "hello";
@@ -638,7 +645,7 @@ int runALUUnitTests3(unsigned int onlyTest)
 
 	// TODO: Many more needed
 
-	std::cout << "\nExpressions\n===========\n\n";
+	printHeader(onlyTest, "\nExpressions\n===========\n\n");
 
 	VERIFY_EXPR("23+45", "Number(23);BOP(+);Number(45)");
 	VERIFY_EXPR(" 23 + -8", "Number(23);BOP(+);Number(-8)");
@@ -661,7 +668,7 @@ int runALUUnitTests3(unsigned int onlyTest)
 
 	// TODO: Yeah, a whole bunch of more expressions
 
-	std::cout << "\nAssignment Statements\n=====================\n\n";
+	printHeader(onlyTest, "\nAssignment Statements\n=====================\n\n");
 
 	VERIFY_ASSNMENT("#6 := 2+2","Number(2);BOP(+);Number(2)");
 	VERIFY_ASSNMENT("#6 = 2+2","ALU assignment statements must have an assignment operator as the second element. Got BOP(=) instead.");
@@ -676,7 +683,7 @@ int runALUUnitTests3(unsigned int onlyTest)
 
 int runALUUnitTests4(unsigned int onlyTest)
 {
-	std::cout << "\nInfix to RPN Conversions - Shunting Yard Algorithm\n==================================================\n\n";
+	printHeader(onlyTest, "\nInfix to RPN Conversions - Shunting Yard Algorithm\n==================================================\n\n");
 
 	VERIFY_RPN("2+3", "Number(2);Number(3);BOP(+)");
 	VERIFY_RPN("-b","FI(b);UOP(-)");
@@ -701,7 +708,7 @@ int runALUUnitTests4(unsigned int onlyTest)
 
 int runALUUnitTests5(unsigned int onlyTest)
 {
-	std::cout << "\nEvaluating Expressions\n======================\n\n";
+	printHeader(onlyTest, "\nEvaluating Expressions\n======================\n\n");
 
 	VERIFY_EXPR_RES("5", "5");
 	VERIFY_EXPR_RES("b", "84")
@@ -1456,15 +1463,29 @@ int runALUUnitTests15(unsigned int onlyTest)
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
 	VERIFY_EXPR_RES("pdefined(unitTestVar)","0");
 	VERIFY_EXPR_RES("pset(unitTestVar,9)","9");
+	
+	if (onlyTest) {
+		std::string nine("9");
+		persistentVarSet(persistentVarName, nine);
+	}
 	VERIFY_EXPR_RES("pget(unitTestVar)","9");
+	
 	VERIFY_EXPR_RES("#unitTestVar","9");
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","9");
 	VERIFY_EXPR_RES("pdefined(unitTestVar)","1");
 	VERIFY_EXPR_RES("pclear(unitTestVar)","9");
-	VERIFY_EXPR_RES("pclear(unitTestVar)","NaN");
+
+	if (onlyTest) {
+		persistentVarClear(persistentVarName);
+	}
+	VERIFY_EXPR_RES("pclear(unitTestVar)","NaN");  // 689
 	VERIFY_EXPR_RES("pget(unitTestVar)","NaN");
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
-	VERIFY_EXPR_RES("pdefined(unitTestVar)","0");
+	
+	if (onlyTest) {
+		persistentVarClear(persistentVarName);
+	}	
+	VERIFY_EXPR_RES("pdefined(unitTestVar)","0"); // 692
 	
 	g_ps.setString(std::make_shared<std::string>("The quick brown fox     jumps over the lazy dog"));
 	VERIFY_EXPR_RES("splus('ek',4)","");           // Should not find ek in the quick brown fox
@@ -1474,7 +1495,7 @@ int runALUUnitTests15(unsigned int onlyTest)
 	VERIFY_EXPR_RES("splus('dog',3)","");	
 	VERIFY_EXPR_RES("splus('dog',4)","");	
 	VERIFY_EXPR_RES("splus('dog',400)","");	
-	VERIFY_EXPR_RES("splus('dog',1,2)","og");	
+	VERIFY_EXPR_RES("splus('dog',1,2)","og");	// 700
 	VERIFY_EXPR_RES("splus('dog',1,3)","og");	
 	VERIFY_EXPR_RES("splus('dog',1,30)","og");	
 	VERIFY_EXPR_RES("splus('The',1)","h");	
@@ -1522,20 +1543,20 @@ int runALUUnitTests15(unsigned int onlyTest)
 
 int runALUUnitTests16(unsigned int onlyTest)
 {
-	std::cout << "\nEvaluating Assignments\n======================\n\n";
+	printHeader(onlyTest, "\nEvaluating Assignments\n======================\n\n");
 
-	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
+	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");  // 737
 	VERIFY_ASSN_RES("#6:=1", "1");
 	VERIFY_ASSN_RES("#6/=0", "NaN");
 
 	counters.set(6,std::numeric_limits<ALUFloat>::quiet_NaN());
-	VERIFY_ASSN_RES("#6+=5", "NaN");
+	VERIFY_ASSN_RES("#6+=5", "NaN");  //740
 	VERIFY_ASSN_RES("#6:=1", "1");   // Let can fix a NaN
 
 	// exact() function
-	std::cout << "\nThe exact() function\n======================\n\n";
+	printHeader(onlyTest, "\nThe exact() function\n======================\n\n");
 	// Exact literals
-	VERIFY_EXPR_RES("exact(5)", "1");
+	VERIFY_EXPR_RES("exact(5)", "1");       // 742
 	VERIFY_EXPR_RES("exact(3.14)", "1");
 	VERIFY_EXPR_RES("exact('hello')", "1");
 
@@ -1547,7 +1568,7 @@ int runALUUnitTests16(unsigned int onlyTest)
 
 	// Inexact arithmetic
 	VERIFY_EXPR_RES("exact(20/3)", "0");
-	VERIFY_EXPR_RES("exact(20/3+4)", "0");
+	VERIFY_EXPR_RES("exact(20/3+4)", "0");   // 750
 
 	// Multiply by zero special case
 	VERIFY_EXPR_RES("exact((20/3)*0)", "1");
@@ -1567,7 +1588,7 @@ int runALUUnitTests16(unsigned int onlyTest)
 
 	// Functions that are always inexact
 	VERIFY_EXPR_RES("exact(sqrt(5))", "0");
-	VERIFY_EXPR_RES("exact(sin(1))", "0");
+	VERIFY_EXPR_RES("exact(sin(1))", "0");   // 760
 	VERIFY_EXPR_RES("exact(cos(1))", "0");
 	VERIFY_EXPR_RES("exact(log(2))", "0");
 	VERIFY_EXPR_RES("exact(exp(1))", "0");
@@ -1639,42 +1660,66 @@ int runALUUnitTests16(unsigned int onlyTest)
 #else
 #warning "Dropping test case because of unsupported precision"
 #endif
+
+	if (onlyTest) {
+		counters.set(7, ALUInt(2));
+		counters.setExactness(7, false);
+	}	
 	VERIFY_EXPR_RES("exact(#7)", "0");
 	VERIFY_ASSN_RES("#8:=2+2", "4");
-	VERIFY_EXPR_RES("exact(#8)", "1");
+	VERIFY_EXPR_RES("exact(#8)", "1");   // 820
 
 	// exact() with persistent varaibles
+	std::string persistentVarName("unitTestVar");
 	VERIFY_ASSN_RES("#9:=10/5", "2");
 	VERIFY_EXPR_RES("exact(#9)", "1");
+
+	if (onlyTest) {
+		counters.set(9,ALUInt(2));
+	}
 	VERIFY_EXPR_RES("pset(unitTestVar, #9)", "2");
-	VERIFY_EXPR_RES("pget(unitTestVar)", "2");
+	
+	if (onlyTest) {
+		std::string two("2");
+		persistentVarSet(persistentVarName, two);
+	}
+	VERIFY_EXPR_RES("pget(unitTestVar)", "2");       // 823
 	VERIFY_ASSN_RES("#10:=pget(unitTestVar)", "2");
+
+	if (onlyTest) {
+		counters.set(10, ALUInt(2));
+		counters.setExactness(10, false);
+	}	
 	VERIFY_EXPR_RES("exact(#10)", "0");
 
 	// not() function
-	std::cout << "\nThe not() function\n======================\n\n";
-	VERIFY_EXPR_RES("not(1)", "0");
+	printHeader(onlyTest, "\nThe not() function\n======================\n\n");
+	VERIFY_EXPR_RES("not(1)", "0");          // 826
 	VERIFY_EXPR_RES("not(0)", "1");
 	VERIFY_EXPR_RES("not(3.1415)", "0");
 	VERIFY_EXPR_RES("not(0.3333)", "0");
-	VERIFY_EXPR_RES("not('hello')", "0");
+	VERIFY_EXPR_RES("not('hello')", "0");    // 830
 	VERIFY_EXPR_RES("not('')", "0");
 	VERIFY_EXPR_RES("not(2+2==4)", "0");
 	VERIFY_EXPR_RES("not(2>3)", "1");
 	VERIFY_EXPR_RES("not(exact(#10))", "1");
-	VERIFY_EXPR_RES("not(includes(raid,'i'))", "0");
+	VERIFY_EXPR_RES("not(includes(raid,'i'))", "0");  // 835
 	VERIFY_EXPR_RES("not(includes(team,'i'))", "1");  // proving that there is really no 'i' in team
 
 
 	if (countFailures) {
-		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
-		std::cout << "Failed tests:\n";
-		for (int i : failedTests) {
-			std::cout << "\t" << i << "\n";
+		if (onlyTest == 0) {
+			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
+			std::cout << "Failed tests:\n";
+			for (int i : failedTests) {
+				std::cout << "\t" << i << "\n";
+			}
 		}
 		return 4;
 	} else {
-		std::cout << "\n*** All tests passed.\n";
+		if (onlyTest == 0) {
+			std::cout << "\n*** All tests passed.\n";
+		}
 		return 0;
 	}
 }

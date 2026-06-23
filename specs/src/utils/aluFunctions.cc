@@ -2861,12 +2861,11 @@ PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit, PValue pLocal
 			oss.imbue(std::locale(myLocale, myPunct));
 		}
 	} else {
-		pretty_punct* pct = new pretty_punct;
 		oss.setf(std::ios::fixed, std:: ios::floatfield);	
 		if (g_localeSpecified || pLocale) {
 			oss.imbue(std::locale(myLocale, myPunct));
 		} else {
-			oss.imbue(std::locale(oss.getloc(), pct));
+			oss.imbue(std::locale(oss.getloc(), new pretty_punct));
 		}
 	}
 
