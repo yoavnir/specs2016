@@ -2168,7 +2168,7 @@ Sets the record format for the primary input stream. Supported options are
 .B D (delimited)
 for records delimited by a character in the input stream (this is the default); 
 .B F (fixed)
-for records or a fixed length (see --lrecl); 
+for records of a fixed length (see --lrecl); 
 .B FD (fixed-delimited)
 for records delimited as in 
 .B fixed,

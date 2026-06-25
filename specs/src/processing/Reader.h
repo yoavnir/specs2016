@@ -102,7 +102,7 @@ private:
 	pipeType  m_pipe;
     char* m_buffer;
 	bool  m_EOF;
-	bool  m_NeedToClose;
+
 	recordFormat m_recfm;
 	unsigned int m_lrecl;
 	char         m_lineDelimiter;
