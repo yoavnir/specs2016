@@ -122,7 +122,6 @@ PSpecString Reader::peek(int offset)
 
 
 StandardReader::StandardReader() {
-	m_NeedToClose = false;
 	m_EOF = false;
 	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
@@ -140,7 +139,6 @@ StandardReader::StandardReader(std::istream* f) {
 		m_EOF = true;
 	}
 	m_File = std::shared_ptr<std::istream>(f);
-	m_NeedToClose = false;
 	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
 	m_lineDelimiter = 0;
@@ -157,7 +155,6 @@ StandardReader::StandardReader(std::string& fn) {
 		std::string err = "File not found: " + fn;
 		MYTHROW(err);
 	}
-	m_NeedToClose = true;
 	m_EOF = false;
 	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
@@ -170,7 +167,6 @@ StandardReader::StandardReader(std::string& fn) {
 
 StandardReader::StandardReader(pipeType pipe) {
 	m_pipe = pipe;
-	m_NeedToClose = false;
 	m_EOF = false;
 	m_buffer = nullptr;
 	m_recfm = RECFM_DELIMITED;
@@ -182,7 +178,7 @@ StandardReader::StandardReader(pipeType pipe) {
 }
 
 StandardReader::~StandardReader() {
-	if (m_NeedToClose) {
+	if (m_File) {
 		auto pInputFile = std::dynamic_pointer_cast<std::ifstream>(m_File);
 		if (pInputFile) pInputFile->close();
 	}
@@ -278,7 +274,7 @@ PSpecString StandardReader::getNextRecordInternal() {
 	case RECFM_DELIMITED: {
 		if (0 != m_lineDelimiter) {
 			m_Timer.changeClass(timeClassIO);
-			if (m_NeedToClose) {
+			if (m_File) {
 				ok = std::getline(*m_File, line, m_lineDelimiter) ? true : false;
 			} else if (m_pipe) {
 				int c = fgetc(m_pipe.get());
@@ -302,7 +298,7 @@ PSpecString StandardReader::getNextRecordInternal() {
 		} else {
 			bool ok;
 			m_Timer.changeClass(timeClassIO);
-			if (m_NeedToClose) {
+			if (m_File) {
 				ok = std::getline(*m_File, line) ? true : false;
 			} else if (m_pipe) {
 				int c = fgetc(m_pipe.get());
@@ -342,10 +338,19 @@ PSpecString StandardReader::getNextRecordInternal() {
 		return std::make_shared<std::string>(line);
 	}
 	case RECFM_FIXED: {
+		std::streamsize bytesRead;
 		m_Timer.changeClass(timeClassIO);
-		m_File->read(m_buffer, m_lrecl);
+		if (m_File) {
+			m_File->read(m_buffer, m_lrecl);
+			bytesRead = m_File->gcount();
+		} else if (m_pipe) {
+			bytesRead = (std::streamsize)fread(m_buffer, 1, m_lrecl, m_pipe.get());
+		} else {
+			std::cin.read(m_buffer, m_lrecl);
+			bytesRead = std::cin.gcount();
+		}
 		m_Timer.changeClass(timeClassProcessing);
-		if (m_File->gcount() < m_lrecl) {
+		if (bytesRead < (std::streamsize)m_lrecl) {
 			if (!m_EOF) g_readRecordCounter++;
 			m_EOF = true;
 			return nullptr;
