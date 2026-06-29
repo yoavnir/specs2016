@@ -34,6 +34,11 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Install pandoc and TeX Live (so the guidebook PDF is built)
+      run: |
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y pandoc texlive-xetex texlive-fonts-recommended fonts-dejavu
+
     - name: configure
       working-directory: specs/src
       run: python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12 

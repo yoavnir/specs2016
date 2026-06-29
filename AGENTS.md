@@ -10,6 +10,11 @@
 - When building the project, always use the command-line `make clean all`. Do not skip the `clean` target, and do not use the `-j` argument.
 - When changing the structure of any of the classes that have dump_ macros in `specs_gdb.py` and `specs.gdb` update the relevant macros as well.
 
+## ALU Functions
+
+- When adding or changing an ALU function - those are the functions defined in `aluFunctions.h` and implemented in `aluFunctions.cc` - document it in `manpage`, in `specs/docs/alu_adv.md`, and in `specs/docs/guidebook.md`.  Add unit tests as necessary in `specs/src/test/ALUUnitTest.cc`.
+- Always consider the exactness of the arguments to the ALU function and of the return value.
+
 ## Rolling Context Feature (Issue #106)
 
 ### Token Normalization in tokens.cc

@@ -135,6 +135,27 @@ jobs:
         name: linux-rpm
         path: rpmbuild/RPMS/**/*.rpm
 
+    - name: Install pandoc and TeX Live (for the guidebook PDF)
+      run: |
+        DEBIAN_FRONTEND=noninteractive apt-get install -y pandoc texlive-xetex texlive-fonts-recommended fonts-dejavu
+
+    - name: Substitute version and date into guidebook
+      run: |
+        DATE=$(date '+%B %d, %Y')
+        VERSION=$(specs/exe/specs '@version' 1 </dev/null)
+        sed -e "s|XXDATE|${DATE}|g" -e "s|XXVERSION|${VERSION}|g" \
+            specs/docs/guidebook.md > specs/docs/guidebook_tmp.md
+
+    - name: Build guidebook PDF
+      run: |
+        pandoc specs/docs/guidebook_tmp.md -o specs-guidebook.pdf --pdf-engine=xelatex -H specs/docs/header.tex
+
+    - name: Upload guidebook artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: guidebook-pdf
+        path: specs-guidebook.pdf
+
   build-macos:
     runs-on: macos-latest
     steps:
@@ -616,4 +637,5 @@ jobs:
           artifacts/windows-msi/*.msi
           artifacts/windows-msi-python/*.msi
           artifacts/windows-exe/*.exe
+          artifacts/guidebook-pdf/specs-guidebook.pdf
           artifacts/windows-exe-python/*.exe
