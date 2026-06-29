@@ -353,6 +353,8 @@ parser.add_argument("--os_version", dest="osversion", action="store", default=""
 					help="OS version to link against. Available only in Mac OS")
 parser.add_argument("--static", dest="static_link", action="store_true", default=False,
                     help="Statically link libstdc++")
+parser.add_argument("--no_book", dest="no_book", action="store_true", default=False,
+                    help="Avoid building the specs guidebook PDF")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
 parser.add_argument("--branch", dest="expbranch", action="store", default="",
@@ -842,21 +844,25 @@ if CFG_python:
 		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
 	)
 
-# Test if the guidebook PDF can be built (requires both pandoc and the
-# xelatex engine).  The "book" target is always written to the Makefile, but
-# it is only added to "all" when both tools are available.
-sys.stdout.write("Testing if pandoc is available...")
-CFG_pandoc = (0 == run_the_cmd("pandoc --version"))
-sys.stdout.write("Yes.\n" if CFG_pandoc else "No.\n")
+sys.stdout.write("Testing is pandoc and xelatex are available...")
+if args.no_book:
+	sys.stdout.write("Doesn't matter. Guidebook generation is configured off.\n")
+	CFG_book = False
+else:
+	# Test if the guidebook PDF can be built (requires both pandoc and the
+	# xelatex engine).  The "book" target is always written to the Makefile, but
+	# it is only added to "all" and "some" when both tools are available.
+	CFG_pandoc = (0 == run_the_cmd("pandoc --version"))
+	sys.stdout.write("Yes" if CFG_pandoc else "No")
 
-sys.stdout.write("Testing if the xelatex engine is available...")
-CFG_xelatex = (0 == run_the_cmd("xelatex --version"))
-sys.stdout.write("Yes.\n" if CFG_xelatex else "No.\n")
+	CFG_xelatex = (0 == run_the_cmd("xelatex --version"))
+	sys.stdout.write(" and yes. " if CFG_xelatex else " and no. ")
 
-if os.path.isfile("xx.txt"):
-	os.remove("xx.txt")
+	if os.path.isfile("xx.txt"):
+		os.remove("xx.txt")
 
-CFG_book = CFG_pandoc and CFG_xelatex
+	CFG_book = CFG_pandoc and CFG_xelatex
+	sys.stdout.write("Guidebook generation is {}.\n".format("enabled" if CFG_book else "disabled"))
 
 # Generate build_info.h (so it exists before the first compile; it is
 # regenerated on every build by the utils/build_info.h Makefile target)
