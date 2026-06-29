@@ -52,6 +52,10 @@ specs/src/gdb/__pycache__
 # Generated build info
 specs/src/utils/build_info.h
 
+# Generated guidebook PDF and its preprocessed source
+specs/docs/guidebook_tmp.md
+specs/docs/guidebook.pdf
+
 # AI agents
 .devin
 

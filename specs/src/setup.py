@@ -193,9 +193,9 @@ TESTOBJS = $(TESTSRC:.cc=.{})
 BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
 
 #default goal
-some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
+some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL)
 
-all: directories $(TEST_EXES)
+all: directories $(TEST_EXES) $(BOOK_ALL)
 
 specs: directories $(EXE_DIR)/specs
 
@@ -250,6 +250,7 @@ install_mac: $(EXE_DIR)/specs specs.1.gz
 	$(MKDIR_C) /usr/local/share/zsh/site-functions
 	cp ../../.github/packaging/specs-completion.zsh /usr/local/share/zsh/site-functions/_specs
 	/bin/bash ../../.github/packaging/postinstall_macos
+	if [ -f $(DOCS_DIR)/guidebook.pdf ]; then $(MKDIR_C) /usr/local/share/doc/specs && cp $(DOCS_DIR)/guidebook.pdf /usr/local/share/doc/specs/; fi
 
 install_linux: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
@@ -260,6 +261,7 @@ install_linux: $(EXE_DIR)/specs specs.1.gz
 	/bin/rm specs.1.gz
 	$(MKDIR_C) /etc/bash_completion.d
 	cp ../../.github/packaging/specs-completion.bash /etc/bash_completion.d/specs
+	if [ -f $(DOCS_DIR)/guidebook.pdf ]; then $(MKDIR_C) /usr/local/share/doc/specs && cp $(DOCS_DIR)/guidebook.pdf /usr/local/share/doc/specs/; fi
 
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
@@ -269,6 +271,7 @@ uninstall_mac:
 	/bin/rm -f /usr/local/bin/specs-autocomplete
 	/bin/rm -f /usr/local/share/man/man1/specs.1.gz
 	/bin/rm -f /usr/local/share/zsh/site-functions/_specs
+	/bin/rm -f /usr/local/share/doc/specs/guidebook.pdf
 	/bin/bash ../../.github/packaging/postuninstall_macos
 
 uninstall_linux:
@@ -276,6 +279,7 @@ uninstall_linux:
 	/bin/rm -f /usr/local/bin/specs-autocomplete
 	/bin/rm -f /usr/local/share/man/man1/specs.1.gz
 	/bin/rm -f /etc/bash_completion.d/specs
+	/bin/rm -f /usr/local/share/doc/specs/guidebook.pdf
 
 uninstall_win:
 	echo "Installation on Windows only copies specs.exe to the PATH; nothing to uninstall. Please manually remove specs.exe if desired."
@@ -284,7 +288,7 @@ uninstall_win:
 clear_clean_posix = \
 """
 clean:
-	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz
+	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz $(DOCS_DIR)/guidebook_tmp.md $(DOCS_DIR)/guidebook.pdf
 	
 clear:
 	/bin/rm */*.d */*.o
@@ -306,6 +310,17 @@ manpart = \
 specs.1.gz: ../../manpage
 	cp ../../manpage specs.1
 	gzip specs.1
+"""
+
+book_part = \
+"""
+.PHONY: book
+book: $(DOCS_DIR)/guidebook.pdf
+
+$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex
+	sed -e "s|XXDATE|$$(date '+%B %d, %Y')|g" -e "s|XXVERSION|$$($(EXE_DIR)/specs '@version' 1 </dev/null)|g" $(DOCS_DIR)/guidebook.md > $(DOCS_DIR)/guidebook_tmp.md
+	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/header.tex
+	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
 
 valid_compilers = ["GCC", "CLANG", "VS"]
@@ -429,6 +444,7 @@ if platform=="POSIX":
 	mkdir_c = "mkdir -p"
 	exe_dir = "../exe"
 	tests_dir = "../tests"
+	docs_dir = "../docs"
 	clear_clean_part = clear_clean_posix
 	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
 	bashrc = "/etc/bash.bashrc" if os.path.isfile("/etc/bash.bashrc") else "/etc/bashrc"
@@ -436,6 +452,7 @@ elif platform=="NT":
 	mkdir_c = "mkdir"
 	exe_dir = "..\\exe"
 	tests_dir = "..\\tests"
+	docs_dir = "..\\docs"
 	clear_clean_part = clear_clean_nt
 	compiler_cleanup_cmd = "del xx.cc xx.o xx.exe xx.txt"
 	bashrc = "/dev/null"
@@ -825,6 +842,22 @@ if CFG_python:
 		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
 	)
 
+# Test if the guidebook PDF can be built (requires both pandoc and the
+# xelatex engine).  The "book" target is always written to the Makefile, but
+# it is only added to "all" when both tools are available.
+sys.stdout.write("Testing if pandoc is available...")
+CFG_pandoc = (0 == run_the_cmd("pandoc --version"))
+sys.stdout.write("Yes.\n" if CFG_pandoc else "No.\n")
+
+sys.stdout.write("Testing if the xelatex engine is available...")
+CFG_xelatex = (0 == run_the_cmd("xelatex --version"))
+sys.stdout.write("Yes.\n" if CFG_xelatex else "No.\n")
+
+if os.path.isfile("xx.txt"):
+	os.remove("xx.txt")
+
+CFG_book = CFG_pandoc and CFG_xelatex
+
 # Generate build_info.h (so it exists before the first compile; it is
 # regenerated on every build by the utils/build_info.h Makefile target)
 subprocess.call([sys.executable, "generate_build_info.py"])
@@ -837,6 +870,8 @@ with open("Makefile", "w") as makefile:
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
 	makefile.write("TESTS_DIR={}\n".format(tests_dir))
+	makefile.write("DOCS_DIR={}\n".format(docs_dir))
+	makefile.write("BOOK_ALL={}\n".format("book" if CFG_book else ""))
 	makefile.write("CPPFLAGS = {}\n".format(cppflags))
 	
 	if compiler=="VS":
@@ -859,6 +894,7 @@ with open("Makefile", "w") as makefile:
 		makefile.write("\n{}\n".format(make_depends))
 	makefile.write("{}\n".format(body2fmt))
 	makefile.write("{}\n".format(clear_clean_part))
+	makefile.write("{}\n".format(book_part))
 
 	if sys.platform=="darwin":
 		makefile.write("{}\n\ninstall: install_mac\n\nuninstall: uninstall_mac\n".format(manpart))
