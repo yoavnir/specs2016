@@ -204,6 +204,24 @@ specs: directories $(EXE_DIR)/specs
 
 """
 
+# GCC/Clang only: build the unit-test harnesses without optimization.  The
+# optimizer dominates compile time for the large, macro-heavy test sources
+# (e.g. ALUUnitTest.cc takes ~48s at -O3 vs ~5s at -O0, ProcessingTest.cc ~24s
+# vs ~3s) and the test executables are never shipped, so optimization buys us
+# nothing - the library code they exercise is still built at -O3.  This applies
+# to every object in test/ EXCEPT the shipped specs / specs-autocomplete
+# binaries (selected via filter-out), so it stays correct even if new tests are
+# added.  The trailing -O0 overrides the -O3 in CONDCOMP.  _FORTIFY_SOURCE
+# requires an optimizing build (it emits a #warning otherwise, which -Werror
+# turns fatal) and its runtime buffer checks are irrelevant for the test
+# binaries, so undefine it here.
+test_opt_override = \
+"""
+NONSHIP_TEST_OBJS = $(filter-out test/specs.o test/specs-autocomplete.o,$(TESTOBJS))
+$(NONSHIP_TEST_OBJS): test/%.o : test/%.cc
+\t$(CXX) $(CPPFLAGS) -Wp,-U_FORTIFY_SOURCE -O0 -c $< -o $@
+"""
+
 make_depends = \
 """
 DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
@@ -891,6 +909,8 @@ with open("Makefile", "w") as makefile:
 		body2fmt = body2.format("o", "-o ", "", "-pthread")
 	
 	makefile.write("{}\n".format(body1fmt))
+	if compiler!="VS":
+		makefile.write("{}\n".format(test_opt_override))
 	if use_cached_depends:
 		if compiler=="VS":
 			makefile.write("\n{}\n".format(cached_depends_vs))
