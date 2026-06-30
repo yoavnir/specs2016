@@ -221,6 +221,19 @@ The parameters for the `fmap_dump` functions are as follows:
 * *showPct* - evaluated as boolean. If *true* causes the textual formats to print out a percentage. Causes the CSV and JSON formats to add a fraction. Default is *false*.
 
 
+## Table of Shell Command Functions
+
+These functions run a shell command and let you process its output and return code.
+
+| Function | Description |
+| -------- | ----------- |
+| `exec(cmd)` | Runs the shell command `cmd` and returns its standard output. A single trailing newline is stripped. The return code is saved for `excrc()` and the standard error is saved for `excerr()` |
+| `exc1(cmd,[lineNo])` | Like `exec(cmd)`, but returns only the content of line `lineNo` of the standard output. `lineNo` must be a positive integer and defaults to `1` (the first line); an empty string is returned if that line does not exist |
+| `excrc()` | Returns the return code of the last shell command run by `exec()` or `exc1()`, or **NaN** if no such command has been run |
+| `excerr()` | Returns the standard error of the last shell command run by `exec()` or `exc1()`. If no such command has been run, returns an empty string |
+
+The `excrc()` and `excerr()` functions reflect **only the last run** of a shell command, so use them before any other shell command is run. Take special care when `exec()` or `exc1()` are used inside an `IF` or `WHILE` block, where the order and number of runs may not be obvious.
+
 ## Table of Special Functions
 | Function | Description |
 | -------- | ----------- |
