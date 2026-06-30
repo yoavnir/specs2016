@@ -204,6 +204,24 @@ specs: directories $(EXE_DIR)/specs
 
 """
 
+# GCC/Clang only: build the unit-test harnesses without optimization.  The
+# optimizer dominates compile time for the large, macro-heavy test sources
+# (e.g. ALUUnitTest.cc takes ~48s at -O3 vs ~5s at -O0, ProcessingTest.cc ~24s
+# vs ~3s) and the test executables are never shipped, so optimization buys us
+# nothing - the library code they exercise is still built at -O3.  This applies
+# to every object in test/ EXCEPT the shipped specs / specs-autocomplete
+# binaries (selected via filter-out), so it stays correct even if new tests are
+# added.  The trailing -O0 overrides the -O3 in CONDCOMP.  _FORTIFY_SOURCE
+# requires an optimizing build (it emits a #warning otherwise, which -Werror
+# turns fatal) and its runtime buffer checks are irrelevant for the test
+# binaries, so undefine it here.
+test_opt_override = \
+"""
+NONSHIP_TEST_OBJS = $(filter-out test/specs.o test/specs-autocomplete.o,$(TESTOBJS))
+$(NONSHIP_TEST_OBJS): test/%.o : test/%.cc
+\t$(CXX) $(CPPFLAGS) -Wp,-U_FORTIFY_SOURCE -O0 -c $< -o $@
+"""
+
 make_depends = \
 """
 DEPS = $(LIBOBJS:.o=.d) $(TESTOBJS:.o=.d)
@@ -231,6 +249,19 @@ run_tests: $(TEST_EXES)
 	$(EXE_DIR)/ALUUnitTest
 	python3 $(TESTS_DIR)/valgrind_specs.py --no_valgrind
 	python3 $(TESTS_DIR)/recfm_tests.py
+
+# Run the full clean -> build -> test cycle with the three phases strictly
+# serialized, while still compiling in parallel within the build phase.
+# Prefer "make -j N ci" over "make -j N clean all run_tests": Make schedules
+# the goals named on the command line concurrently under -j, so clean races the
+# compiles in all and run_tests can start before all has finished.  Running the
+# phases as sequential sub-makes enforces the ordering; each $(MAKE) inherits -j
+# through the jobserver, so the all phase still builds in parallel.
+.PHONY: ci
+ci:
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) run_tests
 
 directories: $(EXE_DIR)
 
@@ -317,7 +348,10 @@ book_part = \
 .PHONY: book
 book: $(DOCS_DIR)/guidebook.pdf
 
-$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex
+# The recipe runs $(EXE_DIR)/specs, so it must depend on it - otherwise a
+# parallel "make -j all" can start generating the guidebook before specs has
+# been linked ("specs: Command not found").
+$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex $(EXE_DIR)/specs
 	$(EXE_DIR)/specs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/guidebook_prepare
 	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
@@ -891,6 +925,8 @@ with open("Makefile", "w") as makefile:
 		body2fmt = body2.format("o", "-o ", "", "-pthread")
 	
 	makefile.write("{}\n".format(body1fmt))
+	if compiler!="VS":
+		makefile.write("{}\n".format(test_opt_override))
 	if use_cached_depends:
 		if compiler=="VS":
 			makefile.write("\n{}\n".format(cached_depends_vs))
