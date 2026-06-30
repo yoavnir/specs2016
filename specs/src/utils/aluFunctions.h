@@ -322,7 +322,16 @@
 	X(split,          3, ALUFUNC_REGULAR,     true,   \
 			"([sep], [hdr], [ftr]) - Returns on multiple lines the fields (separated by the 'sep' character), discarding the first 'hdr' and last 'ftr' records.","The separator defaults to the current field separator.\n'hdr' and 'ftr' both default to zero.") \
 	X(splitw,         3, ALUFUNC_REGULAR,     true,   \
-			"([sep], [hdr], [ftr]) - Returns on multiple lines the words (separated by the 'sep' character), discarding the first 'hdr' and last 'ftr' records.","The separator defaults to the current word separator.\n'hdr' and 'ftr' both default to zero.")
+			"([sep], [hdr], [ftr]) - Returns on multiple lines the words (separated by the 'sep' character), discarding the first 'hdr' and last 'ftr' records.","The separator defaults to the current word separator.\n'hdr' and 'ftr' both default to zero.") \
+	H(Shell Command Functions,22) \
+	X(exec,           1, ALUFUNC_REGULAR,     false,  \
+			"(cmd) - Runs the shell command 'cmd' and returns its standard output.","One trailing newline is stripped from the output.\nThe command's return code is saved and is available through excrc(),\nwhile its standard error is saved and is available through excerr().") \
+	X(exc1,           2, ALUFUNC_REGULAR,     false,  \
+			"(cmd,[lineno]) - Runs the shell command 'cmd' and returns the content of line 'lineno' of its standard output.","'lineno' must be a positive integer and defaults to 1, returning the first line. Returns an empty string if that line does not exist.\nLike exec(), it saves the return code and standard error for excrc() and excerr().") \
+	X(excrc,          0, ALUFUNC_REGULAR,     false,  \
+			"() - Returns the return code of the last shell command run by exec() or exc1().","Returns NaN if no shell command has been run yet.\nReflects only the last run, so use it before running any other shell command.\nTake care when exec() or exc1() are run within an IF or WHILE block.") \
+	X(excerr,         0, ALUFUNC_REGULAR,     false,  \
+			"() - Returns the standard error of the last shell command run by exec() or exc1().","Initialized to an empty string if no shell command has been run yet.\nReflects only the last run, so use it before running any other shell command.\nTake care when exec() or exc1() are run within an IF or WHILE block.")
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false,  \

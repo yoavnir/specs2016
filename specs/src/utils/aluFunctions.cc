@@ -15,6 +15,12 @@
 #include <iomanip>
 #include <algorithm> // for std::reverse
 #include <cstdlib>   // for std::getenv
+#include <cstdio>    // for popen/_popen
+#include <array>     // for the shell command read buffer
+#ifndef WIN64
+#include <sys/wait.h>  // for WIFEXITED/WEXITSTATUS
+#include <unistd.h>    // for mkstemp and close
+#endif
 
 #define PAD_CHAR ' '
 
@@ -3016,6 +3022,138 @@ PValue AluFunc_pset(PValue pName, PValue pValue)
 	auto ret = mkValue(*pValue);
 	ret->setExact(false);
 	return ret;
+}
+
+/*
+ *
+ * Shell command functions: exec, exc1, excrc, excerr
+ * ==================================================
+ * These functions run a shell command and expose its standard output, its
+ * standard error, and its return code. The standard error and return code of
+ * only the *last* run are retained in the globals below.
+ */
+static PValue      g_execRc = mkValue0();   // NaN until a shell command has run
+static std::string g_execErr = "";
+
+#define EXEC_READ_BUFFER_SIZE 65536
+
+// Creates an empty temporary file and returns its name. The file is left in
+// place so the shell can reopen it via redirection. On POSIX we use mkstemp
+// (the safe, race-free way); on Windows, where mkstemp is unavailable, we
+// fall back to tmpnam.
+static std::string makeTempFileName()
+{
+#ifdef WIN64
+	const char* name = std::tmpnam(nullptr);
+	if (nullptr == name) {
+		MYTHROW("exec: Failed to generate a temporary file name");
+	}
+	return std::string(name);
+#else
+	const char* tmpdir = std::getenv("TMPDIR");
+	std::string templ = std::string((tmpdir && *tmpdir) ? tmpdir : "/tmp") + "/specsXXXXXX";
+	int fd = mkstemp(&templ[0]);  // std::string storage is contiguous (C++11+)
+	if (fd < 0) {
+		MYTHROW("exec: Failed to create a temporary file for capturing standard error");
+	}
+	close(fd);
+	return templ;
+#endif
+}
+
+// Runs 'cmd' through the shell, returns its standard output, and updates
+// g_execRc (return code) and g_execErr (standard error).
+static std::string runShellCommand(const std::string& cmd)
+{
+	std::string errFileName = makeTempFileName();
+	std::string fullCmd = cmd + " 2>\"" + errFileName + "\"";
+
+	std::array<char, EXEC_READ_BUFFER_SIZE> buffer;
+	std::string output;
+
+#ifdef WIN64
+	FILE* pipe = _popen(fullCmd.c_str(), "r");
+#else
+	FILE* pipe = popen(fullCmd.c_str(), "r");
+#endif
+	if (nullptr == pipe) {
+		std::string err = "exec: Failed to run command: " + cmd;
+		MYTHROW(err);
+	}
+
+	while (nullptr != fgets(buffer.data(), int(buffer.size()), pipe)) {
+		output += buffer.data();
+	}
+
+#ifdef WIN64
+	int status = _pclose(pipe);
+	g_execRc = mkValue(ALUInt(status));
+#else
+	int status = pclose(pipe);
+	g_execRc = mkValue(ALUInt(WIFEXITED(status) ? WEXITSTATUS(status) : status));
+#endif
+
+	g_execErr = "";
+	FILE* errFile = fopen(errFileName.c_str(), "r");
+	if (nullptr != errFile) {
+		while (nullptr != fgets(buffer.data(), int(buffer.size()), errFile)) {
+			g_execErr += buffer.data();
+		}
+		fclose(errFile);
+	}
+	remove(errFileName.c_str());
+
+	return output;
+}
+
+PValue AluFunc_exec(PValue pCmd)
+{
+	ASSERT_NOT_ELIDED(pCmd,1,command);
+	std::string output = runShellCommand(pCmd->getStr());
+	// Strip a single trailing newline (\n or \r\n)
+	if (!output.empty() && output.back()=='\n') {
+		output.erase(output.length()-1);
+		if (!output.empty() && output.back()=='\r') {
+			output.erase(output.length()-1);
+		}
+	}
+	return mkValue(output);
+}
+
+PValue AluFunc_exc1(PValue pCmd, PValue pLine)
+{
+	ASSERT_NOT_ELIDED(pCmd,1,command);
+	ALUInt lineNo = ARG_INT_WITH_DEFAULT(pLine,1);
+	if (lineNo < 1) {
+		// The below dereference of pLine is safe because if !pLine, lineNo = 1
+		std::string err = "Argument must be a positive integer, but got " + pLine->getStr();
+		THROW_ARG_ISSUE(2,lineNo,err);
+	}
+	std::string output = runShellCommand(pCmd->getStr());
+
+	std::istringstream iss(output);
+	std::string line;
+	ALUInt idx = 0;
+	while (std::getline(iss, line)) {
+		if (++idx == lineNo) {
+			// std::getline strips the \n; strip a trailing \r if present
+			if (!line.empty() && line.back()=='\r') {
+				line.erase(line.length()-1);
+			}
+			return mkValue(line);
+		}
+	}
+	return mkValue(std::string(""));
+}
+
+PValue AluFunc_excrc()
+{
+	return g_execRc;  /* NaN until a shell command has run */
+}
+
+PValue AluFunc_excerr()
+{
+	return mkValue(g_execErr);
 }
 
 PValue AluFunc_getenv(PValue pName)

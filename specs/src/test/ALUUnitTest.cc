@@ -1706,6 +1706,19 @@ int runALUUnitTests16(unsigned int onlyTest)
 	VERIFY_EXPR_RES("not(includes(raid,'i'))", "0");  // 835
 	VERIFY_EXPR_RES("not(includes(team,'i'))", "1");  // proving that there is really no 'i' in team
 
+	// Shell command functions: exec, exc1, excrc, excerr
+	// 'echo' is used because it works on Linux, Mac OS, and Windows.
+	// excrc()/excerr() are exercised within the same expression as the
+	// exec()/exc1() call so each test is self-contained when run in isolation.
+	printHeader(onlyTest, "\nShell command functions\n======================\n\n");
+	VERIFY_EXPR_RES("exec('echo hello')", "hello");          // 837
+	VERIFY_EXPR_RES("exc1('echo hello')", "hello");
+	VERIFY_EXPR_RES("exc1('echo hello',1)", "hello");
+	VERIFY_EXPR_RES("exc1('echo hello',2)", "");             // line out of range -> empty
+	VERIFY_EXPR_RES("exc1('echo hello',0)", "exc1: Argument must be a positive integer, but got 0: #2 (lineNo)");
+	VERIFY_EXPR_RES("exc1('echo hello',-3)", "exc1: Argument must be a positive integer, but got -3: #2 (lineNo)");
+	VERIFY_EXPR_RES("exec('echo hello')||'/'||excrc()", "hello/0");
+	VERIFY_EXPR_RES("exc1('echo hello')||'/'||excerr()", "hello/");
 
 	if (countFailures) {
 		if (onlyTest == 0) {

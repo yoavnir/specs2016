@@ -22,15 +22,15 @@ header-includes: |
 include-before: |
   \begin{titlepage}
   \centering
-  {\Huge\bfseries specs\par}
-  \vspace{2cm}
-  {\Large The complete guidebook\par}
-  \vspace{4cm}
-  {\textit\underline\color{blue}https://github.com/yoavnir/specs2016\par}
+  {\Huge\bfseries\itshape specs\par}
+  \vspace{0cm}
+  {\Huge The complete guidebook\par}
+  \vspace{5cm}
+  {\Large\itshape\color{blue}\underline{https://github.com/yoavnir/specs2016}\par}
   \vfill
-  {\Large Version: XXVERSION\par}
+  {\Large Version XXVERSION\par}
   \vspace{1cm}
-  {\large XXDATE\par}
+  {\Large XXDATE\par}
   \end{titlepage}
   \clearpage
   \chapter*{Preface}
@@ -1729,6 +1729,55 @@ Example — word frequency counter:
 
 ```
 cat file.txt | specs a: w1 . EOF PRINT "fmap_dump(a,'csv','cd',1)" 1
+```
+
+## Shell Command Functions
+
+These functions run a shell command and let you process its standard output, standard error, and return code:
+
+| Function | Description |
+|----------|-------------|
+| `exec(cmd)` | Run shell command c; returns its standard output (one trailing newline stripped) |
+| `exc1(cmd, [lineNo])` | Like `exec`, but returns only the content of output line `lineNo`; `lineNo` must be a positive integer and defaults to 1; empty string if absent |
+| `excrc()` | Return code of the last exec/exc1 run; NaN if none has run |
+| `excerr()` | Standard error of the last exec/exc1 run; empty string if none has run |
+
+`exec` returns whatever the command wrote to standard output. The command's return code and standard error are saved for the `excrc()` and `excerr()` functions:
+
+```
+specs PRINT "exec('echo hello')"
+hello
+```
+
+`exc1` is the same as `exec`, except it returns just one line of output:
+
+```
+specs PRINT "exc1('echo hello')"
+hello
+```
+
+### Reading the return code and standard error
+
+`excrc()` and `excerr()` always reflect **only the last** shell command that was run. Read them right after the relevant `exec`/`exc1` call, and before any other shell command runs:
+
+```
+specs PRINT "exec('grep specs *')" WRITE "stderr" WRITE PRINT "excerr()"
+```
+
+Be especially careful when `exec` or `exc1` appear inside an `IF` or `WHILE` block, where the order and number of runs may not be obvious.
+
+### Efficiency
+
+`exec` and `exc1` launch a new shell for every record they are evaluated on. The following runs `ls | wc` once **per input record**, which is wasteful:
+
+```
+specs -C ls "File" 1 w8 NW "is one of the" NW PRINT "exc1('ls | wc')" NW "files in this directory"
+```
+
+A more efficient version runs the command only once — on the first record — and stores the result in a field identifier for reuse:
+
+```
+specs -C ls IF "first()" THEN SET "#0:=exc1('ls | wc')" ENDIF "File" 1 w8 NW "is one of the" NW PRINT "#0" NW "files in this directory"
 ```
 
 ## Special Functions
