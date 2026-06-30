@@ -250,6 +250,19 @@ run_tests: $(TEST_EXES)
 	python3 $(TESTS_DIR)/valgrind_specs.py --no_valgrind
 	python3 $(TESTS_DIR)/recfm_tests.py
 
+# Run the full clean -> build -> test cycle with the three phases strictly
+# serialized, while still compiling in parallel within the build phase.
+# Prefer "make -j N ci" over "make -j N clean all run_tests": Make schedules
+# the goals named on the command line concurrently under -j, so clean races the
+# compiles in all and run_tests can start before all has finished.  Running the
+# phases as sequential sub-makes enforces the ordering; each $(MAKE) inherits -j
+# through the jobserver, so the all phase still builds in parallel.
+.PHONY: ci
+ci:
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) run_tests
+
 directories: $(EXE_DIR)
 
 $(EXE_DIR):
@@ -335,7 +348,10 @@ book_part = \
 .PHONY: book
 book: $(DOCS_DIR)/guidebook.pdf
 
-$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex
+# The recipe runs $(EXE_DIR)/specs, so it must depend on it - otherwise a
+# parallel "make -j all" can start generating the guidebook before specs has
+# been linked ("specs: Command not found").
+$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex $(EXE_DIR)/specs
 	$(EXE_DIR)/specs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/guidebook_prepare
 	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
