@@ -141,7 +141,7 @@ jobs:
 
     - name: Substitute version and date into guidebook
       run: |
-        specs/exe/specs -i specs/docs/guidebook.md -o specs/docs/guidebook_tmp.md IF "first()" THEN SET "#0:=exc1('date \"+%B %d, %Y\"')" ENDIF PRINT "substitute(substitute(@@,XXDATE,#0,'U'),XXVERSION,@version,'U')"
+        specs/exe/specs -i specs/docs/guidebook.md -o specs/docs/guidebook_tmp.md -f specs/docs/guidebook_prepare
 
     - name: Build guidebook PDF
       run: |

@@ -318,7 +318,7 @@ book_part = \
 book: $(DOCS_DIR)/guidebook.pdf
 
 $(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex
-	$(EXE_DIR)/specs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md IF "first()" THEN SET "#0:=exc1('date \\"+%B %d, %Y\\"')" ENDIF PRINT "substitute(substitute(@@,XXDATE,#0,'U'),XXVERSION,@version,'U')"
+	$(EXE_DIR)/specs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/guidebook_prepare
 	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
