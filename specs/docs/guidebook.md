@@ -22,15 +22,15 @@ header-includes: |
 include-before: |
   \begin{titlepage}
   \centering
-  {\Huge\bfseries specs\par}
-  \vspace{2cm}
-  {\Large The complete guidebook\par}
-  \vspace{4cm}
-  {\textit\underline\color{blue}https://github.com/yoavnir/specs2016\par}
+  {\Huge\bfseries\itshape specs\par}
+  \vspace{0cm}
+  {\Huge The complete guidebook\par}
+  \vspace{5cm}
+  {\Large\itshape\color{blue}\underline{https://github.com/yoavnir/specs2016}\par}
   \vfill
-  {\Large Version: XXVERSION\par}
+  {\Large Version XXVERSION\par}
   \vspace{1cm}
-  {\large XXDATE\par}
+  {\Large XXDATE\par}
   \end{titlepage}
   \clearpage
   \chapter*{Preface}
@@ -1761,7 +1761,7 @@ hello
 `excrc()` and `excerr()` always reflect **only the last** shell command that was run. Read them right after the relevant `exec`/`exc1` call, and before any other shell command runs:
 
 ```
-specs PRINT "exec('grep XXDATE *')" WRITE "stderr" WRITE PRINT "excerr()"
+specs PRINT "exec('grep specs *')" WRITE "stderr" WRITE PRINT "excerr()"
 ```
 
 Be especially careful when `exec` or `exc1` appear inside an `IF` or `WHILE` block, where the order and number of runs may not be obvious.
