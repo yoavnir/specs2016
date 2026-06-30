@@ -141,10 +141,7 @@ jobs:
 
     - name: Substitute version and date into guidebook
       run: |
-        DATE=$(date '+%B %d, %Y')
-        VERSION=$(specs/exe/specs '@version' 1 </dev/null)
-        sed -e "s|XXDATE|${DATE}|g" -e "s|XXVERSION|${VERSION}|g" \
-            specs/docs/guidebook.md > specs/docs/guidebook_tmp.md
+        specs/exe/specs -i specs/docs/guidebook.md -o specs/docs/guidebook_tmp.md -f specs/docs/guidebook_prepare
 
     - name: Build guidebook PDF
       run: |

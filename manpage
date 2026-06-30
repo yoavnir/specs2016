@@ -1760,6 +1760,51 @@ are specified, the first
 words and last 
 .I ftr 
 words are omitted.
+.IP "exec(cmd)" 3
+Runs the shell command in
+.I cmd
+and returns whatever the command wrote to its standard output. A single
+trailing newline is stripped from the output. The command's return code is
+saved and can be retrieved with
+.B excrc(),
+while whatever the command wrote to its standard error is saved and can be
+retrieved with
+.B excerr().
+.IP "exc1(cmd [,lineNo])" 3
+Like
+.B exec(cmd),
+but returns only the contents of line
+.I lineNo
+of the standard output. The
+.I lineNo
+argument must be a positive integer and defaults to 1, which returns the first
+line. If the requested line does not exist, an empty string is returned.
+.IP "excrc()" 3
+Returns the return code of the last shell command run by
+.B exec()
+or
+.B exc1().
+If no such command has been run, returns
+.B NaN.
+This reflects only the most recent run, so use it before running any other
+shell command. Take special care when
+.B exec()
+or
+.B exc1()
+are run inside an
+.B IF
+or
+.B WHILE
+block.
+.IP "excerr()" 3
+Returns whatever the last shell command run by
+.B exec()
+or
+.B exc1()
+wrote to its standard error. If no such command has been run, returns an empty
+string. As with
+.B excrc(),
+this reflects only the most recent run.
 
 
 .SS "Built-In Statistical Pseudo-Functions" 

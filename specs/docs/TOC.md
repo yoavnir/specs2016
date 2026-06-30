@@ -50,6 +50,7 @@ Advanced Topics
   * [Table of REXX-Derived Functions](alu_adv.md#table-of-other-rexx-derived-functions)
   * [Table of Statistical and Frequency Map Pseudo-Functions](alu_adv.md#table-of-statistical-and-frequency-map-pseudo-functions)
   * [Table of Record Access Functions](alu_adv.md#table-of-record-access-functions)
+  * [Table of Shell Command Functions](alu_adv.md#table-of-shell-command-functions)
   * [Table of Special Functions](alu_adv.md#table-of-special-functions)
 * [Local Python Functions](pyfuncs.md)
 * [Examples](examples.md)
