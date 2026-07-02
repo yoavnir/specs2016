@@ -17,6 +17,7 @@
 #include "aluFunctions.h"
 #include "processing/Config.h"  // for configured literals
 #include "processing/Reader.h"  // for g_pReader
+#include "specitems/specItems.h"  // for MAX_CONTEXT_SIZE
 
 extern stateQueryAgent* g_pStateQueryAgent;
 extern unsigned int g_forwardContext;
@@ -24,6 +25,9 @@ extern unsigned int g_backwardContext;
 
 // Sentinel pointer for out-of-bounds values
 PValue g_pOOBValue = std::make_shared<ALUValue>(std::string(""));
+
+// Final errors to be printed by `specs`
+std::ostringstream g_FinalErrors;
 
 bool isOOBValue(PValue pv)
 {
@@ -982,8 +986,8 @@ AluFunction::AluFunction(std::string& _s)
 			try {
 				p_gExternalFunctions->Initialize(getFullSpecPath());
 			} catch (const SpecsException& e) {
-				std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-				exit(0);
+				std::string err = std::string("Python Interface: ") + e.what(!g_bVerbose);
+				MYTHROW(err);
 			}
 		}
 		MYASSERT(p_gExternalFunctions->IsInitialized());
@@ -1146,23 +1150,23 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 		std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << std::endl;
 }
 
-void dumpAluStack(const char* title, std::stack<PValue>& stk)
+void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = std::cerr)
 {
-	std::cerr << title << ": ALU Stack at " << &stk << " with " << stk.size() << " items:\n";
+	stream << title << ": ALU Stack at " << &stk << " with " << stk.size() << " items:\n";
 	std::stack<PValue> tmp;
 	while (!stk.empty()) {
 		PValue v = stk.top();
 		stk.pop();
 		if (v) {
-			std::cerr << "   > " << v->getStr() << "  ("
+			stream << "   > " << v->getStr() << "  ("
 			    << ((v->isExact()) ? "exact " : "inexact ")
 				<< ALUCounterType2Str[v->getType()] << ")" << std::endl;
 		} else {
-			std::cerr << "   > (nil)" << std::endl;
+			stream << "   > (nil)" << std::endl;
 		}
 		tmp.push(v);
 	}
-	std::cerr << std::endl;
+	stream << std::endl;
 	while (!tmp.empty()) {
 		PValue v = tmp.top();
 		tmp.pop();
@@ -1281,7 +1285,19 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			char* tokEnd = c + 2;
 			while (tokEnd<cEnd && isDigit(*tokEnd)) tokEnd++;
 			std::string num(c+2, tokEnd-(c+2));
-			int offset = std::stoi(num);
+			int offset;
+			try {
+				offset = std::stoi(num);
+			} catch (...) {
+				std::string err = "Invalid context offset: <" + num + "> in expression ";
+				MYTHROW(err);
+			}
+			if (offset > MAX_CONTEXT_SIZE) {
+				std::string err = "Context offset out of range: " + std::string(1, sign) + 
+					std::to_string(offset);
+				MYTHROW(err);
+			}
+
 			if (sign == '-') offset = -offset;
 			pUnit = std::make_shared<AluInputRecord>(offset);
 			vec.push_back(pUnit);
@@ -1982,7 +1998,12 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 		}
 	}
 
-	MYASSERT(computeStack.size() == 1);
+	if (computeStack.size() > 1) {
+		if (g_bDebugAluRun || g_bVerbose) {
+			dumpAluStack("Unreduced Final Stack", computeStack, g_FinalErrors);
+		}
+		MYTHROW("Expression did not reduce to a single value.");
+	}
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
 			dumpAluStack("Final Stack", computeStack);

@@ -21,6 +21,16 @@ const char* SpecsException::what(bool concise) const noexcept
 	return ret;
 }
 
+SpecsException _mythrow(const char* _fn, unsigned int _ln, const char* _msg, bool _abend)
+{
+	return SpecsException(_fn, _ln, _msg, _abend);
+}
+
+SpecsException _mythrow(const char* _fn, unsigned int _ln, std::string& _msg, bool _abend)
+{
+	return SpecsException(_fn, _ln, _msg, _abend);
+}
+
 const bool SpecsException::isAbend() const noexcept
 {
 	return bIsAbend;

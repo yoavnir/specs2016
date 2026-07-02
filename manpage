@@ -232,13 +232,13 @@ Causes the program to read the next line of input. If we have already read the l
 .B READ
 or
 .B READSTOP
-spec unit is applied, the context offset is reset to zero (the current record).
+spec unit is applied, the context offset (see below) is reset to zero (the current record).
 .IP "READSTOP" 3
 Causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration. When a
 .B READ
 or
 .B READSTOP
-spec unit is applied, the context offset is reset to zero (the current record).
+spec unit is applied, the context offset (see below) is reset to zero (the current record).
 .IP "UNREAD" 3
 Causes the program to push back the current active record back to the reader, so that the next iteration of the specification or the next 
 .I READ
@@ -374,7 +374,7 @@ resets the working string to the current record,
 .B CONTEXT 1
 sets it to the next record,
 .B CONTEXT -1
-sets it to the previous record, and so on.
+sets it to the previous record, and so on. The integer offset is limited to between -256 and 256.
 The required buffer sizes are computed at parse time from the largest positive and negative offsets used. If the offset refers to a record beyond the beginning or end of the input, the working string is set to the empty string. Note that reading beyond the input with
 .B CONTEXT
 does not cause processing to stop, even if a
@@ -404,7 +404,13 @@ and
 .B @-0
 are equivalent to
 .B @@
-(the current record).
+(the current record). As with the 
+.B CONTEXT
+spec unit, the offsets specified in
+.B @+n
+and
+.B @-n
+are capped to between -256 and 256.
 .P
 Example:
 .P

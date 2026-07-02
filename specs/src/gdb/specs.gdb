@@ -264,6 +264,7 @@ set print array on
 set print array-indexes on
 set print object on
 set print static-members on
+break _mythrow
 
 # ============================================================================
 # WELCOME MESSAGE

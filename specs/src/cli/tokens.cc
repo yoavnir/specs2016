@@ -9,6 +9,7 @@
 #include "processing/conversions.h"
 #include "processing/Reader.h"
 #include "processing/ProcessingState.h"
+#include "specitems/specItems.h"
 
 extern std::string conv_X2CH(std::string& s);
 
@@ -177,7 +178,7 @@ static PTokenFieldRange parseAsSingleNumber(std::string s)
 	long int l;
 	try {
 		l = std::stol(s);
-	} catch(std::invalid_argument&) {
+	}  catch(...) {
 		return nullptr;
 	}
 	if (l==0 || s!=std::to_string(l)) {
@@ -196,7 +197,7 @@ static PTokenFieldRange parseAsFromToRange(std::string s)
 	long int _from, _to;
 	try {
 		_from = std::stol(s, &posOfHyphen);
-	} catch(std::invalid_argument&) {
+	} catch(...) {
 		return nullptr;
 	}
 	if (_from==0 || s.substr(0,posOfHyphen)!=std::to_string(_from)
@@ -233,7 +234,7 @@ static PTokenFieldRange parseAsFromLenRange(std::string s)
 	long int _from, _to, _len;
 	try {
 		_from = std::stol(s, &posOfDot);
-	} catch(std::invalid_argument&) {
+	} catch(...) {
 		return nullptr;
 	}
 	if (_from==0 || s.substr(0,posOfDot)!=std::to_string(_from) || s[posOfDot]!='.') {
@@ -241,7 +242,7 @@ static PTokenFieldRange parseAsFromLenRange(std::string s)
 	}
 	try {
 		_len = std::stol(s.substr(posOfDot+1));
-	} catch (std::invalid_argument&) {
+	} catch (...) {
 		return nullptr;
 	}
 	if (_len<=0 || s.substr(posOfDot+1)!=std::to_string(_len)) {
@@ -920,26 +921,32 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__CONTEXT:
 		{
 			if (i+1 < tokList->size()) {
-				std::string offsetStr;
+				int offset;
 				if (TokenListType__RANGE == nextTok.Type() && nextTok.Range() && nextTok.Range()->isSingleNumber()) {
-					offsetStr = std::to_string(nextTok.Range()->getSingleNumber());
-					nextTok.deallocDynamic();
+					offset = nextTok.Range()->getSingleNumber();
 				} else if (mayBeLiteral(nextTok)) {
-					offsetStr = getLiteral(nextTok);
+					try {
+						// Validate that the offset string represents a valid integer
+						offset = std::stoi(getLiteral(nextTok));
+					} catch (...) {
+						std::string err = "CONTEXT at index " + std::to_string(tok.argIndex()) +
+						" must be followed by an integer offset; got <" + getLiteral(nextTok) + ">";
+						MYTHROW(err);
+					}
 				} else {
 					std::string err = "CONTEXT at index " + std::to_string(tok.argIndex()) +
-						" must be followed by an integer offset, got <" + nextTok.Orig() + ">";
+						" must be followed by an integer offset; got <" + nextTok.Orig() + ">";
 					MYTHROW(err);
 				}
-				// Validate that offsetStr is a valid integer
-				try {
-					std::stoi(offsetStr);
-				} catch (...) {
+
+				if (offset < -MAX_CONTEXT_SIZE || offset > MAX_CONTEXT_SIZE) {
 					std::string err = "CONTEXT at index " + std::to_string(tok.argIndex()) +
-						" must be followed by an integer offset, got <" + offsetStr + ">";
+						" offset is out of range: " + std::to_string(offset);
 					MYTHROW(err);
 				}
-				tok.setLiteral(offsetStr);
+
+				tok.setLiteral(std::to_string(offset));
+				nextTok.deallocDynamic();
 				tokList->erase(tokList->begin()+(i+1));
 			}
 			if (tok.Literal()=="") {

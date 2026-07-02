@@ -250,7 +250,7 @@ A few things to note:
 ## Rolling Context
 The `SELECT SECOND` mechanism described above lets us peek one record ahead. But what if we need to look further ahead, or look *behind* at records we've already seen? The `CONTEXT` spec unit provides a general way to do this.
 
-`CONTEXT` takes a single integer argument -- a positive number to look forward, a negative number to look backward, or zero to reset to the current record. When **specs** encounters a `CONTEXT` spec unit, it changes the active input record to the one at the given offset from the current record. Any input parts that follow will read from that record instead of the current one. Note that reading beyond the input with `CONTEXT` does not cause processing to stop, even if a `READSTOP` token is present in the specification.
+`CONTEXT` takes a single integer argument -- a positive number to look forward, or a negative number to look backward, or zero to reset to the current record. When **specs** encounters a `CONTEXT` spec unit, it changes the active input record to the one at the given offset from the current record. Any input parts that follow will read from that record instead of the current one. Note that reading beyond the input with `CONTEXT` does not cause processing to stop, even if a `READSTOP` token is present in the specification.
 
 Consider the following input:
 ```
@@ -333,7 +333,8 @@ Given three input records, the output is:
 ```
 
 ### How It Works
-**specs** determines the maximum forward and backward offsets at compile time and uses them to maintain a sliding window of records around the current one. Records are read ahead into a forward buffer, and past records are kept in a backward buffer. This means that a specification using `CONTEXT 3` will read three records ahead before processing begins.
+**specs** determines the maximum forward and backward offsets at compile time and uses them to maintain a sliding window of records around the current one. 
+Records are read ahead into a forward buffer, and past records are kept in a backward buffer. This means that a specification using `CONTEXT 3` will read three records ahead before processing begins.
 
 When verbose mode (`-v`) is enabled, **specs** reports the buffer sizes:
 ```
@@ -344,7 +345,8 @@ If the context offset refers to a record that does not exist (before the first r
 
 ### Restrictions
 1. Rolling context is not supported with threading (`-j` flag).
-1. Rolling context is not supported with multiple input streams.
+1. Rolling context is not supported with multiple input streams (see below).
+1. The offset in the rolling context is limited to up to 256 records before or after the current record.
 
 ## Multiple Input Streams
 **specs** allows you to use multiple input streams in your specifications. The way this works is that you use the `--is2` to `--is8` CLI switches to specify additional (up to a total of 8) input streams to use. At each cycle of the specification, 1 record is read from each input stream, which implies that the number of records in each stream should be equal. 
