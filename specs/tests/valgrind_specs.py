@@ -61,7 +61,7 @@ run_case(s,i,"Another conversion")
 
 s = "w2 x2ch 5"
 i = input_samples.Jabberwocky
-run_case(s,i,"A conversion with errors",memcheck.RetCode_COMMAND_FAILED) # Because the words of Jabberwocky are not hex
+run_case(s,i,"A conversion with errors", memcheck.RetCode_COMMAND_FAILED) # Because the words of Jabberwocky are not hex
 
 s = "1-7 3 w2 6 w2:-2 19"
 i = input_samples.Jabberwocky
@@ -317,7 +317,7 @@ run_case(s,i,"Functions: fields")
 
 s = "--force-read-input print 'fieldcount()' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t\n"
-run_case(s,i,"Functions: fieldcount")
+run_case(s,i,"Functions: fieldcount", memcheck.RetCode_COMMAND_FAILED)
 
 s = "print 'fieldend(3)' 1"
 i = "a\tb\tc\td \n a\tb \n \t\t\t\t"
@@ -357,7 +357,7 @@ run_case(s,i,"Functions: wordrange")
 
 s = "--force-read-input print 'wordcount()' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
-run_case(s,i,"Functions: wordcount")
+run_case(s,i,"Functions: wordcount", memcheck.RetCode_COMMAND_FAILED)
 
 s = "print 'wordend(3)' 1"
 i = "Hope is the thing\n with feathers\n\n\n"
@@ -662,11 +662,11 @@ run_case(s,i,"dual input stream with mismatched secondary",inp2=i2)
 
 # Dual stream with mismatched streams - STOP ALLEOF
 i2 = input_samples.ls_out_inodes_mismatched
-run_case("STOP ALLEOF "+s,i,"dual input stream with mismatched secondary - STOP ALLEOF",inp2=i2)
+run_case("STOP ALLEOF "+s,i,"dual input stream with mismatched secondary - STOP ALLEOF",inp2=i2, expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
 # Dual stream with mismatched streams - STOP ANYEOF
 i2 = input_samples.ls_out_inodes_mismatched
-run_case("STOP ANYEOF "+s,i,"dual input stream with mismatched secondary - STOP ANYEOF",inp2=i2)
+run_case("STOP ANYEOF "+s,i,"dual input stream with mismatched secondary - STOP ANYEOF",inp2=i2, expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
 # Dual stream with mismatched streams - STOP 2
 i2 = input_samples.ls_out_inodes_mismatched
@@ -813,24 +813,24 @@ run_case(s,i,"SPLITF - with OF word")
 # Error cases
 s = "splitw 1 splitf 1"
 i = "test"
-run_case(s,i,"SPLITW/SPLITF - nested splits error")
+run_case(s,i,"SPLITW/SPLITF - nested splits error", expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
 s = "splitw fs x 1"
 i = "test"
-run_case(s,i,"SPLITW - mismatched separator error")
+run_case(s,i,"SPLITW - mismatched separator error", expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
 s = "splitf ws x 1"
 i = "test"
-run_case(s,i,"SPLITF - mismatched separator error")
+run_case(s,i,"SPLITF - mismatched separator error", expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
 # Bounds checking tests for WHILE and IF as last tokens
 s = "while"
 i = None
-run_case(s,i,"Bounds checking - WHILE as last token")
+run_case(s,i,"Bounds checking - WHILE as last token", expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
 s = "if"
 i = None
-run_case(s,i,"Bounds checking - IF as last token")
+run_case(s,i,"Bounds checking - IF as last token", expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
 # Security fix regression tests (Issue #336)
 s = 'print \'strip("   ","B")\' 1'

@@ -139,7 +139,7 @@ CONTINUE:
 			p_gExternalFunctions->Initialize(getFullSpecPath());
 		} catch (const SpecsException& e) {
 			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-			dumpErrorsAndExit();
+			dumpErrorsAndExit(-4);
 		}
 #endif
 		if (g_help == "help") {
@@ -213,7 +213,7 @@ int main (int argc, char** argv)
 		}
 	} catch (const SpecsException& e) {
 		std::cerr << "Error: " << e.what(conciseExceptions) << std::endl;
-		dumpErrorsAndExit();
+		dumpErrorsAndExit(-4);
 	}
 
 #ifndef SPECS_NO_PYTHON
@@ -222,7 +222,7 @@ int main (int argc, char** argv)
 			p_gExternalFunctions->SetErrorHandling(g_pythonErr);
 		} catch (const SpecsException& e) {
 			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-			dumpErrorsAndExit();
+			dumpErrorsAndExit(-4);
 		}
 	}
 
@@ -231,7 +231,7 @@ int main (int argc, char** argv)
 			p_gExternalFunctions->Initialize(getFullSpecPath());
 		} catch (const SpecsException& e) {
 			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-			dumpErrorsAndExit();
+			dumpErrorsAndExit(-4);
 		}
 #ifdef DEBUG
 		p_gExternalFunctions->Debug();
@@ -251,7 +251,7 @@ int main (int argc, char** argv)
 		normalizeTokenList(&vec);
 	} catch (const SpecsException& e) {
 		std::cerr << "Error reading specification tokens: " << e.what(conciseExceptions) << "\n";
-		dumpErrorsAndExit();
+		dumpErrorsAndExit(-4);
 	}
 	itemGroup ig;
 	StringBuilder sb;
@@ -277,18 +277,18 @@ int main (int argc, char** argv)
 			}
 			std::cerr << "\n" << ig.Debug();
 		}
-		dumpErrorsAndExit();
+		dumpErrorsAndExit(-4);
 	}
 
 	// Check for rolling context incompatibilities
 	if (g_forwardContext > 0 || g_backwardContext > 0) {
 		if (g_bThreaded) {
 			std::cerr << "Error: Rolling context (CONTEXT / @+n / @-n) is not supported with threading.\n";
-			dumpErrorsAndExit();
+			dumpErrorsAndExit(-4);
 		}
 		if (anyNonPrimaryInputStreamDefined()) {
 			std::cerr << "Error: Rolling context (CONTEXT / @+n / @-n) is not supported with multiple input streams.\n";
-			dumpErrorsAndExit();
+			dumpErrorsAndExit(-4);
 		}
 		if (g_bVerbose) {
 			std::cerr << "specs: Using a " << g_forwardContext + g_backwardContext + 1 << "-record rolling context: " << g_forwardContext << " records forward and " << g_backwardContext << " records backward.\n"; 
@@ -318,7 +318,7 @@ int main (int argc, char** argv)
 
 	if (!g_outputFile.empty() && g_bShellCmd)  {  // These should not both be specified
 		std::cerr << "Error: Cannot specify both --shell and --outfile\n";
-		dumpErrorsAndExit();
+		dumpErrorsAndExit(-4);
 	}
 	if (g_bShellCmd) {
 		pWrtrs[1] = std::make_shared<SimpleWriter>(SimpleWriter::writerType__SHELL);
@@ -365,11 +365,11 @@ int main (int argc, char** argv)
 				pRd = std::make_shared<StandardReader>(g_inputFile);
 			} catch (const SpecsException& e) {
 				std::cerr << "Error: Failed to open input file: " << e.what(!g_bVerbose) << "\n";
-				dumpErrorsAndExit();
+				dumpErrorsAndExit(-4);
 			}
 			if (nullptr != primaryInputPipe()) {
 				std::cerr << "Error: Both input file and input stream specified.\n";
-				dumpErrorsAndExit();
+				dumpErrorsAndExit(-4);
 			}
 		}
 
@@ -444,7 +444,7 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
-			dumpErrorsAndExit();
+			dumpErrorsAndExit(-4);
 		}
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
