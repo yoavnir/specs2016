@@ -440,9 +440,9 @@ public:
 				m_Initialized = true;
 				return;
 			} else {
-				std::cerr << "Python Interface: Error loading local functions: " << std::endl;
+				std::cerr << "Python Interface:\n";
 				PyErr_Print();
-				exit(0);
+				MYTHROW("Error loading local functions");
 			}
 		}
 

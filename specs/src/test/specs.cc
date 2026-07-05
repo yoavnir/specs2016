@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <sstream>
 #include <cmath>
 #include <ctime>
 #include <cstring>
@@ -18,6 +19,15 @@
 
 extern int g_stop_stream;
 extern char g_printonly_rule;
+extern std::ostringstream g_FinalErrors;
+
+void dumpErrorsAndExit(int rc = 0)
+{
+	if (g_FinalErrors.str().length() > 0) {
+		std::cerr << g_FinalErrors.str();
+	}
+	exit(rc);
+}
 
 std::string getNextArg(std::string& argName, int& argc, char**& argv)
 {
@@ -118,7 +128,7 @@ CONTINUE:
 #endif
 		std::cerr << "\tPython version: " << dequote(STRINGIFY(PYTHON_FULL_VER)) << "\n";
 		std::cerr << "\tFloating point precision: " << ALUFloatPrecision << " (" << sizeof(ALUFloat) << " bytes)\n";
-		exit(0);
+		dumpErrorsAndExit();
 	}
 
 	// help
@@ -129,7 +139,7 @@ CONTINUE:
 			p_gExternalFunctions->Initialize(getFullSpecPath());
 		} catch (const SpecsException& e) {
 			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-			exit(0);
+			dumpErrorsAndExit(-4);
 		}
 #endif
 		if (g_help == "help") {
@@ -203,7 +213,7 @@ int main (int argc, char** argv)
 		}
 	} catch (const SpecsException& e) {
 		std::cerr << "Error: " << e.what(conciseExceptions) << std::endl;
-		exit(0);
+		dumpErrorsAndExit(-4);
 	}
 
 #ifndef SPECS_NO_PYTHON
@@ -212,7 +222,7 @@ int main (int argc, char** argv)
 			p_gExternalFunctions->SetErrorHandling(g_pythonErr);
 		} catch (const SpecsException& e) {
 			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-			exit(0);
+			dumpErrorsAndExit(-4);
 		}
 	}
 
@@ -221,7 +231,7 @@ int main (int argc, char** argv)
 			p_gExternalFunctions->Initialize(getFullSpecPath());
 		} catch (const SpecsException& e) {
 			std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-			exit(0);
+			dumpErrorsAndExit(-4);
 		}
 #ifdef DEBUG
 		p_gExternalFunctions->Debug();
@@ -241,7 +251,7 @@ int main (int argc, char** argv)
 		normalizeTokenList(&vec);
 	} catch (const SpecsException& e) {
 		std::cerr << "Error reading specification tokens: " << e.what(conciseExceptions) << "\n";
-		exit (0);
+		dumpErrorsAndExit(-4);
 	}
 	itemGroup ig;
 	StringBuilder sb;
@@ -267,18 +277,18 @@ int main (int argc, char** argv)
 			}
 			std::cerr << "\n" << ig.Debug();
 		}
-		exit (0);
+		dumpErrorsAndExit(-4);
 	}
 
 	// Check for rolling context incompatibilities
 	if (g_forwardContext > 0 || g_backwardContext > 0) {
 		if (g_bThreaded) {
 			std::cerr << "Error: Rolling context (CONTEXT / @+n / @-n) is not supported with threading.\n";
-			exit(0);
+			dumpErrorsAndExit(-4);
 		}
 		if (anyNonPrimaryInputStreamDefined()) {
 			std::cerr << "Error: Rolling context (CONTEXT / @+n / @-n) is not supported with multiple input streams.\n";
-			exit(0);
+			dumpErrorsAndExit(-4);
 		}
 		if (g_bVerbose) {
 			std::cerr << "specs: Using a " << g_forwardContext + g_backwardContext + 1 << "-record rolling context: " << g_forwardContext << " records forward and " << g_backwardContext << " records backward.\n"; 
@@ -308,7 +318,7 @@ int main (int argc, char** argv)
 
 	if (!g_outputFile.empty() && g_bShellCmd)  {  // These should not both be specified
 		std::cerr << "Error: Cannot specify both --shell and --outfile\n";
-		exit(0);
+		dumpErrorsAndExit(-4);
 	}
 	if (g_bShellCmd) {
 		pWrtrs[1] = std::make_shared<SimpleWriter>(SimpleWriter::writerType__SHELL);
@@ -355,11 +365,11 @@ int main (int argc, char** argv)
 				pRd = std::make_shared<StandardReader>(g_inputFile);
 			} catch (const SpecsException& e) {
 				std::cerr << "Error: Failed to open input file: " << e.what(!g_bVerbose) << "\n";
-				exit(0);
+				dumpErrorsAndExit(-4);
 			}
 			if (nullptr != primaryInputPipe()) {
 				std::cerr << "Error: Both input file and input stream specified.\n";
-				exit(0);
+				dumpErrorsAndExit(-4);
 			}
 		}
 
@@ -412,7 +422,7 @@ int main (int argc, char** argv)
 					pWrtrs[i] = nullptr;
 				}
 			}
-			return -4;
+			dumpErrorsAndExit(-4);
 		}
 
 		g_pReader = nullptr;
@@ -434,7 +444,7 @@ int main (int argc, char** argv)
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
-			exit(8);
+			dumpErrorsAndExit(-4);
 		}
 		PSpecString pstr = sb.GetString();
 		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {

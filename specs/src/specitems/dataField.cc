@@ -214,7 +214,7 @@ PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index
 		try {
 			ret = std::make_shared<ExpressionPart>(token.Literal());
 		} catch(const SpecsException& e) {
-			std::string err = "Expression in "+ token.HelpIdentify()
+			std::string err = "Expression in "+ token.HelpIdentify(true)
 					+ ":\n" + e.what(true /* concise */);
 			MYTHROW(err);
 		}

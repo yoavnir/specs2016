@@ -10,6 +10,7 @@
 #include "processing/ProcessingState.h"
 
 #define MAX_DEPTH_CONDITION_STATEMENTS  64
+#define MAX_CONTEXT_SIZE 256
 
 extern unsigned int g_forwardContext;
 extern unsigned int g_backwardContext;

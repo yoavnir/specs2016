@@ -135,7 +135,7 @@ public:
 	void            appendLiteral(char c) {m_literal+=c;}
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
-	std::string&    HelpIdentify();
+	std::string&    HelpIdentify(bool bAllowEmptyLiteral = false);
 	void            deallocDynamic() {/* - TODO: ERASE -- if (m_pRange) {m_pRange = nullptr;} */} // do we even need this method?
 private:
 	TokenListTypes  m_type;
