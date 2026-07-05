@@ -1199,6 +1199,13 @@ int main(int argc, char** argv)
 	spec = "fs :  f1 y:  PRINT 'ctxoob(y)'";
 	VERIFY2(spec, "a:b:c", "0"); // TEST #277
 
+	// Some bad expressions
+	spec = "PRINT ''";
+	VERIFY2(spec, "", "Expression in Token PRINT at index 1 with content <>:\nExpression has no units"); // TEST #278
+
+	spec = "PRINT '1+1hello'";
+	VERIFY2(spec, "1", "Expression did not reduce to a single value"); // TEST #279
+
 	if (errorCount) {
 		if (onlyTest == 0) {
 			std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";

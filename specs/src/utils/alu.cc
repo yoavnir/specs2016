@@ -2002,7 +2002,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 		if (g_bDebugAluRun || g_bVerbose) {
 			dumpAluStack("Unreduced Final Stack", computeStack, g_FinalErrors);
 		}
-		MYTHROW("Expression did not reduce to a single value.");
+		MYTHROW("Expression did not reduce to a single value");
 	}
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
