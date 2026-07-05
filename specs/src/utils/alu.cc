@@ -1998,7 +1998,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 		}
 	}
 
-	if (computeStack.size() > 1) {
+	if (computeStack.size() != 1) {
 		if (g_bDebugAluRun || g_bVerbose) {
 			dumpAluStack("Unreduced Final Stack", computeStack, g_FinalErrors);
 		}

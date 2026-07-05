@@ -16,6 +16,7 @@ keywords:
   - "guidebook"
   - "AI-generated"
 date: "XXDATE"
+geometry: "left=0.75in,right=0.75in,top=0.75in,bottom=0.75in"
 header-includes: |
   \usepackage{etoolbox}
   \pretocmd{\chapter}{\clearpage}{}{}

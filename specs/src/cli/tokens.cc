@@ -164,11 +164,11 @@ std::string Token::Debug(int digits)
 }
 #undef X
 
-std::string& Token::HelpIdentify()
+std::string& Token::HelpIdentify(bool bAllowEmptyLiteral)
 {
 	static std::string ret;
 	ret = "Token " + TokenListType__2str(m_type) + " at index " +
-			std::to_string(m_argc) + " with content <" + ((m_literal.empty()) ? m_orig : m_literal) + ">";
+			std::to_string(m_argc) + " with content <" + ((m_literal.empty() && (!bAllowEmptyLiteral)) ? m_orig : m_literal) + ">";
 	return ret;
 }
 
@@ -493,19 +493,21 @@ CONT1:
 	}
 
 	/* Check for a configuration literal */
-	std::string key = arg.substr(1);
-	if ((arg[0]=='@') && (arg.length() > 1) && (configSpecLiteralDefined(key))) {
-		std::string literal = configSpecLiteralGet(key);
-		pVec->insert(pVec->end(),
+	if ((arg[0]=='@') && (arg.length() > 1)) {
+		std::string key = arg.substr(1);
+		if (configSpecLiteralDefined(key)) {
+			std::string literal = configSpecLiteralGet(key);
+			pVec->insert(pVec->end(),
 				Token(TokenListType__LITERAL, nullptr /* range */,
 						literal, argidx, arg));
-		NEXT_TOKEN;
+			NEXT_TOKEN;
+		}
 	}
 
 	/* Add as literal */
 	{
 		std::string literal;
-		if (arg.front()==arg.back() && arg.length()>=2 && isPossibleDelimiter(arg.front())) {
+		if (arg.length()>=2 && arg.front()==arg.back() && isPossibleDelimiter(arg.front())) {
 			literal = arg.substr(1, arg.length()-2);
 		} else {
 			literal = arg;
