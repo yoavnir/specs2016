@@ -19,15 +19,20 @@ protected:
 	bool         bIsAbend;
 };
 
-#define MYTHROW(s) throw SpecsException(__FILE__, __LINE__, s);
+SpecsException _mythrow(const char* _fn, unsigned int _ln, const char* _msg, bool _abend);
+SpecsException _mythrow(const char* _fn, unsigned int _ln, std::string& _msg, bool _abend);
 
-#define MYABEND(s) throw SpecsException(__FILE__, __LINE__, s, true);
+#define MYTHROW(s) throw _mythrow(__FILE__, __LINE__, s, false);
+	
 
-#define MYASSERT(cond) { if (!(cond)) { \
-	std::string _assert_err = std::string("Failed assertion: ") + #cond; \
-	MYTHROW(_assert_err); \
+#define MYABEND(s) throw _mythrow(__FILE__, __LINE__, s, true);
+
+#define MYASSERT(cond) { \
+	if (!(cond)) { \
+		std::string _assert_err = std::string("Failed assertion: ") + #cond; \
+		MYTHROW(_assert_err); \
 	} \
-	}
+}
 
 #define MYASSERT_NOT_NULL_WITH_DESC(ptr,desc) { if (nullptr==ptr) { \
 	std::string _assert_err = std::string(#ptr) + " is not set for " + desc; \

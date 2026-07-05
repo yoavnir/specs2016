@@ -16,6 +16,7 @@ keywords:
   - "guidebook"
   - "AI-generated"
 date: "XXDATE"
+geometry: "left=0.75in,right=0.75in,top=0.75in,bottom=0.75in"
 header-includes: |
   \usepackage{etoolbox}
   \pretocmd{\chapter}{\clearpage}{}{}
@@ -2483,6 +2484,7 @@ specs: Using a 3-record rolling context: 2 records forward and 1 records backwar
 
 1. Rolling context is not compatible with threading (`-t` flag).
 2. Rolling context is not compatible with multiple input streams.
+3. The integer offset of the context record, whether it appears as a `CONTEXT ±n` spec unit or as a `@±n` expression, is limited to an absolute value of 256.
 
 ## When to Use CONTEXT vs. READ/UNREAD
 

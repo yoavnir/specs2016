@@ -131,7 +131,7 @@ Build information is also available via the following labels:
   Built on github (id 27334782912; build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T10:01:18 UTC
   ```
 
-Additionally, the `@@` string stands for the entire input record. When rolling context is in effect (see [Streams and Records](streams.md#rolling-context)), `@@` always refers to the original input record. The `@!` string refers to the current record as affected by `CONTEXT`, which is the same as `@@` when no `CONTEXT` is active. The `@-n` and `@+n` syntax is an alternative to using that is effective within expressions. Note that reading beyond the input with `@+n` or `@-n` does not cause processing to stop, even if a `READSTOP` token is present in the specification. The following three specifications are equivalent:
+Additionally, the `@@` string stands for the entire input record. When rolling context is in effect (see [Streams and Records](streams.md#rolling-context)), `@@` always refers to the original input record. The `@!` string refers to the current record as affected by `CONTEXT`, which is the same as `@@` when no `CONTEXT` is active. The `@-n` and `@+n` syntax is an alternative to using the `CONTEXT` spec unit that works within expressions. Note that reading beyond the input with `@+n` or `@-n` does not cause processing to stop, even if a `READSTOP` token is present in the specification. The offsets specified in the `@+n` and `@-n` syntax in expressions are capped to between 256 records before the current record to 256 records after it, so `@-256` to `@+256`. The following three specifications are equivalent:
 
 ```
 # Using @@ syntax            # Using the CONTEXT keyword             # No expression - just data fields

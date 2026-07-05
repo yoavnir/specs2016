@@ -23,9 +23,9 @@ def run_cmd(spec, force=False):
 	else:
 		theout_content = ""
 
-	if rc!=0 and rc!=8:
+	if rc!=0 and rc!=252 and rc!=8:
 		ret = "RC="+str(rc)
-	elif rc==0 and theout_content != "":
+	elif (rc==0 or rc==252) and theout_content != "":
 		ret = theout_content
 	elif theerr_content != "":
 		ret = theerr_content[-1]

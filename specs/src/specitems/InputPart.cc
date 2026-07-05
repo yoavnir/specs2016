@@ -209,6 +209,9 @@ ExpressionPart::ExpressionPart(std::string& _expr)
 {
 	AluVec infixExpression;
 	MYASSERT(parseAluExpression(_expr, infixExpression));
+	if (infixExpression.empty()) {
+		MYTHROW("Expression has no units");
+	}
 	if (expressionIsAssignment(infixExpression)) {
 		PUnit aUnit = infixExpression[0];
 		auto pCounterUnit = std::dynamic_pointer_cast<AluUnitCounter>(aUnit);
