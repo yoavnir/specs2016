@@ -250,7 +250,7 @@ A few things to note:
 ## Rolling Context
 The `SELECT SECOND` mechanism described above lets us peek one record ahead. But what if we need to look further ahead, or look *behind* at records we've already seen? The `CONTEXT` spec unit provides a general way to do this.
 
-`CONTEXT` takes a single integer argument -- a positive number to look forward, or a negative number to look backward, or zero to reset to the current record. When **specs** encounters a `CONTEXT` spec unit, it changes the active input record to the one at the given offset from the current record. Any input parts that follow will read from that record instead of the current one. Note that reading beyond the input with `CONTEXT` does not cause processing to stop, even if a `READSTOP` token is present in the specification.
+`CONTEXT` takes a single integer argument -- a positive number to look forward, a negative number to look backward, or zero to reset to the current record. When **specs** encounters a `CONTEXT` spec unit, it changes the active input record to the one at the given offset from the current record. Any input parts that follow will read from that record instead of the current one. Note that reading beyond the input with `CONTEXT` does not cause processing to stop, even if a `READSTOP` token is present in the specification.
 
 Consider the following input:
 ```
