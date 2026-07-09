@@ -20,7 +20,7 @@ Using files allows you to write some very sophisticated specifications, and to a
        print #1 strip nextword
        /records./     nextword
 ``` 
-Using files also allows you to include comments. The rules for comments are that either the line begins with a hash mark and a space, and then the entire line is a comment; or the last occurrence of a hash mark and a space is also preceded by a space, and that is where the comment starts. 
+Using files also allows you to include comments. The rules for comments are that either the line begins with a hash mark and a space, optionally preceded by whitespace, and then the entire line is a comment; or the last occurrence of a hash mark and a space is also preceded by a space, and that is where the comment starts. A hash mark that is the very last character on the line is treated the same as a hash mark followed by a space. 
 You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by OS-specific path separator character. On Linux and Mac OS this is a colon (`:`). On Windows this is a semicolon (`;`).  If neither the environment variable nor the configuration string are set, the **SPECSPATH** defaults to `$HOME/specs` on Linux and Mac OS, and to `%APPDATA%\specs` on Windows.
 * `--verbose` or `-v` -- outputs more information when something goes wrong.
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
