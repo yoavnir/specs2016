@@ -694,15 +694,15 @@ A spec file is a plain text file. Spec units are written as if they were command
 
 There are two styles of comments in spec files:
 
-1. **Full-line comment**: The line begins with `# ` (hash, space). The entire line is ignored.
-2. **End-of-line comment**: The comment begins at the last occurrence of ` # ` (space, hash, space) that is also preceded by whitespace. Everything after it is ignored.
+1. **Full-line comment**: The line begins with `# ` (hash, space), or the line consists of only whitespace followed by a hash mark with nothing after it. The entire line is ignored.
+2. **End-of-line comment**: The comment begins at the last occurrence of ` # ` (space, hash, space) that is also preceded by whitespace, or at a trailing hash mark that is the very last character on the line. Everything from that hash mark onward is ignored.
 
 ```
 w1 1           # This puts the first word at column 1
 /hello/ nextword   # This appends the word "hello"
 ```
 
-Note: `# ` must be preceded by whitespace for an end-of-line comment. A hash inside a literal string (`/hello # world/`) is not a comment.
+Note: `# ` must be preceded by whitespace for an end-of-line comment (unless the hash mark is the last character on the line, with no trailing space). A hash inside a literal string (`/hello # world/`) is not a comment.
 
 ## Directives
 
