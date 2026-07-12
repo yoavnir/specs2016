@@ -352,7 +352,7 @@ book: $(DOCS_DIR)/guidebook.pdf
 # parallel "make -j all" can start generating the guidebook before specs has
 # been linked ("specs: Command not found").
 $(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex $(EXE_DIR)/specs
-	$(EXE_DIR)/specs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/guidebook_prepare
+	$(EXE_DIR)/specs --set docsdir=../docs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/guidebook_prepare
 	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
@@ -804,7 +804,7 @@ cxx_display = "{} {}".format(cxx, cxx_version) if cxx_version else cxx
 if (CFG_python==True) & (full_python_version!="N/A"):
 	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx_display,full_python_version,variation.lower())
 else:
-	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler and no Python - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
 condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatform)
 
 if CFG_python:

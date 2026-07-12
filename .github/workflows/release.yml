@@ -141,7 +141,7 @@ jobs:
 
     - name: Substitute version and date into guidebook
       run: |
-        specs/exe/specs -i specs/docs/guidebook.md -o specs/docs/guidebook_tmp.md -f specs/docs/guidebook_prepare
+        specs/exe/specs --set docsdir=specs/docs -i specs/docs/guidebook.md -o specs/docs/guidebook_tmp.md -f specs/docs/guidebook_prepare
 
     - name: Build guidebook PDF
       run: |
