@@ -1,6 +1,9 @@
+\usepackage{xcolor}
 \setcounter{secnumdepth}{0}
 \makeatletter
 \pagestyle{plain}
+\let\oldtexttt\texttt 
+\renewcommand{\texttt}[1]{{\color{blue}\oldtexttt{#1}}} 
 \renewcommand{\maketitle}{}
 \renewcommand{\numberline}[1]{}
 \renewcommand*{\l@chapter}[2]{%
@@ -27,4 +30,6 @@
     \Huge \bfseries #1\par\nobreak
     \vskip 40\p@
   }}
+\makeatletter 
+\def\verbatim@font{\color{blue}\ttfamily}
 \makeatother

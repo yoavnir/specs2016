@@ -41,6 +41,7 @@ include-before: |
   \bigskip\par
   \textbf{How to use this book}
   \begin{itemize}
+  \item Start with Appendix C to install \textbf{specs}, whether from a pre-built package or by building from source.
   \item Read Chapters 1--5 to understand the mental model and learn the three places where you can give specs its instructions (the command line, the configuration file, and spec files).
   \item Read Chapters 6--13 to master every feature of the language.
   \item Read Chapter 14 when you need to extend specs with Python.
@@ -69,24 +70,21 @@ Here are the kinds of questions specs was built to answer:
 - *"Look at adjacent records and flag any two consecutive entries that differ by more than 10."*
 - *"Run this command for every line in the file."*
 
-### Installation
+**Note**
 
-Binary packages for the latest release are available on the [GitHub releases page](https://github.com/yoavnir/specs2016/releases). Download the package for your operating system and install it.
-
-To build from source, see `BUILDING.md` in the project root.
-
-After installation, verify it works:
+This book assumes that **specs** is installed on your system. If it isn't yet, see **[Appendix C: Installation](#appendixc)** for step-by-step instructions covering both pre-built packages and building from source. Once it's installed, a quick way to check that everything is in order — including whether Python support is available — is:
 
 ```
-specs @version
+specs @platform
 ```
 
-This should print the version string, for example `1.0.0`. Alternatively, you can get even more build into:
+which prints something like:
 
 ```
-$ specs @build-info
-Built on github (id 27938338680; build 262) from commit 3a14b4f of version 1.0.0-beta at 2026-06-22T08:05:28 UTC
+POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
 ```
+
+\newpage
 
 ## The Mental Model
 
@@ -2899,6 +2897,10 @@ A name like `Supercalifragilisticexpialidocious` becomes `Supercali...docious` (
 
 ---
 
+```{=latex}
+\appendix
+```
+
 # Appendix A: Decision Guide
 
 ## Where Should I Write My Spec?
@@ -3150,6 +3152,225 @@ Do NOT use `--threaded` with:
 | `//=` | Integer divide |
 | `%=` | Remainder |
 | `\|\|=` | Append string |
+
+---
+
+# Appendix C: Installation {#appendixc}
+
+There are two ways to get **specs** running on your machine: installing a pre-built binary package, or building it locally from source. Installing a pre-built package is the fastest route for most people; building from source is useful if no package exists for your platform, if you need a different Python version than the one bundled with the official packages, or if you want to hack on **specs** itself.
+
+## Installing from Binaries
+
+Every release of **specs** publishes pre-built packages for Linux (RPM and DEB), macOS (PKG), and Windows (MSI and a standalone EXE).
+
+### Finding the right release
+
+1. Go to the [GitHub releases page](https://github.com/yoavnir/specs2016/releases).
+2. GitHub lists releases newest-first, and the most recent one is tagged **Latest** with a green badge next to its version number, near the top of the page. There may be newer ones, but they will either be marked as **Pre-release* or not marked at all. Make sure you pick the latest release, or the specific pre-relase or older version that you intend to use.
+3. Scroll down to your release's **Assets** section, which lists every downloadable file for that release.
+
+![The GitHub releases page, with the most recent release marked with a "Latest" badge](XXDOCS/releases_page.png)
+
+### Choosing the right package for your operating system
+
+The assets section of a release contains several files. Pick the one that matches your operating system and, where relevant, your CPU architecture:
+
+| File pattern | Operating system | Notes |
+|---|---|---|
+| `specs-<version>-1.x86_64.rpm` | Linux, RPM-based (Fedora, RHEL, CentOS, openSUSE, ...) | Built for 64-bit Intel/AMD (`x86_64`) machines |
+| `specs_<version>_amd64.deb` | Linux, DEB-based (Ubuntu, Debian, Mint, ...) | 64-bit Intel/AMD |
+| `specs_<version>_arm64.deb` | Linux, DEB-based, ARM64 | e.g. Raspberry Pi (64-bit OS), other ARM-based PCs, or Linux running under Parallels on an Apple Silicon Mac |
+| `specs-<version>.pkg` | macOS | Apple Silicon package, bundled with Python 3.12 |
+| `specs-<version>.msi` | Windows | Installer, no Python support |
+| `specs-<version>-python312.msi` | Windows | Installer, bundled with Python 3.12 |
+| `specs-<version>-windows-x64.exe` | Windows | Standalone executable, no installer, no Python support |
+| `specs-<version>-python312-windows-x64.exe` | Windows | Standalone executable, no installer; requires Python 3.12 (`python312.dll`) on the PATH |
+
+If you're not sure which Linux package family your distribution uses, check with your package manager: `dnf`, `yum`, or `zypper` distributions use RPM; `apt` or `apt-get` distributions use DEB. If you're not sure of your CPU architecture on Linux, run `uname -m`; `x86_64` means Intel/AMD 64-bit, while `aarch64` means ARM64.
+
+### Installing the package
+
+**Linux (RPM-based):**
+```
+sudo dnf install ./specs-1.0.0-1.x86_64.rpm
+```
+or, without a dependency-resolving package manager:
+```
+sudo rpm -i specs-1.0.0-1.x86_64.rpm
+```
+
+**Linux (DEB-based):**
+```
+sudo apt install ./specs_1.0.0_amd64.deb
+```
+or:
+```
+sudo dpkg -i specs_1.0.0_amd64.deb
+```
+
+**macOS:**
+
+Double-click the downloaded `.pkg` file and follow the installer prompts, or from the command line:
+```
+sudo installer -pkg specs-1.0.0.pkg -target /
+```
+Recent versions of macOS are strict about where packages come from and may refuse to run the installer, complaining that it is from an "unidentified developer" or quarantining it. If that happens, clear the quarantine flag before installing:
+```
+xattr -dr com.apple.quarantine /path/to/specs-1.0.0.pkg
+```
+
+**Windows (MSI):**
+
+Double-click the downloaded `.msi` file and follow the installer prompts. This adds `specs.exe` to your PATH. Choose `specs-<version>-python312.msi` if you want Python integration; otherwise use `specs-<version>.msi`.
+
+**Windows (standalone EXE):**
+
+Download `specs-<version>-windows-x64.exe` (or the `-python312-` variant for Python support), rename it to `specs.exe` if you like, and place it in a directory that's on your PATH. Unlike the MSI, this is just a single file with no installer and no automatic PATH update. If you download the Python-enabled variant, you need Python 3.12 installed (so that `python312.dll` is available) since, unlike the MSI, it does not bundle its own copy.
+
+Note: although Windows for ARM64 is not officially supported, the x64 packages run fine on it under emulation. For Python integration on ARM64, install the x64 build of Python 3.12.
+
+\newpage
+### Verifying the installation
+
+Once installed, open a new terminal (so that PATH changes take effect) and run:
+```
+specs @version
+```
+This should print the version string, for example `1.0.0`. To check the platform and whether Python support is compiled in, run:
+```
+specs @platform
+```
+which prints something like:
+```
+POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
+```
+For full build provenance, run:
+```
+specs @build-info
+```
+which prints something like:
+```
+Built on GitHub (id 27938338680; build 262) from commit 3a14b4f of version 1.0.0-beta at 2026-06-22T08:05:28 UTC
+```
+
+## Building From Source
+
+If no pre-built package fits your needs — for example, you need a different Python version, or you're contributing to **specs** — you can build it yourself. This is the same procedure documented in `BUILDING.md` at the root of the repository.
+
+### Getting the sources
+
+Download your copy of **specs** from [GitHub](https://github.com/yoavnir/specs2016) in either of two ways:
+
+1. Using git: `git clone https://github.com/yoavnir/specs2016.git`
+2. Using http: `wget https://github.com/yoavnir/specs2016/archive/dev.zip`
+
+### Prerequisites
+
+* A C++17-compatible compiler (GCC, Clang, or MSVC)
+* Python 3 runtime if you are using `GCC` or `CLang`
+* Python 3 development environment (optional, for Python integration support)
+  * On Linux: the `python3-devel` (or `python3-dev`) package that matches your Python version
+  * On Mac OS: the Xcode command-line tools (which include Python headers)
+  * On Windows: a standard Python 3 installation includes the required headers and libraries
+
+### Checking out a stable version
+
+If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.9:
+```
+git checkout v0.9.9
+```
+A good way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
+```
+git checkout stable
+git rebase
+```
+
+### Building on Linux and Mac OS (make)
+
+Change to the `specs/src` directory, and run the following commands:
+
+1. `python setup.py` -- use `python3` or `python3.x` if your default Python version is 2.7
+2. `make -j 8 ci` -- equivalent to the targets `clean`, `all`, and `run_tests`.
+3. `sudo make install`
+
+The `setup.py` script auto-detects your compiler, Python installation, and platform capabilities. It generates a `Makefile` tailored to your environment.
+
+**Python support**
+
+Python support is detected automatically by `setup.py`. To explicitly control it:
+
+* `python setup.py --python python3.11` -- use a specific Python version
+* `python setup.py --python no` -- disable Python support entirely
+
+Only Python 3 is supported. To enable Python support, you need the `python3-devel` package (or equivalent) that matches your Python version installed.
+
+**Notes**
+
+* On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
+* You can pass `-v DEBUG` to `setup.py` to build a debug version.
+* You can pass `-v PROF` to `setup.py` to build a release version with symbols, useful for profiling.
+* You can pass `--static` to `setup.py` to statically link libstdc++ (useful for portable binaries).
+
+### Building on Windows with MSBuild
+
+Start from the repository root directory (do **not** change to `specs/src`).
+
+**Without Python support (default)**
+```
+msbuild specs\specs.sln /p:Configuration=Release /p:Platform=x64
+```
+
+**With Python support**
+
+To build with Python support, add `/p:EnablePython=true` to the command line. Python 3 and its development files must be installed on the build machine:
+```
+msbuild specs\specs.sln /p:Configuration=Release /p:Platform=x64 /p:EnablePython=true
+```
+
+Python is auto-detected from the system PATH. If Python is not in your PATH or you want to use a specific installation, provide the installation directory explicitly:
+```
+msbuild specs\specs.sln /p:Configuration=Release /p:Platform=x64 /p:EnablePython=true 
+     /p:PythonDir=C:\Python312
+```
+
+You may also override the detected version numbers if needed:
+```
+msbuild specs\specs.sln /p:Configuration=Release /p:Platform=x64 /p:EnablePython=true 
+     /p:PythonDir=C:\Python312 /p:PythonVerNoDot=312 /p:PythonFullVer=3.12.0
+```
+
+**After building**
+
+Copy the resulting `specs.exe` from the `specs\bin\Release\` directory to a location in your PATH.
+
+**Notes**
+
+* With Python support enabled, the appropriate Python DLL (e.g., `python312.dll`) must be in the PATH at runtime.
+* To build the Debug configuration, replace `Release` with `Debug` in the commands above.
+
+### Building on Windows with make
+
+As an alternative to MSBuild, you can use `make` on Windows. Change to the `specs/src` directory and run:
+1. `python setup.py -c VS`
+2. `make some`
+
+This approach uses the Visual Studio `cl.exe` compiler via `make` and supports the same `--python` flag as on other platforms.
+
+### Known Issues
+
+* Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
+* On Windows with Python support, the appropriate DLL (like `python312.dll`) must be in the PATH.
+
+*Note:* Although Windows for ARM64 is not officially supported, that platform will run the x64 version just fine. For Python integration, you'll need to install the x64 version of Python.
+
+### Verifying the build
+
+Whichever platform you built on, verify with:
+```
+specs @version
+specs @platform
+```
+as described above under "Verifying the installation."
 
 ---
 

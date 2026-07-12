@@ -230,7 +230,7 @@ void readConfigurationFile(useKeyValueCB cb)
 	// Compose build-info
 	std::string build_info = "Built ";
 	if (ExternalLiterals["build-source"] == "github") {
-	    build_info += "on github (id " + ExternalLiterals["build-runid"];
+	    build_info += "on GitHub (id " + ExternalLiterals["build-runid"];
 		if (!ExternalLiterals["build-number"].empty()) {
 		    build_info += "; build " + ExternalLiterals["build-number"];
 		}
