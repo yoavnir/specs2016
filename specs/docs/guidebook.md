@@ -57,7 +57,7 @@ include-before: |
 
 **specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as a more powerful version of `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
 
-**specs** was originally a stage in the **CMS Pipelines** system on IBM mainframes running VM/ESA or z/VM. This version is a modern re-implementation for Linux, Mac OS, and Windows, liberally extended with new features, and with many of the "mainframisms" replaced with UNIX-isms. As an example, **REXX** integration was replaced with **Python** integration.
+**specs** was originally a stage in the **CMS Pipelines** system on IBM mainframes running VM/ESA or z/VM. This version is a modern re-implementation for Linux, Mac OS, and Windows, liberally extended with new features, and with many of the "Mainframe-isms" replaced with "UNIX-isms". As an example, **REXX** integration was replaced with **Python** integration. It does, however, keep the base-1 indexing, meaning that `WORD 1` is the first word in the record.
 
 ### What problems does specs solve?
 
@@ -450,7 +450,7 @@ Disable the while-guard, which normally causes specs to abort after 5000 iterati
 
 Convert to and from time-formatted strings using the named timezone. Values come from the TZ database, such as `America/New_York`, `Europe/London`, or `Asia/Tokyo`. See [Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for the full list. This can also be set in the configuration file.
 
-### `--regexType optionList`
+### `--regexType optionList` {#regextype}
 
 Set the regular expression grammar. The default is `ECMAScript`. Other options include `basic`, `extended`, `awk`, `grep`, and `egrep`. You can also combine flags like `icase` for case-insensitive matching.
 
@@ -552,7 +552,7 @@ specs PRINT "@pi * @pi" 1
 ```
 Output: `9.86960440108936`
 
-## Settings that Belong in the Configuration File
+## Special configured literals that act as settings {#configured-literal-settings}
 
 ### `timezone`
 
@@ -568,6 +568,18 @@ Sets the locale for number formatting functions like `pretty()`:
 ```
 locale: en_US
 ```
+The special value `global` resets this to the process's global (OS-provided) locale instead of a specific one:
+```
+locale: global
+```
+
+### `regexType`
+
+Sets the default regular expression grammar and flags used by `rmatch()`, `rsearch()`, and `rreplace()`, equivalent to `--regexType` on the command line but applied to every invocation:
+```
+regexType: extended,icase
+```
+See [`--regexType`](#regextype) in Chapter 3 for the list of valid options.
 
 ### `SPECSPATH`
 
@@ -575,27 +587,35 @@ A colon-separated list of directories where specs looks for spec files (Chapter 
 ```
 SPECSPATH: /home/alice/specs:/usr/local/share/specs
 ```
-Defaults to `$HOME/specs` if not set.
+Defaults to `$HOME/specs` if not set.  On `Windows` the directories are separated by semicolons.
 
-### `pythonDisabled`
+### `pythonDisable`
 
 Set to `1` to permanently disable Python function loading. Unlike `--pythonFuncs off`, this cannot be overridden from the command line:
 ```
-pythonDisabled: 1
+pythonDisable: 1
 ```
 
 ### `NO_WARN_REDEFINED_FID`
 
-Set to any value to suppress the warning that specs emits when a field identifier is re-defined within the same spec:
+Set to any value to suppress the warning that specs emits when a field identifier is re-defined within the same spec. Setting this would eliminate the warning below:
 ```
-NO_WARN_REDEFINED_FID: 1
+$ echo "hello there" | specs a: WORD 1 1 a: WORD 2 NEXTWORD
+WARNING: Field Identifier <a> redefined.
+hello there
 ```
 
 ### `EmptyFrequencyMapMessage`
 
 The string returned by `fmap_dump()` when the frequency map contains no data:
 ```
-EmptyFrequencyMapMessage: (no data)
+EmptyFrequencyMapMessage: "(no data)"
+```
+Example:
+```
+$ echo "hello" | specs WORD 1 1 EOF PRINT "fmap_dump(a)"
+hello
+(no data)
 ```
 
 ### `while-guard-limit`
@@ -650,12 +670,17 @@ These exist automatically without any `~/.specs` entry:
 If your specification depends on a configured literal, you can protect it with `REQUIRES`:
 
 ```
-REQUIRES pi
-specs r: word 1 .
-     PRINT "@pi*r*r" 1
+$ echo -e "1\n2\n3" | specs REQUIRES pi PRINT "2*@pi*word(1)"
+6.28318530717958648
+12.566370614359173
+18.8495559215387594
 ```
 
-If `pi` is not defined in `~/.specs`, specs will abort with a clear error message rather than silently producing wrong results.
+If `pi` is not defined in `~/.specs` or via the `--set` switch on the command line, specs will abort with a clear error message while parsing the specification:
+```
+Error while parsing command-line arguments:
+Missing required configured literal <pi>
+```
 
 ---
 
@@ -894,7 +919,7 @@ This selects a range (character, word, or field) *within* another input source. 
 **Example**: Extract the filename from `ls -l` output. The full path (`/Applications/Safari.app/Contents/Resources/en.lproj/foo.html`) is the last word. We want the last component (after the last slash):
 
 ```
-ls -l | specs substr fieldsep / field -1 of word -1    1
+ls -l | specs SUBSTR FS / FIELD -1 OF WORD -1  1
 ```
 
 For the record `-rw-r--r--  1 root  wheel  2554 Oct 30 09:46 /path/to/foo.html`, this outputs `foo.html`.
@@ -3016,6 +3041,22 @@ Do NOT use `--threaded` with:
 | `--help topic` | | Print help |
 | `--info` | | Print build information |
 
+\newpage
+## Special Configured Literals
+
+These are keys that, when set in `~/.specs` (or via `-s`), change `specs` behavior rather than simply becoming an `@name` literal. See [Chapter 4](#configured-literal-settings) for details.
+
+| Key | Default | Effect |
+|-----|---------|--------|
+| `timezone` | System timezone | Timezone used by date/time conversion functions |
+| `locale` | System locale | Locale used by number-formatting functions like `pretty()`; `global` resets to the OS locale |
+| `regexType` | `ECMAScript` | Regex grammar/flags used by `rmatch()`, `rsearch()`, `rreplace()` |
+| `SPECSPATH` | `$HOME/specs` | Colon-separated search path for spec files and Python function files |
+| `pythonDisable` | unset | Set to `1` to permanently disable Python function loading |
+| `NO_WARN_REDEFINED_FID` | unset | Set to suppress the "Field Identifier redefined" warning |
+| `EmptyFrequencyMapMessage` | `""` | String returned by `fmap_dump()` for an empty frequency map |
+| `while-guard-limit` | `5000` | Maximum `WHILE` loop iterations before specs aborts |
+
 ## Input Record Formats (--recfm)
 
 | Format | Nickname | lrecl | linedel | Notes |
@@ -3024,6 +3065,23 @@ Do NOT use `--threaded` with:
 | `F` | fixed | required | n/a | Exactly lrecl characters per record |
 | `FD` | fixed-delimited | required | optional | Fixed length with line delimiter |
 
+## Output Placement Syntax
+
+| Syntax | Meaning |
+|--------|---------|
+| `n` | Absolute column n |
+| `n-m` | Range n to m (truncates/pads) |
+| `n.len` | len characters starting at column n |
+| `n` or `NEXT` | Immediately after previous output |
+| `nw` or `NEXTWORD` | After one space |
+| `nf` or `NEXTFIELD` | After one tab |
+| `n.W` / `nw.W` / `nf.W` | Relative placement with fixed width W |
+| `.` | No output (used with field identifiers) |
+| `(start)` | Composed: dynamic start column |
+| `(start, width)` | Composed: dynamic start and width |
+| `(start, width, align)` | Composed: dynamic alignment |
+
+\newpage
 ## Input Source Syntax
 
 | Syntax | Example | Meaning |
@@ -3048,22 +3106,6 @@ Do NOT use `--threaded` with:
 | `DTODclock` | | Seconds since epoch (current record) |
 | `TIMEDIFF` | | Microseconds since start of run |
 
-## Output Placement Syntax
-
-| Syntax | Meaning |
-|--------|---------|
-| `n` | Absolute column n |
-| `n-m` | Range n to m (truncates/pads) |
-| `n.len` | len characters starting at column n |
-| `n` or `NEXT` | Immediately after previous output |
-| `nw` or `NEXTWORD` | After one space |
-| `nf` or `NEXTFIELD` | After one tab |
-| `n.W` / `nw.W` / `nf.W` | Relative placement with fixed width W |
-| `.` | No output (used with field identifiers) |
-| `(start)` | Composed: dynamic start column |
-| `(start, width)` | Composed: dynamic start and width |
-| `(start, width, align)` | Composed: dynamic alignment |
-
 ## Alignment
 
 | Keyword | Effect |
@@ -3073,6 +3115,8 @@ Do NOT use `--threaded` with:
 | `center` / `centre` | Center |
 
 ## Conversions
+
+The table below holds conversions used within **Data Fields**. Where you see `fmt` this is a string representing a time format as in the function **[strftime](https://man7.org/linux/man-pages/man3/strftime.3.html)**, with the addition of the `%`*x*`f`, where *x* is between zero and 6, which represents fractional seconds. For example, `%H:%M:%S.%3f` may yield `15:02:37.372`.
 
 | Conversion | Effect |
 |------------|--------|
@@ -3126,8 +3170,8 @@ Do NOT use `--threaded` with:
 | `STOP ALLEOF` | Stop when all input streams exhausted (default) |
 | `STOP ANYEOF` | Stop when any input stream exhausted |
 | `STOP n` | Stop when stream n is exhausted |
-| `WORDSEPARATOR str` | Set word separator characters |
-| `FIELDSEPARATOR str` | Set field separator characters |
+| `WORDSEPARATOR str` or `WS str` | Set word separator characters |
+| `FIELDSEPARATOR str` or `FS str` | Set field separator characters |
 | `PAD char` | Set the padding character (default: space) |
 
 ## ALU Operators
@@ -3140,7 +3184,7 @@ Do NOT use `--threaded` with:
 | `/` | Divide | Returns quotient |
 | `//` | Integer divide | |
 | `%` | Remainder | |
-| `\|\|` | Concatenate | |
+| `||` | Concatenate | |
 | `<` `<=` `>` `>=` | Numeric compare | |
 | `=` `!=` | Smart equality | Numeric if both numeric |
 | `==` `!==` | Strict equality | Always string |
@@ -3160,7 +3204,7 @@ Do NOT use `--threaded` with:
 | `/=` | Divide |
 | `//=` | Integer divide |
 | `%=` | Remainder |
-| `\|\|=` | Append string |
+| `||=` | Append string |
 
 ---
 
@@ -3360,6 +3404,7 @@ Copy the resulting `specs.exe` from the `specs\bin\Release\` directory to a loca
 ### Building on Windows with make
 
 As an alternative to MSBuild, you can use `make` on Windows. Change to the `specs/src` directory and run:
+
 1. `python setup.py -c VS`
 2. `make some`
 
