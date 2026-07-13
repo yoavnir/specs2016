@@ -42,12 +42,12 @@ include-before: |
   \textbf{How to use this book}
   \begin{itemize}
   \item Start with Appendix C to install \textbf{specs}, whether from a pre-built package or by building from source.
-  \item Read Chapters 1--5 to understand the mental model and learn the three places where you can give specs its instructions (the command line, the configuration file, and spec files).
-  \item Read Chapters 6--13 to master every feature of the language.
-  \item Read Chapter 14 when you need to extend specs with Python.
-  \item Use Chapter 15 for inspiration, and Appendices A--B as a desk reference.
+  \item Read Chapters 1--5 to understand the mental model and learn the three places where you can give \textbf{specs} its instructions (the command line, the configuration file, and spec files).
+  \item Read Chapters 6--13 to master every feature of the tool.
+  \item Read Chapter 14 when you need to \textbf{extend} specs with functions that you write by yourself.
+  \item Use Chapter 15 for some examples, and Appendices A--B as a desk reference.
   \end{itemize}
-  It is best to first install \textbf{specs} on a \textbf{Mac} or \textbf{Linux} machine, although \textbf{specs} works just fine on \textbf{Microsoft Windows} as well. Every example in this book can be run, and it is \textit{recommended} to try along as you learn. The examples assume a POSIX shell (bash for Linux or zsh for Mac OS), although many work in the Microsoft Windows command line environments, both \textbf{cmd.exe} and \textbf{PowerShell}. Where shell-quoting matters it is called out explicitly.
+  It is best to first install \textbf{specs} on a \textbf{Mac} or \textbf{Linux} machine, although \textbf{specs} works just fine on \textbf{Microsoft Windows} as well. Every example in this book can be run, and it is \textit{recommended} to try things as you learn. The examples assume a POSIX shell (bash for Linux or zsh for Mac OS), although many work in the Microsoft Windows command line environments, both \textbf{cmd.exe} and \textbf{PowerShell}. Where shell-quoting matters it is called out explicitly.
   \clearpage
 ---
 
@@ -55,9 +55,9 @@ include-before: |
 
 ## What is specs?
 
-**specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as an infinitely configurable version of `awk` or `cut`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
+**specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as an more powerful version of `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
 
-**specs** was originally a stage in the **CMS Pipelines** system on IBM mainframes running VM/ESA or z/VM. This version is a modern re-implementation for Linux, macOS, and Windows, liberally extended with new features, and with many of the mainframisms replaced with UNIX-isms. As an example, REXX integration was replaced with Python integration.
+**specs** was originally a stage in the **CMS Pipelines** system on IBM mainframes running VM/ESA or z/VM. This version is a modern re-implementation for Linux, Mac OS, and Windows, liberally extended with new features, and with many of the "mainframisms" replaced with UNIX-isms. As an example, **REXX** integration was replaced with **Python** integration.
 
 ### What problems does specs solve?
 
@@ -96,7 +96,7 @@ Understanding three concepts unlocks everything else:
 
 ### Records
 
-**specs** is a record-oriented processor. It reads the input one *record* at a time (normally one line at a time), runs your specification against that record, and emits zero or more output records. This cycle repeats until the input is exhausted. For most purposes a record is simply one line of text, but specs lives up to its Mainframe heritage by also handling fixed-length records and streams Where records are delimited by characters other than newline — see "Record Formats" in Chapter 6.
+**specs** is a record-oriented processor. It reads the input one *record* at a time (normally one line at a time), runs your specification against that record, and emits zero or more output records. This cycle repeats until the input is exhausted. For most purposes a record is simply one line of text, but specs lives up to its Mainframe heritage by also handling fixed-length records and streams Where records are delimited by characters other than newline — see **[Record Formats](#recfm)** in Chapter 6.
 
 ```
 Input stream          specs                Output stream
@@ -321,7 +321,7 @@ Here is a guided tour of when each flag is useful.
 Read input from a file instead of stdin. Use this when you're not piping from another command:
 
 ```
-specs 1-* 1 -i mydata.txt
+specs -i mydata.txt 1-* 1
 ```
 
 ### `-o filename` / `--outFile filename`
@@ -329,7 +329,7 @@ specs 1-* 1 -i mydata.txt
 Write output to a file instead of stdout. Useful when the output is large or when you want to avoid it appearing on screen:
 
 ```
-cat input.txt | specs w2 1 -o output.txt
+cat input.txt | specs -o output.txt w2 1
 ```
 
 ### `-C cmd` / `--inCmd cmd`
@@ -357,7 +357,7 @@ Control how input records are structured. The default (`D` for delimited) reads 
 Execute each output record as a shell command rather than printing it. This is a powerful but dangerous flag — make sure your specification is correct before using it! A typical use is generating a series of shell commands:
 
 ```
-ls *.log | specs /rm/ 1 w1 nextword --shell
+ls *.log | specs --shell /rm/ 1 w1 nextword
 ```
 
 This would delete all `.log` files. (Use without `--shell` first to verify the commands look right.)
@@ -387,7 +387,7 @@ Use `-v` as your first step when a specification produces unexpected output.
 Print runtime statistics at the end of the run: record counts, wall-clock time, and CPU time. Useful for performance tuning:
 
 ```
-specs 1-* 1 --stats < large_file.txt > /dev/null
+specs --stats 1-* 1 < large_file.txt > /dev/null
 ```
 
 ## Behavior Modifiers
@@ -1045,7 +1045,7 @@ echo "  hello  " | specs 1-* strip 1
 ```
 Output: `hello`
 
-## Record Formats — When Records Are Not Lines
+## Record Formats — When Records Are Not Lines {#recfm}
 
 By default, specs treats each newline-terminated line of input as one record. This is the right choice for most text files and shell pipelines. But some data — especially binary files, packed logs, and files generated by mainframe or legacy systems — is organized differently. The `--recfm` flag (short for **record format**) lets you tell specs how to slice the byte stream into records.
 
@@ -1063,7 +1063,7 @@ You can supply a custom delimiter with `--linedel`:
 
 ```
 # Records separated by a pipe character
-specs w1 1 --recfm D --linedel '|' < data.pipe-separated
+specs --recfm D --linedel '|' w1 1 < data.pipe-separated
 ```
 
 ### `--recfm F` — Fixed Length
@@ -1078,7 +1078,7 @@ specs reads exactly **N** bytes from the input stream per record, regardless of 
 
 ```
 # Each record is exactly 80 bytes — no newlines needed
-specs 1-10 1 21-30 nw --recfm F --lrecl 80 < punched-card-image.bin
+specs --recfm F --lrecl 80 1-10 1 21-30 nw < punched-card-image.bin
 ```
 
 Note that character positions are still 1-based from the start of each record, so column 1 is the first byte of each 80-byte chunk, column 80 is the last, and so on.
@@ -1093,7 +1093,7 @@ A hybrid: specs reads one delimited line at a time (using the OS line-ending or 
 
 ```
 # Lines may vary in actual length but are logically 132 characters wide
-specs 1-10 1 101-110 nw --recfm FD --lrecl 132 < report.txt
+specs --recfm FD --lrecl 132 1-10 1 101-110 nw < report.txt
 ```
 
 ### Summary Table
@@ -2876,7 +2876,7 @@ Run: `cat access.log | specs -f log404.spec`
 **Problem**: Given a list of filenames in a text file, generate `gzip` commands for each.
 
 ```
-cat filelist.txt | specs /gzip -9/ 1 w1 nw --shell
+cat filelist.txt | specs --shell /gzip -9/ 1 w1 nw
 ```
 
 The `--shell` flag executes each output line as a shell command. Remove `--shell` first to verify the commands look correct.
