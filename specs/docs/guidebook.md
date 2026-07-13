@@ -55,7 +55,7 @@ include-before: |
 
 ## What is specs?
 
-**specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as an more powerful version of `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
+**specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as a more powerful version of `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
 
 **specs** was originally a stage in the **CMS Pipelines** system on IBM mainframes running VM/ESA or z/VM. This version is a modern re-implementation for Linux, Mac OS, and Windows, liberally extended with new features, and with many of the "mainframisms" replaced with UNIX-isms. As an example, **REXX** integration was replaced with **Python** integration.
 
@@ -387,7 +387,17 @@ Use `-v` as your first step when a specification produces unexpected output.
 Print runtime statistics at the end of the run: record counts, wall-clock time, and CPU time. Useful for performance tuning:
 
 ```
-specs --stats 1-* 1 < large_file.txt > /dev/null
+$ specs --stats 1-* 1 < large_file.txt > /dev/null
+
+Read  3376 lines.
+Wrote 3376 lines.
+Run Time: 0.004629 seconds.
+CPU Time: 0.504606 seconds.
+Main Thread:
+        Initializing: 155.345 us (3.250%)
+        Processing: 1.444 ms (30.214%)
+        Waiting on IO: 3.177 ms (66.465%)
+        Draining: 3.376 us (0.071%)
 ```
 
 ## Behavior Modifiers
