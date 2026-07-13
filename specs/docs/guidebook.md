@@ -35,9 +35,9 @@ include-before: |
   \end{titlepage}
   \clearpage
   \chapter*{Preface}
-  \textit{A complete tutorial and reference for the} \textbf{specs} \textit{text-processing utility}
+  \textit{A tutorial and reference for the} \textbf{specs} \textit{text-processing utility}
   \bigskip\par
-  This guidebook teaches you \textbf{specs} from the ground up. It assumes no prior knowledge of the tool, though familiarity with a Unix command line is helpful. By the end you will be able to write specifications ranging from one-liners that reformat a column of numbers to multi-page programs that join files, compute statistics, and call Python functions.
+  This guidebook teaches you \textbf{specs} from the ground up. It assumes no prior knowledge of the tool, though familiarity with a Unix command line is helpful, and familiarity with the \textbf{Python} language enables some very powerful usage. By the end you will be able to write specifications ranging from one-liners that reformat a column of numbers to multi-page programs that join files, compute statistics, and incorporate Python-language functions.
   \bigskip\par
   \textbf{How to use this book}
   \begin{itemize}
@@ -47,7 +47,7 @@ include-before: |
   \item Read Chapter 14 when you need to extend specs with Python.
   \item Use Chapter 15 for inspiration, and Appendices A--B as a desk reference.
   \end{itemize}
-  Every example in this book can be copied and run as-is. All examples assume a POSIX shell (bash). Where shell-quoting matters it is called out explicitly.
+  It is best to first install \textbf{specs} on a \textbf{Mac} or \textbf{Linux} machine, although \textbf{specs} works just fine on \textbf{Microsoft Windows} as well. Every example in this book can be run, and it is \textit{recommended} to try along as you learn. The examples assume a POSIX shell (bash for Linux or zsh for Mac OS), although many work in the Microsoft Windows command line environments, both \textbf{cmd.exe} and \textbf{PowerShell}. Where shell-quoting matters it is called out explicitly.
   \clearpage
 ---
 
@@ -84,6 +84,10 @@ which prints something like:
 POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
 ```
 
+### Terminology
+
+The program itself is called **specs**, although the original CMS Pipelines stage could be shortened to **spec**. The arguments to the program form a **specification**, whether that is given on the command line or in a file. The act of giving the program instructions is called **specifying**.  So if you've written a *specification* that converts all the FROM/IN/ON/AT fields of a TZDATA file to seconds-since-the-epoch, you have *specified* to make that conversion.
+
 \newpage
 
 ## The Mental Model
@@ -92,7 +96,7 @@ Understanding three concepts unlocks everything else:
 
 ### Records
 
-**specs** is a record-oriented processor. It reads the input one *record* at a time (normally one line at a time), runs your specification against that record, and emits zero or more output records. This cycle repeats until the input is exhausted. For most purposes a record is simply one line of text, but specs can also handle fixed-length binary records and streams delimited by characters other than newline — see "Record Formats" in Chapter 6.
+**specs** is a record-oriented processor. It reads the input one *record* at a time (normally one line at a time), runs your specification against that record, and emits zero or more output records. This cycle repeats until the input is exhausted. For most purposes a record is simply one line of text, but specs lives up to its Mainframe heritage by also handling fixed-length records and streams Where records are delimited by characters other than newline — see "Record Formats" in Chapter 6.
 
 ```
 Input stream          specs                Output stream
@@ -115,21 +119,14 @@ A specification consists of **spec units** — small building blocks that each p
 
 **specs** is designed to sit in a shell pipeline:
 
-```
-some-command | specs [switches] [spec-units] | next-command
-```
+*some-command* | `specs [switches] [spec-units]` | *next-command*
 
-Input comes from **standard input** (or a file with `-i`). Output goes to **standard output** (or a file with `-o`). This makes specs a natural glue between other Unix tools.
+
+Input comes from **standard input** (or a file with the `-i` / `--inFile` command line argument). Output goes to **standard output** (or a file with `-o` / `--outfile`). This makes specs a natural glue between other Unix tools,a role similar to that of **sed**, **awk**, or **cut**.
 
 ## Three Places to Give Instructions
 
-You will give specs its instructions in three different places, depending on the situation:
-
-| Where | When to use it |
-|-------|---------------|
-| **Command-line arguments** | Short, one-off tasks. The spec fits in a line or two. |
-| **Configuration file** (`~/.specs`) | Values that stay the same across many invocations: timezone, locale, personal constants, Python toggle. |
-| **Spec file** (`-f filename`) | Longer specifications; when you want comments, indentation, and reuse. |
+You can give **specs** its specification in two places: either as arguments on the command line, or as a **spec file** using the `-f filename` or `--specFile filename` command line switches. Specifying on the command line is appropriate for short, one-off tasks or as part of a larger script. Specifying in a file is appropriate for longer specifications, used more than once, with comments and indentation.  Additional information is given to specs in the configuration file -- `/home/johnsmith/.specs` on POSIX systems, or `C:\Users\johnsmith\specs.cfg` on Windows -- values that stay the same across invocations: timezone, locale, personal constants, etc.  
 
 You will learn all three. A quick decision guide is in Appendix A; details are in Chapters 3, 4, and 5.
 
@@ -692,15 +689,17 @@ A spec file is a plain text file. Spec units are written as if they were command
 
 There are two styles of comments in spec files:
 
-1. **Full-line comment**: The line begins with `# ` (hash+space), optionally preceded by whitespace. The entire line is ignored.
-2. **End-of-line comment**: The comment begins at the last occurrence of ` # ` (space+hash+space) that is also preceded by whitespace, or at a trailing hash mark that is the very last character on the line. Everything from that hash mark onward is ignored.
-
+1. **Full-line comment**: The line begins with "`# `" (hash+space), optionally preceded by whitespace. The entire line is ignored.
+2. **End-of-line comment**: The comment begins at the last occurrence of "` # `" (space+hash+space) that is also preceded by whitespace, or at a trailing hash mark that is the very last character on the line. Everything from that hash mark onward is ignored.
+\newpage
+**Example:**
 ```
-w1 1           # This puts the first word at column 1
-/hello/ nextword   # This appends the word "hello"
+# Example specification with a comment on every line
+WORD 1  1          # This puts the first word at column 1
+/hello/ NEXTWORD   # This appends the word "hello"
 ```
 
-Note: `# ` must be preceded by whitespace for an end-of-line comment (unless the hash mark is the last character on the line, with no trailing space). A hash inside a literal string (`/hello # world/`) is not a comment.
+Note: The hash+space ("`# `") must be preceded by whitespace for an end-of-line comment. A hash at the last position in the line can be a comment even though it is not followed by a space, but the comment is empty. A hash inside a literal string (`/hello # world/`) is not a comment.
 
 ## Directives
 
