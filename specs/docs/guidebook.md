@@ -10,6 +10,7 @@ classoption:
 mainfont: "DejaVu Serif"
 monofont: "DejaVu Sans Mono"
 toc: true
+toc-depth: 1
 numbersections: false
 keywords: 
   - "specs"
@@ -29,22 +30,26 @@ include-before: |
   \vspace{5cm}
   {\Large\itshape\color{blue}\underline{https://github.com/yoavnir/specs2016}\par}
   \vfill
+  \includegraphics[width=8cm]{XXDOCS/resources/specs-logo.png}
+  \vfill
   {\Large Version XXVERSION\par}
   \vspace{1cm}
   {\Large XXDATE\par}
   \end{titlepage}
   \clearpage
   \chapter*{Preface}
-  \textit{A tutorial and reference for the} \textbf{specs} \textit{text-processing utility}
+  \textit{This book is a tutorial and reference for the} \textbf{specs} \textit{text-processing utility}
   \bigskip\par
-  This guidebook teaches you \textbf{specs} from the ground up. It assumes no prior knowledge of the tool, though familiarity with a Unix command line is helpful, and familiarity with the \textbf{Python} language enables some very powerful usage. By the end you will be able to write specifications ranging from one-liners that reformat a column of numbers to multi-page programs that join files, compute statistics, and incorporate Python-language functions.
+  This guidebook teaches you \textbf{specs} from the ground up. It assumes no prior knowledge of the tool, though familiarity with a Unix command line is helpful, and familiarity with the \textbf{Python} language enables some very powerful specifications. 
+  
+  By the end you will be able to write specifications ranging from one-liners that reformat a column of numbers to multi-page programs that join files, compute statistics, and incorporate Python-language functions.
   \bigskip\par
   \textbf{How to use this book}
   \begin{itemize}
   \item Start with Appendix C to install \textbf{specs}, whether from a pre-built package or by building from source.
   \item Read Chapters 1--5 to understand the mental model and learn the three places where you can give \textbf{specs} its instructions (the command line, the configuration file, and spec files).
   \item Read Chapters 6--13 to master every feature of the tool.
-  \item Read Chapter 14 when you need to \textbf{extend} specs with functions that you write by yourself.
+  \item Read Chapter 14 when you need to \textbf{extend} specs with \textbf{Python} functions that you write by yourself.
   \item Use Chapter 15 for some examples, and Appendices A--B as a desk reference.
   \end{itemize}
   It is best to first install \textbf{specs} on a \textbf{Mac} or \textbf{Linux} machine, although \textbf{specs} works just fine on \textbf{Microsoft Windows} as well. Every example in this book can be run, and it is \textit{recommended} to try things as you learn. The examples assume a POSIX shell (bash for Linux or zsh for Mac OS), although many work in the Microsoft Windows command line environments, both \textbf{cmd.exe} and \textbf{PowerShell}. Where shell-quoting matters it is called out explicitly.
@@ -70,15 +75,13 @@ Here are the kinds of questions specs was built to answer:
 - *"Look at adjacent records and flag any two consecutive entries that differ by more than 10."*
 - *"Run this command for every line in the file."*
 
-**Note**
-
 This book assumes that **specs** is installed on your system. If it isn't yet, see **[Appendix C: Installation](#appendixc)** for step-by-step instructions covering both pre-built packages and building from source. Once it's installed, a quick way to check that everything is in order — including whether Python support is available — is:
 
 ```
 specs @platform
 ```
 
-which prints something like:
+which prints something like this:
 
 ```
 POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
@@ -86,7 +89,9 @@ POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variatio
 
 ### Terminology
 
-The program itself is called **specs**, although the original CMS Pipelines stage could be shortened to **spec**. The arguments to the program form a **specification**, whether that is given on the command line or in a file. The act of giving the program instructions is called **specifying**.  So if you've written a *specification* that converts all the FROM/IN/ON/AT fields of a TZDATA file to seconds-since-the-epoch, you have *specified* to make that conversion.
+The program itself is called **specs**, although the original CMS Pipelines stage could be shortened to **spec**. The arguments to the program form a **specification**, whether that is given on the command line or in a file.
+The act of giving the program instructions - of writing a *specification* - is called **specifying**.
+So if you've written a *specification* that converts all the FROM/IN/ON/AT fields of a TZDATA file to seconds-since-the-epoch, you have *specified* to make that conversion.
 
 \newpage
 
@@ -107,7 +112,7 @@ line 3           →    [specification] →    result 3
 …                →    [specification] →    …
 ```
 
-This default one-in-one-out pattern can be broken: you can emit multiple output records per input record, read multiple input records per cycle, or suppress output entirely. These capabilities are covered in Chapter 12.
+This default one-in/one-out pattern can be broken: you can emit multiple output records per input record, read multiple input records per cycle, or suppress output entirely. These capabilities are covered in [Chapter 12](#chap12).
 
 ### The Specification
 
@@ -122,7 +127,21 @@ A specification consists of **spec units** — small building blocks that each p
 *some-command* | `specs [switches] [spec-units]` | *next-command*
 
 
-Input comes from **standard input** (or a file with the `-i` / `--inFile` command line argument). Output goes to **standard output** (or a file with `-o` / `--outfile`). This makes specs a natural glue between other Unix tools,a role similar to that of **sed**, **awk**, or **cut**.
+Input can come from three places: 
+
+1. **Standard input**, which by default feeds the primary input stream. 
+1. A file, specified with `-i` or `--inFile` for the primary input stream, or `--is2`, `--is3` ... `--is8` for secondary input streams.
+1. A command output, specified with `-C` or `--inCmd`, which feeds the primary input stream.
+
+Output can also go to three places:
+
+1. **Standard output**, which is the default output stream.
+1. A file, specified with `-o` or `--outfile` for the primary output stream, or `--os2`, `--os3` ... `--os8` for secondary output streams.
+1. The command-line processor. the `-X` or `--shell` command-line switches channel the primary output stream to the command line processor for execution as commands.
+
+For more information about secondary input and output streams, see the [relevant sections in chapter 12](#multstrm)
+
+This makes **specs** a natural glue between other Unix tools, a role similar to that of **sed**, **awk**, or **cut**.
 
 ## Three Places to Give Instructions
 
@@ -2145,7 +2164,7 @@ Finance Department:
 
 ---
 
-# Chapter 12: Multiple Records and Streams
+# Chapter 12: Multiple Records and Streams {#chap12}
 
 The default one-in-one-out model can be broken in many ways. This chapter covers them all.
 
@@ -2331,7 +2350,7 @@ Key notes:
 - `READ` and `READSTOP` must not be used during secondary reading.
 - At the start of each new cycle, the primary stream is always selected.
 
-## Multiple Input Streams
+## Multiple Input Streams {#multstrm}
 
 Assign additional input files with `--is2` through `--is8`. At each cycle, one record is read from each stream simultaneously.
 
@@ -3191,7 +3210,7 @@ The table below holds conversions used within **Data Fields**. Where you see `fm
 | `<<` `<<=` `>>` `>>=` | String compare | Alphabetical |
 | `!` | Logical NOT | |
 | `&` | Logical AND | |
-| `\|` | Logical OR | |
+| `|` | Logical OR | |
 
 ## Assignment Operators (in SET)
 
@@ -3222,7 +3241,7 @@ Every release of **specs** publishes pre-built packages for Linux (RPM and DEB),
 2. GitHub lists releases newest-first, and the most recent one is tagged **Latest** with a green badge next to its version number, near the top of the page. There may be newer ones, but they will either be marked as **Pre-release* or not marked at all. Make sure you pick the latest release, or the specific pre-relase or older version that you intend to use.
 3. Scroll down to your release's **Assets** section, which lists every downloadable file for that release.
 
-![The GitHub releases page, with the most recent release marked with a "Latest" badge](XXDOCS/releases_page.png)
+![The GitHub releases page, with the most recent release marked with a "Latest" badge](XXDOCS/resources/releases_page.png)
 
 ### Choosing the right package for your operating system
 
