@@ -94,14 +94,13 @@ The act of giving the program instructions - of writing a *specification* - is c
 So if you've written a *specification* that converts all the FROM/IN/ON/AT fields of a TZDATA file to seconds-since-the-epoch, you have *specified* to make that conversion.
 
 \newpage
-
 ## The Mental Model
 
 Understanding three concepts unlocks everything else:
 
 ### Records
 
-**specs** is a record-oriented processor. It reads the input one *record* at a time (normally one line at a time), runs your specification against that record, and emits zero or more output records. This cycle repeats until the input is exhausted. For most purposes a record is simply one line of text, but specs lives up to its Mainframe heritage by also handling fixed-length records and streams Where records are delimited by characters other than newline — see **[Record Formats](#recfm)** in Chapter 6.
+**specs** is a record-oriented processor. It reads the input one *record* at a time (normally one line at a time), runs your specification against that record, and emits zero or more output records. This cycle repeats until the input is exhausted. For most purposes a record is simply one line of text, but specs lives up to its Mainframe heritage by also handling fixed-length records and streams Where records are delimited by characters other than newline — see **[Record Formats](#recfm)** in **[Chapter 6](#chap6)**.
 
 ```
 Input stream          specs                Output stream
@@ -194,9 +193,7 @@ Here is what each part does, in the order it appears on the command line:
 - **OutputPlacement** — where the (possibly converted) value goes: an absolute output column, or a column relative to the previous output.
 - **alignment** — how to justify the value (`left`, `right`, or `center`/`centre`) when it is narrower than its output field.
 
-Most parts are optional. At minimum you need an `InputSource` and an `OutputPlacement`. The rest of this section walks through each part in turn, covering enough for you to write specifications made up entirely of data fields. Chapter 6 (input sources and conversions) and Chapter 7 (output placement) go into full depth on each part. When multiple *data fields* are included in a *specification*, they are processed in order.
-
-\newpage
+Most parts are optional. At minimum you need an `InputSource` and an `OutputPlacement`. The rest of this section walks through each part in turn, covering enough for you to write specifications made up entirely of data fields. [Chapter 6 (input sources and conversions)](#chap6) and [Chapter 7 (output placement)](#chap7) go into full depth on each part. When multiple *data fields* are included in a *specification*, they are processed in order.
 
 **Example:** - A specification with one **Data Field** Spec Unit that has only an **InputSource** and an **OutputPlacement**: 
 
@@ -240,7 +237,7 @@ echo ABCDEFGH | specs 5:3 1
 ```
 Output: `EFGHABC`
 
-Chapter 6 covers the full set of range forms.
+**[Chapter 6](#chap6)** covers the full set of range forms.
 
 ### Selecting Words and Word Ranges
 
@@ -269,7 +266,7 @@ echo "the quick brown fox" | specs w-1 1
 ```
 Output: `fox`
 
-The whitespace separator can be set with the `WORDSEPARATOR` or `WS` keywords. **specs** also has **fields**. Unlike words, fields are separated by a single *field separator*, which by default is a `tab`. More on this in Chapter 6.
+The whitespace separator can be set with the `WORDSEPARATOR` or `WS` keywords. **specs** also has **fields**. Unlike words, fields are separated by a single *field separator*, which by default is a `tab`. More on this in **[Chapter 6](#chap6)**.
 
 ### String Literals as InputSource {#sliteral2}
 
@@ -280,12 +277,19 @@ specs "Hello, there" 1
 ```
 Output: `Hello, there`
 
-Delimiters can be used when necessary to avoid confusion. On the command line, double quotes are a signal to the **shell** rather than to **specs**: they tell the shell that everything enclosed — spaces, special characters and all — is a single argument. **specs** then treats that whole argument as a *string literal*, unless the entire thing looks like something else: a keyword, a token, a range, and so on. So a command-line literal usually needs no delimiters of its own.
+Delimiters can be used when necessary to avoid confusion:
+
+```
+specs /word/ 1
+```
+Output: `word`
+
+On the command line, double quotes are a signal to the **shell** rather than to **specs**. They tell the shell that everything enclosed — spaces, special characters and all — is a single argument. **specs** then treats that whole argument as a *string literal*, unless the entire thing looks like something else: a keyword, a token, a range, and so on. So a command-line literal usually needs no delimiters of its own.
 
 In a *spec file* (see **[Chapter 5](#chap5)**) there is no shell to group words into arguments for you, so a string literal that contains spaces **must** be surrounded by a delimiter. A double quote can serve as that delimiter, but slashes are the most common:
 
 ```
-/Hello there/  1
+/Hello, there/  1
 ```
 
 ### Field Identifiers
@@ -312,8 +316,9 @@ This is handy when a fixed-width or word-delimited source includes surrounding b
 
 ### Conversions
 
-A **conversion**, placed just before the `OutputPlacement`, transforms the value. `UCASE` and `LCASE` are the two most common examples — there are others, all covered in Chapter 6:
-
+A **conversion**, placed just before the `OutputPlacement`, transforms the value. `UCASE` and `LCASE` are the two most common examples — there are others, all covered in [Chapter 6](#chap6).
+\newpage
+Example:
 ```
 echo "Hello World" | specs 1-* ucase 1
 ```
@@ -402,7 +407,7 @@ Assign files to additional input or output streams. This is an advanced feature 
 
 ### `--recfm format`, `--lrecl n`, `--linedel char`
 
-Control how input records are structured. The default (`D` for delimited) reads one line at a time. Use `F` for fixed-length records (requires `--lrecl`) or `FD` for fixed-length lines. Full details and examples are in the "Record Formats" section of Chapter 6; a quick reference table is in Appendix B.
+Control how input records are structured. The default (`D` for delimited) reads one line at a time. Use `F` for fixed-length records (requires `--lrecl`) or `FD` for fixed-length lines. Full details and examples are in the **[Record Formats](#recfm)** section of Chapter 6; a quick reference table is in Appendix B.
 
 ## Controlling Output
 
@@ -876,7 +881,7 @@ Use the command line when:
 
 ---
 
-# Chapter 6: Selecting and Transforming Input
+# Chapter 6: Selecting and Transforming Input {#chap6}
 
 Every data field begins with an **input source** — a description of where to get the data for this field. This chapter covers all input source types and the conversions that can be applied to them.
 
@@ -1195,7 +1200,7 @@ specs --recfm FD --lrecl 132 1-10 1 101-110 nw < report.txt
 
 ---
 
-# Chapter 7: Placing Output
+# Chapter 7: Placing Output {#chap7}
 
 The **output placement** tells specs where to put the result of an input source in the output record.
 
