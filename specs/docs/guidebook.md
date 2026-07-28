@@ -27,10 +27,10 @@ include-before: |
   {\Huge\bfseries\itshape specs\par}
   \vspace{0cm}
   {\Huge The complete guidebook\par}
-  \vspace{5cm}
+  \vspace{2cm}
   {\Large\itshape\color{blue}\underline{https://github.com/yoavnir/specs2016}\par}
   \vfill
-  \includegraphics[width=8cm]{XXDOCS/resources/specs-logo.png}
+  \includegraphics[width=12cm]{XXDOCS/resources/specs-logo.png}
   \vfill
   {\Large Version XXVERSION\par}
   \vspace{1cm}
@@ -187,14 +187,14 @@ A **data field** is the workhorse spec unit. Its full form is:
 
 Here is what each part does, in the order it appears on the command line:
 
-- **fieldIdentifier** — a single letter followed by a colon (e.g. `a:`), used to capture the output value for later reuse within the same iteration.
-- **InputSource** — what to read from the input record: a character range, a range of words or fields, a string literal, or one of several other sources. This and `OutputPlacement` are the only parts that are always required.
+- **fieldIdentifier** — a single letter followed by a colon (e.g. `a:`), used to save the value under a name for later reuse.
+- **InputSource** — what to read from the input record: a character range, a range of words, a string literal, or one of several other sources. This and `OutputPlacement` are the only parts that are always required.
 - **STRIP** — removes leading and trailing whitespace from the value before it is converted or placed.
-- **conversion** — transforms the value, e.g. changing case, converting between hex/binary/decimal, or reformatting a timestamp.
-- **OutputPlacement** — where the (possibly converted) value goes: an absolute or relative output column, a field identifier (to capture it instead of writing it out), or `.` to discard it.
+- **conversion** — transforms the value, e.g. changing its case.
+- **OutputPlacement** — where the (possibly converted) value goes: an absolute output column, or a column relative to the previous output.
 - **alignment** — how to justify the value (`left`, `right`, or `center`/`centre`) when it is narrower than its output field.
 
-Most parts are optional. At minimum you need an `InputSource` and an `OutputPlacement`. The rest of this section walks through each part in turn, starting with the simplest possible example.
+Most parts are optional. At minimum you need an `InputSource` and an `OutputPlacement`. The rest of this section walks through each part in turn, covering enough for you to write specifications made up entirely of data fields. Chapter 6 (input sources and conversions) and Chapter 7 (output placement) go into full depth on each part. When multiple *data fields* are included in a *specification*, they are processed in order.
 
 \newpage
 
@@ -211,48 +211,48 @@ Hello
 
 `1-5` selects characters 1 through 5; `1` places them at column 1 of the output.
 
-### Selecting by Position
+### Selecting Characters and Character Ranges
 
-Character ranges use 1-based indexing:
+Character ranges use 1-based indexing, with negative indices counting back from the end:
 
 | Syntax | Meaning |
 |--------|---------|
-| `5` | Character at position 5 |
-| `3-7` or `3:7` | Characters 3 through 7 inclusive |
-| `5.8` | 8 characters starting at position 5 |
-| `-1` | The last character |
-| `-3` | The third character from the end |
-| `2:-2` | All but the first and last characters |
+| `n` | Single character at position n |
+| `m:n` | Characters m through n inclusive (wraps if `n<m`) |
 | `1-*` | The entire record |
+
+**Note**: You can use `m-n` instead of `m:n`, but this older form has some limitations. It doesn't work if `n` is smaller than `m`, or if `n` is negative. The range is treated as a **[string literal](#sliteral2)** and printed verbatim, so `specs 5-3 1` outputs the text `5-3`.
 
 Let's try a few:
 
 ```
-echo "ABCDEFGH" | specs 3-5 1
+echo ABCDEFGH | specs 3-5 1
 ```
 Output: `CDE`
 
 ```
-echo "ABCDEFGH" | specs 1.3 1
+echo ABCDEFGH | specs 1:-3 1
 ```
-Output: `ABC` (3 characters starting at 1)
+Output: `ABCDEF` (from position 1 to the 3rd-from-last character)
 
 ```
-echo "ABCDEFGH" | specs -3-* 1
+echo ABCDEFGH | specs 5:3 1
 ```
-Output: `FGH` (from the third-to-last character to the end)
+Output: `EFGHABC`
 
-### Selecting Words
+Chapter 6 covers the full set of range forms.
 
-A **word** is a sequence of non-whitespace characters. Words are separated by one or more whitespace characters (the default word separator), or whatever `WordSeparator` is specified explicitly.
+### Selecting Words and Word Ranges
+
+A **word** is a sequence of non-whitespace characters. Words are separated by one or more whitespace characters (the default word separator).
 
 | Syntax | Meaning |
 |--------|---------|
-| `w1` or `word 1` | First word |
-| `w3` or `word 3` | Third word |
-| `w1-3` or `words 1-3` | Words 1 through 3 |
-| `w-1` or `word -1` | Last word |
-| `w2.3` | Three words starting at the second word |
+| `w1` or `WORD 1` | First word |
+| `w2:4` or `WORD 2:4` | Words 2 through 4 |
+| `w-1` or `WORD -1` | Last word |
+
+**Note**: Similar to character ranges, you can use `w2-4` here as well, with the same limitations.
 
 ```
 echo "the quick brown fox" | specs w2 1
@@ -260,7 +260,7 @@ echo "the quick brown fox" | specs w2 1
 Output: `quick`
 
 ```
-echo "the quick brown fox" | specs w1-2 1
+echo "the quick brown fox" | specs w1:2 1
 ```
 Output: `the quick`
 
@@ -269,139 +269,77 @@ echo "the quick brown fox" | specs w-1 1
 ```
 Output: `fox`
 
-### Selecting Fields
+The whitespace separator can be set with the `WORDSEPARATOR` or `WS` keywords. **specs** also has **fields**. Unlike words, fields are separated by a single *field separator*, which by default is a `tab`. More on this in Chapter 6.
 
-A **field** is similar to a word, but fields are separated by *exactly one* field separator character (a tab by default, but other characters can be specified). This means empty fields are possible.
+### String Literals as InputSource {#sliteral2}
 
-| Syntax | Meaning |
-|--------|---------|
-| `f1` or `field 1` | First field |
-| `f3` | Third field |
-| `f1-3` or `fields 1-3` | Fields 1 through 3 |
-| `f-1` or `field -1` | Last field |
-
-Words vs. fields are explained in detail in Chapter 6. The key difference: consecutive words can be separated by multiple separators, while consecutive fields are separated by exactly one separator (so empty fields are possible with fields).
-
-### String Literals as Input
-
-You can place literal text in the output by using a string literal as the input source. Delimiters can be `/`, `'`, or `"`:
+You can place literal text in the output by using a string literal as the input source:
 
 ```
-echo "test" | specs /Hello/ 1
+specs "Hello, there" 1
 ```
-Output: `Hello`
+Output: `Hello, there`
 
-On the command line, the most common delimiters are `/` (slashes) or unquoted text that does not look like a keyword. To include special shell characters, wrap the entire argument in double quotes.
+Delimiters can be used when necessary to avoid confusion. On the command line, double quotes are a signal to the **shell** rather than to **specs**: they tell the shell that everything enclosed — spaces, special characters and all — is a single argument. **specs** then treats that whole argument as a *string literal*, unless the entire thing looks like something else: a keyword, a token, a range, and so on. So a command-line literal usually needs no delimiters of its own.
+
+In a *spec file* (see **[Chapter 5](#chap5)**) there is no shell to group words into arguments for you, so a string literal that contains spaces **must** be surrounded by a delimiter. A double quote can serve as that delimiter, but slashes are the most common:
+
+```
+/Hello there/  1
+```
 
 ### Field Identifiers
 
-A **fieldIdentifier** is a single letter followed by a colon, such as `a:`. It names a variable that stores a value for later reuse elsewhere in the same specification — in a later data field, in an ALU expression, in statistics, or in a control break.
-
-Placed at the *start* of a data field (before the `InputSource`), it captures the output value:
+A **fieldIdentifier** is a single letter followed by a colon, such as `a:`, placed at the start of a data field. It saves the value under that name so it can be reused elsewhere in the specification, either in an *expression* (see **[Chapter 8](#chap8)**), or with the `ID` keyword:
 
 ```
-echo "5 3" | specs a: w1 . b: w2 . PRINT "a*b" 1
+echo "5 3" | specs a: w1 . b: w2 . ID b 1 ID a 2
 ```
-Output: `15`
+Output: `35`
 
-Here `a:` saves word 1 into the variable `a`, and `b:` saves word 2 into `b`; the `.` OutputPlacement means "capture it but don't write it out". A later `PRINT "a*b"` expression multiplies the two saved values.
-
-A fieldIdentifier can *also* be used as the **OutputPlacement** of a data field, in which case it captures the resulting (post-STRIP, post-conversion) value instead of, or in addition to, writing it to the output record:
-
-```
-echo "hello world" | specs w1 ucase a:
-```
-
-Here `a:` as the OutputPlacement captures the upper-cased first word into `a`, without producing any output. Field identifiers, expressions, statistics, and control breaks are covered in full in Chapters 6 through 11.
-
-A fieldIdentifier can be used as an inputSource with the keyword `ID`:
-
-```
-echo abcdef | specs 2:-2 ucase a:  ID a 1
-```
-Output: `BCDE`
-
-### Other input sources
-
-The `PRINT` and `ID` keywords for InputSource were mentioned in passing. They, along with `TODclock`, `RECNO`, `SUBSTRING` and others are described in Chapter 6.
+Field identifiers, and everything you can do with them, are covered in full starting in Chapter 6.
 
 ### STRIP — Trimming Whitespace
 
 Adding the `STRIP` keyword right after the `InputSource` removes leading and trailing whitespace from the value before it is converted or placed:
 
 ```
-echo "  hello  " | specs 1-* strip 1
+echo "  hello  " | specs "<" 1 1-* strip NEXT ">" NEXT
 ```
-Output: `hello`
+Output: `<hello>`
 
 This is handy when a fixed-width or word-delimited source includes surrounding blanks that you don't want to carry into the output.
 
 ### Conversions
 
-A **conversion**, placed between `STRIP` (or `InputSource` if there is no `STRIP`) and `OutputPlacement`, transforms the value. Common conversions include case changes, encoding conversions, and time formatting:
+A **conversion**, placed just before the `OutputPlacement`, transforms the value. `UCASE` and `LCASE` are the two most common examples — there are others, all covered in Chapter 6:
 
 ```
 echo "Hello World" | specs 1-* ucase 1
 ```
 Output: `HELLO WORLD`
 
-| Conversion | Effect |
-|------------|--------|
-| `ucase` / `lcase` | Convert to upper/lower case |
-| `rot13` | ROT-13 cipher |
-| `C2X` / `X2CH` | Characters to/from hexadecimal |
-| `C2B` / `B2C` | Characters to/from binary digits |
-| `D2X` / `X2D` | Decimal to/from hexadecimal |
-| `ti2f`, `tf2i`, `s2tf`, `tf2s`, `mcs2tf`, `tf2mcs` | Time format conversions |
-
-The full list of conversions, with examples, is in Chapter 6.
-
 ### Output Placement
 
-The `OutputPlacement` argument says where the value goes. You've already seen the simplest form — an absolute column number, such as the `1` in `1-5 1` — but it can be any of the following:
-
-- **Absolute position or range**, such as `1` or `1-5`, placing the value at that column (padded or truncated to fit a range).
-- **Relative placement**, positioning the value after whatever was last written — see below.
-- **A fieldIdentifier**, such as `a:`, which captures the value instead of (or in addition to) writing it — see "Field Identifiers" above.
-- **`.` (a period)**, meaning "no output" — useful for a data field that exists only to set a fieldIdentifier.
-
-**Relative placement** avoids having to compute absolute column numbers by hand:
-
-| Keyword | Meaning |
-|---------|---------|
-| `n` or `next` | Immediately after the previous output |
-| `nw` or `nextword` | After a space following the previous output |
-| `nf` or `nextfield` | After a tab following the previous output |
+The `OutputPlacement` argument says where the value goes. You've already seen the simplest form — an absolute column number, such as the `1` in `1-5 1`. You can also place output *relative* to whatever was written previously, which avoids having to compute absolute column numbers by hand. Use `N` or `NEXT` to place the output immediately after the previous output. Use `NW` or `NEXTWORD` to place it after a space following the previous output.
 
 ```
-echo "Alice 42" | specs /Name:/ 1 w1 nextword /Age:/ nextword w2 nextword
+echo "Alice 42" | specs /Name:/ 1 w1 NEXTWORD /Age:/ NEXTWORD w2 NEXTWORD
 ```
 Output: `Name: Alice Age: 42`
 
-Note that `nextword` adds a single space before the next piece of output. Chapter 7 covers output placement in full, including fixed-width relative columns and dynamically-computed ("composed") placements.
+Note that `NEXTWORD` adds a single space before the next piece of output, but *will not* do so for the first *data field* in the specification. When OutputPlacement can be omitted (for example, at the end of a specification), the default is `NEXTWORD`.
+
+Other output placement options are covered in Chapters 6 and 7.
 
 ### Alignment
 
 The optional `alignment` argument comes last, and only makes sense when the output field is wider than the value being placed (for example, when `OutputPlacement` is a range like `1-10`). It can be `left` (the default), `right`, or `center`/`centre`:
 
 ```
-echo "42" | specs 1-* 1-10 right
+echo "42" | specs "#" 1 1-* 2-10 right "#"
 ```
-Output: `        42`
-
-```
-echo "hello" | specs 1-* 1.20 center
-```
-Output: `       hello        `
-
-### Multiple Data Fields
-
-A specification can have multiple data fields. They are processed in order, and each can write to a different output position:
-
-```
-echo "Alice 42" | specs w1 1 w2 10
-```
-Output: `Alice    42` (name at column 1, age at column 10)
+Output: `#       42 #` - also an example of an elided final OutputPlacement.
 
 ### A Practical Example
 
@@ -419,7 +357,7 @@ cat logfile.txt | specs w1 1 w3 13 w-1 25
 
 Output:
 ```
-2024-01-15   ERROR        192.168.1.100
+2024-01-15  ERROR       192.168.1.100
 ```
 
 ---
@@ -800,7 +738,7 @@ Missing required configured literal <pi>
 
 ---
 
-# Chapter 5: Offline Specifications — Spec Files
+# Chapter 5: Offline Specifications — Spec Files {#chap5}
 
 When a specification grows beyond a few data fields, putting it all on the command line becomes unwieldy. **Spec files** let you write specifications in a file with comments, indentation, and blank lines.
 
@@ -1192,9 +1130,9 @@ Output: `1572421560.000000`
 Adding `STRIP` between the input source and the conversion (or output placement) removes leading and trailing whitespace from the value before placing it:
 
 ```
-echo "  hello  " | specs 1-* strip 1
+echo "  hello  " | specs "<" 1 1-* STRIP NEXT ">" NEXT
 ```
-Output: `hello`
+Output: `<hello>`
 
 ## Record Formats — When Records Are Not Lines {#recfm}
 
@@ -1334,14 +1272,14 @@ After the output placement, you can specify an alignment for values shorter than
 | `center` or `centre` | Pad equally on both sides |
 
 ```
-echo "hello" | specs 1-* 1.20 center
+echo "42" | specs "<" 1 1-* 2-10 right ">" NEXT
 ```
-Output: `       hello        `
+Output: `<       42>`
 
 ```
-echo "42" | specs 1-* 1-10 right
+echo "hello" | specs "<" 1 1-* 2.20 center ">" NEXT
 ```
-Output: `        42`
+Output: `<       hello        >`
 
 ## The PAD Spec Unit — Changing the Padding Character
 
@@ -1442,7 +1380,7 @@ specs w1 (,,'R')   # next, full width, right-aligned
 
 ---
 
-# Chapter 8: Expressions and the ALU
+# Chapter 8: Expressions and the ALU  {#chap8}
 
 The **Arithmetic-Logical Unit (ALU)** is specs's computation engine. It evaluates *expressions* — combinations of values, operators, and function calls — to produce a result.
 
