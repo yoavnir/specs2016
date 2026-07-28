@@ -351,9 +351,9 @@ book: $(DOCS_DIR)/guidebook.pdf
 # The recipe runs $(EXE_DIR)/specs, so it must depend on it - otherwise a
 # parallel "make -j all" can start generating the guidebook before specs has
 # been linked ("specs: Command not found").
-$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex $(EXE_DIR)/specs
-	$(EXE_DIR)/specs --set docsdir=../docs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/guidebook_prepare
-	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/header.tex
+$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/resources/header.tex $(EXE_DIR)/specs
+	$(EXE_DIR)/specs --set docsdir=../docs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/resources/guidebook_prepare
+	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/resources/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
 

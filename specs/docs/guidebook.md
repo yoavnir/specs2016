@@ -10,6 +10,7 @@ classoption:
 mainfont: "DejaVu Serif"
 monofont: "DejaVu Sans Mono"
 toc: true
+toc-depth: 1
 numbersections: false
 keywords: 
   - "specs"
@@ -26,8 +27,10 @@ include-before: |
   {\Huge\bfseries\itshape specs\par}
   \vspace{0cm}
   {\Huge The complete guidebook\par}
-  \vspace{5cm}
+  \vspace{2cm}
   {\Large\itshape\color{blue}\underline{https://github.com/yoavnir/specs2016}\par}
+  \vfill
+  \includegraphics[width=12cm]{XXDOCS/resources/specs-logo.png}
   \vfill
   {\Large Version XXVERSION\par}
   \vspace{1cm}
@@ -35,16 +38,18 @@ include-before: |
   \end{titlepage}
   \clearpage
   \chapter*{Preface}
-  \textit{A tutorial and reference for the} \textbf{specs} \textit{text-processing utility}
+  \textit{This book is a tutorial and reference for the} \textbf{specs} \textit{text-processing utility}
   \bigskip\par
-  This guidebook teaches you \textbf{specs} from the ground up. It assumes no prior knowledge of the tool, though familiarity with a Unix command line is helpful, and familiarity with the \textbf{Python} language enables some very powerful usage. By the end you will be able to write specifications ranging from one-liners that reformat a column of numbers to multi-page programs that join files, compute statistics, and incorporate Python-language functions.
+  This guidebook teaches you \textbf{specs} from the ground up. It assumes no prior knowledge of the tool, though familiarity with the Unix command line is helpful, and familiarity with the \textbf{Python} language enables some very powerful \textit{specifications}. 
+  
+  By the end you will be able to write specifications ranging from one-liners that reformat a column of numbers to multi-page programs that join files, compute statistics, and incorporate Python-language functions.
   \bigskip\par
   \textbf{How to use this book}
   \begin{itemize}
   \item Start with Appendix C to install \textbf{specs}, whether from a pre-built package or by building from source.
-  \item Read Chapters 1--5 to understand the mental model and learn the three places where you can give \textbf{specs} its instructions (the command line, the configuration file, and spec files).
+  \item Read Chapters 1--5 to understand the mental model, learn the basic \textit{spec units}, and where you can give \textbf{specs} its instructions.
   \item Read Chapters 6--13 to master every feature of the tool.
-  \item Read Chapter 14 when you need to \textbf{extend} specs with functions that you write by yourself.
+  \item Read Chapter 14 when you need to \textbf{extend} specs with \textbf{Python} functions that you write by yourself.
   \item Use Chapter 15 for some examples, and Appendices A--B as a desk reference.
   \end{itemize}
   It is best to first install \textbf{specs} on a \textbf{Mac} or \textbf{Linux} machine, although \textbf{specs} works just fine on \textbf{Microsoft Windows} as well. Every example in this book can be run, and it is \textit{recommended} to try things as you learn. The examples assume a POSIX shell (bash for Linux or zsh for Mac OS), although many work in the Microsoft Windows command line environments, both \textbf{cmd.exe} and \textbf{PowerShell}. Where shell-quoting matters it is called out explicitly.
@@ -57,7 +62,7 @@ include-before: |
 
 **specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as a more powerful version of `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
 
-**specs** was originally a stage in the **CMS Pipelines** system on IBM mainframes running VM/ESA or z/VM. This version is a modern re-implementation for Linux, Mac OS, and Windows, liberally extended with new features, and with many of the "Mainframe-isms" replaced with "UNIX-isms". As an example, **REXX** integration was replaced with **Python** integration. It does, however, keep the base-1 indexing, meaning that `WORD 1` is the first word in the record.
+**specs** was originally a **stage** in the **CMS Pipelines** system on IBM mainframes running **VM/ESA** and later **z/VM**. This version is a re-implementation for Linux, Mac OS, and Windows, liberally extended with new features, and with many (but not all!) of the "Mainframe-isms" replaced with "UNIX-isms". As an example, **REXX** integration was replaced with **Python** integration. It does, however, keep the base-1 indexing, meaning that `WORD 1` is the first word in the record.
 
 ### What problems does specs solve?
 
@@ -70,15 +75,13 @@ Here are the kinds of questions specs was built to answer:
 - *"Look at adjacent records and flag any two consecutive entries that differ by more than 10."*
 - *"Run this command for every line in the file."*
 
-**Note**
-
 This book assumes that **specs** is installed on your system. If it isn't yet, see **[Appendix C: Installation](#appendixc)** for step-by-step instructions covering both pre-built packages and building from source. Once it's installed, a quick way to check that everything is in order — including whether Python support is available — is:
 
 ```
 specs @platform
 ```
 
-which prints something like:
+which prints something like this:
 
 ```
 POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
@@ -86,17 +89,18 @@ POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variatio
 
 ### Terminology
 
-The program itself is called **specs**, although the original CMS Pipelines stage could be shortened to **spec**. The arguments to the program form a **specification**, whether that is given on the command line or in a file. The act of giving the program instructions is called **specifying**.  So if you've written a *specification* that converts all the FROM/IN/ON/AT fields of a TZDATA file to seconds-since-the-epoch, you have *specified* to make that conversion.
+The program itself is called **specs**, although the original CMS Pipelines stage could be shortened to **spec**. The arguments to the program form a **specification**, whether that is given on the command line or in a file.
+The act of giving the program instructions - of writing a *specification* - is called **specifying**.
+So if you've written a *specification* that converts all the FROM/IN/ON/AT fields of a TZDATA file to seconds-since-the-epoch, you have *specified* to make that conversion.
 
 \newpage
-
 ## The Mental Model
 
 Understanding three concepts unlocks everything else:
 
 ### Records
 
-**specs** is a record-oriented processor. It reads the input one *record* at a time (normally one line at a time), runs your specification against that record, and emits zero or more output records. This cycle repeats until the input is exhausted. For most purposes a record is simply one line of text, but specs lives up to its Mainframe heritage by also handling fixed-length records and streams Where records are delimited by characters other than newline — see **[Record Formats](#recfm)** in Chapter 6.
+**specs** is a record-oriented processor. It reads the input one *record* at a time (normally one line at a time), runs your specification against that record, and emits zero or more output records. This cycle repeats until the input is exhausted. For most purposes a record is simply one line of text, but specs lives up to its Mainframe heritage by also handling fixed-length records and streams Where records are delimited by characters other than newline — see **[Record Formats](#recfm)** in **[Chapter 6](#chap6)**.
 
 ```
 Input stream          specs                Output stream
@@ -107,13 +111,13 @@ line 3           →    [specification] →    result 3
 …                →    [specification] →    …
 ```
 
-This default one-in-one-out pattern can be broken: you can emit multiple output records per input record, read multiple input records per cycle, or suppress output entirely. These capabilities are covered in Chapter 12.
+This default one-in/one-out pattern can be broken: you can emit multiple output records per input record, read multiple input records per cycle, or suppress output entirely. These capabilities are covered in [Chapter 12](#chap12).
 
 ### The Specification
 
 The *specification* is the set of instructions you give specs. It describes what to extract from the input record, how to transform it, and where to place it in the output record.
 
-A specification consists of **spec units** — small building blocks that each perform one action. The most common spec unit is a **data field**, which copies a piece of the input to a piece of the output.
+A specification consists of **spec units** — small building blocks that each perform one action. The most common spec unit is the **data field**, which copies a piece of the input to a piece of the output. Data fields are described in the **[Spec Units and Data Fields](#datafield)** section of Chapter 2.
 
 ### Where Specs Lives in a Pipeline
 
@@ -122,7 +126,22 @@ A specification consists of **spec units** — small building blocks that each p
 *some-command* | `specs [switches] [spec-units]` | *next-command*
 
 
-Input comes from **standard input** (or a file with the `-i` / `--inFile` command line argument). Output goes to **standard output** (or a file with `-o` / `--outfile`). This makes specs a natural glue between other Unix tools,a role similar to that of **sed**, **awk**, or **cut**.
+Input can come from three places: 
+
+1. **Standard input**, which by default feeds the primary input stream. 
+1. A file, specified with `-i` or `--inFile` for the primary input stream, or `--is2`, `--is3` ... `--is8` for secondary input streams.
+1. A command output, specified with `-C` or `--inCmd`, which feeds the primary input stream.
+
+Output can go to four places:
+
+1. **Standard output**, which is the default output stream.
+1. A file, specified with `-o` or `--outfile` for the primary output stream, or `--os2`, `--os3` ... `--os8` for secondary output streams.
+1. The command-line processor. the `-X` or `--shell` command-line switches channel the primary output stream to the command line processor for execution as commands.
+1. A **field identifier**, which is a temporary buffer for use within the same iteration of the specification and in statistics.
+
+For more information about secondary input and output streams, see the [relevant sections in chapter 12](#multstrm)
+
+This makes **specs** a natural glue between other Unix tools, a role similar to that of **sed**, **awk**, or **cut**.
 
 ## Three Places to Give Instructions
 
@@ -132,7 +151,7 @@ You will learn all three. A quick decision guide is in Appendix A; details are i
 
 ---
 
-# Chapter 2: Your First Specifications
+# Chapter 2: Basic Specifications - Data Fields
 
 ## Running specs
 
@@ -157,7 +176,7 @@ Hello, world
 
 `1-*` means "characters 1 to the end of the record." `1` means "place the result at output column 1." That is a complete, minimal spec.
 
-## Spec Units and Data Fields
+## Spec Units and Data Fields {#datafield}
 
 A **data field** is the workhorse spec unit. Its full form is:
 
@@ -165,9 +184,18 @@ A **data field** is the workhorse spec unit. Its full form is:
 [fieldIdentifier:] InputSource [STRIP] [conversion] OutputPlacement [alignment]
 ```
 
-Most parts are optional. At minimum you need an `InputSource` and an `OutputPlacement`.
+Here is what each part does, in the order it appears on the command line:
 
-### Your First Data Field
+- **fieldIdentifier** — a single letter followed by a colon (e.g. `a:`), used to save the value under a name for later reuse.
+- **InputSource** — what to read from the input record: a character range, a range of words, a string literal, or one of several other sources. This and `OutputPlacement` are the only parts that are always required.
+- **STRIP** — removes leading and trailing whitespace from the value before it is converted or placed.
+- **conversion** — transforms the value, e.g. changing its case.
+- **OutputPlacement** — where the (possibly converted) value goes: an absolute output column, or a column relative to the previous output.
+- **alignment** — how to justify the value (`left`, `right`, or `center`/`centre`) when it is narrower than its output field.
+
+Most parts are optional. At minimum you need an `InputSource` and an `OutputPlacement`. The rest of this section walks through each part in turn, covering enough for you to write specifications made up entirely of data fields. [Chapter 6 (input sources and conversions)](#chap6) and [Chapter 7 (output placement)](#chap7) go into full depth on each part. When multiple *data fields* are included in a *specification*, they are processed in order.
+
+**Example:** - A specification with one **Data Field** Spec Unit that has only an **InputSource** and an **OutputPlacement**: 
 
 ```
 echo "Hello, world" | specs 1-5 1
@@ -180,47 +208,48 @@ Hello
 
 `1-5` selects characters 1 through 5; `1` places them at column 1 of the output.
 
-### Selecting by Position
+### Selecting Characters and Character Ranges
 
-Character ranges use 1-based indexing:
+Character ranges use 1-based indexing, with negative indices counting back from the end:
 
 | Syntax | Meaning |
 |--------|---------|
-| `5` | Character at position 5 |
-| `3-7` | Characters 3 through 7 inclusive |
-| `5.8` | 8 characters starting at position 5 |
-| `-1` | The last character |
-| `-3` | The third character from the end |
+| `n` | Single character at position n |
+| `m:n` | Characters m through n inclusive (wraps if `n<m`) |
 | `1-*` | The entire record |
+
+**Note**: You can use `m-n` instead of `m:n`, but this older form has some limitations. It doesn't work if `n` is smaller than `m`, or if `n` is negative. The range is treated as a **[string literal](#sliteral2)** and printed verbatim, so `specs 5-3 1` outputs the text `5-3`.
 
 Let's try a few:
 
 ```
-echo "ABCDEFGH" | specs 3-5 1
+echo ABCDEFGH | specs 3-5 1
 ```
 Output: `CDE`
 
 ```
-echo "ABCDEFGH" | specs 1.3 1
+echo ABCDEFGH | specs 1:-3 1
 ```
-Output: `ABC` (3 characters starting at 1)
+Output: `ABCDEF` (from position 1 to the 3rd-from-last character)
 
 ```
-echo "ABCDEFGH" | specs -3-* 1
+echo ABCDEFGH | specs 5:3 1
 ```
-Output: `FGH` (from the third-to-last character to the end)
+Output: `EFGHABC`
 
-### Selecting Words
+**[Chapter 6](#chap6)** covers the full set of range forms.
+
+### Selecting Words and Word Ranges
 
 A **word** is a sequence of non-whitespace characters. Words are separated by one or more whitespace characters (the default word separator).
 
 | Syntax | Meaning |
 |--------|---------|
-| `w1` or `word 1` | First word |
-| `w3` or `word 3` | Third word |
-| `w1-3` or `words 1-3` | Words 1 through 3 |
-| `w-1` or `word -1` | Last word |
-| `w2.3` | Three words starting at the second word |
+| `w1` or `WORD 1` | First word |
+| `w2:4` or `WORD 2:4` | Words 2 through 4 |
+| `w-1` or `WORD -1` | Last word |
+
+**Note**: Similar to character ranges, you can use `w2-4` here as well, with the same limitations.
 
 ```
 echo "the quick brown fox" | specs w2 1
@@ -228,7 +257,7 @@ echo "the quick brown fox" | specs w2 1
 Output: `quick`
 
 ```
-echo "the quick brown fox" | specs w1-2 1
+echo "the quick brown fox" | specs w1:2 1
 ```
 Output: `the quick`
 
@@ -237,55 +266,85 @@ echo "the quick brown fox" | specs w-1 1
 ```
 Output: `fox`
 
-### Selecting Fields
+The whitespace separator can be set with the `WORDSEPARATOR` or `WS` keywords. **specs** also has **fields**. Unlike words, fields are separated by a single *field separator*, which by default is a `tab`. More on this in **[Chapter 6](#chap6)**.
 
-A **field** is similar to a word, but fields are separated by *exactly one* field separator character (a tab by default). This means empty fields are possible.
+### String Literals as InputSource {#sliteral2}
 
-| Syntax | Meaning |
-|--------|---------|
-| `f1` or `field 1` | First field |
-| `f3` | Third field |
-| `f1-3` or `fields 1-3` | Fields 1 through 3 |
-| `f-1` or `field -1` | Last field |
-
-Words vs. fields are explained in detail in Chapter 6. The key difference: consecutive words can be separated by multiple separators, while consecutive fields are separated by exactly one separator (so empty fields are possible with fields).
-
-### String Literals as Input
-
-You can place literal text in the output by using a string literal as the input source. Delimiters can be `/`, `'`, or `"`:
+You can place literal text in the output by using a string literal as the input source:
 
 ```
-echo "test" | specs /Hello/ 1
+specs "Hello, there" 1
 ```
-Output: `Hello`
+Output: `Hello, there`
 
-On the command line, the most common delimiters are `/` (slashes) or unquoted text that does not look like a keyword. To include special shell characters, wrap the entire argument in double quotes.
-
-### Multiple Data Fields
-
-A specification can have multiple data fields. They are processed in order, and each can write to a different output position:
+Delimiters can be used when necessary to avoid confusion:
 
 ```
-echo "Alice 42" | specs w1 1 w2 10
+specs /word/ 1
 ```
-Output: `Alice    42` (name at column 1, age at column 10)
+Output: `word`
 
-### Relative Output Placement
+On the command line, double quotes are a signal to the **shell** rather than to **specs**. They tell the shell that everything enclosed — spaces, special characters and all — is a single argument. **specs** then treats that whole argument as a *string literal*, unless the entire thing looks like something else: a keyword, a token, a range, and so on. So a command-line literal usually needs no delimiters of its own.
 
-Instead of specifying absolute column numbers, you can use relative placement:
-
-| Keyword | Meaning |
-|---------|---------|
-| `n` or `next` | Immediately after the previous output |
-| `nw` or `nextword` | After a space following the previous output |
-| `nf` or `nextfield` | After a tab following the previous output |
+In a *spec file* (see **[Chapter 5](#chap5)**) there is no shell to group words into arguments for you, so a string literal that contains spaces **must** be surrounded by a delimiter. A double quote can serve as that delimiter, but slashes are the most common:
 
 ```
-echo "Alice 42" | specs /Name:/ 1 w1 nextword /Age:/ nextword w2 nextword
+/Hello, there/  1
+```
+
+### Field Identifiers
+
+A **fieldIdentifier** is a single letter followed by a colon, such as `a:`, placed at the start of a data field. It saves the value under that name so it can be reused elsewhere in the specification, either in an *expression* (see **[Chapter 8](#chap8)**), or with the `ID` keyword:
+
+```
+echo "5 3" | specs a: w1 . b: w2 . ID b 1 ID a 2
+```
+Output: `35`
+
+Field identifiers, and everything you can do with them, are covered in full starting in Chapter 6.
+
+### STRIP — Trimming Whitespace
+
+Adding the `STRIP` keyword right after the `InputSource` removes leading and trailing whitespace from the value before it is converted or placed:
+
+```
+echo "  hello  " | specs "<" 1 1-* strip NEXT ">" NEXT
+```
+Output: `<hello>`
+
+This is handy when a fixed-width or word-delimited source includes surrounding blanks that you don't want to carry into the output.
+
+### Conversions
+
+A **conversion**, placed just before the `OutputPlacement`, transforms the value. `UCASE` and `LCASE` are the two most common examples — there are others, all covered in [Chapter 6](#chap6).
+\newpage
+Example:
+```
+echo "Hello World" | specs 1-* ucase 1
+```
+Output: `HELLO WORLD`
+
+### Output Placement
+
+The `OutputPlacement` argument says where the value goes. You've already seen the simplest form — an absolute column number, such as the `1` in `1-5 1`. You can also place output *relative* to whatever was written previously, which avoids having to compute absolute column numbers by hand. Use `N` or `NEXT` to place the output immediately after the previous output. Use `NW` or `NEXTWORD` to place it after a space following the previous output.
+
+```
+echo "Alice 42" | specs /Name:/ 1 w1 NEXTWORD /Age:/ NEXTWORD w2 NEXTWORD
 ```
 Output: `Name: Alice Age: 42`
 
-Note that `nextword` adds a single space before the next piece of output.
+Note that `NEXTWORD` adds a single space before the next piece of output, but *will not* do so for the first *data field* in the specification. When OutputPlacement can be omitted (for example, at the end of a specification), the default is `NEXTWORD`.
+
+Other output placement options are covered in Chapters 6 and 7.
+
+### Alignment
+
+The optional `alignment` argument comes last, and only makes sense when the output field is wider than the value being placed (for example, when `OutputPlacement` is a range like `1-10`). It can be `left` (the default), `right`, or `center`/`centre`:
+
+```
+echo "42" | specs "#" 1 1-* 2-10 right "#"
+```
+Output: `#       42 #` - also an example of an elided final OutputPlacement.
 
 ### A Practical Example
 
@@ -303,7 +362,7 @@ cat logfile.txt | specs w1 1 w3 13 w-1 25
 
 Output:
 ```
-2024-01-15   ERROR        192.168.1.100
+2024-01-15  ERROR       192.168.1.100
 ```
 
 ---
@@ -348,7 +407,7 @@ Assign files to additional input or output streams. This is an advanced feature 
 
 ### `--recfm format`, `--lrecl n`, `--linedel char`
 
-Control how input records are structured. The default (`D` for delimited) reads one line at a time. Use `F` for fixed-length records (requires `--lrecl`) or `FD` for fixed-length lines. Full details and examples are in the "Record Formats" section of Chapter 6; a quick reference table is in Appendix B.
+Control how input records are structured. The default (`D` for delimited) reads one line at a time. Use `F` for fixed-length records (requires `--lrecl`) or `FD` for fixed-length lines. Full details and examples are in the **[Record Formats](#recfm)** section of Chapter 6; a quick reference table is in Appendix B.
 
 ## Controlling Output
 
@@ -684,7 +743,7 @@ Missing required configured literal <pi>
 
 ---
 
-# Chapter 5: Offline Specifications — Spec Files
+# Chapter 5: Offline Specifications — Spec Files {#chap5}
 
 When a specification grows beyond a few data fields, putting it all on the command line becomes unwieldy. **Spec files** let you write specifications in a file with comments, indentation, and blank lines.
 
@@ -822,7 +881,7 @@ Use the command line when:
 
 ---
 
-# Chapter 6: Selecting and Transforming Input
+# Chapter 6: Selecting and Transforming Input {#chap6}
 
 Every data field begins with an **input source** — a description of where to get the data for this field. This chapter covers all input source types and the conversions that can be applied to them.
 
@@ -1076,9 +1135,9 @@ Output: `1572421560.000000`
 Adding `STRIP` between the input source and the conversion (or output placement) removes leading and trailing whitespace from the value before placing it:
 
 ```
-echo "  hello  " | specs 1-* strip 1
+echo "  hello  " | specs "<" 1 1-* STRIP NEXT ">" NEXT
 ```
-Output: `hello`
+Output: `<hello>`
 
 ## Record Formats — When Records Are Not Lines {#recfm}
 
@@ -1141,7 +1200,7 @@ specs --recfm FD --lrecl 132 1-10 1 101-110 nw < report.txt
 
 ---
 
-# Chapter 7: Placing Output
+# Chapter 7: Placing Output {#chap7}
 
 The **output placement** tells specs where to put the result of an input source in the output record.
 
@@ -1218,14 +1277,14 @@ After the output placement, you can specify an alignment for values shorter than
 | `center` or `centre` | Pad equally on both sides |
 
 ```
-echo "hello" | specs 1-* 1.20 center
+echo "42" | specs "<" 1 1-* 2-10 right ">" NEXT
 ```
-Output: `       hello        `
+Output: `<       42>`
 
 ```
-echo "42" | specs 1-* 1-10 right
+echo "hello" | specs "<" 1 1-* 2.20 center ">" NEXT
 ```
-Output: `        42`
+Output: `<       hello        >`
 
 ## The PAD Spec Unit — Changing the Padding Character
 
@@ -1326,7 +1385,7 @@ specs w1 (,,'R')   # next, full width, right-aligned
 
 ---
 
-# Chapter 8: Expressions and the ALU
+# Chapter 8: Expressions and the ALU  {#chap8}
 
 The **Arithmetic-Logical Unit (ALU)** is specs's computation engine. It evaluates *expressions* — combinations of values, operators, and function calls — to produce a result.
 
@@ -2145,7 +2204,7 @@ Finance Department:
 
 ---
 
-# Chapter 12: Multiple Records and Streams
+# Chapter 12: Multiple Records and Streams {#chap12}
 
 The default one-in-one-out model can be broken in many ways. This chapter covers them all.
 
@@ -2331,7 +2390,7 @@ Key notes:
 - `READ` and `READSTOP` must not be used during secondary reading.
 - At the start of each new cycle, the primary stream is always selected.
 
-## Multiple Input Streams
+## Multiple Input Streams {#multstrm}
 
 Assign additional input files with `--is2` through `--is8`. At each cycle, one record is read from each stream simultaneously.
 
@@ -3191,7 +3250,7 @@ The table below holds conversions used within **Data Fields**. Where you see `fm
 | `<<` `<<=` `>>` `>>=` | String compare | Alphabetical |
 | `!` | Logical NOT | |
 | `&` | Logical AND | |
-| `\|` | Logical OR | |
+| `|` | Logical OR | |
 
 ## Assignment Operators (in SET)
 
@@ -3222,7 +3281,7 @@ Every release of **specs** publishes pre-built packages for Linux (RPM and DEB),
 2. GitHub lists releases newest-first, and the most recent one is tagged **Latest** with a green badge next to its version number, near the top of the page. There may be newer ones, but they will either be marked as **Pre-release* or not marked at all. Make sure you pick the latest release, or the specific pre-relase or older version that you intend to use.
 3. Scroll down to your release's **Assets** section, which lists every downloadable file for that release.
 
-![The GitHub releases page, with the most recent release marked with a "Latest" badge](XXDOCS/releases_page.png)
+![The GitHub releases page, with the most recent release marked with a "Latest" badge](XXDOCS/resources/releases_page.png)
 
 ### Choosing the right package for your operating system
 

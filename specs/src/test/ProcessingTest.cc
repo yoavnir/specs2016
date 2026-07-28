@@ -1206,6 +1206,12 @@ int main(int argc, char** argv)
 	spec = "PRINT '1+1hello'";
 	VERIFY2(spec, "1", "Expression did not reduce to a single value"); // TEST #279
 
+	// early and late field identifier
+	spec = "a: w1 UCASE .  ID a 1";
+	VERIFY2(spec, "abcde", "abcde");  // TEST #280
+	spec = "w1 UCASE a: ID a 1";
+	VERIFY2(spec, "abcde", "ABCDE");  // TEST #281
+
 	if (errorCount) {
 		if (onlyTest == 0) {
 			std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
