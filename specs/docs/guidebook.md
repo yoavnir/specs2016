@@ -403,11 +403,11 @@ This avoids a pipe when you want the input to be the output of a command.
 
 ### `--is2` through `--is8` / `--os2` through `--os8`
 
-Assign files to additional input or output streams. This is an advanced feature covered in Chapter 12.
+Assign files to additional input or output streams. This is an advanced feature covered in **[Chapter 12](#chap12)**.
 
 ### `--recfm format`, `--lrecl n`, `--linedel char`
 
-Control how input records are structured. The default (`D` for delimited) reads one line at a time. Use `F` for fixed-length records (requires `--lrecl`) or `FD` for fixed-length lines. Full details and examples are in the **[Record Formats](#recfm)** section of Chapter 6; a quick reference table is in Appendix B.
+Control how input records are structured. The default (`D` for delimited) reads one line at a time. Use `F` for fixed-length records (requires `--lrecl`) or `FD` for fixed-length delimited lines. For details, see the **[Record Formats](#recfm)** section of Chapter 6; a quick reference table is in **[Appendix B](#appendixb)**.
 
 ## Controlling Output
 
@@ -419,7 +419,7 @@ Execute each output record as a shell command rather than printing it. This is a
 ls *.log | specs --shell /rm/ 1 w1 nextword
 ```
 
-This would delete all `.log` files. (Use without `--shell` first to verify the commands look right.)
+This would delete all `.log` files. Use without `--shell` first to verify the commands look right.
 
 ### `--toASCII`
 
@@ -433,7 +433,7 @@ Print a counter to stderr every second showing how many records have been proces
 
 ### `-v` / `--verbose`
 
-Print extra information when something goes wrong. When rolling context is in use (Chapter 13), it also reports the buffer sizes:
+Print extra information when something goes wrong. When rolling context is in use (**[Chapter 13](#chap13)**), it also reports the buffer sizes:
 
 ```
 specs: Using a 3-record rolling context: 2 records forward and 1 records backward.
@@ -443,7 +443,7 @@ Use `-v` as your first step when a specification produces unexpected output.
 
 ### `--stats`
 
-Print runtime statistics at the end of the run: record counts, wall-clock time, and CPU time. Useful for performance tuning:
+Print runtime statistics to **standard error** at the end of the run: record counts, wall-clock time, and CPU time. Useful for performance tuning:
 
 ```
 $ specs --stats 1-* 1 < large_file.txt > /dev/null
@@ -458,32 +458,52 @@ Main Thread:
         Waiting on IO: 3.177 ms (66.465%)
         Draining: 3.376 us (0.071%)
 ```
-
+\newpage
 ## Behavior Modifiers
 
 ### `-f filename` / `--specFile filename`
 
-Read the specification from a file rather than the command line. This is covered in depth in Chapter 5.
+Read the specification from a file rather than the command line. This is covered in depth in **[Chapter 5](#chap5)**.
 
 ### `-c filename` / `--config filename`
 
-Use a different configuration file instead of `~/.specs`. Useful for testing or when managing multiple configurations:
+Use a different configuration file instead of the default one — `~/.specs` on POSIX systems (Linux and macOS), or `specs.cfg` in your home directory on Windows.
+
+This is useful for testing, and for keeping a separate set of configured literals per project:
 
 ```
 specs -c ~/specs-project1 -f myspec.txt
 ```
 
-### `-s name=value` / `--set name=value`
-
-Set a configured literal (see Chapter 4) from the command line. Lets you parameterize a spec file:
+It is even more useful for sharing one configuration file among several users. A configuration file in a shared location gives an entire team the same configured literals, timezone, and locale, so that everybody's specifications produce identical results — and a correction needs to be made in only one place:
 
 ```
-specs -f report.spec -s threshold=100
+specs -c /etc/specs/team.cfg -f myspec.txt
+```
+
+### `-s name=value` / `--set name=value`
+
+Set a configured literal (see **[Chapter 4](#chap4)**) from the command line. This overrides any value from the configuration file, and lets you parameterize a specification without editing it:
+
+```
+$ cat sales.txt
+widgets 150
+gadgets 80
+gizmos 220
+
+$ specs -i sales.txt -s threshold=100 WORD 2 a: IF "a > @threshold" THEN w1 1 w2 nw ENDIF
+widgets 150
+gizmos 220
+
+$ specs -i sales.txt -s threshold=200 WORD 2 a: IF "a > @threshold" THEN w1 1 w2 nw ENDIF
+gizmos 220
 ```
 
 ### `-t` / `--threaded`
 
-Run in threaded mode: separate threads for the reader, the processor, and the writer. This can improve throughput on large files when I/O is the bottleneck. The default since version 0.9.5 is single-threaded.
+Run in threaded mode: separate threads for the reader, the processor, and the writer. This can improve throughput on large files when *processing* is the bottleneck, because the processing thread no longer has to block while records are read and written. If the I/O itself is the bottleneck, threaded mode will not help — there is nothing for the processor to get on with while it waits. The default since version 0.9.5 is single-threaded.
+
+**Deprecated** — threaded mode may be removed in a future release. Most practical specifications turn out to be I/O-bound rather than CPU-bound, so there is rarely anything for threaded mode to gain. Avoid relying on it in new work.
 
 ### `--spaceWS` / `-w`
 
@@ -491,7 +511,7 @@ Treat only the space character as a word separator, rather than all locale-defin
 
 ### `--no-while-guard`
 
-Disable the while-guard, which normally causes specs to abort after 5000 iterations of a `WHILE` loop (a safety net against infinite loops). Use this when you intentionally have a long-running loop. The default limit of 5000 can also be changed via the `while-guard-limit` key in `~/.specs`.
+Disable the while-guard, which normally causes specs to abort after 5000 iterations of a `WHILE` loop (a safety net against infinite loops). Use this when you intentionally have a long-running loop. The default limit of 5000 can also be changed via the `while-guard-limit` key in the configuration file (**[Chapter 4](#chap4)**).
 
 ### `--EXP-UTF8`
 
@@ -517,7 +537,9 @@ Set the regular expression grammar. The default is `ECMAScript`. Other options i
 
 ### `--pythonFuncs on/off/auto`
 
-Control loading of Python functions (see Chapter 14). The default, `auto`, loads Python only when an unknown function name is encountered. Set to `off` to disable Python entirely (also needed if Python support was not compiled in). Set to `on` to always load Python even when no unknown functions appear.
+Control loading of Python functions (see Chapter 14). The default, `auto`, loads Python only when an unknown function name is encountered. Set to `off` to disable Python entirely. Set to `on` to always load Python even when no unknown functions appear.
+
+If your build of specs was compiled without Python support, this flag makes no difference — Python functions are never loaded in any case.
 
 ### `--pythonErr throw/NaN/zero/nullstr`
 
@@ -556,7 +578,7 @@ Force specs to read input records even if no spec unit references input. By defa
 
 ---
 
-# Chapter 4: The Configuration File
+# Chapter 4: The Configuration File {#chap4}
 
 The **configuration file** is a plain-text file that defines *configured literals* — named constants that specs can use in specifications. It also contains settings that affect specs's default behavior.
 
@@ -642,7 +664,7 @@ See [`--regexType`](#regextype) in Chapter 3 for the list of valid options.
 
 ### `SPECSPATH`
 
-A colon-separated list of directories where specs looks for spec files (Chapter 5) and Python function files (Chapter 14):
+A colon-separated list of directories where specs looks for spec files ([Chapter 5](#chap5)) and Python function files (Chapter 14):
 ```
 SPECSPATH: /home/alice/specs:/usr/local/share/specs
 ```
@@ -721,8 +743,8 @@ These exist automatically without any `~/.specs` entry:
 | `@build-url` | GitHub Actions build URL (empty for local) |
 | `@build-info` | Composite build information string |
 | `@@` | The entire current input record (in expressions) |
-| `@!` | The context-affected input record (see Chapter 13) |
-| `@+n` / `@-n` | Record at offset +n / -n from current (see Chapter 13) |
+| `@!` | The context-affected input record (see [Chapter 13](#chap13)) |
+| `@+n` / `@-n` | Record at offset +n / -n from current (see [Chapter 13](#chap13)) |
 
 ## Ensuring a Literal is Defined — REQUIRES
 
@@ -1492,7 +1514,7 @@ Output: `11`
 
 ### Record Offsets — `@+n` and `@-n`
 
-In expressions, `@+n` refers to the record n positions ahead and `@-n` to n positions behind (see Chapter 13 on rolling context).
+In expressions, `@+n` refers to the record n positions ahead and `@-n` to n positions behind (see **[Chapter 13](#chap13)** on rolling context).
 
 ## Operators
 
@@ -2425,7 +2447,7 @@ specs -o main.txt --os2 errors.txt
 
 ---
 
-# Chapter 13: Rolling Context
+# Chapter 13: Rolling Context  {#chap13}
 
 ## The Problem
 
@@ -3053,10 +3075,13 @@ Both trigger the run-out cycle. Choose based on readability:
 
 ## When Should I Use --threaded?
 
+**Deprecated** — threaded mode may be removed in a future release. Avoid relying on it in new work.
+
 Use `--threaded` when:
 - Processing large files (millions of records)
-- I/O is the bottleneck (slow disks, network filesystems)
-- CPU-intensive specifications (complex ALU expressions)
+- *Processing* is the bottleneck (CPU-intensive specifications, complex ALU expressions), so that reads and writes can proceed while the processor works
+
+Threaded mode will **not** help when the I/O itself is the bottleneck (slow disks, network filesystems). In that case the processor is merely waiting for data, and giving the reader and writer their own threads gives it nothing extra to do. Most practical specifications fall into exactly this category — they are I/O-bound rather than CPU-bound — which is why threaded mode is deprecated and may be removed in a future release.
 
 Do NOT use `--threaded` with:
 - Rolling context (`CONTEXT`)
@@ -3064,7 +3089,7 @@ Do NOT use `--threaded` with:
 
 ---
 
-# Appendix B: Quick Reference
+# Appendix B: Quick Reference  {#appendixb}
 
 ## Command-Line Switches
 
@@ -3077,7 +3102,7 @@ Do NOT use `--threaded` with:
 | `--set name=val` | `-s` | Set configured literal |
 | `--inCmd cmd` | `-C` | Use command output as input |
 | `--shell` | `-X` | Execute output lines as shell commands |
-| `--threaded` | `-t` | Run in threaded mode |
+| `--threaded` | `-t` | Run in threaded mode (deprecated) |
 | `--verbose` | `-v` | Verbose error output |
 | `--stats` | | Print runtime statistics |
 | `--progress` | | Show progress on stderr |
