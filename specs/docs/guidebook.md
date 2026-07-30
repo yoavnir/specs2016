@@ -446,24 +446,24 @@ Use `-v` as your first step when a specification produces unexpected output.
 Print runtime statistics to **standard error** at the end of the run: record counts, wall-clock time, and CPU time. Useful for performance tuning:
 
 ```
-$ specs --stats 1-* 1 < large_file.txt > /dev/null
+$ specs --stats -i large_file.txt -o /dev/null 1-* 1
 
-Read  3376 lines.
-Wrote 3376 lines.
-Run Time: 0.004629 seconds.
-CPU Time: 0.504606 seconds.
+Read  36160 lines.
+Wrote 36160 lines.
+Run Time: 0.030199 seconds.
+CPU Time: 0.529951 seconds.
 Main Thread:
-        Initializing: 155.345 us (3.250%)
-        Processing: 1.444 ms (30.214%)
-        Waiting on IO: 3.177 ms (66.465%)
-        Draining: 3.376 us (0.071%)
+        Initializing: 148.513 us (0.490%)
+        Processing: 16.252 ms (53.575%)
+        Waiting on IO: 13.926 ms (45.909%)
+        Draining: 7.820 us (0.026%)
 ```
 \newpage
 ## Behavior Modifiers
 
 ### `-f filename` / `--specFile filename`
 
-Read the specification from a file rather than the command line. This is covered in depth in **[Chapter 5](#chap5)**.
+Read the specification from the named file instead of the command line. This is covered in **[Chapter 5](#chap5)**.
 
 ### `-c filename` / `--config filename`
 
@@ -531,13 +531,15 @@ Convert to and from time-formatted strings using the named timezone. Values come
 
 ### `--regexType optionList` {#regextype}
 
-Set the regular expression grammar. The default is `ECMAScript`. Other options include `basic`, `extended`, `awk`, `grep`, and `egrep`. You can also combine flags like `icase` for case-insensitive matching.
+A few of the built-in ALU functions — `rmatch()`, `rsearch()`, and `rreplace()`, all described in **[Chapter 9](#chap9)** — match strings against *regular expressions*. This switch sets the grammar in which those regular expressions are written.
+
+The default is `ECMAScript`. Other options include `basic`, `extended`, `awk`, `grep`, and `egrep`. You can also combine flags like `icase` for case-insensitive matching. This can also be set in the configuration file.
 
 ## Python Functions
 
 ### `--pythonFuncs on/off/auto`
 
-Control loading of Python functions (see Chapter 14). The default, `auto`, loads Python only when an unknown function name is encountered. Set to `off` to disable Python entirely. Set to `on` to always load Python even when no unknown functions appear.
+Control loading of Python functions (see **[Chapter 14](#chap14)**). The default, `auto`, loads Python only when an unknown function name is encountered. Set to `off` to disable Python entirely. Set to `on` to always load Python even when no unknown functions appear.
 
 If your build of specs was compiled without Python support, this flag makes no difference — Python functions are never loaded in any case.
 
@@ -549,14 +551,20 @@ Determine what happens when a Python function raises an exception. The default, 
 
 ### `--help topic`
 
-Print help for a topic without running specs. Topics include: `help` (how to use this switch), `pyfuncs` (Python functions), `builtin` (built-in functions), `specs` (saved specifications), or the name of a specific function or saved specification.
+Print help for a topic without running specs. Topics include: `help` (how to use this switch), `pyfuncs` (Python functions), `builtin` (built-in functions), `specs` (the specifications on the `SPECSPATH`), or the name of a specific function or specification. The help text for a specification comes from the comments at the top of its spec file, as described in **[Chapter 5](#docblock)**.
 
 ### `--info`
 
-Print build information: version, platform, Python version, compiler, build source, commit hash, and build time.
+Print build information: version, platform, Python version, compiler, build source, commit hash, and build time. Example output:
 
 ```
-specs --info
+specs invoked as 'specs'
+        Compiler version: 9.2.1 20191120 (Red Hat 9.2.1-2)
+        High/low watermark for queues: 5000 / 4500
+        Random Provider: rand48
+        Git tag: dev-1.0.0
+        Python version: 3.12.1
+        Floating point precision: 18 (16 bytes)
 ```
 
 ### `--force-read-input`
@@ -587,7 +595,7 @@ The **configuration file** is a plain-text file that defines *configured literal
 - **Linux and macOS**: `~/.specs` (in your home directory)
 - **Windows**: `%HOME%\specs.cfg`
 
-You can override this with the `-c` flag (Chapter 3).
+You can override this with the `--config` flag (Chapter 3).
 
 ## Format
 
@@ -664,11 +672,13 @@ See [`--regexType`](#regextype) in Chapter 3 for the list of valid options.
 
 ### `SPECSPATH`
 
-A colon-separated list of directories where specs looks for spec files ([Chapter 5](#chap5)) and Python function files (Chapter 14):
+A colon-separated list of directories where specs looks for spec files ([Chapter 5](#chap5)) and Python functions ([Chapter 14](#chap14)):
 ```
 SPECSPATH: /home/alice/specs:/usr/local/share/specs
 ```
-Defaults to `$HOME/specs` if not set.  On `Windows` the directories are separated by semicolons.
+**Note:** On Microsoft Windows the directories are separated by semicolons.
+
+If not set, `SPECSPATH` defaults to `$HOME/specs` on POSIX systems and to `%APPDATA%\specs` on Windows.
 
 ### `pythonDisable`
 
@@ -688,11 +698,13 @@ hello there
 
 ### `EmptyFrequencyMapMessage`
 
-The string returned by `fmap_dump()` when the frequency map contains no data:
+`fmap_dump()` is one of the frequency map functions described under **[Statistical and Frequency Map Functions](#statistical-and-frequency-map-functions)** in **[Chapter 9](#chap9)**. It returns a printable summary of the values accumulated in a field identifier.
+
+This key sets the string that `fmap_dump()` returns when the frequency map contains no data at all. The default is an empty string. So for example, if the file contains this entry:
 ```
 EmptyFrequencyMapMessage: "(no data)"
 ```
-Example:
+Then you get the following:
 ```
 $ echo "hello" | specs WORD 1 1 EOF PRINT "fmap_dump(a)"
 hello
@@ -772,16 +784,27 @@ When a specification grows beyond a few data fields, putting it all on the comma
 ## Using a Spec File
 
 ```
-specs -f myspec.txt < input.txt
+specs -f myspec.txt
 ```
 
 or equivalently:
 
 ```
-specs --specFile myspec.txt < input.txt
+specs --specFile myspec.txt
 ```
 
-The `-f` flag can appear anywhere before the spec units (but since spec files replace spec units, there are typically no spec units on the command line when `-f` is used).
+A spec file replaces the command-line specification entirely, so the two cannot be combined. If you supply both a spec file and spec units, specs rejects the invocation rather than silently ignoring one of them:
+
+```
+$ specs -f myspec.txt -i input.txt w1 1
+A spec file (--specFile) cannot be combined with spec units on the command line: <w1>
+```
+
+The specification is the only thing that moves into the file. Input and output are still supplied in the usual way — from standard input and standard output, or with `-i` and `-o`:
+
+```
+specs -f myspec.txt -i input.txt -o report.txt
+```
 
 ## Format
 
@@ -800,14 +823,14 @@ A spec file is a plain text file. Spec units are written as if they were command
        print #1 strip  nextword
        /records./      nextword
 ```
-
-### Comments
+\newpage
+## Comments
 
 There are two styles of comments in spec files:
 
 1. **Full-line comment**: The line begins with "`# `" (hash+space), optionally preceded by whitespace. The entire line is ignored.
 2. **End-of-line comment**: The comment begins at the last occurrence of "` # `" (space+hash+space) that is also preceded by whitespace, or at a trailing hash mark that is the very last character on the line. Everything from that hash mark onward is ignored.
-\newpage
+
 **Example:**
 ```
 # Example specification with a comment on every line
@@ -816,6 +839,67 @@ WORD 1  1          # This puts the first word at column 1
 ```
 
 Note: The hash+space ("`# `") must be preceded by whitespace for an end-of-line comment. A hash at the last position in the line can be a comment even though it is not followed by a space, but the comment is empty. A hash inside a literal string (`/hello # world/`) is not a comment.
+
+## Documenting a Spec File {#docblock}
+
+Comments at the very top of a spec file do double duty: besides documenting the file for anyone reading it, they become the file's **help text**. This lets you find out what a spec file does without opening it — useful once you have accumulated a directory of them on the **[SPECSPATH](#the-specspath)**.
+
+Consider a spec file named `wordfreq`:
+
+```
+# Count word frequencies in the input.
+# Reads one word per record and prints a
+# frequency table at end of file.
+#
+# Usage: specs -f wordfreq -i words.txt
+printonly eof
+   a: word 1
+eof
+   print "fmap_dump(a)" 1
+```
+
+There are two ways to ask for this help text, and they deliberately show different amounts of it.
+
+### Listing all specifications
+
+`specs --help specs` lists every spec file on the `SPECSPATH`, each with a one-line summary taken from **only the first line** of the file:
+
+```
+$ specs --help specs
+Specification <wordfreq> -  Count word frequencies in the input.
+Specification <nodoc>
+Specification <plainspec>
+```
+
+Because only the first line appears here, make it a self-contained summary. A file whose first line is not a comment is still listed, just without a description — as with `nodoc` and `plainspec` above.
+
+\newpage
+
+### Help for one specification
+
+Naming a single specification shows the **whole** opening comment block:
+
+```
+$ specs --help wordfreq
+Specification <wordfreq>
+	 Count word frequencies in the input.
+	 Reads one word per record and prints a
+	 frequency table at end of file.
+
+	 Usage: specs -f wordfreq -i words.txt
+```
+
+So the first line belongs in the summary, and the remaining lines are the place for usage notes, the expected input format, and examples.
+
+### Rules for the help text
+
+The opening comment block obeys stricter rules than comments elsewhere in the file:
+
+- It must begin on the **first line** of the file, and it ends at the first line that does not start with a hash mark. Comments further down the file are ordinary comments and never appear in help output.
+- The hash mark must be in **column 1**. An indented comment is a perfectly good comment, but it is not help text.
+- Write the hash mark followed by a space. A hash mark with nothing after it is fine and produces a blank line in the help text, but `#likethis` is *not* a comment as far as the specification parser is concerned — it appears in the help text and then makes the specification fail to compile.
+
+Files whose names begin with a period or an underscore, and files whose names contain `.py`, are not treated as specifications and are not listed.
 
 ## Directives
 
@@ -847,7 +931,7 @@ Combined with a spec, this makes a self-contained script:
 w9 1 w5 nw
 ```
 
-## The SPECSPATH
+## The SPECSPATH {#the-specspath}
 
 When you specify a relative filename with `-f`, specs searches for it in the **SPECSPATH** — a colon-separated list of directories. The SPECSPATH is controlled by:
 
@@ -869,20 +953,6 @@ w1 1
 IF "w1 > @threshold" THEN
     /EXCEEDS LIMIT/ nextword
 ENDIF
-```
-
-## Saving Specifications for Later Use
-
-You can document your spec files with docstrings and list them with `--help specs`:
-
-```
-specs --help specs
-```
-
-This lists all spec files found on the `SPECSPATH`. To get help on a specific one:
-
-```
-specs --help myspec
 ```
 
 ## When to Use a Spec File Instead of the Command Line
@@ -1179,7 +1249,7 @@ You can supply a custom delimiter with `--linedel`:
 
 ```
 # Records separated by a pipe character
-specs --recfm D --linedel '|' w1 1 < data.pipe-separated
+specs --recfm D --linedel '|' -i data.pipe-separated w1 1
 ```
 
 ### `--recfm F` — Fixed Length
@@ -1194,7 +1264,7 @@ specs reads exactly **N** bytes from the input stream per record, regardless of 
 
 ```
 # Each record is exactly 80 bytes — no newlines needed
-specs --recfm F --lrecl 80 1-10 1 21-30 nw < punched-card-image.bin
+specs --recfm F --lrecl 80 -i punched-card-image.bin 1-10 1 21-30 nw
 ```
 
 Note that character positions are still 1-based from the start of each record, so column 1 is the first byte of each 80-byte chunk, column 80 is the last, and so on.
@@ -1209,7 +1279,7 @@ A hybrid: specs reads one delimited line at a time (using the OS line-ending or 
 
 ```
 # Lines may vary in actual length but are logically 132 characters wide
-specs --recfm FD --lrecl 132 1-10 1 101-110 nw < report.txt
+specs --recfm FD --lrecl 132 -i report.txt 1-10 1 101-110 nw
 ```
 
 ### Summary Table
@@ -1488,7 +1558,7 @@ Output:
 
 The counter `#0` accumulates the sum as each record is processed.
 
-Named persistent variables also exist: see `pset()` and `pget()` in Chapter 9.
+Named persistent variables also exist: see `pset()` and `pget()` in **[Chapter 9](#chap9)**.
 
 ### Configured Literals
 
@@ -1627,7 +1697,7 @@ When a string is used in a numeric context, specs tries to parse it as a number.
 
 ---
 
-# Chapter 9: Built-in Functions
+# Chapter 9: Built-in Functions {#chap9}
 
 specs provides a large library of built-in functions for use in expressions. This chapter presents them organized by category.
 
@@ -1806,7 +1876,7 @@ echo "2024-01-15 14:32:07" | specs PRINT "tf2mcs(word(1)||' '||word(2),'%Y-%m-%d
 ```
 Output: `1705329127000000`
 
-## Statistical and Frequency Map Functions
+## Statistical and Frequency Map Functions {#statistical-and-frequency-map-functions}
 
 These functions work with **field identifiers** to accumulate statistics across records:
 
@@ -2612,7 +2682,7 @@ specs: Using a 3-record rolling context: 2 records forward and 1 records backwar
 
 ---
 
-# Chapter 14: Python Functions
+# Chapter 14: Python Functions  {#chap14}
 
 ## When to Write a Python Function
 
@@ -3135,7 +3205,7 @@ These are keys that, when set in `~/.specs` (or via `-s`), change `specs` behavi
 | `timezone` | System timezone | Timezone used by date/time conversion functions |
 | `locale` | System locale | Locale used by number-formatting functions like `pretty()`; `global` resets to the OS locale |
 | `regexType` | `ECMAScript` | Regex grammar/flags used by `rmatch()`, `rsearch()`, `rreplace()` |
-| `SPECSPATH` | `$HOME/specs` | Colon-separated search path for spec files and Python function files |
+| `SPECSPATH` | `$HOME/specs` or `%APPDATA%\specs` | Search path for spec files and Python function files |
 | `pythonDisable` | unset | Set to `1` to permanently disable Python function loading |
 | `NO_WARN_REDEFINED_FID` | unset | Set to suppress the "Field Identifier redefined" warning |
 | `EmptyFrequencyMapMessage` | `""` | String returned by `fmap_dump()` for an empty frequency map |

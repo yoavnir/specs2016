@@ -2169,6 +2169,14 @@ a list of directories separated by colons on Linux and Mac OS, or semicolons on 
 .I SPECSPATH
 defaults to 
 .B $HOME/specs
+on POSIX systems, or
+.B %APPDATA%\especs
+on Windows.
+A spec file replaces the specification on the command line entirely, so the two cannot be combined:
+.B specs
+rejects an invocation that supplies both
+.B --specFile
+and spec units.
 .IP "--verbose or -v" 3
 Outputs more information when something goes wrong.
 .IP "--stats"
@@ -2279,9 +2287,10 @@ prints the name, arguments, and docstring of all loaded python functions,
 .B builtin
 prints the name, arguments, and a line of help for the built-in functions, 
 .B specs 
-prints a list of all specifications on the path and the comment, and a particular python function name makes 
-.I help
-display the arguments and docstring of that function only.
+prints a list of all the specifications on the path, each with the first line of its opening comment block.
+Any other parameter is taken to be a name. For a built-in or a python function,
+.B specs
+displays the arguments and documentation of that function only. For a specification, it displays the entire opening comment block of the spec file. That block must begin on the first line of the file, and it ends at the first line that does not begin with a hash mark in the first column.
 .IP "--info" 3
 Does not run specs. Instead it displays some information about this build of specs: compiler version, watermarks for queues, 
 random provider, python and floating point precision.

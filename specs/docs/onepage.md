@@ -16,7 +16,7 @@ Switches
 ========
 * --toASCII -- causes output to be translated into ASCII if it's outside the range.
 * --force-read-input -- forces specs to read every input line even if none of the spec units use it.  By default they won't.
-* --specFile or -f -- reads the specification from a file rather than the command line.
+* --specFile or -f -- reads the specification from a file rather than the command line. Cannot be combined with spec units on the command line.
 * --verbose or -v -- outputs more information when something goes wrong.
 * --stats -- output statistics on run time, and records read, and on records written. 
 * `--threaded` or `-t` -- run **specs** in separate threads for processing, for readers, and for writers. This was the default until version 0.9.5. Now the default is to run everything in a single thread.

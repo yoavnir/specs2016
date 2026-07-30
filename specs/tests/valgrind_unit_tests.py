@@ -1,4 +1,4 @@
-import sys, memcheck, argparse, platform
+import sys, os, memcheck, argparse, platform
 
 count_ALU_tests = 852
 count_processing_tests = 281
@@ -109,3 +109,7 @@ for i in range(count_processing_tests):
     memcheck.cleanup()
 if len(tests_that_failed) > 0:
     sys.stdout.write("ProcessingTest: {} tests failed: {}\n".format(len(tests_that_failed), tests_that_failed))
+
+# Failing ProcessingTest cases dump their actual and expected output to files for
+# the developer to diff. Here they are just leftovers polluting the repository.
+os.system("/bin/rm ProcessingTest.Expected ProcessingTest.Got 2> /dev/null")
