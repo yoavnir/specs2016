@@ -777,9 +777,9 @@ Missing required configured literal <pi>
 
 ---
 
-# Chapter 5: Offline Specifications — Spec Files {#chap5}
+# Chapter 5: Specification Files {#chap5}
 
-When a specification grows beyond a few data fields, putting it all on the command line becomes unwieldy. **Spec files** let you write specifications in a file with comments, indentation, and blank lines.
+When a specification grows beyond a few data fields, putting it all on the command line becomes unwieldy. **Specification Files** (or just **Spec files**) let you write specifications in a file with comments, indentation, and blank lines.
 
 ## Using a Spec File
 
@@ -806,6 +806,23 @@ The specification is the only thing that moves into the file. Input and output a
 specs -f myspec.txt -i input.txt -o report.txt
 ```
 
+## Where Spec Files Go {#the-specspath}
+
+You can place a spec file anywhere. Just give an absolute path, and **specs** will find it:
+```
+$ specs -f /home/alice/specs/myspec
+```
+
+It's usually better to place the specifications in specific, dedicated directories and then only tell **specs** the name of the specification (`myspec` in the example). When you specify a relative filename with `-f`, specs searches for it in the **SPECSPATH** — a colon-separated list of directories. The SPECSPATH is controlled by:
+
+1. The `SPECSPATH` environment variable
+2. The `SPECSPATH` entry in `~/.specs`
+3. The default: `$HOME/specs` on Linux/macOS, `%APPDATA%\specs` on Windows
+
+So if your `SPECSPATH` is `/home/alice/specs`, you can store your spec files there and reference them as `-f myspec` without specifying a full path.
+
+\newpage
+
 ## Format
 
 A spec file is a plain text file. Spec units are written as if they were command-line arguments, but you can spread them across multiple lines and add comments:
@@ -823,7 +840,7 @@ A spec file is a plain text file. Spec units are written as if they were command
        print #1 strip  nextword
        /records./      nextword
 ```
-\newpage
+
 ## Comments
 
 There are two styles of comments in spec files:
@@ -872,8 +889,6 @@ Specification <plainspec>
 ```
 
 Because only the first line appears here, make it a self-contained summary. A file whose first line is not a comment is still listed, just without a description — as with `nodoc` and `plainspec` above.
-
-\newpage
 
 ### Help for one specification
 
@@ -930,16 +945,6 @@ Combined with a spec, this makes a self-contained script:
 +IN ls -l /var/log
 w9 1 w5 nw
 ```
-
-## The SPECSPATH {#the-specspath}
-
-When you specify a relative filename with `-f`, specs searches for it in the **SPECSPATH** — a colon-separated list of directories. The SPECSPATH is controlled by:
-
-1. The `SPECSPATH` environment variable
-2. The `SPECSPATH` entry in `~/.specs`
-3. The default: `$HOME/specs` on Linux/macOS, `%APPDATA%\specs` on Windows
-
-So if your `SPECSPATH` is `/home/alice/specs`, you can store your spec files there and reference them as `-f myscript` without specifying a full path.
 
 ## The `REQUIRES` Keyword
 
