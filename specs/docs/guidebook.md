@@ -1103,15 +1103,17 @@ A floating-point number of seconds since the Unix epoch, representing the time t
 ```
 echo "" | specs todclock 1
 ```
-Output: `1736000000.000000` (approximately, depending on when you run it)
+Output: `XXTODCLOCK` (depending on when you run it)
+
+Because its value is fixed for the whole run, `TODclock` does not force *specs* to read input records. A specification that contains no other input-reading source will therefore produce a single output record.
 
 ### `DTODclock`
 
-Like `TODclock`, but gives the time of producing the **current** output record rather than the start of the run.
+Like `TODclock`, but gives the time of producing the **current** output record rather than the start of the run. Unlike `TODclock`, it does force reading input records, so it produces one output record per input record.
 
 ### `TIMEDIFF`
 
-A 12-character decimal number giving microseconds since the start of the run. Useful for timing:
+A 12-character decimal number giving microseconds since the start of the run. Like `DTODclock`, it forces reading input records. Useful for timing:
 
 ```
 echo -e "first\nsecond\nthird" | specs timediff 1
@@ -1123,7 +1125,7 @@ Evaluates an ALU expression and uses the result as input. Covered in detail in C
 
 ### `ID fieldIdentifier`
 
-Uses the stored value of a **field identifier** as the input source. Field identifiers are covered next.
+Uses the stored value of a **field identifier** as the input source. Field identifiers are covered below.
 
 ### String Literals
 

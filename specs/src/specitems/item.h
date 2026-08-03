@@ -122,6 +122,7 @@ public:
 	~ClockPart() override {}
 	std::string Debug() override;
 	PSpecString getStr(ProcessingState& pState) override;
+	bool        readsLines() override {return m_Type!=ClockType__Static;}
 private:
 	clockType    m_Type;
 	clockValue   m_StaticClock;

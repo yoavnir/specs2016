@@ -151,6 +151,37 @@ run_test(
 )
 
 
+
+# =====================================================================
+# The dynamic clock sources force reading the input, the static one does not.
+# The clock value itself is overwritten by a literal so that the expected
+# output does not depend on the actual time.
+# =====================================================================
+
+xes = "x" * 20
+
+run_test(
+    "DTODCLOCK reads all input records",
+    "-i @in@ -o @out@ DTODCLOCK 1 /{}/ 1".format(xes),
+    expected_out=(xes + "\n") * 3,
+    inp="1\n2\n3\n"
+)
+
+run_test(
+    "TIMEDIFF reads all input records",
+    "-i @in@ -o @out@ TIMEDIFF 1 /{}/ 1".format(xes),
+    expected_out=(xes + "\n") * 3,
+    inp="1\n2\n3\n"
+)
+
+run_test(
+    "TODCLOCK does not force reading the input",
+    "-i @in@ -o @out@ TODCLOCK 1 /{}/ 1".format(xes),
+    expected_out=xes + "\n",
+    inp="1\n2\n3\n"
+)
+
+
 # =====================================================================
 # Done
 # =====================================================================
