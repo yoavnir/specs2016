@@ -997,9 +997,9 @@ The simplest input source is a range of character positions (1-based):
 
 The colon (`:`) is the recommended separator. The other two both work, but neither is a drop-in replacement for it.
 
-The semicolon (`;`) is included for CMS Pipelines compatibility. It sees little use here because the shell uses a semicolon to separate commands, so a range written with one has to be quoted — `specs '2;-2' 1` rather than `specs 2:-2 1`.
+The semicolon (`;`) is included for **CMS Pipelines** compatibility. The shell uses a semicolon to separate commands, so a range written with one has to be quoted — `specs '2;-2' 1` rather than `specs 2:-2 1`.
 
-The hyphen (`-`) reads naturally but cannot express a negative position, since the leading minus sign of the second position would be indistinguishable from the separator itself. So `1:-3` (from position 1 to 3 before the end) has no hyphenated equivalent. Worse, a range the hyphen cannot express is not reported as an error: the token simply fails to parse as a range and is taken as a **string literal**. `specs 2--2 1` therefore prints the four characters `2--2`.
+The hyphen (`-`) reads naturally but you cannot have a negative value in the last position. `specs 1--3` is interpreted as the **string literal** "`1--3`", and the range `1:-3` (from position 1 to 3 before the end) has no hyphenated equivalent.
 
 When the first position of a range is greater than the second, the selection **wraps around** the end of the record. On the input `abcdefgh`, `5:2` yields positions 5 through 8 followed by positions 1 and 2:
 
@@ -1022,9 +1022,7 @@ Words are separated by the **word separator**, which defaults to any locale-defi
 | `w2-4` or `w2;4` | Alternate separators for `w2:4`, with the same caveats as character ranges |
 | `w2.3` | 3 words starting at word 2 |
 
-The keyword may be abbreviated to any prefix, so `word 2:4`, `wor 2:4`, `wo 2:4` and `w 2:4` are all accepted. It must **not** be pluralized: `words` is one character longer than the keyword and so is never recognized as one. Like a malformed range, it is silently taken as a string literal, which makes `specs words 2-4 1` place the text `wor` in columns 2 through 4 instead of selecting anything.
-
-The entire input, from the start of the first word to the end of the last specified word (including any separators between them), is captured as the value. Note that the separators *around* the selection are not:
+The keyword may be abbreviated to any prefix, so `word 2:4`, `wor 2:4`, `wo 2:4` and `w 2:4` are all accepted. The entire input, from the start of the first word to the end of the last specified word (including any separators between them), is captured as the value. Note that the separators *around* the selection are not included:
 
 ```
 echo "  hello   world   foo   bar  " | specs w2:3 1
@@ -1045,9 +1043,7 @@ Fields are separated by the **field separator**, which defaults to a tab charact
 | `f2-4` or `f2;4` | Alternate separators for `f2:4`, with the same caveats as character ranges |
 | `f2.3` | 3 fields starting at field 2 |
 
-As with words, the keyword may be abbreviated to any prefix (`field`, `fiel`, `fie`, `fi`, `f`) but must not be pluralized — `fields` is silently treated as a string literal.
-
-On a tab-separated input `a\t\tb`, field 1 is `a`, field 2 is empty, and field 3 is `b`.
+As with words, the keyword `FIELD` may be abbreviated to any prefix and used in any capitalization. On the tab-separated input `a\t\tb`, field 1 is `a`, field 2 is empty, and field 3 is `b`.
 
 ## Words vs. Fields: The Key Distinction
 
@@ -1086,7 +1082,8 @@ echo "Good,bye,old,,paint" | specs fieldseparator , /</ 1 f2 n />/ n /</ nw f4 n
 ```
 Output: `<bye><>`
 
-Both `WORDSEPARATOR` and `FIELDSEPARATOR` are **MainOptions** — they apply to the entire specification and must appear before any data fields.
+Both `WORDSEPARATOR` and `FIELDSEPARATOR` are **MainOptions** — they apply to the entire specification and should appear before any data fields. 
+Practically, field separators are more often overridden than word separators. One common usecase is using a comma or semicolon to parse a comma-separated values (CSV) file. Another is using the slash character (`/`) as field separator to break a full Unix path into directories.
 
 ## The SUBSTRING Input Source
 
@@ -1154,10 +1151,24 @@ Output (just an example):
 ### The `PRINT` / `?` Source
 
 Evaluates an ALU expression and uses the result as input. Covered in **[Chapter 8](#chap8)**.
+```
+$ echo -e "1\n2\n3\n4" | specs PRINT "word(1)*3" 1
+3
+6
+9
+12
+```
 
-### `ID fieldIdentifier`
+### The `ID` keyword
 
 Uses the stored value of a **field identifier** as the input source. Field identifiers are covered below.
+```
+$ echo -e "1\n2\n3\n4" | specs WORD 1 a: ID a 1 PRINT "a*a" NEXTWORD
+1 1
+2 4
+3 9
+4 16
+```
 
 ### String Literals
 
