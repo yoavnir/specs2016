@@ -1022,14 +1022,12 @@ Words are separated by the **word separator**, which defaults to any locale-defi
 | `w2-4` or `w2;4` | Alternate separators for `w2:4`, with the same caveats as character ranges |
 | `w2.3` | 3 words starting at word 2 |
 
-The keyword may be abbreviated to any prefix, so `word 2:4`, `wor 2:4`, `wo 2:4` and `w 2:4` are all accepted. The entire input, from the start of the first word to the end of the last specified word (including any separators between them), is captured as the value. Note that the separators *around* the selection are not included:
+The keyword may be abbreviated to any prefix, so `word 2:4`, `wor 2:4`, `wo 2:4` and `w 2:4` are all accepted. The entire input, from the start of the first word to the end of the last specified word (including any whitespace in between), is captured as the value. Note that the whitespace *around* the selection is not included:
 
 ```
 echo "  hello   world   foo   bar  " | specs w2:3 1
 ```
 Output: `"world   foo"`
-
-The double quotes above are not part of the output; they are there to show that the leading and trailing whitespace of the record, and the run of spaces before `world`, are all excluded.
 
 ## Fields
 
@@ -1087,13 +1085,13 @@ Practically, field separators are more often overridden than word separators. On
 
 ## The SUBSTRING Input Source
 
-For more complex selection, use `SUBSTRING` (or `SUBSTR`):
+For a more complex selection out of the input record, use `SUBSTRING` (or just `SUBSTR`):
 
 ```
-SUBSTRING [WORDSEP char] [FIELDSEP char] range OF InputSource
+SUBSTRing [WORDSEP char] [FIELDSEP char] range OF InputSource
 ```
 
-Despite the `OF InputSource` on the end, this is not a spec unit of its own — it is an `InputSource`, and it needs an `OutputPlacement` after it just like any other. What makes it unusual is that it is an `InputSource` that *contains* another `InputSource`: it selects a range (character, word, or field) *within* whatever that inner source produced. The `WORDSEP` and `FIELDSEP` options let you use different separators just for this substring selection, without changing the global setting.
+This is quite verbose, but it is still just an `InputSource`, and it needs an `OutputPlacement` after it just like any other. What makes it unusual is that it is an `InputSource` that *contains* another `InputSource`: it selects a range (character, word, or field) from *within* whatever that inner source produces. The `WORDSEP` and `FIELDSEP` options let you set different separators just for this substring selection, independent of the global settings.
 
 **Example**: extract the bare filename from a list of paths. `find` prints one path per line, so the whole path is word 1; splitting that word on slashes and taking the last field gives the final component:
 
@@ -1121,7 +1119,7 @@ Output:
 
 ### `TODclock`
 
-An integer number of microseconds since the Unix epoch, representing the time the current specs run started:
+An integer number of microseconds since the Unix epoch — midnight of January 1st, 1970 — representing the time the current specs run started:
 
 ```
 specs todclock 1
@@ -1132,7 +1130,7 @@ Because its value is fixed for the whole run, `TODclock` does not force *specs* 
 
 ### `DTODclock`
 
-Like `TODclock`, but gives the time of producing the **current** output record rather than the start of the run. Unlike `TODclock`, it does force reading input records, so it produces one output record per input record, and none with no input.
+Like `TODclock`, but gives the time of processing the **current** input record rather than the start of the run. Unlike `TODclock`, it *does* force the reading of input records. A specification that only has a data field with `DTODclock` as input produces one output record per input record, and none with no input.
 
 ### `TIMEDIFF`
 
@@ -1197,9 +1195,9 @@ specs x48454C4C4F 1
 ```
 Output: `HELLO`
 
-As with `TODclock`, a specification built only from literals reads no input, so nothing needs to be piped in.
-
 Hex literals can be combined with conversions like `C2X` to round-trip binary data, or used to inject separator characters that are hard to type on the command line.
+
+As with `TODclock`, a specification built only from literals, string or hex, reads no input, so nothing needs to be piped in.
 
 ## Field Identifiers
 
