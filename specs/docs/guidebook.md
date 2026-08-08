@@ -989,13 +989,26 @@ The simplest input source is a range of character positions (1-based):
 | Syntax | Meaning |
 |--------|---------|
 | `n` | Single character at position n |
-| `n-m` | Characters n through m inclusive |
+| `n:m` | Characters n through m inclusive |
 | `n.len` | `len` characters starting at position n |
-| `n;m` or `n:m` | Same as `n-m` (alternative separators) |
+| `n-m` or `n;m` | Alternate separators for `n:m`, each with a caveat (see below) |
 | `-n` | n-th character from the end (`-1` is the last) |
 | `1-*` | The entire record |
 
-The semicolon (`;`) separator is included for CMS Pipelines compatibility. The colon (`:`) is particularly useful when the ending position is negative, making it more readable (`1:-3` means from position 1 to 3 before the end).
+The colon (`:`) is the recommended separator. The other two both work, but neither is a drop-in replacement for it.
+
+The semicolon (`;`) is included for **CMS Pipelines** compatibility. The shell uses a semicolon to separate commands, so a range written with one has to be quoted — `specs '2;-2' 1` rather than `specs 2:-2 1`.
+
+The hyphen (`-`) reads naturally but you cannot have a negative value in the last position. `specs 1--3` is interpreted as the **string literal** "`1--3`", and the range `1:-3` (from position 1 to 3 before the end) has no hyphenated equivalent.
+
+When the first position of a range is greater than the second, the selection **wraps around** the end of the record. On the input `abcdefgh`, `5:2` yields positions 5 through 8 followed by positions 1 and 2:
+
+```
+echo "abcdefgh" | specs 5:2 1
+```
+Output: `efghab`
+
+Wrap-around is available only through the colon and semicolon forms; `5-2` is a string literal.
 
 ## Words
 
@@ -1005,10 +1018,16 @@ Words are separated by the **word separator**, which defaults to any locale-defi
 |--------|---------|
 | `w1` or `word 1` | First word |
 | `w-1` or `word -1` | Last word |
-| `w2-4` or `words 2-4` | Words 2 through 4 |
+| `w2:4` or `word 2:4` | Words 2 through 4 |
+| `w2-4` or `w2;4` | Alternate separators for `w2:4`, with the same caveats as character ranges |
 | `w2.3` | 3 words starting at word 2 |
 
-The entire input, from the start of the first word to the end of the last specified word (including any separators between them), is captured as the value. So `w1-3` on `"  hello   world   foo  "` gives `hello   world   foo`.
+The keyword may be abbreviated to any prefix, so `word 2:4`, `wor 2:4`, `wo 2:4` and `w 2:4` are all accepted. The entire input, from the start of the first word to the end of the last specified word (including any whitespace in between), is captured as the value. Note that the whitespace *around* the selection is not included:
+
+```
+echo "  hello   world   foo   bar  " | specs w2:3 1
+```
+Output: `"world   foo"`
 
 ## Fields
 
@@ -1018,10 +1037,11 @@ Fields are separated by the **field separator**, which defaults to a tab charact
 |--------|---------|
 | `f1` or `field 1` | First field |
 | `f-1` or `field -1` | Last field |
-| `f2-4` or `fields 2-4` | Fields 2 through 4 |
+| `f2:4` or `field 2:4` | Fields 2 through 4 |
+| `f2-4` or `f2;4` | Alternate separators for `f2:4`, with the same caveats as character ranges |
 | `f2.3` | 3 fields starting at field 2 |
 
-On a tab-separated input `a\t\tb`, field 1 is `a`, field 2 is empty, and field 3 is `b`.
+As with words, the keyword `FIELD` may be abbreviated to any prefix and used in any capitalization. On the tab-separated input `a\t\tb`, field 1 is `a`, field 2 is empty, and field 3 is `b`.
 
 ## Words vs. Fields: The Key Distinction
 
@@ -1060,25 +1080,26 @@ echo "Good,bye,old,,paint" | specs fieldseparator , /</ 1 f2 n />/ n /</ nw f4 n
 ```
 Output: `<bye><>`
 
-Both `WORDSEPARATOR` and `FIELDSEPARATOR` are **MainOptions** — they apply to the entire specification and must appear before any data fields.
+Both `WORDSEPARATOR` and `FIELDSEPARATOR` are **MainOptions** — they apply to the entire specification and should appear before any data fields. 
+Practically, field separators are more often overridden than word separators. One common usecase is using a comma or semicolon to parse a comma-separated values (CSV) file. Another is using the slash character (`/`) as field separator to break a full Unix path into directories.
 
-## The SUBSTRING Spec Unit
+## The SUBSTRING Input Source
 
-For more complex selection, use `SUBSTRING` (or `SUBSTR`):
-
-```
-SUBSTRING [WORDSEP char] [FIELDSEP char] range OF InputSource
-```
-
-This selects a range (character, word, or field) *within* another input source. The `WORDSEP` and `FIELDSEP` options let you use different separators just for this substring selection, without changing the global setting.
-
-**Example**: Extract the filename from `ls -l` output. The full path (`/Applications/Safari.app/Contents/Resources/en.lproj/foo.html`) is the last word. We want the last component (after the last slash):
+For a more complex selection out of the input record, use `SUBSTRING` (or just `SUBSTR`):
 
 ```
-ls -l | specs SUBSTR FS / FIELD -1 OF WORD -1  1
+SUBSTRing [WORDSEP char] [FIELDSEP char] range OF InputSource
 ```
 
-For the record `-rw-r--r--  1 root  wheel  2554 Oct 30 09:46 /path/to/foo.html`, this outputs `foo.html`.
+This is quite verbose, but it is still just an `InputSource`, and it needs an `OutputPlacement` after it just like any other. What makes it unusual is that it is an `InputSource` that *contains* another `InputSource`: it selects a range (character, word, or field) from *within* whatever that inner source produces. The `WORDSEP` and `FIELDSEP` options let you set different separators just for this substring selection, independent of the global settings.
+
+**Example**: extract the bare filename from a list of paths. `find` prints one path per line, so the whole path is word 1; splitting that word on slashes and taking the last field gives the final component:
+
+```
+find . -type f -name "*.md" | specs SUBSTR FS / FIELD -1 OF WORD 1  1
+```
+
+For the record `./specs/docs/guidebook.md`, this outputs `guidebook.md`.
 
 ## Special Input Sources
 
@@ -1098,32 +1119,54 @@ Output:
 
 ### `TODclock`
 
-A floating-point number of seconds since the Unix epoch, representing the time the current specs run started:
+An integer number of microseconds since the Unix epoch — midnight of January 1st, 1970 — representing the time the current specs run started:
 
 ```
-echo "" | specs todclock 1
+specs todclock 1
 ```
-Output: `1736000000.000000` (approximately, depending on when you run it)
+Output: `1785757989732438` (depending on when you run it)
+
+Because its value is fixed for the whole run, `TODclock` does not force *specs* to read input records. A specification that contains no other input-reading source will therefore produce a single output record.
 
 ### `DTODclock`
 
-Like `TODclock`, but gives the time of producing the **current** output record rather than the start of the run.
+Like `TODclock`, but gives the time of processing the **current** input record rather than the start of the run. Unlike `TODclock`, it *does* force the reading of input records. A specification that only has a data field with `DTODclock` as input produces one output record per input record, and none with no input.
 
 ### `TIMEDIFF`
 
-A 12-character decimal number giving microseconds since the start of the run. Useful for timing:
+A 12-character decimal number giving microseconds since the start of the run. Like `DTODclock`, it forces reading input records. Useful for timing:
 
 ```
 echo -e "first\nsecond\nthird" | specs timediff 1
 ```
+Output (just an example):
+```
+          34
+          71
+         118
+```
 
 ### The `PRINT` / `?` Source
 
-Evaluates an ALU expression and uses the result as input. Covered in detail in Chapter 8.
+Evaluates an ALU expression and uses the result as input. Covered in **[Chapter 8](#chap8)**.
+```
+$ echo -e "1\n2\n3\n4" | specs PRINT "word(1)*3" 1
+3
+6
+9
+12
+```
 
-### `ID fieldIdentifier`
+### The `ID` keyword
 
-Uses the stored value of a **field identifier** as the input source. Field identifiers are covered next.
+Uses the stored value of a **field identifier** as the input source. Field identifiers are covered below.
+```
+$ echo -e "1\n2\n3\n4" | specs WORD 1 a: ID a 1 PRINT "a*a" NEXTWORD
+1 1
+2 4
+3 9
+4 16
+```
 
 ### String Literals
 
@@ -1148,11 +1191,13 @@ A token beginning with `x` followed by an **even number** of hexadecimal digits 
 | `xDEADBEEF` | A 4-byte binary string |
 
 ```
-echo "" | specs x48454C4C4F 1
+specs x48454C4C4F 1
 ```
 Output: `HELLO`
 
 Hex literals can be combined with conversions like `C2X` to round-trip binary data, or used to inject separator characters that are hard to type on the command line.
+
+As with `TODclock`, a specification built only from literals, string or hex, reads no input, so nothing needs to be piped in.
 
 ## Field Identifiers
 
@@ -1223,9 +1268,9 @@ Time conversion arguments follow the strftime convention, with the addition of `
 Example — convert a date string to seconds since epoch:
 
 ```
-echo "Oct 30 09:46" | specs w1-3 tf2s "%b %d %H:%M" 1
+echo "Oct 30 09:46:22" | specs w1-3 tf2s "%b %d %H:%M:%S" 1
 ```
-Output: `1572421560.000000`
+Output: `1793346382.000000`
 
 ### STRIP
 
@@ -1428,7 +1473,7 @@ InputSource (start_expr, width_expr)
 InputSource (start_expr, width_expr, align_expr)
 ```
 
-The expressions are ALU expressions (Chapter 8) evaluated each cycle.
+The expressions are ALU expressions ([Chapter 8](#chap8)) evaluated each cycle.
 
 Examples:
 
@@ -3246,15 +3291,15 @@ These are keys that, when set in `~/.specs` (or via `-s`), change `specs` behavi
 | Syntax | Example | Meaning |
 |--------|---------|---------|
 | `n` | `5` | Character at position 5 |
-| `n-m` | `3-7` | Characters 3 to 7 |
+| `n:m` | `3:7` | Characters 3 to 7 |
 | `n.len` | `5.8` | 8 characters starting at 5 |
 | `-n` | `-1` | Last character |
 | `1-*` | `1-*` | Entire record |
 | `wn` / `word n` | `w2` | n-th word |
-| `wn-m` / `words n-m` | `w1-3` | Words n through m |
+| `wn:m` / `word n:m` | `w1:3` | Words n through m |
 | `w-1` | `w-1` | Last word |
 | `fn` / `field n` | `f3` | n-th field |
-| `fn-m` / `fields n-m` | `f2-4` | Fields n through m |
+| `fn:m` / `field n:m` | `f2:4` | Fields n through m |
 | `SUBSTR ... OF ...` | | Substring of another source |
 | `PRINT "expr"` / `? "expr"` | | ALU expression result |
 | `ID fid` | `ID a` | Value of field identifier |

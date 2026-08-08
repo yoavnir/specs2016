@@ -13,4 +13,7 @@
    PRINT "substitute(@@,XXVERSION,@version,'U')"
    REDO
    PRINT "substitute(@@,XXDOCS,@docsdir,'U')"
+   REDO
+   DTODCLOCK a:
+   PRINT "substitute(@@,XXTODCLOCK,a,'U')"
 
