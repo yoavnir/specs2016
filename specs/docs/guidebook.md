@@ -706,9 +706,8 @@ EmptyFrequencyMapMessage: "(no data)"
 ```
 Then you get the following:
 ```
-$ echo "hello" | specs WORD 1 1 EOF PRINT "fmap_dump(a)"
-hello
-(no data)
+$ echo "hello" | specs WORD 1 1 PRINT "fmap_dump(a)" NEXTWORD
+hello (no data)
 ```
 
 ### `while-guard-limit`
@@ -840,6 +839,7 @@ A spec file is a plain text file. Spec units are written as if they were command
        print #1 strip  nextword
        /records./      nextword
 ```
+**NOTE:** `printonly` is explained in [Chapter 11](#chap11).
 
 ## Comments
 
@@ -1419,6 +1419,22 @@ echo "hello world" | specs W1 NW.10 RIGHT  W2 NW.10 RIGHT
 ```
 Output: `     hello     world`
 
+### Field Identifiers as Output Placement
+
+Instead of placing output in the output record, you can save it in a **field identifier** (a single letter followed by a colon) for later use in expressions or other data fields. Use the field identifier as the output placement:
+
+```
+echo "42" | specs W1 a: PRINT "a * 2" 1
+```
+Output: `84`
+
+Here, `W1` is saved in field identifier `a`, then used in the expression `a * 2`.
+
+Field identifiers are useful for:
+- Saving intermediate values for reuse
+- Building complex calculations step by step
+- Avoiding redundant input source extraction
+
 ## Alignment
 
 After the output placement, you can specify an alignment for values shorter than the output field:
@@ -1439,6 +1455,7 @@ echo "hello" | specs "<" 1 1-* 2.20 CENTER ">" NEXT
 ```
 Output: `<       hello        >`
 
+\newpage
 **Note:** Alignment also applies when the value is *longer* than the output field. In this case, the value is truncated, and which part is removed depends on the alignment: `LEFT` removes the right end, `RIGHT` removes the left end, and `CENTER` removes from both ends.
 
 ```
@@ -1521,7 +1538,7 @@ specs w1 (20-len(word(1)))
 # Dynamic triangles (position shifts with each record)
 specs /##########/ (recno()%5 + 1, 2*(6 - recno()%5 - 1))
 ```
-\newpage
+
 ```
 # Right-align in a 10-character field
 echo "hello" | specs /hello/ (1,10,"R")
@@ -1572,12 +1589,12 @@ Expressions appear in:
 
 - `PRINT "expression"` — compute a value and place it in the output
 - `SET "#n op expression"` — compute a value and store it in a counter
-- `IF "condition"`, `WHILE "condition"` — control flow (Chapter 10)
-- Composed output placement arguments (Chapter 7)
+- `IF "condition"`, `WHILE "condition"` — control flow ([Chapter 10](#chap10))
+- Composed output placement arguments ([Chapter 7](#chap7))
 
-## The PRINT Spec Unit
+## The PRINT Input Source
 
-`PRINT` is the expression-to-output bridge. It evaluates its argument as an ALU expression and places the result in the output.
+`PRINT` is an **InputSource**, similar to the others described in [chapter 6](#chap6). It evaluates its argument as an ALU expression and places the result as the input value.
 
 ```
 echo "" | specs PRINT "2+3" 1
@@ -1618,7 +1635,7 @@ Note: The outer quotes are the shell's; the inner single quotes are the ALU's st
 
 ### Field Identifiers
 
-When a field identifier (say `a`) is set, you can use it by name in expressions:
+When a field identifier (say `a`) is set, you can use it by name, no colon needed:
 
 ```
 echo "42" | specs a: w1 . PRINT "a * 2" 1
@@ -1643,14 +1660,18 @@ Output:
 
 The counter `#0` accumulates the sum as each record is processed.
 
-Named persistent variables also exist: see `pset()` and `pget()` in **[Chapter 9](#chap9)**.
+See also **[Chapter 9](#chap9)** for the **Named persistent variables** available thgouth the  `pset()` and `pget()` functions.
 
 ### Configured Literals
 
-`@name` refers to a value from the configuration file:
+`@name` refers to a value from the configuration file (`~/.specs` or `%HOME%\specs.cfg`):
 
 ```
-# In ~/.specs:  pi: 3.14159265
+pi: 3.14159265
+```
+
+And then the specification:
+```
 specs PRINT "@pi * 2" 1
 ```
 Output: `6.28318530`
@@ -1667,9 +1688,11 @@ echo "hello world" | specs PRINT "len(@@)" 1
 ```
 Output: `11`
 
+**Note:** `CONTEXT` is described in [Chapter 13](#chap13)
+
 ### Record Offsets — `@+n` and `@-n`
 
-In expressions, `@+n` refers to the record n positions ahead and `@-n` to n positions behind (see **[Chapter 13](#chap13)** on rolling context).
+In expressions, `@+n` refers to the record n positions ahead and `@-n` to n positions behind (again, see **[Chapter 13](#chap13)** for information about rolling context).
 
 ## Operators
 
@@ -1690,7 +1713,7 @@ Note: specs uses `//` for integer division and `%` for remainder, matching C/Pyt
 
 | Operator | Name | Example |
 |----------|------|---------|
-| `\|\|` | Concatenation | `'hello' \|\| ' ' \|\| 'world'` → `hello world` |
+| `||` | Concatenation | `'hello' || ' ' || 'world'` → `hello world` |
 
 ### Comparison Operators
 
@@ -1719,7 +1742,49 @@ The **strict** operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) always compare 
 |----------|------|--------|
 | `!` | Logical NOT | `!0` → `1`, `!5` → `0` |
 | `&` | Logical AND | `1` if both operands are non-zero |
-| `\|` | Logical OR | `1` if either operand is non-zero |
+| `|` | Logical OR | `1` if either operand is non-zero |
+
+## Functions
+
+Functions are a powerful part of expressions. They take zero or more arguments and return a result. specs provides a large library of **built-in functions** for string manipulation, mathematics, statistics, and more. You can also write your own functions in **Python** to extend specs's capabilities.
+
+### Built-in Functions
+
+Built-in functions cover:
+
+- **String functions**: `len()`, `substr()`, `pos()`, `substitute()`, `reverse()`, and many more
+- **Mathematical functions**: `abs()`, `sqrt()`, `sin()`, `cos()`, `floor()`, `round()`, etc.
+- **Statistical functions**: `sum()`, `average()`, `min()`, `max()`, `variance()`, `stddev()`
+- **Record access functions**: `word()`, `field()`, `range()`, `record()`, etc.
+- **Time functions**: `tf2mcs()`, `mcs2tf()`, `tf2s()`, `s2tf()`
+- **Special functions**: `first()`, `eof()`, `getenv()`, `exec()`, and more
+
+**Example — string length:**
+```
+echo "hello world" | specs PRINT "len(@@)" 1
+```
+Output: `11`
+
+**Example — trigonometry:**
+```
+echo 3.14 | specs PRINT "sin(@@)" 1
+```
+Output: `0.00159265291648682823`
+
+For a complete guide to all built-in functions, see **[Chapter 9: Built-in Functions](#chap9)**.
+
+### User-Written Functions
+
+You can extend specs with your own functions written in **Python**. These custom functions integrate seamlessly into expressions and can perform complex logic that would be difficult with built-in functions alone.
+
+**Example — custom function to count vowels:**
+```python
+def count_vowels(s):
+    return sum(1 for c in s.lower() if c in 'aeiou')
+```
+
+For details on writing and using custom Python functions, see **[Chapter 14: Extending specs with Python](#chap14)**.
+\newpage
 
 ## SET — Storing Values in Counters
 
@@ -1748,9 +1813,13 @@ echo -e "1\n2\n3" | specs SET "#0:=0" EOF PRINT "#0" 1
 This is wrong — the `SET` runs for every record, resetting #0 each time. To initialize a counter, use `IF "first()"`:
 
 ```
-echo -e "1\n2\n3" | specs a: w1 . SET "#0+=a" EOF PRINT "#0" 1
+echo -e "2\n3\n4" | specs w1 a: IF "first()" THEN SET "#0:=1" ENDIF SET "#0*=a" EOF PRINT "#0" 1
 ```
-Output: `6` (counters start at zero automatically)
+Output: `24` (2 × 3 × 4)
+
+Here, `#0` is initialized to 1 on the first record, then multiplied by each word value. Without the `IF "first()"` guard, the counter would be reset to 1 on every record.
+
+**NOTE:** The control structures such as `IF..THEN..ENDIF` are described in [Chapter 10](#chap10); Spec Units that follow `EOF` are executed once at the end of the run, as explained in [Chapter 11](#chap11). `first()` evaluates to 1 on the first record, and zero (or false) ever after.
 
 ### Compound SET
 
@@ -2079,7 +2148,7 @@ An abbreviated form: `#varname` is equivalent to `pget('varname')`.
 
 ---
 
-# Chapter 10: Control Flow
+# Chapter 10: Control Flow  {#chap10}
 
 By default, specs executes all spec units in the specification sequentially for every input record. Control flow lets you make decisions and repeat operations.
 
@@ -2222,7 +2291,7 @@ These spec units usually make sense at the beginning of a specification.
 
 ---
 
-# Chapter 11: Run-In, Run-Out, and Control Breaks
+# Chapter 11: Run-In, Run-Out, and Control Breaks  {#chap11}
 
 ## The Normal Cycle
 
