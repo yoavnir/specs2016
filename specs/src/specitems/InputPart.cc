@@ -148,7 +148,7 @@ std::string NumberPart::Debug()
 PSpecString NumberPart::getStr(ProcessingState& pState)
 {
 	std::string s = std::to_string(pState.getRecordCount());
-	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), ' ') + s;
+	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), pState.getPadChar()) + s;
 	return std::make_shared<std::string>(s);
 }
 
