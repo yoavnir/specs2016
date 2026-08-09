@@ -1360,53 +1360,64 @@ The output record is padded with spaces to reach column 10.
 You can also specify a range to constrain the width:
 
 ```
-echo "hello world" | specs w1 1-5
+echo "hello world" | specs W1 1-5
 ```
 Output: `hello` (5 characters at column 1)
 
 If the value is shorter than the range, it is padded (left-aligned by default). If longer, it is truncated.
 
+You can also use a **width suffix** (a dot followed by a number) to specify the width more compactly:
+
+```
+echo "hello world" | specs W1 1.5
+```
+Output: `hello` (equivalent to `1-5`)
+
+The width suffix works with both absolute and relative placement.
+
 ## Relative Placement
 
 | Keyword | Meaning |
 |---------|---------|
-| `n` or `next` | Immediately after the previous output, no gap |
-| `nw` or `nextword` | After one space following the previous output |
-| `nf` or `nextfield` | After one tab following the previous output |
+| `N` or `NEXT` | Immediately after the previous output, no gap |
+| `NW` or `NEXTWORD` | After one space following the previous output |
+| `NF` or `NEXTFIELD` | After one tab following the previous output |
 | `.` | No output — the value is captured but not placed (used with field identifiers) |
 
-The abbreviated forms (`n`, `nw`, `nf`) also accept alternate spellings `nword` and `nfield`.
+The abbreviated forms (`N`, `NW`, `NF`) also accept alternate spellings `NWORD` and `NFIELD`.
 
-### Width Suffix on Relative Placement
-
-Any of `next`, `nextword`, and `nextfield` can take an optional width suffix in the form `.N`, making the output a fixed-width column at the relative position:
-
-| Syntax | Meaning |
-|--------|---------|
-| `nw.10` or `nextword.10` | Next-word position, 10-character column |
-| `nf.8` or `nextfield.8` | Next-field position, 8-character column |
-| `n.5` or `next.5` | Next position, 5-character column |
-
-This is equivalent to using absolute `nextword` placement followed by an explicit width range but expressed more compactly. Alignment applies after the column width (default left-aligned; add `right` or `center` to change it).
+`NEXT` places output exactly where the previous output ended:
 
 ```
-echo "hello world" | specs w1 nw.10 right  w2 nw.10 right
-```
-Output: `     hello     world`
-
-`next` places output exactly where the previous output ended:
-
-```
-echo "AB" | specs /[/ 1 1-* n /]/ n
+echo "AB" | specs /[/ 1 1-* N /]/ N
 ```
 Output: `[AB]`
 
-`nextword` inserts a space:
+\newpage
+
+`NEXTWORD` inserts a space:
 
 ```
-echo "hello world" | specs w1 1 w2 nw
+echo "hello world" | specs W1 1 W2 NW
 ```
 Output: `hello world`
+
+### Width Suffix on Relative Placement
+
+As mentioned above, the width suffix also works with relative placement. Any of `NEXT`, `NEXTWORD`, and `NEXTFIELD` can take an optional width suffix in the form `.N`, making the output a fixed-width column at the relative position:
+
+| Syntax | Meaning |
+|--------|---------|
+| `NW.10` or `NEXTWORD.10` | Next-word position, 10-character column |
+| `NF.8` or `NEXTFIELD.8` | Next-field position, 8-character column |
+| `N.5` or `NEXT.5` | Next position, 5-character column |
+
+Alignment applies after the column width (default LEFT-aligned; add `RIGHT` or `CENTER` to change it).
+
+```
+echo "hello world" | specs W1 NW.10 RIGHT  W2 NW.10 RIGHT
+```
+Output: `     hello     world`
 
 ## Alignment
 
@@ -1414,52 +1425,76 @@ After the output placement, you can specify an alignment for values shorter than
 
 | Keyword | Effect |
 |---------|--------|
-| `left` | Pad on the right (default) |
-| `right` | Pad on the left |
-| `center` or `centre` | Pad equally on both sides |
+| `LEFT` | Pad on the right (default) |
+| `RIGHT` | Pad on the left |
+| `CENTER` or `CENTRE` | Pad equally on both sides |
 
 ```
-echo "42" | specs "<" 1 1-* 2-10 right ">" NEXT
+echo "42" | specs "<" 1 1-* 2-10 RIGHT ">" NEXT
 ```
 Output: `<       42>`
 
 ```
-echo "hello" | specs "<" 1 1-* 2.20 center ">" NEXT
+echo "hello" | specs "<" 1 1-* 2.20 CENTER ">" NEXT
 ```
 Output: `<       hello        >`
 
+**Note:** Alignment also applies when the value is *longer* than the output field. In this case, the value is truncated, and which part is removed depends on the alignment: `LEFT` removes the right end, `RIGHT` removes the left end, and `CENTER` removes from both ends.
+
+```
+echo -e "abcdefgh" | specs 1-8 1-4 LEFT
+```
+Output: `abcd`
+```
+echo -e "abcdefgh" | specs 1-8 1-4 RIGHT
+```
+Output: `efgh`
+```
+echo -e "abcdefgh" | specs 1-8 1-4 CENTER
+```
+Output: `cdef`
+
 ## The PAD Spec Unit — Changing the Padding Character
 
-By default, gaps in the output record (spaces between placed fields, or padding added to make a value fit a fixed-width column) are filled with the **space character**. The `PAD` spec unit changes this fill character for all subsequent output in the same specification.
+By default, gaps in the output record (spaces between placed fields, or padding added to make a value fit a larger output field) are filled with the **space character**. The `PAD` spec unit changes this fill character for all subsequent output in the same specification.
 
 ```
 PAD /char/
 ```
 
-The argument is a single character, using any delimiter. You can also write it without a delimiter if the character is unambiguous (e.g., `PAD *`).
+The argument is a single character, using any delimiter. You can also write it without a delimiter if the character is unambiguous (e.g., `PAD =`).
 
 `PAD` can appear multiple times to use different padding for different fields.
 
 **Example — three different padding characters:**
 
 ```
-echo "The quick brown" | specs pad /q/ w1 1.10 left  pad /w/ w2 11.10 center  pad /e/ w3 21.10 right
+echo "The quick brown" | specs PAD /q/ W1 1.10 LEFT  PAD /w/ W2 11.10 CENTER  PAD /e/ W3 21.10 RIGHT
 ```
 Output: `Theqqqqqqqwwquickwwweeeeebrown`
 
 Breaking this down:
-- `pad /q/` sets padding to `q`; word 1 (`The`) placed left-aligned in a 10-char field → `Theqqqqqqq`
-- `pad /w/` sets padding to `w`; word 2 (`quick`) placed center-aligned in 10 chars → `wwquickwww`
-- `pad /e/` sets padding to `e`; word 3 (`brown`) placed right-aligned in 10 chars → `eeeeebrown`
+- `PAD /q/` sets padding to `q`; word 1 (`The`) placed LEFT-aligned in a 10-char field → `Theqqqqqqq`
+- `PAD /w/` sets padding to `w`; word 2 (`quick`) placed CENTER-aligned in 10 chars → `wwquickwww`
+- `PAD /e/` sets padding to `e`; word 3 (`brown`) placed RIGHT-aligned in 10 chars → `eeeeebrown`
 
 **Example — fill the gap between two fields:**
 
 ```
-echo "First record" | specs word 1 5  pad *  word 2 15
+echo "First record" | specs WORD 1 5  PAD =  WORD 2 15
 ```
-Output: `    First*****record`
+Output: `    First=====record`
 
-Here, the space from column 10 (end of "First") to column 14 (before "record") is filled with `*` instead of spaces.
+Here, the space from column 10 (end of "First") to column 14 (before "record") is filled with `=` instead of spaces.
+
+**Important note about NEXTWORD and NEXTFIELD:** When using `NEXTWORD` or `NEXTFIELD` placement, the space or tab character inserted between fields is *not* replaced by the PAD character. It is always a literal space (for `NEXTWORD`) or tab (for `NEXTFIELD`). For example:
+
+```
+echo "hello there" | specs PAD = W1 1 W2 NW.9
+```
+Output: `hello there====`
+
+The space between "hello" and "there" is a literal space (inserted by `NEXTWORD`), not a pad character. Only the padding added to fill the 9-character width is replaced with `=`.
 
 `PAD` is a **MainOption** — it takes effect immediately where it appears and applies to all subsequent output until another `PAD` changes it again.
 
@@ -1486,7 +1521,7 @@ specs w1 (20-len(word(1)))
 # Dynamic triangles (position shifts with each record)
 specs /##########/ (recno()%5 + 1, 2*(6 - recno()%5 - 1))
 ```
-
+\newpage
 ```
 # Right-align in a 10-character field
 echo "hello" | specs /hello/ (1,10,"R")
