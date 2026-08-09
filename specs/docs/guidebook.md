@@ -1351,7 +1351,7 @@ The **output placement** tells specs where to put the result of an input source 
 Specify a column number:
 
 ```
-echo "hello world" | specs w1 1 w2 10
+echo "hello world" | specs WORD 1 1 WORD 2 10
 ```
 Output: `hello    world`
 
@@ -1360,16 +1360,16 @@ The output record is padded with spaces to reach column 10.
 You can also specify a range to constrain the width:
 
 ```
-echo "hello world" | specs W1 1-5
+echo "hello world" | specs WORD 1 1-5
 ```
-Output: `hello` (5 characters at column 1)
+Output: `hello` (5 characters starting at column 1)
 
 If the value is shorter than the range, it is padded (left-aligned by default). If longer, it is truncated.
 
-You can also use a **width suffix** (a dot followed by a number) to specify the width more compactly:
+You can also use a **width suffix** (a dot followed by a number) to specify the width:
 
 ```
-echo "hello world" | specs W1 1.5
+echo "hello world" | specs WORD 1 1.5
 ```
 Output: `hello` (equivalent to `1-5`)
 
@@ -1379,17 +1379,17 @@ The width suffix works with both absolute and relative placement.
 
 | Keyword | Meaning |
 |---------|---------|
-| `N` or `NEXT` | Immediately after the previous output, no gap |
-| `NW` or `NEXTWORD` | After one space following the previous output |
-| `NF` or `NEXTFIELD` | After one tab following the previous output |
-| `.` | No output — the value is captured but not placed (used with field identifiers) |
+| `N` or `NEXT` | Append the value mmediately after the previous output, no gap |
+| `NW` or `NEXTWORD` | Add a space, then append the value |
+| `NF` or `NEXTFIELD` | Add a tab, then append the value |
+| `.` (single dot) | No output — the value is captured but not placed (used with field identifiers) |
 
 The abbreviated forms (`N`, `NW`, `NF`) also accept alternate spellings `NWORD` and `NFIELD`.
 
 `NEXT` places output exactly where the previous output ended:
 
 ```
-echo "AB" | specs /[/ 1 1-* N /]/ N
+echo "AB" | specs [ 1  WORD 1 N  ] N
 ```
 Output: `[AB]`
 
@@ -1404,15 +1404,15 @@ Output: `hello world`
 
 ### Width Suffix on Relative Placement
 
-As mentioned above, the width suffix also works with relative placement. Any of `NEXT`, `NEXTWORD`, and `NEXTFIELD` can take an optional width suffix in the form `.N`, making the output a fixed-width column at the relative position:
+As mentioned above, the width suffix also works with relative placement. Any of `NEXT`, `NEXTWORD`, and `NEXTFIELD` can take an optional width suffix in the form `.n`, making the output a fixed-width output field at the relative position:
 
 | Syntax | Meaning |
 |--------|---------|
-| `NW.10` or `NEXTWORD.10` | Next-word position, 10-character column |
-| `NF.8` or `NEXTFIELD.8` | Next-field position, 8-character column |
-| `N.5` or `NEXT.5` | Next position, 5-character column |
+| `NW.10` or `NEXTWORD.10` | Next-word position, 10-character output field |
+| `NF.8` or `NEXTFIELD.8` | Next-field position, 8-character output field |
+| `N.5` or `NEXT.5` | Next position, 5-character output field |
 
-Alignment applies after the column width (default LEFT-aligned; add `RIGHT` or `CENTER` to change it).
+Alignment applies after the output width (default LEFT-aligned; add `RIGHT` or `CENTER` to change it).
 
 ```
 echo "hello world" | specs W1 NW.10 RIGHT  W2 NW.10 RIGHT
@@ -1431,9 +1431,11 @@ Output: `84`
 Here, `W1` is saved in field identifier `a`, then used in the expression `a * 2`.
 
 Field identifiers are useful for:
+
 - Saving intermediate values for reuse
 - Building complex calculations step by step
 - Avoiding redundant input source extraction
+- Calculate statistics on some or all records.
 
 ## Alignment
 
@@ -1486,14 +1488,15 @@ The argument is a single character, using any delimiter. You can also write it w
 **Example — three different padding characters:**
 
 ```
-echo "The quick brown" | specs PAD /q/ W1 1.10 LEFT  PAD /w/ W2 11.10 CENTER  PAD /e/ W3 21.10 RIGHT
+echo "The quick brown" | specs PAD q W1 1.10 LEFT  PAD w W2 11.10 CENTER  PAD e W3 21.10 RIGHT
 ```
 Output: `Theqqqqqqqwwquickwwweeeeebrown`
 
 Breaking this down:
-- `PAD /q/` sets padding to `q`; word 1 (`The`) placed LEFT-aligned in a 10-char field → `Theqqqqqqq`
-- `PAD /w/` sets padding to `w`; word 2 (`quick`) placed CENTER-aligned in 10 chars → `wwquickwww`
-- `PAD /e/` sets padding to `e`; word 3 (`brown`) placed RIGHT-aligned in 10 chars → `eeeeebrown`
+
+- `PAD q` sets padding to `q`; word 1 (`The`) placed LEFT-aligned in a 10-char field → `Theqqqqqqq`
+- `PAD w` sets padding to `w`; word 2 (`quick`) placed CENTER-aligned in 10 chars → `wwquickwww`
+- `PAD e` sets padding to `e`; word 3 (`brown`) placed RIGHT-aligned in 10 chars → `eeeeebrown`
 
 **Example — fill the gap between two fields:**
 
@@ -1805,7 +1808,7 @@ Assignment operators:
 | `/=` | Divide |
 | `//=` | Integer divide |
 | `%=` | Remainder |
-| `\|\|=` | Append (string concatenation) |
+| `||=` | Append (string concatenation) |
 
 ```
 echo -e "1\n2\n3" | specs SET "#0:=0" EOF PRINT "#0" 1
