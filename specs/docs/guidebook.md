@@ -1402,6 +1402,8 @@ echo "hello world" | specs W1 1 W2 NW
 ```
 Output: `hello world`
 
+**Note:** If used on the first output-producing *spec unit* in the specification, all three of `NEXT`, `NEXTWORD`, and `NEXTFIELD` place the output at the start of the line, leaving no space or tab.
+
 ### Width Suffix on Relative Placement
 
 As mentioned above, the width suffix also works with relative placement. Any of `NEXT`, `NEXTWORD`, and `NEXTFIELD` can take an optional width suffix in the form `.n`, making the output a fixed-width output field at the relative position:
@@ -1447,6 +1449,7 @@ After the output placement, you can specify an alignment for values shorter than
 | `RIGHT` | Pad on the left |
 | `CENTER` or `CENTRE` | Pad equally on both sides |
 
+\newpage
 ```
 echo "42" | specs "<" 1 1-* 2-10 RIGHT ">" NEXT
 ```
@@ -1457,7 +1460,6 @@ echo "hello" | specs "<" 1 1-* 2.20 CENTER ">" NEXT
 ```
 Output: `<       hello        >`
 
-\newpage
 **Note:** Alignment also applies when the value is *longer* than the output field. In this case, the value is truncated, and which part is removed depends on the alignment: `LEFT` removes the right end, `RIGHT` removes the left end, and `CENTER` removes from both ends.
 
 ```
@@ -1551,6 +1553,7 @@ Output: `     hello`
 ### Alignment Strings in Composed Placement
 
 The third expression is evaluated as a string:
+
 - Begins with `c` or `C` → centered
 - Begins with `r` or `R` → right-aligned
 - Anything else → left-aligned
@@ -1572,13 +1575,61 @@ echo "abcdefghijklmnopqrstuvwxyz" | specs 1-* (1,10,"R2")
 ```
 Output: `ab...vwxyz`
 
-### Eliding Arguments
+### Eliding Arguments in Composed Output
 
 You can omit leading arguments and use commas as placeholders. Omitting the start defaults to `next()`, and omitting the width defaults to `rest()`:
 
 ```
 specs w1 (,,'R')   # next, full width, right-aligned
 ```
+
+## Eliding The Entire Output Placement
+
+Under certain conditions, it is possible to omit the **Output Placement** entirely. These are:
+
+- On the last Data Field within a block
+- On the one and only Data Field in the specification
+- On the one and only Data Field in the run-out cycle
+
+When the entire specification has just one data field that produces output, the **output placement** defaults to the first column - the start of the line. You can safely omit that:
+```
+specs W1   # Writes the first word of the input to the start of the output line
+```
+
+When the last Data Field within a block has no output placement, `specs` defaults to `NEXTWORD`. This is really a generalization of the previous case, because `NEXTWORD` on the first Data Field places the output at the start of the line. There is, however, a need to explain the meaning of "block" in this context.
+
+A **block** refers to a portion of the specification that is executed or not executed at the same cycle. In the simplest case, a block is the whole specification:
+```
+specs WORD 1 1 WORD 2 20 WORD 3 
+```
+
+If you use **Control Flow** ([Chapter 10](#chap10)), you can get blocks before, in the middle, and after the parts of the control structure:
+```
+specs
+   WORD 2  a:    # No output, just loading the word into A
+   WROD 1  1
+   WORD 3        # Last data field in the block, treated as NEXTWORD
+   IF "0 = a%2" THEN   # if a is even
+      /even/     # Elided placement at the end of the THEN block
+   ELSE
+      /odd/      # Elided placement at the end of the ELSE block
+   ENDIF
+   /number found/  # Elided placement at the end of the final block
+```
+
+For the input "foo 7 bar", you get the output `foo bar odd number found`
+
+Similarly, just before the `EOF` keyword that marks the beginning of the run-out cycle ([Chapter 11](#chap11)), the last data field can skip the output placement:
+```
+echo "hello, there" | specs WROD 1 1 WORD 2 EOF /All done/
+```
+Output:
+```
+hello, there
+All done
+```
+
+The one thing all these cases have in common is that the data field is followed by an obvious stop: either the end of the specification, or a keyword such as `IF`, `ELSE`, `ENDIF`, `EOF`.
 
 ---
 
@@ -1978,12 +2029,12 @@ Several special values are available in expressions:
 - `#n` — counters (e.g., `#0` is counter 0)
 
 ```
-specs PRINT "length(@@)" 1
+specs PRINT "length(@@)"
 ```
 Output: (length of the current input record)
 
 ```
-echo "hello world" | specs PRINT "word(@@)" 1
+echo "hello world" | specs PRINT "word(1)"
 ```
 Output: `hello`
 
@@ -2188,6 +2239,7 @@ REXX is a scripting language that was central to IBM's CMS (Conversational Monit
 | `fieldwith(substr)` | First field containing *substr* |
 | `fieldwithidx(substr)` | Index of first field containing *substr* |
 
+\newpage
 ## Record Access Functions
 
 These functions read from the current (or context-affected) input record:
@@ -2222,6 +2274,7 @@ These functions read from the current (or context-affected) input record:
 | `next()` | Current print position (where next output would go) |
 | `rest()` | Columns remaining to terminal width |
 
+\newpage
 ### Record Output and Substring Functions
 
 **`split(sep, hdr, ftr)`** outputs all fields on separate lines:
@@ -2271,6 +2324,7 @@ echo "2024-01-15 14:32:07" | specs PRINT "tf2mcs(word(1)||' '||word(2),'%Y-%m-%d
 ```
 Output: `1705329127000000`
 
+\newpage
 ## Statistical and Frequency Map Functions {#statistical-and-frequency-map-functions}
 
 These functions work with **field identifiers** to accumulate statistics across records:
@@ -2359,6 +2413,7 @@ A more efficient version runs the command only once — on the first record — 
 specs -C ls IF "first()" THEN SET "#0:=exc1('ls | wc')" ENDIF "File" 1 w8 NW "is one of the" NW PRINT "#0" NW "files in this directory"
 ```
 
+\newpage
 ## Special Functions
 
 | Function | Description |
