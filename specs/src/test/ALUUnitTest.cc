@@ -1046,8 +1046,8 @@ int runALUUnitTests10(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fact(2)","2");
 	VERIFY_EXPR_RES("fact(1)","1");
 	VERIFY_EXPR_RES("fact(0)","1");
-	VERIFY_EXPR_RES("fact(-5)","1");
-	VERIFY_EXPR_RES("fact(3.14)","6");
+	VERIFY_EXPR_RES("fact(-5)","NaN");
+	VERIFY_EXPR_RES("pretty(fact(3.14))","7.173269");
 
 	VERIFY_EXPR_RES("permutations(6,4)","360");  // 6*5*4*3
 	VERIFY_EXPR_RES("permutations(6,2)","30");

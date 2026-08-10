@@ -1325,17 +1325,23 @@ PValue AluFunc_log(PValue pX, PValue pBase)
 PValue AluFunc_fact(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	ALUInt i,res = 1;
-	ALUInt x = pX->getInt();
-	if (x > 20) {
-		MYTHROW("fact: argument too large (max 20 for 64-bit integers)");
+	
+	// For integer values between 0 and 20, use exact factorial computation
+	if (pX->getType() == counterType__Int) {
+		ALUInt x = pX->getInt();
+		if (x >= 0 && x <= 20) {
+			ALUInt i, res = 1;
+			for (i = 2; i <= x; i++) {
+				res *= i;
+			}
+			return mkValueE(res, pX->isExact());
+		}
 	}
-
-	for (i=2; i <= x; i++) {
-		res *= i;
-	}
-
-	return mkValueE(res, pX->isExact());
+	
+	// For values > 20 or real numbers, use tgamma(x+1)
+	ALUFloat x = pX->getFloat();
+	ALUFloat result = std::tgamma(x + 1);
+	return mkValueE(result, false);
 }
 
 PValue AluFunc_combinations(PValue pN, PValue pK)
