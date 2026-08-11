@@ -876,8 +876,8 @@ int main(int argc, char** argv)
 	// sfield() with out-of-range negative count (was pointer underflow)
 	VERIFY2("print 'sfield(\"a\",-2,\",\")' 1", "x", ""); // Test #221
 
-	// fact() argument exceeding 64-bit overflow limit (was silent overflow)
-	VERIFY2("print 'fact(21)' 1", "x", "fact: argument too large (max 20 for 64-bit integers)"); // Test #222
+	// fact() argument exceeding 64-bit limit now uses tgamma
+	VERIFY2("print 'pretty(fact(21))' 1", "x", "5.109094e+19"); // Test #222
 	
 	// STRIP modifier on all-whitespace input (was out-of-bounds read in stripString)
 	VERIFY2("1-* strip 1", "   ", ""); // Test #223

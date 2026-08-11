@@ -754,7 +754,7 @@ These exist automatically without any `~/.specs` entry:
 | `@build-url` | GitHub Actions build URL (empty for local) |
 | `@build-info` | Composite build information string |
 | `@@` | The entire current input record (in expressions) |
-| `@!` | The context-affected input record (see [Chapter 13](#chap13)) |
+| `@!` | The current in-context input record (see `CONTEXT` in [Chapter 13](#chap13)) |
 | `@+n` / `@-n` | Record at offset +n / -n from current (see [Chapter 13](#chap13)) |
 
 ## Ensuring a Literal is Defined — REQUIRES
@@ -1402,6 +1402,8 @@ echo "hello world" | specs W1 1 W2 NW
 ```
 Output: `hello world`
 
+**Note:** If used on the first output-producing *spec unit* in the specification, all three of `NEXT`, `NEXTWORD`, and `NEXTFIELD` place the output at the start of the line, leaving no space or tab.
+
 ### Width Suffix on Relative Placement
 
 As mentioned above, the width suffix also works with relative placement. Any of `NEXT`, `NEXTWORD`, and `NEXTFIELD` can take an optional width suffix in the form `.n`, making the output a fixed-width output field at the relative position:
@@ -1447,6 +1449,7 @@ After the output placement, you can specify an alignment for values shorter than
 | `RIGHT` | Pad on the left |
 | `CENTER` or `CENTRE` | Pad equally on both sides |
 
+\newpage
 ```
 echo "42" | specs "<" 1 1-* 2-10 RIGHT ">" NEXT
 ```
@@ -1457,7 +1460,6 @@ echo "hello" | specs "<" 1 1-* 2.20 CENTER ">" NEXT
 ```
 Output: `<       hello        >`
 
-\newpage
 **Note:** Alignment also applies when the value is *longer* than the output field. In this case, the value is truncated, and which part is removed depends on the alignment: `LEFT` removes the right end, `RIGHT` removes the left end, and `CENTER` removes from both ends.
 
 ```
@@ -1534,7 +1536,7 @@ Examples:
 
 ```
 # Right-align a word in a 20-character field
-specs w1 (20-len(word(1)))
+specs w1 (20-length(word(1)))
 ```
 
 ```
@@ -1551,6 +1553,7 @@ Output: `     hello`
 ### Alignment Strings in Composed Placement
 
 The third expression is evaluated as a string:
+
 - Begins with `c` or `C` → centered
 - Begins with `r` or `R` → right-aligned
 - Anything else → left-aligned
@@ -1572,13 +1575,61 @@ echo "abcdefghijklmnopqrstuvwxyz" | specs 1-* (1,10,"R2")
 ```
 Output: `ab...vwxyz`
 
-### Eliding Arguments
+### Eliding Arguments in Composed Output
 
 You can omit leading arguments and use commas as placeholders. Omitting the start defaults to `next()`, and omitting the width defaults to `rest()`:
 
 ```
 specs w1 (,,'R')   # next, full width, right-aligned
 ```
+
+## Eliding The Entire Output Placement
+
+Under certain conditions, it is possible to omit the **Output Placement** entirely. These are:
+
+- On the last Data Field within a block
+- On the one and only Data Field in the specification
+- On the one and only Data Field in the run-out cycle
+
+When the entire specification has just one data field that produces output, the **output placement** defaults to the first column - the start of the line. You can safely omit that:
+```
+specs W1   # Writes the first word of the input to the start of the output line
+```
+
+When the last Data Field within a block has no output placement, `specs` defaults to `NEXTWORD`. This is really a generalization of the previous case, because `NEXTWORD` on the first Data Field places the output at the start of the line. There is, however, a need to explain the meaning of "block" in this context.
+
+A **block** refers to a portion of the specification that is executed or not executed at the same cycle. In the simplest case, a block is the whole specification:
+```
+specs WORD 1 1 WORD 2 20 WORD 3 
+```
+
+If you use **Control Flow** ([Chapter 10](#chap10)), you can get blocks before, in the middle, and after the parts of the control structure:
+```
+specs
+   WORD 2  a:    # No output, just loading the word into A
+   WROD 1  1
+   WORD 3        # Last data field in the block, treated as NEXTWORD
+   IF "0 = a%2" THEN   # if a is even
+      /even/     # Elided placement at the end of the THEN block
+   ELSE
+      /odd/      # Elided placement at the end of the ELSE block
+   ENDIF
+   /number found/  # Elided placement at the end of the final block
+```
+
+For the input "foo 7 bar", you get the output `foo bar odd number found`
+
+Similarly, just before the `EOF` keyword that marks the beginning of the run-out cycle ([Chapter 11](#chap11)), the last data field can skip the output placement:
+```
+echo "hello, there" | specs WROD 1 1 WORD 2 EOF /All done/
+```
+Output:
+```
+hello, there
+All done
+```
+
+The one thing all these cases have in common is that the data field is followed by an obvious stop: either the end of the specification, or a keyword such as `IF`, `ELSE`, `ENDIF`, `EOF`.
 
 ---
 
@@ -1684,10 +1735,10 @@ Note: `@pi` used *outside* of an expression (like `specs @pi 1`) is expanded to 
 ### The Entire Record — `@@` and `@!`
 
 - `@@` — the entire current input record (always the original, unaffected by `CONTEXT`)
-- `@!` — the current input record as affected by `CONTEXT` (same as `@@` when no `CONTEXT` is active)
+- `@!` — the current in-context input record (same as `@@` when no `CONTEXT` is active)
 
 ```
-echo "hello world" | specs PRINT "len(@@)" 1
+echo "hello world" | specs PRINT "length(@@)" 1
 ```
 Output: `11`
 
@@ -1695,7 +1746,7 @@ Output: `11`
 
 ### Record Offsets — `@+n` and `@-n`
 
-In expressions, `@+n` refers to the record n positions ahead and `@-n` to n positions behind (again, see **[Chapter 13](#chap13)** for information about rolling context).
+In expressions, `@+n` refers to the record n positions ahead and `@-n` to n positions behind.
 
 ## Operators
 
@@ -1755,7 +1806,7 @@ Functions are a powerful part of expressions. They take zero or more arguments a
 
 Built-in functions cover:
 
-- **String functions**: `len()`, `substr()`, `pos()`, `substitute()`, `reverse()`, and many more
+- **String functions**: `length()`, `substr()`, `pos()`, `substitute()`, `reverse()`, and many more
 - **Mathematical functions**: `abs()`, `sqrt()`, `sin()`, `cos()`, `floor()`, `round()`, etc.
 - **Statistical functions**: `sum()`, `average()`, `min()`, `max()`, `variance()`, `stddev()`
 - **Record access functions**: `word()`, `field()`, `range()`, `record()`, etc.
@@ -1764,7 +1815,7 @@ Built-in functions cover:
 
 **Example — string length:**
 ```
-echo "hello world" | specs PRINT "len(@@)" 1
+echo "hello world" | specs PRINT "length(@@)" 1
 ```
 Output: `11`
 
@@ -1774,7 +1825,7 @@ echo 3.14 | specs PRINT "sin(@@)" 1
 ```
 Output: `0.00159265291648682823`
 
-For a complete guide to all built-in functions, see **[Chapter 9: Built-in Functions](#chap9)**.
+For a complete guide to the built-in functions, see **[Chapter 9: Built-in Functions](#chap9)**.
 
 ### User-Written Functions
 
@@ -1856,14 +1907,14 @@ When a string is used in a numeric context, specs tries to parse it as a number.
 
 # Chapter 9: Built-in Functions {#chap9}
 
-specs provides a large library of built-in functions for use in expressions. This chapter presents them organized by category.
+specs provides a library of built-in functions for use in expressions. This chapter presents them organized by category.
 
 ## Calling Functions
 
 Functions appear inside ALU expressions:
 
 ```
-specs PRINT "len('hello')" 1
+specs PRINT "length('hello')" 1
 ```
 Output: `5`
 
@@ -1873,78 +1924,236 @@ specs PRINT "substr('hello world', 7, 5)" 1
 ```
 Output: `world`
 
+## Passing Arguments
+
+When calling a function, you can pass different kinds of arguments. Here are the options:
+
+### Numeric Literals
+
+Numbers can be passed without quotes:
+
+```
+specs PRINT "sqrt(16)" 1
+```
+Output: `4`
+
+```
+specs PRINT "pow(2, 8)" 1
+```
+Output: `256`
+
+### String Literals with Quotes
+
+Strings containing spaces or special characters must be enclosed in delimiters. You can use single quotes, double quotes, or slashes:
+
+```
+specs PRINT "length('hello world')" 1
+```
+Output: `11`
+
+```
+specs PRINT 'substr("hello world", 7, 5)' 1
+```
+Output: `world`
+
+```
+specs PRINT "pos(world, /hello world/)" 1
+```
+Output: `7`
+
+### Unquoted String Literals
+
+A single word with no special characters can be passed without quotes, as long as it is unambiguous. For example:
+
+```
+specs PRINT 'length(hello)' 1
+```
+Output: `5`
+
+```
+$ specs PRINT 'length(hello!)' 1
+Error while parsing command-line arguments:
+Expression in Token PRINT at index 1 with content <length(hello!)>:
+Operator '!' is invalid.
+```
+
+However, **you cannot pass a single-character unquoted argument** because `specs` will interpret it as a field identifier reference (see below). These fail:
+
+```
+specs PRINT "length(x)" 1              # ERROR: field identifier x not defined
+specs PRINT "includes(hello,x)" 1      # ERROR: field identifier x not defined
+```
+
+Always quote single-character arguments:
+
+```
+specs PRINT "length('x')" 1
+```
+Output: `1`
+
+### Field Identifiers
+
+When you have defined a field identifier (e.g., `a:`), you can use it in expressions by name, without the colon:
+
+```
+echo "hello world" | specs a: WORD 1 . PRINT "length(a)" 1
+```
+Output: `5`
+
+```
+echo "5 3" | specs WORD 1 a: WORD 2 b" PRINT "a * b" 1
+```
+Output: `15`
+
+### Configured Literals
+
+Configured literals from your `~/.specs` file (or set with `--set`) are referenced with the `@` prefix:
+
+```
+specs PRINT "@pi" 1
+```
+Output: `3.14159265` (if `pi: 3.14159265` is in your config)
+
+```
+echo 5 | specs W1 r: PRINT "2 * @pi * r" 1
+```
+Output: `31.4159265`
+
+### Special Values
+
+Several special values are available in expressions:
+
+- `@@` — the entire current input record
+- `@!` — the current in-context input record
+- `@+n` / `@-n` — records at offset positions (e.g., `@+1` is the next record)
+- `#n` — counters (e.g., `#0` is counter 0)
+
+```
+specs PRINT "length(@@)"
+```
+Output: (length of the current input record)
+
+```
+echo "hello world" | specs PRINT "word(1)"
+```
+Output: `hello`
+
+### Nested Function Calls
+
+Functions can be nested. The inner function is evaluated first:
+
+```
+specs PRINT "length(word(1))" 1
+```
+Output: (length of the first word)
+
+```
+specs PRINT "substr(@@, 1, length(word(1)))" 1
+```
+Output: (the first word)
+
+### Argument Passing Rules Summary
+
+| Argument Type | Example | Notes |
+|---------------|---------|-------|
+| Number | `sqrt(16)` | No quotes needed |
+| Multi-word string | `length('hello world')` | Quotes required |
+| Single-word string | `length(hello)` | Quotes optional if unambiguous |
+| Single-character string | `length('x')` | Quotes required (else interpreted as field identifier) |
+| Field identifier | `length(a)` | Use the letter only, no colon |
+| Configured literal | `2 * @pi` | Prefix with `@` |
+| Current record | `length(@@)` | Use `@@` for the full record |
+| Nested function | `length(word(1))` | Inner function evaluated first |
+
 ## Numerical and Logical Functions
 
 | Function | Description |
 |----------|-------------|
-| `abs(x)` | Absolute value |
-| `ceil(x)` | Smallest integer ≥ x |
-| `floor(x)` | Largest integer ≤ x |
-| `round(x, d)` | Round x to d decimal places (default: nearest integer) |
-| `sign(x)` | 1 if x > 0, 0 if x = 0, -1 if x < 0 |
-| `sqrt(x)` | Square root (returns NaN for negative x) |
-| `exp(x)` | e^x |
-| `log(x, base)` | Logarithm (default: natural log) |
-| `pow(x, y)` | x raised to the power y |
-| `sin(x)` | Sine (x in radians) |
-| `cos(x)` | Cosine (x in radians) |
-| `tan(x)` | Tangent (x in radians) |
-| `arcsin(x)` | Inverse sine (result in radians) |
-| `arccos(x)` | Inverse cosine (result in radians) |
-| `arctan(x)` | Inverse tangent (result in radians) |
-| `dsin(x)` | Sine (x in degrees) |
-| `dcos(x)` | Cosine (x in degrees) |
-| `dtan(x)` | Tangent (x in degrees) |
-| `arcdsin(x)` | Inverse sine (result in degrees) |
-| `arcdcos(x)` | Inverse cosine (result in degrees) |
-| `arcdtan(x)` | Inverse tangent (result in degrees) |
-| `fact(n)` | n factorial |
-| `combinations(n, k)` | Number of ways to choose k from n |
-| `permutations(n, k)` | Number of ordered ways to choose k from n |
-| `rand(x)` | Random integer 0 ≤ result < x. If x omitted: random float [0, 1) |
-| `not(expr)` | 1 if expr is zero; 0 otherwise |
-| `c2d(x)` | Signed decimal value of binary string x (up to 8 bytes, 2's complement) |
-| `c2u(x)` | Unsigned decimal value of binary string x (up to 8 bytes) |
-| `c2f(x)` | Floating-point value of binary string x |
-| `frombin(x)` | Decimal value of binary string x (little-endian) |
-| `tobin(x)` | Binary (byte) representation of integer x |
-| `tobine(x, n)` | Binary representation of integer x as n-byte string |
-| `fmt(value, format, digits, decimal, separator)` | Format a number. `format`: `f` for fixed, `s` for scientific |
-| `pretty(value, flimit, ilimit, locale)` | Format with thousands separators |
+| `abs(x)` | Absolute value of *x* |
+| `ceil(x)` | Smallest integer ≥ *x* |
+| `floor(x)` | Largest integer ≤ *x* |
+| `round(x, d)` | Round *x* to *d* decimal places (default: nearest integer) |
+| `sign(x)` | 1 if *x* > 0, 0 if *x* = 0, -1 if *x* < 0 |
+| `sqrt(x)` | Square root of *x* (returns NaN for negative *x*) |
+| `exp(x)` | e raised to the power *x* |
+| `log(x, base)` | Logarithm of *x* (default: natural log); optional *base* |
+| `pow(x, y)` | *x* raised to the power *y* |
+| `sin(x)` | Sine of *x* (in radians) |
+| `cos(x)` | Cosine of *x* (in radians) |
+| `tan(x)` | Tangent of *x* (in radians) |
+| `arcsin(x)` | Inverse sine of *x* (result in radians) |
+| `arccos(x)` | Inverse cosine of *x* (result in radians) |
+| `arctan(x)` | Inverse tangent of *x* (result in radians) |
+| `dsin(x)` | Sine of *x* (in degrees) |
+| `dcos(x)` | Cosine of *x* (in degrees) |
+| `dtan(x)` | Tangent of *x* (in degrees) |
+| `arcdsin(x)` | Inverse sine of *x* (result in degrees) |
+| `arcdcos(x)` | Inverse cosine of *x* (result in degrees) |
+| `arcdtan(x)` | Inverse tangent of *x* (result in degrees) |
+| `fact(n)` | *n* factorial. Returns Gamma(*n*+1) if *n* is not a small integer |
+| `combinations(n, k)` | Number of ways to choose *k* items from a set of *n* |
+| `permutations(n, k)` | Number of ordered ways to choose *k* items from a set of *n* |
+| `rand(x)` | Random integer 0 ≤ result < *x*. If *x* omitted: random float [0, 1) |
+| `not(expr)` | 1 if *expr* is zero; 0 otherwise |
+| `c2d(x)` | Signed decimal value of binary string *x* (up to 8 bytes, 2's complement) |
+| `c2u(x)` | Unsigned decimal value of binary string *x* (up to 8 bytes) |
+| `c2f(x)` | Floating-point value of binary string *x* |
+| `frombin(x)` | Decimal value of binary string *x* (little-endian) |
+| `tobin(x)` | Binary (byte) representation of integer *x* |
+| `tobine(x, n)` | Binary representation of integer *x* as *n*-byte string |
+| `fmt(value, format, digits, decimal, separator)` | Format a number (see below) |
+| `pretty(value, flimit, ilimit, locale)` | Format with thousands separators (see below) |
+
+### fmt and pretty
+
+**`fmt(value, format, digits, decimal, separator)`** formats a number with control over the output format:
+
+- *value*: the number to format
+- *format*: `f` for fixed-point, `s` for scientific notation
+- *digits*: total number of digits in the output
+- *decimal*: decimal places (for fixed-point format) or significant digits (for scientific notation)
+- *separator*: character to use as thousands separator
+
+**`pretty(value, flimit, ilimit, locale)`** formats a number with thousands separators:
+
+- *value*: the number to format
+- *flimit*: threshold for applying formatting to floating-point numbers
+- *ilimit*: threshold for applying formatting to integers
+- *locale*: locale string to determine separator characters (e.g., `en_US`, `de_DE`)
 
 ## String Functions
 
 | Function | Description |
 |----------|-------------|
-| `len(s)` or `length(s)` | Length of string |
-| `left(s, n)` | Leftmost n characters (space-padded if shorter) |
-| `right(s, n)` | Rightmost n characters (space-padded if shorter) |
-| `center(s, n)` / `centre(s, n)` | Center n characters (space-padded if shorter) |
-| `substr(s, start, len)` | Substring of s starting at start for len characters |
-| `pos(needle, haystack)` | 1-based position of first occurrence of needle in haystack; haystack defaults to current record |
-| `lastpos(needle, haystack)` | 1-based position of last occurrence of needle; haystack defaults to current record |
-| `includes(haystack, needle1, ...)` | 1 if any needle is a substring of haystack; haystack defaults to current record |
-| `includesall(haystack, needle1, ...)` | 1 if all needles are substrings of haystack |
-| `substitute(haystack, needle, subst, max)` | Replace needle with subst, up to max times (`U` = all) |
-| `reverse(s)` | Reverse the characters in s |
-| `strip(s, option, pad)` | Strip leading/trailing characters. option: `B` (both, default), `L` (leading), `T` (trailing) |
-| `space(s, len, pad)` | Replace internal whitespace with len occurrences of pad |
-| `copies(s, n)` | s repeated n times |
-| `translate(s, tableout, tablein, pad)` | Translate characters in s according to mapping |
-| `abbrev(h, n, l)` | 1 if first l chars of n equal first chars of h |
-| `compare(s1, s2, pad)` | Index of first mismatch, or 0 if equal |
-| `verify(s, ref, option, start)` | Find first character of s not in ref (N) or in ref (M) |
-| `insert(s, target, pos, len, pad)` | Insert s into target at position pos |
-| `overlay(s1, s2, start, len, pad)` | Overlay s1 onto s2 starting at start |
-| `delstr(s, start, len)` | Delete len characters from s starting at start |
-| `justify(s, len, pad)` | Evenly justify words within s to length len |
-| `lvalue(s, sep)` | Left-hand side of `key=value` string (sep defaults to `=`) |
-| `rvalue(s, sep)` | Right-hand side of `key=value` string (sep defaults to `=`) |
-| `xrange(start, end)` | String of all characters from start to end |
-| `x2d(s, len)` | Hex string to decimal (signed if len missing or ≤ 0) |
-| `rmatch(s, regex, flags)` | 1 if regex matches all of s |
-| `rsearch(s, regex, flags)` | 1 if regex matches any substring of s |
-| `rreplace(s, regex, fmt, flags)` | Replace all regex matches in s with fmt |
+| `length(s)` or `length(s)` | Length of string *s* |
+| `left(s, n)` | Leftmost *n* characters of string *s* (space-padded if shorter) |
+| `right(s, n)` | Rightmost *n* characters of string *s* (space-padded if shorter) |
+| `center(s, n)` / `centre(s, n)` | Middle *n* characters of string *s* (space-padded if shorter) |
+| `substr(s, start, len)` | Substring of *s* starting at position *start* for *len* characters |
+| `pos(needle, haystack)` | 1-based position of the first occurrence of *needle* in *haystack*; *haystack* defaults to current record |
+| `lastpos(needle, haystack)` | 1-based position of the last occurrence of *needle*; *haystack* defaults to current record |
+| `includes(haystack, needle1, ...)` | 1 if any *needle* is a substring of *haystack*; *haystack* defaults to current record |
+| `includesall(haystack, needle1, ...)` | 1 if all *needles* are substrings of *haystack* |
+| `substitute(haystack, needle, subst, max)` | Replace occurrences (see below) |
+| `reverse(s)` | Reverse the characters in *s* |
+| `strip(s, option, pad)` | Strip leading/trailing characters (see below) |
+| `space(s, len, pad)` | Replace internal whitespace (see below) |
+| `copies(s, n)` | *s* repeated *n* times |
+| `translate(s, tableout, tablein, pad)` | Translate characters (see below) |
+| `abbrev(h, n, l)` | 1 if first *l* chars of *n* equal first chars of *h* |
+| `compare(s1, s2, pad)` | Index of first mismatch between *s1* and *s2*, or 0 if equal; *pad*: padding character |
+| `verify(s, ref, option, start)` | Find first character of *s* not in *ref* (N) or in *ref* (M); *start*: starting position |
+| `insert(s, target, pos, len, pad)` | Insert string (see below) |
+| `overlay(s1, s2, start, len, pad)` | Overlay string (see below) |
+| `delstr(s, start, len)` | Delete *len* characters from *s* starting at *start* |
+| `justify(s, len, pad)` | Evenly justify words within *s* to length *len* |
+| `lvalue(s, sep)` | Left-hand side of `key=value` string *s* (*sep* defaults to `=`) |
+| `rvalue(s, sep)` | Right-hand side of `key=value` string *s* (*sep* defaults to `=`) |
+| `xrange(start, end)` | String of all characters from *start* to *end* |
+| `x2d(s, len)` | Hex string *s* to decimal (signed if *len* missing or ≤ 0) |
+| `rmatch(s, regex, flags)` | 1 if *regex* matches all of *s* |
+| `rsearch(s, regex, flags)` | 1 if *regex* matches any substring of *s* |
+| `rreplace(s, regex, fmt, flags)` | Replace all *regex* matches in *s* with *fmt* |
 
 ### matchFlags for Regular Expression Functions
 
@@ -1960,70 +2169,152 @@ The optional `flags` argument is a comma-separated list:
 | `sed` | sed formatting for replacement (for `rreplace`) |
 | `no_copy` | Do not copy non-matching sections (for `rreplace`) |
 
+### String Manipulation Functions with Multiple Parameters
+
+**`substitute(haystack, needle, subst, max)`** replaces occurrences of a substring:
+
+- *haystack*: the string to search in
+- *needle*: the substring to find and replace
+- *subst*: the replacement string
+- *max*: maximum number of replacements to make; use `U` to replace all occurrences
+
+**`strip(s, option, pad)`** removes leading and/or trailing characters:
+
+- *s*: the string to strip
+- *option*: `B` (both leading and trailing, default), `L` (leading only), `T` (trailing only)
+- *pad*: the character to strip (default: space)
+
+**`space(s, len, pad)`** normalizes internal whitespace:
+
+- *s*: the string to process
+- *len*: number of occurrences of *pad* to use between words (default: 1)
+- *pad*: the character to use as separator (default: space)
+
+**`translate(s, tableout, tablein, pad)`** translates characters according to a mapping:
+
+- *s*: the string to translate
+- *tableout*: output characters (the translation table)
+- *tablein*: input characters to match (the source table)
+- *pad*: padding character for unmatched positions (default: space)
+
+Characters in *tablein* are replaced with corresponding characters from *tableout*. If *tableout* is shorter than *tablein*, unmatched characters are replaced with *pad*.
+
+**`insert(s, target, pos, len, pad)`** inserts a string into another string:
+
+- *s*: the string to insert
+- *target*: the string to insert into
+- *pos*: position where insertion begins (1-based)
+- *len*: length of the insertion (if *s* is shorter, it is padded with *pad*)
+- *pad*: padding character (default: space)
+
+**`overlay(s1, s2, start, len, pad)`** overlays one string onto another:
+
+- *s1*: the string to overlay
+- *s2*: the base string
+- *start*: starting position in *s2* (1-based)
+- *len*: length of the overlay (if *s1* is shorter, it is padded with *pad*)
+- *pad*: padding character (default: space)
+
 ## REXX-Derived String Functions
+
+REXX is a scripting language that was central to IBM's CMS (Conversational Monitor System) and remains an important part of the CMS experience. CMS Pipelines, the inspiration for specs, included many REXX-derived functions for string manipulation and word/field processing. These functions are provided in specs to maintain compatibility with CMS Pipelines scripts and to leverage the proven utility of REXX's capabilities.
 
 | Function | Description |
 |----------|-------------|
-| `bitand(x, y)` | Bitwise AND of strings x and y |
-| `bitor(x, y)` | Bitwise OR of strings x and y |
-| `bitxor(x, y)` | Bitwise XOR of strings x and y |
-| `find(string, phrase)` | Word number of first occurrence of phrase in string |
-| `index(haystack, needle, start)` | Character position of needle in haystack |
-| `wordpos(phrase, string, start)` | Word number where phrase begins in string |
-| `words(string)` | Number of blank-delimited words in string |
-| `subword(string, start, len)` | Substring starting at word start for len words |
-| `wordindex(string, n)` | Character position of word n |
-| `wordlength(string, n)` | Length of word n |
-| `delword(string, start, len)` | Delete len words starting at word start |
-| `sword(str, n, sep)` | n-th word using first char of sep as separator |
-| `sfield(str, n, sep)` | n-th field using first char of sep as separator |
-| `wordwith(substr)` | First word of current record containing substr |
-| `wordwithidx(substr)` | Index of first word containing substr |
-| `fieldwith(substr)` | First field containing substr |
-| `fieldwithidx(substr)` | Index of first field containing substr |
+| `bitand(x, y)` | Bitwise AND of strings *x* and *y* |
+| `bitor(x, y)` | Bitwise OR of strings *x* and *y* |
+| `bitxor(x, y)` | Bitwise XOR of strings *x* and *y* |
+| `find(string, phrase)` | Word number of first occurrence of *phrase* in *string* |
+| `index(haystack, needle, start)` | Character position of *needle* in *haystack* (optionally starting at *start*) |
+| `wordpos(phrase, string, start)` | Word number where *phrase* begins in *string* (optionally starting at *start*) |
+| `words(string)` | Number of blank-delimited words in *string* |
+| `subword(string, start, len)` | Substring starting at word *start* for *len* words |
+| `wordindex(string, n)` | Character position of word *n* in *string* |
+| `wordlength(string, n)` | Length of word *n* in *string* |
+| `delword(string, start, len)` | Delete *len* words starting at word *start* in *string* |
+| `sword(str, n, sep)` | *n*-th word of *str* using first char of *sep* as separator |
+| `sfield(str, n, sep)` | *n*-th field of *str* using first char of *sep* as separator |
+| `wordwith(substr)` | First word of current record containing *substr* |
+| `wordwithidx(substr)` | Index of first word containing *substr* |
+| `fieldwith(substr)` | First field containing *substr* |
+| `fieldwithidx(substr)` | Index of first field containing *substr* |
 
+\newpage
 ## Record Access Functions
 
 These functions read from the current (or context-affected) input record:
 
 | Function | Description |
 |----------|-------------|
-| `record()` | Entire current input record (context-affected; same as `@!`) |
-| `cfrecord()` | Entire current input record, ignoring context (same as `@@`) |
-| `range(n, m)` | Characters n through m of the current record |
-| `word(n)` | n-th word of the current record |
-| `wordrange(n, m)` | Words n through m |
-| `wordcount(s, p)` | Number of words in s (default: current record) |
-| `wordstart(n)` | Start position of word n |
-| `wordend(n)` | End position of word n |
-| `wordlen(n)` | Length of word n |
-| `field(n)` | n-th field of the current record |
-| `fieldrange(n, m)` | Fields n through m |
-| `fieldcount(s, p)` | Number of fields in s (default: current record) |
-| `fieldindex(n)` | Start position of field n |
-| `fieldend(n)` | End position of field n |
-| `fieldlength(n)` | Length of field n |
+| `record()` | Entire current input record (context-affected) |
+| `cfrecord()` | Entire current input record (ignoring context) |
+| `range(n, m)` | Characters *n* through *m* of the current record |
+| `word(n)` | *n*-th word of the current record |
+| `wordrange(n, m)` | Words *n* through *m* |
+| `wordcount(s, p)` | Number of words in *s* (default: current record); *p*: separator pattern |
+| `wordstart(n)` | Start position of word *n* |
+| `wordend(n)` | End position of word *n* |
+| `wordlength(n)` | Length of word *n* |
+| `field(n)` | *n*-th field of the current record |
+| `fieldrange(n, m)` | Fields *n* through *m* |
+| `fieldcount(s, p)` | Number of fields in *s* (default: current record); *p*: separator pattern |
+| `fieldindex(n)` | Start position of field *n* |
+| `fieldend(n)` | End position of field *n* |
+| `fieldlength(n)` | Length of field *n* |
 | `recno()` | Current record number (number of records read so far) |
 | `number()` | Number of processing cycles completed |
 | `ctxrecno()` | Record number of the context-affected record |
 | `ctxoffset()` | Current context offset (0 if no CONTEXT is active) |
-| `ctxoob(s)` | 1 if s came from out-of-bounds input |
-| `split(sep, hdr, ftr)` | All fields on separate output lines |
-| `splitw(sep, hdr, ftr)` | All words on separate output lines |
-| `splus(s, o, l)` | Substring at offset o from first instance of string s |
-| `wplus(s, o, l)` | Substring at word offset o from first occurrence of word s |
-| `fplus(s, o, l)` | Substring at field offset o from first occurrence of field s |
+| `ctxoob(s)` | 1 if *s* came from out-of-bounds input |
+| `split(sep, hdr, ftr)` | Output fields on separate lines (see below) |
+| `splitw(sep, hdr, ftr)` | Output words on separate lines (see below) |
+| `splus(s, o, l)` | Substring relative to string (see below) |
+| `wplus(s, o, l)` | Substring relative to word (see below) |
+| `fplus(s, o, l)` | Substring relative to field (see below) |
 | `next()` | Current print position (where next output would go) |
-| `rest()` | Number of columns from the current print position to the terminal width (`@cols − next() + 1`) |
+| `rest()` | Columns remaining to terminal width |
+
+\newpage
+### Record Output and Substring Functions
+
+**`split(sep, hdr, ftr)`** outputs all fields on separate lines:
+
+- *sep*: field separator (default: space)
+- *hdr*: header to print before each field (optional)
+- *ftr*: footer to print after each field (optional)
+
+**`splitw(sep, hdr, ftr)`** outputs all words on separate lines:
+
+- *sep*: word separator (default: space)
+- *hdr*: header to print before each word (optional)
+- *ftr*: footer to print after each word (optional)
+
+**`splus(s, o, l)`** extracts a substring at a specified offset from the first occurrence of a string:
+
+- *s*: the string to search for
+- *o*: offset from the start of *s* (can be negative to start before *s*)
+- *l*: length of the substring to extract
+
+**`wplus(s, o, l)`** extracts a substring at a specified word offset from the first occurrence of a word:
+
+- *s*: the word to search for
+- *o*: word offset from *s* (can be negative)
+- *l*: number of words to extract
+
+**`fplus(s, o, l)`** extracts a substring at a specified field offset from the first occurrence of a field:
+
+- *s*: the field to search for
+- *o*: field offset from *s* (can be negative)
+- *l*: number of fields to extract
 
 ## Time Functions
 
 | Function | Description |
 |----------|-------------|
-| `tf2mcs(s, f)` | Parse time string s with format f → microseconds since epoch |
-| `mcs2tf(x, f)` | Format microseconds-since-epoch x with format f → string |
-| `tf2s(s, f)` | Parse time string s with format f → seconds since epoch |
-| `s2tf(x, f)` | Format seconds-since-epoch x with format f → string |
+| `tf2mcs(s, f)` | Parse time string *s* with format *f* → microseconds since epoch |
+| `mcs2tf(x, f)` | Format microseconds-since-epoch *x* with format *f* → string |
+| `tf2s(s, f)` | Parse time string *s* with format *f* → seconds since epoch |
+| `s2tf(x, f)` | Format seconds-since-epoch *x* with format *f* → string |
 
 Time format strings follow strftime conventions. The additional format code `%xf` (where x is 0–6) produces fractional seconds with x digits.
 
@@ -2033,32 +2324,33 @@ echo "2024-01-15 14:32:07" | specs PRINT "tf2mcs(word(1)||' '||word(2),'%Y-%m-%d
 ```
 Output: `1705329127000000`
 
+\newpage
 ## Statistical and Frequency Map Functions {#statistical-and-frequency-map-functions}
 
 These functions work with **field identifiers** to accumulate statistics across records:
 
 | Function | Description |
 |----------|-------------|
-| `present(a)` | 1 if field identifier a is assigned, 0 otherwise |
-| `sum(a)` | Sum of all values assigned to field identifier a |
-| `min(a)` | Minimum value assigned to a |
-| `max(a)` | Maximum value assigned to a |
-| `average(a)` | Arithmetic mean of values assigned to a |
-| `variance(a)` | Variance of values assigned to a |
-| `stddev(a)` | Standard deviation of values assigned to a |
-| `stderrmean(a)` | Standard error of the mean of values assigned to a |
-| `fmap_nelem(a)` | Number of distinct values of a |
-| `fmap_nsamples(a)` | Total number of samples of a |
-| `fmap_common(a)` | Most frequent value of a |
-| `fmap_rare(a)` | Least frequent (but non-zero) value of a |
-| `fmap_count(a, s)` | Number of times value s appeared for a |
-| `fmap_frac(a, s)` | Fraction of samples of a that equal s |
-| `fmap_pct(a, s)` | Percentage of samples of a that equal s |
-| `fmap_sample(a, s)` | Record s as a new sample for a; returns count |
-| `fmap_dump(a, format, sortOrder, showPct)` | Formatted dump of frequency map |
-| `countocc(needle, haystack)` | Times needle appeared in haystack across all calls |
-| `countocc_get(needle)` | Count of needle without a new match attempt |
-| `countocc_dump(format, sortOrder, showPct)` | Dump of countocc frequency map |
+| `present(a)` | 1 if field identifier *a* is assigned, 0 otherwise |
+| `sum(a)` | Sum of all values assigned to field identifier *a* |
+| `min(a)` | Minimum value assigned to *a* |
+| `max(a)` | Maximum value assigned to *a* |
+| `average(a)` | Arithmetic mean of values assigned to *a* |
+| `variance(a)` | Variance of values assigned to *a* |
+| `stddev(a)` | Standard deviation of values assigned to *a* |
+| `stderrmean(a)` | Standard error of the mean of values assigned to *a* |
+| `fmap_nelem(a)` | Number of distinct values of *a* |
+| `fmap_nsamples(a)` | Total number of samples of *a* |
+| `fmap_common(a)` | Most frequent value of *a* |
+| `fmap_rare(a)` | Least frequent (but non-zero) value of *a* |
+| `fmap_count(a, s)` | Number of times value *s* appeared for *a* |
+| `fmap_frac(a, s)` | Fraction of samples of *a* that equal *s* |
+| `fmap_pct(a, s)` | Percentage of samples of *a* that equal *s* |
+| `fmap_sample(a, s)` | Record *s* as a new sample for *a*; returns count |
+| `fmap_dump(a, format, sortOrder, showPct)` | Formatted dump of frequency map for *a*; see parameters below |
+| `countocc(needle, haystack)` | Times *needle* appeared in *haystack* across all calls |
+| `countocc_get(needle)` | Count of *needle* without a new match attempt |
+| `countocc_dump(format, sortOrder, showPct)` | Dump of countocc frequency map; see parameters below |
 
 ### fmap_dump Parameters
 
@@ -2078,8 +2370,8 @@ These functions run a shell command and let you process its standard output, sta
 
 | Function | Description |
 |----------|-------------|
-| `exec(cmd)` | Run shell command c; returns its standard output (one trailing newline stripped) |
-| `exc1(cmd, [lineNo])` | Like `exec`, but returns only the content of output line `lineNo`; `lineNo` must be a positive integer and defaults to 1; empty string if absent |
+| `exec(cmd)` | Run shell command *cmd*; returns its standard output (one trailing newline stripped) |
+| `exc1(cmd, [lineNo])` | Like `exec`, but returns only the content of output line *lineNo*; *lineNo* must be a positive integer and defaults to 1; empty string if absent |
 | `excrc()` | Return code of the last exec/exc1 run; NaN if none has run |
 | `excerr()` | Standard error of the last exec/exc1 run; empty string if none has run |
 
@@ -2121,22 +2413,23 @@ A more efficient version runs the command only once — on the first record — 
 specs -C ls IF "first()" THEN SET "#0:=exc1('ls | wc')" ENDIF "File" 1 w8 NW "is one of the" NW PRINT "#0" NW "files in this directory"
 ```
 
+\newpage
 ## Special Functions
 
 | Function | Description |
 |----------|-------------|
 | `first()` | 1 during the first iteration, 0 otherwise |
 | `eof()` | 1 during the run-out (post-input) cycle, 0 otherwise |
-| `conf(key, default)` | Value of configured literal key; default if missing; NaN if no default given |
-| `defined(key)` | 1 if configured literal key is defined, 0 otherwise |
-| `getenv(name)` | Value of environment variable name; NaN if undefined |
-| `pset(var, value)` | Set persistent variable var to value; returns value |
-| `pget(var, default)` | Get persistent variable var; returns default if not set |
-| `pdefined(var)` | 1 if persistent variable var is defined |
-| `pclear(var)` | Clear persistent variable var; returns its former value |
-| `string(x)` | Force x to be stored as a string |
-| `exact(expr)` | 1 if expr evaluated without rounding, 0 otherwise |
-| `break(a)` | 1 if break level a is established this cycle (see Chapter 11) |
+| `conf(key, default)` | Value of configured literal *key*; *default* if missing; NaN if no *default* given |
+| `defined(key)` | 1 if configured literal *key* is defined, 0 otherwise |
+| `getenv(name)` | Value of environment variable *name*; NaN if undefined |
+| `pset(var, value)` | Set persistent variable *var* to *value*; returns *value* |
+| `pget(var, default)` | Get persistent variable *var*; returns *default* if not set |
+| `pdefined(var)` | 1 if persistent variable *var* is defined |
+| `pclear(var)` | Clear persistent variable *var*; returns its former value |
+| `string(x)` | Force *x* to be stored as a string |
+| `exact(expr)` | 1 if *expr* evaluated without rounding, 0 otherwise |
+| `break(a)` | 1 if break level *a* is established this cycle (see Chapter 11) |
 
 ### Persistent Variables
 
@@ -2144,10 +2437,15 @@ specs -C ls IF "first()" THEN SET "#0:=exc1('ls | wc')" ENDIF "File" 1 w8 NW "is
 
 ```
 # Count how many times you've run a script
-specs PRINT "pset('runs', pget('runs',0)+1)" 1
+specs PRINT "pset(runs, pget(runs,0)+1)" 1
 ```
 
-An abbreviated form: `#varname` is equivalent to `pget('varname')`.
+An abbreviated form: `#varname` is equivalent to `pget('varname')`:
+
+```
+# Count how many times you've run a script
+specs PRINT "pset(runs, #runs+1)" 1
+```
 
 ---
 
@@ -2868,7 +3166,7 @@ def commas(x):
     while x >= 1000:
         rm = str(x % 1000)
         x = x // 1000
-        while len(rm) < 3:
+        while length(rm) < 3:
             rm = "0" + rm
         ret = "," + rm + ret
     if x > 0:
