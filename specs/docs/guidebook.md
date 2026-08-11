@@ -2437,10 +2437,15 @@ specs -C ls IF "first()" THEN SET "#0:=exc1('ls | wc')" ENDIF "File" 1 w8 NW "is
 
 ```
 # Count how many times you've run a script
-specs PRINT "pset('runs', pget('runs',0)+1)" 1
+specs PRINT "pset(runs, pget(runs,0)+1)" 1
 ```
 
-An abbreviated form: `#varname` is equivalent to `pget('varname')`.
+An abbreviated form: `#varname` is equivalent to `pget('varname')`:
+
+```
+# Count how many times you've run a script
+specs PRINT "pset(runs, #runs+1)" 1
+```
 
 ---
 
