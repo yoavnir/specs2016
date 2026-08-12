@@ -1049,6 +1049,7 @@ As with words, the keyword `FIELD` may be abbreviated to any prefix and used in 
 - **Fields**: Separated by *exactly one* separator character. Two consecutive separators produce an empty field between them.
 
 Example with comma as both word and field separator on `hello,,,,there`:
+
 - Word 1 = `hello`, word 2 = `there` (the commas collapse)
 - Field 1 = `hello`, fields 2–4 = `""` (empty), field 5 = `there`
 
@@ -2451,38 +2452,40 @@ specs PRINT "pset(runs, #runs+1)" 1
 
 # Chapter 10: Control Flow  {#chap10}
 
-By default, specs executes all spec units in the specification sequentially for every input record. Control flow lets you make decisions and repeat operations.
+Normally, `specs` executes all *spec units* in the *specification* sequentially for every input record. Control flow lets you make decisions and repeat operations.
 
 ## Conditions
 
 A **condition** is an expression that evaluates to true or false:
+
 - True: any non-zero, non-NaN, non-empty value
 - False: zero, NaN, or empty string
 
 Any ALU expression can be a condition.
 
-## IF / THEN / ELSE / ENDIF
+## IF / THEN / ELSEIF / ELSE / ENDIF
 
 ```
 IF "condition" THEN
-    unit-sequence
+    spec-block
 ELSEIF "condition" THEN
-    unit-sequence
+    spec-block
 ELSE
-    unit-sequence
+    spec-block
 ENDIF
 ```
 
 Rules:
+
 - `THEN` is required after every condition.
 - `ELSEIF` blocks are optional; you can have as many as you like.
-- `ELSE` is optional.
-- `ENDIF` is required. Omitting it may sometimes work, but nested conditionals become ambiguous.
+- The `ELSE` block is optional.
+- `ENDIF` is required, except at the end of the specification, or just prior to the *run-out block*. Otherwise, nested conditionals may become ambiguous.
 
 **Simple example**: Print whether each number is odd or even:
 
 ```
-echo -e "1\n2\n3\n4" | specs a: w1 1 /is/ nextword IF "a%2" THEN /odd/ nextword ELSE /even/ nextword ENDIF
+seq 1 5 | specs a: WORD 1 1 is NEXTWORD IF "a%2" THEN odd NEXTWORD ELSE even NEXTWORD ENDIF
 ```
 Output:
 ```
@@ -2490,37 +2493,51 @@ Output:
 2 is even
 3 is odd
 4 is even
+5 is odd
 ```
-
-**Multi-line in a spec file**:
+\newpage
+**Note:** For ease of reading, most examples in this chapter will be in the form of a *spec file*. Always assume that the spec file is named `example`:
 
 ```
-a: w1 1
-   /is/ nextword
+a: WORD 1         1
+   is             NEXTWORD
    IF "a%2" THEN
-       /odd/ nextword
+      odd         NEXTWORD
    ELSE
-       /even/ nextword
+      even        NEXTWORD
    ENDIF
+   
+$ seq 1 5 | specs -f example
+1 is odd
+2 is even
+3 is odd
+4 is even
+5 is odd
 ```
 
 ## WHILE / DO / DONE
 
 ```
 WHILE "condition" DO
-    unit-sequence
+    spec-block
 DONE
 ```
 
-As long as the condition is true, the unit sequence is repeated. **Warning**: specs has a **while-guard** that aborts after a large number of iterations to prevent accidental infinite loops. Disable it with `--no-while-guard` if you intentionally need a long loop.
+As long as the condition is true, the unit sequence is repeated. 
+
+**Warning**: `specs` has a **while-guard** feature that aborts execution after 5000 iterations to prevent accidental infinite loops. You can disable it with the `--no-while-guard` switch, or set the maximum number of iterations to something else using the `while-guard-limit` *configured literal* if you need a longer loop.
 
 **Example**: Print n asterisks for each input number:
 
 ```
-echo -e "1\n3\n5" | specs a: w1 1 SET "#1:=a" WHILE "#1>0" DO /\*/ n SET "#1-=1" DONE
-```
-Output:
-```
+a: WORD 1  1 
+   SET "#1:=a" 
+   WHILE "#1>0" DO 
+      /*/  NEXT
+      SET "#1-=1" 
+   DONE
+   
+$ echo -e "1\n3\n5" | specs -f example 
 1*
 3***
 5*****
@@ -2538,7 +2555,10 @@ This is useful for skipping records that match a condition:
 
 ```
 # Skip comment lines (lines starting with #)
-specs IF "word(1)=='#'" THEN CONTINUE ENDIF 1-* 1
+   IF "word(1)=='#'" THEN 
+      CONTINUE 
+   ENDIF 
+   1-* 1
 ```
 
 ## ABEND — ABnormal END
@@ -2546,11 +2566,15 @@ specs IF "word(1)=='#'" THEN CONTINUE ENDIF 1-* 1
 `ABEND` halts the entire specs run with an error message sent to stderr. The current output record is *not* written. No further records are processed.
 
 ```
-specs
-   a: 55-57 NW
+a: 55-57    NEXTWORD
    IF "a > 120" THEN
-       ABEND /Age in record exceeds limit/
-   ENDIF
+       ABEND "Age in record exceeds limit"
+
+$ seq 118 122 | specs W1 55 | specs -f example
+118
+119
+120
+ABEND: Age in record exceeds limit
 ```
 
 `ABEND` only makes sense inside a conditional.
@@ -2560,14 +2584,32 @@ specs
 `ASSERT` is like `ABEND` but takes a condition rather than a message. If the condition is false, specs aborts with a message that includes the text of the failed condition:
 
 ```
-specs
-   a: 55-57 NW
+a: 55-57    NEXTWORD
    ASSERT "a <= 120"
+
+$ seq 118 122 | specs W1 55 | specs -f example
+118
+119
+120
+ASSERTION failed: a <= 120
 ```
 
-If `a` is 150, specs outputs: `Assertion failed: a <= 120` and aborts.
-
 Use `ASSERT` for sanity checks that should always be true. Use `ABEND` for conditions you want to handle with a specific error message.
+
+**Note:** In both of the above examples, the value **121** triggered the `a > 120` condition or the failure of the `a <= 120` assertion. The reason we never see that value printed is because the abnormal end of `specs` left that last output line unprinted. To demonstrate this, we'll add a `WRITE` keyword that flushes that buffer. See [Chapter 12](#chap12).
+
+```
+a: 55-57    NEXTWORD
+   WRITE
+   ASSERT "a <= 120"
+
+$ seq 118 122 | specs W1 55 | specs -f example
+118
+119
+120
+121
+ASSERTION failed: a <= 120
+```
 
 ## SKIP-WHILE and SKIP-UNTIL
 
@@ -2583,9 +2625,9 @@ They work like `CONTINUE` within an implicit `IF`, but they "turn off" after the
 **Example**: Print all records from the first one whose date is after July 1st, 2020:
 
 ```
-a: w1 .        # date in yyyymmdd format
-SKIP-WHILE "a < 20200701"
-1-* 1
+   WORD 1   a:        # date in yyyymmdd format
+   SKIP-WHILE "a < 20200701"
+   1-*      1
 ```
 
 These spec units usually make sense at the beginning of a specification.
@@ -2903,6 +2945,7 @@ WORD:store
 ### Optional Separator and OF Clause
 
 Both `SPLITW` and `SPLITF` accept:
+
 - `WS char` or `FS char` — use a specific separator character
 - `OF range` — split only the specified portion of the record
 
@@ -2932,6 +2975,7 @@ specs
 ```
 
 Key notes:
+
 - The second reading station lags one record behind the primary stream.
 - Accessing the second reading station forces a run-out cycle (same as using `eof()`).
 - `READ` and `READSTOP` must not be used during secondary reading.
@@ -2977,6 +3021,7 @@ specs -o main.txt --os2 errors.txt
 ## The Problem
 
 Sometimes you need to look at records other than the current one. For example:
+
 - Detect a change between adjacent records (difference between consecutive values)
 - Print a record together with its predecessor and successor
 - Process a multi-record "block" as a unit
@@ -3100,6 +3145,7 @@ specs CONTEXT 2 PRINT "ctxoob()" 1
 On the last two records of a three-record input, this outputs `0`, `0`, `1` (wait — actually on the third record `CONTEXT 2` would look two ahead which is past the end, so `ctxoob()` returns 1).
 
 **Important**: The OOB flag is preserved when you use the OOB record directly in input parts or expressions. It is **not** preserved after:
+
 - Assignment into a numbered counter (`SET "#n:=record()"`)
 - Values that pass through an output-producing spec unit
 
@@ -3108,6 +3154,7 @@ Query OOB status as close as possible to where the OOB record is read.
 ## How Rolling Context Works
 
 specs determines the maximum forward and backward context offsets at compile time. It maintains a **sliding window** of records:
+
 - A **forward buffer** of up to the maximum forward offset
 - A **backward buffer** of up to the maximum backward offset
 
@@ -3144,6 +3191,7 @@ specs: Using a 3-record rolling context: 2 records forward and 1 records backwar
 specs has a rich library of built-in functions, but sometimes you need functionality that isn't there. Python functions let you add arbitrary functions by writing them in Python.
 
 Write a Python function when:
+
 - You need an algorithm that's easier to express in Python (complex string processing, external libraries, stateful computations)
 - You want to use Python's standard library (`re`, `math`, `datetime`, etc.)
 - You need to maintain state across records that's more complex than a counter
@@ -3282,6 +3330,7 @@ specs tracks whether numerical values are **exact** (no rounding has occurred) o
 ### Return Exactness
 
 By default:
+
 - Integer return values are **exact**
 - String return values are **exact**
 - Float return values are **inexact**
@@ -3572,12 +3621,14 @@ Is the value used across many different specs?
 ## Should I Write a Python Function?
 
 Write a Python function when:
+
 - You need an algorithm that's complex to express in the ALU (nested loops, data structures, recursion)
 - You want to use a Python library (`re`, `requests`, `json`, `csv`, etc.)
 - You need stateful computation more complex than a counter (dict accumulation, complex objects)
 - You want reusable code with Python's testing tools
 
 Use a built-in function or the ALU when:
+
 - The operation is string manipulation, arithmetic, or time conversion
 - Performance is critical (built-in functions are faster than Python calls)
 - The Python runtime may not be available in the deployment environment
@@ -3585,6 +3636,7 @@ Use a built-in function or the ALU when:
 ## Should I Use eof() or the EOF Keyword?
 
 Both trigger the run-out cycle. Choose based on readability:
+
 - `EOF` keyword: When the run-out code is clearly separate from per-record code (especially in spec files where indentation helps)
 - `eof()` in an `IF`: When the run-out logic is interleaved with per-record logic or when a single conditional covers both
 
@@ -3603,12 +3655,14 @@ Both trigger the run-out cycle. Choose based on readability:
 **Deprecated** — threaded mode may be removed in a future release. Avoid relying on it in new work.
 
 Use `--threaded` when:
+
 - Processing large files (millions of records)
 - *Processing* is the bottleneck (CPU-intensive specifications, complex ALU expressions), so that reads and writes can proceed while the processor works
 
 Threaded mode will **not** help when the I/O itself is the bottleneck (slow disks, network filesystems). In that case the processor is merely waiting for data, and giving the reader and writer their own threads gives it nothing extra to do. Most practical specifications fall into exactly this category — they are I/O-bound rather than CPU-bound — which is why threaded mode is deprecated and may be removed in a future release.
 
 Do NOT use `--threaded` with:
+
 - Rolling context (`CONTEXT`)
 - Multiple input streams
 
