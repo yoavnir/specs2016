@@ -2359,11 +2359,27 @@ These functions work with **field identifiers** to accumulate statistics across 
 - **sortOrder**: `s`/`sa` (alphabetical asc, default), `sd` (alphabetical desc), `c`/`ca` (count asc), `cd` (count desc)
 - **showPct**: boolean — if true, adds a percentage column
 
-Example — word frequency counter:
+Example — distribution of the count of distinct prime factors in natural numbers up to 210:
+```
+$ seq 210 | specs print "distinct_prime_factors(word(1))" a: EOF PRINT "fmap_dump(a,lin,sa,1)"
++---+-----+--------+
+| 0 |   1 |  0.48% |
+| 1 |  60 | 28.57% |
+| 2 | 116 | 55.24% |
+| 3 |  32 | 15.24% |
+| 4 |   1 |  0.48% |
++---+-----+--------+
+```
+Notes:
 
+- 210 is the smallest number with 4 distinct prime factors: `210==2*3*5*7`
+- The `distinct_prime_factors` is an [example](#dpf) in [Chapter 14](#chap14).
+
+Example — the sum of the numbers from 1 to 10
 ```
-cat file.txt | specs a: w1 . EOF PRINT "fmap_dump(a,'csv','cd',1)" 1
+seq 10 | specs w1 a: EOF PRINT "sum(a)"
 ```
+Output: `55`
 
 ## Shell Command Functions
 
@@ -2642,15 +2658,7 @@ Each iteration of specs processes one input record. The spec units run, output i
 
 ## Run-In: The First Iteration
 
-The first iteration is called the **run-in** cycle. You can detect it with the `first()` function:
-
-```
-IF "first()" THEN
-    # initialization
-ENDIF
-```
-
-Useful for setting up counters or recording the first record's values:
+The first iteration is called the **run-in** cycle. You can specify actions for the *run-in cycle* using the `first()` function. This is useful for setting up counters or recording the first record's values:
 
 ```
 # Print only records that start with the same word as the first record
@@ -2666,7 +2674,7 @@ ENDIF
 
 The **run-out** cycle runs after the last input record is exhausted. It is used for summaries, totals, and final reports. There are two ways to trigger it.
 
-### The `eof()` Function — Forced Run-Out
+### The `eof()` Function — Forced Run-Out Cycle
 
 When specs encounters an `eof()` function call anywhere in the specification, it performs a *forced* run-out cycle — an extra iteration after the last record is processed. This cycle has no input record (the record is empty), and `eof()` returns 1.
 
@@ -2701,39 +2709,67 @@ Given input `1`, `2`, `3`, `4`, output is:
 Total: 10
 ```
 
-### When to Use `eof()` vs. `EOF`
+### `first()` vs `eof()` vs. `EOF`
 
-Both accomplish the same thing. Style preference:
+Both `eof()` and `EOF` accomplish similar things: The difference is that when using `eof()`, the other *spec units* in the normal cycle also run.
 
 - Use `EOF` when the run-out logic is clearly separated from the per-record logic — it reads cleanly in a spec file.
 - Use `eof()` inside `IF` when the logic is interleaved with per-record processing.
 
-## PRINTONLY and KEEP
-
-`PRINTONLY` (a **MainOption**) suppresses per-record output unless a specified break level is established. It is followed by either:
-
-- A **field identifier** (case matters) — records are suppressed until that break level is established (see Control Breaks below)
-- The keyword **`EOF`** — records are suppressed until the input is exhausted (i.e., only the run-out output is printed)
-
+For comparison:
 ```
-PRINTONLY EOF
-# ... per-record spec units (all output suppressed) ...
-EOF
-   # ... summary output (printed) ...
-```
+$ seq 3 | specs IF "first()" THEN 1st ENDIF "cycle" NW a: W1 IF "eof()" THEN "?sum(a)"
+1st cycle 1
+cycle 2
+cycle 3
+cycle 6
 
-`KEEP` (always following `PRINTONLY`) prevents the output buffer from being cleared between non-printed records. This allows output from multiple records to accumulate into a single output record before the break level is established.
+$ seq 3 | specs IF "first()" THEN 1st ENDIF "cycle" NW a: W1 EOF "?sum(a)"
+1st cycle 1
+cycle 2
+cycle 3
+6
+```
+So,
+
+- A *run-in cycle* with `first()` is a normal cycle with an input record. If you want to print headers, use `WRITE` to place them on a different line from the one with the output associated with the first input record.
+- A *run-out cycle* with `eof()` forces an extra cycle, with no input record. Other *spec units* **will** run.
+- A *run-out cycle* with `EOF` runs only a truncated cycle with the *spec units* that follow the `EOF` keyword.
 
 ## Control Breaks
 
-A **control break** occurs when a tracked field identifier changes value from one record to the next. This is a pattern common in report generation — printing a header whenever a category changes.
+A **control break** occurs when a tracked *field identifier* changes value from one record to the next. This is a pattern common in report generation — printing a header whenever a category changes, and suppressing repeated values.
 
-### Setting Up a Break
+A control break is conceptually similar to the run-out cycle triggered by `EOF`: both let you set aside a group of spec units that only run under a special condition, rather than on every record. Where `EOF` triggers once, when input is exhausted, a control break can trigger on *any* record, whenever a chosen field identifier's value changes.
 
-Use a field identifier with a `BREAK` statement:
+### The `BREAK` Keyword
+
+Consider this CSV file of personnel records (department, first name, last name), `employees.csv`:
+```
++-------------------------+
+| Payroll,Eddy,Eck        |
+| Payroll,Janel,Polen     |
+| Finance,Leonard,Cockett |
+| Finance,Dorie,Lugo      |
+| Finance,Wiley,Cheung    |
+| R&D,Jamaal,Mcgillis     |
+| R&D,Jonna,Scheffer      |
+| Sales,Kristopher,Lind   |
+| Sales,Margret,Picone    |
++-------------------------+
+```
+
+Suppose we want to print this out, but suppress repetition of the department field. We track the department in a field identifier, and place a `BREAK` statement in front of the spec units that should run only when that field identifier's value has just changed:
 
 ```
-specs
+    IF "first()" THEN
+        Dept          1
+        "Last, first" 10
+        WRITE
+        "======="           1
+        "=================" 10
+        WRITE
+    ENDIF
     FIELDSEPARATOR ,
     c: FIELD 1   .
        FIELD 3  10
@@ -2743,28 +2779,34 @@ specs
         ID c 1
 ```
 
-Here, `c` is set to the first field (department name) of each CSV record. When `c` changes, the break is triggered, and `ID c 1` prints the department name. When `c` stays the same, the department name is suppressed.
+Here, `c` is set to the first field (department name) of each CSV record. Spec units after `BREAK c` — in this case, `ID c 1`, which prints the department name — only run on records where `c` has just changed from the previous record. For this to work, the input needs to be sorted. `specs` processes records one at a time, so it cannot sort on its own.
 
-Result from a personnel CSV (department, first, last):
+Result:
 ```
+Dept     Last, first
+=======  =================
 Payroll  Eck, Eddy
          Polen, Janel
 Finance  Cockett, Leonard
          Lugo, Dorie
-...
+         Cheung, Wiley
+R&D      Mcgillis, Jamaal
+         Scheffer, Jonna
+Sales    Lind, Kristopher
+         Picone, Margret
 ```
 
-### How Break Levels Work
+## Break Levels
 
-When the value of a field identifier changes, the **break level** is set to that identifier. The break level and all identifiers alphabetically lower than it are said to be **established**.
+When the value of a field identifier changes from one record to the next, the **break level** is **set** to that identifier. In the example above, when the *specification* encountered a new department name, *break level* `c` was set. That identifier, along with all identifiers alphabetically lower than it, are said to be **established** for the current record.
 
-For example: if field identifiers `a`, `b`, and `c` are tracked, and `b` changes, then break levels `a` and `b` are established, but `c` is not.
+For example: if field identifiers `a`, `b`, and `c` are all tracked (each with its own assignment earlier in the spec), and `b` changes value while `a` does not, then break levels `a` and `b` are established, but `c` is not. Capital letters are considered higher than lower-case letters when comparing identifiers.
 
-Spec units following a `BREAK x` statement execute only when break level x or higher is established.
+Spec units following a `BREAK x` statement execute only when break level `x` is established for the current record. Since establishment cascades downward, `x` is established either when `x` itself just changed, or when some alphabetically higher tracked identifier just changed (which establishes `x` along with it). `x` is *not* established merely because some lower identifier changed. This lets you nest breaks: a `BREAK a` group runs on every break, however minor, since some identifier changes whenever `a` is established; a `BREAK c` group runs only on the less frequent, more specific occasions when `c` itself changes.
 
 ### The `break()` Function
 
-The `break(a)` function returns 1 if break level `a` is established, and 0 otherwise. It can be used in `IF` conditions for more complex break handling:
+The `break(a)` function returns 1 if break level `a` is established for the current record, and 0 otherwise. Unlike `BREAK`, which applies to every spec unit that follows it, `break()` is a pseudo-function you can use inside an `IF` condition, so it can be combined with other logic. (It is called a pseudo-function because its only allowed argument is a field identifier.)
 
 ```
 specs
@@ -2788,7 +2830,153 @@ Payroll Department:
          Polen, Janel
 Finance Department:
          Cockett, Leonard
-...
+         Lugo, Dorie
+         Cheung, Wiley
+R&D Department:
+         Mcgillis, Jamaal
+         Scheffer, Jonna
+Sales Department:
+         Lind, Kristopher
+         Picone, Margret
+```
+
+## PRINTONLY and KEEP
+
+Now that break levels are understood, we can use them to control whether a record is printed at all, not just which spec units run.
+
+`PRINTONLY` (a **MainOption**) suppresses per-record output unless a specified break level is established. It is followed by either:
+
+- A **field identifier** (case matters) — records are suppressed until that break level is established (as described above under Break Levels)
+- The keyword **`EOF`** — records are suppressed until the input is exhausted (i.e., only the run-out output is printed)
+
+```
+PRINTONLY EOF
+# ... per-record spec units (all output suppressed) ...
+EOF
+   # ... summary output (printed) ...
+```
+
+`KEEP` (always following `PRINTONLY`) prevents the output buffer from being cleared between non-printed records. This allows output from multiple records to accumulate into a single output record before the break level is established, instead of being discarded record by record.
+
+### PRINTONLY Without KEEP — Picking One Record per Group
+
+Without `KEEP`, a suppressed record's output is simply thrown away before the next record is read. This is useful when you only care about *one* record per group and want to discard the rest — for example, printing only the first employee listed for each department (imagine the data is sorted so that the department head is listed first):
+
+```
+PRINTONLY c
+FIELDSEPARATOR ,
+c: FIELD 1   1
+   FIELD 3  10
+   /,/      NEXT
+   FIELD 2  NEXTWORD
+```
+
+Since `c` (the department) is tracked automatically as soon as it's assigned, no explicit `BREAK` is needed: `PRINTONLY c` prints a record only when break level `c` is established — that is, only on the first record of each new department. Every other record in that department is fully suppressed and discarded, buffer and all, because there is no `KEEP`.
+
+Given the same personnel CSV from earlier, sorted by department, the output is:
+```
+Payroll  Eck, Eddy
+Finance  Cockett, Leonard
+R&D      Mcgillis, Jamaal
+Sales    Lind, Kristopher
+```
+
+Only the department's first row survives; the rest never produce output at all.
+
+### PRINTONLY with KEEP — Accumulating Records into One Line
+
+With `KEEP`, the output buffer is *not* cleared when a record is suppressed, so spec units in the next cycle keep writing into the same buffer, picking up right where the previous (suppressed) record left off. This lets you build up a single output line piece by piece across many records, and only flush it once, when a record finally isn't suppressed.
+
+Combined with `PRINTONLY EOF`, this lets you accumulate something from every input record and print it as a single line at the very end:
+
+```
+PRINTONLY EOF
+KEEP
+FIELDSEPARATOR ,
+a: FIELD 3    NEXTWORD
+EOF
+   /(end)/ NEXTWORD
+```
+
+Every record's last name (`FIELD 3`) is placed with `NEXTWORD`, right after whatever is already in the buffer. Because of `KEEP`, none of that is discarded between records — it just keeps growing. Only at `EOF`, when the record is no longer suppressed, does the accumulated line finally get written, with `(end)` tacked on:
+
+```
+Eck Polen Cockett Lugo Cheung Mcgillis Scheffer Lind Picone (end)
+```
+\newpage
+Compare this with the same specification *without* `KEEP`:
+
+```
+PRINTONLY EOF
+FIELDSEPARATOR ,
+a: FIELD 3    NEXTWORD
+EOF
+   /(end)/ NEXTWORD
+```
+
+Now every suppressed record's contribution to the buffer is discarded before the next record is read, so by the time `EOF` runs, all that's left is whatever the `EOF` spec units themselves produced:
+
+```
+(end)
+```
+
+This contrast is the key reason `KEEP` exists: use it whenever the *point* of `PRINTONLY` is to gather output across records rather than to simply pick which one record gets to print.
+
+A numerical example:
+```
+$ seq 10 | specs PRINTONLY EOF a: WORD 1 EOF "?sum(a)"
+55
+
+$ seq 10 | specs PRINTONLY EOF KEEP a: WORD 1 EOF "?sum(a)"
+1 2 3 4 5 6 7 8 9 10 55
+```
+Notes:
+
+- The `a: WORD 1` *data field* has an implied `NEXTWORD`
+- `a` is counted towards the `sum` function even when no break is established.
+
+### Advanced Example
+
+**Question:** Can you figure out why the following specification is producing this output?
+```
+PRINTONLY a KEEP 
+a: PRINT "floor(sqrt(word(1)))"
+
+$ seq 81 | specs -f example
+1
+1 1 2
+2 2 2 2 3
+3 3 3 3 3 3 4
+4 4 4 4 4 4 4 4 5
+5 5 5 5 5 5 5 5 5 5 6
+6 6 6 6 6 6 6 6 6 6 6 6 7
+7 7 7 7 7 7 7 7 7 7 7 7 7 7 8
+8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9
+```
+\newpage
+Compare and contrast with this version, that is a little nicer, but more complex:
+```
+   IF "first()" THEN
+      SET "#0:=''"
+   ENDIF
+   PRINT "floor(sqrt(word(1)))" a: 
+   IF "break(a)" THEN 
+      PRINT "#0"      1 
+      SET "#0:=a" 
+   ELSE 
+      SET "#0:=#0||' '||a"
+
+$ seq 81 | specs -f example
+
+1 1 1
+2 2 2 2 2
+3 3 3 3 3 3 3
+4 4 4 4 4 4 4 4 4
+5 5 5 5 5 5 5 5 5 5 5
+6 6 6 6 6 6 6 6 6 6 6 6 6
+7 7 7 7 7 7 7 7 7 7 7 7 7 7 7
+8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8
+9
 ```
 
 ---
@@ -3228,6 +3416,27 @@ Place this in `$HOME/specs/localfuncs.py`. Now use it in specs:
 echo "1398234" | specs print "commas(word(1))" 1.12 right
 ```
 Output: `   1,398,234`
+
+## A more elaborate example {#dpf}
+
+Given an integer n, how many distinct prime factors does it have?  While `specs` contains many built-in functions, it doesn't cover all needs, so if you happen to need the number of distinct prime factors, here's one possible implementations
+```
+def distinct_prime_factors(n):
+    '''Return the number of distinct prime factors of n'''
+    n = int(n)                  # Sanitize input
+    factor_count = 0            # initialization
+    d = 2                       # smallest prime
+    include_d = False           # Do we count d?
+    while d <= n:
+        while n % d == 0:       
+            include_d = True
+            n //= d             # divide until d is no longer a factor
+        if include_d:
+            factor_count += 1   # Count each factor only once
+        d += 1                  # really only want prime d, but this works
+        include_d = False
+    return factor_count
+```
 
 ## Importing Python Modules
 
