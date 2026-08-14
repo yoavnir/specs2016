@@ -2262,8 +2262,8 @@ These functions read from the current (or context-affected) input record:
 | `fieldindex(n)` | Start position of field *n* |
 | `fieldend(n)` | End position of field *n* |
 | `fieldlength(n)` | Length of field *n* |
-| `recno()` | Current record number (number of records read so far) |
-| `number()` | Number of processing cycles completed |
+| `recno()` | Current record number (how many read so far) |
+| `number()` | Number of *processing cycle* - `1` when `first()` |
 | `ctxrecno()` | Record number of the context-affected record |
 | `ctxoffset()` | Current context offset (0 if no CONTEXT is active) |
 | `ctxoob(s)` | 1 if *s* came from out-of-bounds input |
@@ -2274,8 +2274,9 @@ These functions read from the current (or context-affected) input record:
 | `fplus(s, o, l)` | Substring relative to field (see below) |
 | `next()` | Current print position (where next output would go) |
 | `rest()` | Columns remaining to terminal width |
-
+**Note:** Despite the similarity in names, `number()` and `recno()` are not synonyms the way that the `NUMBER` and `RECNO` input sources are. `number()` counts cycles, while `recno()` counts input records. As shown in [Chapter 12](#chap12), a cycle can read more than one record.
 \newpage
+
 ### Record Output and Substring Functions
 
 **`split(sep, hdr, ftr)`** outputs all fields on separate lines:
@@ -2328,7 +2329,7 @@ Output: `1705329127000000`
 \newpage
 ## Statistical and Frequency Map Functions {#statistical-and-frequency-map-functions}
 
-These functions work with **field identifiers** to accumulate statistics across records:
+These pseudo-functions work with **field identifiers** to accumulate statistics across records. They are called pseudo-functions because the only valid argument is a field identifier. The last three are not pseudo-functions. Instead, they work with a special needle-counting map:
 
 | Function | Description |
 |----------|-------------|
@@ -2347,7 +2348,7 @@ These functions work with **field identifiers** to accumulate statistics across 
 | `fmap_count(a, s)` | Number of times value *s* appeared for *a* |
 | `fmap_frac(a, s)` | Fraction of samples of *a* that equal *s* |
 | `fmap_pct(a, s)` | Percentage of samples of *a* that equal *s* |
-| `fmap_sample(a, s)` | Record *s* as a new sample for *a*; returns count |
+| `fmap_sample(a, s)` | Record *s* as a new sample for *a*, without setting *a*; returns count |
 | `fmap_dump(a, format, sortOrder, showPct)` | Formatted dump of frequency map for *a*; see parameters below |
 | `countocc(needle, haystack)` | Times *needle* appeared in *haystack* across all calls |
 | `countocc_get(needle)` | Count of *needle* without a new match attempt |
@@ -2355,9 +2356,12 @@ These functions work with **field identifiers** to accumulate statistics across 
 
 ### fmap_dump Parameters
 
+The below arguments apply to the `fmap_cump` and the `countocc_dump` functions:
+
 - **format**: `txt`/`0`/empty (default), `lin` (boxed), an integer (fixed width), `csv`, `json`
 - **sortOrder**: `s`/`sa` (alphabetical asc, default), `sd` (alphabetical desc), `c`/`ca` (count asc), `cd` (count desc)
 - **showPct**: boolean — if true, adds a percentage column
+\newpage
 
 Example — distribution of the count of distinct prime factors in natural numbers up to 210:
 ```
@@ -2654,11 +2658,11 @@ These spec units usually make sense at the beginning of a specification.
 
 ## The Normal Cycle
 
-Each iteration of specs processes one input record. The spec units run, output is produced, and the next record is read. This continues until input is exhausted.
+Each iteration of `specs` processes one input record. The *spec units* run, output is produced, and the next record is read. This continues until input is exhausted.
 
 ## Run-In: The First Iteration
 
-The first iteration is called the **run-in** cycle. You can specify actions for the *run-in cycle* using the `first()` function. This is useful for setting up counters or recording the first record's values:
+The first iteration is called the **run-in cycle**. You can specify actions for the *run-in cycle* using the `first()` function. This is useful for setting up counters, printing headers, or recording the first record's values:
 
 ```
 # Print only records that start with the same word as the first record
@@ -2932,7 +2936,7 @@ $ seq 10 | specs PRINTONLY EOF KEEP a: WORD 1 EOF "?sum(a)"
 ```
 Notes:
 
-- The `a: WORD 1` *data field* has an implied `NEXTWORD`
+- The `a: WORD 1` *data field* has an implied `NEXTWORD` *output placement*.
 - `a` is counted towards the `sum` function even when no break is established.
 
 ### An Advanced Example
