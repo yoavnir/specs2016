@@ -2903,7 +2903,7 @@ Every record's last name (`FIELD 3`) is placed with `NEXTWORD`, right after what
 ```
 Eck Polen Cockett Lugo Cheung Mcgillis Scheffer Lind Picone (end)
 ```
-\newpage
+
 Compare this with the same specification *without* `KEEP`:
 
 ```
@@ -2922,7 +2922,7 @@ Now every suppressed record's contribution to the buffer is discarded before the
 
 This contrast is the key reason `KEEP` exists: use it whenever the *point* of `PRINTONLY` is to gather output across records rather than to simply pick which one record gets to print.
 
-A numerical example:
+### A Numerical Example
 ```
 $ seq 10 | specs PRINTONLY EOF a: WORD 1 EOF "?sum(a)"
 55
@@ -2935,7 +2935,7 @@ Notes:
 - The `a: WORD 1` *data field* has an implied `NEXTWORD`
 - `a` is counted towards the `sum` function even when no break is established.
 
-### Advanced Example
+### An Advanced Example
 
 **Question:** Can you figure out why the following specification is producing this output?
 ```
