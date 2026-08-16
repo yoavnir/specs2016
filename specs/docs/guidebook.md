@@ -149,6 +149,24 @@ You can give **specs** its specification in two places: either as arguments on t
 
 You will learn all three. A quick decision guide is in Appendix A; details are in Chapters 3, 4, and 5.
 
+## A Note About Examples
+
+As stated above, you can run **specs** with a *specification* on the command line, or place the *specification* in a file. With a file, you get indentation and comments for better readability. For the readability of this guidebook, some of the examples are given as command line, some as a file, and some with a kind of mixture that is not possible. See the following example copied from [Chapter 12](#chap12):
+```
+specs --inCmd "ls -l"
+    /Filename:/ 1
+    W-1         NW   # Last word in "ls -l" output is file name
+    WRITE            # Skip to next line
+    /type:/ 1
+    IF "range(1,1)=='d'" THEN
+        /directory/ nw
+    ELSE             # if we wanted to be fancy, we'd add an ELSEIF for 'l' and /link/
+        /file/ nw
+    ENDIF
+```
+
+We have the **specs** command, followed by the command flag and the `ls -l` command and no `--specFile` switch, so this *specification* is given as arguments on the command line. And yet we show it as multi-line and with indentation and comments. This is done for readability.
+
 ---
 
 # Chapter 2: Basic Specifications - Data Fields
@@ -1978,7 +1996,7 @@ Expression in Token PRINT at index 1 with content <length(hello!)>:
 Operator '!' is invalid.
 ```
 
-However, **you cannot pass a single-character unquoted argument** because `specs` will interpret it as a field identifier reference (see below). These fail:
+However, **you cannot pass a single-character unquoted argument** because **specs** will interpret it as a field identifier reference (see below). These fail:
 
 ```
 specs PRINT "length(x)" 1              # ERROR: field identifier x not defined
@@ -2472,7 +2490,7 @@ specs PRINT "pset(runs, #runs+1)" 1
 
 # Chapter 10: Control Flow  {#chap10}
 
-Normally, `specs` executes all *spec units* in the *specification* sequentially for every input record. Control flow lets you make decisions and repeat operations.
+Normally, **specs** executes all *spec units* in the *specification* sequentially for every input record. Control flow lets you make decisions and repeat operations.
 
 ## Conditions
 
@@ -2545,7 +2563,7 @@ DONE
 
 As long as the condition is true, the unit sequence is repeated. 
 
-**Warning**: `specs` has a **while-guard** feature that aborts execution after 5000 iterations to prevent accidental infinite loops. You can disable it with the `--no-while-guard` switch, or set the maximum number of iterations to something else using the `while-guard-limit` *configured literal* if you need a longer loop.
+**Warning**: **specs** has a **while-guard** feature that aborts execution after 5000 iterations to prevent accidental infinite loops. You can disable it with the `--no-while-guard` switch, or set the maximum number of iterations to something else using the `while-guard-limit` *configured literal* if you need a longer loop.
 
 **Example**: Print n asterisks for each input number:
 
@@ -2616,7 +2634,7 @@ ASSERTION failed: a <= 120
 
 Use `ASSERT` for sanity checks that should always be true. Use `ABEND` for conditions you want to handle with a specific error message.
 
-**Note:** In both of the above examples, the value **121** triggered the `a > 120` condition or the failure of the `a <= 120` assertion. The reason we never see that value printed is because the abnormal end of `specs` left that last output line unprinted. To demonstrate this, we'll add a `WRITE` keyword that flushes that buffer. See [Chapter 12](#chap12).
+**Note:** In both of the above examples, the value **121** triggered the `a > 120` condition or the failure of the `a <= 120` assertion. The reason we never see that value printed is because the abnormal end of **specs** left that last output line unprinted. To demonstrate this, we'll add a `WRITE` keyword that flushes that buffer. See [Chapter 12](#chap12).
 
 ```
 a: 55-57    NEXTWORD
@@ -2658,7 +2676,7 @@ These spec units usually make sense at the beginning of a specification.
 
 ## The Normal Cycle
 
-Each iteration of `specs` processes one input record. The *spec units* run, output is produced, and the next record is read. This continues until input is exhausted.
+Each iteration of **specs** processes one input record. The *spec units* run, output is produced, and the next record is read. This continues until input is exhausted.
 
 ## Run-In: The First Iteration
 
@@ -2783,7 +2801,7 @@ Suppose we want to print this out, but suppress repetition of the department fie
         ID c 1
 ```
 
-Here, `c` is set to the first field (department name) of each CSV record. Spec units after `BREAK c` — in this case, `ID c 1`, which prints the department name — only run on records where `c` has just changed from the previous record. For this to work, the input needs to be sorted. `specs` processes records one at a time, so it cannot sort on its own.
+Here, `c` is set to the first field (department name) of each CSV record. Spec units after `BREAK c` — in this case, `ID c 1`, which prints the department name — only run on records where `c` has just changed from the previous record. For this to work, the input needs to be sorted. **specs** processes records one at a time, so it cannot sort on its own.
 
 Result:
 ```
@@ -2996,12 +3014,12 @@ Use the `WRITE` spec unit to emit the current output record and start a fresh on
 ```
 specs -C "ls -l"
     /Filename:/ 1
-    W-1         NW
-    WRITE
+    W-1         NW   # Last word in "ls -l" output is file name
+    WRITE            # Skip to next line
     /type:/ 1
     IF "range(1,1)=='d'" THEN
         /directory/ nw
-    ELSE
+    ELSE             # if we wanted to be fancy, we'd add an ELSEIF for 'l' and /link/
         /file/ nw
     ENDIF
 ```
@@ -3194,13 +3212,13 @@ The `--is2` through `--is8` switches assign additional input files. At each cycl
 specs -i file1.txt --is2 file2.txt WORD 1 1 WORD 2 NW SELECT 2 WORD 2 NW
 ```
 
-This combines the second column of record *n* from `file1.txt` with the second column of record *n* from `file2.txt`, for each *n*, into a three-column output. The two streams are paired only by their position within the cycle — `specs` does not match records by comparing field values the way a database join would; it is up to you to ensure that matching records at the same offset from different streams makes sense.
+This combines the second column of record *n* from `file1.txt` with the second column of record *n* from `file2.txt`, for each *n*, into a three-column output. The two streams are paired only by their position within the cycle — **specs** does not match records by comparing field values the way a database join would; it is up to you to ensure that matching records at the same offset from different streams makes sense.
 
 `SELECT n` (where n is the stream number 1–8) switches between streams. The stream resets to #1 at the start of each new cycle.
 
 **When all streams have equal record counts**, this positional pairing is straightforward. If stream lengths differ, the `STOP` MainOption controls behavior:
 
-- `STOP ALLEOF` (default): continue until *all* streams are exhausted; `specs` treats READs from exhausted streams as if they return empty records
+- `STOP ALLEOF` (default): continue until *all* streams are exhausted; **specs** treats READs from exhausted streams as if they return empty records
 - `STOP ANYEOF`: stop when *any* stream runs out
 - `STOP n`: stop when stream `n` runs out
 
@@ -3256,7 +3274,7 @@ After a `CONTEXT` spec unit, all subsequent input parts (character ranges, word 
 specs 1-* 1 CONTEXT 1 1-* NEXTWORD
 ```
 
-On input `alpha`, `beta`, `gamma`:
+On input `alpha\nbeta\ngamma`, the output is:
 ```
 alpha beta
 beta gamma
@@ -3274,7 +3292,8 @@ beta alpha
 gamma beta
 ```
 
-When the context record doesn't exist (before the first record or past the last), it is empty.
+When the context record doesn't exist (before the first record or past the last), **specs** behaves as if it retrieved an empty record.
+\newpage
 
 ## Multiple CONTEXT Tokens
 
@@ -3304,7 +3323,14 @@ specs PRINT "length(@+1)" 1
 
 On input `AB`, `CDE`, `F` — outputs `3`, `1`, `0` (the lengths of the next record).
 
-Note: Reading out-of-bounds with `@+n` or `@-n` does not stop processing, even if `READSTOP` is present.
+Notes: 
+
+- Reading out-of-bounds with `@+n` or `@-n` does not stop processing, even if `READSTOP` is present.
+- The `@+n` / `@-n` elements in expressions are not affected by global context. The following *specification* has exactly the same output as the one above:
+
+```
+specs CONTEXT 2 PRINT "length(@+1)" 1
+```
 
 ## @@ vs. @! and record() vs. cfrecord()
 
@@ -3322,7 +3348,7 @@ Example:
 specs CONTEXT 1 PRINT "@!" 1 WRITE PRINT "@@" 1 WRITE
 ```
 
-On input `alpha`, `beta`, `gamma`:
+On input `alpha\nbeta\ngamma`:
 ```
 beta
 alpha
@@ -3331,6 +3357,7 @@ beta
 
 gamma
 ```
+\newpage
 
 ## The ctxrecno() Function
 
@@ -3383,6 +3410,7 @@ specs: Using a 3-record rolling context: 2 records forward and 1 records backwar
 1. Rolling context is not compatible with threading (`-t` flag).
 2. Rolling context is not compatible with multiple input streams.
 3. The integer offset of the context record, whether it appears as a `CONTEXT ±n` spec unit or as a `@±n` expression, is limited to an absolute value of 256.
+\newpage
 
 ## When to Use CONTEXT vs. READ/UNREAD
 
@@ -3399,9 +3427,14 @@ specs: Using a 3-record rolling context: 2 records forward and 1 records backwar
 
 # Chapter 14: Python Functions  {#chap14}
 
-## When to Write a Python Function
+Although **specs** has a rich library of built-in functions, sometimes you need logic that isn't available. You can use the powerful language features of Python, and the [seemingly endless library of modules](https://xkcd.com/353/) to give extra functionality to your *specifications*. This chapter explains to to extend **specs** by writing **external functions** in Python.
 
-specs has a rich library of built-in functions, but sometimes you need functionality that isn't there. Python functions let you add arbitrary functions by writing them in Python.
+Note that not all installations of **specs** include Python support. The following command will show you if Python function support is enabled in your installation:
+```
+$ specs @python
+Enabled`
+```
+If it isn't, check [Appendix C](#appendixc) to see how you can get a version that supports Python.
 
 Write a Python function when:
 
@@ -3409,25 +3442,69 @@ Write a Python function when:
 - You want to use Python's standard library (`re`, `math`, `datetime`, etc.)
 - You need to maintain state across records that's more complex than a counter
 
-## The localfuncs.py File
+## The `localfuncs.py` File
 
 All Python functions must be defined in a file called **`localfuncs.py`**. This file must reside in a directory on the **SPECSPATH** (see Chapter 4 and 5). It is a regular Python file that you can `import` from the Python environment.
 
-**All functions whose names do not begin with an underscore (`_`)** are automatically available to specs. Use underscore-prefixed names for helper functions that you don't want to expose.
+All functions whose names **do not** begin with an underscore (`_`) are automatically available to **specs**. Use underscore-prefixed names for helper functions that you don't want to expose.
 
 ## A First Example
 
 Suppose you want a `commas` function that formats integers with thousands separators:
 
-```python
+```
 def commas(x):
     '''Convert the integer x into a string with thousands groups separated by commas'''
-    x = int(x)
     ret = ""
     while x >= 1000:
         rm = str(x % 1000)
         x = x // 1000
-        while length(rm) < 3:
+        ret = "," + rm + ret
+    if x > 0:
+        ret = str(x) + ret
+    return ret
+```
+
+Place this in `$HOME/specs/localfuncs.py` or in `%HOME%\specs\localfuncs.py`. Now use it in **specs**:
+
+```
+$ echo "1398234" | specs PRINT "commas(word(1))" 1.12 right
+```
+Output: `   1,398,234`
+
+## A Bug
+
+Unfortunately, bugs are part of life for those who write code, so:
+
+```
+$ echo 2048 | specs PRINT "commas(word(1))"
+```
+Output: `2,48`
+
+That is not quite what we intended. The problem is that the `rm = str(x % 1000)` line could end up with an `rm` value that is not three-digit. But this function requires three-digit groups. So we need to pad it with zeros. But wait! there's more:
+
+```
+$ echo 9003.14159265 | specs PRINT "commas(word(1))"
+```
+Output: `9.0,3.1415926499994384`
+
+Can you figure out what happened here?
+
+Here's a fixed version:
+
+```
+def commas(x):
+    '''Convert the integer x into a string with thousands groups separated by commas'''
+    try:
+        x = int(float(x)) # x will usually be a string. Converting directly to int fails.
+    except:
+        return 0
+
+    ret = ""
+    while x >= 1000:
+        rm = str(x % 1000)
+        x = x // 1000
+        while len(rm) < 3:  # Pad with zeros to length 3
             rm = "0" + rm
         ret = "," + rm + ret
     if x > 0:
@@ -3435,16 +3512,17 @@ def commas(x):
     return ret
 ```
 
-Place this in `$HOME/specs/localfuncs.py`. Now use it in specs:
-
+Yes, this works:
 ```
-echo "1398234" | specs print "commas(word(1))" 1.12 right
+$ echo -e "2048\n9003.14159265\nhello" | specs PRINT "commas(word(1))"
+2,048
+9,003
+0
 ```
-Output: `   1,398,234`
 
 ## A more elaborate example {#dpf}
 
-Given an integer n, how many distinct prime factors does it have?  While `specs` contains many built-in functions, it doesn't cover all needs, so if you happen to need the number of distinct prime factors, here's one possible implementations
+Given an integer n, how many distinct prime factors does it have?  While **specs** contains many built-in functions, it doesn't cover all needs, so if you happen to need the number of distinct prime factors, here's one possible implementations
 ```
 def distinct_prime_factors(n):
     '''Return the number of distinct prime factors of n'''
@@ -3467,7 +3545,7 @@ def distinct_prime_factors(n):
 
 Your functions can use any module available in the Python environment:
 
-```python
+```
 import math
 import datetime
 
@@ -3490,7 +3568,7 @@ def prime_factors(n):
 
 Python functions can maintain state using module-level variables:
 
-```python
+```
 running_max = None
 def update_max(x):
     '''Return the running maximum value seen so far'''
@@ -3503,7 +3581,7 @@ def update_max(x):
 
 Or, for frequency counting (the `countocc` pattern from the docs):
 
-```python
+```
 occ_dict = dict()
 def countocc_py(haystack, needle):
     '''Count occurrences of needle in haystack across all calls'''
@@ -3519,7 +3597,7 @@ def countocc_py(haystack, needle):
 
 Python's docstrings integrate with specs's help system. Document your functions as you would any Python function:
 
-```python
+```
 def commas(x):
     '''Convert the integer x into a string with thousands groups separated by commas'''
     ...
@@ -3571,7 +3649,7 @@ By default:
 
 To override, return a 2-tuple `(value, bool)` instead of a plain value:
 
-```python
+```
 def exact_pi():
     '''Return an exact value of pi'''
     return (3.141592653589793, True)   # exact
@@ -3587,7 +3665,7 @@ The tuple must have exactly 2 elements, and the second must be a Python `bool`.
 
 If your function needs to know whether its arguments are exact, set `arg_type = "exact"`:
 
-```python
+```
 def lowindex(x):
     '''Returns the lower 16 bits, preserving exactness'''
     return (int(x[0]) % 65536, x[1])
@@ -3599,7 +3677,7 @@ When `arg_type = "exact"` is set, **all** arguments are passed as 2-tuples `(val
 
 ### Combining Argument and Return Exactness
 
-```python
+```
 def add_exact(a, b):
     '''Add two numbers, exact only if both inputs are exact'''
     return (a[0] + b[0], a[1] and b[1])
@@ -3611,7 +3689,7 @@ add_exact.arg_type = "exact"
 
 If `arg_type` is set to an unrecognized value, specs reports an error at initialization:
 
-```python
+```
 def bad_function(x):
     pass
 
@@ -3941,7 +4019,7 @@ Do NOT use `--threaded` with:
 \newpage
 ## Special Configured Literals
 
-These are keys that, when set in `~/.specs` (or via `-s`), change `specs` behavior rather than simply becoming an `@name` literal. See [Chapter 4](#configured-literal-settings) for details.
+These are keys that, when set in `~/.specs` (or via `-s`), change **specs** behavior rather than simply becoming an `@name` literal. See [Chapter 4](#configured-literal-settings) for details.
 
 | Key | Default | Effect |
 |-----|---------|--------|
