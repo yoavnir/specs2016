@@ -2987,16 +2987,16 @@ $ seq 81 | specs -f example
 
 # Chapter 12: Multiple Records and Streams {#chap12}
 
-The default one-in-one-out model can be broken in many ways. This chapter covers them all.
+The default one-in-one-out model can be broken in many ways. This chapter covers that.
 
 ## Multiple Output Records — WRITE
 
 Use the `WRITE` spec unit to emit the current output record and start a fresh one, all within the same cycle:
 
 ```
-cat ls-output.txt | specs
+specs -C "ls -l"
     /Filename:/ 1
-    w-1         nw
+    W-1         NW
     WRITE
     /type:/ 1
     IF "range(1,1)=='d'" THEN
@@ -3006,21 +3006,26 @@ cat ls-output.txt | specs
     ENDIF
 ```
 
-`WRITE` flushes the current output record and clears the output buffer. The last record in a cycle is always written automatically — you don't need a trailing `WRITE`.
+`WRITE` flushes the current output record and clears the output buffer. The last output record in a cycle is always written automatically — you don't need a trailing `WRITE`. However, if the last output record is empty, it is not emitted, so there's no harm in a trailing `WRITE`.
 
 ## Suppressing Output — NOWRITE and NOPRINT
 
 `NOWRITE` (synonymous with `NOPRINT`) suppresses the automatic output record at the end of the cycle. No output is written for this record unless you used an explicit `WRITE` earlier.
 
+Note that a cycle with no output data fields never emits a record anyway, so `NOWRITE` only matters when the cycle has data fields that emit output. The example below would not demonstrate `NOWRITE` without that "`'LOG: ' 1`" *data field*:
+
 ```
-# Only write records that contain "error"
+# Prefix every line with "LOG: ", but only write lines that contain "error"
 specs
-    IF "includes('error')" THEN
-        1-* 1
+    'LOG: ' 1
+    IF "includes(,'error')" THEN
+        1-*
     ELSE
         NOWRITE
     ENDIF
 ```
+
+Without the `NOWRITE`, every record would be emitted as "`LOG: <record>`" or "`LOG:`", because the "`'LOG: ' 1`" *data field* emits output even if the `IF` condition doesn't hold. The `NOWRITE` in the `ELSE` branch suppresses that output for records that don't contain "error".
 
 ## Multiple Input Records — READ and READSTOP
 
@@ -3044,13 +3049,15 @@ specs
 **Use case**: Process git log (variable-length entries):
 
 ```
-specs
+specs -C "git log"
     IF "first()" THEN
         SET "#4:=word(2)"    # save the first commit hash
     ELSE
         PRINT "#4" 1         # print the saved hash
-        WORD 2        NEXTWORD
+        ASSERT "word(1)=='Author:'"
+        WORD 2-*   NEXTWORD  # print the author's name
         READ
+        ASSERT "word(1)=='Date:'"
         WORD 2-6 tf2s "%c" NEXTWORD
         WHILE "word(1)!='commit'" DO
             READSTOP
@@ -3061,20 +3068,23 @@ specs
 
 ## UNREAD — Pushing Back a Record
 
-`UNREAD` pushes the current record back so it will be re-read as the first record of the next cycle. This avoids the "consumed one record too many" problem when looping with `READ`/`READSTOP`:
+`UNREAD` pushes the current record back so it will be re-read as the first record of the next cycle. This avoids the "consumed one record too many" problem when looping with `READ`/`READSTOP`. It also means we don't need the `#4` variable from the previous example to carry the commit hash across cycles — each cycle can simply start on its own "commit" line:
 
 ```
-specs
-    WORD 2                    1         # author username
-    READSTOP                            # read past commit line
-    WORD 2             NEXTWORD         # email
-    READSTOP
-    WORD 2-6 tf2s "%c" NEXTWORD        # date
+specs -C "git log"
+    WORD 2                     1         # commit hash
+    READ
+    ASSERT "word(1)=='Author:'"
+    WORD 2-*            NEXTWORD         # author name and email
+    READ
+    ASSERT "word(1)=='Date:'"
+    WORD 2-6 tf2s "%c" NEXTWORD          # date
     WHILE "word(1)!='commit'" DO
         READSTOP
     DONE
-    UNREAD                              # push back the next "commit" line
+    UNREAD                               # push back the next "commit" line
 ```
+\newpage
 
 ## REDO — Two-Phase Processing
 
@@ -3133,6 +3143,7 @@ WORD:to
 WORD:the
 WORD:store
 ```
+\newpage
 
 ### Optional Separator and OF Clause
 
@@ -3172,37 +3183,47 @@ Key notes:
 - Accessing the second reading station forces a run-out cycle (same as using `eof()`).
 - `READ` and `READSTOP` must not be used during secondary reading.
 - At the start of each new cycle, the primary stream is always selected.
+- The rolling context window described in [the next chapter](#chap13) is a more advanced capability than the second reading station.
+\newpage
 
 ## Multiple Input Streams {#multstrm}
 
-Assign additional input files with `--is2` through `--is8`. At each cycle, one record is read from each stream simultaneously.
+The `--is2` through `--is8` switches assign additional input files. At each cycle, one record is advanced from every stream, even from streams the specification never reads from.
 
 ```
 specs -i file1.txt --is2 file2.txt WORD 1 1 WORD 2 NW SELECT 2 WORD 2 NW
 ```
 
-This joins the second column of two matching files into a three-column output.
+This combines the second column of record *n* from `file1.txt` with the second column of record *n* from `file2.txt`, for each *n*, into a three-column output. The two streams are paired only by their position within the cycle — `specs` does not match records by comparing field values the way a database join would; it is up to you to ensure that matching records at the same offset from different streams makes sense.
 
-Switch between streams with `SELECT n` (where n is the stream number 1–8). The stream resets to #1 at the start of each new cycle.
+`SELECT n` (where n is the stream number 1–8) switches between streams. The stream resets to #1 at the start of each new cycle.
 
-**When all streams have equal record counts**, this is the simplest way to join data. If stream lengths differ, the `STOP` MainOption controls behavior:
+**When all streams have equal record counts**, this positional pairing is straightforward. If stream lengths differ, the `STOP` MainOption controls behavior:
 
-- `STOP ALLEOF` (default): continue until all streams are exhausted; shorter streams emit empty records
-- `STOP ANYEOF`: stop when any stream runs out
-- `STOP n`: stop when stream n runs out
+- `STOP ALLEOF` (default): continue until *all* streams are exhausted; `specs` treats READs from exhausted streams as if they return empty records
+- `STOP ANYEOF`: stop when *any* stream runs out
+- `STOP n`: stop when stream `n` runs out
 
 ## Multiple Output Streams
 
-Assign additional output files with `--os2` through `--os8`. Switch between them with `OUTSTREAM n` or `OUTSTREAM STDERR`:
+The `--os2` through `--os8` switches assign additional output files. `OUTSTREAM n` (or `OUTSTREAM STDERR`) switches between them. The active output stream resets to #1 at the start of each new cycle:
 
 ```
 specs -o main.txt --os2 errors.txt
-    IF "includes('ERROR')" THEN
+    IF "includes(,'ERROR')" THEN
         OUTSTREAM 2
-        1-* 1
-        OUTSTREAM 1
-    ELSE
-        1-* 1
+    ENDIF
+    1-* 1
+```
+
+Note that the above example switches output stream for the error records, so the error records go into `errors.txt`, but not to `main.txt`.  If we wanted to write all the records to `main.txt`, we could do it like this:
+```
+specs -o main.txt --os2 errors.txt
+    1-* 1
+    IF "includes(,'ERROR')" THEN
+        WRITE        # Flush the primary stream
+        OUTSTREAM 2
+        1-* 1        # Write again - this time to the secondary stream
     ENDIF
 ```
 
