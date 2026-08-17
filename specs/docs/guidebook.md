@@ -151,7 +151,7 @@ You will learn all three. A quick decision guide is in Appendix A; details are i
 
 ## A Note About Examples
 
-As stated above, you can run **specs** with a *specification* on the command line, or place the *specification* in a file. With a file, you get indentation and comments for better readability. For the readability of this guidebook, some of the examples are given as command line, some as a file, and some with a kind of mixture that is not possible. See the following example copied from [Chapter 12](#chap12):
+As stated above, you can run **specs** with a *specification* on the command line, or place the *specification* in a file. With a file, you get indentation and comments for better readability. For the readability of this guidebook, some of the examples are given as command line, some as a file, and some with a kind of mixture that is not possible in real usage. See the following example copied from [Chapter 12](#chap12):
 ```
 specs --inCmd "ls -l"
     /Filename:/ 1
@@ -3012,7 +3012,7 @@ The default one-in-one-out model can be broken in many ways. This chapter covers
 Use the `WRITE` spec unit to emit the current output record and start a fresh one, all within the same cycle:
 
 ```
-specs -C "ls -l"
+specs --inCmd "ls -l"
     /Filename:/ 1
     W-1         NW   # Last word in "ls -l" output is file name
     WRITE            # Skip to next line
