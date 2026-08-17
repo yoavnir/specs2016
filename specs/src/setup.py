@@ -879,7 +879,7 @@ if CFG_python:
 		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
 	)
 
-sys.stdout.write("Testing is pandoc and xelatex and soul.sty are available...")
+sys.stdout.write("Testing is pandoc, xelatex and soul.sty are available...")
 if args.no_book:
 	sys.stdout.write("Doesn't matter. Guidebook generation is configured off.\n")
 	CFG_book = False
@@ -888,12 +888,12 @@ else:
 	# xelatex engine).  The "book" target is always written to the Makefile, but
 	# it is only added to "all" and "some" when both tools are available.
 	CFG_pandoc = (0 == run_the_cmd("pandoc --version"))
-	sys.stdout.write("Yes" if CFG_pandoc else "No")
+	sys.stdout.write("Yes," if CFG_pandoc else "No,")
 
 	CFG_xelatex = (0 == run_the_cmd("xelatex --version"))
-	sys.stdout.write(" and yes" if CFG_xelatex else " and no")
+	sys.stdout.write(" yes" if CFG_xelatex else " no")
 	
-	CFG_soul = (0 == run_the_cmd("kpsewhich soul.str"))
+	CFG_soul = (0 == run_the_cmd("kpsewhich soul.sty"))
 	sys.stdout.write(" and yes. " if CFG_soul else " and no. ")
 
 	if os.path.isfile("xx.txt"):
