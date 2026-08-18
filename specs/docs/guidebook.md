@@ -4242,7 +4242,7 @@ There are two ways to get **specs** running on your machine: installing a pre-bu
 
 ## Installing from Binaries
 
-Every release of **specs** publishes pre-built packages for Linux (RPM and DEB), macOS (PKG), and Windows (MSI and a standalone EXE).
+Every release of **specs** publishes pre-built packages for Linux (RPM and DEB), macOS (PKG), and Windows (MSI and a standalone EXE). This guidebook is also available from the same webpage - see below.
 
 ### Finding the right release
 
@@ -4309,8 +4309,8 @@ Double-click the downloaded `.msi` file and follow the installer prompts. This a
 Download `specs-<version>-windows-x64.exe` (or the `-python312-` variant for Python support), rename it to `specs.exe` if you like, and place it in a directory that's on your PATH. Unlike the MSI, this is just a single file with no installer and no automatic PATH update. If you download the Python-enabled variant, you need Python 3.12 installed (so that `python312.dll` is available) since, unlike the MSI, it does not bundle its own copy.
 
 Note: although Windows for ARM64 is not officially supported, the x64 packages run fine on it under emulation. For Python integration on ARM64, install the x64 build of Python 3.12.
-
 \newpage
+
 ### Verifying the installation
 
 Once installed, open a new terminal (so that PATH changes take effect) and run:
@@ -4348,17 +4348,19 @@ Download your copy of **specs** from [GitHub](https://github.com/yoavnir/specs20
 ### Prerequisites
 
 * A C++17-compatible compiler (GCC, Clang, or MSVC)
-* Python 3 runtime if you are using `GCC` or `CLang`
+* Python 3 runtime if you are building with `make`.
 * Python 3 development environment (optional, for Python integration support)
   * On Linux: the `python3-devel` (or `python3-dev`) package that matches your Python version
   * On Mac OS: the Xcode command-line tools (which include Python headers)
   * On Windows: a standard Python 3 installation includes the required headers and libraries
+* `pandoc` and `tex` if you intend to generate this **guidebook**.
+  * On Mac OS you will need to install `MacTex.pkg` because this guidebook includes `purple text` and [links](#appendixc) that look like links.
 
 ### Checking out a stable version
 
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.9:
+If you have downloaded a git repository, first make sure to check out a stable tag such as v1.0.0:
 ```
-git checkout v0.9.9
+git checkout v1.0.0
 ```
 A good way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
 ```
