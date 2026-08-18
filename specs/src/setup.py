@@ -179,6 +179,11 @@ CCSRC = $(wildcard cli/*.cc) \
 		$(wildcard processing/*.cc) \
 		$(wildcard utils/*.cc)
 		
+# Files that must use tabs (not spaces) for leading whitespace. Add more
+# files/globs here as they are brought into compliance; the goal is to
+# eventually cover all of CCSRC and its headers.
+FORMAT_FILES = utils/PythonIntf.cc utils/PythonIntf.h
+
 TESTSRC = $(wildcard test/*.cc)
 TESTS = $(notdir $(basename $(TESTSRC)))
 TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
@@ -193,11 +198,63 @@ TESTOBJS = $(TESTSRC:.cc=.{})
 BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
 
 #default goal
-some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL)
+some: check-format directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL)
 
-all: directories $(TEST_EXES) $(BOOK_ALL)
+all: check-format directories $(TEST_EXES) $(BOOK_ALL)
 
-specs: directories $(EXE_DIR)/specs
+specs: check-format directories $(EXE_DIR)/specs
+
+# Fails (without modifying anything) if any file in FORMAT_FILES has a line
+# whose leading whitespace (the run of spaces/tabs before the first
+# non-blank character) contains a space. Only that leading run is ever
+# touched - the rest of each line, and everyone's chosen editor/tool, is
+# left alone. Run "make format" to fix in place.
+# This is implemented directly in awk (POSIX-specified, present unchanged on
+# both Linux and macOS/BSD) rather than via the "unexpand" utility, whose
+# option names and default column-stop behavior differ enough between GNU
+# and BSD/macOS builds that no single invocation works reliably on both.
+CHECK_LEAD_AWK = '{{ \
+	line = $$0; \
+	n = match(line, /[^ \\t]/); \
+	lead = (n > 0) ? substr(line, 1, n - 1) : line; \
+	if (index(lead, " ") > 0) {{ bad = 1 }} \
+}} \
+END {{ exit (bad ? 1 : 0) }}'
+
+FIX_LEAD_AWK = '{{ \
+	line = $$0; \
+	n = match(line, /[^ \\t]/); \
+	if (n > 0) {{ lead = substr(line, 1, n - 1); rest = substr(line, n) }} \
+	else {{ lead = line; rest = "" }} \
+	col = 0; \
+	for (i = 1; i <= length(lead); i++) {{ \
+		c = substr(lead, i, 1); \
+		if (c == "\\t") {{ col = int(col / tw + 1) * tw }} else {{ col++ }} \
+	}} \
+	ntabs = int(col / tw); \
+	nspaces = col % tw; \
+	newlead = ""; \
+	for (i = 0; i < ntabs; i++) newlead = newlead "\\t"; \
+	for (i = 0; i < nspaces; i++) newlead = newlead " "; \
+	print newlead rest \
+}}'
+
+.PHONY: check-format
+check-format:
+	@status=0; \
+	for f in $(FORMAT_FILES); do \
+		if ! awk $(CHECK_LEAD_AWK) "$$f"; then \
+			echo "$$f: leading whitespace uses spaces instead of tabs (run 'make format' to fix)" >&2; \
+			status=1; \
+		fi; \
+	done; \
+	exit $$status
+
+.PHONY: format
+format:
+	@for f in $(FORMAT_FILES); do \
+		awk -v tw=4 $(FIX_LEAD_AWK) "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; \
+	done
 
 %.obj : %.cc
 	$(CXX) $(CPPFLAGS) /Fo$@ /c $<

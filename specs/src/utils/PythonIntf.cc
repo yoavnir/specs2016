@@ -3,6 +3,8 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <algorithm>  // for std::find_if
+#include <cctype>     // for std::isspace
 #include <utils/platform.h>
 #include "PythonIntf.h"
 #include "ErrorReporting.h"
@@ -292,7 +294,7 @@ public:
 		return pRet;
 	}
 
-	std::string getStr() {
+	std::string getStr(bool fullDoc = true) {
 		std::ostringstream strm;
 		strm << m_name << " (";
 		bool first = true;
@@ -309,15 +311,42 @@ public:
 			strm << " [arg_type=exact]";
 		}
 		if (m_doc.length() > 0) {
-			if (m_doc.find("\n") != std::string::npos) {
-				strm << " :\n" << m_doc << "\n";
+			if (fullDoc) {
+				if (m_doc.find("\n") != std::string::npos) {
+					strm << " :\n" << m_doc << "\n";
+				} else {
+					strm << " : " << m_doc;
+				}
 			} else {
-				strm << " : " << m_doc;
+				strm << " : " << firstNonBlankLine();
 			}
 		}
 		return strm.str();
 	}
 private:
+	static void ltrim(std::string& s) {
+		s.erase(
+			s.begin(),
+			std::find_if(s.begin(), s.end(), [](char c) {
+				return 0 == std::isspace(static_cast<unsigned char>(c));
+			}));
+	}
+
+	// Returns the first non-blank line of m_doc (a "blank" line is one that is
+	// empty or contains only whitespace). Returns an empty string if m_doc
+	// consists entirely of blank lines.
+	std::string firstNonBlankLine() {
+		std::istringstream strm(m_doc);
+		std::string line;
+		while (std::getline(strm, line)) {
+			if (line.find_first_not_of(" \t\r\n") != std::string::npos) {
+				ltrim(line);
+				return line;
+			}
+		}
+		return "";
+	}
+
 	std::string                m_name;
 	PyObject*                  m_pFuncPtr;
 	std::vector<PythonFuncArg> m_args;
@@ -670,7 +699,7 @@ public:
 
 		std::cerr << "\nPython Interface Functions: \n===========================\n";
 		for (auto it = m_Functions.begin() ; it != m_Functions.end() ; it++) {
-			std::cerr << "- " << it->second->getStr() << "\n";
+			std::cerr << "- " << it->second->getStr(false) << "\n";
 		}
 		std::cerr << std::endl;
 	}

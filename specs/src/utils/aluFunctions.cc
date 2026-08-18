@@ -369,6 +369,10 @@ PValue AluFunc_tobine(PValue op, PValue _bits)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	ASSERT_NOT_ELIDED(_bits,2,bits);
+	if (!op->isWholeNumber()) {
+		std::string err = "Out of range trying to convert " + op->getStr() + " to Int";
+		MYTHROW(err);
+	}
 	ALUInt value = op->getInt();
 	int    bits = int(_bits->getInt());
 	switch (bits) {
