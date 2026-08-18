@@ -8,6 +8,7 @@ typedef long long int ALUInt;
 typedef long double   ALUFloat;
 
 #define MAX_ALUInt LLONG_MAX
+#define MIN_ALUInt LLONG_MIN
 
 #define ALUInt_SZ sizeof(ALUInt)
 

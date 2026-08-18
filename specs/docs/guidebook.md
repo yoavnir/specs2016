@@ -1922,6 +1922,19 @@ Output: `2+3=5`
 
 When a string is used in a numeric context, specs tries to parse it as a number. Non-numeric strings evaluate to zero in integer context. Floating-point values used as integers are truncated.
 
+## Exactness
+
+Besides its value, every result of an expression carries an **exactness** flag: it is either **exact** (no rounding has occurred) or **inexact**. Integers and strings are normally exact; results of floating-point computations are normally inexact, since they may have lost precision along the way.
+
+```
+echo "" | specs PRINT "exact(3+4)" 1 /and/ nextword PRINT "exact(3/4)" nextword
+```
+Output: `1 and 0`
+
+Here `3+4` is an integer computation, so it is exact, while `3/4` involves floating-point division, so it is inexact.
+
+The built-in `exact()` function, introduced in **[Chapter 9](#chap9)**, lets you test the exactness of an expression. User-written Python functions can also inspect and control exactness explicitly; see **[Chapter 14](#chap14)** for details.
+
 ---
 
 # Chapter 9: Built-in Functions {#chap9}
@@ -3519,6 +3532,7 @@ $ echo -e "2048\n9003.14159265\nhello" | specs PRINT "commas(word(1))"
 9,003
 0
 ```
+\newpage
 
 ## A more elaborate example {#dpf}
 
@@ -3549,24 +3563,20 @@ Your functions can use any module available in the Python environment:
 import math
 import datetime
 
-def prime_factors(n):
-    '''Return the prime factors of n as a comma-separated string'''
-    n = int(n)
-    factors = []
-    d = 2
-    while d * d <= n:
-        while n % d == 0:
-            factors.append(str(d))
-            n //= d
-        d += 1
-    if n > 1:
-        factors.append(str(n))
-    return ','.join(factors)
+def circle_area(radius):
+    '''Return the area of a circle with the given radius'''
+    return math.pi * float(radius) ** 2
+
+def days_since(date_str):
+    '''Return the number of days elapsed since the given date (YYYY-MM-DD)'''
+    then = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+    return (datetime.datetime.now() - then).days
 ```
+\newpage
 
 ## Stateful Functions
 
-Python functions can maintain state using module-level variables:
+**specs** imports the `localfuncs` module only once per run, so module-level variables persist across calls and can be used to maintain state:
 
 ```
 running_max = None
@@ -3603,7 +3613,8 @@ def commas(x):
     ...
 ```
 
-Then:
+There are two ways to ask specs about your Python functions: `--help pyfuncs` lists **all** of them at once, while `--help <name>` shows the full detail for **one** function by name.
+
 ```
 specs --help pyfuncs
 ```
@@ -3611,7 +3622,49 @@ Output:
 ```
 Python Interface Functions:
 ===========================
-- commas (x) :  Convert the integer x into a string with thousands groups separated by commas
+- commas (x) : Convert the integer x into a string with thousands groups separated by commas
+```
+
+```
+specs --help commas
+```
+Output:
+```
+commas (x) : Convert the integer x into a string with thousands groups separated by commas
+```
+
+For a function with a single-line docstring like `commas`, both forms show the same text. The difference matters once a docstring spans multiple lines, as is common when a function needs a longer explanation:
+
+```
+def prime_factors(n):
+    '''
+    Return the prime factors of n as a comma-separated string.
+
+    Uses trial division up to sqrt(n).
+    '''
+    ...
+```
+
+`specs --help pyfuncs` prints a compact, one-line-per-function summary, so it shows only the **first non-blank line** of each docstring (here, the docstring's first line is blank, so the summary is taken from the next one):
+
+```
+$ specs --help pyfuncs
+
+Python Interface Functions:
+===========================
+- commas (x) : Convert the integer x into a string with thousands groups separated by commas
+- prime_factors (n) : Return the prime factors of n as a comma-separated string.
+```
+
+`specs --help prime_factors`, on the other hand, prints the **entire** docstring, since you asked about that one function specifically:
+
+```
+$ specs --help prime_factors
+prime_factors (n) :
+
+    Return the prime factors of n as a comma-separated string.
+
+    Uses trial division up to sqrt(n).
 ```
 
 ## Python Function Options
@@ -3620,24 +3673,24 @@ Python Interface Functions:
 
 Controls when Python functions are loaded:
 
-- `auto` (default): Load Python only if specs encounters an unknown function name. This avoids the overhead of initializing Python for specs that don't need it.
+- `auto` (default): Load Python only if specs encounters an unknown function name. This avoids the overhead of initializing Python for specifications that don't need it.
 - `on`: Always load Python, even if no Python functions are called.
-- `off`: Never load Python. Calling a Python function is an error.
+- `off`: Never load Python. Calling a Python function is an *unrecognized function* error.
 
 ### --pythonErr throw/NaN/zero/nullstr
 
 Controls what happens when a Python function raises an exception:
 
-- `throw` (default): specs aborts with an error message echoing the Python traceback.
+- `throw` (default): specs aborts with an error message echoing the Python error.
 - `NaN`: Return NaN and continue.
 - `zero`: Return the integer 0 and continue.
 - `nullstr`: Return an empty string and continue.
 
 Use `NaN` or `nullstr` when you want specs to tolerate Python errors gracefully.
 
-## Exactness
+## Exactness in Python Functions
 
-specs tracks whether numerical values are **exact** (no rounding has occurred) or **inexact**. This is used by functions like `exact()` to let you reason about precision.
+specs tracks whether numerical values are **exact** (no rounding has occurred) or **inexact**. This is used by the `exact()` function to let you reason about precision.
 
 ### Return Exactness
 
@@ -3696,7 +3749,7 @@ def bad_function(x):
 bad_function.arg_type = "bogus"  # ERROR at startup
 ```
 
-If a function with `arg_type = "exact"` tries to use an argument as a plain value (not as a tuple), Python raises a `TypeError`, which specs reports.
+If a function with `arg_type = "exact"` tries to use an argument as a plain value (not as a tuple), Python raises a `TypeError`, which **specs** reports.
 
 ---
 

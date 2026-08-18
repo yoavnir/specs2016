@@ -136,6 +136,7 @@ bool ALUValue::isWholeNumber() const
 	if (!isNumeric()) return false;
 	if (m_type == counterType__Int) return true;
 	ALUFloat f = getFloat();
+    if (f > ALUFloat(MAX_ALUInt) || f < ALUFloat(MIN_ALUInt)) return false;
 	return (f==std::floor(f));
 }
 
