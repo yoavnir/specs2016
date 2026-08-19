@@ -3759,13 +3759,28 @@ This chapter presents worked examples that combine multiple features. Each examp
 
 ## Example 1: Reformatting ls -l Output
 
-**Problem**: Given `ls -l` output, extract just the filename (last word's last component after `/`) and right-align it in a 40-character field, followed by the file size (5th word, right-aligned in 10 characters).
+**Problem**: Given `ls -l` output for full paths, extract just the filename (last path component after `/`) and right-align it in a 40-character field, followed by the file size (5th word, right-aligned in 10 characters).
 
 ```
-ls -l | specs substr fs / field -1 of word -1 1.40 right   w5 nw
+find /var/log -maxdepth 1 -type f -exec ls -l {} \;
+   | specs substr fs / field -1 of word -1 1.40 right   w5 nw.10 right
 ```
 
 This uses a `SUBSTRING` to extract the filename by treating `/` as the field separator within the last word.
+
+Input:
+```
+-rw-r--r-- 1 root root  8192 Jan 10 09:15 /var/log/auth.log
+-rw-r--r-- 1 root root 45210 Jan 10 09:15 /var/log/syslog
+-rw-r--r-- 1 root root  1024 Jan 10 09:15 /var/log/dpkg.log
+```
+
+Output:
+```
+                                auth.log       8192
+                                  syslog      45210
+                                dpkg.log       1024
+```
 
 ## Example 2: Summing a Column of Numbers
 
@@ -3782,6 +3797,24 @@ This uses a `SUBSTRING` to extract the filename by treating `/` as the field sep
 ```
 
 Run: `cat numbers.txt | specs -f summing.spec`
+
+Input:
+```
+10
+25
+7
+3
+```
+\newpage
+
+Output:
+```
+10 10
+25 35
+7 42
+3 45
+Grand total: 45
+```
 
 ## Example 3: Department Break Report
 
@@ -3800,16 +3833,30 @@ BREAK c
 
 Run: `sort -t, -k1 employees.csv | specs -f dept_report.spec`
 
+Input:
+```
+Finance,Wiley,Cheung
+Finance,Leonard,Cockett
+Finance,Dorie,Lugo
+Payroll,Eddy,Eck
+Payroll,Janel,Polen
+R&D,Shawnna,Driskell
+R&D,Ignacio,Fung
+```
+
 Output:
 ```
-Finance  Cheung, Wiley
+Finance  Lugo, Dorie
          Cockett, Leonard
-         Lugo, Dorie
+         Cheung, Wiley
 Payroll  Eck, Eddy
          Polen, Janel
-R&D      Driskell, Shawnna
-...
+R&D      Fung, Ignacio
+         Driskell, Shawnna
 ```
+
+Note that `sort` breaks ties within a department by comparing the rest of the line, so records land in order by first name (the second CSV column), not by last name.
+\newpage
 
 ## Example 4: Parsing git log
 
@@ -3818,18 +3865,20 @@ R&D      Driskell, Shawnna
 ```
 # gitlog.spec
 IF "first()" THEN
-    SET "#4:=word(2)"
+    SET "#4:=word(2)"                              # prime #4 with the hash from the very first "commit <hash>" line
 ELSE
-    PRINT "#4"                1
-    WORD 2             NEXTWORD
-    READ
-    WORD 2-6 tf2s "%c" NEXTWORD
+    PRINT "#4"                1                    # print the hash saved in #4 on the previous iteration
+    WORD 2             NEXTWORD                    # append the author name (word 2 of the "Author:" line)
+    READ                                            # advance to the "Date:" line
+    WORD 2-6 tf2s "%a %b %d %H:%M:%S %Y" NEXTWORD  # convert the date words to seconds since epoch and append
     WHILE "word(1)!='commit'" DO
-        READSTOP
+        READSTOP                                    # skip the commit message/blank lines until the next commit header
     DONE
-    SET "#4:=word(2)"
+    SET "#4:=word(2)"                              # save the next commit's hash in #4 for the following iteration's PRINT
 ENDIF
 ```
+
+Note: use an explicit format such as `"%a %b %d %H:%M:%S %Y"` rather than the locale-dependent `"%c"` — the latter is not reliably parsed back by `tf2s`.
 
 Run: `git log | specs -f gitlog.spec`
 
@@ -3847,7 +3896,7 @@ e6d7f9ac591379d653a5685f9d75deccc1792545 synp71 1548011387.000000
 # temps.spec
 t: w1 1
 IF "first()" THEN
-    /n/a/ nw
+    "n/a" nw
 ELSE
     CONTEXT -1
     p: w1 .
@@ -3870,19 +3919,40 @@ On input `20`, `23`, `19`, `25`:
 
 **Problem**: Count how many times each word appears in a file, then print the top 10 by frequency.
 
+`SPLITW` turns each input record into one output record per word, and `REDO` feeds each of those back in as a new input record, so the rest of the spec (`w1 a:`) only ever sees one word at a time — no external preprocessing needed. `PRINTONLY EOF` suppresses per-record output entirely, so `fmap_dump` only ever sees the words that were actually assigned to `a`, and doesn't pick up a spurious empty entry from the end-of-file cycle. (Since `REDO` revisits the `a:` definition, specs prints a harmless "Field Identifier redefined" warning; set `NO_WARN_REDEFINED_FID` to suppress it.)
+
 ```
-# wordfreq.spec
-a: w1 .
-   IF "!eof()" THEN
-       NOWRITE
-   ENDIF
-EOF
-   PRINT "fmap_dump(a,'txt','cd',1)" 1
+specs -i file.txt 
+PRINTONLY EOF 
+   SPLITW 
+REDO 
+   WORD 1 a: 
+EOF 
+   PRINT "fmap_dump(a,txt,cd,1)"
 ```
 
-Run: `tr '[:space:]' '\n' < file.txt | grep -v '^$' | specs -f wordfreq.spec | head -10`
+Run `head -10` on the output if you only want the top 10; the `fmap_dump` sort order `cd` (count descending) already puts the most frequent words first.
 
-The `fmap_dump` with sort order `cd` (count descending) gives the most frequent words first.
+Input (`file.txt`):
+```
+the quick brown fox
+jumps over the lazy dog
+the fox runs away
+```
+
+Output:
+```
+the   3  23.08%
+fox   2  15.38%
+runs  1   7.69%
+quick 1   7.69%
+over  1   7.69%
+lazy  1   7.69%
+jumps 1   7.69%
+dog   1   7.69%
+brown 1   7.69%
+away  1   7.69%
+```
 
 ## Example 7: Estimating PI (Monte Carlo Method)
 
@@ -3904,21 +3974,27 @@ EOF
 
 Run: `seq 100000 | specs -f pi_estimate.spec`
 
+Sample output (results vary run to run, since the points are random):
+```
+3.14176
+```
+
 For 100,000 iterations, you get about 3–4 significant digits of pi.
 
 ## Example 8: Processing Web Server Logs
 
 **Problem**: Parse Apache combined log format, extract the URL and HTTP status code, filter for 404s, and count the 10 most common 404 URLs.
 
+`fmap_dump` tabulates every value ever assigned to its field, whether or not the record was written, so `a` must only be assigned for 404s — not assigned unconditionally and then merely hidden with `NOWRITE`:
+
 ```
 # log404.spec
    fs " "
-   a: f7  .                  # URL field (7th word)
-   b: f9  .                  # status code field
+   b: f9  .                   # status code field (9th word)
    IF "b == 404" THEN
-       NOWRITE
+       a: f7  .                # URL field (7th word) — only captured for 404s
    ELSE
-       CONTINUE
+       NOWRITE
    ENDIF
 EOF
    PRINT "fmap_dump(a,'txt','cd',0)" 1
@@ -3926,15 +4002,48 @@ EOF
 
 Run: `cat access.log | specs -f log404.spec`
 
+Input (`access.log`):
+```
+10.0.0.1 - - [01/Jan/2024:00:00:01 +0000] "GET /index.html HTTP/1.1" 200 512
+10.0.0.2 - - [01/Jan/2024:00:00:02 +0000] "GET /missing.html HTTP/1.1" 404 0
+10.0.0.3 - - [01/Jan/2024:00:00:03 +0000] "GET /missing.html HTTP/1.1" 404 0
+10.0.0.4 - - [01/Jan/2024:00:00:04 +0000] "GET /old.html HTTP/1.1" 404 0
+10.0.0.5 - - [01/Jan/2024:00:00:05 +0000] "GET /index.html HTTP/1.1" 200 512
+10.0.0.6 - - [01/Jan/2024:00:00:06 +0000] "GET /admin HTTP/1.1" 403 0
+10.0.0.7 - - [01/Jan/2024:00:00:07 +0000] "GET /missing.html HTTP/1.1" 404 0
+```
+
+Output:
+```
+/missing.html 3
+/old.html     1
+```
+
 ## Example 9: Generating Shell Commands
 
 **Problem**: Given a list of filenames in a text file, generate `gzip` commands for each.
 
+The literal must be quoted so the shell passes `gzip -9` to **specs** as one argument instead of splitting it on the space:
+
 ```
-cat filelist.txt | specs --shell /gzip -9/ 1 w1 nw
+cat filelist.txt | specs --shell "/gzip -9/" 1 w1 nw
 ```
 
 The `--shell` flag executes each output line as a shell command. Remove `--shell` first to verify the commands look correct.
+
+Input (`filelist.txt`):
+```
+report.csv
+data.json
+notes.txt
+```
+
+Output (without `--shell`, i.e. the commands that would be run):
+```
+gzip -9 report.csv
+gzip -9 data.json
+gzip -9 notes.txt
+```
 
 ## Example 10: Fixed-Width Report with Ellipsis
 
@@ -3943,11 +4052,27 @@ The `--shell` flag executes each output line as a shell command. Remove `--shell
 ```
 # report.spec
 FIELDSEPARATOR ,
-w1 (1, 30, "R3")    # name: centered ellipsis if too long
+f1 (1, 30, "R3")    # name: centered ellipsis if too long
 f2 nw               # second field: value
 ```
 
-A name like `Supercalifragilisticexpialidocious` becomes `Supercali...docious` (30 characters).
+The name is a `FIELD` (`f1`), not a `WORD` (`w1`) — with `FIELDSEPARATOR` set to `,`, a `WORD` would swallow the whole comma-separated line since there's no blank in it.
+
+Run: `cat report.txt | specs -f report.spec`
+
+Input (`report.txt`):
+```
+Supercalifragilisticexpialidocious,42
+Bob,7
+```
+
+Output:
+```
+Supercalifrag...expialidocious 42
+                           Bob 7
+```
+
+A name like `Supercalifragilisticexpialidocious` becomes `Supercalifrag...expialidocious` — 30 characters, split roughly in half around the ellipsis.
 
 ---
 
@@ -3983,6 +4108,17 @@ Is the value used across many different specs?
 | Consumed one record too many in a loop | `UNREAD` |
 | Processing variable-length blocks from a structured format | `READ` + `WHILE` + `UNREAD` |
 
+## Should I Split a Record with SPLITW/SPLITF, or Preprocess Externally?
+
+```
+Do you need to process each word/field of a record independently?
+├─ Yes, and it should stay in one specs invocation → SPLITW / SPLITF, optionally with REDO
+└─ Yes, and an external tool is simpler or already in the pipeline → Preprocess with tr/awk/etc. before specs
+```
+
+`SPLITW`/`SPLITF` avoid an external preprocessing step (see **Chapter 15, Example 6**), but since they drive `REDO` internally, they carry the same field-identifier caveat as `REDO` — see below.
+\newpage
+
 ## Should I Write a Python Function?
 
 Write a Python function when:
@@ -4014,6 +4150,12 @@ Both trigger the run-out cycle. Choose based on readability:
 | Can be used in break detection | No | Yes (BREAK a) |
 | Available in statistical functions | No | Yes (sum(a), average(a), etc.) |
 | Suitable for accumulators | Yes | With fmap_sample() |
+
+**Caveats:**
+
+- Statistical functions (`sum()`, `fmap_dump()`, etc.) tally *every* value ever assigned to a field identifier, whether or not that record was actually written. Wrapping the output in `NOWRITE`/`IF` doesn't exclude a value from the statistics — the *assignment* itself must be conditional. See **Chapter 15, Example 8**.
+- `REDO` (and `SPLITW`/`SPLITF`, which use it internally) intentionally does not clear field identifiers between passes within one cycle, so redefining the same identifier across those passes can trigger a harmless "Field Identifier redefined" warning; suppress it with `NO_WARN_REDEFINED_FID` if needed. See **Chapter 15, Example 6**.
+\newpage
 
 ## When Should I Use --threaded?
 
@@ -4238,7 +4380,7 @@ The table below holds conversions used within **Data Fields**. Where you see `fm
 
 # Appendix C: Installation {#appendixc}
 
-There are two ways to get **specs** running on your machine: installing a pre-built binary package, or building it locally from source. Installing a pre-built package is the fastest route for most people; building from source is useful if no package exists for your platform, if you need a different Python version than the one bundled with the official packages, or if you want to hack on **specs** itself.
+There are two ways to get **specs** running on your machine: installing a pre-built binary package, or building it locally from source. Installing a pre-built package is the fastest route for most people; building from source is useful if no package exists for your platform, if you need a different Python version than the one bundled with the official packages, or if you want to work on **specs** itself.
 
 ## Installing from Binaries
 
@@ -4442,7 +4584,7 @@ This approach uses the Visual Studio `cl.exe` compiler via `make` and supports t
 
 ### Known Issues
 
-* Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
+* Regular expression grammars other than the default `ECMAScript` don't work on Windows and older Linux.
 * On Windows with Python support, the appropriate DLL (like `python312.dll`) must be in the PATH.
 
 *Note:* Although Windows for ARM64 is not officially supported, that platform will run the x64 version just fine. For Python integration, you'll need to install the x64 version of Python.
