@@ -179,6 +179,11 @@ CCSRC = $(wildcard cli/*.cc) \
 		$(wildcard processing/*.cc) \
 		$(wildcard utils/*.cc)
 		
+# Files that must use tabs (not spaces) for leading whitespace. Add more
+# files/globs here as they are brought into compliance; the goal is to
+# eventually cover all of CCSRC and its headers.
+FORMAT_FILES = utils/PythonIntf.cc utils/PythonIntf.h
+
 TESTSRC = $(wildcard test/*.cc)
 TESTS = $(notdir $(basename $(TESTSRC)))
 TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
@@ -193,11 +198,63 @@ TESTOBJS = $(TESTSRC:.cc=.{})
 BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
 
 #default goal
-some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL)
+some: check-format directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL)
 
-all: directories $(TEST_EXES) $(BOOK_ALL)
+all: check-format directories $(TEST_EXES) $(BOOK_ALL)
 
-specs: directories $(EXE_DIR)/specs
+specs: check-format directories $(EXE_DIR)/specs
+
+# Fails (without modifying anything) if any file in FORMAT_FILES has a line
+# whose leading whitespace (the run of spaces/tabs before the first
+# non-blank character) contains a space. Only that leading run is ever
+# touched - the rest of each line, and everyone's chosen editor/tool, is
+# left alone. Run "make format" to fix in place.
+# This is implemented directly in awk (POSIX-specified, present unchanged on
+# both Linux and macOS/BSD) rather than via the "unexpand" utility, whose
+# option names and default column-stop behavior differ enough between GNU
+# and BSD/macOS builds that no single invocation works reliably on both.
+CHECK_LEAD_AWK = '{{ \
+	line = $$0; \
+	n = match(line, /[^ \\t]/); \
+	lead = (n > 0) ? substr(line, 1, n - 1) : line; \
+	if (index(lead, " ") > 0) {{ bad = 1 }} \
+}} \
+END {{ exit (bad ? 1 : 0) }}'
+
+FIX_LEAD_AWK = '{{ \
+	line = $$0; \
+	n = match(line, /[^ \\t]/); \
+	if (n > 0) {{ lead = substr(line, 1, n - 1); rest = substr(line, n) }} \
+	else {{ lead = line; rest = "" }} \
+	col = 0; \
+	for (i = 1; i <= length(lead); i++) {{ \
+		c = substr(lead, i, 1); \
+		if (c == "\\t") {{ col = int(col / tw + 1) * tw }} else {{ col++ }} \
+	}} \
+	ntabs = int(col / tw); \
+	nspaces = col % tw; \
+	newlead = ""; \
+	for (i = 0; i < ntabs; i++) newlead = newlead "\\t"; \
+	for (i = 0; i < nspaces; i++) newlead = newlead " "; \
+	print newlead rest \
+}}'
+
+.PHONY: check-format
+check-format:
+	@status=0; \
+	for f in $(FORMAT_FILES); do \
+		if ! awk $(CHECK_LEAD_AWK) "$$f"; then \
+			echo "$$f: leading whitespace uses spaces instead of tabs (run 'make format' to fix)" >&2; \
+			status=1; \
+		fi; \
+	done; \
+	exit $$status
+
+.PHONY: format
+format:
+	@for f in $(FORMAT_FILES); do \
+		awk -v tw=4 $(FIX_LEAD_AWK) "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; \
+	done
 
 %.obj : %.cc
 	$(CXX) $(CPPFLAGS) /Fo$@ /c $<
@@ -248,6 +305,7 @@ run_tests: $(TEST_EXES)
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
 	python3 $(TESTS_DIR)/valgrind_specs.py --no_valgrind
+	# python3 $(TESTS_DIR)/cli_arg_tests.py
 	python3 $(TESTS_DIR)/recfm_tests.py
 
 # Run the full clean -> build -> test cycle with the three phases strictly
@@ -351,9 +409,9 @@ book: $(DOCS_DIR)/guidebook.pdf
 # The recipe runs $(EXE_DIR)/specs, so it must depend on it - otherwise a
 # parallel "make -j all" can start generating the guidebook before specs has
 # been linked ("specs: Command not found").
-$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/header.tex $(EXE_DIR)/specs
-	$(EXE_DIR)/specs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/guidebook_prepare
-	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/header.tex
+$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/resources/header.tex $(EXE_DIR)/specs
+	$(EXE_DIR)/specs --set docsdir=../docs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/resources/guidebook_prepare
+	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/resources/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
 
@@ -804,7 +862,7 @@ cxx_display = "{} {}".format(cxx, cxx_version) if cxx_version else cxx
 if (CFG_python==True) & (full_python_version!="N/A"):
 	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx_display,full_python_version,variation.lower())
 else:
-	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler and no Python - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
 condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatform)
 
 if CFG_python:
@@ -878,7 +936,7 @@ if CFG_python:
 		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
 	)
 
-sys.stdout.write("Testing is pandoc and xelatex are available...")
+sys.stdout.write("Testing is pandoc, xelatex and soul.sty are available...")
 if args.no_book:
 	sys.stdout.write("Doesn't matter. Guidebook generation is configured off.\n")
 	CFG_book = False
@@ -887,15 +945,18 @@ else:
 	# xelatex engine).  The "book" target is always written to the Makefile, but
 	# it is only added to "all" and "some" when both tools are available.
 	CFG_pandoc = (0 == run_the_cmd("pandoc --version"))
-	sys.stdout.write("Yes" if CFG_pandoc else "No")
+	sys.stdout.write("Yes," if CFG_pandoc else "No,")
 
 	CFG_xelatex = (0 == run_the_cmd("xelatex --version"))
-	sys.stdout.write(" and yes. " if CFG_xelatex else " and no. ")
+	sys.stdout.write(" yes" if CFG_xelatex else " no")
+	
+	CFG_soul = (0 == run_the_cmd("kpsewhich soul.sty"))
+	sys.stdout.write(" and yes. " if CFG_soul else " and no. ")
 
 	if os.path.isfile("xx.txt"):
 		os.remove("xx.txt")
 
-	CFG_book = CFG_pandoc and CFG_xelatex
+	CFG_book = CFG_pandoc and CFG_xelatex and CFG_soul
 	sys.stdout.write("Guidebook generation is {}.\n".format("enabled" if CFG_book else "disabled"))
 
 # Generate build_info.h (so it exists before the first compile; it is
