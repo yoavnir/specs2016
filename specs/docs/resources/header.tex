@@ -1,0 +1,49 @@
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{soul}
+\definecolor{codecolor}{HTML}{6A0DAD}
+\setcounter{secnumdepth}{0}
+\makeatletter
+\pagestyle{plain}
+\let\oldtexttt\texttt 
+\renewcommand{\texttt}[1]{{\color{codecolor}\bfseries\oldtexttt{#1}}} 
+\renewcommand{\maketitle}{}
+\renewcommand{\numberline}[1]{}
+\renewcommand*{\l@chapter}[2]{%
+  \addpenalty{-\@highpenalty}%
+  \vskip 1.0em \@plus\p@
+  \begingroup
+    \parindent \z@ \rightskip \@pnumwidth
+    \parfillskip -\@pnumwidth
+    \leavevmode \bfseries
+    #1\nobreak\hfil \nobreak\hb@xt@\@pnumwidth{\hss #2}\par
+    \penalty\@highpenalty
+  \endgroup}
+\renewcommand{\@makechapterhead}[1]{%
+  \vspace*{50\p@}%
+  {\parindent \z@ \raggedright \normalfont
+    \interlinepenalty\@M
+    \Huge \bfseries #1\par\nobreak
+    \vskip 40\p@
+  }}
+\renewcommand{\@makeschapterhead}[1]{%
+  \vspace*{50\p@}%
+  {\parindent \z@ \raggedright \normalfont
+    \interlinepenalty\@M
+    \Huge \bfseries #1\par\nobreak
+    \vskip 40\p@
+  }}
+\makeatletter 
+\def\verbatim@font{\color{codecolor}\bfseries\ttfamily}
+% hyperref is loaded by pandoc's own LaTeX template, but different pandoc
+% versions insert -H/header-includes content either before or after that
+% happens. \AtBeginDocument defers this until the whole preamble (including
+% hyperref) has been processed, regardless of pandoc's template ordering.
+\AtBeginDocument{%
+  \hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue}%
+  \let\OldHyperref\hyperref
+  \renewcommand{\hyperref}[2][]{\OldHyperref[#1]{\ul{#2}}}%
+  \let\OldHref\href
+  \renewcommand{\href}[2]{\OldHref{#1}{\ul{#2}}}%
+}
+\makeatother

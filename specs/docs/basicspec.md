@@ -35,10 +35,10 @@ sets _a_ to the content of the first word of the input record, and sets _b_ to a
 The **InputSource** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based. Negative values can be used for counting characters from the end, so -1 means the last character, -2 the penultimate character, etc.
-* A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based. Negative indexes can be used here as well.
-* A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based. Negative indexes can be used here as well.
-* **TODclock** - a floating point number, accurate to microseconds and giving seconds since the Unix epoch.
-* **DTODclock** - a floating point number, accurate to microseconds and giving seconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
+* A range of words, such as `w5` or `word 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based. Negative indexes can be used here as well. The keyword may be abbreviated to any prefix of `word`, but must not be pluralized -- `words` is taken as a string literal.
+* A range of fields, such as `field 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based. Negative indexes can be used here as well. As with words, `field` may be abbreviated to any prefix but must not be pluralized.
+* **TODclock** - an integer giving microseconds since the Unix epoch.
+* **DTODclock** - an integer giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** or **RECNO** - A record counter as a 10-digit decimal number.  Read more about expressions on the [Arithmetic-Logical Unit](alu.md) page.
 * **TIMEDIFF** - a 12-char decimal number indicating the number of microseconds since the invocation of the program.
 * An **ID** keyword followed by a previously defined **FieldIdentifier**.

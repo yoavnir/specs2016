@@ -21,10 +21,13 @@ extern bool g_bWarnAboutGrammars;
 #define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
 #define INC_TEST_INDEX2 if (++testIndex==onlyTest || onlyTest==0)
 
+#define PRINT_TEST_HEADER \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
+	" (line " << std::setfill('0') << std::setw(4) << __LINE__ << "): "
+
 #define VERIFY_TYPE(i,t) do {\
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": type[" << i << "]=="#t": "; \
+	PRINT_TEST_HEADER << "type[" << i << "]=="#t": "; \
 	if (counters.type(i)==counterType__##t) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -34,8 +37,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_INT(i,val) do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << "==" << val << ": "; \
+	PRINT_TEST_HEADER << "#" << i << "==" << val << ": "; \
 	if (counters.getInt(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -45,8 +47,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_WHOLE(i,b) do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << (b ? " is whole: ":" isn't whole: "); \
+	PRINT_TEST_HEADER << "#" << i << (b ? " is whole: ":" isn't whole: "); \
 	if (counters.isWholeNumber(i)==b) {  \
 		std::cout << "OK (" << counters.getFloat(i) << ")\n";    \
 	} else {     \
@@ -56,8 +57,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_HEX(i,val) do { \
 	INC_TEST_INDEX;            \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << "==" << val << ": "; \
+	PRINT_TEST_HEADER << "#" << i << "==" << val << ": "; \
 	if (counters.getHex(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -67,8 +67,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_FLOAT(i,val) do { \
 	INC_TEST_INDEX; \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << "==" << std::setprecision(ALUFloatPrecision) << val << ": "; \
+	PRINT_TEST_HEADER << "#" << i << "==" << std::setprecision(ALUFloatPrecision) << val << ": "; \
 	if (counters.getFloat(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -78,8 +77,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_STR(i,val)  do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << "==" << val << ": "; \
+	PRINT_TEST_HEADER << "#" << i << "==" << val << ": "; \
 	if (counters.getStr(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -89,8 +87,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_NUMERIC(i,b)	 do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": #" << i << (b ? " is numeric: ":" isn't numeric: "); \
+	PRINT_TEST_HEADER << "#" << i << (b ? " is numeric: ":" isn't numeric: "); \
 	if (counters.isNumeric(i)==b) {  \
 		std::cout << "OK (";    \
 	} else {     \
@@ -102,8 +99,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_DIVINED_TYPE(i,t)  do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": #" << i << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
+	PRINT_TEST_HEADER << "#" << i << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (counters.divinedType(i)==counterType__##t) { \
 		std::cout << "OK (" << counters.getStr(i) << ")\n";    \
 	} else {     \
@@ -115,8 +111,7 @@ extern bool g_bWarnAboutGrammars;
 #define UNIT_DIVINED_TYPE(u,t) do { \
 	INC_TEST_INDEX;				\
 	PValue ctr = u.evaluate(); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
+	PRINT_TEST_HEADER << #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (ctr->getDivinedType()==counterType__##t) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
@@ -129,8 +124,7 @@ extern bool g_bWarnAboutGrammars;
 #define VERIFY_UNIT_ST(u,s) do { \
 	INC_TEST_INDEX;				\
 	PValue ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << " is \""<< s <<"\": "; \
+	PRINT_TEST_HEADER << #u << " is \""<< s <<"\": "; \
 	if (ctr->getStr()==s) { \
 		std::cout << "OK.\n";    \
 	} else {     \
@@ -142,8 +136,7 @@ extern bool g_bWarnAboutGrammars;
 #define VERIFY_UNIT_INT(u,i) do { \
 	INC_TEST_INDEX;				\
 	PValue ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << " is "<< i <<": "; \
+	PRINT_TEST_HEADER << #u << " is "<< i <<": "; \
 	if (ctr->getInt()==i) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
@@ -155,8 +148,7 @@ extern bool g_bWarnAboutGrammars;
 #define VERIFY_UNIT_F(u,f) do { \
 	INC_TEST_INDEX;				\
 	PValue ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << " is "<< f <<": "; \
+	PRINT_TEST_HEADER << #u << " is "<< f <<": "; \
 	if (ctr->getFloat()==f) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
@@ -170,8 +162,7 @@ extern bool g_bWarnAboutGrammars;
 	AluUnitCounter ctr(o);	\
 	PValue _op = ctr.compute(&counters);	\
 	PValue _res = u.compute(_op);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
+	PRINT_TEST_HEADER << #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[_res->getType()] << ")\n"; \
 		countFailures++;  failedTests.push_back(testIndex); \
@@ -190,8 +181,7 @@ extern bool g_bWarnAboutGrammars;
 	PValue _op1 = ctr1.compute(&counters);	\
 	PValue _op2 = ctr2.compute(&counters);	\
 	PValue _res = u.compute(_op1,_op2);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
+	PRINT_TEST_HEADER << #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[_res->getType()] << ")\n"; \
 		countFailures++;  failedTests.push_back(testIndex); \
@@ -208,8 +198,7 @@ extern bool g_bWarnAboutGrammars;
 	AluUnitCounter 	ctr(o);	\
 	PValue		op = ctr.compute(&counters);	\
 	u.perform(p,&counters,op);			\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
+	PRINT_TEST_HEADER << #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=counters.type(p)) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[counters.type(p)] << ")\n"; \
 		countFailures++;  failedTests.push_back(testIndex); \
@@ -226,8 +215,7 @@ extern bool g_bWarnAboutGrammars;
 	std::string _expr(s);						\
 	parseAluExpression(_expr,vec);				\
 	std::string _dump = dumpAluVec(vec, true);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": <"<< s << "> ==> \"" << e << "\": "; 	\
+	PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << e << "\": "; 	\
 	if (_dump==e) std::cout << "OK\n";			\
 	else {										\
 		std::cout << "*** NOT OK *** - " << _dump << "\n";	\
@@ -254,8 +242,7 @@ extern bool g_bWarnAboutGrammars;
 		actual = e.what(true);								\
 		cleanAluVec(vec);									\
 	}														\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": <"<< s << "> ==> \"" << ex << "\": "; 				\
+	PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << ex << "\": ";	\
 	if (_res) std::cout << "OK\n";							\
 	else {													\
 		std::cout << "*** NOT OK *** - " << actual << "\n";	\
@@ -277,8 +264,7 @@ extern bool g_bWarnAboutGrammars;
 			_dump = e.what(true);							\
 		}													\
 		_res = (_dump==ex);									\
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": <"<< s << "> ==> \"" << ex << "\": ";			\
+		PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << ex << "\": ";			\
 		if (_res) std::cout << "OK\n";						\
 		else {												\
 			std::cout << "*** NOT OK *** - " << _dump << "\n";	\
@@ -319,8 +305,7 @@ extern bool g_bWarnAboutGrammars;
 				_res = (_result!=nullptr) && (_result->getStr()==res);	\
 			}                                               \
 		}                                                   \
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": "<< s << " ==> " << res << ": ";					\
+		PRINT_TEST_HEADER << s << " ==> " << res << ": ";					\
 		if (_res && _res2) std::cout << "OK\n";						\
 		else {												\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
@@ -343,8 +328,7 @@ extern bool g_bWarnAboutGrammars;
 			_res2 = (counters.getStr(k)==exp);					\
 		}														\
 		cleanAluVec(rpnVec); 									\
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": <"<< s << "> ==> \"" << exp << "\": "; 				\
+		PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << exp << "\": "; 				\
 		if (_res && _res2) std::cout << "OK\n";					\
 		else {													\
 			std::cout << "*** NOT OK *** - ";					\
@@ -1046,8 +1030,8 @@ int runALUUnitTests10(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fact(2)","2");
 	VERIFY_EXPR_RES("fact(1)","1");
 	VERIFY_EXPR_RES("fact(0)","1");
-	VERIFY_EXPR_RES("fact(-5)","1");
-	VERIFY_EXPR_RES("fact(3.14)","6");
+	VERIFY_EXPR_RES("fact(-5)","NaN");
+	VERIFY_EXPR_RES("pretty(fact(3.14))","7.173269");
 
 	VERIFY_EXPR_RES("permutations(6,4)","360");  // 6*5*4*3
 	VERIFY_EXPR_RES("permutations(6,2)","30");

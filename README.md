@@ -1,7 +1,11 @@
-# specs2016
-A re-writing of the specs pipeline stage from CMS, only changed quite a bit
+<p align="center">
+  <img src="specs/docs/resources/specs-logo.png" width="209"/><br/>
+  <strong>A modern text-processing utility with roots in CMS Pipelines.</strong>
+</p>
 
-"specs" is a command line utility for parsing and re-arranging text
+`specs` is a re-writing of the specs pipeline stage from CMS, only changed quite a bit
+
+It is a command line utility for parsing and re-arranging text
 input. It allows re-alignment of fields, some format conversion, and
 re-formatting multiple lines into single lines or vice versa. Input
 comes from standard input, and output flows to standard output.
@@ -76,5 +80,5 @@ The documentation for *specs2016* exists in two places:
 
 License
 =======
-* *specs2016* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
+* *specs* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
 * The *Python 3.12* library bundled with the GitHub-built packages is licensed under the [Python Software Foundation License](https://github.com/yoavnir/specs2016/blob/dev-1.0.0/PYTHON_LICENSE)

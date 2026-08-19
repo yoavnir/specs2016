@@ -9,6 +9,8 @@
 - `MYASSERT(cond)` and `MYASSERT_WITH_MSG(cond, msg)` (defined in `specs/src/utils/ErrorReporting.h`) are **always-on runtime checks** that throw `SpecsException` via `MYTHROW`. They are *not* compiled out by `NDEBUG`. Do not add redundant `if`/`MYTHROW` guards that duplicate what a `MYASSERT` already covers.
 - When building the project, always use the command-line `make clean all`. Do not skip the `clean` target, and do not use the `-j` argument.
 - When changing the structure of any of the classes that have dump_ macros in `specs_gdb.py` and `specs.gdb` update the relevant macros as well.
+- Command-line invocations of `specs` require ALL switches (`-i`, `-o`, `-f`, `--recfm`, `--shell`, etc.) to come *before* any spec units on the command line. `parseSwitches` (in `specs/src/test/specs.cc`) stops parsing switches as soon as it hits the first argument not starting with `-`, so a switch placed after a spec unit is silently ignored rather than applied. When writing or reviewing examples (e.g. in `specs/docs/guidebook.md` or other docs), always put switches first: `specs [switches] [spec-units]`, never `specs [spec-units] [switches]`.
+- This project is based on the CMS pipelines stage `spec`. When it's not clear what the right thing to do is, it's a good idea to refer to chapter 16 and chapter 24 of the [CMS Pipelines User's Guide and Reference](https://publib.boulder.ibm.com/epubs/pdf/hcsj0c30.pdf).
 
 ## ALU Functions
 

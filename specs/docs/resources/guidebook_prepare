@@ -1,6 +1,7 @@
 # Process `guidebook.md`:
 #   Replace instances of XXDATE with the current date
 #   Replace instances of XXVERSION with the current version
+#   Replace instances of XXDOCS with the path to the docs directory
 # This makes things ready for generating the PDF
 
    IF "first()" THEN 
@@ -10,4 +11,9 @@
    PRINT "substitute(@@,XXDATE,#0,'U')" 
    REDO 
    PRINT "substitute(@@,XXVERSION,@version,'U')"
+   REDO
+   PRINT "substitute(@@,XXDOCS,@docsdir,'U')"
+   REDO
+   DTODCLOCK a:
+   PRINT "substitute(@@,XXTODCLOCK,a,'U')"
 

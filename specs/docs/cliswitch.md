@@ -20,8 +20,9 @@ Using files allows you to write some very sophisticated specifications, and to a
        print #1 strip nextword
        /records./     nextword
 ``` 
-Using files also allows you to include comments. The rules for comments are that either the line begins with a hash mark and a space, and then the entire line is a comment; or the last occurrence of a hash mark and a space is also preceded by a space, and that is where the comment starts. 
+Using files also allows you to include comments. The rules for comments are that either the line begins with a hash mark and a space, optionally preceded by whitespace, and then the entire line is a comment; or the last occurrence of a hash mark and a space is also preceded by a space, and that is where the comment starts. A hash mark that is the very last character on the line is treated the same as a hash mark followed by a space. 
 You can specify the full path of the files, or `specs` will search the **SPECSPATH** for them. The **SPECSPATH** can be set from either the environment variable `SPECSPATH` or the configuration string `SPECSPATH`. In both cases the syntax is just like the OS `PATH`: a list of directories separated by OS-specific path separator character. On Linux and Mac OS this is a colon (`:`). On Windows this is a semicolon (`;`).  If neither the environment variable nor the configuration string are set, the **SPECSPATH** defaults to `$HOME/specs` on Linux and Mac OS, and to `%APPDATA%\specs` on Windows.
+A spec file replaces the command-line specification entirely, so the two cannot be combined. **specs** rejects an invocation that supplies both `--specFile` and spec units, rather than silently ignoring the spec units.
 * `--verbose` or `-v` -- outputs more information when something goes wrong.
 * `--stats` -- output statistics on run time, records read, and records written to standard output. 
 The resulting stats look something like this when running in threaded mode (see below):
@@ -95,6 +96,7 @@ Main Thread:
 * `--pythonFuncs` **on/off/auto** -- Enables of disables the loading of Python functions. **auto**, which is the default signifies that Python functions are loaded only when the parser encounters an unknown function. Note that setting the `pythonDisabled` configured literal to `1` will disable Python functions and cannot be overridden from the command line.
 * `--pythonErr` **throw/NaN/zero/nullstr** -- determines what happens when a called Python function throws an exception. The default, `throw` is for **specs** to throw its own exception and terminate. The alternatives, `NaN`, `zero`, and `nullstr` make **specs** behave as if the function returned, NaN, the integer zero, or an empty string respectively.
 * `--help` **help/pyfuncs/builtin/specs/funcname** -- does not run specs. Instead, it prints out help for the `help` switch, for python functions in general, for the built-in functions in general, for the saved specifications, or for a particular specification or function.
+With **specs**, each specification on the **SPECSPATH** is listed with the first line of the comment block at the top of its spec file. Naming a single specification prints that whole comment block. The block must begin on the first line of the file, and ends at the first line that does not begin with a hash mark in the first column.
 * `--info` -- prints out information about this build of **specs**.
 
 ## Table of record formats

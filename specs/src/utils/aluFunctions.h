@@ -244,7 +244,7 @@
 	X(log,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
 	X(fact,           1, ALUFUNC_REGULAR,     false,  \
-			"(x) - Returns the factorial of x","")    \
+			"(x) - Returns the factorial of x","For integer values 0-20, computes the exact factorial.\nFor values > 20 or real numbers, returns tgamma(x+1).")    \
 	X(permutations,   2, ALUFUNC_REGULAR,     false,  \
 			"(n,k) - Returns the number of permutations of k elements from n elements.","Order matters.")    \
 	X(combinations,   2, ALUFUNC_REGULAR,     false,  \

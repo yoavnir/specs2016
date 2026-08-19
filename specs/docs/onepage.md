@@ -16,7 +16,7 @@ Switches
 ========
 * --toASCII -- causes output to be translated into ASCII if it's outside the range.
 * --force-read-input -- forces specs to read every input line even if none of the spec units use it.  By default they won't.
-* --specFile or -f -- reads the specification from a file rather than the command line.
+* --specFile or -f -- reads the specification from a file rather than the command line. Cannot be combined with spec units on the command line.
 * --verbose or -v -- outputs more information when something goes wrong.
 * --stats -- output statistics on run time, and records read, and on records written. 
 * `--threaded` or `-t` -- run **specs** in separate threads for processing, for readers, and for writers. This was the default until version 0.9.5. Now the default is to run everything in a single thread.
@@ -49,8 +49,8 @@ sets _a_ to the content of the first word of the input record, and sets _b_ to a
 The **InputPart** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
-* A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
-* A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based.
+* A range of words, such as `w5` or `word 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based. The keyword may be abbreviated to any prefix of `word`, but must not be pluralized -- `words` is taken as a string literal.
+* A range of fields, such as `field 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based. As with words, `field` may be abbreviated to any prefix but must not be pluralized.
 * **TODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch.
 * **DTODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** or **RECNO** - A record counter as a 10-digit decimal number.
