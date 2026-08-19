@@ -176,6 +176,12 @@ CONTINUE:
 		return false;
 	}
 
+	// a spec file and command-line spec units are mutually exclusive
+	if (g_specFile != "" && argc > 0) {
+		std::cerr << "A spec file (--specFile) cannot be combined with spec units on the command line: <" << argv[0] << ">\n";
+		return false;
+	}
+
 	return true;
 }
 

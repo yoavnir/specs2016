@@ -136,20 +136,18 @@ std::vector<Token> parseTokensSplit(const char* arg)
 	return ret;
 }
 
-// A comment is defined as starting with the last hash mark + space  ("# ") sequence 
-// on the line, preceded by whitespace unless it's at the start of the line.
+// A comment is defined as starting with the last hash mark + space ("# ") sequence
+// on the line, preceded by whitespace unless it's at the start of the line. A hash
+// mark that is the very last character on the line (i.e. with nothing, not even a
+// trailing space, after it) is treated the same as if it were followed by a space.
 std::string removeComment(std::string& st)
 {
 	std::string ret;
-	std::size_t found = 0;
+	std::size_t found = st.rfind("# ");
 
-	// Special case - a line that is just a pound sign
-	if (st=="#") {
-		ret = std::string("");
-		goto FINISH;
+	if (found==std::string::npos && !st.empty() && st.back()=='#') {
+		found = st.size()-1;
 	}
-	
-	found = st.rfind("# ");
 
 	if (found==std::string::npos || (found>0 && !is_whitespace(st[found-1]))) {
 		ret = st;
