@@ -57,9 +57,9 @@ argument may be any of the following:
 .P
 A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
 .P
-A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
+A range of words, such as `w5` or `word 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based. The keyword may be abbreviated to any prefix of `word`, but must not be pluralized -- `words` is taken as a string literal.
 .P
-A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based.
+A range of fields, such as `field 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based. As with words, `field` may be abbreviated to any prefix but must not be pluralized.
 .P 
 .B TODclock
 -- A 64-bit formatted timestamp, giving microseconds since the Unix epoch.
@@ -2169,6 +2169,14 @@ a list of directories separated by colons on Linux and Mac OS, or semicolons on 
 .I SPECSPATH
 defaults to 
 .B $HOME/specs
+on POSIX systems, or
+.B %APPDATA%\especs
+on Windows.
+A spec file replaces the specification on the command line entirely, so the two cannot be combined:
+.B specs
+rejects an invocation that supplies both
+.B --specFile
+and spec units.
 .IP "--verbose or -v" 3
 Outputs more information when something goes wrong.
 .IP "--stats"
@@ -2279,9 +2287,10 @@ prints the name, arguments, and docstring of all loaded python functions,
 .B builtin
 prints the name, arguments, and a line of help for the built-in functions, 
 .B specs 
-prints a list of all specifications on the path and the comment, and a particular python function name makes 
-.I help
-display the arguments and docstring of that function only.
+prints a list of all the specifications on the path, each with the first line of its opening comment block.
+Any other parameter is taken to be a name. For a built-in or a python function,
+.B specs
+displays the arguments and documentation of that function only. For a specification, it displays the entire opening comment block of the spec file. That block must begin on the first line of the file, and it ends at the first line that does not begin with a hash mark in the first column.
 .IP "--info" 3
 Does not run specs. Instead it displays some information about this build of specs: compiler version, watermarks for queues, 
 random provider, python and floating point precision.
