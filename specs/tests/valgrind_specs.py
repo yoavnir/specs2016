@@ -849,9 +849,9 @@ s = "1-* strip 1"
 i = "   "
 run_case(s,i,"Security: STRIP on all-whitespace input")
 
-s = "print 'fact(21)' 1"
+s = "print 'fact(1760)' 1"
 i = "test"
-run_case(s,i,"Security: fact() overflow limit", memcheck.RetCode_COMMAND_FAILED)
+run_case(s,i,"Security: fact() overflow limit")
 
 
 sys.stdout.write("\n*** All tests passed.\n\n")

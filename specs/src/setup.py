@@ -305,7 +305,7 @@ run_tests: $(TEST_EXES)
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
 	python3 $(TESTS_DIR)/valgrind_specs.py --no_valgrind
-	# python3 $(TESTS_DIR)/cli_arg_tests.py
+	python3 $(TESTS_DIR)/cli_arg_tests.py
 	python3 $(TESTS_DIR)/recfm_tests.py
 
 # Run the full clean -> build -> test cycle with the three phases strictly
