@@ -2386,7 +2386,7 @@ contains a composite string with all build information. For example:
 .p
 or
 .p
-    Built on github (id 27334782912; build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T10:01:18 UTC
+    Built on GitHub (id 27334782912; build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T10:01:18 UTC
 .p
     
 .SH EXAMPLES
