@@ -3,7 +3,7 @@
   <strong>A modern text-processing utility with roots in CMS Pipelines.</strong>
 </p>
 
-`specs` is a re-writing of the specs pipeline stage from CMS, only changed quite a bit
+`specs` is a re-writing of the specs pipeline stage from CMS, only de-mainframe-ized.[^mainframeism]
 
 It is a command line utility for parsing and re-arranging text
 input. It allows re-alignment of fields, some format conversion, and
@@ -14,14 +14,15 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-11-Sep-2026: Version 1.0.0 is here
+7-Sep-2026: Version 1.0.0 is here
 
 What's new:
  * Rolling context allows processing previous and future records.
- * Packages for Linux, Mac OS and Windows, bundled with Python 3.12.
- * Python support in `MSBuild` builds.
  * Exactness in Python function arguments and return value.
+ * Shell command execution from ALU functions (`exec`, `exc1`, `excrc`, `excerr`).
  * Build information system-defined labels, such as `@build-info` and `@build-url`.
+ * Packages for Linux, Mac OS and Windows, bundled with Python 3.12.[^pythonwindows]
+ * New guidebook.
  * Debugging aids for GDB.
 
 
@@ -82,3 +83,9 @@ License
 =======
 * *specs* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
 * The *Python 3.12* library bundled with the GitHub-built packages is licensed under the [Python Software Foundation License](https://github.com/yoavnir/specs2016/blob/dev-1.0.0/PYTHON_LICENSE)
+
+---
+
+[^mainframeism]: Yes, that is a perfectly cromulent verb.
+
+[^pythonwindows]: Requires pre-installation of Python 3.12 on Windows.

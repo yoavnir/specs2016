@@ -4475,6 +4475,7 @@ which prints something like:
 ```
 Built on GitHub (id 27938338680; build 262) from commit 3a14b4f of version 1.0.0-beta at 2026-06-22T08:05:28 UTC
 ```
+\newpage
 
 ## Building From Source
 
@@ -4518,7 +4519,7 @@ Change to the `specs/src` directory, and run the following commands:
 2. `make -j 8 ci` -- equivalent to the targets `clean`, `all`, and `run_tests`.
 3. `sudo make install`
 
-The `setup.py` script auto-detects your compiler, Python installation, and platform capabilities. It generates a `Makefile` tailored to your environment.
+The `setup.py` script auto-detects your compiler, Python installation, and platform capabilities. It generates a `Makefile` tailored to your environment. It also supports some optional flags, for specifying **DEBUG** vs **RELEASE** builds, for Python version, etc.  Run `python setup.py --help` for details.
 
 **Python support**
 
@@ -4528,6 +4529,7 @@ Python support is detected automatically by `setup.py`. To explicitly control it
 * `python setup.py --python no` -- disable Python support entirely
 
 Only Python 3 is supported. To enable Python support, you need the `python3-devel` package (or equivalent) that matches your Python version installed.
+\newpage
 
 **Notes**
 
@@ -4535,6 +4537,7 @@ Only Python 3 is supported. To enable Python support, you need the `python3-deve
 * You can pass `-v DEBUG` to `setup.py` to build a debug version.
 * You can pass `-v PROF` to `setup.py` to build a release version with symbols, useful for profiling.
 * You can pass `--static` to `setup.py` to statically link libstdc++ (useful for portable binaries).
+* You *can* use `setup.py` and `make` to build on Windows if you have these tools installed. You will have to copy the resulting binaries yourself.
 
 ### Building on Windows with MSBuild
 
@@ -4581,6 +4584,7 @@ As an alternative to MSBuild, you can use `make` on Windows. Change to the `spec
 2. `make some`
 
 This approach uses the Visual Studio `cl.exe` compiler via `make` and supports the same `--python` flag as on other platforms.
+\newpage
 
 ### Known Issues
 
