@@ -10,6 +10,8 @@ void disableRegexCache();
 
 void setRegexType(std::string& s);
 
+void setRegexWarn(std::string& s);
+
 bool regexMatch(std::string* pStr, PValue pExp, std::string* pFlags = nullptr);
 
 bool regexSearch(std::string* pStr, PValue pExp, std::string* pFlags = nullptr);

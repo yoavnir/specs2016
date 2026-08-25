@@ -838,8 +838,19 @@ else:
 			sys.stdout.write("\nFailed to make Makefile. Python support is not properly configured.\n")
 			exit(-4)
 
-# RegEx different grammars
-CFG_regex_grammars = (sys.platform=="darwin")
+# RegEx different grammars.
+# std::regex behaves differently across standard library implementations for
+# the non-ECMAScript grammars (basic/extended/awk/grep/egrep). REGEX_GRAMMARS
+# is set to a platform name so that aluRegex.cc can decide, at runtime, which
+# of those grammars are currently known to produce non-conformant results and
+# should trigger a warning.
+if sys.platform=="darwin":
+	regex_grammars_platform = "mac"
+elif compiler=="VS":
+	regex_grammars_platform = "windows"
+else:
+	regex_grammars_platform = "linux"
+condcomp = condcomp + '{}REGEX_GRAMMARS="{}"'.format(def_prefix,regex_grammars_platform)
 	
 condcomp = condcomp + '{}GITTAG="{}"'.format(def_prefix,gittag)
 
@@ -923,9 +934,6 @@ else:
 	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix) \
 	                                   + "{}PYTHON_FULL_VER=N/A".format(def_prefix)
 	
-if CFG_regex_grammars:
-	condcomp = condcomp + "{}REGEX_GRAMMARS".format(def_prefix)
-
 if osversion != "":
 	condlink = condlink + " -mmacosx-version-min={}".format(osversion)
 
