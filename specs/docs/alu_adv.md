@@ -120,6 +120,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `no_copy` | No copy | for `rreplace` only - sections that do not match are not copied |
 | `first_only` | First only | Only the first occurrence is replaced |
 
+The regular expression *grammar* (`ECMAScript`, `basic`, `extended`, `awk`, `grep`, or `egrep`) is set separately, with `--regexType` or the `regexType` configured literal, not through `matchFlags`. Some non-default grammars behave differently across platforms; see the guidebook, Chapter 8, "Regular Expression Portability", before choosing one, and the `regexWarn` configured literal to control the warning specs prints when it detects a risk.
 
 ## Table of Other REXX-Derived Functions
 | Function | Description |

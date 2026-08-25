@@ -45,6 +45,8 @@ static void useKeyValue(std::string& key, std::string& value)
 			specPrettySetLocale(value);
 		} else if (key == "regexType") {
 			setRegexType(value);
+		} else if (key == "regexWarn") {
+			setRegexWarn(value);
 		} else if (key == "while-guard-limit") {
 			try {
 				g_WhileGuardLimit = std::stoul(value);

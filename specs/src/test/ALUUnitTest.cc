@@ -18,6 +18,14 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 extern void setRegexType(std::string& s);
 extern bool g_bWarnAboutGrammars;
 
+// REGEX_GRAMMARS arrives on the command line as a bare (unquoted) token; see
+// the comment in aluRegex.cc for why STRINGIFY()+dequote() is needed here.
+#ifndef REGEX_GRAMMARS
+#define REGEX_GRAMMARS unknown
+#endif
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
+
 #define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
 #define INC_TEST_INDEX2 if (++testIndex==onlyTest || onlyTest==0)
 
@@ -1379,48 +1387,35 @@ int runALUUnitTests14(unsigned int onlyTest)
 	VERIFY_EXPR_RES("rsearch(t,'JUMP')", "1");
 
 	tg.set('z', "zzxayyzz");
-#ifdef REGEX_GRAMMARS
-	setRegexType("");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-	setRegexType("basic");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("extended");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
-	setRegexType("awk");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
-	setRegexType("grep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("egrep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
-#else
-#ifdef VISUAL_STUDIO
-	setRegexType("");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
-	setRegexType("basic");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("extended");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("awk");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("grep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("egrep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-#else
-	setRegexType("");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-	setRegexType("basic");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("extended");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-	setRegexType("awk");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-	setRegexType("grep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("egrep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-#endif
-#endif
+	{
+		// std::regex's matching behavior for the "extended"/"awk"/"egrep"
+		// grammars is platform-dependent: GCC/libstdc++ (Linux) does not
+		// implement POSIX leftmost-longest matching for alternation (GCC
+		// bug 61424, open since 2014), while Clang/libc++ (macOS) and the
+		// MSVC STL (Windows, current toolchains) are conformant. See 
+		// chapter 8 in the guidebook for an explanation of the limitation
+		// in the various platforms. REGEX_GRAMMARS names the current 
+		// platform name ("linux", "mac", or "windows"), set by setup.py 
+		// or the .vcxproj files, so the expected result below is
+		// selected by platform name.
+		std::string regexPlatform = dequote(STRINGIFY(REGEX_GRAMMARS));
+		std::string linuxBuggyResult = "Oyyzz";
+		std::string conformantResult = "Ozz";
+		std::string& posixAlternationResult = (regexPlatform == "linux") ? linuxBuggyResult : conformantResult;
+
+		setRegexType("");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+		setRegexType("basic");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+		setRegexType("extended");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", posixAlternationResult);
+		setRegexType("awk");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", posixAlternationResult);
+		setRegexType("grep");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+		setRegexType("egrep");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", posixAlternationResult);
+	}
 #endif
 
 	setRegexType("");

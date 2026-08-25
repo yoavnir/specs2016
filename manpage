@@ -1958,6 +1958,30 @@ The regular expression follows this grammar. Do not specify more than one of the
 The regular expression follows this grammar. Do not specify more than one of these.
 .P
 .RE 3
+.B Portability note:
+The C++ standard library's matching behavior for the
+.I basic, extended, awk, grep,
+and
+.I egrep
+grammars is not fully consistent across platforms; some implementations do not correctly
+implement POSIX leftmost-longest matching for patterns that combine alternation with an
+unbounded quantifier. specs prints a warning to standard error when you select a grammar
+known to be affected on the platform it is running on. See the guidebook, Chapter 8,
+"Regular Expressions", for details. The
+.B ECMAScript
+grammar (the default) is not affected and is the recommended choice when portability across
+platforms matters.
+.P
+To silence the warning, set the
+.B regexWarn
+configuration label to
+.B 0, false,
+or
+.B no
+in the configuration file; see the
+.B CONFIGURATION FILE
+section below.
+.P
 The last parameter in all three functions is 
 .I matchFlags.
 This optional parameter is also a comma-separated list of flags. The supported flags are:
@@ -2300,12 +2324,14 @@ random provider, python and floating point precision.
 reads a configuration file by default from 
 .B $HOME/.specs
 .P 
-This file contains some configuration options. For now, it only allows you to set user-predefined labels and four specific configuration options: 
+This file contains some configuration options. For now, it only allows you to set user-predefined labels and a handful of specific configuration options: 
 .B timezone, 
 .B locale, 
 .B while-guard-limit,
-and 
-.B SPECSPATH. 
+.B SPECSPATH,
+.B regexType,
+and
+.B regexWarn.
 For example, an entry such as this:
 .P
     timezone: "Europe/Belfast"
@@ -2320,13 +2346,40 @@ command like this:
 .P
     specs /My certificates come from/ 1 @myCA nw 
 .SS "Special configuration labels"
-There is currently just one user-settable configuration label with special meaning:
+The following user-settable configuration labels have special meaning:
 .IP "NO_WARN_REDEFINED_FID" 3
 If this is set to any value, then 
 .B specs
 suppresses the warning message if a 
 .I field identifier
 is re-defined within a specification.   
+.IP "regexType" 3
+Sets the default regular expression grammar and flags used by
+.I rmatch, rsearch,
+and
+.I rreplace,
+equivalent to the
+.B --regexType
+command-line switch but applied to every invocation. See the
+.B Regular Expressions
+section above for the list of valid grammars and flags, for example:
+.P
+    regexType: extended,icase
+.IP "regexWarn" 3
+Controls whether
+.B specs
+warns when a regular expression grammar known to behave differently across platforms is selected
+(see the
+.B Regular Expressions
+section above). Set to
+.B 0, false,
+or
+.B no
+to silence the warning:
+.P
+    regexWarn: 0
+.P
+Any other value, or leaving it unset, keeps the warning enabled, which is the default.
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
