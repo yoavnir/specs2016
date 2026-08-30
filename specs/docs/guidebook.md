@@ -553,6 +553,8 @@ A few of the built-in ALU functions — `rmatch()`, `rsearch()`, and `rreplace()
 
 The default is `ECMAScript`. Other options include `basic`, `extended`, `awk`, `grep`, and `egrep`. You can also combine flags like `icase` for case-insensitive matching. This can also be set in the configuration file.
 
+**Before choosing a grammar other than the default**, see **[Regular Expressions](#regex-portability)** in Chapter 8 — grammars other than `ECMAScript` behave differently on different platforms. **specs** will warn you about it when it detects a risk.
+
 ## Python Functions
 
 ### `--pythonFuncs on/off/auto`
@@ -686,7 +688,15 @@ Sets the default regular expression grammar and flags used by `rmatch()`, `rsear
 ```
 regexType: extended,icase
 ```
-See [`--regexType`](#regextype) in Chapter 3 for the list of valid options.
+See **[Regular Expressions](#regex-portability)** in Chapter 8 for the list of valid options and for platform-specific caveats about using grammars other than `ECMAScript`.
+
+### `regexWarn`
+
+Controls whether specs warns when a regular expression grammar known to behave differently across platforms is selected (see **[Regular Expressions](#regex-portability)** in Chapter 8). Set to `0`, `false`, or `no` to silence the warning:
+```
+regexWarn: 0
+```
+Any other value (or leaving it unset) keeps the warning enabled, which is the default.
 
 ### `SPECSPATH`
 
@@ -751,6 +761,7 @@ lbs_to_kg: 0.453592
 projectRoot: /home/alice/myproject
 reportHeader: "Monthly Report for"
 ```
+\newpage
 
 ## Pre-defined Configured Literals
 
@@ -1935,6 +1946,81 @@ Here `3+4` is an integer computation, so it is exact, while `3/4` involves float
 
 The built-in `exact()` function, introduced in **[Chapter 9](#chap9)**, lets you test the exactness of an expression. User-written Python functions can also inspect and control exactness explicitly; see **[Chapter 14](#chap14)** for details.
 
+## Regular Expressions {#regex-portability}
+
+specs's regular-expression functions — `rmatch()`, `rsearch()`, and `rreplace()` (all described in **[Chapter 9](#chap9)**) — are built on the C++ standard library's `std::regex`. `std::regex` supports several regular expression *grammars*, selected with the [`--regexType`](#regextype) command-line switch or the [`regexType`](#configured-literal-settings) configured literal. This section explains what those grammars are, and — because this is an area where C++ standard library implementations genuinely disagree — where the behavior of **specs** can differ from one platform to another.
+
+This is **not** a tutorial on regular expression syntax; see any general regular expression reference for that. It focuses on the parts of the picture that are specific to **specs**.
+
+### The Grammars
+
+| Grammar | Style | Notes |
+|---------|-------|-------|
+| `ECMAScript` (default) | JavaScript-like | Supports `+`, `?`, `\|`, `{m,n}`, non-greedy `*?`/`+?`, and more, all without escaping |
+| `basic` | POSIX BRE | `+`, `?`, and unescaped `\|` are **not** special - they match themselves literally |
+| `extended` | POSIX ERE | Adds `+`, `?`, and unescaped `\|` back, but still has no non-greedy quantifiers |
+| `awk` | POSIX ERE, awk-flavored | Very close to `extended` |
+| `grep` | Same as `basic` | For familiarity with the `grep` command line tool |
+| `egrep` | Same as `extended` | For familiarity with the `egrep` command line tool |
+
+You can combine a grammar with *match flags* such as `icase` (case-insensitive matching), e.g. `--regexType extended,icase`.
+
+**Recommendation:** unless you specifically need POSIX syntax, leave the grammar at its default, `ECMAScript`. It is the grammar with the most predictable, most thoroughly-specified behavior, and (as explained below) the one least affected by cross-platform inconsistencies.
+
+### Why Results Can Differ Across Platforms
+
+The C++ standard specifies, in detail, how each grammar is supposed to choose *which* substring a pattern matches when more than one substring would satisfy it:
+
+- **`ECMAScript`** uses **depth-first / leftmost-first** matching: alternatives inside `(a|b)` are tried in the order written, and greedy quantifiers back off one character at a time until the rest of the pattern succeeds. The first match found this way wins.
+- **The POSIX grammars** (`basic`, `extended`, `awk`, `grep`, `egrep`) are required to use **leftmost-longest** matching: among every possible match starting at the leftmost position, the *overall longest* one wins, regardless of the order alternatives are written in.
+
+In practice, not every C++ standard library implements leftmost-longest matching correctly. As of this writing:
+
+- **Linux (libstdc++/GCC):** `extended`, `awk`, and `egrep` do **not** implement leftmost-longest matching for patterns that combine an unbounded quantifier with an alternation, such as `.*(a|xayy)`. This is a long-standing, still-open GCC bug (GCC bugzilla #61424). Results from these three grammars end up looking like `ECMAScript`'s leftmost-first answer instead of the POSIX-correct leftmost-longest one.
+- **macOS (libc++/Clang)** and **Windows (MSVC STL, current toolchains):** all grammars implement leftmost-longest matching correctly for this class of pattern. (Older MSVC releases, prior to a March 2025 fix, had their own separate bugs in this area; if you are using a very old Windows toolchain, verify your results independently.)
+- **`basic` and `grep`** behave identically on every platform: since `+`, `?`, and unescaped `\|` are not special in POSIX BRE, patterns using them are matched literally everywhere. This is expected, not a bug — it just means those two grammars support less pattern syntax than the others.
+
+**Example** — the same call can give two different answers depending on the platform:
+```
+specs -s z='zzxayyzz' --regexType extended PRINT "rreplace(z,'.*(a|xayy)','O')" 1
+```
+- On Linux: `Ozz` was expected before the leftmost-first fallback described above, but the actual (buggy) result is `Oyyzz`.
+- On macOS and current Windows: `Ozz`, the POSIX-correct leftmost-longest answer.
+
+Since `specs` warns you whenever you pick a grammar known to be buggy on the running platform (see below), you do not need to memorize this table to be safe — just default to `ECMAScript`, or pay attention to the warning if you deliberately choose a POSIX grammar.
+
+### A Construct to Avoid Entirely: Stacked Repetition Operators
+
+Patterns like `.*?` (a `*` immediately followed by `?`) apply *two* repetition operators back-to-back to the same atom. This is well-defined in `ECMAScript` (`*?` is the standard non-greedy "star"), but for the POSIX grammars, the POSIX specification itself says:
+
+> "The behavior of multiple adjacent duplication symbols ('+', '*', '?', and intervals) produces undefined results."
+
+This is not a library bug to track and wait for a fix — POSIX explicitly leaves it open, so different implementations are free to do different things, and they do:
+
+- macOS (libc++) and Windows (MSVC STL) both **reject** such patterns outright, throwing a regular-expression parse error, when used with `extended`, `awk`, or `egrep`.
+- Linux (libstdc++) **accepts** such patterns silently and returns a match.
+
+Since no result is guaranteed to be portable here, it is best to avoid stacked repetition operators (`.*?`, `a+*`, `a**`, `a?{2,3}`, and similar) with `basic`, `extended`, `awk`, `grep`, or `egrep` — regardless of whether your current platform happens to accept them. This restriction does not apply to `ECMAScript`, where `*?`, `+?`, and `??` are simply the well-defined non-greedy quantifiers.
+
+### The Grammar Warning
+
+Because of the leftmost-longest issue described above, `specs` prints a warning to standard error the first time you select a grammar that is known to behave incorrectly on the platform it is currently running on:
+
+```
+$ specs --regexType extended PRINT "rreplace(abc,'a+','X')" 1
+
+Warning: the 'extended' regular expression grammar has known matching bugs on this platform
+Xbc
+```
+
+The warning only fires for the specific grammar/platform combinations described above (currently: `extended`, `awk`, and `egrep` on Linux). Choosing `ECMAScript`, `basic`, or `grep` never triggers it, and choosing any grammar on a platform without known bugs never triggers it either.
+
+If you have already accounted for this behavior — for example, your specs and test suite were written and verified against the platform you deploy to — you can silence the warning with the `regexWarn` configured literal:
+```
+regexWarn: 0
+```
+Any of `0`, `false`, or `no` disables the warning; any other value (or simply not setting it) leaves it enabled. See **[Chapter 4](#configured-literal-settings)** for how configured literals work.
+
 ---
 
 # Chapter 9: Built-in Functions {#chap9}
@@ -2201,6 +2287,8 @@ The optional `flags` argument is a comma-separated list:
 | `sed` | sed formatting for replacement (for `rreplace`) |
 | `no_copy` | Do not copy non-matching sections (for `rreplace`) |
 
+The regular expression grammar itself (`ECMAScript`, `basic`, `extended`, `awk`, `grep`, or `egrep`) is set separately via [`--regexType`](#regextype) or the `regexType` configured literal, not through `matchFlags`. See **[Regular Expression Portability](#regex-portability)** in Chapter 8 before choosing a grammar other than the default — some grammars behave differently across platforms.
+
 ### String Manipulation Functions with Multiple Parameters
 
 **`substitute(haystack, needle, subst, max)`** replaces occurrences of a substring:
@@ -2465,7 +2553,6 @@ A more efficient version runs the command only once — on the first record — 
 specs -C ls IF "first()" THEN SET "#0:=exc1('ls | wc')" ENDIF "File" 1 w8 NW "is one of the" NW PRINT "#0" NW "files in this directory"
 ```
 
-\newpage
 ## Special Functions
 
 | Function | Description |
@@ -4475,6 +4562,7 @@ which prints something like:
 ```
 Built on GitHub (id 27938338680; build 262) from commit 3a14b4f of version 1.0.0-beta at 2026-06-22T08:05:28 UTC
 ```
+\newpage
 
 ## Building From Source
 
@@ -4518,7 +4606,7 @@ Change to the `specs/src` directory, and run the following commands:
 2. `make -j 8 ci` -- equivalent to the targets `clean`, `all`, and `run_tests`.
 3. `sudo make install`
 
-The `setup.py` script auto-detects your compiler, Python installation, and platform capabilities. It generates a `Makefile` tailored to your environment.
+The `setup.py` script auto-detects your compiler, Python installation, and platform capabilities. It generates a `Makefile` tailored to your environment. It also supports some optional flags, for specifying **DEBUG** vs **RELEASE** builds, for Python version, etc.  Run `python setup.py --help` for details.
 
 **Python support**
 
@@ -4528,6 +4616,7 @@ Python support is detected automatically by `setup.py`. To explicitly control it
 * `python setup.py --python no` -- disable Python support entirely
 
 Only Python 3 is supported. To enable Python support, you need the `python3-devel` package (or equivalent) that matches your Python version installed.
+\newpage
 
 **Notes**
 
@@ -4535,6 +4624,7 @@ Only Python 3 is supported. To enable Python support, you need the `python3-deve
 * You can pass `-v DEBUG` to `setup.py` to build a debug version.
 * You can pass `-v PROF` to `setup.py` to build a release version with symbols, useful for profiling.
 * You can pass `--static` to `setup.py` to statically link libstdc++ (useful for portable binaries).
+* You *can* use `setup.py` and `make` to build on Windows if you have these tools installed. You will have to copy the resulting binaries yourself.
 
 ### Building on Windows with MSBuild
 
@@ -4581,6 +4671,7 @@ As an alternative to MSBuild, you can use `make` on Windows. Change to the `spec
 2. `make some`
 
 This approach uses the Visual Studio `cl.exe` compiler via `make` and supports the same `--python` flag as on other platforms.
+\newpage
 
 ### Known Issues
 

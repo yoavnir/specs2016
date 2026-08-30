@@ -48,14 +48,45 @@ void dumpRegexStats() {
 	}
 }
 
-#ifdef REGEX_GRAMMARS
-#define OTHER_GRAMMAR_UNSUPPORTED false
-#else
-#define OTHER_GRAMMAR_UNSUPPORTED true
+// REGEX_GRAMMARS names the std::regex implementation family for the current
+// build platform ("linux", "mac", or "windows"); it is always defined by
+// setup.py (POSIX builds) or the .vcxproj files (Windows builds). The
+// fallback below only matters for some hypothetical build that skips both.
+// It arrives on the command line as a bare (unquoted, since the shell strips
+// the quotes) token, so it must go through STRINGIFY()+dequote(), the same
+// convention used for GITTAG/LITERAL_PLATFORM in Config.cc and specs.cc.
+#ifndef REGEX_GRAMMARS
+#define REGEX_GRAMMARS unknown
 #endif
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
+
+// Grammars whose std::regex implementation is currently known to diverge
+// from the C++ standard's required matching semantics on a given platform.
+// This is not about a grammar being "unsupported" - it compiles and runs
+// fine everywhere - it is about known-incorrect *results*:
+//   - Linux (libstdc++): "extended", "awk", and "egrep" do not implement
+//     POSIX leftmost-longest matching for alternation (GCC bug 61424,
+//     open since 2014).
+//   - macOS (libc++) and Windows (MSVC STL, current toolchains) are
+//     conformant for every grammar.
+static bool isKnownBuggyGrammar(const char* grammarName) {
+	static const std::string platform = dequote(STRINGIFY(REGEX_GRAMMARS));
+	if (platform == "linux") {
+		return 0 == strcasecmp(grammarName,"extended")
+		    || 0 == strcasecmp(grammarName,"awk")
+		    || 0 == strcasecmp(grammarName,"egrep");
+	}
+	return false;
+}
+
+void setRegexWarn(std::string& s) {
+	g_bWarnAboutGrammars = !(s=="0" || 0==strcasecmp(s.c_str(),"false") || 0==strcasecmp(s.c_str(),"no"));
+}
 
 void setRegexType(std::string& s) {
-	bool bWarnUnsupportedGrammarOption = false;
+	bool bWarnUnsupportedOption = false;
+	bool bWarnBuggyGrammar = false;
 	g_regexType = std::regex_constants::ECMAScript;
 	gs_regexType = s;
 	std::unique_ptr<char, decltype(&free)> st_guard(strdup(s.c_str()), free);
@@ -63,11 +94,13 @@ void setRegexType(std::string& s) {
 	char* st_ctx = st;
 	char* p = strtok_r(st,",", &st_ctx);
 	while (p) {
+		bWarnUnsupportedOption = false;
+		bWarnBuggyGrammar = false;
 		if (0 == strcasecmp(p,"icase")) {
 			g_regexType |= std::regex_constants::icase;
 		} else if (0 == strcasecmp(p,"nosubs")) {
 			g_regexType |= std::regex_constants::nosubs;
-			bWarnUnsupportedGrammarOption = true;
+			bWarnUnsupportedOption = true;
 		} else if (0 == strcasecmp(p,"optimize")) {
 			g_regexType |= std::regex_constants::optimize;
 		} else if (0 == strcasecmp(p,"collate")) {
@@ -76,25 +109,30 @@ void setRegexType(std::string& s) {
 			g_regexType = std::regex_constants::ECMAScript;
 		} else if (0 == strcasecmp(p,"basic")) {
 			g_regexType = std::regex_constants::basic;
-			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
+			bWarnBuggyGrammar = isKnownBuggyGrammar(p);
 		} else if (0 == strcasecmp(p,"extended")) {
 			g_regexType = std::regex_constants::extended;
-			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
+			bWarnBuggyGrammar = isKnownBuggyGrammar(p);
 		} else if (0 == strcasecmp(p,"awk")) {
 			g_regexType = std::regex_constants::awk;
-			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
+			bWarnBuggyGrammar = isKnownBuggyGrammar(p);
 		} else if (0 == strcasecmp(p,"grep")) {
 			g_regexType = std::regex_constants::grep;
-			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
+			bWarnBuggyGrammar = isKnownBuggyGrammar(p);
 		} else if (0 == strcasecmp(p,"egrep")) {
 			g_regexType = std::regex_constants::egrep;
-			bWarnUnsupportedGrammarOption = OTHER_GRAMMAR_UNSUPPORTED;
+			bWarnBuggyGrammar = isKnownBuggyGrammar(p);
 		} else {
 			std::string err = "Invalid regular expression syntax option type: " + std::string(p);
 			MYTHROW(err);
 		}
-		if (bWarnUnsupportedGrammarOption && g_bWarnAboutGrammars) {
-			std::cerr << "\nWarning: syntax option '" << p << "' is not supported on this platform\n";
+		if (g_bWarnAboutGrammars) {
+			if (bWarnUnsupportedOption) {
+				std::cerr << "\nWarning: syntax option '" << p << "' is not supported on this platform\n";
+			}
+			if (bWarnBuggyGrammar) {
+				std::cerr << "\nWarning: the '" << p << "' regular expression grammar has known matching bugs on this platform\n";
+			}
 		}
 		p = strtok_r(nullptr, ",", &st_ctx);
 	}
