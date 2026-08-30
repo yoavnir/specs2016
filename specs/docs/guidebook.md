@@ -60,7 +60,7 @@ include-before: |
 
 ## What is specs?
 
-**specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as a more powerful version of `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
+**specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as an alternative to `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
 
 **specs** was originally a **stage** in the **CMS Pipelines** system on IBM mainframes running **VM/ESA** and later **z/VM**. This version is a re-implementation for Linux, Mac OS, and Windows, liberally extended with new features, and with many (but not all!) of the "Mainframe-isms" replaced with "UNIX-isms". As an example, **REXX** integration was replaced with **Python** integration. It does, however, keep the base-1 indexing, meaning that `WORD 1` is the first word in the record.
 
