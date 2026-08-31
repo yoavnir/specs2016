@@ -1702,11 +1702,12 @@ int runALUUnitTests16(unsigned int onlyTest)
 	if (countFailures) {
 		if (onlyTest == 0) {
 			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
-			std::cout << "Failed tests:\n";
-			for (int i : failedTests) {
-				std::cout << "\t" << i << "\n";
-			}
 		}
+		std::cout << "FAILED_TESTS:";
+		for (int i : failedTests) {
+			std::cout << " " << i;
+		}
+		std::cout << "\n";
 		return 4;
 	} else {
 		if (onlyTest == 0) {
