@@ -1215,12 +1215,12 @@ int main(int argc, char** argv)
 	if (errorCount) {
 		if (onlyTest == 0) {
 			std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
-			std::cout << "Failed tests: ";
-			for (int i : failedTests) {
-				std::cout << i << " ";
-			}
-			std::cout << "\n";
 		}
+		std::cout << "FAILED_TESTS:";
+		for (int i : failedTests) {
+			std::cout << " " << i;
+		}
+		std::cout << "\n";
 	} else {
 		if (onlyTest == 0) {
 			std::cout << "\n*** All tests passed.\n";
