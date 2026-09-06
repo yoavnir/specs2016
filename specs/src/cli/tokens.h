@@ -79,6 +79,7 @@
 	X(SKIPWHILE,      false, true)  \
 	X(SPLITW,         false, false) \
 	X(SPLITF,         false, false) \
+	X(CONTEXT,        false, true)  \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,
@@ -134,7 +135,7 @@ public:
 	void            appendLiteral(char c) {m_literal+=c;}
 	int             argIndex() {return m_argc;}
 	std::string&    Orig() {return m_orig;}
-	std::string&    HelpIdentify();
+	std::string&    HelpIdentify(bool bAllowEmptyLiteral = false);
 	void            deallocDynamic() {/* - TODO: ERASE -- if (m_pRange) {m_pRange = nullptr;} */} // do we even need this method?
 private:
 	TokenListTypes  m_type;

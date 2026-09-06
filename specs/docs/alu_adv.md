@@ -6,7 +6,7 @@
 | -- | ---- | ------- |
 | `+` | Unary Plus | |
 | `-` | Unary Minus | Negates its operand, so if `a` is 5.3 then `-a` is -5.3 |
-| `!` | Unary Not | Logical Not. If the result is zero, returns `1`, otherwise returns zero |
+| `!` | Unary Not | Logical Not. If the result is zero, returns `1`, otherwise returns zero. Equivalent to the `not` built-in function (see below) |
 | `+` | Binary Plus | Returns the sum of its two operands |
 | `-` | Binary Minus | Returns the difference between the left-hand operand and the right-hand operand |
 | `*` | Binary Multiplication | Returns the product of its two operands |
@@ -42,7 +42,7 @@
 | `%=` | RemDiv | Divides the value of the left-hand counter by the right-hand counter, storing the **remainder** in that counter |
 | `\|\|=` | Appnd | Appends the string value of the right-hand operand to the string value of the left-hand counter, storing the concatenation in that counter |
 
-## Table of Numerical Functions
+## Table of Numerical and Logical Functions
 | Function | Description |
 | -------- | ----------- |
 | `abs(x)` | Returns the absolute value of `x` |
@@ -77,6 +77,8 @@
 | `tan(x)` | Returns the tangent function, treating `x` as an angle expressed in radians |
 | `tobin(x)` | Returns a binary (usually unprintable) representation of the integer number x. For example, if `x` is 65 the function returns "A"; if `x` is 16961 the function returns "AB". |
 | `tobine(x,n)` | Returns a binary representation of the integer number x as an *n*-byte string. |
+| `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
+| `not(expr)` | Returns 1 if the `expr` is an integer zero, or 0 if it is anything else.  It serves as an alternative to the **unary logical not** operator (!). |
 
 ## Table of String Functions
 | Function | Description |
@@ -118,6 +120,7 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `no_copy` | No copy | for `rreplace` only - sections that do not match are not copied |
 | `first_only` | First only | Only the first occurrence is replaced |
 
+The regular expression *grammar* (`ECMAScript`, `basic`, `extended`, `awk`, `grep`, or `egrep`) is set separately, with `--regexType` or the `regexType` configured literal, not through `matchFlags`. Some non-default grammars behave differently across platforms; see the guidebook, Chapter 8, "Regular Expression Portability", before choosing one, and the `regexWarn` configured literal to control the warning specs prints when it detects a risk.
 
 ## Table of Other REXX-Derived Functions
 | Function | Description |
@@ -135,7 +138,6 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `justify(string,length,pad)` | Evenly justifies words within `string`. The `length` specifies the length of the returned string, while `pad` specifies what padding (by default a space) to insert (if necessary). |
 | `overlay(string1, string2 ,start ,length ,pad)` | Returns a copy of `string2`, partially or fully overwritten by `string1`. `start` specifies the starting position of the overlay. `length` truncates or pads `string1` prior to the operation, using `pad` as the pad character. |
 | `reverse(string)` | Returns a copy of a `string` with its characters reversed. |
-| `sign(number)` | Returns 1 if the `number` is positive, 0 if the `number` is 0, and -1 if the `number` is negative. |
 | `space(string,length,pad)` | Formats a `string` by replacing internal blanks with `length` occurrences of the `pad` character. The default pad character is blank and the default length is 1. Leading and trailing blanks are always removed. If `length` is 0, all blanks are removed. |
 | strip(string,option,pad-chars) | Returns `string` stripped of leading and/or trailing blanks or any other character specified in the `pad-chars` string. `Option` values determine the action: *L* for leading, *T* for trailing, and *B* for both (the default) |
 | `subword(string,start,length)` | Returns the substring that begins at blank-delimited word `start`. If `length` is omitted, it defaults to the remainder of the string. |
@@ -164,7 +166,11 @@ All three regular expression functions have an argument called `matchFlags`. Thi
 | `number()` | Returns the number of processing cycles we have already gone through. Unless `READ` or `READSTOP` are used, this will be equal to the number of records read so far. |
 | `range(n,m)` | Returns the substring from the *n*-th character (default first) to the *m*-th character (default last) |
 | `recno()` | Returns the number of the currently read record. If the `READ` or `READSTOP` keywords are used this may be greater than `number()` |
-| `record()` | Returns the entire input record |
+| `ctxrecno()` | Returns the record number of the record that input parts work on. This is similar to `recno()`, but considers rolling context, which `recno()` does not. |
+| `ctxoffset()` | Returns the current effective context offset. Returns 0 when no `CONTEXT` is in effect. |
+| `ctxoob(s)` | Returns 1 if the argument string came from out-of-bounds input, 0 otherwise. With no argument, checks the current (context-affected) record. The out-of-bounds property is not preserved by all operations -- see [Out-of-Bounds (OOB) Records](#out-of-bounds-oob-records) below. |
+| `record()` | Returns the entire input record. Equivalent to `@!`. |
+| `cfrecord()` | Returns the entire input record, disregarding rolling context. Same as `record()` when `CONTEXT` is not in effect. Equivalent to `@@`. |
 | `word(n)` | Returns the *n*-th word |
 | `wordrange(n,m)` | Returns the substring from the *n*-th word (default first) to the *m*-th word (default last) |
 | `wordcount(s,p)` | Returns the number of words in the string `s`, or in the current record if `s` is not specified. The separator used is `p`.  If `p` is not specified, the separator is the current word separator if processing the current record, or a **blank space** if processing `s`. |
@@ -216,6 +222,19 @@ The parameters for the `fmap_dump` functions are as follows:
 * *showPct* - evaluated as boolean. If *true* causes the textual formats to print out a percentage. Causes the CSV and JSON formats to add a fraction. Default is *false*.
 
 
+## Table of Shell Command Functions
+
+These functions run a shell command and let you process its output and return code.
+
+| Function | Description |
+| -------- | ----------- |
+| `exec(cmd)` | Runs the shell command `cmd` and returns its standard output. A single trailing newline is stripped. The return code is saved for `excrc()` and the standard error is saved for `excerr()` |
+| `exc1(cmd,[lineNo])` | Like `exec(cmd)`, but returns only the content of line `lineNo` of the standard output. `lineNo` must be a positive integer and defaults to `1` (the first line); an empty string is returned if that line does not exist |
+| `excrc()` | Returns the return code of the last shell command run by `exec()` or `exc1()`, or **NaN** if no such command has been run |
+| `excerr()` | Returns the standard error of the last shell command run by `exec()` or `exc1()`. If no such command has been run, returns an empty string |
+
+The `excrc()` and `excerr()` functions reflect **only the last run** of a shell command, so use them before any other shell command is run. Take special care when `exec()` or `exc1()` are used inside an `IF` or `WHILE` block, where the order and number of runs may not be obvious.
+
 ## Table of Special Functions
 | Function | Description |
 | -------- | ----------- |
@@ -235,6 +254,25 @@ The parameters for the `fmap_dump` functions are as follows:
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |
 | `next()` | Returns the index of the print position. `w1 "(next())"` should do the same as `w1 next`. |
 | `exact(expression)` | Returns `1` if the evaluation of the `expression` results in an exact value, or `0` if some rounding and/or loss of precision has been involved in the computaion. The function has some limitations and will err on the side of returning `0` when it's unsure. |
+
+## Out-of-Bounds (OOB) Records
+
+When `CONTEXT` or a `@±n` expression refers to a record beyond the beginning or end of the input, or when a `READ` runs dry, the working string becomes an *out-of-bounds* (OOB) record. An OOB record behaves as an empty string, but it additionally carries a hidden flag marking it as out of bounds. This flag lets you distinguish a record that is genuinely empty from one that is empty only because it lies past the edge of the input. The flag can be queried with the `ctxoob()` function.
+
+The OOB flag travels with the working string only as long as the OOB record is read **directly**. It is *preserved* by:
+
+- `ctxoob()` with no argument (it inspects the current working string).
+- The record-access functions `record()`, `range()`, `substr()`, `word()`, `wordrange()`, `field()` and `fieldrange()` when they operate on the current (OOB) record.
+- The `@@`, `@!` and `@±n` input-record expressions.
+- Character, word and field range labels (for example `1-5 a:`, `w1-3 x:` or `f1 y:`) that capture the OOB record. The captured label, e.g. `a`, remains OOB and can be tested with `ctxoob(a)`.
+
+The OOB flag is **not** preserved once the value is copied into a plain-text value that no longer refers to the working string. Known cases where the flag is lost include:
+
+- **Assignment into a numbered counter** with a `SET` spec unit (or any `:=` assignment). For example, after `CONTEXT 1 set "#5:=record()"`, the expression `ctxoob(#5)` returns `0`, because the counter stores only the (empty) text and not the OOB flag.
+- **Values that pass through an output-producing spec unit** such as `PRINT` before being re-captured. For example, in `CONTEXT 1 1-5 a: PRINT "a" b: PRINT "ctxoob(b)"`, the label `b` is no longer OOB and `ctxoob(b)` returns `0`.
+- Other operations that materialize the working string as ordinary text may likewise drop the flag.
+
+In short: query OOB status as close as possible to where the OOB record is read, and do not expect it to survive a round trip through a counter or other plain-text storage.
 
 
 

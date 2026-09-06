@@ -36,7 +36,7 @@ So why do we have data fields at all if we don't want to output them? There can 
 ## >1 Input Records in Each Iteration
 Sometimes we would like to use more than one input record to produce our output record. We use the `READ` or `READSTOP` keywords for that.
 
-Both `READ` and `READSTOP` read the next record from the input stream to be the new active input record. The difference is what to do if the current line was the last. With `READ` the specification continues to be executed as if we have just read an empty record. With `READSTOP` the execution of the specification stops.
+Both `READ` and `READSTOP` read the next record from the input stream to be the new active input record. The difference is what to do if the current line was the last. With `READ` the specification continues to be executed as if we have just read an empty record. With `READSTOP` the execution of the specification stops. When a `READ` or `READSTOP` spec unit is applied, the context offset is reset to zero (the current record).
 
 Below is an example of a specification that handles git log. A git log looks something like this:
 ```
@@ -94,7 +94,7 @@ e6d7f9ac591379d653a5685f9d75deccc1792545 synp71 1548011387.000000
 ## Pushing Back The Last Record
 That specification in the previous section reads several lines in a `WHILE` loop searching for the line we need for the next iteration. This is a common pattern and we were forced to use a variable to transfer the content of the next commit record to the next iteration.
 
-**specs** version 0.3 introduces the `UNREAD` spec unit. What it does is push back the current read record so that it is possible to process it as the first record of the next iteration. The specification above can thus be simplified as follows:
+The `UNREAD` spec unit pushes back the current read record so that it is possible to process it as the first record of the next iteration. The specification above can thus be simplified as follows:
 
 ```
 specs WORD 2                    1
@@ -246,6 +246,107 @@ A few things to note:
 1. It does not matter what the selected stream is at the end of the specification. The next cycle always begins with the primary stream selected.
 1. `READ` and `READSTOP` **MUST NOT** be used during secondary reading. This will result in an error.
 1. Specifications should not mix `READ` and `READSTOP` with `SELECT SECOND` even if the `READ` or `READSTOP` is during reading of the primary record. The results are undefined and may change in future releases.
+
+## Rolling Context
+The `SELECT SECOND` mechanism described above lets us peek one record ahead. But what if we need to look further ahead, or look *behind* at records we've already seen? The `CONTEXT` spec unit provides a general way to do this.
+
+`CONTEXT` takes a single integer argument -- a positive number to look forward, a negative number to look backward, or zero to reset to the current record. When **specs** encounters a `CONTEXT` spec unit, it changes the active input record to the one at the given offset from the current record. Any input parts that follow will read from that record instead of the current one. Note that reading beyond the input with `CONTEXT` does not cause processing to stop, even if a `READSTOP` token is present in the specification.
+
+Consider the following input:
+```
+alpha
+beta
+gamma
+```
+And use the following specification:
+```
+specs 1-* 1 CONTEXT 1 1-* NEXTWORD
+```
+The output is:
+```
+alpha beta
+beta gamma
+gamma
+```
+On the first cycle, the current record is `alpha` and `CONTEXT 1` peeks one record ahead to `beta`. On the second cycle, the current record is `beta` and `CONTEXT 1` peeks ahead to `gamma`. On the third cycle, there is no record after `gamma`, so the context record is empty.
+
+Looking backward works the same way:
+```
+specs 1-* 1 CONTEXT -1 1-* NEXTWORD
+```
+produces:
+```
+alpha
+beta alpha
+gamma beta
+```
+On the first cycle there is no previous record, so the context record is empty. On later cycles we get the previous record.
+
+Multiple `CONTEXT` tokens can appear in a single specification, and `CONTEXT 0` resets to the current record:
+```
+specs CONTEXT 1 WORD 1 1 CONTEXT 0 WORD 1 NEXTWORD
+```
+Given the same input, the output is:
+```
+beta alpha
+gamma beta
+gamma
+```
+The first column comes from `WORD 1` while the *next* record is selected, and the second column comes from `WORD 1` after `CONTEXT 0` resets back to the current record.
+
+Note that when a `READ` or `READSTOP` spec unit is applied, the context offset is automatically reset to zero (the current record). This means that any context offset set by a `CONTEXT` spec unit will be lost when `READ` or `READSTOP` is executed.
+
+### Context in Expressions
+In addition to the `CONTEXT` spec unit, **specs** supports the `@+n` and `@-n` syntax in expressions, where *n* is a non-negative integer. These evaluate to the full content of the record at the given offset:
+```
+specs PRINT "length(@+1)" 1
+```
+Given the input `AB`, `CDE`, `F`, this outputs `3`, `1`, `0` -- the length of the *next* record in each cycle. Note that reading beyond the input with `@+n` or `@-n` does not cause processing to stop, even if a `READSTOP` token is present in the specification.
+
+Note that `@@` (the current input record) and `@+0` or `@-0` are not quite the same thing when `CONTEXT` is also used: `@@` always returns the real input record, regardless of any `CONTEXT` that may be in effect. To get the context-affected record in an expression, use `@!`:
+```
+specs CONTEXT 1 PRINT "@!" 1 WRITE PRINT "@@" 1 WRITE
+```
+Given the input `alpha`, `beta`, `gamma`, the output is:
+```
+beta
+alpha
+gamma
+beta
+
+gamma
+```
+The first line of each pair comes from `@!` (the context-affected record -- one ahead), while the second comes from `@@` (the original input record). Without `CONTEXT`, `@!` and `@@` are equivalent.
+
+Similarly, the `record()` function returns the context-affected record, while the `cfrecord()` function always returns the original input record regardless of any `CONTEXT` that may be in effect.
+
+### The ctxrecno() Function
+The `ctxrecno()` function returns the record number that the context record *would* have if it were the current record. Without any `CONTEXT` in effect, `ctxrecno()` is the same as `recno()`. With `CONTEXT 1`, `ctxrecno()` returns `recno() + 1`, and so on:
+```
+specs PRINT "ctxrecno()" 1 CONTEXT 1 PRINT "ctxrecno()" NEXTWORD
+```
+Given three input records, the output is:
+```
+1 2
+2 3
+3 4
+```
+
+### How It Works
+**specs** determines the maximum forward and backward offsets at compile time and uses them to maintain a sliding window of records around the current one. 
+Records are read ahead into a forward buffer, and past records are kept in a backward buffer. This means that a specification using `CONTEXT 3` will read three records ahead before processing begins.
+
+When verbose mode (`-v`) is enabled, **specs** reports the buffer sizes:
+```
+specs: Using a 3-record rolling context: 2 records forward and 1 records backward.
+```
+
+If the context offset refers to a record that does not exist (before the first record or past the last), the context record is empty.
+
+### Restrictions
+1. Rolling context is not supported with threading (`-j` flag).
+1. Rolling context is not supported with multiple input streams (see below).
+1. The offset in the rolling context is limited to up to 256 records before or after the current record.
 
 ## Multiple Input Streams
 **specs** allows you to use multiple input streams in your specifications. The way this works is that you use the `--is2` to `--is8` CLI switches to specify additional (up to a total of 8) input streams to use. At each cycle of the specification, 1 record is read from each input stream, which implies that the number of records in each stream should be equal. 

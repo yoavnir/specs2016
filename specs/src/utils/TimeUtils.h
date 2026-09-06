@@ -64,11 +64,13 @@ enum queueTimeClasses {
 class queueTimer {
 public:
 	queueTimer();
+	void     setCapacity(size_t capacity) { m_capacity = capacity; }
 	void     increment();
 	void     decrement();
 	void     drain();
 	void     dump(std::string title);
 private:
+	size_t   m_capacity;
 	size_t   m_elements;
 	std::chrono::time_point<HClock> m_lastTimePoint;
 	std::chrono::time_point<HClock> m_lastIncDec;

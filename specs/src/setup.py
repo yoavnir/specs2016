@@ -127,9 +127,30 @@ with open("xx.txt","w") as v:
 	with open("xx.txt", "r") as flags:
 		filtered_flags = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes']
 		filtered_flags_debug = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes', '-Wp,-D_FORTIFY_SOURCE=2']
+		# Multi-word flags to filter: list of (flag, value) tuples to remove
+		# For example: ('-arch', 'x86_64') will remove "-arch x86_64" but keep "-arch arm64"
+		filtered_multi_flags = [('-arch', 'x86_64')]
 		cflags=flags.read().strip().split()
 		filter = filtered_flags_debug if variation=="DEBUG" else filtered_flags
-		filtered_cflags = [f for f in cflags if f not in filter]
+		filtered_cflags = []
+		i = 0
+		while i < len(cflags):
+			flag = cflags[i]
+			# Check if this flag should be filtered out
+			should_filter = False
+			if flag in filter:
+				should_filter = True
+			else:
+				# Check multi-word flags
+				for multi_flag, multi_value in filtered_multi_flags:
+					if flag == multi_flag and i + 1 < len(cflags) and cflags[i + 1] == multi_value:
+						should_filter = True
+						i += 1  # Skip the next token (the value)
+						break
+			
+			if not should_filter:
+				filtered_cflags.append(flag)
+			i += 1
 		python_cflags = " ".join(filtered_cflags) + " -Wno-deprecated-register -fPIC"
 	
 	# Get the result of python-config --ldflags
@@ -158,6 +179,11 @@ CCSRC = $(wildcard cli/*.cc) \
 		$(wildcard processing/*.cc) \
 		$(wildcard utils/*.cc)
 		
+# Files that must use tabs (not spaces) for leading whitespace. Add more
+# files/globs here as they are brought into compliance; the goal is to
+# eventually cover all of CCSRC and its headers.
+FORMAT_FILES = utils/PythonIntf.cc utils/PythonIntf.h
+
 TESTSRC = $(wildcard test/*.cc)
 TESTS = $(notdir $(basename $(TESTSRC)))
 TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
@@ -165,14 +191,92 @@ TEST_EXES = $(addprefix $(EXE_DIR)/,$(TESTS))
 LIBOBJS = $(CCSRC:.cc=.{})
 TESTOBJS = $(TESTSRC:.cc=.{})
 
-#default goal
-some: directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete
+# build_info.h is regenerated only when one of the core objects would be
+# rebuilt (Config.o is excluded to avoid a cycle, since Config.cc includes
+# build_info.h).  This keeps an up-to-date tree a no-op instead of forcing a
+# spurious header regeneration, Config.o recompile and relink on every build.
+BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
 
-all: directories $(TEST_EXES)
+#default goal
+some: check-format directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL)
+
+all: check-format directories $(TEST_EXES) $(BOOK_ALL)
+
+specs: check-format directories $(EXE_DIR)/specs
+
+# Fails (without modifying anything) if any file in FORMAT_FILES has a line
+# whose leading whitespace (the run of spaces/tabs before the first
+# non-blank character) contains a space. Only that leading run is ever
+# touched - the rest of each line, and everyone's chosen editor/tool, is
+# left alone. Run "make format" to fix in place.
+# This is implemented directly in awk (POSIX-specified, present unchanged on
+# both Linux and macOS/BSD) rather than via the "unexpand" utility, whose
+# option names and default column-stop behavior differ enough between GNU
+# and BSD/macOS builds that no single invocation works reliably on both.
+CHECK_LEAD_AWK = '{{ \
+	line = $$0; \
+	n = match(line, /[^ \\t]/); \
+	lead = (n > 0) ? substr(line, 1, n - 1) : line; \
+	if (index(lead, " ") > 0) {{ bad = 1 }} \
+}} \
+END {{ exit (bad ? 1 : 0) }}'
+
+FIX_LEAD_AWK = '{{ \
+	line = $$0; \
+	n = match(line, /[^ \\t]/); \
+	if (n > 0) {{ lead = substr(line, 1, n - 1); rest = substr(line, n) }} \
+	else {{ lead = line; rest = "" }} \
+	col = 0; \
+	for (i = 1; i <= length(lead); i++) {{ \
+		c = substr(lead, i, 1); \
+		if (c == "\\t") {{ col = int(col / tw + 1) * tw }} else {{ col++ }} \
+	}} \
+	ntabs = int(col / tw); \
+	nspaces = col % tw; \
+	newlead = ""; \
+	for (i = 0; i < ntabs; i++) newlead = newlead "\\t"; \
+	for (i = 0; i < nspaces; i++) newlead = newlead " "; \
+	print newlead rest \
+}}'
+
+.PHONY: check-format
+check-format:
+	@status=0; \
+	for f in $(FORMAT_FILES); do \
+		if ! awk $(CHECK_LEAD_AWK) "$$f"; then \
+			echo "$$f: leading whitespace uses spaces instead of tabs (run 'make format' to fix)" >&2; \
+			status=1; \
+		fi; \
+	done; \
+	exit $$status
+
+.PHONY: format
+format:
+	@for f in $(FORMAT_FILES); do \
+		awk -v tw=4 $(FIX_LEAD_AWK) "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; \
+	done
 
 %.obj : %.cc
 	$(CXX) $(CPPFLAGS) /Fo$@ /c $<
 
+"""
+
+# GCC/Clang only: build the unit-test harnesses without optimization.  The
+# optimizer dominates compile time for the large, macro-heavy test sources
+# (e.g. ALUUnitTest.cc takes ~48s at -O3 vs ~5s at -O0, ProcessingTest.cc ~24s
+# vs ~3s) and the test executables are never shipped, so optimization buys us
+# nothing - the library code they exercise is still built at -O3.  This applies
+# to every object in test/ EXCEPT the shipped specs / specs-autocomplete
+# binaries (selected via filter-out), so it stays correct even if new tests are
+# added.  The trailing -O0 overrides the -O3 in CONDCOMP.  _FORTIFY_SOURCE
+# requires an optimizing build (it emits a #warning otherwise, which -Werror
+# turns fatal) and its runtime buffer checks are irrelevant for the test
+# binaries, so undefine it here.
+test_opt_override = \
+"""
+NONSHIP_TEST_OBJS = $(filter-out test/specs.o test/specs-autocomplete.o,$(TESTOBJS))
+$(NONSHIP_TEST_OBJS): test/%.o : test/%.cc
+\t$(CXX) $(CPPFLAGS) -Wp,-U_FORTIFY_SOURCE -O0 -c $< -o $@
 """
 
 make_depends = \
@@ -191,12 +295,31 @@ cached_depends_vs = "-include Makefile.cached_depends_vs"
 
 body2 = \
 """	
+.PHONY: specs
+
+utils/build_info.h: $(BUILD_INFO_DEPS)
+	@python3 generate_build_info.py
+
 run_tests: $(TEST_EXES)
 	$(EXE_DIR)/TokenTest
 	$(EXE_DIR)/ProcessingTest
 	$(EXE_DIR)/ALUUnitTest
 	python3 $(TESTS_DIR)/valgrind_specs.py --no_valgrind
+	python3 $(TESTS_DIR)/cli_arg_tests.py
 	python3 $(TESTS_DIR)/recfm_tests.py
+
+# Run the full clean -> build -> test cycle with the three phases strictly
+# serialized, while still compiling in parallel within the build phase.
+# Prefer "make -j N ci" over "make -j N clean all run_tests": Make schedules
+# the goals named on the command line concurrently under -j, so clean races the
+# compiles in all and run_tests can start before all has finished.  Running the
+# phases as sequential sub-makes enforces the ordering; each $(MAKE) inherits -j
+# through the jobserver, so the all phase still builds in parallel.
+.PHONY: ci
+ci:
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) run_tests
 
 directories: $(EXE_DIR)
 
@@ -208,10 +331,15 @@ $(EXE_DIR)/%: test/%.{} $(LIBOBJS)
 		
 install_mac: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
+	cp $(EXE_DIR)/specs-autocomplete /usr/local/bin/
 	/bin/rm */*.d
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
+	$(MKDIR_C) /usr/local/share/zsh/site-functions
+	cp ../../.github/packaging/specs-completion.zsh /usr/local/share/zsh/site-functions/_specs
+	/bin/bash ../../.github/packaging/postinstall_macos
+	if [ -f $(DOCS_DIR)/guidebook.pdf ]; then $(MKDIR_C) /usr/local/share/doc/specs && cp $(DOCS_DIR)/guidebook.pdf /usr/local/share/doc/specs/; fi
 
 install_linux: $(EXE_DIR)/specs specs.1.gz
 	cp $(EXE_DIR)/specs /usr/local/bin/
@@ -220,16 +348,36 @@ install_linux: $(EXE_DIR)/specs specs.1.gz
 	$(MKDIR_C) /usr/local/share/man/man1
 	cp specs.1.gz /usr/local/share/man/man1/
 	/bin/rm specs.1.gz
-	grep -v "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs" BASHRC | /usr/local/bin/specs -o BASHRC 1-* 1 EOF "complete -o bashdefault -o default -o nospace -C specs-autocomplete specs"
+	$(MKDIR_C) /etc/bash_completion.d
+	cp ../../.github/packaging/specs-completion.bash /etc/bash_completion.d/specs
+	if [ -f $(DOCS_DIR)/guidebook.pdf ]; then $(MKDIR_C) /usr/local/share/doc/specs && cp $(DOCS_DIR)/guidebook.pdf /usr/local/share/doc/specs/; fi
 
 install_win: $(EXE_DIR)/specs.exe
 	echo "Please copy the file specs.exe in the EXE dir to a location on the PATH"
+
+uninstall_mac:
+	/bin/rm -f /usr/local/bin/specs
+	/bin/rm -f /usr/local/bin/specs-autocomplete
+	/bin/rm -f /usr/local/share/man/man1/specs.1.gz
+	/bin/rm -f /usr/local/share/zsh/site-functions/_specs
+	/bin/rm -f /usr/local/share/doc/specs/guidebook.pdf
+	/bin/bash ../../.github/packaging/postuninstall_macos
+
+uninstall_linux:
+	/bin/rm -f /usr/local/bin/specs
+	/bin/rm -f /usr/local/bin/specs-autocomplete
+	/bin/rm -f /usr/local/share/man/man1/specs.1.gz
+	/bin/rm -f /etc/bash_completion.d/specs
+	/bin/rm -f /usr/local/share/doc/specs/guidebook.pdf
+
+uninstall_win:
+	echo "Installation on Windows only copies specs.exe to the PATH; nothing to uninstall. Please manually remove specs.exe if desired."
 """
 
 clear_clean_posix = \
 """
 clean:
-	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz
+	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz $(DOCS_DIR)/guidebook_tmp.md $(DOCS_DIR)/guidebook.pdf
 	
 clear:
 	/bin/rm */*.d */*.o
@@ -251,6 +399,20 @@ manpart = \
 specs.1.gz: ../../manpage
 	cp ../../manpage specs.1
 	gzip specs.1
+"""
+
+book_part = \
+"""
+.PHONY: book
+book: $(DOCS_DIR)/guidebook.pdf
+
+# The recipe runs $(EXE_DIR)/specs, so it must depend on it - otherwise a
+# parallel "make -j all" can start generating the guidebook before specs has
+# been linked ("specs: Command not found").
+$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/resources/header.tex $(EXE_DIR)/specs
+	$(EXE_DIR)/specs --set docsdir=../docs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/resources/guidebook_prepare
+	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/resources/header.tex
+	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
 
 valid_compilers = ["GCC", "CLANG", "VS"]
@@ -283,6 +445,8 @@ parser.add_argument("--os_version", dest="osversion", action="store", default=""
 					help="OS version to link against. Available only in Mac OS")
 parser.add_argument("--static", dest="static_link", action="store_true", default=False,
                     help="Statically link libstdc++")
+parser.add_argument("--no_book", dest="no_book", action="store_true", default=False,
+                    help="Avoid building the specs guidebook PDF")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
 parser.add_argument("--branch", dest="expbranch", action="store", default="",
@@ -374,6 +538,7 @@ if platform=="POSIX":
 	mkdir_c = "mkdir -p"
 	exe_dir = "../exe"
 	tests_dir = "../tests"
+	docs_dir = "../docs"
 	clear_clean_part = clear_clean_posix
 	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
 	bashrc = "/etc/bash.bashrc" if os.path.isfile("/etc/bash.bashrc") else "/etc/bashrc"
@@ -381,6 +546,7 @@ elif platform=="NT":
 	mkdir_c = "mkdir"
 	exe_dir = "..\\exe"
 	tests_dir = "..\\tests"
+	docs_dir = "..\\docs"
 	clear_clean_part = clear_clean_nt
 	compiler_cleanup_cmd = "del xx.cc xx.o xx.exe xx.txt"
 	bashrc = "/dev/null"
@@ -672,8 +838,19 @@ else:
 			sys.stdout.write("\nFailed to make Makefile. Python support is not properly configured.\n")
 			exit(-4)
 
-# RegEx different grammars
-CFG_regex_grammars = (sys.platform=="darwin")
+# RegEx different grammars.
+# std::regex behaves differently across standard library implementations for
+# the non-ECMAScript grammars (basic/extended/awk/grep/egrep). REGEX_GRAMMARS
+# is set to a platform name so that aluRegex.cc can decide, at runtime, which
+# of those grammars are currently known to produce non-conformant results and
+# should trigger a warning.
+if sys.platform=="darwin":
+	regex_grammars_platform = "mac"
+elif compiler=="VS":
+	regex_grammars_platform = "windows"
+else:
+	regex_grammars_platform = "linux"
+condcomp = condcomp + '{}REGEX_GRAMMARS="{}"'.format(def_prefix,regex_grammars_platform)
 	
 condcomp = condcomp + '{}GITTAG="{}"'.format(def_prefix,gittag)
 
@@ -696,12 +873,16 @@ cxx_display = "{} {}".format(cxx, cxx_version) if cxx_version else cxx
 if (CFG_python==True) & (full_python_version!="N/A"):
 	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx_display,full_python_version,variation.lower())
 else:
-	literalPlatform = "{} ({}) system using the {} compiler - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler and no Python - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
 condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatform)
 
 if CFG_python:
 	condcomp = condcomp + " " + python_cflags + "{}PYTHON_VER_{}".format(def_prefix,python_version) \
 	                                   + "{}PYTHON_FULL_VER={}".format(def_prefix,full_python_version)
+	
+	# Determine if we should bundle Python (only on GitHub CI builds)
+	bundle_python = (os.environ.get("SPECS_BUILD_SOURCE", "local") == "github") and CFG_python
+	
 	if args.static_link and platform!="NT":
 		# Statically link libpython so the binary works regardless of the
 		# Python version installed on the target system.
@@ -719,20 +900,76 @@ if CFG_python:
 		# The static libpython archive includes built-in extension modules
 		# (pyexpat, zlib, etc.) that depend on these system libraries.
 		static_pyldflags.extend(["-lexpat", "-lz"])
-		# Ubuntu 20.04's libpython3.8.a is not PIE-compatible, so disable PIE
+		# Older libpython static archives may not be PIE-compatible, so disable PIE
 		static_pyldflags.append("-no-pie")
 		condlink = condlink + " " + " ".join(static_pyldflags)
+	elif bundle_python and platform!="NT":
+		# Bundle the shared libpython and stdlib, and point the binary at them.
+		# The install prefix differs per platform: the macOS .pkg installs under
+		# /usr/local, while the Linux RPM/DEB packages install under /usr.
+		if sys.platform=="darwin":
+			bundle_prefix = "/usr/local/lib/specs/python"
+		else:
+			bundle_prefix = "/usr/lib/specs/python"
+		# The rpath must match the platlibdir of the Python being bundled
+		# (e.g. "lib" on Debian/Ubuntu, "lib64" on Fedora/RHEL) so that the
+		# dynamic linker finds libpython in the correct subdirectory.
+		platlibdir = sys.platlibdir
+		# Define the path where the bundled stdlib will be installed
+		condcomp = condcomp + '{}PYTHON_STDLIB_PATH=\\"{}\\"'.format(def_prefix, bundle_prefix)
+		# Add rpath so the bundled libpython is found first.
+		# On Linux, --disable-new-dtags emits DT_RPATH instead of DT_RUNPATH;
+		# DT_RPATH is searched before ld.so.cache, ensuring the bundled
+		# libpython takes precedence over any system-installed libpython3.12.
+		# macOS uses Apple ld which does not support --disable-new-dtags, and
+		# does not need it (install_name_tool rewrites the dylib reference).
+		if sys.platform=="darwin":
+			rpath_flags = "-Wl,-rpath,{}/lib".format(bundle_prefix)
+		else:
+			rpath_flags = "-Wl,--disable-new-dtags,-rpath,{}/{}".format(bundle_prefix, platlibdir)
+		condlink = condlink + " " + rpath_flags + " " + python_ldflags
 	else:
 		condlink = condlink + " " + python_ldflags
 else:
 	condcomp = condcomp + "{}SPECS_NO_PYTHON".format(def_prefix) \
 	                                   + "{}PYTHON_FULL_VER=N/A".format(def_prefix)
 	
-if CFG_regex_grammars:
-	condcomp = condcomp + "{}REGEX_GRAMMARS".format(def_prefix)
-
 if osversion != "":
 	condlink = condlink + " -mmacosx-version-min={}".format(osversion)
+
+# Add pytest.py to run_tests if Python support is available
+if CFG_python:
+	body2 = body2.replace(
+		"python3 $(TESTS_DIR)/recfm_tests.py",
+		"python3 $(TESTS_DIR)/recfm_tests.py\n\tpython3 $(TESTS_DIR)/pytest.py"
+	)
+
+sys.stdout.write("Testing is pandoc, xelatex and soul.sty are available...")
+if args.no_book:
+	sys.stdout.write("Doesn't matter. Guidebook generation is configured off.\n")
+	CFG_book = False
+else:
+	# Test if the guidebook PDF can be built (requires both pandoc and the
+	# xelatex engine).  The "book" target is always written to the Makefile, but
+	# it is only added to "all" and "some" when both tools are available.
+	CFG_pandoc = (0 == run_the_cmd("pandoc --version"))
+	sys.stdout.write("Yes," if CFG_pandoc else "No,")
+
+	CFG_xelatex = (0 == run_the_cmd("xelatex --version"))
+	sys.stdout.write(" yes" if CFG_xelatex else " no")
+	
+	CFG_soul = (0 == run_the_cmd("kpsewhich soul.sty"))
+	sys.stdout.write(" and yes. " if CFG_soul else " and no. ")
+
+	if os.path.isfile("xx.txt"):
+		os.remove("xx.txt")
+
+	CFG_book = CFG_pandoc and CFG_xelatex and CFG_soul
+	sys.stdout.write("Guidebook generation is {}.\n".format("enabled" if CFG_book else "disabled"))
+
+# Generate build_info.h (so it exists before the first compile; it is
+# regenerated on every build by the utils/build_info.h Makefile target)
+subprocess.call([sys.executable, "generate_build_info.py"])
 
 with open("Makefile", "w") as makefile:
 	makefile.write("CXX={}\n".format(cxx))
@@ -742,6 +979,8 @@ with open("Makefile", "w") as makefile:
 	makefile.write("MKDIR_C={}\n".format(mkdir_c))
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
 	makefile.write("TESTS_DIR={}\n".format(tests_dir))
+	makefile.write("DOCS_DIR={}\n".format(docs_dir))
+	makefile.write("BOOK_ALL={}\n".format("book" if CFG_book else ""))
 	makefile.write("CPPFLAGS = {}\n".format(cppflags))
 	
 	if compiler=="VS":
@@ -755,6 +994,8 @@ with open("Makefile", "w") as makefile:
 		body2fmt = body2.format("o", "-o ", "", "-pthread")
 	
 	makefile.write("{}\n".format(body1fmt))
+	if compiler!="VS":
+		makefile.write("{}\n".format(test_opt_override))
 	if use_cached_depends:
 		if compiler=="VS":
 			makefile.write("\n{}\n".format(cached_depends_vs))
@@ -764,12 +1005,13 @@ with open("Makefile", "w") as makefile:
 		makefile.write("\n{}\n".format(make_depends))
 	makefile.write("{}\n".format(body2fmt))
 	makefile.write("{}\n".format(clear_clean_part))
+	makefile.write("{}\n".format(book_part))
 
 	if sys.platform=="darwin":
-		makefile.write("{}\n\ninstall: install_mac\n".format(manpart))
+		makefile.write("{}\n\ninstall: install_mac\n\nuninstall: uninstall_mac\n".format(manpart))
 	elif platform=="NT":
-		makefile.write("install: install_win\n")
+		makefile.write("install: install_win\n\nuninstall: uninstall_win\n")
 	else:
-		makefile.write("{}\n\ninstall: install_linux\n".format(manpart))
+		makefile.write("{}\n\ninstall: install_linux\n\nuninstall: uninstall_linux\n".format(manpart))
 
 sys.stderr.write("Makefile created.\n")

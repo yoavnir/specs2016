@@ -2,6 +2,7 @@
 #include "processing/Config.h"
 #include "utils/TimeUtils.h"
 #include "utils/ErrorReporting.h"
+#include "processing/Reader.h"
 #include "item.h"
 #include <math.h>
 
@@ -54,6 +55,8 @@ std::string WordRangePart::Debug()
 PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
 	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
+	// If current record is OOB, preserve OOB status
+	if (Reader::isOOBRecord(pState.currRecord())) return pState.currRecord();
 	std::string keepSeparator(DEFAULT_WORDSEPARATOR);
 	if (!m_WordSep.empty()) {
 		keepSeparator = pState.getWSChars();
@@ -87,6 +90,8 @@ std::string FieldRangePart::Debug()
 PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
 	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
+	// If current record is OOB, preserve OOB status
+	if (Reader::isOOBRecord(pState.currRecord())) return pState.currRecord();
 	std::string keepSeparator(DEFAULT_FIELDSEPARATOR);
 	if (!m_FieldSep.empty()) {
 		keepSeparator = pState.getFSChars();
@@ -143,7 +148,7 @@ std::string NumberPart::Debug()
 PSpecString NumberPart::getStr(ProcessingState& pState)
 {
 	std::string s = std::to_string(pState.getRecordCount());
-	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), ' ') + s;
+	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), pState.getPadChar()) + s;
 	return std::make_shared<std::string>(s);
 }
 
@@ -204,6 +209,9 @@ ExpressionPart::ExpressionPart(std::string& _expr)
 {
 	AluVec infixExpression;
 	MYASSERT(parseAluExpression(_expr, infixExpression));
+	if (infixExpression.empty()) {
+		MYTHROW("Expression has no units");
+	}
 	if (expressionIsAssignment(infixExpression)) {
 		PUnit aUnit = infixExpression[0];
 		auto pCounterUnit = std::dynamic_pointer_cast<AluUnitCounter>(aUnit);

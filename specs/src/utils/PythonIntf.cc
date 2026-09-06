@@ -3,6 +3,8 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <algorithm>  // for std::find_if
+#include <cctype>     // for std::isspace
 #include <utils/platform.h>
 #include "PythonIntf.h"
 #include "ErrorReporting.h"
@@ -12,6 +14,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 // Some defines for compatibility
 #ifdef PYTHON_VER_3
@@ -106,6 +109,9 @@ public:
 
 	void setDoc(const char* cstr) { m_doc = cstr; }
 
+	void setArgTypeExact(bool v) { m_argTypeExact = v; }
+	bool isArgTypeExact() const { return m_argTypeExact; }
+
 	void setArgValue(size_t idx, PValue pValue) {
 		PyObject* pValObj;
 		size_t argCount = GetArgCount();
@@ -151,11 +157,23 @@ public:
 			Py_INCREF(Py_None);
 		}
 
+		// If arg_type=exact, wrap the value as a (value, exactness) tuple
+		if (m_argTypeExact) {
+			PyObject* pExactness = pValue->isExact() ? Py_True : Py_False;
+			Py_INCREF(pExactness);
+			PyObject* pArgTuple = PyTuple_New(2);
+			PyTuple_SetItem(pArgTuple, 0, pValObj);
+			PyTuple_SetItem(pArgTuple, 1, pExactness);
+			pValObj = pArgTuple;
+		}
+
 		PyTuple_SetItem(m_pTuple, idx, pValObj);
 	}
 
 	PValue Call() {
 		PValue pRet = nullptr;
+		bool exactnessSpecified = false;
+		bool exactness = true;
 
 		// Check that all values were passed, complete those that haven't
 		for (size_t i=0 ; i<GetArgCount() ; i++) {
@@ -166,6 +184,50 @@ public:
 
 		PyObject* pResult = PyObject_CallObject(m_pFuncPtr, m_pTuple);
 		if (pResult) {
+			// Check if result is a tuple that might contain (value, exactness)
+			if (PyTuple_Check(pResult)) {
+				Py_ssize_t tupleSize = PyTuple_Size(pResult);
+				if (tupleSize == 2) {
+					PyObject* pSecond = PyTuple_GetItem(pResult, 1);
+					if (PyBool_Check(pSecond)) {
+						// Valid (value, exactness) tuple - unwrap it
+						PyObject* pValue = PyTuple_GetItem(pResult, 0);
+						Py_INCREF(pValue);
+						Py_DECREF(pResult);
+						pResult = pValue;
+						exactnessSpecified = true;
+						exactness = (pSecond == Py_True);
+					} else {
+						// Tuple with 2 elements but second is not bool
+						std::string err = "Invalid exactness value returned from function ";
+						err += m_name;
+						err += " - must be Bool";
+						if (g_bVerbose) {
+							PyObject* pRepr = PyObject_Repr(pResult);
+							err += ". Content is ";
+							err += PyUnicode_AsUTF8(pRepr);
+							Py_DECREF(pRepr);
+						}
+						Py_DECREF(pResult);
+						MYTHROW(err);
+					}
+				} else {
+					// Tuple with wrong number of elements
+					std::string err = "Invalid tuple returned from function ";
+					err += m_name;
+					err += " - only a (value, exactness) pair is supported";
+					if (g_bVerbose) {
+						PyObject* pRepr = PyObject_Repr(pResult);
+						err += ". Content is ";
+						err += PyUnicode_AsUTF8(pRepr);
+						Py_DECREF(pRepr);
+					}
+					Py_DECREF(pResult);
+					MYTHROW(err);
+				}
+			}
+
+			// Now process the (possibly unwrapped) result
 			if (PyLong_Check(pResult)) {
 				pRet = mkValue(ALUInt(PyLong_AsLong(pResult)));
 			} else if (PyInt_Check(pResult)) {
@@ -182,19 +244,29 @@ public:
 					pRet = mkValue(std::string(""));
 				}
 			} else if (PyString_Check(pResult)) {
-				pRet = mkValue(PyString_AS_STRING(pResult));
+				pRet = mkValue(PyUnicode_AsUTF8(pResult));
 			} else if (Py_None == pResult){
 				pRet = mkValue0();  // NaN
 			} else {
-				PyObject* pRepr = PyObject_Repr(pResult);
-				std::string err = "Invalid return type from function ";
-				err += m_name + ": ";
-				err += PyString_AS_STRING(pRepr);
-				Py_DECREF(pRepr);
+				std::string err = "Invalid return type <";
+				err += Py_TYPE(pResult)->tp_name;
+				err += "> from function ";
+				err += m_name;
+				if (g_bVerbose) {
+					PyObject* pRepr = PyObject_Repr(pResult);
+					err += " with content ";
+					err += PyUnicode_AsUTF8(pRepr);
+					Py_DECREF(pRepr);
+				}
 				Py_DECREF(pResult);
 				MYTHROW(err);
 			}
 			Py_DECREF(pResult);
+
+			// Apply exactness if it was specified in the tuple
+			if (exactnessSpecified && pRet) {
+				pRet->setExact(exactness);
+			}
 		} else {
 			if (PyErr_Occurred()) {
 				switch (g_errorHandling) {
@@ -222,7 +294,7 @@ public:
 		return pRet;
 	}
 
-	std::string getStr() {
+	std::string getStr(bool fullDoc = true) {
 		std::ostringstream strm;
 		strm << m_name << " (";
 		bool first = true;
@@ -235,21 +307,52 @@ public:
 			strm << arg.getStr();
 		}
 		strm << ")";
+		if (m_argTypeExact) {
+			strm << " [arg_type=exact]";
+		}
 		if (m_doc.length() > 0) {
-			if (m_doc.find("\n") != std::string::npos) {
-				strm << " :\n" << m_doc << "\n";
+			if (fullDoc) {
+				if (m_doc.find("\n") != std::string::npos) {
+					strm << " :\n" << m_doc << "\n";
+				} else {
+					strm << " : " << m_doc;
+				}
 			} else {
-				strm << " : " << m_doc;
+				strm << " : " << firstNonBlankLine();
 			}
 		}
 		return strm.str();
 	}
 private:
+	static void ltrim(std::string& s) {
+		s.erase(
+			s.begin(),
+			std::find_if(s.begin(), s.end(), [](char c) {
+				return 0 == std::isspace(static_cast<unsigned char>(c));
+			}));
+	}
+
+	// Returns the first non-blank line of m_doc (a "blank" line is one that is
+	// empty or contains only whitespace). Returns an empty string if m_doc
+	// consists entirely of blank lines.
+	std::string firstNonBlankLine() {
+		std::istringstream strm(m_doc);
+		std::string line;
+		while (std::getline(strm, line)) {
+			if (line.find_first_not_of(" \t\r\n") != std::string::npos) {
+				ltrim(line);
+				return line;
+			}
+		}
+		return "";
+	}
+
 	std::string                m_name;
 	PyObject*                  m_pFuncPtr;
 	std::vector<PythonFuncArg> m_args;
 	PyObject*                  m_pTuple;
 	std::string                m_doc;
+	bool                       m_argTypeExact = false;
 };
 
 typedef std::shared_ptr<PythonFuncRec> PPythonFuncRec;
@@ -283,11 +386,49 @@ public:
 			return;
 		}
 		// Initialize Python environment
-#ifdef PYTHON_STDLIB_PATH
-		// When Python is statically linked, set the home directory to our bundled stdlib
-		Py_SetPythonHome(Py_DecodeLocale(PYTHON_STDLIB_PATH, NULL));
-#endif
+#if defined(WIN64)
+		// On Windows the MSI bundles the stdlib next to specs.exe (in a "Lib"
+		// subdirectory) together with pythonXY.dll, so the program runs without
+		// any system Python installation. Point Python's home at the executable's
+		// directory when that bundled layout is present; otherwise fall back to
+		// the default search (e.g. a developer build using a system Python).
+		bool bundledStdlibInitialized = false;
+		{
+			wchar_t exePath[MAX_PATH];
+			DWORD exePathLen = GetModuleFileNameW(NULL, exePath, MAX_PATH);
+			if (exePathLen > 0 && exePathLen < MAX_PATH) {
+				std::filesystem::path exeDir = std::filesystem::path(exePath).parent_path();
+				if (std::filesystem::exists(exeDir / "Lib")) {
+					PyConfig config;
+					PyConfig_InitPythonConfig(&config);
+					PyConfig_SetString(&config, &config.home, exeDir.wstring().c_str());
+					Py_InitializeFromConfig(&config);
+					PyConfig_Clear(&config);
+					bundledStdlibInitialized = true;
+				}
+			}
+		}
+		if (!bundledStdlibInitialized) {
+			Py_Initialize();
+		}
+#elif defined(PYTHON_STDLIB_PATH)
+		// When Python is bundled (either statically linked or as a shared library
+		// with rpath), use PyConfig to set the home directory to our bundled stdlib
+		// (Py_SetPythonHome was deprecated in Python 3.11).
+		// Only set the home path if the bundled directory actually exists.
+		bool use_bundled_stdlib = std::filesystem::exists(PYTHON_STDLIB_PATH);
+		if (use_bundled_stdlib) {
+			PyConfig config;
+			PyConfig_InitPythonConfig(&config);
+			PyConfig_SetBytesString(&config, &config.home, PYTHON_STDLIB_PATH);
+			Py_InitializeFromConfig(&config);
+			PyConfig_Clear(&config);
+		} else {
+			Py_Initialize();
+		}
+#else
 		Py_Initialize();
+#endif
 
 		// update the python path
 		if (_path && _path[0]) {
@@ -328,10 +469,8 @@ public:
 				m_Initialized = true;
 				return;
 			} else {
-				if (g_bVerbose) {
-					std::cerr << "Python Interface: Error loading local functions: ";
-					PyErr_Print();
-				}
+				std::cerr << "Python Interface:\n";
+				PyErr_Print();
 				MYTHROW("Error loading local functions");
 			}
 		}
@@ -386,7 +525,16 @@ public:
 				PyTuple_SetItem(pTuple, 0, pFunc);
 
 				PyObject* pArgSpec = PyObject_CallObject(pArgSpecFunc, pTuple);
-				MYASSERT_NOT_NULL_WITH_DESC(pArgSpec,funcName);
+				if (!pArgSpec) {
+					// getargspec failed (e.g., for built-in C functions) - skip this function
+					PyErr_Clear();
+					Py_DECREF(pRepr);
+#ifdef PYTHON_VER_3
+					Py_DECREF(pStr);
+#endif
+					Py_DECREF(pTuple);
+					continue;
+				}
 
 				PyObject* pArgList = PyObject_GetAttrString(pArgSpec, "args");
 				MYASSERT_NOT_NULL(pArgList);
@@ -456,6 +604,50 @@ public:
 					}
 					Py_DECREF(pDoc);
 				}
+
+				// Check for arg_type attribute
+				if (PyObject_HasAttrString(pFunc, "arg_type")) {
+					PyObject* pArgType = PyObject_GetAttrString(pFunc, "arg_type");
+					MYASSERT_NOT_NULL(pArgType);
+					
+					// Check if it's a string equal to "exact"
+					bool isExact = false;
+#ifdef PYTHON_VER_2
+					if (PyString_Check(pArgType)) {
+						if (0 == strcmp(PyString_AS_STRING(pArgType), "exact")) {
+							isExact = true;
+						}
+					}
+#else
+					if (PyUnicode_Check(pArgType)) {
+						PyObject* pArgTypeBytes = PyUnicode_AsASCIIString(pArgType);
+						if (pArgTypeBytes) {
+							if (0 == strcmp(PyBytes_AS_STRING(pArgTypeBytes), "exact")) {
+								isExact = true;
+							}
+							Py_DECREF(pArgTypeBytes);
+						}
+					}
+#endif
+					
+					if (isExact) {
+						pFuncRec->setArgTypeExact(true);
+					} else {
+						// arg_type exists but is not "exact" - error
+						std::string err = "Invalid arg_type value for function ";
+						err += funcName;
+						err += " - must be \"exact\"";
+						if (g_bVerbose) {
+							PyObject* pRepr = PyObject_Repr(pArgType);
+							err += ". Got: ";
+							err += PyUnicode_AsUTF8(pRepr);
+							Py_DECREF(pRepr);
+						}
+						Py_DECREF(pArgType);
+						MYTHROW(err);
+					}
+					Py_DECREF(pArgType);
+				}
 			}
 			Py_DECREF(pRepr);
 #ifdef PYTHON_VER_3
@@ -507,7 +699,7 @@ public:
 
 		std::cerr << "\nPython Interface Functions: \n===========================\n";
 		for (auto it = m_Functions.begin() ; it != m_Functions.end() ; it++) {
-			std::cerr << "- " << it->second->getStr() << "\n";
+			std::cerr << "- " << it->second->getStr(false) << "\n";
 		}
 		std::cerr << std::endl;
 	}

@@ -40,6 +40,12 @@
 			"() - Returns TRUE (1) if this is the first line.","") \
 	X(recno,          0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the record number of the current record.","Increments with every READ or READSTOP.") \
+	X(ctxrecno,       0, ALUFUNC_REGULAR,      true,  \
+			"() - Returns the record number of the record that input parts work on.","This is similar to recno, but considers rolling context, which recno does not.") \
+	X(ctxoffset,      0, ALUFUNC_REGULAR,      true,  \
+			"() - Returns the current effective context offset.","Returns 0 when no CONTEXT is in effect.") \
+	X(ctxoob,         1, ALUFUNC_REGULAR,     false,  \
+			"(s) - Returns 1 if the argument string came from out-of-bounds input, 0 otherwise.","With no argument, checks the current (context-affected) record.") \
 	X(number,         0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the number of times this specification has restarted","Does not increment with READ or READSTOP. Otherwise similar to recno().") \
 	X(eof,            0, ALUFUNC_REGULAR,     false,  \
@@ -48,7 +54,9 @@
 			"(fid) - Returns TRUE (1) if the break for field-identifier 'fid' is established, or FALSE (0) otherwise.","") \
 	H(Record Functions,16) \
 	X(record,         0, ALUFUNC_REGULAR,      true,  \
-			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable.") \
+			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable when CONTEXT is not in effect.") \
+	X(cfrecord,       0, ALUFUNC_REGULAR,      true,  \
+			"() - Returns the entire input record, disregarding rolling context.","Equivalent to the @@ pseudo-variable. Same as record() when CONTEXT is not in effect.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the length of the string s","") \
 	X(wordcount,      2, ALUFUNC_REGULAR,     false,  \
@@ -140,7 +148,7 @@
 	X(rvalue,         2, ALUFUNC_REGULAR,     false,  \
 			"(str,[sep]) - Return the right hand part of 'str' separated by 'sep'.","'sep' defaults to an equals sign.") \
 	X(sword,          3, ALUFUNC_REGULAR,     false,  \
-			"(str,n,[sep]) - Returns the n-th word of 'str' if the word separator is 'sep'.","'sep' defaults to a tab.") \
+			"(str,n,[sep]) - Returns the n-th word of 'str' if the word separator is 'sep'.","'sep' defaults to a space.") \
 	X(abbrev,         3, ALUFUNC_REGULAR,     false,  \
 			"(str,s,[len]) - Returns TRUE (1) if 's' is a prefix of 'str', or FALSE (0) otherwise.","If 'len' is specified, only the first 'len' characters of 's' are considered.") \
 	X(compare,        3, ALUFUNC_REGULAR,     false,  \
@@ -198,7 +206,7 @@
 			"(fid,elem) - Notes an occurence of the value in 'elem' for field identifier 'fid', and returns the number of occurences so far.","This is the only one of the fmap_* functions that modifies the frequency map.\nIt also affects the other statistics functions.") \
 	X(fmap_dump,      4, ALUFUNC_FREQUENCY,   false,  \
 			"(fid,fmt,order,pct) - Returns a multi-line string with the frequency map of field identifier 'fid'.","Only provides information relevant to the entire data set during the run-out cycle.\nFormat can be 'txt' or '0' for a textual table; 'lin' for a table with lines, and 'csv' or 'json' for those formats.\nOrder is 's'/'sa' to sort by ascending value, or 'sd' for descending, 'c'/'ca' for sorting by ascending count, or 'cd' for descending.\n'pct' adds a percentage column if true.") \
-	H(Advanced Math Functions,20) \
+	H(Advanced Math Functions,21) \
 	X(rand,           1, ALUFUNC_REGULAR,     false,  \
 			"([limit]) - Returns a random integer up to (but not including) 'limit'.","If 'limit' is omitted, returns a floating point number between 0 and 1.") \
 	X(floor,          1, ALUFUNC_REGULAR,     false,  \
@@ -236,7 +244,7 @@
 	X(log,            2, ALUFUNC_REGULAR,     false,  \
 			"(x,[base]) - Returns logarithm of 'x'.","If base is omitted, retuns the natural logarithm of 'x'.") \
 	X(fact,           1, ALUFUNC_REGULAR,     false,  \
-			"(x) - Returns the factorial of x","")    \
+			"(x) - Returns the factorial of x","For integer values 0-20, computes the exact factorial.\nFor values > 20 or real numbers, returns tgamma(x+1).")    \
 	X(permutations,   2, ALUFUNC_REGULAR,     false,  \
 			"(n,k) - Returns the number of permutations of k elements from n elements.","Order matters.")    \
 	X(combinations,   2, ALUFUNC_REGULAR,     false,  \
@@ -250,6 +258,8 @@
 			"(s1,s2) - Returns a bit-wise XOR of the two strings s1 and s2.","If the strings are not equal in length, the result has the length of the shorter one.\nIf an operand is not a string, it is converted to a decimal string representation.") \
 	X(sign,           1, ALUFUNC_REGULAR,     false,  \
 			"(x) - Returns -1/0/1 for negative/zero/positive x.","") \
+	X(not,            1, ALUFUNC_REGULAR,     false,  \
+			"(x) - Returns 1 if x is zero, or 0 otherwise. Serves as a logical NOT, an alternative to using the unary operator.","") \
 	X(space,          3, ALUFUNC_REGULAR,     false,  \
 			"(str,[len],[pad]) - Formats 'str' by replacing internal blanks with 'len' occurrences of the 'pad' character.","'len' defaults to 1. 'pad' defaults to a space.") \
 	X(strip,          3, ALUFUNC_REGULAR,     false,  \
@@ -312,7 +322,16 @@
 	X(split,          3, ALUFUNC_REGULAR,     true,   \
 			"([sep], [hdr], [ftr]) - Returns on multiple lines the fields (separated by the 'sep' character), discarding the first 'hdr' and last 'ftr' records.","The separator defaults to the current field separator.\n'hdr' and 'ftr' both default to zero.") \
 	X(splitw,         3, ALUFUNC_REGULAR,     true,   \
-			"([sep], [hdr], [ftr]) - Returns on multiple lines the words (separated by the 'sep' character), discarding the first 'hdr' and last 'ftr' records.","The separator defaults to the current word separator.\n'hdr' and 'ftr' both default to zero.")
+			"([sep], [hdr], [ftr]) - Returns on multiple lines the words (separated by the 'sep' character), discarding the first 'hdr' and last 'ftr' records.","The separator defaults to the current word separator.\n'hdr' and 'ftr' both default to zero.") \
+	H(Shell Command Functions,22) \
+	X(exec,           1, ALUFUNC_REGULAR,     false,  \
+			"(cmd) - Runs the shell command 'cmd' and returns its standard output.","One trailing newline is stripped from the output.\nThe command's return code is saved and is available through excrc(),\nwhile its standard error is saved and is available through excerr().") \
+	X(exc1,           2, ALUFUNC_REGULAR,     false,  \
+			"(cmd,[lineno]) - Runs the shell command 'cmd' and returns the content of line 'lineno' of its standard output.","'lineno' must be a positive integer and defaults to 1, returning the first line. Returns an empty string if that line does not exist.\nLike exec(), it saves the return code and standard error for excrc() and excerr().") \
+	X(excrc,          0, ALUFUNC_REGULAR,     false,  \
+			"() - Returns the return code of the last shell command run by exec() or exc1().","Returns NaN if no shell command has been run yet.\nReflects only the last run, so use it before running any other shell command.\nTake care when exec() or exc1() are run within an IF or WHILE block.") \
+	X(excerr,         0, ALUFUNC_REGULAR,     false,  \
+			"() - Returns the standard error of the last shell command run by exec() or exc1().","Initialized to an empty string if no shell command has been run yet.\nReflects only the last run, so use it before running any other shell command.\nTake care when exec() or exc1() are run within an IF or WHILE block.")
 
 #define ALU_DEBUG_FUNCTION_LIST                       \
 	X(testfunc,       4, ALUFUNC_REGULAR,     false,  \
@@ -427,9 +446,12 @@ public:
 		return getFromTo(int(from), int(to));
 	}
 	virtual PSpecString currRecord() = 0;
+	virtual PSpecString inputRecord() = 0;
 	virtual bool    isRunIn() = 0;
 	virtual bool    isRunOut() = 0;
+	virtual bool    isEOF() = 0;
 	virtual ALUInt  getRecordCount() = 0;
+	virtual ALUInt  getContextOffset() = 0;
 	virtual ALUInt  getIterationCount() = 0;
 	virtual bool    breakEstablished(char id) = 0;
 	virtual PAluValueStats valueStatistics(char id) = 0;

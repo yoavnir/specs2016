@@ -16,8 +16,23 @@
 #include "alu.h"
 #include "aluFunctions.h"
 #include "processing/Config.h"  // for configured literals
+#include "processing/Reader.h"  // for g_pReader
+#include "specitems/specItems.h"  // for MAX_CONTEXT_SIZE
 
 extern stateQueryAgent* g_pStateQueryAgent;
+extern unsigned int g_forwardContext;
+extern unsigned int g_backwardContext;
+
+// Sentinel pointer for out-of-bounds values
+PValue g_pOOBValue = std::make_shared<ALUValue>(std::string(""));
+
+// Final errors to be printed by `specs`
+std::ostringstream g_FinalErrors;
+
+bool isOOBValue(PValue pv)
+{
+	return pv == g_pOOBValue;
+}
 
 void ALUValue::set(std::string& s)
 {
@@ -121,6 +136,7 @@ bool ALUValue::isWholeNumber() const
 	if (!isNumeric()) return false;
 	if (m_type == counterType__Int) return true;
 	ALUFloat f = getFloat();
+    if (f > ALUFloat(MAX_ALUInt) || f < ALUFloat(MIN_ALUInt)) return false;
 	return (f==std::floor(f));
 }
 
@@ -283,6 +299,9 @@ PValue AluUnitFieldIdentifier::evaluate()
 	}
 	if (!g_fieldIdentifierGetter) {
 		MYTHROW("Field Identifier Getter is not set")
+	}
+	if (g_fieldIdentifierGetter->isOOB(m_id)) {
+		return g_pOOBValue;
 	}
 	return mkValue(g_fieldIdentifierGetter->Get(m_id));
 }
@@ -861,12 +880,40 @@ PValue AluAssnOperator::computeAppnd(PValue operand, PValue prevOp)
 
 void AluInputRecord::_serialize(std::ostream& os) const
 {
-	os << "@@";
+	if (m_offset == INT_MAX) {
+		os << "@!";
+	} else if (m_offset == 0) {
+		os << "@@";
+	} else if (m_offset > 0) {
+		os << "@+" << m_offset;
+	} else {
+		os << "@" << m_offset;
+	}
+}
+
+std::string AluInputRecord::_identify()
+{
+	if (m_offset == INT_MAX) return "@!";
+	if (m_offset == 0) return "@@";
+	if (m_offset > 0) return "@+" + std::to_string(m_offset);
+	return "@" + std::to_string(m_offset);
 }
 
 PValue AluInputRecord::evaluate()
 {
-	PSpecString ps = g_pStateQueryAgent->getFromTo(1,-1);
+	PSpecString ps;
+	if (m_offset == INT_MAX) {
+		ps = g_pStateQueryAgent->currRecord();
+	} else if (m_offset == 0) {
+		ps = g_pStateQueryAgent->inputRecord();
+	} else {
+		MYASSERT_WITH_MSG(g_pReader != nullptr, "Rolling context requires a reader");
+		ps = g_pReader->peek(m_offset);
+	}
+	// Check if this is an out-of-bounds record
+	if (Reader::isOOBRecord(ps)) {
+		return g_pOOBValue;
+	}
 	PValue ret;
 	if (ps) {
 		ret = mkValue2(ps->data(), int(ps->length()));
@@ -940,8 +987,8 @@ AluFunction::AluFunction(std::string& _s)
 			try {
 				p_gExternalFunctions->Initialize(getFullSpecPath());
 			} catch (const SpecsException& e) {
-				std::cerr << "Python Interface: " << e.what(!g_bVerbose) << "\n";
-				exit(0);
+				std::string err = std::string("Python Interface: ") + e.what(!g_bVerbose);
+				MYTHROW(err);
 			}
 		}
 		MYASSERT(p_gExternalFunctions->IsInitialized());
@@ -1104,17 +1151,23 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 		std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << std::endl;
 }
 
-void dumpAluStack(const char* title, std::stack<PValue>& stk)
+void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = std::cerr)
 {
-	std::cerr << title << ": ALU Stack at " << &stk << " with " << stk.size() << " items:\n";
+	stream << title << ": ALU Stack at " << &stk << " with " << stk.size() << " items:\n";
 	std::stack<PValue> tmp;
 	while (!stk.empty()) {
 		PValue v = stk.top();
 		stk.pop();
-		std::cerr << "   > " << (v ? v->getStr() : "(nil)") << std::endl;
+		if (v) {
+			stream << "   > " << v->getStr() << "  ("
+			    << ((v->isExact()) ? "exact " : "inexact ")
+				<< ALUCounterType2Str[v->getType()] << ")" << std::endl;
+		} else {
+			stream << "   > (nil)" << std::endl;
+		}
 		tmp.push(v);
 	}
-	std::cerr << std::endl;
+	stream << std::endl;
 	while (!tmp.empty()) {
 		PValue v = tmp.top();
 		tmp.pop();
@@ -1227,6 +1280,40 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			continue;
 		}
 
+		// Rolling context: @+n or @-n
+		if (*c=='@' && (c[1]=='+' || c[1]=='-') && isDigit(c[2])) {
+			char sign = c[1];
+			char* tokEnd = c + 2;
+			while (tokEnd<cEnd && isDigit(*tokEnd)) tokEnd++;
+			std::string num(c+2, tokEnd-(c+2));
+			int offset;
+			try {
+				offset = std::stoi(num);
+			} catch (...) {
+				std::string err = "Invalid context offset: <" + num + "> in expression ";
+				MYTHROW(err);
+			}
+			if (offset > MAX_CONTEXT_SIZE) {
+				std::string err = "Context offset out of range: " + std::string(1, sign) + 
+					std::to_string(offset);
+				MYTHROW(err);
+			}
+
+			if (sign == '-') offset = -offset;
+			pUnit = std::make_shared<AluInputRecord>(offset);
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			c = tokEnd;
+			mayBeStart = false;
+			// Update rolling context size globals
+			if (offset > 0 && (unsigned int)offset > g_forwardContext) {
+				g_forwardContext = (unsigned int)offset;
+			} else if (offset < 0 && (unsigned int)(-offset) > g_backwardContext) {
+				g_backwardContext = (unsigned int)(-offset);
+			}
+			continue;
+		}
+
 		// Also a configured string
 		if (*c=='@' && isFirstCharInIdentifier(c[1])) {
 			char* tokEnd = ++c;
@@ -1250,6 +1337,16 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		if (*c=='@' && c[1]=='@')  {
 			c+=2;
 			pUnit = std::make_shared<AluInputRecord>();
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			mayBeStart = false;
+			continue;
+		}
+
+		// A special string @! representing the current record (context-affected)
+		if (*c=='@' && c[1]=='!')  {
+			c+=2;
+			pUnit = std::make_shared<AluInputRecord>(INT_MAX);
 			vec.push_back(pUnit);
 			prevUnitType = pUnit->type();
 			mayBeStart = false;
@@ -1902,7 +1999,12 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 		}
 	}
 
-	MYASSERT(computeStack.size() == 1);
+	if (computeStack.size() != 1) {
+		if (g_bDebugAluRun || g_bVerbose) {
+			dumpAluStack("Unreduced Final Stack", computeStack, g_FinalErrors);
+		}
+		MYTHROW("Expression did not reduce to a single value");
+	}
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
 			dumpAluStack("Final Stack", computeStack);

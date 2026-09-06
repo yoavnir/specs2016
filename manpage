@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "1 May 2026" "0.9.9" "specs man page"
+.TH man 1 "11 Sep 2026" "1.0.0" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -57,9 +57,9 @@ argument may be any of the following:
 .P
 A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
 .P
-A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
+A range of words, such as `w5` or `word 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based. The keyword may be abbreviated to any prefix of `word`, but must not be pluralized -- `words` is taken as a string literal.
 .P
-A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based.
+A range of fields, such as `field 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based. As with words, `field` may be abbreviated to any prefix but must not be pluralized.
 .P 
 .B TODclock
 -- A 64-bit formatted timestamp, giving microseconds since the Unix epoch.
@@ -228,9 +228,17 @@ Convert printable time format to a number, representing microseconds since the e
 .SS "Other Spec Units"
 There are also other spec units, that may be used:
 .IP "READ" 3
-Causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string.
+Causes the program to read the next line of input. If we have already read the last line, the read line is taken to be the empty string. When a
+.B READ
+or
+.B READSTOP
+spec unit is applied, the context offset (see below) is reset to zero (the current record).
 .IP "READSTOP" 3
-Causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration.
+Causes the program to read the next line of input. If we have already read the last line, no more processing is done for this iteration. When a
+.B READ
+or
+.B READSTOP
+spec unit is applied, the context offset (see below) is reset to zero (the current record).
 .IP "UNREAD" 3
 Causes the program to push back the current active record back to the reader, so that the next iteration of the specification or the next 
 .I READ
@@ -357,6 +365,147 @@ Similarly:
     specs w1 a: SKIP-UNTIL "a=BEGIN" 1-* 1
 .P
 skips records until the first record whose first word is BEGIN, then processes that record and all subsequent records normally.
+.IP "CONTEXT" 3
+Temporarily changes the working string to a nearby record without consuming it.
+.B CONTEXT
+is followed by an integer offset:
+.B CONTEXT 0
+resets the working string to the current record,
+.B CONTEXT 1
+sets it to the next record,
+.B CONTEXT -1
+sets it to the previous record, and so on. The integer offset is limited to between -256 and 256.
+The required buffer sizes are computed at parse time from the largest positive and negative offsets used. If the offset refers to a record beyond the beginning or end of the input, the working string is set to the empty string. Note that reading beyond the input with
+.B CONTEXT
+does not cause processing to stop, even if a
+.B READSTOP
+token is present in the specification.
+.P
+.B CONTEXT
+must not be abbreviated. It is not supported with threading or multiple input streams.
+.P
+Example:
+.P
+    echo -e "A\\nB\\nC" | specs 1-* 1 CONTEXT 1 1-* NW
+.P
+produces: "A B", "B C", "C" -- each line shows the current record followed by the next.
+.P
+In expressions, the syntax
+.B @+n
+and
+.B @-n
+provides access to nearby records without changing the working string. For example,
+.B @+1
+refers to the next record and
+.B @-1
+refers to the previous record.
+.B @+0
+and
+.B @-0
+are equivalent to
+.B @@
+(the current record). As with the 
+.B CONTEXT
+spec unit, the offsets specified in
+.B @+n
+and
+.B @-n
+are capped to between -256 and 256.
+.P
+Example:
+.P
+    echo -e "A\\nB\\nC" | specs print @+1 1
+.P
+produces: "B", "C", "" -- each line shows the next record (empty for the last).
+.P
+Note that reading beyond the input with
+.B @+n
+or
+.B @-n
+does not cause processing to stop, even if a
+.B READSTOP
+token is present in the specification.
+
+.SS "Out-of-Bounds (OOB) Records"
+When
+.B CONTEXT
+or an
+.B @\(+-n
+expression refers to a record beyond the beginning or end of the input, or when a
+.B READ
+runs dry, the working string becomes an
+.I out-of-bounds
+(OOB) record. An OOB record behaves as an empty string, but it additionally carries a hidden flag marking it as out of bounds. This flag lets you tell the difference between a record that is genuinely empty and one that is empty only because it lies past the edge of the input. The flag is queried with the
+.B ctxoob()
+function (see
+.B "Built-In Functions" ).
+.P
+The OOB flag travels with the working string only as long as the OOB record is read
+.I directly.
+It is preserved by the following:
+.RS
+.IP \(bu 3
+.B ctxoob()
+with no argument (it inspects the current working string).
+.IP \(bu 3
+The record-access functions
+.B record(),
+.B range(),
+.B substr(),
+.B word(),
+.B wordrange(),
+.B field()
+and
+.B fieldrange()
+when they operate on the current (OOB) record.
+.IP \(bu 3
+The
+.B @@,
+.B @!
+and
+.B @\(+-n
+input-record expressions.
+.IP \(bu 3
+Character, word and field range labels (for example
+.B "1-5 a:" ,
+.B "w1-3 x:"
+or
+.B "f1 y:" )
+that capture the OOB record. The captured label, e.g.
+.B a,
+remains OOB and can be tested with
+.B ctxoob(a).
+.RE
+.P
+The OOB flag is
+.B not
+preserved once the value is copied into a plain text value that no longer refers to the working string. Known cases where the flag is lost include:
+.RS
+.IP \(bu 3
+Assigning into a numbered counter with a
+.B SET
+spec unit (or any
+.B :=
+assignment). For example, after
+.B "CONTEXT 1 set #5:=record()" ,
+the expression
+.B ctxoob(#5)
+returns 0, because the counter stores only the (empty) text and not the OOB flag.
+.IP \(bu 3
+Values that pass through an output-producing spec unit such as
+.B PRINT
+before being re-captured. For example, in
+.B "CONTEXT 1 1-5 a: PRINT \(dqa\(dq b: PRINT \(dqctxoob(b)\(dq" ,
+the label
+.B b
+is no longer OOB and
+.B ctxoob(b)
+returns 0.
+.IP \(bu 3
+Other operations that materialize the working string as ordinary text may likewise drop the flag.
+.RE
+.P
+In short: query OOB status as close as possible to where the OOB record is read, and do not expect it to survive a round trip through a counter or other plain-text storage.
 
 .SS "MainOptions"
 These are optional spec units that appear at the beginning of the specification and modify the behavior of the entire specification.
@@ -532,7 +681,7 @@ sorted by department name. You can print this out without repeating the departme
           BREAK c
               ID c 1
 
-.SS "RunIn and RunOut Cycles"
+.SS "Run-In and Run-Out Cycles"
 A 
 .B cycle 
 is a single run of the specification on the current active input record. A cycle may read additional input records, produce zero output records, or produce multiple output records. If the specification contains 
@@ -542,16 +691,16 @@ or
 tokens, a single cycle can consume more than one input record.
 
 The 
-.B runin 
-cycle is the first cycle. In the runin cycle, the function 
+.B run-in 
+cycle is the first cycle. In the run-in cycle, the function 
 .B first()
 returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
 
 The 
-.B runout 
+.B run-out 
 cycle happens 
 .I after 
-the last line has been read, but only when the specification requires a runout cycle. It consists of the spec items that follow the 
+the last line has been read, but only when the specification requires a run-out cycle. It consists of the spec items that follow the 
 .B EOF 
 token, or (when 
 .I select second 
@@ -570,6 +719,21 @@ function. Example:
         /==========/ 1 write
         /Total:/ 1
         print #0 nw
+
+
+Note that any use of the
+.B eof()
+function anywhere in the specification forces a run-out cycle. This is called a
+.I forced run-out cycle
+and any use of record-reading spec units, such as a 
+.I data field 
+or
+.B ALU
+functions that access records, like
+.B record()
+or
+.B word(i)
+will result in an empty string returned.
         
 .SS "Input Streams"
 The keyword 
@@ -641,7 +805,9 @@ Expressions are used in PRINT data units as well as in assignments. Assignments 
 
 Expressions are made up of numbers, field identifiers (no colon needed), and counter numbers preceded by a hash mark. They allow ordinary arithmetic and logical operations as well as function calls for pre-defined functions:
 .IP "Unary Operators" 3
-+ (plus - does nothing), - (minus), ! (logical NOT)
++ (plus - does nothing), - (minus), ! (logical NOT - equivalent to the 
+.I not
+built-in function)
 .IP "Binary Arithmetic Operators" 3
 +, -, *. / (division), // (integer division), % (remainder)
 .IP "Binary String Operator" 3
@@ -680,6 +846,38 @@ will output 4.  The assignment is performed and the value stored in the counter.
 
 .IP "At-sign (@) Operator" 3
 The at-sign allows the inclusion of user-defined and system-defined labels as strings in expressions. The double at-sign (@@) substitutes for the entire input record.
+The syntax
+.B @+n
+and
+.B @-n
+(where n is a natural number) accesses nearby records from the rolling context buffer.
+.B @+1
+is the next record,
+.B @-1
+is the previous record.
+.B @+0
+and
+.B @-0
+are equivalent to
+.B @@.
+The
+.B @!
+syntax substitutes for the current record as affected by
+.B CONTEXT.
+Without
+.B CONTEXT
+in effect,
+.B @!
+is equivalent to
+.B @@.
+When
+.B CONTEXT
+is active,
+.B @@
+still returns the original input record, while
+.B @!
+returns the context-affected record.
+Out-of-bounds offsets return the empty string. The forward and backward buffer sizes are computed automatically at parse time. This feature requires non-threaded mode and a single input stream.
 
 .SS "Built-In Functions"
 .IP "abs(x)" 3
@@ -839,12 +1037,12 @@ Returns a binary representation of the unsigned integer in x. The field length i
 Returns the length of the argument when viewed as a string. For example, len(37) is 2; len('hello') is 5.
 .IP "first()" 3
 Returns 1 during the 
-.B runin
+.B run-in
 cycle, and zero otherwise.
 .IP "eof()" 3
 Returns 1 during the
-.B runout 
-cycle, and zero otherwise.
+.B run-out 
+cycle, and zero otherwise. Its use in a specification forces a run-out cycle.
 .IP "number()" 3
 Returns the number of times the specification has so far been run on different records.
 .IP "recno()" 3
@@ -855,9 +1053,41 @@ or
 spec units, then this number will be equal to the result of 
 .B number().
 Otherwise, it will be higher.
+.IP "ctxrecno()" 3
+Returns the record number of the record that input parts work on. This is similar to
+.B recno(),
+but considers rolling context, which
+.B recno()
+does not. When no
+.I CONTEXT
+is active, returns the same value as
+.B recno().
+.IP "ctxoffset()" 3
+Returns the current effective context offset. When no
+.I CONTEXT
+is active, returns 0.
+.IP "ctxoob()" 3
+Returns 1 if the argument string came from out-of-bounds input (either via
+.I CONTEXT
+or
+.I @±n
+reading past the input edges, or via a
+.I READ
+that ran dry), and 0 otherwise. With no argument, checks the current (context-affected) record. The out-of-bounds property is not preserved by all operations; see the subsection
+.B "Out-of-Bounds (OOB) Records"
+for details and limitations.
 .IP "record()" 3
 Returns the entire input record. Equivalent to 
 .B range(1,-1)
+.IP "cfrecord()" 3
+Returns the entire input record, disregarding rolling context. When
+.I CONTEXT
+is active,
+.B record()
+returns the context-affected record, while
+.B cfrecord()
+returns the original input record. Equivalent to
+.B @@.
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s
@@ -990,7 +1220,9 @@ Returns whether the evaluation of
 .I expression
 results in an exact result (1) or not (0). 
 .B NOTE:
-This function has some limitations. For example, Python functions are always taken to return an exact value when they return an integer or a string, but an inexact value when they return a float, which may or may not be correct. When unsure, the
+Python functions use a heuristic where integer and string returns are exact, while float returns are inexact. This may not always be correct. Python functions can override this by returning a 2-tuple
+.B (value, exactness)
+to explicitly specify exactness. When unsure, the
 .B exact
 function errs on the side of returning 0.
 
@@ -1371,6 +1603,12 @@ is positive, 0 if the
 is 0, and -1 if the 
 .I number 
 is negative.
+.IP "not(expression)" 3
+Returns 1 if the 
+.I expression
+is an integer zero, or 0 if it is anything else.  It serves as an alternative to the
+.B unary logical not
+operator (!).
 .IP "space(string,length,pad)" 3
 Formats a 
 .I string 
@@ -1528,6 +1766,51 @@ are specified, the first
 words and last 
 .I ftr 
 words are omitted.
+.IP "exec(cmd)" 3
+Runs the shell command in
+.I cmd
+and returns whatever the command wrote to its standard output. A single
+trailing newline is stripped from the output. The command's return code is
+saved and can be retrieved with
+.B excrc(),
+while whatever the command wrote to its standard error is saved and can be
+retrieved with
+.B excerr().
+.IP "exc1(cmd [,lineNo])" 3
+Like
+.B exec(cmd),
+but returns only the contents of line
+.I lineNo
+of the standard output. The
+.I lineNo
+argument must be a positive integer and defaults to 1, which returns the first
+line. If the requested line does not exist, an empty string is returned.
+.IP "excrc()" 3
+Returns the return code of the last shell command run by
+.B exec()
+or
+.B exc1().
+If no such command has been run, returns
+.B NaN.
+This reflects only the most recent run, so use it before running any other
+shell command. Take special care when
+.B exec()
+or
+.B exc1()
+are run inside an
+.B IF
+or
+.B WHILE
+block.
+.IP "excerr()" 3
+Returns whatever the last shell command run by
+.B exec()
+or
+.B exc1()
+wrote to its standard error. If no such command has been run, returns an empty
+string. As with
+.B excrc(),
+this reflects only the most recent run.
 
 
 .SS "Built-In Statistical Pseudo-Functions" 
@@ -1675,6 +1958,30 @@ The regular expression follows this grammar. Do not specify more than one of the
 The regular expression follows this grammar. Do not specify more than one of these.
 .P
 .RE 3
+.B Portability note:
+The C++ standard library's matching behavior for the
+.I basic, extended, awk, grep,
+and
+.I egrep
+grammars is not fully consistent across platforms; some implementations do not correctly
+implement POSIX leftmost-longest matching for patterns that combine alternation with an
+unbounded quantifier. specs prints a warning to standard error when you select a grammar
+known to be affected on the platform it is running on. See the guidebook, Chapter 8,
+"Regular Expressions", for details. The
+.B ECMAScript
+grammar (the default) is not affected and is the recommended choice when portability across
+platforms matters.
+.P
+To silence the warning, set the
+.B regexWarn
+configuration label to
+.B 0, false,
+or
+.B no
+in the configuration file; see the
+.B CONFIGURATION FILE
+section below.
+.P
 The last parameter in all three functions is 
 .I matchFlags.
 This optional parameter is also a comma-separated list of flags. The supported flags are:
@@ -1771,6 +2078,96 @@ clause.  The following two are equivalent:
 .P
     specs IF "word(1)=='UU'"
     
+
+.SH PYTHON FUNCTIONS
+When compiled with Python support,
+.I specs
+can load user-defined functions from a Python file named
+.B localfuncs.py.
+The file is searched on
+.B SPECSPATH,
+the same path used for specification files.
+It should be a normal importable Python module.
+.PP
+Functions whose names do not start with an underscore are made available to
+.I specs
+expressions. Helper functions can be kept private by starting their names with
+an underscore.
+.PP
+For example, a
+.B localfuncs.py
+file can define a small formatting function:
+.RS
+.nf
+def commas(value):
+    value = int(value)
+    return f"{value:,}"
+.fi
+.RE
+.PP
+It can then be called from a specification expression:
+.RS
+.nf
+specs print "commas(word(1))" 1.12 RIGHT
+.fi
+.RE
+.PP
+Python functions may return an integer, floating-point number, string, or
+.B None.
+By default, integer and string returns are marked as exact, while floating-point
+returns are marked as inexact. To override this heuristic, a function may instead
+return a 2-tuple
+.B (value, exactness)
+where
+.I value
+is the return value (integer, float, string, or None) and
+.I exactness
+is a Python boolean
+.B True
+or
+.B False.
+For example,
+.B return (3.14159, True)
+returns an exact floating-point value.
+.PP
+By default, Python functions receive their arguments as plain values with exactness information stripped.
+To allow a function to receive exactness information with its arguments, set the
+.B arg_type
+attribute on the function to the string
+.B \[dq]exact\[dq].
+When
+.B arg_type = \[dq]exact\[dq]
+is set, every argument is passed as a 2-tuple
+.B (value, exactness)
+where
+.I value
+is the argument value and
+.I exactness
+is a Python boolean
+.B True
+or
+.B False
+indicating whether the value is exact. This allows functions to inspect and propagate exactness information.
+For example:
+.RS
+.nf
+def lowindex(x):
+    return (int(x[0]) % 65536, x[1])
+
+lowindex.arg_type = "exact"
+.fi
+.RE
+.PP
+Docstrings are used by
+.B specs --help pyfuncs
+when listing loaded Python functions. Use
+.B --pythonFuncs on
+to force loading Python functions,
+.B --pythonFuncs off
+to disable them, or
+.B --pythonFuncs auto
+to load them only after an unknown function is encountered.
+
 .SH OPTIONS
 .B specs 
 supports the following switches:
@@ -1796,6 +2193,14 @@ a list of directories separated by colons on Linux and Mac OS, or semicolons on 
 .I SPECSPATH
 defaults to 
 .B $HOME/specs
+on POSIX systems, or
+.B %APPDATA%\especs
+on Windows.
+A spec file replaces the specification on the command line entirely, so the two cannot be combined:
+.B specs
+rejects an invocation that supplies both
+.B --specFile
+and spec units.
 .IP "--verbose or -v" 3
 Outputs more information when something goes wrong.
 .IP "--stats"
@@ -1846,7 +2251,7 @@ Sets the record format for the primary input stream. Supported options are
 .B D (delimited)
 for records delimited by a character in the input stream (this is the default); 
 .B F (fixed)
-for records or a fixed length (see --lrecl); 
+for records of a fixed length (see --lrecl); 
 .B FD (fixed-delimited)
 for records delimited as in 
 .B fixed,
@@ -1906,9 +2311,10 @@ prints the name, arguments, and docstring of all loaded python functions,
 .B builtin
 prints the name, arguments, and a line of help for the built-in functions, 
 .B specs 
-prints a list of all specifications on the path and the comment, and a particular python function name makes 
-.I help
-display the arguments and docstring of that function only.
+prints a list of all the specifications on the path, each with the first line of its opening comment block.
+Any other parameter is taken to be a name. For a built-in or a python function,
+.B specs
+displays the arguments and documentation of that function only. For a specification, it displays the entire opening comment block of the spec file. That block must begin on the first line of the file, and it ends at the first line that does not begin with a hash mark in the first column.
 .IP "--info" 3
 Does not run specs. Instead it displays some information about this build of specs: compiler version, watermarks for queues, 
 random provider, python and floating point precision.
@@ -1918,12 +2324,14 @@ random provider, python and floating point precision.
 reads a configuration file by default from 
 .B $HOME/.specs
 .P 
-This file contains some configuration options. For now, it only allows you to set user-predefined labels and four specific configuration options: 
+This file contains some configuration options. For now, it only allows you to set user-predefined labels and a handful of specific configuration options: 
 .B timezone, 
 .B locale, 
 .B while-guard-limit,
-and 
-.B SPECSPATH. 
+.B SPECSPATH,
+.B regexType,
+and
+.B regexWarn.
 For example, an entry such as this:
 .P
     timezone: "Europe/Belfast"
@@ -1938,23 +2346,50 @@ command like this:
 .P
     specs /My certificates come from/ 1 @myCA nw 
 .SS "Special configuration labels"
-There is currently just one user-settable configuration label with special meaning:
+The following user-settable configuration labels have special meaning:
 .IP "NO_WARN_REDEFINED_FID" 3
 If this is set to any value, then 
 .B specs
 suppresses the warning message if a 
 .I field identifier
 is re-defined within a specification.   
+.IP "regexType" 3
+Sets the default regular expression grammar and flags used by
+.I rmatch, rsearch,
+and
+.I rreplace,
+equivalent to the
+.B --regexType
+command-line switch but applied to every invocation. See the
+.B Regular Expressions
+section above for the list of valid grammars and flags, for example:
+.P
+    regexType: extended,icase
+.IP "regexWarn" 3
+Controls whether
+.B specs
+warns when a regular expression grammar known to behave differently across platforms is selected
+(see the
+.B Regular Expressions
+section above). Set to
+.B 0, false,
+or
+.B no
+to silence the warning:
+.P
+    regexWarn: 0
+.P
+Any other value, or leaving it unset, keeps the warning enabled, which is the default.
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
 This returns the version of 
 .B specs, 
-for example "v0.6"
+for example "1.0.0"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 
-    specs @version 1
+    specs @version
 .IP "cols" 3
 contains the number of columns in the display. You can override this in the configuration file. For example, the following prints a right-justified string. 
 .P
@@ -1971,107 +2406,107 @@ depending on whether support for python function is available.
 contains a string describing this build. For example:
 .p
     POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
+.IP "build-commit" 3
+contains the git commit hash (short form) of the build. For example:
+.p
+    b74fcb1
+.IP "build-branch" 3
+contains the git branch name of the build. May be empty if not available. For example:
+.p
+    dev-1.0.0
+.IP "build-time" 3
+contains the timestamp of when the build was created. Format is
+.B yyyy-MM-ddTHH:mm:ss.
+It has local time for local builds, and UTC for GitHub builds. For example:
+.p
+    2026-06-08T08:22:52
+.IP "build-source" 3
+contains either
+.B local
+or
+.B github
+depending on where the build was created.
+.IP "build-number" 3
+contains the build number from GitHub Actions (github.run_number). Empty for local builds.
+.IP "build-runid" 3
+contains the 11-digit build id from GitHub Actions (github.run_id). Empty for local builds.
+.IP "build-url" 3
+contains the build URL for the GitHub build. Empty for local builds.
+.IP "build-info" 3
+contains a composite string with all build information. For example:
+.p
+    Built locally from commit 8bd11da on branch dev-1.0.0 at 2026-06-08T13:01:18 local
+.p
+or
+.p
+    Built on GitHub (id 27334782912; build 217) from commit 8bd11da of version 1.0.0 at 2026-06-08T10:01:18 UTC
+.p
     
 .SH EXAMPLES
 `ls -l` yields this:
 
-    total 352
-    -rw-r--r--@ 1 ynir  admin    574 Aug 25  2009 Makefile
-    -rw-r--r--@ 1 ynir  admin   3542 Nov 23 00:21 README
-    -rw-r--r--@ 1 ynir  admin    362 Nov 19 08:31 conversion.h
-    -rw-r--r--  1 ynir  admin    984 Nov 11 17:45 ls.txt
-    -rw-r--r--@ 1 ynir  admin   2233 Nov 23 00:03 main.cc
-    -rw-r--r--  1 ynir  admin   9412 Nov 23 00:11 main.o
-    -rw-r--r--@ 1 ynir  admin   6567 Nov 23 00:09 spec_build.cc
-    -rw-r--r--  1 ynir  admin  16776 Nov 23 00:11 spec_build.o
-    -rw-r--r--@ 1 ynir  admin   5494 Nov 19 08:30 spec_convert.cc
-    -rw-r--r--  1 ynir  admin  17004 Nov 23 00:11 spec_convert.o
-    -rw-r--r--@ 1 ynir  admin  11419 Nov 23 00:10 spec_params.cc
-    -rw-r--r--  1 ynir  admin  21080 Nov 23 00:11 spec_params.o
-    -rw-r--r--@ 1 ynir  admin    375 Nov 11 09:29 spec_vars.cc
-    -rw-r--r--  1 ynir  admin   4800 Nov 23 00:11 spec_vars.o
-    -rwxr-xr-x  1 ynir  admin  36740 Nov 23 00:11 specs
-    -rw-r--r--@ 1 ynir  admin   1547 Nov 23 00:10 specs.h
+    total 96
+    -rw-rw-r-- 1 sio sio 16432 Jun  1 12:49 dataField.cc
+    -rw-rw-r-- 1 sio sio  6187 Jun  4 12:16 InputPart.cc
+    -rw-rw-r-- 1 sio sio 11717 Jun  4 12:16 item.h
+    -rw-rw-r-- 1 sio sio 35974 Jun  4 12:16 specItems.cc
+    -rw-rw-r-- 1 sio sio  1144 Jun  4 12:16 specItems.h
+    -rw-rw-r-- 1 sio sio 13953 Jun  1 12:49 splitItem.cc
 
 Let's run it though a spec:
 
-    ls -l | specs 12-* 1 redo w2 1 w4 d2x 8.8 r w8 17
+    ls -l | specs 12-* 1 REDO IF "wordcount()>=8" THEN w2 1 w4 d2x 8.8 RIGHT w8 17
     
 The first spec unit converts it to this:
 
-    1 ynir  admin    574 Aug 25  2009 Makefile
-    1 ynir  admin   3542 Nov 23 00:21 README
-    1 ynir  admin    362 Nov 19 08:31 conversion.h
-    1 ynir  admin    984 Nov 11 17:45 ls.txt
-    1 ynir  admin   2233 Nov 23 00:03 main.cc
-    1 ynir  admin   9412 Nov 23 00:11 main.o
-    1 ynir  admin   6567 Nov 23 00:09 spec_build.cc
-    1 ynir  admin  16776 Nov 23 00:11 spec_build.o
-    1 ynir  admin   5494 Nov 19 08:30 spec_convert.cc
-    1 ynir  admin  17004 Nov 23 00:11 spec_convert.o
-    1 ynir  admin  11419 Nov 23 00:10 spec_params.cc
-    1 ynir  admin  21080 Nov 23 00:11 spec_params.o
-    1 ynir  admin    375 Nov 11 09:29 spec_vars.cc
-    1 ynir  admin   4800 Nov 23 00:11 spec_vars.o
-    1 ynir  admin  36740 Nov 23 00:11 specs
-    1 ynir  admin   1547 Nov 23 00:10 specs.h
+    1 sio sio 16432 Jun  1 12:49 dataField.cc
+    1 sio sio  6187 Jun  4 12:16 InputPart.cc
+    1 sio sio 11717 Jun  4 12:16 item.h
+    1 sio sio 35974 Jun  4 12:16 specItems.cc
+    1 sio sio  1144 Jun  4 12:16 specItems.h
+    1 sio sio 13953 Jun  1 12:49 splitItem.cc
 
-Then after the redo, we get this:
+Then after the REDO arm, we get this:
 
-    ynir        23e Makefile
-    ynir        dd6 README
-    ynir        16a conversion.h
-    ynir        3d8 ls.txt
-    ynir        8b9 main.cc
-    ynir       24c4 main.o
-    ynir       19a7 spec_build.cc
-    ynir       4188 spec_build.o
-    ynir       1576 spec_convert.cc
-    ynir       426c spec_convert.o
-    ynir       2c9b spec_params.cc
-    ynir       5258 spec_params.o
-    ynir        eae spec_vars.cc
-    ynir       12c0 spec_vars.o
-    ynir       8f84 specs
-    ynir        60b specs.h
-
+    sio        4030 dataField.cc
+    sio        182b InputPart.cc
+    sio        2dc5 item.h
+    sio        8c86 specItems.cc
+    sio         478 specItems.h
+    sio        3681 splitItem.cc
       
 Alternatively, let's arrange this on multiple lines:
 
-    ls -l | specs w9 1 write "Owner:" 3 w3 10 write "Size:" 3 w5 10-20 r
+    specs -C "ls -l" w9 1 write "Owner:" 3 w3 10 write "Size:" 3 w5 10-20 r
 
-    Makefile
-      Owner: ynir
-      Size:          574
-    README
-      Owner: ynir
-      Size:         5834
-    conversion.h
-      Owner: ynir
-      Size:          362
-    list.txt
-      Owner: ynir
-      Size:          978
-    ls.txt
-      Owner: ynir
-      Size:          984
-    main.cc
-      Owner: ynir
-      Size:         2233
-    main.o
-      Owner: ynir
-      Size:         9412
+    Owner:
+    Size:              r
+    dataField.cc
+    Owner: sio
+    Size:  16432       r
+    InputPart.cc
+    Owner: sio
+    Size:  6187        r
+    item.h
+    Owner: sio
+    Size:  11717       r
+    specItems.cc
+    Owner: sio
+    Size:  35974       r
+    specItems.h
+    Owner: sio
+    Size:  1144        r
+    splitItem.cc
+    Owner: sio
+    Size:  13953       r
 
 Finally, let's make our own version of the multi-column display:
 
-    ls -l | specs w9 1 read w9 26 read w9 51
-                             Makefile                 README
-    conversion.h             main.cc                  main.o
-    spec_build.cc            spec_build.o             spec_convert.cc
-    spec_convert.o           spec_params.cc           spec_params.o
-    spec_vars.cc             spec_vars.o              specs
-    specs.h
+    specs -C "ls -l" w9 1 read w9 26 read w9 51
 
+                            dataField.cc             InputPart.cc
+    item.h                  specItems.cc             specItems.h
+    splitItem.cc
 
 .SH SEE ALSO
 sed(1), awk(1)

@@ -122,6 +122,7 @@ public:
 	~ClockPart() override {}
 	std::string Debug() override;
 	PSpecString getStr(ProcessingState& pState) override;
+	bool        readsLines() override {return m_Type!=ClockType__Static;}
 private:
 	clockType    m_Type;
 	clockValue   m_StaticClock;
@@ -389,5 +390,18 @@ private:
 };
 
 typedef std::shared_ptr<SplitItem> PSplitItem;
+
+class ContextItem : public Item {
+public:
+	explicit ContextItem(int offset);
+	~ContextItem() override {}
+	std::string Debug() override;
+	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
+	bool readsLines() override { return true; }
+private:
+	int m_offset;
+};
+
+typedef std::shared_ptr<ContextItem> PContextItem;
 
 #endif

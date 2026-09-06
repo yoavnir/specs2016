@@ -136,20 +136,18 @@ std::vector<Token> parseTokensSplit(const char* arg)
 	return ret;
 }
 
-// A comment is defined as starting with the last hash mark + space  ("# ") sequence 
-// on the line, preceded by whitespace unless it's at the start of the line.
+// A comment is defined as starting with the last hash mark + space ("# ") sequence
+// on the line, preceded by whitespace unless it's at the start of the line. A hash
+// mark that is the very last character on the line (i.e. with nothing, not even a
+// trailing space, after it) is treated the same as if it were followed by a space.
 std::string removeComment(std::string& st)
 {
 	std::string ret;
-	std::size_t found = 0;
+	std::size_t found = st.rfind("# ");
 
-	// Special case - a line that is just a pound sign
-	if (st=="#") {
-		ret = std::string("");
-		goto FINISH;
+	if (found==std::string::npos && !st.empty() && st.back()=='#') {
+		found = st.size()-1;
 	}
-	
-	found = st.rfind("# ");
 
 	if (found==std::string::npos || (found>0 && !is_whitespace(st[found-1]))) {
 		ret = st;
@@ -169,12 +167,25 @@ FINISH:
 	return ret;
 }
 
+static bool hasPathComponent(const std::string& name)
+{
+	if (name.find('/') != std::string::npos) return true;
+#ifdef WIN64
+	if (name.find('\\') != std::string::npos) return true;
+	if (name.size() >= 2 && std::isalpha(name[0]) && name[1] == ':') return true;
+#endif
+	return false;
+}
+
 static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 {
-	theFile.open(fileName);
-	if (theFile.is_open()) return;
+	if (hasPathComponent(fileName)) {
+		// Explicit path -- open directly, don't search the spec path
+		theFile.open(fileName);
+		return;
+	}
 
-	// No?  Try the path
+	// Bare name -- search the spec path
 	char* spath = strdup(getFullSpecPath());
 	if (spath && spath[0]) {
 		char* spath_ctx = spath;

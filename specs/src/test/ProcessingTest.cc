@@ -8,16 +8,47 @@
 #include "processing/Config.h"
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
+#include "processing/Reader.h"
 
 extern ALUCounters g_counters;
 extern char        g_printonly_rule;
 extern bool        g_keep_suppressed_record;
 extern unsigned int g_WhileGuardLimit;
 
-std::string prettify(std::string src)
+//  DUMP_TO_FILES levels:
+//   0 - Never dump to files
+//   1 - Dump to files only for failed tests (anything but "Res")
+//   2 - Always dump to files - later tests will overwrite previous tests
+
+#define DUMP_TO_FILES 1
+
+std::string prettify(std::string label, std::string src)
 {
-	std::string ret;
+#ifdef DUMP_TO_FILES
+#if DUMP_TO_FILES > 0
+#if DUMP_TO_FILES == 1
+    if ("Res" != label) {
+#endif
+	std::string fname = std::string("ProcessingTest.")+label;
+	auto f = fopen(fname.c_str(), "w");
+	fprintf(f, "%s", src.c_str());
+	fclose (f);
+#if DUMP_TO_FILES == 1
+    }
+#endif
+#endif
+#endif
+	std::string ret(label);
+	int max_chars = (label == "Res") ? 160 : 256;
+	ret += ": <";
 	for (char c : src) {
+		if (max_chars <= 0) {
+			if (max_chars == 0) {
+				ret += "...";
+				max_chars--;
+			}
+			continue;
+		}
 		switch (c) {
 			case '\n':
 				ret.append("\\n");
@@ -30,7 +61,9 @@ std::string prettify(std::string src)
 			default:
 				ret+=c;
 		}
+		max_chars--;
 	}
+	ret += ">";
 	return ret;
 }
 
@@ -40,16 +73,16 @@ std::string prettify(std::string src)
 		PSpecString ps = runTestOnExample(sp, "The quick brown fox jumped over the   lazy dog");  \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
-			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << ex << ">\n"; \
+			std::cout << "*** NOT OK ***\n\tGot: (NULL)\n\tExpected: <" << ex << ">\n"; \
 			errorCount++;                       \
 			failedTests.push_back(testCount);      \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {     \
-				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
+				std::cout << "*** NOT OK ***\n\t" << prettify("Got", *ps) << "\n\t" << prettify("Expected", ex) << "\n"; \
 				errorCount++;                   \
 				failedTests.push_back(testCount);  \
 			} else {                            \
-				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
+				std::cout << "***** OK *****   " << prettify("Res", ex) << "\n"; \
 			}                                   \
 		}                                       \
 } while (0);
@@ -60,16 +93,16 @@ std::string prettify(std::string src)
 		PSpecString ps = runTestOnExample(sp, ln);  \
 		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testCount << " ";     \
 		if (!ps) {                              \
-			std::cout << "*** NOT OK ***: Got (NULL); Expected: <" << prettify(ex) << ">\n"; \
+			std::cout << "*** NOT OK ***\n\tGot: (NULL)\n\t" << prettify("Expected", ex) << "\n"; \
 			errorCount++;                       \
 			failedTests.push_back(testCount);      \
 		} else {                                \
 			if (*(ps) != std::string(ex)) {              \
-				std::cout << "*** NOT OK ***:\n\tGot <" << prettify(*ps) << ">\n\tExp <" << prettify(ex) << ">\n"; \
+				std::cout << "*** NOT OK ***\n\t" << prettify("Got", *ps) << "\n\t" << prettify("Expected", ex) << "\n"; \
 				errorCount++;                   \
 				failedTests.push_back(testCount);  \
 			} else {                            \
-				std::cout << "***** OK *****: <" << prettify(ex) << ">\n"; \
+				std::cout << "***** OK *****   " << prettify("Res", ex) << "\n"; \
 			}                                   \
 		}                                       \
 } while (0);
@@ -84,11 +117,11 @@ std::string prettify(std::string src)
 		actual_res = e.what(true);              \
 	}                                           \
 	if (res==actual_res) {                      \
-		std::cout << "***** OK *****: <" << prettify(actual_res) << ">\n"; \
+		std::cout << "***** OK *****   " << prettify("Res", actual_res) << "\n"; \
 	} else {                                    \
 		errorCount++;                           \
 		failedTests.push_back(testCount);          \
-		std::cout << "*** NOT OK ***:\n\tGot <" << prettify(actual_res) << ">\n\tExp <" << prettify(res) << ">\n"; \
+		std::cout << "*** NOT OK ***\n\t" << prettify("Got", actual_res) << "\n\t" << prettify("Expected", res) << ">\n"; \
 	}                                           \
 } while (0);
 
@@ -109,8 +142,11 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	g_counters.clearAll();
 	g_keep_suppressed_record = false;
 	g_printonly_rule = PRINTONLY_PRINTALL;
+	g_forwardContext = 0;
+	g_backwardContext = 0;
 
 	TestReader tRead(100);
+	g_pReader = &tRead;
 	unsigned int readerCounter = 1;
 	char* example = strdup(_example);
 	char* example_ctx = example;
@@ -187,6 +223,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 		if (!ig.readsLines()) {
 			ig.setRegularRunAtEOF();
 		}
+		ps.setEOF();
 		ps.setString(nullptr);
 		ps.setFirst();
 		try {
@@ -206,6 +243,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	}
 
 end:
+	g_pReader = nullptr;
 	free(example);
 	while (!vec.empty()) {
 		vec[0].deallocDynamic();
@@ -528,12 +566,19 @@ int main(int argc, char** argv)
 #ifdef SPANISH_LOCALE_SUPPORTED
 	VERIFYCMD(specTimeSetLocale("es_ES"),"");  // TEST #112
 #ifdef PUT_TIME__SUPPORTED
+	if (onlyTest) {
+		specTimeSetLocale("es_ES");
+	}
 	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "viernes,21-diciembre-2018");  // TEST #113
 #else
 	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #113
 #endif
 #endif
 	VERIFYCMD(specTimeSetLocale("C"),"");  // TEST #114
+
+	if (onlyTest) {
+		specTimeSetLocale("C");
+	}
 	VERIFY("/1545407296.548900/ s2tf '%A,%d-%B-%Y' 1", "Friday,21-December-2018");  // TEST #115
 	
 	VERIFY("print 'next()' 1 /next/ n print 'next()' n", "1next6");  // TEST #116
@@ -831,8 +876,8 @@ int main(int argc, char** argv)
 	// sfield() with out-of-range negative count (was pointer underflow)
 	VERIFY2("print 'sfield(\"a\",-2,\",\")' 1", "x", ""); // Test #221
 
-	// fact() argument exceeding 64-bit overflow limit (was silent overflow)
-	VERIFY2("print 'fact(21)' 1", "x", "fact: argument too large (max 20 for 64-bit integers)"); // Test #222
+	// fact() argument exceeding 64-bit limit now uses tgamma
+	VERIFY2("print 'pretty(fact(21))' 1", "x", "5.109094e+19"); // Test #222
 	
 	// STRIP modifier on all-whitespace input (was out-of-bounds read in stripString)
 	VERIFY2("1-* strip 1", "   ", ""); // Test #223
@@ -869,15 +914,317 @@ int main(int argc, char** argv)
 			"   PRINT 'exact(max(a))'                NW";
 	VERIFY2(spec, "1.5\n2.5\n3.5", "0 0 0"); // TEST #228
 
+	// === Rolling Context tests ===
+
+	// CONTEXT 0 resets to current record
+	spec = "CONTEXT 0 1-* 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #229
+
+	// CONTEXT +1 peeks at next record
+	spec = "1-* 1 CONTEXT 1 1-* NW";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha beta\nbeta gamma\ngamma"); // TEST #230
+
+	// CONTEXT -1 peeks at previous record
+	spec = "1-* 1 CONTEXT -1 1-* NW";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta alpha\ngamma beta"); // TEST #231
+
+	// @+1 in expression peeks at next record
+	spec = "print @+1 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "beta\ngamma\n"); // TEST #232
+
+	// @-1 in expression peeks at previous record
+	spec = "print @-1 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "\nalpha\nbeta"); // TEST #233
+
+	// @+0 is the same as @@
+	spec = "print @+0 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #234
+
+	// @-0 is the same as @@
+	spec = "print @-0 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #235
+
+	// CONTEXT with larger forward offset
+	spec = "1-* 1 CONTEXT 2 1-* NW";
+	VERIFY2(spec, "A\nB\nC\nD\nE", "A C\nB D\nC E\nD\nE"); // TEST #236
+
+	// CONTEXT with larger backward offset
+	spec = "1-* 1 CONTEXT -2 1-* NW";
+	VERIFY2(spec, "A\nB\nC\nD\nE", "A\nB\nC A\nD B\nE C"); // TEST #237
+
+	// Combined forward and backward in one spec
+	spec = "CONTEXT -1 1-* 1 CONTEXT 0 1-* NW CONTEXT 1 1-* NW";
+	VERIFY2(spec, "A\nB\nC", "A B\nA B C\nB C"); // TEST #238
+
+	// @+n in expression with function
+	spec = "PRINT 'length(@+1)' 1";
+	VERIFY2(spec, "AB\nCDE\nF", "3\n1\n0"); // TEST #239
+
+	// Out-of-range forward context returns empty string
+	spec = "print @+5 1";
+	VERIFY2(spec, "only", ""); // TEST #240
+
+	// Out-of-range backward context returns empty string
+	spec = "print @-5 1";
+	VERIFY2(spec, "only", ""); // TEST #241
+
+	// @@ returns the real input record, not the CONTEXT-modified one
+	spec = "CONTEXT -1 PRINT '@@' 1 WRITE PRINT '@-1' 1 WRITE";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\n\nbeta\nalpha\ngamma\nbeta"); // TEST #242
+
+	// === ctxrecno tests ===
+
+	// ctxrecno without CONTEXT returns same as recno
+	spec = "PRINT 'ctxrecno()' 1";
+	VERIFY2(spec, "a\nb\nc", "1\n2\n3"); // TEST #243
+
+	// ctxrecno with CONTEXT 1 returns recno + 1
+	spec = "CONTEXT 1 PRINT 'ctxrecno()' 1";
+	VERIFY2(spec, "a\nb\nc", "2\n3\n4"); // TEST #244
+
+	// ctxrecno with CONTEXT -1 returns recno - 1
+	spec = "CONTEXT -1 PRINT 'ctxrecno()' 1";
+	VERIFY2(spec, "a\nb\nc", "0\n1\n2"); // TEST #245
+
+	// ctxrecno with CONTEXT 0 returns same as recno
+	spec = "CONTEXT 0 PRINT 'ctxrecno()' 1";
+	VERIFY2(spec, "a\nb\nc", "1\n2\n3"); // TEST #246
+
+	// ctxrecno resets after CONTEXT changes
+	spec = "PRINT 'ctxrecno()' 1 CONTEXT 1 PRINT 'ctxrecno()' NW";
+	VERIFY2(spec, "a\nb\nc", "1 2\n2 3\n3 4"); // TEST #247
+
+	// EOF token should not terminate processing during runout cycle
+	// when bNeedRunoutCycleFromStart is set by eof() in a condition
+	spec = "w1 a: EOF if /eof()/ then /hello/ 1 endif";
+	VERIFY2(spec, "test", "hello"); // TEST #248
+
+	// Same with visible pre-EOF output
+	spec = "a: w1 1 EOF if /eof()/ then /done/ 1 endif";
+	VERIFY2(spec, "x\ny", "x\ny\ndone"); // TEST #249
+
+	// CONTEXT + EOF + eof(): CONTEXT changes m_ps during runout,
+	// but eof() should still return true and EOF token should not stop processing
+	spec = "w1 1 CONTEXT 1 if /!eof()/ then 1-* nw endif EOF if /eof()/ then /RUNOUT/ 1 endif";
+	VERIFY2(spec, "a\nb\nc", "a b\nb c\nc\nRUNOUT"); // TEST #250
+
+	// @! returns the context-affected record (same as record() or 1-*)
+	// Without CONTEXT, @! and @@ are equivalent
+	spec = "PRINT '@!' 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #251
+
+	// With CONTEXT, @! returns the context-affected record while @@ returns the original
+	spec = "CONTEXT 1 PRINT '@!' 1 WRITE PRINT '@@' 1 WRITE";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "beta\nalpha\ngamma\nbeta\n\ngamma"); // TEST #252
+
+	// @! with CONTEXT -1 returns the previous record
+	spec = "CONTEXT -1 PRINT '@!' 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "\nalpha\nbeta"); // TEST #253
+
+	// cfrecord() without CONTEXT returns the same as record()
+	spec = "PRINT 'cfrecord()' 1";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha\nbeta\ngamma"); // TEST #254
+
+	// cfrecord() with CONTEXT returns the original input record (not context-affected)
+	spec = "CONTEXT 1 PRINT 'cfrecord()' 1 PRINT 'record()' NW";
+	VERIFY2(spec, "alpha\nbeta\ngamma", "alpha beta\nbeta gamma\ngamma"); // TEST #255
+
+	// record(), word(), field(), range() return empty string during forced run-out cycle
+	spec = "PRINT 'record()' 1 PRINT 'eof()' NEXTWORD";
+	VERIFY2(spec, "hello\nworld", "hello 0\nworld 0\n1"); // TEST #256
+
+	spec = "PRINT 'word(1)' 1 PRINT 'eof()' NEXTWORD";
+	VERIFY2(spec, "hello world", "hello 0\n1"); // TEST #257
+
+	spec = "PRINT 'field(1)' 1 PRINT 'eof()' NEXTWORD";
+	VERIFY2(spec, "hello\tworld", "hello 0\n1"); // TEST #258
+
+	spec = "PRINT 'range(1,3)' 1 PRINT 'eof()' NEXTWORD";
+	VERIFY2(spec, "abcdef", "abc 0\n1"); // TEST #259
+	
+	// All the ways of accessing a record with and without CONTEXT
+	spec = "'Cycle:' 1 PRINT 'recno()' WRITE "                   \
+		"   'Context:' 3 PRINT 'ctxrecno()' WRITE"               \
+		"   'Using Spec Units:' 5 1-*                25 WRITE"   \
+		"   'Using record():'   5 PRINT 'record()'   25 WRITE"   \
+		"   'Using @@:'         5 PRINT '@@'         25 WRITE"   \
+		"   'Using @!:'         5 PRINT '@!'         25 WRITE"   \
+		"   'Using cfrecord():' 5 PRINT 'cfrecord()' 25 WRITE"   \
+		"   'Setting CONTEXT to +1' 3 CONTEXT +1   WRITE"        \
+		"   'Context:' 3 PRINT 'ctxrecno()' WRITE"               \
+		"   'Using Spec Units:' 5 1-*                25 WRITE"   \
+		"   'Using record():'   5 PRINT 'record()'   25 WRITE"   \
+		"   'Using @@:'         5 PRINT '@@'         25 WRITE"   \
+		"   'Using @!:'         5 PRINT '@!'         25 WRITE"   \
+		"   'Using cfrecord():' 5 PRINT 'cfrecord()' 25 WRITE"   \
+		"   'Setting CONTEXT to -1' 3 CONTEXT -1   WRITE"        \
+		"   'Context:' 3 PRINT 'ctxrecno()' WRITE"               \
+		"   'Using Spec Units:' 5 1-*                25 WRITE"   \
+		"   'Using record():'   5 PRINT 'record()'   25 WRITE"   \
+		"   'Using @@:'         5 PRINT '@@'         25 WRITE"   \
+		"   'Using @!:'         5 PRINT '@!'         25 WRITE"   \
+		"   'Using cfrecord():' 5 PRINT 'cfrecord()' 25 WRITE";
+	strm = "Wise men say\nOnly fools rush in\nBut I can't help falling in love with you";
+	res = \
+		"Cycle: 1\n"  \
+		"  Context: 1\n"  \
+		"    Using Spec Units:   Wise men say\n"  \
+		"    Using record():     Wise men say\n"  \
+		"    Using @@:           Wise men say\n"  \
+		"    Using @!:           Wise men say\n"  \
+		"    Using cfrecord():   Wise men say\n"  \
+		"  Setting CONTEXT to +1\n"  \
+		"  Context: 2\n"  \
+		"    Using Spec Units:   Only fools rush in\n"  \
+		"    Using record():     Only fools rush in\n"  \
+		"    Using @@:           Wise men say\n"  \
+		"    Using @!:           Only fools rush in\n"  \
+		"    Using cfrecord():   Wise men say\n"  \
+		"  Setting CONTEXT to -1\n"  \
+		"  Context: 0\n"  \
+		"    Using Spec Units:   \n"  \
+		"    Using record():     \n"  \
+		"    Using @@:           Wise men say\n"  \
+		"    Using @!:           \n"  \
+		"    Using cfrecord():   Wise men say\n"  \
+		"Cycle: 2\n"  \
+		"  Context: 2\n"  \
+		"    Using Spec Units:   Only fools rush in\n"  \
+		"    Using record():     Only fools rush in\n"  \
+		"    Using @@:           Only fools rush in\n"  \
+		"    Using @!:           Only fools rush in\n"  \
+		"    Using cfrecord():   Only fools rush in\n"  \
+		"  Setting CONTEXT to +1\n"  \
+		"  Context: 3\n"  \
+		"    Using Spec Units:   But I can't help falling in love with you\n"  \
+		"    Using record():     But I can't help falling in love with you\n"  \
+		"    Using @@:           Only fools rush in\n"  \
+		"    Using @!:           But I can't help falling in love with you\n"  \
+		"    Using cfrecord():   Only fools rush in\n"  \
+		"  Setting CONTEXT to -1\n"  \
+		"  Context: 1\n"  \
+		"    Using Spec Units:   Wise men say\n"  \
+		"    Using record():     Wise men say\n"  \
+		"    Using @@:           Only fools rush in\n"  \
+		"    Using @!:           Wise men say\n"  \
+		"    Using cfrecord():   Only fools rush in\n"  \
+		"Cycle: 3\n"  \
+		"  Context: 3\n"  \
+		"    Using Spec Units:   But I can't help falling in love with you\n"  \
+		"    Using record():     But I can't help falling in love with you\n"  \
+		"    Using @@:           But I can't help falling in love with you\n"  \
+		"    Using @!:           But I can't help falling in love with you\n"  \
+		"    Using cfrecord():   But I can't help falling in love with you\n"  \
+		"  Setting CONTEXT to +1\n"  \
+		"  Context: 4\n"  \
+		"    Using Spec Units:   \n"  \
+		"    Using record():     \n"  \
+		"    Using @@:           But I can't help falling in love with you\n"  \
+		"    Using @!:           \n"  \
+		"    Using cfrecord():   But I can't help falling in love with you\n"  \
+		"  Setting CONTEXT to -1\n"  \
+		"  Context: 2\n"  \
+		"    Using Spec Units:   Only fools rush in\n"  \
+		"    Using record():     Only fools rush in\n"  \
+		"    Using @@:           But I can't help falling in love with you\n"  \
+		"    Using @!:           Only fools rush in\n"  \
+		"    Using cfrecord():   But I can't help falling in love with you";
+	VERIFY2(spec, strm.c_str(), res.c_str());   // TEST #260
+
+	// ctxoffset() function test
+	spec = "PRINT 'ctxoffset()' 1  CONTEXT +1  PRINT 'ctxoffset()' NW  CONTEXT -1  PRINT 'ctxoffset()' NW";
+	VERIFY2(spec, "x", "0 1 -1"); // TEST #261
+
+	// ctxoob() function test - CONTEXT-based
+	spec = "PRINT 'ctxoob()' 1  CONTEXT +1  PRINT 'ctxoob()' NW  CONTEXT -1  PRINT 'ctxoob()' NW";
+	VERIFY2(spec, "x", "0 1 1"); // TEST #262
+
+	// ctxoob() function test - @± expression-based
+	spec = "PRINT 'ctxoob(@@)' 1  PRINT 'ctxoob(@+1)' NW  PRINT 'ctxoob(@-1)' NW";
+	VERIFY2(spec, "x", "0 1 1"); // TEST #263
+
+	// ctxoob() function test - OOB status preserved through record()
+	spec = "CONTEXT +1  PRINT 'ctxoob(record())'";
+	VERIFY2(spec, "hello", "1"); // TEST #264
+
+	// ctxoob() function test - OOB status preserved through word()
+	spec = "CONTEXT +1  PRINT 'ctxoob(word(1))'";
+	VERIFY2(spec, "hello world", "1"); // TEST #265
+
+	// ctxoob() function test - normal record() should return 0
+	spec = "PRINT 'ctxoob(record())'";
+	VERIFY2(spec, "hello", "0"); // TEST #266
+
+	// ctxoob() function test - normal word() should return 0
+	spec = "PRINT 'ctxoob(word(1))'";
+	VERIFY2(spec, "hello world", "0"); // TEST #267
+
+	// ctxoob() function test - OOB status preserved through range()
+	spec = "CONTEXT +1  PRINT 'ctxoob(range(1,3))'";
+	VERIFY2(spec, "hello", "1"); // TEST #268
+
+	// ctxoob() function test - normal range() should return 0
+	spec = "PRINT 'ctxoob(range(1,3))'";
+	VERIFY2(spec, "hello", "0"); // TEST #269
+
+	// ctxoob() function test - OOB status preserved through substr() of current record
+	spec = "CONTEXT +1  PRINT 'ctxoob(substr(,1,5))'";
+	VERIFY2(spec, "hello", "1"); // TEST #270
+
+	// ctxoob() function test - normal substr() should return 0
+	spec = "PRINT 'ctxoob(substr(,1,5))'";
+	VERIFY2(spec, "hello", "0"); // TEST #271
+
+	// ctxoob() function test - OOB status preserved through range-label variable
+	spec = "CONTEXT +1  1-5 a:  PRINT 'ctxoob(a)'";
+	VERIFY2(spec, "hello", "1"); // TEST #272
+
+	// ctxoob() function test - normal range-label variable should return 0
+	spec = "1-5 a:  PRINT 'ctxoob(a)'";
+	VERIFY2(spec, "hello", "0"); // TEST #273
+
+	// ctxoob() function test - OOB status preserved through word-range label
+	spec = "CONTEXT +1  w1-3 x:  PRINT 'ctxoob(x)'";
+	VERIFY2(spec, "a b c", "1"); // TEST #274
+
+	// ctxoob() function test - normal word-range label should return 0
+	spec = "w1-3 x:  PRINT 'ctxoob(x)'";
+	VERIFY2(spec, "a b c", "0"); // TEST #275
+
+	// ctxoob() function test - OOB status preserved through field-range label
+	spec = "fs :  CONTEXT +1  f1 y:  PRINT 'ctxoob(y)'";
+	VERIFY2(spec, "a:b:c", "1"); // TEST #276
+
+	// ctxoob() function test - normal field-range label should return 0
+	spec = "fs :  f1 y:  PRINT 'ctxoob(y)'";
+	VERIFY2(spec, "a:b:c", "0"); // TEST #277
+
+	// Some bad expressions
+	spec = "PRINT ''";
+	VERIFY2(spec, "", "Expression in Token PRINT at index 1 with content <>:\nExpression has no units"); // TEST #278
+
+	spec = "PRINT '1+1hello'";
+	VERIFY2(spec, "1", "Expression did not reduce to a single value"); // TEST #279
+
+	// early and late field identifier
+	spec = "a: w1 UCASE .  ID a 1";
+	VERIFY2(spec, "abcde", "abcde");  // TEST #280
+	spec = "w1 UCASE a: ID a 1";
+	VERIFY2(spec, "abcde", "ABCDE");  // TEST #281
+
 	if (errorCount) {
-		std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
-		std::cout << "Failed tests: ";
+		if (onlyTest == 0) {
+			std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
+		}
+		std::cout << "FAILED_TESTS:";
 		for (int i : failedTests) {
-			std::cout << i << " ";
+			std::cout << " " << i;
 		}
 		std::cout << "\n";
 	} else {
-		std::cout << "\n*** All tests passed.\n";
+		if (onlyTest == 0) {
+			std::cout << "\n*** All tests passed.\n";
+		}
 	}
 
 	return (errorCount==0) ? 0 : 4;

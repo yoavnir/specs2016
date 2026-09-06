@@ -6,6 +6,7 @@
 #include "processing/Config.h"
 #include "processing/persistent.h"
 #include "processing/ProcessingState.h"
+#include "processing/Reader.h"
 #include <cstring>
 #include <cmath>
 #include <functional>
@@ -14,6 +15,12 @@
 #include <iomanip>
 #include <algorithm> // for std::reverse
 #include <cstdlib>   // for std::getenv
+#include <cstdio>    // for popen/_popen
+#include <array>     // for the shell command read buffer
+#ifndef WIN64
+#include <sys/wait.h>  // for WIFEXITED/WEXITSTATUS
+#include <unistd.h>    // for mkstemp and close
+#endif
 
 #define PAD_CHAR ' '
 
@@ -362,6 +369,10 @@ PValue AluFunc_tobine(PValue op, PValue _bits)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
 	ASSERT_NOT_ELIDED(_bits,2,bits);
+	if (!op->isWholeNumber()) {
+		std::string err = "Out of range trying to convert " + op->getStr() + " to Int";
+		MYTHROW(err);
+	}
 	ALUInt value = op->getInt();
 	int    bits = int(_bits->getInt());
 	switch (bits) {
@@ -414,9 +425,28 @@ PValue AluFunc_recno()
 	return mkValue(g_pStateQueryAgent->getRecordCount());
 }
 
+PValue AluFunc_ctxrecno()
+{
+	return mkValue(g_pStateQueryAgent->getRecordCount() + g_pStateQueryAgent->getContextOffset());
+}
+
+PValue AluFunc_ctxoffset()
+{
+	return mkValue(g_pStateQueryAgent->getContextOffset());
+}
+
+PValue AluFunc_ctxoob(PValue pArg)
+{
+	if (nullptr == pArg) {
+		return mkValue(ALUInt(Reader::isOOBRecord(g_pStateQueryAgent->currRecord()) ? 1 : 0));
+	} else {
+		return mkValue(ALUInt(isOOBValue(pArg) ? 1 : 0));
+	}
+}
+
 PValue AluFunc_eof()
 {
-	bool isRunOut = g_pStateQueryAgent->isRunOut();
+	bool isRunOut = g_pStateQueryAgent->isEOF();
 	return mkValue(ALUInt(isRunOut ? 1 : 0));
 }
 
@@ -481,6 +511,10 @@ PValue AluFunc_fieldcount(PValue pStr, PValue pSep)
 // Helper function
 static PValue AluFunc_range(ALUInt start, ALUInt end)
 {
+	// If the current record is out-of-bounds, preserve that status
+	if (Reader::isOOBRecord(g_pStateQueryAgent->currRecord())) {
+		return g_pOOBValue;
+	}
 	PSpecString pRange = g_pStateQueryAgent->getFromTo(start, end);
 	if (pRange) {
 		PValue pRet = mkValue(pRange->data());
@@ -493,6 +527,16 @@ static PValue AluFunc_range(ALUInt start, ALUInt end)
 PValue AluFunc_record()
 {
 	return AluFunc_range(1,-1);
+}
+
+PValue AluFunc_cfrecord()
+{
+	PSpecString ps = g_pStateQueryAgent->inputRecord();
+	if (ps) {
+		return mkValue(ps->data());
+	} else {
+		return mkValue("");
+	}
 }
 
 PValue AluFunc_range(PValue pStart, PValue pEnd)
@@ -652,6 +696,10 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 {
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
+	// If no argument provided and current record is OOB, preserve OOB status
+	if (!pBigString && Reader::isOOBRecord(g_pStateQueryAgent->currRecord())) {
+		return g_pOOBValue;
+	}
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
 	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
@@ -1281,17 +1329,23 @@ PValue AluFunc_log(PValue pX, PValue pBase)
 PValue AluFunc_fact(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
-	ALUInt i,res = 1;
-	ALUInt x = pX->getInt();
-	if (x > 20) {
-		MYTHROW("fact: argument too large (max 20 for 64-bit integers)");
+	
+	// For integer values between 0 and 20, use exact factorial computation
+	if (pX->getType() == counterType__Int) {
+		ALUInt x = pX->getInt();
+		if (x >= 0 && x <= 20) {
+			ALUInt i, res = 1;
+			for (i = 2; i <= x; i++) {
+				res *= i;
+			}
+			return mkValueE(res, pX->isExact());
+		}
 	}
-
-	for (i=2; i <= x; i++) {
-		res *= i;
-	}
-
-	return mkValueE(res, pX->isExact());
+	
+	// For values > 20 or real numbers, use tgamma(x+1)
+	ALUFloat x = pX->getFloat();
+	ALUFloat result = std::tgamma(x + 1);
+	return mkValueE(result, false);
 }
 
 PValue AluFunc_combinations(PValue pN, PValue pK)
@@ -1651,8 +1705,7 @@ PValue AluFunc_substitute(PValue pSrc, PValue pSearchString, PValue pSubstitute,
 	ASSERT_NOT_ELIDED(pSearchString,2,needle);
 	ASSERT_NOT_ELIDED(pSubstitute,3,subst);
 	std::string res = pSrc->getStr();
-	ALUInt count = ARG_INT_WITH_DEFAULT(pMax,1);
-	if (pMax->getStr()=="U") count = MAX_ALUInt;
+	ALUInt count = (ARG_STR_WITH_DEFAULT(pMax,"") == "U") ? MAX_ALUInt : ARG_INT_WITH_DEFAULT(pMax,1);
 
 	size_t findRet = 0;
 
@@ -1683,7 +1736,7 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 	if (pSep && pSep->getStrPtr()->length() > 0) {
 		sep = pSep->getStr()[0];
 	} else {
-		sep = '\t';
+		sep = DEFAULT_FIELDSEPARATOR_C;
 	}
 
 	if (0 == count) {
@@ -1777,7 +1830,7 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 	if (pSep && pSep->getStrPtr()->length() > 0) {
 		sep = pSep->getStr()[0];
 	} else {
-		sep = ' ';
+		sep = DEFAULT_WORDSEPARATOR_C;
 	}
 
 	if (0 == count) {
@@ -2356,6 +2409,20 @@ PValue AluFunc_sign(PValue pNumber)
 	return mkValue(ret);
 }
 
+PValue AluFunc_not(PValue pNumber)
+{
+	ASSERT_NOT_ELIDED(pNumber,1,number);
+	ALUInt ret = 0;
+	switch (pNumber->getDivinedType()) {
+		case counterType__Int: 
+			ret = (0 == pNumber->getInt() ? 1 : 0);
+			break;
+		default:
+			ret = 0;
+	}
+	return mkValue(ret);
+}
+
 PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pStr,1,string);
@@ -2810,12 +2877,11 @@ PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit, PValue pLocal
 			oss.imbue(std::locale(myLocale, myPunct));
 		}
 	} else {
-		pretty_punct* pct = new pretty_punct;
 		oss.setf(std::ios::fixed, std:: ios::floatfield);	
 		if (g_localeSpecified || pLocale) {
 			oss.imbue(std::locale(myLocale, myPunct));
 		} else {
-			oss.imbue(std::locale(oss.getloc(), pct));
+			oss.imbue(std::locale(oss.getloc(), new pretty_punct));
 		}
 	}
 
@@ -2966,6 +3032,138 @@ PValue AluFunc_pset(PValue pName, PValue pValue)
 	auto ret = mkValue(*pValue);
 	ret->setExact(false);
 	return ret;
+}
+
+/*
+ *
+ * Shell command functions: exec, exc1, excrc, excerr
+ * ==================================================
+ * These functions run a shell command and expose its standard output, its
+ * standard error, and its return code. The standard error and return code of
+ * only the *last* run are retained in the globals below.
+ */
+static PValue      g_execRc = mkValue0();   // NaN until a shell command has run
+static std::string g_execErr = "";
+
+#define EXEC_READ_BUFFER_SIZE 65536
+
+// Creates an empty temporary file and returns its name. The file is left in
+// place so the shell can reopen it via redirection. On POSIX we use mkstemp
+// (the safe, race-free way); on Windows, where mkstemp is unavailable, we
+// fall back to tmpnam.
+static std::string makeTempFileName()
+{
+#ifdef WIN64
+	const char* name = std::tmpnam(nullptr);
+	if (nullptr == name) {
+		MYTHROW("exec: Failed to generate a temporary file name");
+	}
+	return std::string(name);
+#else
+	const char* tmpdir = std::getenv("TMPDIR");
+	std::string templ = std::string((tmpdir && *tmpdir) ? tmpdir : "/tmp") + "/specsXXXXXX";
+	int fd = mkstemp(&templ[0]);  // std::string storage is contiguous (C++11+)
+	if (fd < 0) {
+		MYTHROW("exec: Failed to create a temporary file for capturing standard error");
+	}
+	close(fd);
+	return templ;
+#endif
+}
+
+// Runs 'cmd' through the shell, returns its standard output, and updates
+// g_execRc (return code) and g_execErr (standard error).
+static std::string runShellCommand(const std::string& cmd)
+{
+	std::string errFileName = makeTempFileName();
+	std::string fullCmd = cmd + " 2>\"" + errFileName + "\"";
+
+	std::array<char, EXEC_READ_BUFFER_SIZE> buffer;
+	std::string output;
+
+#ifdef WIN64
+	FILE* pipe = _popen(fullCmd.c_str(), "r");
+#else
+	FILE* pipe = popen(fullCmd.c_str(), "r");
+#endif
+	if (nullptr == pipe) {
+		std::string err = "exec: Failed to run command: " + cmd;
+		MYTHROW(err);
+	}
+
+	while (nullptr != fgets(buffer.data(), int(buffer.size()), pipe)) {
+		output += buffer.data();
+	}
+
+#ifdef WIN64
+	int status = _pclose(pipe);
+	g_execRc = mkValue(ALUInt(status));
+#else
+	int status = pclose(pipe);
+	g_execRc = mkValue(ALUInt(WIFEXITED(status) ? WEXITSTATUS(status) : status));
+#endif
+
+	g_execErr = "";
+	FILE* errFile = fopen(errFileName.c_str(), "r");
+	if (nullptr != errFile) {
+		while (nullptr != fgets(buffer.data(), int(buffer.size()), errFile)) {
+			g_execErr += buffer.data();
+		}
+		fclose(errFile);
+	}
+	remove(errFileName.c_str());
+
+	return output;
+}
+
+PValue AluFunc_exec(PValue pCmd)
+{
+	ASSERT_NOT_ELIDED(pCmd,1,command);
+	std::string output = runShellCommand(pCmd->getStr());
+	// Strip a single trailing newline (\n or \r\n)
+	if (!output.empty() && output.back()=='\n') {
+		output.erase(output.length()-1);
+		if (!output.empty() && output.back()=='\r') {
+			output.erase(output.length()-1);
+		}
+	}
+	return mkValue(output);
+}
+
+PValue AluFunc_exc1(PValue pCmd, PValue pLine)
+{
+	ASSERT_NOT_ELIDED(pCmd,1,command);
+	ALUInt lineNo = ARG_INT_WITH_DEFAULT(pLine,1);
+	if (lineNo < 1) {
+		// The below dereference of pLine is safe because if !pLine, lineNo = 1
+		std::string err = "Argument must be a positive integer, but got " + pLine->getStr();
+		THROW_ARG_ISSUE(2,lineNo,err);
+	}
+	std::string output = runShellCommand(pCmd->getStr());
+
+	std::istringstream iss(output);
+	std::string line;
+	ALUInt idx = 0;
+	while (std::getline(iss, line)) {
+		if (++idx == lineNo) {
+			// std::getline strips the \n; strip a trailing \r if present
+			if (!line.empty() && line.back()=='\r') {
+				line.erase(line.length()-1);
+			}
+			return mkValue(line);
+		}
+	}
+	return mkValue(std::string(""));
+}
+
+PValue AluFunc_excrc()
+{
+	return g_execRc;  /* NaN until a shell command has run */
+}
+
+PValue AluFunc_excerr()
+{
+	return mkValue(g_execErr);
 }
 
 PValue AluFunc_getenv(PValue pName)

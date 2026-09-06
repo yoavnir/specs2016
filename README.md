@@ -1,7 +1,11 @@
-# specs2016
-A re-writing of the specs pipeline stage from CMS, only changed quite a bit
+<p align="center">
+  <img src="specs/docs/resources/specs-logo.png" width="209"/><br/>
+  <strong>A modern text-processing utility with roots in CMS Pipelines.</strong>
+</p>
 
-"specs" is a command line utility for parsing and re-arranging text
+`specs` is a re-writing of the specs pipeline stage from CMS, only de-mainframe-ized.[^mainframeism]
+
+It is a command line utility for parsing and re-arranging text
 input. It allows re-alignment of fields, some format conversion, and
 re-formatting multiple lines into single lines or vice versa. Input
 comes from standard input, and output flows to standard output.
@@ -10,28 +14,17 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-1-May-2026: Version 0.9.9 is here
+7-Sep-2026: Version 1.0.0 is here
 
 What's new:
- * MSI package & standalone executable for Windows
- * .pkg package for Mac OS
- * RPM for Linux
- * .deb package for Ubuntu/Debian
- * Visual Studio infra for building for Windows
- * Improved guessing of Python version
- * New spec units: `SPLITW` and `SPLITF` for splitting input records by words or fields into multiple output records. These new spec units support optional custom separators, `OF` clauses (with the same semantics as SUBSTRING), and range output placement (e.g. `splitw 1-10`).
- * A more exact `exact()` function
+ * Rolling context allows processing previous and future records.
+ * Exactness in Python function arguments and return value.
+ * Shell command execution from ALU functions (`exec`, `exc1`, `excrc`, `excerr`).
+ * Build information system-defined labels, such as `@build-info` and `@build-url`.
+ * Packages for Linux, Mac OS and Windows, bundled with Python 3.12.[^pythonwindows]
+ * New guidebook.
+ * Debugging aids for GDB.
 
-*Note:* Installing from package does not include Python support on Windows.
-
-*Note:* On Linux, the `specs` binary is bigger when installed from package, as it is statically linked with libstdc++.
-***
-28-Feb-2026: Version 0.9.6 is here
-
-What's new:
- * Support for newer Linux distros (newer gcc)
- * Support for Visual Studio and latest Windows versions
- * Alignment with C++ coding standards
 
 Sources
 =======
@@ -41,43 +34,22 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Installation from binaries
 ==========================
-The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v0.9.9)
+The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v1.0.0)
 
-Limitations:
- * You will not get any Python support for Python integration on Windows
- * You may get an older version of Python for Python integration on other platforms
- * No support for exotic OS-es like Windows on ARM.
+**Notes:**
+ * On Windows for ARM, you may install the x64 version of Python 3.12.
+ * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.0.0.pkg`
 
 Building
 ========
-If you have downloaded a git repository, first make sure to check out a stable tag such as v0.9.9:
-```
-git checkout v0.9.9
-```
-A good way to get the latest stable release is to check out the `stable` branch and rebase to its tip:
-```
-git checkout stable
-git rebase
-```
+For detailed build instructions covering Linux, Mac OS, and Windows (both `make` and MSBuild), see [BUILDING.md](BUILDING.md).
 
-After that, _cd_ to the specs/src directory, and run the following three commands:
-* `python setup.py` - use `python3` or `python3.x` if your default Python version is 2.7
-* `make some`
-* `sudo make install`
-
-*Note:* For Microsoft Windows, you can use **MSBuild** as follows:
-* Start from the repository directory (do not _cd_ to specs/src)
-* `msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64`
-* Now copy the resulting `specs.exe` to a target directory in the path. 
-
-*Note:* Only Python 3 is supported at this point. To enable Python support, you need to have the `python3-devel` package that matches your python version installed.
-
-*Note:* On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
+**Note on Python versions:** The pre-built binaries are linked against Python 3.12, and bundled with it. If you need to use a different version of Python, you can build `specs` locally from source. When building, you can specify which Python version to use via the `--python` option to `setup.py` (on Linux/macOS) or by setting the appropriate Python version in your Visual Studio environment (on Windows).
 
 Known Issues
 ============
 * Regular expression grammars other than the default `ECMAScript` don't work except on Mac OS.
-* On Windows with Python support the appropriate dll (like `python38.dll`) must be in the path.
+* The Python-enabled Windows MSI bundles its own Python 3.12 runtime, so no system Python is required. The standalone Python-enabled `.exe` (downloaded on its own, outside the MSI) still needs `python312.dll` on the path (or Python 3.12 installed).
 
 Contributing
 ============
@@ -96,8 +68,10 @@ When starting a new version:
 
 Contributors
 ============
-* Yoav Nir ([yoavnir](https://github.com/yoavnir))
-* Jean-Baptiste Jouband ([Gawesomer](https://github.com/Gawesomer))
+- Yoav Nir ([yoavnir](https://github.com/yoavnir))
+- Jean-Baptiste Jouband ([Gawesomer](https://github.com/Gawesomer))
+- donglrd ([donglrd](https://github.com/donglrd))
+- Miriam-R-coder ([Miriam-R-coder](https://github.com/Miriam))
 
 Documentation
 =============
@@ -107,4 +81,11 @@ The documentation for *specs2016* exists in two places:
 
 License
 =======
-*specs2016* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
+* *specs* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
+* The *Python 3.12* library bundled with the GitHub-built packages is licensed under the [Python Software Foundation License](https://github.com/yoavnir/specs2016/blob/dev-1.0.0/PYTHON_LICENSE)
+
+---
+
+[^mainframeism]: Yes, that is a perfectly cromulent verb.
+
+[^pythonwindows]: Requires pre-installation of Python 3.12 on Windows.

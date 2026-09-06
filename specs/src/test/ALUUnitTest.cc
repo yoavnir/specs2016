@@ -18,13 +18,24 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 extern void setRegexType(std::string& s);
 extern bool g_bWarnAboutGrammars;
 
+// REGEX_GRAMMARS arrives on the command line as a bare (unquoted) token; see
+// the comment in aluRegex.cc for why STRINGIFY()+dequote() is needed here.
+#ifndef REGEX_GRAMMARS
+#define REGEX_GRAMMARS unknown
+#endif
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
+
 #define INC_TEST_INDEX if (++testIndex!=onlyTest && onlyTest!=0) break;
 #define INC_TEST_INDEX2 if (++testIndex==onlyTest || onlyTest==0)
 
+#define PRINT_TEST_HEADER \
+	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
+	" (line " << std::setfill('0') << std::setw(4) << __LINE__ << "): "
+
 #define VERIFY_TYPE(i,t) do {\
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": type[" << i << "]=="#t": "; \
+	PRINT_TEST_HEADER << "type[" << i << "]=="#t": "; \
 	if (counters.type(i)==counterType__##t) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -34,8 +45,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_INT(i,val) do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << "==" << val << ": "; \
+	PRINT_TEST_HEADER << "#" << i << "==" << val << ": "; \
 	if (counters.getInt(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -45,8 +55,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_WHOLE(i,b) do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << (b ? " is whole: ":" isn't whole: "); \
+	PRINT_TEST_HEADER << "#" << i << (b ? " is whole: ":" isn't whole: "); \
 	if (counters.isWholeNumber(i)==b) {  \
 		std::cout << "OK (" << counters.getFloat(i) << ")\n";    \
 	} else {     \
@@ -56,8 +65,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_HEX(i,val) do { \
 	INC_TEST_INDEX;            \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << "==" << val << ": "; \
+	PRINT_TEST_HEADER << "#" << i << "==" << val << ": "; \
 	if (counters.getHex(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -67,8 +75,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_FLOAT(i,val) do { \
 	INC_TEST_INDEX; \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << "==" << std::setprecision(ALUFloatPrecision) << val << ": "; \
+	PRINT_TEST_HEADER << "#" << i << "==" << std::setprecision(ALUFloatPrecision) << val << ": "; \
 	if (counters.getFloat(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -78,8 +85,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_STR(i,val)  do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": #" << i << "==" << val << ": "; \
+	PRINT_TEST_HEADER << "#" << i << "==" << val << ": "; \
 	if (counters.getStr(i)==val) {  \
 		std::cout << "OK\n"; \
 	} else { \
@@ -89,8 +95,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_NUMERIC(i,b)	 do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": #" << i << (b ? " is numeric: ":" isn't numeric: "); \
+	PRINT_TEST_HEADER << "#" << i << (b ? " is numeric: ":" isn't numeric: "); \
 	if (counters.isNumeric(i)==b) {  \
 		std::cout << "OK (";    \
 	} else {     \
@@ -102,8 +107,7 @@ extern bool g_bWarnAboutGrammars;
 
 #define VERIFY_DIVINED_TYPE(i,t)  do { \
 	INC_TEST_INDEX;				\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": #" << i << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
+	PRINT_TEST_HEADER << "#" << i << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (counters.divinedType(i)==counterType__##t) { \
 		std::cout << "OK (" << counters.getStr(i) << ")\n";    \
 	} else {     \
@@ -115,8 +119,7 @@ extern bool g_bWarnAboutGrammars;
 #define UNIT_DIVINED_TYPE(u,t) do { \
 	INC_TEST_INDEX;				\
 	PValue ctr = u.evaluate(); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
+	PRINT_TEST_HEADER << #u << " is "<< ALUCounterType2Str[counterType__##t] <<": "; \
 	if (ctr->getDivinedType()==counterType__##t) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
@@ -129,8 +132,7 @@ extern bool g_bWarnAboutGrammars;
 #define VERIFY_UNIT_ST(u,s) do { \
 	INC_TEST_INDEX;				\
 	PValue ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << " is \""<< s <<"\": "; \
+	PRINT_TEST_HEADER << #u << " is \""<< s <<"\": "; \
 	if (ctr->getStr()==s) { \
 		std::cout << "OK.\n";    \
 	} else {     \
@@ -142,8 +144,7 @@ extern bool g_bWarnAboutGrammars;
 #define VERIFY_UNIT_INT(u,i) do { \
 	INC_TEST_INDEX;				\
 	PValue ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << " is "<< i <<": "; \
+	PRINT_TEST_HEADER << #u << " is "<< i <<": "; \
 	if (ctr->getInt()==i) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
@@ -155,8 +156,7 @@ extern bool g_bWarnAboutGrammars;
 #define VERIFY_UNIT_F(u,f) do { \
 	INC_TEST_INDEX;				\
 	PValue ctr = u.compute(&counters); \
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << " is "<< f <<": "; \
+	PRINT_TEST_HEADER << #u << " is "<< f <<": "; \
 	if (ctr->getFloat()==f) { \
 		std::cout << "OK (" << ctr->getStr() << ")\n";    \
 	} else {     \
@@ -170,8 +170,7 @@ extern bool g_bWarnAboutGrammars;
 	AluUnitCounter ctr(o);	\
 	PValue _op = ctr.compute(&counters);	\
 	PValue _res = u.compute(_op);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
+	PRINT_TEST_HEADER << #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[_res->getType()] << ")\n"; \
 		countFailures++;  failedTests.push_back(testIndex); \
@@ -190,8 +189,7 @@ extern bool g_bWarnAboutGrammars;
 	PValue _op1 = ctr1.compute(&counters);	\
 	PValue _op2 = ctr2.compute(&counters);	\
 	PValue _res = u.compute(_op1,_op2);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
+	PRINT_TEST_HEADER << #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=_res->getType()) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[_res->getType()] << ")\n"; \
 		countFailures++;  failedTests.push_back(testIndex); \
@@ -208,8 +206,7 @@ extern bool g_bWarnAboutGrammars;
 	AluUnitCounter 	ctr(o);	\
 	PValue		op = ctr.compute(&counters);	\
 	u.perform(p,&counters,op);			\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": "<< #u << "(" << #t << ") is \""<< s <<"\": "; \
+	PRINT_TEST_HEADER << #u << "(" << #t << ") is \""<< s <<"\": "; \
 	if (counterType__##t!=counters.type(p)) { \
 		std::cout << "*** NOT OK *** (type=" << ALUCounterType2Str[counters.type(p)] << ")\n"; \
 		countFailures++;  failedTests.push_back(testIndex); \
@@ -226,8 +223,7 @@ extern bool g_bWarnAboutGrammars;
 	std::string _expr(s);						\
 	parseAluExpression(_expr,vec);				\
 	std::string _dump = dumpAluVec(vec, true);	\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": <"<< s << "> ==> \"" << e << "\": "; 	\
+	PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << e << "\": "; 	\
 	if (_dump==e) std::cout << "OK\n";			\
 	else {										\
 		std::cout << "*** NOT OK *** - " << _dump << "\n";	\
@@ -254,8 +250,7 @@ extern bool g_bWarnAboutGrammars;
 		actual = e.what(true);								\
 		cleanAluVec(vec);									\
 	}														\
-	std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-	": <"<< s << "> ==> \"" << ex << "\": "; 				\
+	PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << ex << "\": ";	\
 	if (_res) std::cout << "OK\n";							\
 	else {													\
 		std::cout << "*** NOT OK *** - " << actual << "\n";	\
@@ -277,8 +272,7 @@ extern bool g_bWarnAboutGrammars;
 			_dump = e.what(true);							\
 		}													\
 		_res = (_dump==ex);									\
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": <"<< s << "> ==> \"" << ex << "\": ";			\
+		PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << ex << "\": ";			\
 		if (_res) std::cout << "OK\n";						\
 		else {												\
 			std::cout << "*** NOT OK *** - " << _dump << "\n";	\
@@ -319,8 +313,7 @@ extern bool g_bWarnAboutGrammars;
 				_res = (_result!=nullptr) && (_result->getStr()==res);	\
 			}                                               \
 		}                                                   \
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": "<< s << " ==> " << res << ": ";					\
+		PRINT_TEST_HEADER << s << " ==> " << res << ": ";					\
 		if (_res && _res2) std::cout << "OK\n";						\
 		else {												\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
@@ -343,8 +336,7 @@ extern bool g_bWarnAboutGrammars;
 			_res2 = (counters.getStr(k)==exp);					\
 		}														\
 		cleanAluVec(rpnVec); 									\
-		std::cout << "Test #" << std::setfill('0') << std::setw(3) << testIndex << \
-		": <"<< s << "> ==> \"" << exp << "\": "; 				\
+		PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << exp << "\": "; 				\
 		if (_res && _res2) std::cout << "OK\n";					\
 		else {													\
 			std::cout << "*** NOT OK *** - ";					\
@@ -358,6 +350,13 @@ void setRegexType(const char* str)
 {
 	std::string s = str;
 	setRegexType(s);
+}
+
+void printHeader(unsigned int onlyTest, const std::string& header)
+{
+	if (onlyTest == 0) {
+		std::cout << header;
+	}
 }
 
 class testGetter : public fieldIdentifierGetter {
@@ -392,7 +391,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	tg.set('z', "0.0");
 	tg.set('n', "-9.8");
 
-	std::cout << "\nCounter Types and Values\n========================\n\n";
+	printHeader(onlyTest, "\nCounter Types and Values\n========================\n\n");
 
 	// All variables are None before they're set
 	VERIFY_TYPE(0,None);
@@ -460,7 +459,7 @@ int runALUUnitTests(unsigned int onlyTest)
 	VERIFY_DIVINED_TYPE(0,None);
 	VERIFY_DIVINED_TYPE(11,Float);  // -8.0 should be considered float
 
-	std::cout << "\nALU Units\n=========\n\n";
+	printHeader(onlyTest, "\nALU Units\n=========\n\n");
 
 	// Some ALU Units
 	std::string s = "hello";
@@ -638,7 +637,7 @@ int runALUUnitTests3(unsigned int onlyTest)
 
 	// TODO: Many more needed
 
-	std::cout << "\nExpressions\n===========\n\n";
+	printHeader(onlyTest, "\nExpressions\n===========\n\n");
 
 	VERIFY_EXPR("23+45", "Number(23);BOP(+);Number(45)");
 	VERIFY_EXPR(" 23 + -8", "Number(23);BOP(+);Number(-8)");
@@ -661,7 +660,7 @@ int runALUUnitTests3(unsigned int onlyTest)
 
 	// TODO: Yeah, a whole bunch of more expressions
 
-	std::cout << "\nAssignment Statements\n=====================\n\n";
+	printHeader(onlyTest, "\nAssignment Statements\n=====================\n\n");
 
 	VERIFY_ASSNMENT("#6 := 2+2","Number(2);BOP(+);Number(2)");
 	VERIFY_ASSNMENT("#6 = 2+2","ALU assignment statements must have an assignment operator as the second element. Got BOP(=) instead.");
@@ -676,7 +675,7 @@ int runALUUnitTests3(unsigned int onlyTest)
 
 int runALUUnitTests4(unsigned int onlyTest)
 {
-	std::cout << "\nInfix to RPN Conversions - Shunting Yard Algorithm\n==================================================\n\n";
+	printHeader(onlyTest, "\nInfix to RPN Conversions - Shunting Yard Algorithm\n==================================================\n\n");
 
 	VERIFY_RPN("2+3", "Number(2);Number(3);BOP(+)");
 	VERIFY_RPN("-b","FI(b);UOP(-)");
@@ -701,7 +700,7 @@ int runALUUnitTests4(unsigned int onlyTest)
 
 int runALUUnitTests5(unsigned int onlyTest)
 {
-	std::cout << "\nEvaluating Expressions\n======================\n\n";
+	printHeader(onlyTest, "\nEvaluating Expressions\n======================\n\n");
 
 	VERIFY_EXPR_RES("5", "5");
 	VERIFY_EXPR_RES("b", "84")
@@ -1039,8 +1038,8 @@ int runALUUnitTests10(unsigned int onlyTest)
 	VERIFY_EXPR_RES("fact(2)","2");
 	VERIFY_EXPR_RES("fact(1)","1");
 	VERIFY_EXPR_RES("fact(0)","1");
-	VERIFY_EXPR_RES("fact(-5)","1");
-	VERIFY_EXPR_RES("fact(3.14)","6");
+	VERIFY_EXPR_RES("fact(-5)","NaN");
+	VERIFY_EXPR_RES("pretty(fact(3.14))","7.173269");
 
 	VERIFY_EXPR_RES("permutations(6,4)","360");  // 6*5*4*3
 	VERIFY_EXPR_RES("permutations(6,2)","30");
@@ -1137,6 +1136,7 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','u')", "Just the place for a snark");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','','U')", "Justtheplaceforasnark");
 	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','_','U')", "Just_the_place_for_a_snark");
+	VERIFY_EXPR_RES("substitute('Just the place for a snark',' ','_')", "Just_the place for a snark");
 
 	VERIFY_EXPR_RES("sfield('Where hae\tya been',0,'')","sfield: Called with count equal to zero");
 	VERIFY_EXPR_RES("sfield('Where hae\tya been',1,'')","Where hae");
@@ -1387,48 +1387,35 @@ int runALUUnitTests14(unsigned int onlyTest)
 	VERIFY_EXPR_RES("rsearch(t,'JUMP')", "1");
 
 	tg.set('z', "zzxayyzz");
-#ifdef REGEX_GRAMMARS
-	setRegexType("");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-	setRegexType("basic");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("extended");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
-	setRegexType("awk");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
-	setRegexType("grep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("egrep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
-#else
-#ifdef VISUAL_STUDIO
-	setRegexType("");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Ozz");
-	setRegexType("basic");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("extended");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("awk");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("grep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("egrep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-#else
-	setRegexType("");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-	setRegexType("basic");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("extended");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-	setRegexType("awk");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-	setRegexType("grep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
-	setRegexType("egrep");
-	VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
-#endif
-#endif
+	{
+		// std::regex's matching behavior for the "extended"/"awk"/"egrep"
+		// grammars is platform-dependent: GCC/libstdc++ (Linux) does not
+		// implement POSIX leftmost-longest matching for alternation (GCC
+		// bug 61424, open since 2014), while Clang/libc++ (macOS) and the
+		// MSVC STL (Windows, current toolchains) are conformant. See 
+		// chapter 8 in the guidebook for an explanation of the limitation
+		// in the various platforms. REGEX_GRAMMARS names the current 
+		// platform name ("linux", "mac", or "windows"), set by setup.py 
+		// or the .vcxproj files, so the expected result below is
+		// selected by platform name.
+		std::string regexPlatform = dequote(STRINGIFY(REGEX_GRAMMARS));
+		std::string linuxBuggyResult = "Oyyzz";
+		std::string conformantResult = "Ozz";
+		std::string& posixAlternationResult = (regexPlatform == "linux") ? linuxBuggyResult : conformantResult;
+
+		setRegexType("");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "Oyyzz");
+		setRegexType("basic");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+		setRegexType("extended");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", posixAlternationResult);
+		setRegexType("awk");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", posixAlternationResult);
+		setRegexType("grep");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", "zzxayyzz");
+		setRegexType("egrep");
+		VERIFY_EXPR_RES("rreplace(z,'.*(a|xayy)','O')", posixAlternationResult);
+	}
 #endif
 
 	setRegexType("");
@@ -1455,15 +1442,29 @@ int runALUUnitTests15(unsigned int onlyTest)
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
 	VERIFY_EXPR_RES("pdefined(unitTestVar)","0");
 	VERIFY_EXPR_RES("pset(unitTestVar,9)","9");
+	
+	if (onlyTest) {
+		std::string nine("9");
+		persistentVarSet(persistentVarName, nine);
+	}
 	VERIFY_EXPR_RES("pget(unitTestVar)","9");
+	
 	VERIFY_EXPR_RES("#unitTestVar","9");
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","9");
 	VERIFY_EXPR_RES("pdefined(unitTestVar)","1");
 	VERIFY_EXPR_RES("pclear(unitTestVar)","9");
-	VERIFY_EXPR_RES("pclear(unitTestVar)","NaN");
+
+	if (onlyTest) {
+		persistentVarClear(persistentVarName);
+	}
+	VERIFY_EXPR_RES("pclear(unitTestVar)","NaN");  // 689
 	VERIFY_EXPR_RES("pget(unitTestVar)","NaN");
 	VERIFY_EXPR_RES("pget(unitTestVar,8)","8");
-	VERIFY_EXPR_RES("pdefined(unitTestVar)","0");
+	
+	if (onlyTest) {
+		persistentVarClear(persistentVarName);
+	}	
+	VERIFY_EXPR_RES("pdefined(unitTestVar)","0"); // 692
 	
 	g_ps.setString(std::make_shared<std::string>("The quick brown fox     jumps over the lazy dog"));
 	VERIFY_EXPR_RES("splus('ek',4)","");           // Should not find ek in the quick brown fox
@@ -1473,7 +1474,7 @@ int runALUUnitTests15(unsigned int onlyTest)
 	VERIFY_EXPR_RES("splus('dog',3)","");	
 	VERIFY_EXPR_RES("splus('dog',4)","");	
 	VERIFY_EXPR_RES("splus('dog',400)","");	
-	VERIFY_EXPR_RES("splus('dog',1,2)","og");	
+	VERIFY_EXPR_RES("splus('dog',1,2)","og");	// 700
 	VERIFY_EXPR_RES("splus('dog',1,3)","og");	
 	VERIFY_EXPR_RES("splus('dog',1,30)","og");	
 	VERIFY_EXPR_RES("splus('The',1)","h");	
@@ -1521,20 +1522,20 @@ int runALUUnitTests15(unsigned int onlyTest)
 
 int runALUUnitTests16(unsigned int onlyTest)
 {
-	std::cout << "\nEvaluating Assignments\n======================\n\n";
+	printHeader(onlyTest, "\nEvaluating Assignments\n======================\n\n");
 
-	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");
+	VERIFY_ASSN_RES("#4:=#3+1","4.14159265");  // 737
 	VERIFY_ASSN_RES("#6:=1", "1");
 	VERIFY_ASSN_RES("#6/=0", "NaN");
 
 	counters.set(6,std::numeric_limits<ALUFloat>::quiet_NaN());
-	VERIFY_ASSN_RES("#6+=5", "NaN");
+	VERIFY_ASSN_RES("#6+=5", "NaN");  //740
 	VERIFY_ASSN_RES("#6:=1", "1");   // Let can fix a NaN
 
 	// exact() function
-	std::cout << "\nThe exact() function\n======================\n\n";
+	printHeader(onlyTest, "\nThe exact() function\n======================\n\n");
 	// Exact literals
-	VERIFY_EXPR_RES("exact(5)", "1");
+	VERIFY_EXPR_RES("exact(5)", "1");       // 742
 	VERIFY_EXPR_RES("exact(3.14)", "1");
 	VERIFY_EXPR_RES("exact('hello')", "1");
 
@@ -1546,7 +1547,7 @@ int runALUUnitTests16(unsigned int onlyTest)
 
 	// Inexact arithmetic
 	VERIFY_EXPR_RES("exact(20/3)", "0");
-	VERIFY_EXPR_RES("exact(20/3+4)", "0");
+	VERIFY_EXPR_RES("exact(20/3+4)", "0");   // 750
 
 	// Multiply by zero special case
 	VERIFY_EXPR_RES("exact((20/3)*0)", "1");
@@ -1566,7 +1567,7 @@ int runALUUnitTests16(unsigned int onlyTest)
 
 	// Functions that are always inexact
 	VERIFY_EXPR_RES("exact(sqrt(5))", "0");
-	VERIFY_EXPR_RES("exact(sin(1))", "0");
+	VERIFY_EXPR_RES("exact(sin(1))", "0");   // 760
 	VERIFY_EXPR_RES("exact(cos(1))", "0");
 	VERIFY_EXPR_RES("exact(log(2))", "0");
 	VERIFY_EXPR_RES("exact(exp(1))", "0");
@@ -1638,27 +1639,80 @@ int runALUUnitTests16(unsigned int onlyTest)
 #else
 #warning "Dropping test case because of unsupported precision"
 #endif
+
+	if (onlyTest) {
+		counters.set(7, ALUInt(2));
+		counters.setExactness(7, false);
+	}	
 	VERIFY_EXPR_RES("exact(#7)", "0");
 	VERIFY_ASSN_RES("#8:=2+2", "4");
-	VERIFY_EXPR_RES("exact(#8)", "1");
+	VERIFY_EXPR_RES("exact(#8)", "1");   // 820
 
 	// exact() with persistent varaibles
+	std::string persistentVarName("unitTestVar");
 	VERIFY_ASSN_RES("#9:=10/5", "2");
 	VERIFY_EXPR_RES("exact(#9)", "1");
+
+	if (onlyTest) {
+		counters.set(9,ALUInt(2));
+	}
 	VERIFY_EXPR_RES("pset(unitTestVar, #9)", "2");
-	VERIFY_EXPR_RES("pget(unitTestVar)", "2");
+	
+	if (onlyTest) {
+		std::string two("2");
+		persistentVarSet(persistentVarName, two);
+	}
+	VERIFY_EXPR_RES("pget(unitTestVar)", "2");       // 823
 	VERIFY_ASSN_RES("#10:=pget(unitTestVar)", "2");
+
+	if (onlyTest) {
+		counters.set(10, ALUInt(2));
+		counters.setExactness(10, false);
+	}	
 	VERIFY_EXPR_RES("exact(#10)", "0");
 
+	// not() function
+	printHeader(onlyTest, "\nThe not() function\n======================\n\n");
+	VERIFY_EXPR_RES("not(1)", "0");          // 826
+	VERIFY_EXPR_RES("not(0)", "1");
+	VERIFY_EXPR_RES("not(3.1415)", "0");
+	VERIFY_EXPR_RES("not(0.3333)", "0");
+	VERIFY_EXPR_RES("not('hello')", "0");    // 830
+	VERIFY_EXPR_RES("not('')", "0");
+	VERIFY_EXPR_RES("not(2+2==4)", "0");
+	VERIFY_EXPR_RES("not(2>3)", "1");
+	VERIFY_EXPR_RES("not(exact(#10))", "1");
+	VERIFY_EXPR_RES("not(includes(raid,'i'))", "0");  // 835
+	VERIFY_EXPR_RES("not(includes(team,'i'))", "1");  // proving that there is really no 'i' in team
+
+	// Shell command functions: exec, exc1, excrc, excerr
+	// 'echo' is used because it works on Linux, Mac OS, and Windows.
+	// excrc()/excerr() are exercised within the same expression as the
+	// exec()/exc1() call so each test is self-contained when run in isolation.
+	printHeader(onlyTest, "\nShell command functions\n======================\n\n");
+	VERIFY_EXPR_RES("exec('echo hello')", "hello");          // 837
+	VERIFY_EXPR_RES("exc1('echo hello')", "hello");
+	VERIFY_EXPR_RES("exc1('echo hello',1)", "hello");
+	VERIFY_EXPR_RES("exc1('echo hello',2)", "");             // line out of range -> empty
+	VERIFY_EXPR_RES("exc1('echo hello',0)", "exc1: Argument must be a positive integer, but got 0: #2 (lineNo)");
+	VERIFY_EXPR_RES("exc1('echo hello',-3)", "exc1: Argument must be a positive integer, but got -3: #2 (lineNo)");
+	VERIFY_EXPR_RES("exec('echo hello')||'/'||excrc()", "hello/0");
+	VERIFY_EXPR_RES("exc1('echo hello')||'/'||excerr()", "hello/");
+
 	if (countFailures) {
-		std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
-		std::cout << "Failed tests:\n";
-		for (int i : failedTests) {
-			std::cout << "\t" << i << "\n";
+		if (onlyTest == 0) {
+			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
 		}
+		std::cout << "FAILED_TESTS:";
+		for (int i : failedTests) {
+			std::cout << " " << i;
+		}
+		std::cout << "\n";
 		return 4;
 	} else {
-		std::cout << "\n*** All tests passed.\n";
+		if (onlyTest == 0) {
+			std::cout << "\n*** All tests passed.\n";
+		}
 		return 0;
 	}
 }

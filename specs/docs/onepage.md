@@ -16,7 +16,7 @@ Switches
 ========
 * --toASCII -- causes output to be translated into ASCII if it's outside the range.
 * --force-read-input -- forces specs to read every input line even if none of the spec units use it.  By default they won't.
-* --specFile or -f -- reads the specification from a file rather than the command line.
+* --specFile or -f -- reads the specification from a file rather than the command line. Cannot be combined with spec units on the command line.
 * --verbose or -v -- outputs more information when something goes wrong.
 * --stats -- output statistics on run time, and records read, and on records written. 
 * `--threaded` or `-t` -- run **specs** in separate threads for processing, for readers, and for writers. This was the default until version 0.9.5. Now the default is to run everything in a single thread.
@@ -49,8 +49,8 @@ sets _a_ to the content of the first word of the input record, and sets _b_ to a
 The **InputPart** argument may be any of the following:
 
 * A range of characters, such as `5`, `3-7`, or `5.8`, the last one indicating 8 characters starting in the 5th position. Note that the indexing of characters is 1- rather than 0-based.
-* A range of words, such as `w5` or `words 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based.
-* A range of fields, such as `fields 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based.
+* A range of words, such as `w5` or `word 5-7`, where words are separated by one or more `wordseparator` characters -- locale-defined whitespace by default. The word indexing is 1-based. The keyword may be abbreviated to any prefix of `word`, but must not be pluralized -- `words` is taken as a string literal.
+* A range of fields, such as `field 5` or `f5-7`, where fields are separated by exactly one `fieldseparator` character -- a tab by default. The field indexing is 1-based. As with words, `field` may be abbreviated to any prefix but must not be pluralized.
 * **TODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch.
 * **DTODclock** - a 64-bit formatted timestamp, giving microseconds since the Unix epoch. The difference is that TODclock shows the time when this run of *specs* begun, while DTODclock gives the time of producing the current record.
 * **NUMBER** or **RECNO** - A record counter as a 10-digit decimal number.
@@ -150,13 +150,13 @@ Without **while-guard** this specification will loop forever. To solve this, **s
 
 **While-Guard** is not perfect. To disable it, you can use the command-line switch `--no-while-guard` or you can override the maximum iteration count at which the program exist by setting the `while-guard-limit` to some integer value.
 
-RunIn and RunOut Cycles
+Run-In and Run-Out Cycles
 =========================
 A **cycle** is defined as a single run of the specification, which includes reading an input record, processing it, and outputting one or more records. If the specification contains **read** or **readstop** tokens, a single cycle can consume more than one input records.
 
-The **runin** cycle is the first one to run. In the runin cycle, the function **first()** returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
+The **run-in** cycle is the first one to run. In the run-in cycle, the function **first()** returns 1. This can be used for initial processing such as printing of headers or setting initial values. 
 
-The **runout** cycle happens *after* the last line has been read.  It consists of the spec items that follow the **EOF** token, or (when **select second** is used) conditional specifications with the **eof()** function. Example:
+The **run-out** cycle happens *after* the last line has been read.  It consists of the spec items that follow the **EOF** token, or (when **select second** is used) conditional specifications with the **eof()** function. Example:
 ```
             if first() then
                 /Item/  1  /Square/ nw write
@@ -170,6 +170,9 @@ The **runout** cycle happens *after* the last line has been read.  It consists o
                 /Total:/ 1
                 print #0 nw
 ```
+
+Note that there are two kinds of **run-out** cycle: the **explicit run-out cycle**, where there are spec units after an **EOF** token, and the **forced run-out cycle** which is triggered by the use of the `eof()` function anywhere in the specification. A forced run-out cycle will force an extra run of the specification with apparently an empty input record.
+
 Configuration File
 ==================
 
@@ -197,6 +200,14 @@ There are some pre-configured labels that do not need to be explicitly defined:
 * platform - contains a string with the OS type, the compiler and the variation used to build *specs*
 * cols - contains the number of screen columns - useful for composed output placement.
 * rows - contains the number of screen rows.
+* build-commit - contains the git commit hash (short form) of the build
+* build-branch - contains the git branch name (may be empty)
+* build-time - contains the timestamp when the build was created (format: `yyyy-MM-ddTHH:mm:ss`). It's local time for local builds, or UTC for GitHub builds.
+* build-source - contains either `local` or `github`
+* build-number - contains the GitHub Actions build number (empty for local builds)
+* build-runid - contains the 11-digit GitHub Actions run id (empty for local builds)
+* build-url - contains the build URL for the GitHub build (Empty for local builds)
+* build-info - contains a composite string with all build information
       
 Examples
 ========

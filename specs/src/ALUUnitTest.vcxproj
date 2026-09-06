@@ -31,6 +31,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="build_info.targets" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -52,7 +53,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN64;DEBUG;ALU_DUMP;ALURAND_wincrypt;PUT_TIME__SUPPORTED;ADVANCED_REGEX_FUNCTIONS;SPECS_NO_PYTHON;PYTHON_FULL_VER=N/A;GITTAG="$(GitTag)";LITERAL_PLATFORM="Windows (x64) system using MSBuild $(MSBuildVersion) - debug variation";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN64;DEBUG;ALU_DUMP;ALURAND_wincrypt;PUT_TIME__SUPPORTED;ADVANCED_REGEX_FUNCTIONS;REGEX_GRAMMARS="windows";$(SpecsPythonDefs)GITTAG="$(GitTag)";LITERAL_PLATFORM="Windows (x64) system using MSBuild $(MSBuildVersion)$(SpecsPythonPlatformNote) - debug variation";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -71,7 +72,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN64;ALURAND_wincrypt;PUT_TIME__SUPPORTED;ADVANCED_REGEX_FUNCTIONS;SPECS_NO_PYTHON;PYTHON_FULL_VER=N/A;GITTAG="$(GitTag)";LITERAL_PLATFORM="Windows (x64) system using MSBuild $(MSBuildVersion) - release variation";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN64;ALURAND_wincrypt;PUT_TIME__SUPPORTED;ADVANCED_REGEX_FUNCTIONS;REGEX_GRAMMARS="windows";$(SpecsPythonDefs)GITTAG="$(GitTag)";LITERAL_PLATFORM="Windows (x64) system using MSBuild $(MSBuildVersion)$(SpecsPythonPlatformNote) - release variation";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
