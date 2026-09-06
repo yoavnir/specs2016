@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <GitTag>1.1.0</GitTag>
+    <GitTag>dev-1.1.0</GitTag>
     <SpecsProductName>specs</SpecsProductName>
     <SpecsFileDescription>A re-writing of the specs pipeline stage from CMS, only changed quite a bit</SpecsFileDescription>
     <SpecsCopyright>Copyright (c) 2018-2026 Yoav Nir</SpecsCopyright>
