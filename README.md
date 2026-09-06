@@ -14,6 +14,16 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+7-Dec-2026: Version 1.1.0 is here
+
+What's new:
+ * Current output record (re-)processing
+ * Syntax definition and colorization
+ * Usability enhancements
+ * C++20
+
+---
+
 7-Sep-2026: Version 1.0.0 is here
 
 What's new:
@@ -34,11 +44,11 @@ To download your copy of *specs*, you can get it from [github](https://github.co
 
 Installation from binaries
 ==========================
-The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases/tag/v1.0.0)
+The binaries for the latest release can be downloaded from [**the release page**](https://github.com/yoavnir/specs2016/releases)
 
 **Notes:**
- * On Windows for ARM, you may install the x64 version of Python 3.12.
- * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.0.0.pkg`
+ * On Windows for ARM, you may install the x64 version.
+ * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.1.0.pkg`
 
 Building
 ========
@@ -82,7 +92,7 @@ The documentation for *specs2016* exists in two places:
 License
 =======
 * *specs* is licensed under the [MIT License](https://github.com/yoavnir/specs2016/blob/dev/LICENSE).
-* The *Python 3.12* library bundled with the GitHub-built packages is licensed under the [Python Software Foundation License](https://github.com/yoavnir/specs2016/blob/dev-1.0.0/PYTHON_LICENSE)
+* The *Python 3.12* library bundled with the GitHub-built packages is licensed under the [Python Software Foundation License](https://github.com/yoavnir/specs2016/blob/dev/PYTHON_LICENSE)
 
 ---
 
