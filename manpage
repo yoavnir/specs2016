@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "11 Sep 2026" "1.0.0" "specs man page"
+.TH man 1 "7 Dec 2026" "1.1.0" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -2385,7 +2385,7 @@ The system also defines some labels:
 .IP "version" 3
 This returns the version of 
 .B specs, 
-for example "1.0.0"
+for example "1.1.0"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 
@@ -2413,7 +2413,7 @@ contains the git commit hash (short form) of the build. For example:
 .IP "build-branch" 3
 contains the git branch name of the build. May be empty if not available. For example:
 .p
-    dev-1.0.0
+    dev-1.1.0
 .IP "build-time" 3
 contains the timestamp of when the build was created. Format is
 .B yyyy-MM-ddTHH:mm:ss.

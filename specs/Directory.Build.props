@@ -1,11 +1,11 @@
 <Project>
   <PropertyGroup>
-    <GitTag>1.0.0</GitTag>
+    <GitTag>1.1.0</GitTag>
     <SpecsProductName>specs</SpecsProductName>
     <SpecsFileDescription>A re-writing of the specs pipeline stage from CMS, only changed quite a bit</SpecsFileDescription>
     <SpecsCopyright>Copyright (c) 2018-2026 Yoav Nir</SpecsCopyright>
     <SpecsProductVersion Condition="'$(SpecsProductVersion)' == ''">$(GitTag)</SpecsProductVersion>
-    <SpecsFileVersion Condition="'$(SpecsFileVersion)' == ''">1,0,0,0</SpecsFileVersion>
+    <SpecsFileVersion Condition="'$(SpecsFileVersion)' == ''">1,1,0,0</SpecsFileVersion>
     <!-- Python support: pass /p:EnablePython=true on the MSBuild command line to enable -->
     <EnablePython Condition="'$(EnablePython)' == ''">false</EnablePython>
     <SpecsPythonDefs Condition="'$(EnablePython)' != 'true'">SPECS_NO_PYTHON;PYTHON_FULL_VER=N/A;</SpecsPythonDefs>
