@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ dev, stable, dev-1.1.0]
+    branches: [ dev, stable, dev-1.1.0, dev-1.1.0-cpp20, dev-1.1.0-syntax, dev-1.1.0-automan]
   pull_request:
-    branches: [ dev, stable, dev-1.1.0]
+    branches: [ dev, stable, dev-1.1.0, dev-1.1.0-cpp20, dev-1.1.0-syntax, dev-1.1.0-automan]
 
 env:
   SPECS_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
