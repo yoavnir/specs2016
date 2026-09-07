@@ -35,11 +35,20 @@ The guidebook PDF is built with `--highlight-style specs/utils/specs.theme`, a s
 
 - **No background colour.** A style that sets one makes pandoc emit `\usepackage{framed}`, and `framed.sty` is not in the CI TeX Live installation (`texlive-xetex texlive-fonts-recommended`). Of the built-in styles only `pygments`, `haddock` and `monochrome` qualify; `specs.theme` keeps `"background-color": null` for the same reason.
 - **No token may rely on weight.** `header.tex` sets `\fvset{formatcom=\bfseries}` so that highlighted blocks match the weight of the plain verbatim blocks around them, which also makes every token bold and erases the per-token `bold` flags. In stock `pygments` that would merge `dsKeyword` with `dsOthers` (both `#007020`, differing only in weight), i.e. `SET`/`PRINT`/`WRITE` would become indistinguishable from `NEXTWORD`/`NEXT`. `specs.theme` gives `Other` its own colour instead.
-- **Dark colours.** The default palettes are tuned for screens and look pale in print. Every colour used by `specs.xml` attributes in `specs.theme` has a luminance of 81 or less.
+- **Enough contrast for print.** The default palettes are tuned for screens and look pale on paper. Every colour used by a `specs.xml` attribute reaches at least **4.5:1** against white, which is the WCAG AA threshold for normal-size text. The relaxed 3:1 threshold does not apply here even though `formatcom` makes everything bold: that one starts at 14pt bold, and the guidebook sets code smaller than that. The ratio is `(L_lighter + 0.05) / (L_darker + 0.05)`, where white has `L = 1.0` and `L` is relative luminance, computed from the sRGB channels *after* linearising them:
 
-A style is also free to leave a default style undefined, in which case those tokens come out plain black: `haddock` defines nothing for `dsAttribute`, `dsBuiltIn`, `dsConstant`, `dsDataType`, `dsDecVal`, `dsFloat`, `dsBaseN`, `dsFunction`, `dsOperator` or `dsVariable`, which is more than half of what `specs.xml` uses. For the 25 attributes in `specs.xml`, `specs.theme` yields 15 distinct colours, `pygments` 12 and `haddock` 5.
+  ```
+  C' = C / 255
+  C_lin = C'/12.92                  if C' <= 0.04045
+        = ((C' + 0.055)/1.055)^2.4  otherwise
+  L = 0.2126*R_lin + 0.7152*G_lin + 0.0722*B_lin
+  ```
 
-The one deliberately close pair is `dsFunction` (`#06287e`) and `dsVariable` (`#19177c`), both dark navy: ALU function names sit next to counters and field identifiers inside expressions, and are told apart by the `(` that must follow them.
+  Do not judge this with a plain weighted sum of the raw 8-bit channels: that is luma, not luminance, and it ranks these colours differently depending on whether the Rec. 709 or Rec. 601 coefficients are used.
+
+A style is also free to leave a default style undefined, in which case those tokens come out plain black: `haddock` defines nothing for `dsAttribute`, `dsBuiltIn`, `dsConstant`, `dsDataType`, `dsDecVal`, `dsFloat`, `dsBaseN`, `dsFunction`, `dsOperator` or `dsVariable`, which is more than half of what `specs.xml` uses. For the 25 attributes in `specs.xml`, `specs.theme` currently yields 16 distinct renderings, `pygments` 13 and `haddock` 5.
+
+Some attributes are close enough in colour to read as one, which is fine where they cannot appear next to each other. In increasing order of separation: `dsPreprocessor` (`#7a3e00`, Directive) and `dsOthers` (`#7a4300`, Shell Command) are effectively the same brown, and do meet on a `+SET` line; `dsBuiltIn` (`#006e00`, Input Source) and `dsChar` (`#008000`, Separator Char) never meet, since a separator character only follows `WS`/`FS`/`PAD`; `dsFunction` (`#06287e`) and `dsVariable` (`#19177c`) are both dark navy and do sit together inside expressions, but a function name is always followed by `(`.
 
 ## ALU Functions
 
