@@ -145,7 +145,7 @@ jobs:
 
     - name: Build guidebook PDF
       run: |
-        pandoc specs/docs/guidebook_tmp.md -o specs-guidebook.pdf --pdf-engine=xelatex --highlight-style specs/utils/specs.theme --syntax-definition=specs/utils/specs.xml -H specs/docs/resources/header.tex
+        pandoc specs/docs/guidebook_tmp.md -o specs-guidebook.pdf --pdf-engine=xelatex --syntax-highlighting specs/utils/specs.theme --syntax-definition=specs/utils/specs.xml -H specs/docs/resources/header.tex
 
     - name: Upload guidebook artifact
       uses: actions/upload-artifact@v7

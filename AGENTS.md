@@ -22,7 +22,7 @@
 - After editing the file, check it with `xmllint --noout specs/utils/specs.xml`, and check the highlighting itself by rendering the sample specification `specs/utils/example.spec`:
   ```
   { echo '```specs'; cat specs/utils/example.spec; echo '```'; } | \
-      pandoc -s --syntax-definition=specs/utils/specs.xml --highlight-style specs/utils/specs.theme \
+      pandoc -s --syntax-definition=specs/utils/specs.xml --syntax-highlighting specs/utils/specs.theme \
              --metadata pagetitle=specs -o /tmp/example.html
   ```
   The `-s` (standalone) switch is what makes the output colourful: without it pandoc emits only the `<span class="...">` markup and none of the CSS that colours it, so the result looks black and white. Pandoc refuses to load a definition with unresolved `IncludeRules`, so this also verifies that the file stays self-contained. Keep it that way: do not add `IncludeRules` references to other syntax files (`##Comments`, `##Alerts`, and the like).
