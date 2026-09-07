@@ -55,18 +55,29 @@
       <item>eof</item>
     </list>
 
-    <!-- Flow control. The ones taking an expression (IF, ELSEIF, WHILE,
-         ASSERT, ABEND, SKIP-UNTIL, SKIP-WHILE) are in the "exprflow" and
-         "exprkeywords" lists instead, because they switch context, and
-         BREAK has its own rule because it takes a field identifier. -->
+    <!-- Flow control, following the grouping of chapter 10 of the guidebook.
+         Some of these are matched by rules of their own in the Normal
+         context rather than by this list, because they take an argument the
+         rule has to switch context for: IF, ELSEIF, WHILE, ASSERT, ABEND,
+         SKIP-UNTIL and SKIP-WHILE take an ALU expression, and BREAK takes a
+         field identifier. They are listed here anyway so that this list
+         stays the full picture. -->
     <list name="controlflow">
+      <item>if</item>
       <item>then</item>
       <item>else</item>
+      <item>elseif</item>
       <item>endif</item>
+      <item>while</item>
       <item>do</item>
       <item>done</item>
       <item>continue</item>
       <item>redo</item>
+      <item>break</item>
+      <item>assert</item>
+      <item>abend</item>
+      <item>skip-until</item>
+      <item>skip-while</item>
       <item>select</item>
       <item>first</item>
       <item>second</item>
@@ -177,23 +188,6 @@
       <item>tf2s</item>
       <item>mcs2tf</item>
       <item>tf2mcs</item>
-    </list>
-
-    <!-- Flow control keywords whose argument is an ALU expression. -->
-    <list name="exprflow">
-      <item>if</item>
-      <item>elseif</item>
-      <item>while</item>
-    </list>
-
-    <!-- Other keywords whose argument is an ALU expression. -->
-    <list name="exprkeywords">
-      <item>print</item>
-      <item>set</item>
-      <item>assert</item>
-      <item>abend</item>
-      <item>skip-until</item>
-      <item>skip-while</item>
     </list>
 
     <!-- ALU functions, from ALU_FUNCTION_LIST in aluFunctions.h. This
@@ -418,9 +412,13 @@
         <RegExpr attribute="Control Flow" context="FidArg" String="break(?=\s|$)" insensitive="true" />
         <RegExpr attribute="Main Option" context="FidArg" String="printonly(?=\s|$)" insensitive="true" />
 
-        <!-- Keywords taking an ALU expression as their argument. -->
-        <keyword attribute="Control Flow" context="ExprArg" String="exprflow" />
-        <keyword attribute="Keyword" context="ExprArg" String="exprkeywords" />
+        <!-- Keywords taking an ALU expression as their argument. The flow
+             control ones are in the "controlflow" list too, but need these
+             rules, ahead of that list, to switch into the expression.
+             PRINT also has the "?" spelling, which may be a token of its
+             own or a prefix of the expression. -->
+        <RegExpr attribute="Control Flow" context="ExprArg" String="(elseif|if|while|assert|abend|skip-until|skip-while)(?=\s|$)" />
+        <RegExpr attribute="Keyword" context="ExprArg" String="(print|set)(?=\s|$)" />
         <RegExpr attribute="Keyword" context="ExprArg" String="\?" />
 
         <keyword attribute="Main Option" context="#stay" String="mainoptions" />
@@ -583,8 +581,11 @@
       <itemData name="Control Flow"     defStyleNum="dsControlFlow" spellChecking="0" />
       <itemData name="IO Keyword"       defStyleNum="dsKeyword" spellChecking="0" />
       <itemData name="Input Source"     defStyleNum="dsBuiltIn" spellChecking="0" />
-      <itemData name="Placement"        defStyleNum="dsOthers" spellChecking="0" />
-      <itemData name="Alignment"        defStyleNum="dsAttribute" spellChecking="0" />
+      <!-- Placement, Alignment and Conversion deliberately share dsDataType:
+           they are the three parts of a data field that follow its input
+           part, and are meant to read as one group. -->
+      <itemData name="Placement"        defStyleNum="dsDataType" spellChecking="0" />
+      <itemData name="Alignment"        defStyleNum="dsDataType" spellChecking="0" />
       <itemData name="Separator"        defStyleNum="dsKeyword" spellChecking="0" />
       <itemData name="Separator Char"   defStyleNum="dsChar" spellChecking="0" />
       <itemData name="Conversion"       defStyleNum="dsDataType" spellChecking="0" />

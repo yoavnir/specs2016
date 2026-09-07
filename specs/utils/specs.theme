@@ -14,21 +14,21 @@
       "background-color": null,
       "bold": true,
       "italic": false,
-      "text-color": "#ff0000",
+      "text-color": "#cc0000",
       "underline": false
     },
     "Annotation": {
       "background-color": null,
       "bold": true,
       "italic": true,
-      "text-color": "#60a0b0",
+      "text-color": "#003333",
       "underline": false
     },
     "Attribute": {
       "background-color": null,
       "bold": false,
       "italic": false,
-      "text-color": "#4a5518",
+      "text-color": "#a34400",
       "underline": false
     },
     "BaseN": {
@@ -42,28 +42,28 @@
       "background-color": null,
       "bold": false,
       "italic": false,
-      "text-color": "#00666b",
+      "text-color": "#006e00",
       "underline": false
     },
     "Char": {
       "background-color": null,
       "bold": false,
       "italic": false,
-      "text-color": "#2f5377",
+      "text-color": "#008000",
       "underline": false
     },
     "Comment": {
       "background-color": null,
       "bold": false,
       "italic": true,
-      "text-color": "#33555d",
+      "text-color": "#666666",
       "underline": false
     },
     "CommentVar": {
       "background-color": null,
       "bold": true,
       "italic": true,
-      "text-color": "#60a0b0",
+      "text-color": "#666666",
       "underline": false
     },
     "Constant": {
@@ -77,7 +77,7 @@
       "background-color": null,
       "bold": true,
       "italic": false,
-      "text-color": "#6a1b9a",
+      "text-color": "#0000cc",
       "underline": false
     },
     "DataType": {
@@ -98,7 +98,7 @@
       "background-color": null,
       "bold": false,
       "italic": true,
-      "text-color": "#ba2121",
+      "text-color": "#448844",
       "underline": false
     },
     "Error": {
@@ -147,7 +147,7 @@
       "background-color": null,
       "bold": true,
       "italic": false,
-      "text-color": "#005c1f",
+      "text-color": "#000066",
       "underline": false
     },
     "Normal": {
@@ -175,7 +175,7 @@
       "background-color": null,
       "bold": false,
       "italic": false,
-      "text-color": "#734b00",
+      "text-color": "#7a3e00",
       "underline": false
     },
     "SpecialChar": {
