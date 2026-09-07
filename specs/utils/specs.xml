@@ -418,8 +418,9 @@
              PRINT also has the "?" spelling, which may be a token of its
              own or a prefix of the expression. -->
         <RegExpr attribute="Control Flow" context="ExprArg" String="(elseif|if|while|assert|abend|skip-until|skip-while)(?=\s|$)" />
-        <RegExpr attribute="Keyword" context="ExprArg" String="(print|set)(?=\s|$)" />
-        <RegExpr attribute="Keyword" context="ExprArg" String="\?" />
+        <RegExpr attribute="Keyword" context="ExprArg" String="(set)(?=\s|$)" />
+        <RegExpr attribute="Input Source" context="ExprArg" String="(print)(?=\s|$)" />
+        <RegExpr attribute="Input Source" context="ExprArg" String="\?" />
 
         <keyword attribute="Main Option" context="#stay" String="mainoptions" />
         <keyword attribute="Control Flow" context="#stay" String="controlflow" />
