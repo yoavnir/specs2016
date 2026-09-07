@@ -411,7 +411,7 @@ book: $(DOCS_DIR)/guidebook.pdf
 # been linked ("specs: Command not found").
 $(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/resources/header.tex $(UTILS_DIR)/specs.xml $(UTILS_DIR)/specs.theme $(EXE_DIR)/specs
 	$(EXE_DIR)/specs --set docsdir=../docs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/resources/guidebook_prepare
-	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex --syntax-highlighting $(UTILS_DIR)/specs.theme --syntax-definition=$(UTILS_DIR)/specs.xml -H $(DOCS_DIR)/resources/header.tex
+	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex --highlight-style $(UTILS_DIR)/specs.theme --syntax-definition=$(UTILS_DIR)/specs.xml -H $(DOCS_DIR)/resources/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
 
