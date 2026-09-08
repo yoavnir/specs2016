@@ -409,9 +409,9 @@ book: $(DOCS_DIR)/guidebook.pdf
 # The recipe runs $(EXE_DIR)/specs, so it must depend on it - otherwise a
 # parallel "make -j all" can start generating the guidebook before specs has
 # been linked ("specs: Command not found").
-$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/resources/header.tex $(EXE_DIR)/specs
+$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/resources/header.tex $(UTILS_DIR)/specs.xml $(UTILS_DIR)/specs.theme $(EXE_DIR)/specs
 	$(EXE_DIR)/specs --set docsdir=../docs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/resources/guidebook_prepare
-	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/resources/header.tex
+	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex --highlight-style $(UTILS_DIR)/specs.theme --syntax-definition=$(UTILS_DIR)/specs.xml -H $(DOCS_DIR)/resources/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
 
@@ -539,6 +539,7 @@ if platform=="POSIX":
 	exe_dir = "../exe"
 	tests_dir = "../tests"
 	docs_dir = "../docs"
+	utils_dir = "../utils"
 	clear_clean_part = clear_clean_posix
 	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
 	bashrc = "/etc/bash.bashrc" if os.path.isfile("/etc/bash.bashrc") else "/etc/bashrc"
@@ -547,6 +548,7 @@ elif platform=="NT":
 	exe_dir = "..\\exe"
 	tests_dir = "..\\tests"
 	docs_dir = "..\\docs"
+	utils_dir = "..\\utils"
 	clear_clean_part = clear_clean_nt
 	compiler_cleanup_cmd = "del xx.cc xx.o xx.exe xx.txt"
 	bashrc = "/dev/null"
@@ -980,6 +982,7 @@ with open("Makefile", "w") as makefile:
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
 	makefile.write("TESTS_DIR={}\n".format(tests_dir))
 	makefile.write("DOCS_DIR={}\n".format(docs_dir))
+	makefile.write("UTILS_DIR={}\n".format(utils_dir))
 	makefile.write("BOOK_ALL={}\n".format("book" if CFG_book else ""))
 	makefile.write("CPPFLAGS = {}\n".format(cppflags))
 	

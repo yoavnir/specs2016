@@ -855,7 +855,7 @@ So if your `SPECSPATH` is `/home/alice/specs`, you can store your spec files the
 
 A spec file is a plain text file. Spec units are written as if they were command-line arguments, but you can spread them across multiple lines and add comments:
 
-```
+```specs
 # This counts and adds up a list of numbers
     printonly eof
     a: word 1

@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language>
+<!--
+    KDE-style syntax definition for the "specs" specification language.
+
+    specs is an implementation of the CMS Pipelines "spec" stage:
+    https://github.com/yoavnir/specs2016
+
+    This file works with anything that reads the KDE/Kate syntax format:
+      * Kate, KWrite, KDevelop and other KSyntaxHighlighting consumers
+        (copy to ~/.local/share/org.kde.syntax-highlighting/syntax/)
+      * skylighting, and therefore pandoc, through its
+        "syntax-definition" option
+      * any other consumer of the KDE highlighting XML format
+
+    It is deliberately self-contained: it contains no IncludeRules references
+    to other syntax files (no "##Comments", "##Alerts", etc.), so a single
+    syntax-definition option is enough to load it.
+
+    Maintenance: the keyword lists below are derived from the specs sources.
+    When any of these change, update this file as well:
+      * spec unit keywords and their abbreviations
+            specs/src/cli/tokens.cc  (SIMPLETOKEN / SIMPLETOKENV / the
+                                      NEXTWORD / NEXTFIELD / NEXT block)
+      * conversions
+            specs/src/processing/conversions.h  (STRING_CONVERSIONS_LIST and
+                                                 PARAMETRIZED_CONVERSIONS_LIST)
+      * ALU function names
+            specs/src/utils/aluFunctions.h  (ALU_FUNCTION_LIST)
+
+    SPDX-FileCopyrightText: 2018-2026 Yoav Nir
+    SPDX-License-Identifier: MIT
+ -->
+<language
+    name="specs"
+    section="Scripts"
+    version="1"
+    kateversion="5.79"
+    extensions="*.spec;*.specs"
+    mimetype="text/x-specs"
+    casesensitive="0"
+    license="MIT"
+  >
+  <highlighting>
+
+    <!-- Main options. Only valid at the very start of a specification.
+         PRINTONLY is not here: it takes an argument, so it has its own
+         rule in the Normal context. -->
+    <list name="mainoptions">
+      <item>stop</item>
+      <item>alleof</item>
+      <item>anyeof</item>
+      <item>keep</item>
+      <item>counters</item>
+      <item>eof</item>
+    </list>
+
+    <!-- Flow control, following the grouping of chapter 10 of the guidebook.
+         Some of these are matched by rules of their own in the Normal
+         context rather than by this list, because they take an argument the
+         rule has to switch context for: IF, ELSEIF, WHILE, ASSERT, ABEND,
+         SKIP-UNTIL and SKIP-WHILE take an ALU expression, and BREAK takes a
+         field identifier. They are listed here anyway so that this list
+         stays the full picture. -->
+    <list name="controlflow">
+      <item>if</item>
+      <item>then</item>
+      <item>else</item>
+      <item>elseif</item>
+      <item>endif</item>
+      <item>while</item>
+      <item>do</item>
+      <item>done</item>
+      <item>continue</item>
+      <item>redo</item>
+      <item>break</item>
+      <item>assert</item>
+      <item>abend</item>
+      <item>skip-until</item>
+      <item>skip-while</item>
+      <item>select</item>
+      <item>first</item>
+      <item>second</item>
+    </list>
+
+    <!-- Input, output and stream handling. -->
+    <list name="io">
+      <item>read</item>
+      <item>readstop</item>
+      <item>unread</item>
+      <item>write</item>
+      <item>nowrite</item>
+      <item>noprint</item>
+      <item>outstream</item>
+      <item>stderr</item>
+      <item>splitw</item>
+      <item>splitf</item>
+      <item>context</item>
+      <item>requires</item>
+    </list>
+
+    <!-- Input sources, with every abbreviation the tokenizer accepts:
+         word/field down to one letter, substring down to "substr",
+         todclock down to "tod", dtodclock down to "dtod". ID is not here
+         because it takes a field identifier as its argument. -->
+    <list name="inputsource">
+      <item>w</item>
+      <item>wo</item>
+      <item>wor</item>
+      <item>word</item>
+      <item>f</item>
+      <item>fi</item>
+      <item>fie</item>
+      <item>fiel</item>
+      <item>field</item>
+      <item>substr</item>
+      <item>substri</item>
+      <item>substrin</item>
+      <item>substring</item>
+      <item>of</item>
+      <item>number</item>
+      <item>recno</item>
+      <item>tod</item>
+      <item>todc</item>
+      <item>todcl</item>
+      <item>todclo</item>
+      <item>todcloc</item>
+      <item>todclock</item>
+      <item>dtod</item>
+      <item>dtodc</item>
+      <item>dtodcl</item>
+      <item>dtodclo</item>
+      <item>dtodcloc</item>
+      <item>dtodclock</item>
+      <item>timediff</item>
+    </list>
+
+    <!-- Output placement. next down to "n", nextword down to "nextw"
+         (plus nw and nword), nextfield down to "nextf" (plus nf and
+         nfield). A trailing ".len" is highlighted separately. -->
+    <list name="placement">
+      <item>n</item>
+      <item>ne</item>
+      <item>nex</item>
+      <item>next</item>
+      <item>nw</item>
+      <item>nword</item>
+      <item>nextw</item>
+      <item>nextwo</item>
+      <item>nextwor</item>
+      <item>nextword</item>
+      <item>nf</item>
+      <item>nfield</item>
+      <item>nextf</item>
+      <item>nextfi</item>
+      <item>nextfie</item>
+      <item>nextfiel</item>
+      <item>nextfield</item>
+      <item>strip</item>
+    </list>
+
+    <list name="alignment">
+      <item>left</item>
+      <item>right</item>
+      <item>center</item>
+      <item>centre</item>
+    </list>
+
+    <!-- Conversions. "identity" is deliberately absent: it is excluded by
+         getConversionByName(), so in a specification it is just a literal.
+         "b2x" is also absent: it appears in the documentation but is not
+         implemented. The six parametrized conversions take a format
+         string as their next token. -->
+    <list name="conversions">
+      <item>ROT13</item>
+      <item>C2B</item>
+      <item>C2X</item>
+      <item>B2C</item>
+      <item>X2CH</item>
+      <item>D2X</item>
+      <item>X2D</item>
+      <item>LCASE</item>
+      <item>UCASE</item>
+      <item>BSWAP</item>
+      <item>ti2f</item>
+      <item>tf2i</item>
+      <item>s2tf</item>
+      <item>tf2s</item>
+      <item>mcs2tf</item>
+      <item>tf2mcs</item>
+    </list>
+
+    <!-- ALU functions, from ALU_FUNCTION_LIST in aluFunctions.h. This
+         includes the pseudo-functions (break, sum, min, max, average,
+         variance, stddev, stderrmean, present, fmap_*) whose first
+         argument is a field identifier rather than a value. -->
+    <list name="alufunctions">
+      <item>abbrev</item>
+      <item>abs</item>
+      <item>arccos</item>
+      <item>arcdcos</item>
+      <item>arcdsin</item>
+      <item>arcdtan</item>
+      <item>arcsin</item>
+      <item>arctan</item>
+      <item>average</item>
+      <item>bitand</item>
+      <item>bitor</item>
+      <item>bitxor</item>
+      <item>break</item>
+      <item>bswap</item>
+      <item>c2d</item>
+      <item>c2f</item>
+      <item>c2u</item>
+      <item>c2x</item>
+      <item>ceil</item>
+      <item>center</item>
+      <item>centre</item>
+      <item>cfrecord</item>
+      <item>combinations</item>
+      <item>compare</item>
+      <item>conf</item>
+      <item>copies</item>
+      <item>cos</item>
+      <item>countocc</item>
+      <item>countocc_dump</item>
+      <item>countocc_get</item>
+      <item>ctxoffset</item>
+      <item>ctxoob</item>
+      <item>ctxrecno</item>
+      <item>d2x</item>
+      <item>dcos</item>
+      <item>defined</item>
+      <item>delstr</item>
+      <item>delword</item>
+      <item>dsin</item>
+      <item>dtan</item>
+      <item>eof</item>
+      <item>exact</item>
+      <item>exc1</item>
+      <item>excerr</item>
+      <item>excrc</item>
+      <item>exec</item>
+      <item>exp</item>
+      <item>fact</item>
+      <item>field</item>
+      <item>fieldcount</item>
+      <item>fieldend</item>
+      <item>fieldindex</item>
+      <item>fieldlength</item>
+      <item>fieldrange</item>
+      <item>fieldwith</item>
+      <item>fieldwithidx</item>
+      <item>find</item>
+      <item>first</item>
+      <item>floor</item>
+      <item>fmap_common</item>
+      <item>fmap_count</item>
+      <item>fmap_dump</item>
+      <item>fmap_frac</item>
+      <item>fmap_nelem</item>
+      <item>fmap_nsamples</item>
+      <item>fmap_pct</item>
+      <item>fmap_rare</item>
+      <item>fmap_sample</item>
+      <item>fmt</item>
+      <item>fplus</item>
+      <item>frombin</item>
+      <item>getenv</item>
+      <item>includes</item>
+      <item>includesall</item>
+      <item>index</item>
+      <item>insert</item>
+      <item>justify</item>
+      <item>lastpos</item>
+      <item>lcase</item>
+      <item>left</item>
+      <item>length</item>
+      <item>log</item>
+      <item>lvalue</item>
+      <item>max</item>
+      <item>mcs2tf</item>
+      <item>min</item>
+      <item>next</item>
+      <item>not</item>
+      <item>number</item>
+      <item>overlay</item>
+      <item>pclear</item>
+      <item>pdefined</item>
+      <item>permutations</item>
+      <item>pget</item>
+      <item>pos</item>
+      <item>pow</item>
+      <item>present</item>
+      <item>pretty</item>
+      <item>pset</item>
+      <item>rand</item>
+      <item>range</item>
+      <item>recno</item>
+      <item>record</item>
+      <item>rest</item>
+      <item>reverse</item>
+      <item>right</item>
+      <item>rmatch</item>
+      <item>round</item>
+      <item>rreplace</item>
+      <item>rsearch</item>
+      <item>rvalue</item>
+      <item>s2tf</item>
+      <item>sfield</item>
+      <item>sign</item>
+      <item>sin</item>
+      <item>space</item>
+      <item>split</item>
+      <item>splitw</item>
+      <item>splus</item>
+      <item>sqrt</item>
+      <item>stddev</item>
+      <item>stderrmean</item>
+      <item>string</item>
+      <item>strip</item>
+      <item>substitute</item>
+      <item>substr</item>
+      <item>subword</item>
+      <item>sum</item>
+      <item>sword</item>
+      <item>tan</item>
+      <item>testfunc</item>
+      <item>tf2mcs</item>
+      <item>tf2s</item>
+      <item>tobin</item>
+      <item>tobine</item>
+      <item>translate</item>
+      <item>ucase</item>
+      <item>variance</item>
+      <item>verify</item>
+      <item>word</item>
+      <item>wordcount</item>
+      <item>wordend</item>
+      <item>wordindex</item>
+      <item>wordlen</item>
+      <item>wordlength</item>
+      <item>wordpos</item>
+      <item>wordrange</item>
+      <item>words</item>
+      <item>wordstart</item>
+      <item>wordwith</item>
+      <item>wordwithidx</item>
+      <item>wplus</item>
+      <item>x2ch</item>
+      <item>x2d</item>
+      <item>xrange</item>
+    </list>
+
+    <contexts>
+
+      <!-- The order of the rules in this context mirrors the order in
+           which parseSingleToken() in tokens.cc tries to interpret a
+           token, so that ambiguous spellings resolve the same way. -->
+      <context name="Normal" attribute="Normal Text" lineEndContext="#stay">
+        <DetectSpaces />
+
+        <!-- A comment starts at the *last* "# " on the line (removeComment()
+             in splitter.cc uses rfind), so an earlier "# " is code. The
+             negative lookahead reproduces that: this "#" only starts a
+             comment when no later " # " follows. A "#" that is the very
+             last character on the line also starts a comment; a "#" not
+             followed by a blank (as in the #0 counter) never does. -->
+        <RegExpr attribute="Comment" context="Comment" String="#(?= )(?!.*\s# )" />
+        <RegExpr attribute="Comment" context="Comment" String="#$" />
+
+        <!-- Directives. Only valid on their own line, before any spec text. -->
+        <RegExpr attribute="Directive" context="DirectiveSet" String="^\+SET\b" insensitive="false" />
+        <RegExpr attribute="Directive" context="DirectiveCmd" String="^\+IN\b" insensitive="false" />
+
+        <!-- The splitter honours a backslash escape anywhere. -->
+        <RegExpr attribute="Escape" context="#stay" String="\\." />
+
+        <!-- Delimited literals. Any of ' " / may be used as the delimiter. -->
+        <DetectChar attribute="String" context="StringDQ" char="&quot;" />
+        <DetectChar attribute="String" context="StringSQ" char="'" />
+        <DetectChar attribute="String" context="StringSlash" char="/" />
+
+        <!-- Configured literals and record pseudo-variables. -->
+        <RegExpr attribute="Label" context="#stay" String="@@|@!|@[-+]\d{1,3}|@[A-Za-z_][A-Za-z0-9_-]*" />
+
+        <!-- Counters (#0 - #999). The #name form of a persistent variable
+             is only meaningful inside an expression, so it is highlighted
+             there and left alone here. -->
+        <RegExpr attribute="Counter" context="#stay" String="#\d{1,3}(?=\s|$)" />
+
+        <!-- Field identifier, either capturing input ("a: 1-5") or
+             capturing output ("1-5 a:"). Exactly one letter and a colon. -->
+        <RegExpr attribute="Field Identifier" context="#stay" String="[A-Za-z]:(?=\s|$)" />
+
+        <!-- Conversions come before the hex literal rule on purpose: "x2d"
+             is both a valid conversion and a valid hex literal, and
+             tokens.cc tries conversions first. -->
+        <keyword attribute="Conversion" context="#stay" String="conversions" />
+
+        <!-- Hex literal: a lowercase x and an even number of hex digits.
+             An uppercase X is not accepted by the tokenizer. -->
+        <RegExpr attribute="Hex" context="#stay" String="x([0-9A-Fa-f]{2})+(?=\s|$)" insensitive="false" />
+
+        <!-- Separator and pad settings swallow the following character,
+             which may be a bare character, a quoted one, or "default". -->
+        <RegExpr attribute="Separator" context="SepChar" String="(ws|fs|pad|wordsep(a(r(a(t(o(r)?)?)?)?)?)?|fieldsep(a(r(a(t(o(r)?)?)?)?)?)?)(?=\s|$)" insensitive="true" />
+
+        <!-- Keywords whose argument is a one-letter field identifier.
+             PRINTONLY also accepts EOF. -->
+        <RegExpr attribute="Input Source" context="FidArg" String="id(?=\s|$)" insensitive="true" />
+        <RegExpr attribute="Control Flow" context="FidArg" String="break(?=\s|$)" insensitive="true" />
+        <RegExpr attribute="Main Option" context="FidArg" String="printonly(?=\s|$)" insensitive="true" />
+
+        <!-- Keywords taking an ALU expression as their argument. The flow
+             control ones are in the "controlflow" list too, but need these
+             rules, ahead of that list, to switch into the expression.
+             PRINT also has the "?" spelling, which may be a token of its
+             own or a prefix of the expression. -->
+        <RegExpr attribute="Control Flow" context="ExprArg" String="(elseif|if|while|assert|abend|skip-until|skip-while)(?=\s|$)" />
+        <RegExpr attribute="Keyword" context="ExprArg" String="(set)(?=\s|$)" />
+        <RegExpr attribute="Input Source" context="ExprArg" String="(print)(?=\s|$)" />
+        <RegExpr attribute="Input Source" context="ExprArg" String="\?" />
+
+        <keyword attribute="Main Option" context="#stay" String="mainoptions" />
+        <keyword attribute="Control Flow" context="#stay" String="controlflow" />
+        <keyword attribute="IO Keyword" context="#stay" String="io" />
+        <keyword attribute="Input Source" context="#stay" String="inputsource" />
+        <keyword attribute="Placement" context="#stay" String="placement" />
+        <keyword attribute="Alignment" context="#stay" String="alignment" />
+
+        <!-- Input and output ranges: 5, -1, 3-7, 3;7, 3:7, 1-*, 5.8,
+             and the same forms prefixed with w or f. -->
+        <RegExpr attribute="Range" context="#stay" String="[wWfF]?-?\d+([-;:](\d+|\*)|\.\d+)?(?=\s|$|\)|,)" />
+
+        <!-- The ".len" suffix of nw.8 / next.5, and the lone period
+             meaning "produce no output". -->
+        <RegExpr attribute="Range" context="#stay" String="\.\d+(?=\s|$|\)|,)" />
+        <RegExpr attribute="Placement" context="#stay" String="\.(?=\s|$)" />
+
+        <!-- Groups of input ranges, and composed output placement. -->
+        <AnyChar attribute="Operator" context="#stay" String="()," />
+
+        <!-- Anything else is a literal. Consuming the whole token keeps the
+             comment rules above from firing on a "#" inside a token, which
+             the real tokenizer would not treat as a comment either. -->
+        <RegExpr attribute="Normal Text" context="#stay" String="\S+" />
+      </context>
+
+      <context name="Comment" attribute="Comment" lineEndContext="#pop" />
+
+      <!-- "+SET name shell command" -->
+      <context name="DirectiveSet" attribute="Normal Text" lineEndContext="#pop">
+        <DetectSpaces />
+        <RegExpr attribute="Variable" context="DirectiveSetCmd" String="\S+" />
+      </context>
+      <context name="DirectiveSetCmd" attribute="Shell Command" lineEndContext="#pop#pop" />
+
+      <!-- "+IN shell command" -->
+      <context name="DirectiveCmd" attribute="Shell Command" lineEndContext="#pop" />
+
+      <!-- The one-letter field identifier argument of ID / BREAK / PRINTONLY. -->
+      <context name="FidArg" attribute="Normal Text" lineEndContext="#pop">
+        <DetectSpaces />
+        <RegExpr attribute="Main Option" context="#pop" String="eof(?=\s|$)" />
+        <RegExpr attribute="Field Identifier" context="#pop" String="[A-Za-z](?=\s|$)" />
+        <RegExpr attribute="Normal Text" context="#pop" String="\S" lookAhead="true" />
+      </context>
+
+      <!-- The character argument of WS / FS / PAD. -->
+      <context name="SepChar" attribute="Normal Text" lineEndContext="#pop">
+        <DetectSpaces />
+        <!-- The tokenizer only accepts "default" in lower case here. -->
+        <StringDetect attribute="Keyword" context="#pop" String="default" insensitive="false" />
+        <RegExpr attribute="Separator Char" context="#pop" String="&quot;.&quot;|'.'|/./|\\?." />
+      </context>
+
+      <!-- Plain literals, with no expression highlighting. A literal may
+           span lines, because parseTokensFile() joins all the lines of a
+           spec file with a blank before splitting them into tokens, so
+           these contexts stay open at the end of a line. An unbalanced
+           delimiter therefore colours the rest of the file as a string -
+           which is also what specs itself reports, as "Missing delimiter
+           at end of input". -->
+      <context name="StringDQ" attribute="String" lineEndContext="#stay">
+        <RegExpr attribute="Escape" context="#stay" String="\\." />
+        <DetectChar attribute="String" context="#pop" char="&quot;" />
+      </context>
+      <context name="StringSQ" attribute="String" lineEndContext="#stay">
+        <RegExpr attribute="Escape" context="#stay" String="\\." />
+        <DetectChar attribute="String" context="#pop" char="'" />
+      </context>
+      <context name="StringSlash" attribute="String" lineEndContext="#stay">
+        <RegExpr attribute="Escape" context="#stay" String="\\." />
+        <DetectChar attribute="String" context="#pop" char="/" />
+      </context>
+
+      <!-- The argument of PRINT / SET / IF / WHILE / ASSERT / ... is an ALU
+           expression. It is usually quoted, but it may also be a bare token
+           or a parenthesized group. -->
+      <context name="ExprArg" attribute="Normal Text" lineEndContext="#pop">
+        <DetectSpaces />
+        <DetectChar attribute="String" context="ExprDQ" char="&quot;" />
+        <DetectChar attribute="String" context="ExprSQ" char="'" />
+        <DetectChar attribute="Operator" context="ExprParen" char="(" />
+        <RegExpr attribute="Normal Text" context="ExprBare" String="\S" lookAhead="true" />
+      </context>
+
+      <context name="ExprDQ" attribute="String" lineEndContext="#stay">
+        <DetectChar attribute="String" context="#pop#pop" char="&quot;" />
+        <DetectChar attribute="String" context="ExprNestedSQ" char="'" />
+        <IncludeRules context="ALU" />
+      </context>
+
+      <context name="ExprSQ" attribute="String" lineEndContext="#stay">
+        <DetectChar attribute="String" context="#pop#pop" char="'" />
+        <DetectChar attribute="String" context="ExprNestedDQ" char="&quot;" />
+        <IncludeRules context="ALU" />
+      </context>
+
+      <!-- A quoted string inside an expression, as in
+           print "substitute(@@,XXDATE,#0,'U')" -->
+      <context name="ExprNestedSQ" attribute="String" lineEndContext="#stay">
+        <RegExpr attribute="Escape" context="#stay" String="\\." />
+        <DetectChar attribute="String" context="#pop" char="'" />
+      </context>
+      <context name="ExprNestedDQ" attribute="String" lineEndContext="#stay">
+        <RegExpr attribute="Escape" context="#stay" String="\\." />
+        <DetectChar attribute="String" context="#pop" char="&quot;" />
+      </context>
+
+      <context name="ExprParen" attribute="Normal Text" lineEndContext="#stay">
+        <DetectChar attribute="Operator" context="#pop#pop" char=")" />
+        <DetectChar attribute="Operator" context="ExprParenNested" char="(" />
+        <DetectChar attribute="String" context="ExprNestedDQ" char="&quot;" />
+        <DetectChar attribute="String" context="ExprNestedSQ" char="'" />
+        <IncludeRules context="ALU" />
+      </context>
+
+      <context name="ExprParenNested" attribute="Normal Text" lineEndContext="#stay">
+        <DetectChar attribute="Operator" context="#pop" char=")" />
+        <DetectChar attribute="Operator" context="ExprParenNested" char="(" />
+        <DetectChar attribute="String" context="ExprNestedDQ" char="&quot;" />
+        <DetectChar attribute="String" context="ExprNestedSQ" char="'" />
+        <IncludeRules context="ALU" />
+      </context>
+
+      <!-- An unquoted expression, as in "?2+2" or "print #0". It ends at
+           the first blank, just as the splitter ends the token there. -->
+      <context name="ExprBare" attribute="Normal Text" lineEndContext="#pop#pop">
+        <DetectSpaces attribute="Normal Text" context="#pop#pop" />
+        <DetectChar attribute="String" context="ExprNestedDQ" char="&quot;" />
+        <DetectChar attribute="String" context="ExprNestedSQ" char="'" />
+        <IncludeRules context="ALU" />
+      </context>
+
+      <!-- Rules shared by every expression context. Not entered directly. -->
+      <context name="ALU" attribute="Normal Text" lineEndContext="#stay">
+        <RegExpr attribute="Escape" context="#stay" String="\\." />
+        <keyword attribute="Function" context="#stay" String="alufunctions" />
+        <RegExpr attribute="Function" context="#stay" String="[A-Za-z_][A-Za-z0-9_]+(?=\s*\()" />
+        <RegExpr attribute="Label" context="#stay" String="@@|@!|@[-+]\d{1,3}|@[A-Za-z_][A-Za-z0-9_]*" />
+        <RegExpr attribute="Counter" context="#stay" String="#\d{1,3}|#[A-Za-z_][A-Za-z0-9_]*" />
+        <RegExpr attribute="Number" context="#stay" String="\d+(\.\d+)?|\.\d+" />
+        <RegExpr attribute="Field Identifier" context="#stay" String="[A-Za-z](?![A-Za-z0-9_])" />
+        <!-- The lexer takes a maximal run of these characters as a single
+             operator, so + - * / // % || < <= << <<= = == != !== &amp; | := += ...
+             are all matched here. -->
+        <RegExpr attribute="Operator" context="#stay" String="[-+*/|!&lt;&gt;:&amp;%=]+" />
+        <AnyChar attribute="Operator" context="#stay" String="()," />
+      </context>
+
+    </contexts>
+
+    <itemDatas>
+      <itemData name="Normal Text"      defStyleNum="dsNormal" />
+      <itemData name="Comment"          defStyleNum="dsComment" />
+      <itemData name="Directive"        defStyleNum="dsPreprocessor" spellChecking="0" />
+      <itemData name="Shell Command"    defStyleNum="dsOthers" spellChecking="0" />
+      <itemData name="Main Option"      defStyleNum="dsAttribute" spellChecking="0" />
+      <itemData name="Keyword"          defStyleNum="dsKeyword" spellChecking="0" />
+      <itemData name="Control Flow"     defStyleNum="dsControlFlow" spellChecking="0" />
+      <itemData name="IO Keyword"       defStyleNum="dsKeyword" spellChecking="0" />
+      <itemData name="Input Source"     defStyleNum="dsBuiltIn" spellChecking="0" />
+      <!-- Placement, Alignment and Conversion deliberately share dsDataType:
+           they are the three parts of a data field that follow its input
+           part, and are meant to read as one group. -->
+      <itemData name="Placement"        defStyleNum="dsDataType" spellChecking="0" />
+      <itemData name="Alignment"        defStyleNum="dsDataType" spellChecking="0" />
+      <itemData name="Separator"        defStyleNum="dsKeyword" spellChecking="0" />
+      <itemData name="Separator Char"   defStyleNum="dsChar" spellChecking="0" />
+      <itemData name="Conversion"       defStyleNum="dsDataType" spellChecking="0" />
+      <itemData name="Range"            defStyleNum="dsDecVal" spellChecking="0" />
+      <itemData name="Field Identifier" defStyleNum="dsVariable" spellChecking="0" />
+      <itemData name="Counter"          defStyleNum="dsVariable" spellChecking="0" />
+      <itemData name="Variable"         defStyleNum="dsVariable" spellChecking="0" />
+      <itemData name="Label"            defStyleNum="dsConstant" spellChecking="0" />
+      <itemData name="String"           defStyleNum="dsString" />
+      <itemData name="Escape"           defStyleNum="dsSpecialChar" spellChecking="0" />
+      <itemData name="Hex"              defStyleNum="dsBaseN" spellChecking="0" />
+      <itemData name="Number"           defStyleNum="dsFloat" spellChecking="0" />
+      <itemData name="Function"         defStyleNum="dsFunction" spellChecking="0" />
+      <itemData name="Operator"         defStyleNum="dsOperator" spellChecking="0" />
+    </itemDatas>
+
+  </highlighting>
+  <general>
+    <comments>
+      <comment name="singleLine" start="#" position="afterwhitespace" />
+    </comments>
+    <!-- "-" is a weak deliminator so that skip-until and skip-while are
+         matched as single keywords. -->
+    <keywords casesensitive="0" weakDeliminator="-" />
+  </general>
+</language>
+
+<!-- kate: space-indent on; indent-width 2; replace-tabs on; -->
