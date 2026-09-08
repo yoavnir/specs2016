@@ -94,6 +94,11 @@ int main(int argc, char** argv)
 	TESTNS("a: w1 . ID a 1", "RANGELABEL; /a/|WORDRANGE; S:1|PERIOD|ID; /a/|RANGE; S:1");
 	TESTNS("stop anyeof printonly eof w1 1", "STOP; /any/|PRINTONLY; /EOF/|WORDRANGE; S:1|RANGE; S:1");
 	TESTNS("stop 1 printonly a keep a: w1 . w2 nw", "STOP; /1/|PRINTONLY; /a/|KEEP|RANGELABEL; /a/|WORDRANGE; S:1|PERIOD|WORDRANGE; S:2|NEXTWORD");
+	// OUTREC and SCRATCH are exact-match keywords. 'outstream' must not be
+	// shadowed by 'outrec', and abbreviations of either are plain literals.
+	TESTNS("outrec OUTREC scratch SCRATCH", "OUTREC|OUTREC|SCRATCH|SCRATCH");
+	TESTNS("outstream 2 outre outrecs scrat scratchy", "OUTSTREAM; /2/|LITERAL; /outre/|LITERAL; /outrecs/|LITERAL; /scrat/|LITERAL; /scratchy/");
+	TESTNS("substr w2 of outrec 1 scratch", "SUBSTRING|WORDRANGE; S:2|OF|OUTREC|RANGE; S:1|SCRATCH");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";

@@ -266,7 +266,7 @@ int main (int argc, char** argv)
 	PSimpleWriter pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
-	setPositionGetter(&sb);
+	setOutputAgent(&sb);
 
 	// memset(pWrtrs, 0, sizeof(void*) * (1 + MAX_INPUT_STREAMS));
 

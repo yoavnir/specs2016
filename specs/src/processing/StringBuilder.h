@@ -4,7 +4,7 @@
 #include "utils/SpecString.h"
 #include "ProcessingState.h"
 
-class StringBuilder : public positionGetter {
+class StringBuilder : public outputAgent {
 public:
 	StringBuilder();
 	~StringBuilder();
@@ -16,7 +16,12 @@ public:
 	void           insertNextWord(PSpecString str);
 	void           insertNextField(PSpecString str);
 	void           setPadChar(char c)     {m_pad = c;}
-	size_t         pos()                  {return m_pos;}
+	size_t         pos() override         {return m_pos;}
+	// A copy, not mp_str itself: the caller may insert the result straight
+	// back into this same builder (e.g. the OUTREC spec unit).
+	PSpecString    outputRecord() override {
+		return mp_str ? std::make_shared<std::string>(*mp_str) : std::make_shared<std::string>();
+	}
 	size_t         getPosition() const    {return m_pos;}
 	void           setPosition(size_t p)  {m_pos = p;}
 	void           setString(PSpecString s) {mp_str = s;}

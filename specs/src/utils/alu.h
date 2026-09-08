@@ -97,6 +97,7 @@ enum AluUnitType {
 	UT_BinaryOp,
 	UT_AssignmentOp,
 	UT_InputRecord,
+	UT_OutputRecord,
 	UT_Null,
 };
 
@@ -301,6 +302,18 @@ public:
 	int             offset() const {return m_offset;}
 private:
 	int m_offset;
+};
+
+// The @> pseudo-variable: the output record built so far in this cycle.
+// Unlike AluInputRecord it does not rely on any input having been read.
+class AluOutputRecord : public AluUnit {
+public:
+	AluOutputRecord()					{}
+	~AluOutputRecord() override			{}
+	void   			_serialize(std::ostream& os) const override;
+	std::string     _identify() override;
+	AluUnitType		type() override	{return UT_OutputRecord;}
+	PValue		evaluate() override;
 };
 
 class AluOtherToken : public AluUnit {

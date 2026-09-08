@@ -273,6 +273,35 @@ to make all whitespace defined by the locale work as a word separator. This keyw
 spec unit.
 .IP "REDO" 3
 Causes the current output line to become the new input line.
+.IP "SCRATCH" 3
+Discards the output record built so far in this cycle, so that following spec units start building a fresh one. Unlike
+.B REDO
+it leaves everything about the input side alone: the current input record, the context offset and the selected input station are all untouched. This makes the output record usable as a scratch pad. Capture its content first if you need it, either into a counter with
+.B SET
+.I "\(dq#0:=@>\(dq"
+or into a field identifier with
+.B "OUTREC a:"
+(see
+.B OUTREC
+and the
+.B @>
+pseudo-variable below). A cycle whose output record has been scratched and not rebuilt writes no line at all, not even an empty one.
+.IP "OUTREC" 3
+An input part that yields the output record built so far in this cycle. It may be used wherever an input part is accepted, for example
+.I "OUTREC 1"
+to duplicate it,
+.I "OUTREC a:"
+to capture it into a field identifier without producing output, or
+.I "SUBSTR W2 OF OUTREC"
+to take it apart. Reading the output record does not modify it. In an expression, use the
+.B @>
+pseudo-variable or the
+.B outrec()
+function instead. Note that
+.B OUTREC
+takes no argument: all output streams share a single output record, and
+.B OUTSTREAM
+only selects which stream receives it when it is written.
 .IP "SPLITW" 3
 Splits the current input record by words and produces one output record for each word. 
 Any spec units before the 
@@ -878,6 +907,18 @@ still returns the original input record, while
 .B @!
 returns the context-affected record.
 Out-of-bounds offsets return the empty string. The forward and backward buffer sizes are computed automatically at parse time. This feature requires non-threaded mode and a single input stream.
+.P
+The
+.B @>
+syntax substitutes for the
+.I output
+record built so far in the current cycle, which is also available as the
+.B outrec()
+function and, outside expressions, as the
+.B OUTREC
+spec unit. It reflects only the spec units that precede it, including any pad characters they caused, and is empty before anything has been placed. Reading it does not modify it; use the
+.B SCRATCH
+spec unit to discard the output record.
 
 .SS "Built-In Functions"
 .IP "abs(x)" 3
@@ -1088,6 +1129,14 @@ returns the context-affected record, while
 .B cfrecord()
 returns the original input record. Equivalent to
 .B @@.
+.IP "outrec()" 3
+Returns the output record built so far in the current cycle, rather than anything from the input. Equivalent to
+.B @>.
+It reflects only the spec units preceding it in the cycle, and is the empty string before anything has been placed. See the
+.B OUTREC
+and
+.B SCRATCH
+spec units.
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s

@@ -140,6 +140,13 @@ PRINT @+1 1 WRITE            CONTEXT +1  PRINT @! 1 WRITE            CONTEXT +1 
 PRINT @+2 1 WRITE            CONTEXT +2  PRINT @! 1 WRITE            CONTEXT +2 1-* 1 WRITE
 ```
 
+While all of the above read from the input, the `@>` string stands for the *output* record built so far in the current cycle -- that is, whatever the spec units to the left of the expression have already placed, including any pad characters they introduced. It is the empty string before anything has been placed. Reading it has no effect on it; the `SCRATCH` spec unit discards it. Outside of expressions the same value is available as the `OUTREC` spec unit, and within expressions also as the `outrec()` function. See [Streams and Records](streams.md) for both.
+
+```
+echo hello | specs "wc -w" 1 w1 NW PRINT "length(@>)" NW
+```
+Output: `wc -w hello 11`
+
 `@python` contains either "Enabled" or "Disabled" depending on whether python function support is enabled.
 
 **Note:** The timezone used in the date conversion can also be set in the configuration file with a `timezone` entry. Similarly, the locale used can be set with a `locale` entry.

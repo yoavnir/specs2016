@@ -76,14 +76,8 @@ test/ALUUnitTest.obj: test/ALUUnitTest.cc utils/platform.h \
  utils/ErrorReporting.h utils/alu.h utils/PythonIntf.h utils/aluValue.h \
  utils/aluRegex.h utils/TimeUtils.h utils/SpecString.h \
  processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
- utils/SpecString.h utils/aluFunctions.h processing/persistent.h
-test/itemTest.obj: test/itemTest.cc utils/platform.h cli/tokens.h \
- utils/ErrorReporting.h specitems/specItems.h specitems/item.h \
- processing/conversions.h processing/StringBuilder.h utils/SpecString.h \
- processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
- utils/SpecString.h utils/TimeUtils.h utils/alu.h utils/PythonIntf.h \
- utils/aluValue.h utils/aluFunctions.h processing/ProcessingState.h \
- processing/Reader.h utils/directives.h
+ utils/SpecString.h utils/aluFunctions.h processing/StringBuilder.h \
+ processing/persistent.h
 test/readWriteTest.obj: test/readWriteTest.cc utils/ErrorReporting.h \
  processing/Reader.h utils/StringQueue.h utils/SpecString.h \
  utils/platform.h utils/TimeUtils.h utils/SpecString.h utils/directives.h \
