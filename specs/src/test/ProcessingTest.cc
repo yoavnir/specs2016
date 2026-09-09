@@ -171,14 +171,14 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	try {
 		normalizeTokenList(&vec);
 	} catch (const SpecsException& e) {
-		result = std::make_shared<std::string>(e.what(true));
+		result = mkSpecString(e.what(true));
 		goto end;
 	}
 
 	try {
 		ig.Compile(vec,index);
 	} catch (const SpecsException& e) {
-		result = std::make_shared<std::string>(e.what(true));
+		result = mkSpecString(e.what(true));
 		goto end;
 	}
 
@@ -196,7 +196,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				PSpecString pWritten = pwr1->getString();
 				PSpecString pOut = sb.GetStringUnsafe();
 				if (!pOut && bSomethingWasDone) {
-					pOut = std::make_shared<std::string>();
+					pOut = mkSpecString();
 				}
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 					while (pWritten) {
@@ -215,7 +215,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	} catch (SpecsException& e) {
 		if (result) {
 		}
-		result = std::make_shared<std::string>(e.what(true));
+		result = mkSpecString(e.what(true));
 		goto end;
 	}
 
@@ -237,7 +237,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			if (result) *result = *result + '\n' + *pOut;
 			else result = pOut;
 		} catch (SpecsException& e) {
-			result = std::make_shared<std::string>(e.what(true));
+			result = mkSpecString(e.what(true));
 			goto end;
 		}
 	}
@@ -249,7 +249,7 @@ end:
 		vec[0].deallocDynamic();
 		vec.erase(vec.begin());
 	}
-	return result ? result : std::make_shared<std::string>();
+	return result ? result : mkSpecString();
 }
 
 PSpecString runTestOnExample(std::string& s, const char* _example)

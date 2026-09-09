@@ -319,7 +319,7 @@ ApplyRet SplitItem::apply(ProcessingState& pState, StringBuilder* pSB)
 				m_pieces.push_back(piece);
 			} else {
 				// Empty field - push empty string
-				m_pieces.push_back(std::make_shared<std::string>());
+				m_pieces.push_back(mkSpecString());
 			}
 		}
 		
@@ -339,7 +339,7 @@ ApplyRet SplitItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		// Save the current StringBuilder state as the prefix (non-destructive)
 		PSpecString currentStr = pSB->PeekString();
 		if (currentStr) {
-			m_savedPrefix = std::make_shared<std::string>(*currentStr);
+			m_savedPrefix = mkSpecString(*currentStr);
 		} else {
 			m_savedPrefix = nullptr;
 		}
@@ -470,7 +470,7 @@ void SplitItem::restorePrefix(StringBuilder* pSB)
 	// Restore the StringBuilder to the saved prefix state
 	// We need to make a fresh copy to avoid the saved prefix being modified
 	if (m_savedPrefix) {
-		PSpecString freshCopy = std::make_shared<std::string>(*m_savedPrefix);
+		PSpecString freshCopy = mkSpecString(*m_savedPrefix);
 		pSB->setString(freshCopy);
 		pSB->setPosition(m_savedSBPos);
 	} else {

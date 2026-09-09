@@ -755,14 +755,14 @@ int runALUUnitTests5(unsigned int onlyTest)
 int runALUUnitTests6(unsigned int onlyTest)
 {
 	// The functions that look at the line being processed
-	g_ps.setString(std::make_shared<std::string>());
+	g_ps.setString(mkSpecString());
 	VERIFY_EXPR_RES("wordcount()", "0");
 	VERIFY_EXPR_RES("word(2)", "");
 	VERIFY_EXPR_RES("wordstart(3)", "0");
 	VERIFY_EXPR_RES("wordend(2)", "0");
 	VERIFY_EXPR_RES("wordrange(3,4)", "");
 
-	g_ps.setString(std::make_shared<std::string>("The quick brown foox jumps over the lazy dog"));
+	g_ps.setString(mkSpecString("The quick brown foox jumps over the lazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("word(2)", "quick");
 	VERIFY_EXPR_RES("wordstart(3)", "11");
@@ -784,7 +784,7 @@ int runALUUnitTests6(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wordwithidx('oo')", "4");
 	VERIFY_EXPR_RES("wordwithidx('ooo')", "0");
 
-	g_ps.setString(std::make_shared<std::string>("The\tquick brown\tfox jumps\tover the\tlazy dog"));
+	g_ps.setString(mkSpecString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("wordcount()", "9");
 	VERIFY_EXPR_RES("wordcount(,'e')", "4");
 	VERIFY_EXPR_RES("wordcount('Some sentence with a bunch    of spaces')", "7");
@@ -1466,7 +1466,7 @@ int runALUUnitTests15(unsigned int onlyTest)
 	}	
 	VERIFY_EXPR_RES("pdefined(unitTestVar)","0"); // 692
 	
-	g_ps.setString(std::make_shared<std::string>("The quick brown fox     jumps over the lazy dog"));
+	g_ps.setString(mkSpecString("The quick brown fox     jumps over the lazy dog"));
 	VERIFY_EXPR_RES("splus('ek',4)","");           // Should not find ek in the quick brown fox
 	VERIFY_EXPR_RES("splus('ck',4)","r");
 	VERIFY_EXPR_RES("splus('dog',-2)","y");
@@ -1498,7 +1498,7 @@ int runALUUnitTests15(unsigned int onlyTest)
 	VERIFY_EXPR_RES("wplus('quick',7)","dog"); 
 	VERIFY_EXPR_RES("wplus('quick',8)",""); 
 	
-	g_ps.setString(std::make_shared<std::string>("The\tquick brown\tfox jumps\tover the\tlazy dog"));
+	g_ps.setString(mkSpecString("The\tquick brown\tfox jumps\tover the\tlazy dog"));
 	VERIFY_EXPR_RES("fplus('fast',0)",""); 
 	VERIFY_EXPR_RES("fplus('quick',0)",""); 
 	VERIFY_EXPR_RES("fplus('brown',0)",""); 
