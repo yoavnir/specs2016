@@ -7,6 +7,7 @@
 #include <math.h>
 
 extern ALUCounters g_counters;
+extern outputAgent* g_pOutputAgent;
 
 std::string LiteralPart::Debug()
 {
@@ -203,6 +204,17 @@ PSpecString IDPart::getStr(ProcessingState& pState)
 {
 	auto fidPtr = pState.fieldIdentifierGet(m_fieldIdentifier[0]);
 	return std::make_shared<std::string>(*fidPtr);
+}
+
+std::string OutRecPart::Debug()
+{
+	return "OutputRecord";
+}
+
+PSpecString OutRecPart::getStr(ProcessingState& pState)
+{
+	MYASSERT_WITH_MSG(nullptr != g_pOutputAgent, "OUTREC requires an output record builder");
+	return g_pOutputAgent->outputRecord();
 }
 
 ExpressionPart::ExpressionPart(std::string& _expr)

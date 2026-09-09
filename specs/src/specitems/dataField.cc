@@ -209,6 +209,9 @@ PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index
 	case TokenListType__ID:
 		ret = std::make_shared<IDPart>(token.Literal());
 		break;
+	case TokenListType__OUTREC:
+		ret = std::make_shared<OutRecPart>();
+		break;
 	case TokenListType__PRINT:
 	{
 		try {
@@ -316,6 +319,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	case TokenListType__READSTOP:
 	case TokenListType__EOF:
 	case TokenListType__REDO:
+	case TokenListType__SCRATCH:
 		/* This is a control structure?  Assume NEXTWORD and re-use this one */
 		REUSE_CURRENT_TOKEN;
 	case TokenListType__DUMMY:

@@ -183,6 +183,69 @@ run_test(
 
 
 # =====================================================================
+# A cycle that built no output record writes no line at all.
+# These exercise the "specification does not read the input" path in
+# specs.cc, which itemGroup::process (and hence ProcessingTest) never
+# reaches. It used to ignore whether anything had been built and emitted
+# a spurious empty line.
+# =====================================================================
+
+run_test(
+    "SCRATCH in a non-reading specification writes nothing",
+    "-i @in@ -o @out@ /drop/ 1 SCRATCH",
+    expected_out="",
+    inp="alpha beta\n"
+)
+
+run_test(
+    "SCRATCH in a reading specification writes nothing",
+    "-i @in@ -o @out@ 1-* 1 SCRATCH",
+    expected_out="",
+    inp="alpha beta\n"
+)
+
+run_test(
+    "SCRATCH followed by output in a non-reading specification writes only the rebuilt record",
+    "-i @in@ -o @out@ /drop/ 1 SCRATCH /keep/ 1",
+    expected_out="keep\n",
+    inp="alpha beta\n"
+)
+
+run_test(
+    "A non-reading specification that produces no output writes nothing",
+    "-i @in@ -o @out@ SET '#1:=5'",
+    expected_out="",
+    inp="alpha beta\n"
+)
+
+run_test(
+    "A non-reading specification with only a tail label writes nothing",
+    "-i @in@ -o @out@ /drop/ a:",
+    expected_out="",
+    inp="alpha beta\n"
+)
+
+# --stats reports the line counts for this branch. They used to be hardcoded
+# to 1, which both double-counted the one record it can emit and reported a
+# line for specifications that emit none.
+run_test(
+    "Statistics count the one record a non-reading specification emits exactly once",
+    "--stats -i @in@ -o @out@ PRINT '2+2' 1",
+    expected_out="4\n",
+    expected_err="Wrote 1 lines",
+    inp="alpha beta\n"
+)
+
+run_test(
+    "Statistics report no written lines after SCRATCH in a non-reading specification",
+    "--stats -i @in@ -o @out@ /drop/ 1 SCRATCH",
+    expected_out="",
+    expected_err="Wrote 0 lines",
+    inp="alpha beta\n"
+)
+
+
+# =====================================================================
 # Done
 # =====================================================================
 cleanup()

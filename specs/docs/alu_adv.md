@@ -171,6 +171,7 @@ The regular expression *grammar* (`ECMAScript`, `basic`, `extended`, `awk`, `gre
 | `ctxoob(s)` | Returns 1 if the argument string came from out-of-bounds input, 0 otherwise. With no argument, checks the current (context-affected) record. The out-of-bounds property is not preserved by all operations -- see [Out-of-Bounds (OOB) Records](#out-of-bounds-oob-records) below. |
 | `record()` | Returns the entire input record. Equivalent to `@!`. |
 | `cfrecord()` | Returns the entire input record, disregarding rolling context. Same as `record()` when `CONTEXT` is not in effect. Equivalent to `@@`. |
+| `outrec()` | Returns the *output* record built so far in this cycle, rather than anything from the input. Equivalent to `@>`. See the `OUTREC` and `SCRATCH` spec units. |
 | `word(n)` | Returns the *n*-th word |
 | `wordrange(n,m)` | Returns the substring from the *n*-th word (default first) to the *m*-th word (default last) |
 | `wordcount(s,p)` | Returns the number of words in the string `s`, or in the current record if `s` is not specified. The separator used is `p`.  If `p` is not specified, the separator is the current word separator if processing the current record, or a **blank space** if processing `s`. |

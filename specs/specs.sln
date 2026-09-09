@@ -12,8 +12,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALUUnitTest", "src\ALUUnitT
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cacheTest", "src\cacheTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F05}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "itemTest", "src\itemTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F06}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "readWriteTest", "src\readWriteTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F07}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "timeTest", "src\timeTest.vcxproj", "{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F08}"
@@ -36,8 +34,6 @@ Global
 		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F04}.Release|x64.ActiveCfg = Release|x64
 		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F05}.Debug|x64.ActiveCfg = Debug|x64
 		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F05}.Release|x64.ActiveCfg = Release|x64
-		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F06}.Debug|x64.ActiveCfg = Debug|x64
-		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F06}.Release|x64.ActiveCfg = Release|x64
 		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F07}.Debug|x64.ActiveCfg = Debug|x64
 		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F07}.Release|x64.ActiveCfg = Release|x64
 		{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F08}.Debug|x64.ActiveCfg = Debug|x64

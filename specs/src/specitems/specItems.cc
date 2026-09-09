@@ -235,6 +235,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__WRITE:
 		case TokenListType__UNREAD:
 		case TokenListType__REDO:
+		case TokenListType__SCRATCH:
 		case TokenListType__NOWRITE:
 		case TokenListType__ABEND:
 		case TokenListType__CONTINUE:
@@ -255,6 +256,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__DTODCLOCK:
 		case TokenListType__TIMEDIFF:
 		case TokenListType__ID:
+		case TokenListType__OUTREC:
 		case TokenListType__PRINT:
 		{
 			auto pItem = std::make_shared<DataField>();
@@ -672,6 +674,12 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 			pState.setString(ps, false);
 			pState.setFirst();
 			break;
+		case ApplyRet__Scratch:
+			// Discard the output record built so far. Unlike REDO, nothing
+			// about the input state is touched.
+			sb.clear();
+			bSomethingWasDone = false;
+			break;
 		case ApplyRet__SkipToNext:
 			processingContinue = false;
 			break;
@@ -932,6 +940,8 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__UNREAD;
 	case TokenListType__REDO:
 		return ApplyRet__ReDo;
+	case TokenListType__SCRATCH:
+		return ApplyRet__Scratch;
 	case TokenListType__CONTINUE:
 		return ApplyRet__SkipToNext;
 	default:

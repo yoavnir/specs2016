@@ -266,7 +266,7 @@ int main (int argc, char** argv)
 	PSimpleWriter pWrtrs[MAX_INPUT_STREAMS+1]; // zero will be stderr
 
 	setStateQueryAgent(&ps);
-	setPositionGetter(&sb);
+	setOutputAgent(&sb);
 
 	// memset(pWrtrs, 0, sizeof(void*) * (1 + MAX_INPUT_STREAMS));
 
@@ -443,17 +443,22 @@ int main (int argc, char** argv)
 			pRd->endCollectingTimeData();
 		}
 	} else {
+		bool bSomethingWasDone = false;
 		try {
 			unsigned int readerCount = 0;
 			ig.setRegularRunAtEOF();
-			ig.processDo(sb, ps, nullptr, timer, readerCount);
+			bSomethingWasDone = ig.processDo(sb, ps, nullptr, timer, readerCount);
 		} catch (const SpecsException& e) {
 			std::cerr << "Runtime error. ";
 			std::cerr << e.what(conciseExceptions) << "\n";
 			dumpErrorsAndExit(-4);
 		}
 		PSpecString pstr = sb.GetString();
-		if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
+		// As in itemGroup::process, a cycle that built no output record writes
+		// no line at all. Without this, SCRATCH (and any specification that
+		// produces no output) would emit a spurious empty line here, because
+		// GetString() manufactures an empty string when nothing was built.
+		if (bSomethingWasDone && ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 			auto pSW = std::dynamic_pointer_cast<SimpleWriter>(ps.getCurrentWriter());
 			pSW->Write(pstr,timer);
 		} else {
@@ -461,8 +466,11 @@ int main (int argc, char** argv)
 		}
 		readLines = 0;
 		usedLines = 0;
-		generatedLines = 1;
-		writtenLines = 1;
+		// Seeded to zero, as in the input-reading branch above: the writers'
+		// own counters are added in below and are the authority. Hardcoding 1
+		// here used to double-count the single record this branch can produce.
+		generatedLines = 0;
+		writtenLines = 0;
 	}
 
 	clockValue timeAtEnd = specTimeGetTOD();
