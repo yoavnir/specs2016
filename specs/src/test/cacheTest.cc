@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "utils/lruCache.h"
+#include "utils/SpecString.h"
 
 typedef std::shared_ptr<std::string> PString;
 
