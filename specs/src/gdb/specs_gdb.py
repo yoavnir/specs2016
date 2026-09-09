@@ -38,10 +38,11 @@ APPLY_RET = {
     7: "EOF",
     8: "UNREAD",
     9: "ReDo",
-    10: "Break",
-    11: "SkipToNext",
-    12: "SplitStart",
-    13: "SplitContinue",
+    10: "Scratch",
+    11: "Break",
+    12: "SkipToNext",
+    13: "SplitStart",
+    14: "SplitContinue",
 }
 
 ALU_COUNTER_TYPE = {
@@ -72,7 +73,8 @@ ALU_UNIT_TYPE = {
     10: "BinaryOp",
     11: "AssignmentOp",
     12: "InputRecord",
-    13: "Null",
+    13: "OutputRecord",
+    14: "Null",
 }
 
 ALU_UNARY_OP = {
@@ -235,7 +237,10 @@ TOKEN_TYPES = {
     60: "SKIPWHILE",
     61: "SPLITW",
     62: "SPLITF",
-    63: "DUMMY",
+    63: "CONTEXT",
+    64: "OUTREC",
+    65: "SCRATCH",
+    66: "DUMMY",
 }
 
 STRING_CONVERSIONS = {

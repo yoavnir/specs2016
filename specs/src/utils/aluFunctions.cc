@@ -27,16 +27,16 @@
 #define PERCENTS (ALUFloat(100.0))
 
 stateQueryAgent* g_pStateQueryAgent = nullptr;
-positionGetter* g_PositionGetter = nullptr;
+outputAgent* g_pOutputAgent = nullptr;
 
 void setStateQueryAgent(stateQueryAgent* qa)
 {
 	g_pStateQueryAgent = qa;
 }
 
-void setPositionGetter(positionGetter* pGetter)
+void setOutputAgent(outputAgent* pAgent)
 {
-	g_PositionGetter = pGetter;
+	g_pOutputAgent = pAgent;
 }
 
 static bool g_localeSpecified = false;
@@ -527,6 +527,15 @@ static PValue AluFunc_range(ALUInt start, ALUInt end)
 PValue AluFunc_record()
 {
 	return AluFunc_range(1,-1);
+}
+
+PValue AluFunc_outrec()
+{
+	if (!g_pOutputAgent) {
+		return mkValue("");
+	}
+	PSpecString ps = g_pOutputAgent->outputRecord();
+	return mkValue2(ps->data(), int(ps->length()));
 }
 
 PValue AluFunc_cfrecord()
@@ -2891,8 +2900,8 @@ PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit, PValue pLocal
 
 PValue AluFunc_next()
 {
-	if (!g_PositionGetter) return mkValue(ALUInt(1));
-	return mkValue(ALUInt(g_PositionGetter->pos()));
+	if (!g_pOutputAgent) return mkValue(ALUInt(1));
+	return mkValue(ALUInt(g_pOutputAgent->pos()));
 }
 
 PValue AluFunc_exact(PValue pval)
@@ -2905,7 +2914,7 @@ PValue AluFunc_rest()
 	static std::string sName("cols");
 	static std::string sCols = configSpecLiteralGet(sName);
 	static ALUInt cols = std::stoul(sCols);
-	return mkValue(ALUInt(cols - g_PositionGetter->pos() + 1));
+	return mkValue(ALUInt(cols - g_pOutputAgent->pos() + 1));
 }
 
 frequencyMap g_OccuranceMap;

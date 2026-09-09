@@ -209,6 +209,9 @@ PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index
 	case TokenListType__ID:
 		ret = std::make_shared<IDPart>(token.Literal());
 		break;
+	case TokenListType__OUTREC:
+		ret = std::make_shared<OutRecPart>();
+		break;
 	case TokenListType__PRINT:
 	{
 		try {
@@ -316,6 +319,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	case TokenListType__READSTOP:
 	case TokenListType__EOF:
 	case TokenListType__REDO:
+	case TokenListType__SCRATCH:
 		/* This is a control structure?  Assume NEXTWORD and re-use this one */
 		REUSE_CURRENT_TOKEN;
 	case TokenListType__DUMMY:
@@ -427,7 +431,7 @@ void DataField::stripString(PSpecString &pOrig)
 	}
 
 	if (!len) {
-		pOrig = std::make_shared<std::string>();
+		pOrig = mkSpecString();
 		return;
 	}
 
@@ -437,7 +441,7 @@ void DataField::stripString(PSpecString &pOrig)
 		len--;
 	}
 
-	pOrig = std::make_shared<std::string>(s, len);
+	pOrig = mkSpecString(s, len);
 }
 
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
@@ -447,7 +451,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	PSpecString pInput = m_InputPart->getStr(pState);
 	size_t outputWidth = m_maxLength;
 
-	if (!pInput) pInput = std::make_shared<std::string>();
+	if (!pInput) pInput = mkSpecString();
 
 	if (m_label) {
 		try {
@@ -464,7 +468,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	if (m_conversion) {
 		std::string currentString(pInput->data(), pInput->length());
 		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
-		pInput = std::make_shared<std::string>(convertedString);
+		pInput = mkSpecString(convertedString);
 	}
 
 	// truncate or expand if necessary

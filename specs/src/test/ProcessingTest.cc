@@ -162,7 +162,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 
 	PSpecString result = nullptr;
 	StringBuilder sb;
-	setPositionGetter(&sb);
+	setOutputAgent(&sb);
 
 	unsigned int index = 0;
 
@@ -171,14 +171,14 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	try {
 		normalizeTokenList(&vec);
 	} catch (const SpecsException& e) {
-		result = std::make_shared<std::string>(e.what(true));
+		result = mkSpecString(e.what(true));
 		goto end;
 	}
 
 	try {
 		ig.Compile(vec,index);
 	} catch (const SpecsException& e) {
-		result = std::make_shared<std::string>(e.what(true));
+		result = mkSpecString(e.what(true));
 		goto end;
 	}
 
@@ -196,7 +196,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 				PSpecString pWritten = pwr1->getString();
 				PSpecString pOut = sb.GetStringUnsafe();
 				if (!pOut && bSomethingWasDone) {
-					pOut = std::make_shared<std::string>();
+					pOut = mkSpecString();
 				}
 				if (ps.shouldWrite() && !ps.printSuppressed(g_printonly_rule)) {
 					while (pWritten) {
@@ -215,7 +215,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 	} catch (SpecsException& e) {
 		if (result) {
 		}
-		result = std::make_shared<std::string>(e.what(true));
+		result = mkSpecString(e.what(true));
 		goto end;
 	}
 
@@ -237,7 +237,7 @@ PSpecString runTestOnExample(const char* _specList, const char* _example)
 			if (result) *result = *result + '\n' + *pOut;
 			else result = pOut;
 		} catch (SpecsException& e) {
-			result = std::make_shared<std::string>(e.what(true));
+			result = mkSpecString(e.what(true));
 			goto end;
 		}
 	}
@@ -249,7 +249,7 @@ end:
 		vec[0].deallocDynamic();
 		vec.erase(vec.begin());
 	}
-	return result ? result : std::make_shared<std::string>();
+	return result ? result : mkSpecString();
 }
 
 PSpecString runTestOnExample(std::string& s, const char* _example)
@@ -1211,6 +1211,93 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "abcde", "abcde");  // TEST #280
 	spec = "w1 UCASE a: ID a 1";
 	VERIFY2(spec, "abcde", "ABCDE");  // TEST #281
+
+	// ---- The output record under construction: @> / outrec() / OUTREC / SCRATCH ----
+
+	// @> and outrec() read the output record built so far
+	spec = "'abc' 1 PRINT '@>' NW";
+	VERIFY2(spec, "x", "abc abc");  // TEST #282
+	spec = "'abc' 1 PRINT 'outrec()' NW";
+	VERIFY2(spec, "x", "abc abc");  // TEST #283
+	spec = "'hello' 1 PRINT 'length(@>)' NW";
+	VERIFY2(spec, "x", "hello 5");  // TEST #284
+
+	// Before anything has been placed, the output record is empty
+	spec = "PRINT 'length(@>)' 1";
+	VERIFY2(spec, "x", "0");  // TEST #285
+	spec = "PRINT '\"[\"||@>||\"]\"' 1";
+	VERIFY2(spec, "x", "[]");  // TEST #286
+
+	// @> sees only what precedes it, and reflects pad characters
+	spec = "'ab' 1 'cd' 6 PRINT 'length(@>)' NW";
+	VERIFY2(spec, "x", "ab   cd 7");  // TEST #287
+
+	// The OUTREC spec unit, and self-reference safety: OUTREC is inserted
+	// back into the very buffer it was read from
+	spec = "'abc' 1 OUTREC 5";
+	VERIFY2(spec, "x", "abc abc");  // TEST #288
+	spec = "'abc' 1 OUTREC 2";
+	VERIFY2(spec, "x", "aabc");  // TEST #289
+
+	// OUTREC as the big part of a SUBSTR
+	spec = "'one two three' 1 SUBSTR W2 OF OUTREC NW";
+	VERIFY2(spec, "x", "one two three two");  // TEST #290
+
+	// OUTREC with a tail label produces no output of its own
+	spec = "w1 1 w2 NW OUTREC a: ID a NW";
+	VERIFY2(spec, "alpha beta", "alpha beta alpha beta");  // TEST #291
+
+	// SCRATCH discards the output record built so far
+	spec = "'discard me' 1 SCRATCH 'kept' 1";
+	VERIFY2(spec, "x", "kept");  // TEST #292
+
+	// SCRATCH resets the NEXTWORD/NEXT position back to the start
+	spec = "'aaaa' 1 SCRATCH 'b' NW 'c' NW";
+	VERIFY2(spec, "x", "b c");  // TEST #293
+
+	// The defining property: SCRATCH leaves the input record alone, so w1
+	// still works afterwards. The REDO case below is the contrast.
+	spec = "w1 1 SCRATCH w1 1 w2 NW";
+	VERIFY2(spec, "alpha beta", "alpha beta");  // TEST #294
+	spec = "w1 1 REDO w1 1 w2 NW";
+	VERIFY2(spec, "alpha beta", "alpha");  // TEST #295
+
+	// ... and @@ / record() are equally undisturbed
+	spec = "w1 1 SCRATCH PRINT '@@' 1";
+	VERIFY2(spec, "alpha beta", "alpha beta");  // TEST #296
+
+	// SCRATCH with nothing built is harmless; there is no compile-time guard
+	spec = "SCRATCH 'only' 1";
+	VERIFY2(spec, "x", "only");  // TEST #297
+
+	// SCRATCH as the last unit: the record is discarded entirely, so no
+	// line is written at all (not even an empty one)
+	spec = "w1 1 SCRATCH";
+	VERIFY2(spec, "alpha beta", "");  // TEST #298
+
+	// SCRATCH inside a conditional. The scratched cycle yields no line at
+	// all, so the surviving record is the entire output.
+	spec = "1-* 1 IF 'word(1)==\"drop\"' THEN SCRATCH ENDIF";
+	VERIFY2(spec, "keep this\ndrop this", "keep this");  // TEST #299
+
+	// SCRATCH after a WRITE only affects the record being built
+	spec = "w1 1 WRITE w2 1 SCRATCH w1 1";
+	VERIFY2(spec, "alpha beta", "alpha\nalpha");  // TEST #300
+
+	// SCRATCH does not disturb the CONTEXT offset
+	spec = "CONTEXT +1 'x' 1 SCRATCH PRINT 'ctxoffset()' 1 1-* NW";
+	VERIFY2(spec, "alpha\nbeta", "1 beta\n1");  // TEST #301
+
+	// The capture idioms: into a counter, and into a field identifier
+	spec = "'wc -w' 1 w1 NW SET '#0:=@>' SCRATCH PRINT '#0' 1";
+	VERIFY2(spec, "afile", "wc -w afile");  // TEST #302
+	spec = "'wc -w' 1 w1 NW OUTREC a: SCRATCH ID a 1";
+	VERIFY2(spec, "afile", "wc -w afile");  // TEST #303
+
+	// End-to-end: build a command, stash it, scratch the scratch work, run it,
+	// and still have the original input record available afterwards.
+	spec = "'echo' 1 w1 NW SET '#0:=@>' SCRATCH PRINT 'exec(#0)' 1 w2 NW";
+	VERIFY2(spec, "hello world", "hello world");  // TEST #304
 
 	if (errorCount) {
 		if (onlyTest == 0) {

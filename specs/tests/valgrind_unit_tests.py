@@ -1,8 +1,8 @@
 import sys, os, memcheck, argparse, platform, re
 
-count_ALU_tests = 852
-count_processing_tests = 281
-count_token_tests = 17
+count_ALU_tests = 854
+count_processing_tests = 304
+count_token_tests = 20
 
 # Parse the one command line options
 parser = argparse.ArgumentParser()
