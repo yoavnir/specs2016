@@ -82,6 +82,7 @@ Contributors
 - Jean-Baptiste Jouband ([Gawesomer](https://github.com/Gawesomer))
 - donglrd ([donglrd](https://github.com/donglrd))
 - Miriam-R-coder ([Miriam-R-coder](https://github.com/Miriam))
+- Aaqibhafeezkhan ([Aaqibhafeezkhan](https://github.com/Aaqibhafeezkhan))
 
 Documentation
 =============

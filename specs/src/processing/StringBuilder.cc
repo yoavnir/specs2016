@@ -105,7 +105,7 @@ PSpecString StringBuilder::GetStringUnsafe()
 
 PSpecString StringBuilder::GetString()
 {
-	if (!mp_str) return std::make_shared<std::string>();
+	if (!mp_str) return mkSpecString();
 	PSpecString pRet = mp_str;
 	mp_str = nullptr;
 	m_pos = 1;
@@ -116,7 +116,7 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 {
 	MYASSERT(offset>0);
 	if (!mp_str) {
-		mp_str = std::make_shared<std::string>();
+		mp_str = mkSpecString();
 	}
 	offset--;  // translate it to C-style offsets
 
@@ -149,7 +149,7 @@ void StringBuilder::insertNext(PSpecString s)
 
 void StringBuilder::insertNextWord(PSpecString s)
 {
-	static PSpecString pSpace = std::make_shared<std::string>(" ");
+	static PSpecString pSpace = mkSpecString(" ");
 	if (s->length()==0) return;
 	if (Length() > 0)
 		insert(pSpace,m_pos,true);
@@ -158,7 +158,7 @@ void StringBuilder::insertNextWord(PSpecString s)
 
 void StringBuilder::insertNextField(PSpecString s)
 {
-	static PSpecString pTab = std::make_shared<std::string>("\t");
+	static PSpecString pTab = mkSpecString("\t");
 	insert(pTab,m_pos,true);
 	insert(s, m_pos, true);
 }
