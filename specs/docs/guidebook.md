@@ -51,6 +51,7 @@ include-before: |
   \item Read Chapters 6--13 to master every feature of the tool.
   \item Read Chapter 14 when you need to \textbf{extend} specs with \textbf{Python} functions that you write by yourself.
   \item Use Chapter 15 for some examples, and Appendices A--B as a desk reference.
+  \item See Appendix D for non-backward-compatible changes between versions.
   \end{itemize}
   It is best to first install \textbf{specs} on a \textbf{Mac} or \textbf{Linux} machine, although \textbf{specs} works just fine on \textbf{Microsoft Windows} as well. Every example in this book can be run, and it is \textit{recommended} to try things as you learn. The examples assume a POSIX shell (bash for Linux or zsh for Mac OS), although many work in the Microsoft Windows command line environments, both \textbf{cmd.exe} and \textbf{PowerShell}. Where shell-quoting matters it is called out explicitly.
   \clearpage
@@ -4826,4 +4827,54 @@ as described above under "Verifying the installation."
 
 ---
 
-*This guidebook covers specs version XXVERSION. The specs project is hosted at [https://github.com/yoavnir/specs2016](https://github.com/yoavnir/specs2016).*
+# Appendix D: Behavior Changes {#appendixd}
+
+This guidebook covers version XXVERSION. `specs` is backward-compatible **for
+the most part**, meaning that *specification* will work the same way after an
+upgrade. 
+
+This appendix lists the exception to this rule: non-backward-compatible 
+changes to the handling of *specifications* — cases where an unchanged 
+*specification* produces different output under a newer version of **specs**. 
+New features are not listed here.
+
+Sections are newest-first. When skipping versions, read every section between
+the old and the new one.
+
+## Changes from Version 1.0.0 to 1.1.0
+
+### No output record, no output line
+
+A *specification* that neither reads the input nor builds an output record
+wrote one empty line. It now writes nothing.
+
+Both conditions are required: no input is read (no character, word or field
+range, no `READ`, no `EOF`) *and* no output record is produced.
+
+| Specification | 1.0.0 | 1.1.0 |
+|---------------|-------|-------|
+| `specs SET "#1:=5"` | one empty line | no output |
+| `specs /text/ a:` | one empty line | no output |
+| `specs PRINT "2+2" 1` | `4` | `4` |
+| `specs /text/ 1` | `text` | `text` |
+
+*Specifications* that read the input were never affected: a cycle has always
+written a record only when it built one. The rule was not applied when no input
+was read, and an untouched output record yields an empty string rather than
+nothing at all. It is now applied in both cases.
+
+### `--stats` line counts
+
+The written-line count reported by `--stats` was one too high for a
+*specification* that does not read the input, which counted its single output
+record twice. Output itself was unaffected, as were *specifications* that read
+the input.
+
+| Specification | 1.0.0 | 1.1.0 |
+|---------------|-------|-------|
+| `specs --stats PRINT "2+2" 1` | `Wrote 2 lines.` | `Wrote 1 lines.` |
+| `specs --stats SET "#1:=5"` | `Wrote 1 lines.` | `Wrote 0 lines.` |
+
+---
+
+*The specs project is hosted at [https://github.com/yoavnir/specs2016](https://github.com/yoavnir/specs2016).*
