@@ -8,6 +8,7 @@
 #include "utils/aluRegex.h"
 #include "utils/TimeUtils.h"
 #include "processing/ProcessingState.h"
+#include "processing/StringBuilder.h"
 #include "processing/persistent.h"
 
 ALUCounters counters;
@@ -1698,6 +1699,28 @@ int runALUUnitTests16(unsigned int onlyTest)
 	VERIFY_EXPR_RES("exc1('echo hello',-3)", "exc1: Argument must be a positive integer, but got -3: #2 (lineNo)");
 	VERIFY_EXPR_RES("exec('echo hello')||'/'||excrc()", "hello/0");
 	VERIFY_EXPR_RES("exc1('echo hello')||'/'||excerr()", "hello/");
+
+	// The output record: the @> pseudo-variable and the outrec() function.
+	// No output agent has been registered up to this point, so both must
+	// degrade to an empty string rather than dereferencing a null pointer.
+	printHeader(onlyTest, "\nThe output record\n=================\n\n");
+	VERIFY_EXPR_RES("@>", "");
+	VERIFY_EXPR_RES("outrec()", "");
+	VERIFY_EXPR_RES("length(@>)", "0");
+
+	// With an output record under construction, both forms return its content.
+	// sb must outlive the checks below -- the agent holds a bare pointer.
+	StringBuilder sb;
+	sb.setPadChar(' ');
+	sb.insert(std::make_shared<std::string>("hello world"), 1);
+	setOutputAgent(&sb);
+	VERIFY_EXPR_RES("@>", "hello world");
+	VERIFY_EXPR_RES("outrec()", "hello world");
+	VERIFY_EXPR_RES("length(@>)", "11");
+	VERIFY_EXPR_RES("wordcount(@>)", "2");
+	VERIFY_EXPR_RES("@>==outrec()", "1");
+	VERIFY_EXPR_RES("'['||@>||']'", "[hello world]");
+	setOutputAgent(nullptr);
 
 	if (countFailures) {
 		if (onlyTest == 0) {

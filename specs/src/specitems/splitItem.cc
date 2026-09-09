@@ -138,6 +138,7 @@ void SplitItem::parseOutputPlacement(std::vector<Token> &tokenVec, unsigned int&
 	case TokenListType__READSTOP:
 	case TokenListType__EOF:
 	case TokenListType__REDO:
+	case TokenListType__SCRATCH:
 	case TokenListType__FIELDSEPARATOR:
 	case TokenListType__WORDSEPARATOR:
 	case TokenListType__OUTSTREAM:

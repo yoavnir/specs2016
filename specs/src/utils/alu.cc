@@ -20,6 +20,7 @@
 #include "specitems/specItems.h"  // for MAX_CONTEXT_SIZE
 
 extern stateQueryAgent* g_pStateQueryAgent;
+extern outputAgent* g_pOutputAgent;
 extern unsigned int g_forwardContext;
 extern unsigned int g_backwardContext;
 
@@ -923,6 +924,25 @@ PValue AluInputRecord::evaluate()
 	return ret;
 }
 
+void AluOutputRecord::_serialize(std::ostream& os) const
+{
+	os << "@>";
+}
+
+std::string AluOutputRecord::_identify()
+{
+	return "@>";
+}
+
+PValue AluOutputRecord::evaluate()
+{
+	if (!g_pOutputAgent) {
+		return mkValue("");
+	}
+	PSpecString ps = g_pOutputAgent->outputRecord();
+	return mkValue2(ps->data(), int(ps->length()));
+}
+
 void AluOtherToken::_serialize(std::ostream& os) const
 {
 	switch(m_type) {
@@ -1353,6 +1373,16 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 			continue;
 		}
 
+		// A special string @> representing the output record built so far
+		if (*c=='@' && c[1]=='>')  {
+			c+=2;
+			pUnit = std::make_shared<AluOutputRecord>();
+			vec.push_back(pUnit);
+			prevUnitType = pUnit->type();
+			mayBeStart = false;
+			continue;
+		}
+
 		// hash-sign followed by a number is either a counter or a persistent variable
 		if (*c=='#') {
 			c++;
@@ -1770,6 +1800,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		case UT_Counter:
 		case UT_FieldIdentifier:
 		case UT_InputRecord:
+		case UT_OutputRecord:
 			dest.push_back(pUnit);
 			availableOperands++;
 			bExpectNullArgument = false;
@@ -1898,6 +1929,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 		case UT_LiteralNumber:
 		case UT_FieldIdentifier:
 		case UT_InputRecord:
+		case UT_OutputRecord:
 		case UT_Null:
 			computeStack.push(pUnit->evaluate());
 			break;

@@ -369,6 +369,8 @@ void parseSingleToken(std::vector<Token> *pVec, std::string arg, int argidx)
 	SIMPLETOKEN(splitw, SPLITW);
 	SIMPLETOKEN(splitf, SPLITF);
 	SIMPLETOKEN(context, CONTEXT);
+	SIMPLETOKEN(outrec, OUTREC);
+	SIMPLETOKEN(scratch, SCRATCH);
 
 	/* question mark to replace PRINT */
 	if (arg[0]=='?') {

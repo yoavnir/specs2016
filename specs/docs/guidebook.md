@@ -51,6 +51,7 @@ include-before: |
   \item Read Chapters 6--13 to master every feature of the tool.
   \item Read Chapter 14 when you need to \textbf{extend} specs with \textbf{Python} functions that you write by yourself.
   \item Use Chapter 15 for some examples, and Appendices A--B as a desk reference.
+  \item See Appendix D for non-backward-compatible changes between versions.
   \end{itemize}
   It is best to first install \textbf{specs} on a \textbf{Mac} or \textbf{Linux} machine, although \textbf{specs} works just fine on \textbf{Microsoft Windows} as well. Every example in this book can be run, and it is \textit{recommended} to try things as you learn. The examples assume a POSIX shell (bash for Linux or zsh for Mac OS), although many work in the Microsoft Windows command line environments, both \textbf{cmd.exe} and \textbf{PowerShell}. Where shell-quoting matters it is called out explicitly.
   \clearpage
@@ -785,6 +786,7 @@ These exist automatically without any `~/.specs` entry:
 | `@@` | The entire current input record (in expressions) |
 | `@!` | The current in-context input record (see `CONTEXT` in [Chapter 13](#chap13)) |
 | `@+n` / `@-n` | Record at offset +n / -n from current (see [Chapter 13](#chap13)) |
+| `@>` | The output record built so far in this cycle (see [Chapter 13](#chap13)) |
 
 ## Ensuring a Literal is Defined — REQUIRES
 
@@ -1774,6 +1776,23 @@ Output: `11`
 
 **Note:** `CONTEXT` is described in [Chapter 13](#chap13)
 
+### The Output Record — `@>`
+
+Everything above reads from the *input*. `@>` reads the **output** record you are
+building in the current cycle — everything placed by the spec units to its left:
+
+```specs
++IN echo "world"
+   hello               1 
+   WORD 1              NEXTWORD 
+   PRINT "length(@>)"  NEXTWORD
+```
+Output: `hello world 11`
+
+It is also available as the `outrec()` function, and outside expressions as the
+`OUTREC` spec unit. See [Chapter 13](#chap13) for both, and for `SCRATCH`, which
+discards the output record.
+
 ### Record Offsets — `@+n` and `@-n`
 
 In expressions, `@+n` refers to the record n positions ahead and `@-n` to n positions behind.
@@ -2144,6 +2163,7 @@ Several special values are available in expressions:
 - `@@` — the entire current input record
 - `@!` — the current in-context input record
 - `@+n` / `@-n` — records at offset positions (e.g., `@+1` is the next record)
+- `@>` — the output record built so far in this cycle
 - `#n` — counters (e.g., `#0` is counter 0)
 
 ```
@@ -3219,6 +3239,120 @@ grep "^Name:" file.txt | specs fs : f2-* 1 | specs w1 1
 ```
 
 Both produce the same result, but `REDO` keeps it in one invocation.
+
+## The Output Record as a Scratch Pad — OUTREC, `@>` and SCRATCH
+
+`REDO` is destructive: it *replaces* the input record, so after a `REDO` the
+original input is gone and `w1`, `1-*`, `@@` and `record()` all see the text you
+just built. When you want to look at what you have built *without* giving up the
+input record, use the output record directly.
+
+There are three ways to read it, all non-destructive:
+
+| Form | Where | Example |
+|------|-------|---------|
+| `OUTREC` | a spec unit (an input part) | `SUBSTR W2 OF OUTREC`, `OUTREC a:`, `OUTREC 1` |
+| `@>` | in an expression | `PRINT "length(@>)"` |
+| `outrec()` | in an expression | `SET "#0:=outrec()"` |
+
+All three see only what the spec units to their left have placed, including any
+pad characters, and yield the empty string before anything has been placed.
+
+`SCRATCH` is the matching write operation: it **discards** the output record
+built so far, so the units after it start a fresh one.
+
+```specs
++IN echo "one two three"
+   1-*                  1 
+   SUBSTR W2 OF OUTREC  NEXTWORD
+```
+Output: `one two three two`
+
+### SCRATCH vs. REDO
+
+| | `REDO` | `SCRATCH` |
+|---|---|---|
+| Output record | becomes the new input record | discarded |
+| Input record | **replaced** | untouched |
+| `CONTEXT` offset | reset to 0 | untouched |
+| Input station | forced back to FIRST | untouched |
+| Compile-time requirement | output-producing units before *and* after | none |
+
+The contrast in one line each:
+
+```specs
++IN echo "alpha   beta"
+   w1       1 
+   SCRATCH 
+   w1       1 
+   w2       nw
+```
+Output: `alpha beta` — the input record survived, so `w1` and `w2` still work.
+
+```specs
++IN echo "alpha   beta"
+   w1       1 
+   REDO 
+   w1       1 
+   w2       nw
+```
+Output: `alpha` — the input record is now `alpha`, so there is no second word.
+
+### Capturing before you scratch
+
+`SCRATCH` does not save the record anywhere; capture it first if you need it.
+Either into a counter of your choosing:
+
+```specs
+   'wc -w'       1  
+   w1            NW 
+   SET "#0:=@>" 
+   SCRATCH 
+   PRINT "exec(#0)" 1
+```
+
+or into a field identifier, using `OUTREC` with a tail label (which produces no
+output of its own):
+
+```specs 
+   'wc -w'      1 
+   w1           NW 
+   OUTREC a: 
+   SCRATCH 
+   PRINT "exec(a)" 1
+```
+
+Putting it together — build a shell command from each input line, run it, and
+still have the original line available afterwards:
+
+```specs
+specs -C "find . -type f"   \
+   "wc -w" 1                \
+   w1      NW               \
+   SET "#0:=@>"             \  
+   SCRATCH                  \
+   PRINT "exec(#0)" a:      \
+   SUBSTR W1 OF ID a b:     \
+ EOF                        \
+   PRINT "sum(b)"
+```
+
+`-C` runs `find` and feeds its output in as the input records. For each file
+name, the spec builds `wc -w <name>`, stashes it in `#0`, scratches that working
+text out of the output record, runs the command, keeps its first word (the
+count) in `b`, and finally prints the total. Because `SCRATCH` left the input
+record alone, `w1` would still give the file name at any point afterwards.
+
+**Notes:**
+
+- A cycle whose output record is scratched and not rebuilt writes **no line at
+  all** — not even an empty one.
+- `SCRATCH` also resets the `NEXTWORD` / `NEXTFIELD` / `NEXT` position back to
+  the start of the record.
+- `OUTREC` takes no argument. All output streams share a single output record;
+  `OUTSTREAM` only chooses which stream receives it when it is written.
+- Reading the output record and writing it back in the same unit is safe:
+  `specs 'abc' 1 OUTREC 5` gives `abc abc`.
 
 ## SPLITW and SPLITF — Splitting Records
 
@@ -4356,6 +4490,7 @@ These are keys that, when set in `~/.specs` (or via `-s`), change **specs** beha
 | `SUBSTR ... OF ...` | | Substring of another source |
 | `PRINT "expr"` / `? "expr"` | | ALU expression result |
 | `ID fid` | `ID a` | Value of field identifier |
+| `OUTREC` | `OUTREC 1` | Output record built so far in this cycle |
 | `/text/` | `/hello/` | String literal |
 | `xHH...` | `x4142` | Hex literal: binary string from hex pairs |
 | `RECNO` / `NUMBER` | | Record counter (10 digits) |
@@ -4406,6 +4541,7 @@ The table below holds conversions used within **Data Fields**. Where you see `fm
 | `READSTOP` | Read next input record (stop if at end) |
 | `UNREAD` | Push current record back for next cycle |
 | `REDO` | Make current output the new input |
+| `SCRATCH` | Discard the output record built so far (input untouched) |
 | `SPLITW` | Split by words into separate output records |
 | `SPLITF` | Split by fields into separate output records |
 | `SELECT n` | Switch to input stream n |
@@ -4691,4 +4827,54 @@ as described above under "Verifying the installation."
 
 ---
 
-*This guidebook covers specs version XXVERSION. The specs project is hosted at [https://github.com/yoavnir/specs2016](https://github.com/yoavnir/specs2016).*
+# Appendix D: Behavior Changes {#appendixd}
+
+This guidebook covers version XXVERSION. `specs` is backward-compatible **for
+the most part**, meaning that *specification* will work the same way after an
+upgrade. 
+
+This appendix lists the exception to this rule: non-backward-compatible 
+changes to the handling of *specifications* — cases where an unchanged 
+*specification* produces different output under a newer version of **specs**. 
+New features are not listed here.
+
+Sections are newest-first. When skipping versions, read every section between
+the old and the new one.
+
+## Changes from Version 1.0.0 to 1.1.0
+
+### No output record, no output line
+
+A *specification* that neither reads the input nor builds an output record
+wrote one empty line. It now writes nothing.
+
+Both conditions are required: no input is read (no character, word or field
+range, no `READ`, no `EOF`) *and* no output record is produced.
+
+| Specification | 1.0.0 | 1.1.0 |
+|---------------|-------|-------|
+| `specs SET "#1:=5"` | one empty line | no output |
+| `specs /text/ a:` | one empty line | no output |
+| `specs PRINT "2+2" 1` | `4` | `4` |
+| `specs /text/ 1` | `text` | `text` |
+
+*Specifications* that read the input were never affected: a cycle has always
+written a record only when it built one. The rule was not applied when no input
+was read, and an untouched output record yields an empty string rather than
+nothing at all. It is now applied in both cases.
+
+### `--stats` line counts
+
+The written-line count reported by `--stats` was one too high for a
+*specification* that does not read the input, which counted its single output
+record twice. Output itself was unaffected, as were *specifications* that read
+the input.
+
+| Specification | 1.0.0 | 1.1.0 |
+|---------------|-------|-------|
+| `specs --stats PRINT "2+2" 1` | `Wrote 2 lines.` | `Wrote 1 lines.` |
+| `specs --stats SET "#1:=5"` | `Wrote 1 lines.` | `Wrote 0 lines.` |
+
+---
+
+*The specs project is hosted at [https://github.com/yoavnir/specs2016](https://github.com/yoavnir/specs2016).*
