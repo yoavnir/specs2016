@@ -17,7 +17,7 @@ std::string LiteralPart::Debug()
 PSpecString LiteralPart::getStr(ProcessingState& pState)
 {
 	if (!g_bSupportUTF8) {
-		return std::make_shared<std::string>(m_Str);
+		return mkSpecString(m_Str);
 	} else {
 		MYTHROW("UTF-8 is not supported yet");
 		return nullptr;
@@ -40,7 +40,7 @@ std::string RegularRangePart::Debug()
 
 PSpecString RegularRangePart::getStr(ProcessingState& pState)
 {
-	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
+	if (pState.recordNotAvailable()) return mkSpecString();
 	return pState.getFromTo(_from, _to);
 }
 
@@ -55,7 +55,7 @@ std::string WordRangePart::Debug()
 
 PSpecString WordRangePart::getStr(ProcessingState& pState)
 {
-	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
+	if (pState.recordNotAvailable()) return mkSpecString();
 	// If current record is OOB, preserve OOB status
 	if (Reader::isOOBRecord(pState.currRecord())) return pState.currRecord();
 	std::string keepSeparator(DEFAULT_WORDSEPARATOR);
@@ -67,7 +67,7 @@ PSpecString WordRangePart::getStr(ProcessingState& pState)
 	PSpecString ret;
 	int wordCount = int(pState.getWordCount());
 	if (_from > wordCount) {
-		ret = std::make_shared<std::string>();
+		ret = mkSpecString();
 	} else {
 		ret = pState.getFromTo(pState.getWordStart(_from), pState.getWordEnd(_to));
 	}
@@ -90,7 +90,7 @@ std::string FieldRangePart::Debug()
 
 PSpecString FieldRangePart::getStr(ProcessingState& pState)
 {
-	if (pState.recordNotAvailable()) return std::make_shared<std::string>();
+	if (pState.recordNotAvailable()) return mkSpecString();
 	// If current record is OOB, preserve OOB status
 	if (Reader::isOOBRecord(pState.currRecord())) return pState.currRecord();
 	std::string keepSeparator(DEFAULT_FIELDSEPARATOR);
@@ -102,7 +102,7 @@ PSpecString FieldRangePart::getStr(ProcessingState& pState)
 	PSpecString ret;
 	int fieldCount = int(pState.getFieldCount());
 	if (_from > fieldCount) {
-		ret = std::make_shared<std::string>();
+		ret = mkSpecString();
 	} else {
 		ret = pState.getFromTo(pState.getFieldStart(_from), pState.getFieldEnd(_to));
 	}
@@ -150,7 +150,7 @@ PSpecString NumberPart::getStr(ProcessingState& pState)
 {
 	std::string s = std::to_string(pState.getRecordCount());
 	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), pState.getPadChar()) + s;
-	return std::make_shared<std::string>(s);
+	return mkSpecString(s);
 }
 
 ClockPart::ClockPart(clockType _type)
@@ -188,11 +188,11 @@ PSpecString ClockPart::getStr(ProcessingState& pState)
 			clockValue diff = specTimeGetTOD() - m_StaticClock;
 			std::string s = std::to_string(diff);
 			s = std::string(CLOCKDIFF_PART_FIELD_LEN - s.length(), ' ') + s;
-			return std::make_shared<std::string>(s);
+			return mkSpecString(s);
 		}
 	}
 	std::string asString = std::to_string(timeStamp);
-	return std::make_shared<std::string>(asString);
+	return mkSpecString(asString);
 }
 
 std::string IDPart::Debug()
@@ -203,7 +203,7 @@ std::string IDPart::Debug()
 PSpecString IDPart::getStr(ProcessingState& pState)
 {
 	auto fidPtr = pState.fieldIdentifierGet(m_fieldIdentifier[0]);
-	return std::make_shared<std::string>(*fidPtr);
+	return mkSpecString(*fidPtr);
 }
 
 std::string OutRecPart::Debug()
@@ -260,7 +260,7 @@ PSpecString ExpressionPart::getStr(ProcessingState& pState)
 		res = evaluateExpression(m_RPNExpr, &g_counters);
 	}
 	std::string ret = res->getStr();
-	return std::make_shared<std::string>(ret);
+	return mkSpecString(ret);
 }
 
 bool ExpressionPart::readsLines()

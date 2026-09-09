@@ -659,7 +659,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				if (bSomethingWasDone) {
 					pState.getCurrentWriter()->Write(sb.GetString(), tmr);
 				} else {
-					pState.getCurrentWriter()->Write(std::make_shared<std::string>(), tmr);
+					pState.getCurrentWriter()->Write(mkSpecString(), tmr);
 				}
 			}
 			bSomethingWasDone = false;
@@ -669,7 +669,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				ps = sb.GetString();
 				bSomethingWasDone = false;
 			} else {
-				ps = std::make_shared<std::string>();
+				ps = mkSpecString();
 			}
 			pState.setString(ps, false);
 			pState.setFirst();

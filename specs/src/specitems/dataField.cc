@@ -431,7 +431,7 @@ void DataField::stripString(PSpecString &pOrig)
 	}
 
 	if (!len) {
-		pOrig = std::make_shared<std::string>();
+		pOrig = mkSpecString();
 		return;
 	}
 
@@ -441,7 +441,7 @@ void DataField::stripString(PSpecString &pOrig)
 		len--;
 	}
 
-	pOrig = std::make_shared<std::string>(s, len);
+	pOrig = mkSpecString(s, len);
 }
 
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
@@ -451,7 +451,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	PSpecString pInput = m_InputPart->getStr(pState);
 	size_t outputWidth = m_maxLength;
 
-	if (!pInput) pInput = std::make_shared<std::string>();
+	if (!pInput) pInput = mkSpecString();
 
 	if (m_label) {
 		try {
@@ -468,7 +468,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	if (m_conversion) {
 		std::string currentString(pInput->data(), pInput->length());
 		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
-		pInput = std::make_shared<std::string>(convertedString);
+		pInput = mkSpecString(convertedString);
 	}
 
 	// truncate or expand if necessary

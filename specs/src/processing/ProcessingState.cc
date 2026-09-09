@@ -127,7 +127,7 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 	if (m_inputRecord) {
 		m_prevPs = m_inputRecord;
 	} else {
-		m_prevPs = std::make_shared<std::string>();
+		m_prevPs = mkSpecString();
 	}
 	m_inputRecord = ps;
 	m_ps = ps;
@@ -206,7 +206,7 @@ PWriter ProcessingState::getCurrentWriter()
 PSpecString ProcessingState::extractCurrentRecord()
 {
 	PSpecString ret = m_ps;
-	m_ps = std::make_shared<std::string>(); // empty string
+	m_ps = mkSpecString(); // empty string
 	return ret;
 }
 
@@ -364,7 +364,7 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 {
 	// In the run-out cycle, return an empty string
 	if (m_inputStation != STATION_SECOND && nullptr==m_ps) {
-		return std::make_shared<std::string>();
+		return mkSpecString();
 	}
 	// If current record is OOB, preserve OOB status
 	if (Reader::isOOBRecord(currRecord())) {
@@ -372,9 +372,9 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	}
 	int slen = (int)(currRecord()->length());
 
-	if (0==from && 0==to) return std::make_shared<std::string>();
+	if (0==from && 0==to) return mkSpecString();
 
-	if (to==EMPTY_FIELD_MARKER) return std::make_shared<std::string>();
+	if (to==EMPTY_FIELD_MARKER) return mkSpecString();
 
 	// conventions
 	if (from==0) from=1;
@@ -396,13 +396,13 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 
 	// to < from ==> wrap-around
 	if (to<from) {
-		PSpecString pRet = std::make_shared<std::string>(currRecord()->substr(from-1, slen-from+1));
-		PSpecString pWrappedAroundPart = std::make_shared<std::string>(currRecord()->substr(0, to));
+		PSpecString pRet = mkSpecString(currRecord()->substr(from-1, slen-from+1));
+		PSpecString pWrappedAroundPart = mkSpecString(currRecord()->substr(0, to));
 		*pRet += *pWrappedAroundPart;
 		return pRet;
 	}
 
-	return std::make_shared<std::string>(currRecord()->substr(from-1, to-from+1));
+	return mkSpecString(currRecord()->substr(from-1, to-from+1));
 }
 
 void ProcessingState::fieldIdentifierClear()
@@ -453,7 +453,7 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 
 	if (m_breakValues[id] && (*ps == *m_breakValues[id])) return;
 
-	m_breakValues[id] = std::make_shared<std::string>(*ps);
+	m_breakValues[id] = mkSpecString(*ps);
 	if (breakLevelGE(id, m_breakLevel)) {
 		m_breakLevel = id;
 	}
