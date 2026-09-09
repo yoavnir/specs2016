@@ -20,6 +20,9 @@
            ID a              nw
 
            SET "#0 += b; #1 := #0 * 100"
+	   OUTREC NEXTWORD
+	   PRINT "outrec()" NEXTWORD
+	   SCRATCH
            PRINT "substitute(@@,XXVERSION,@version,'U')"   NEXTWORD
            PRINT "@+1 || '/' || @!"   NEXTWORD
            ?length(record())   nextword

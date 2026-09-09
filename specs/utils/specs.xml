@@ -81,6 +81,8 @@
       <item>select</item>
       <item>first</item>
       <item>second</item>
+      <item>scratch</item>
+      <item>outrec></item>
     </list>
 
     <!-- Input, output and stream handling. -->
@@ -284,6 +286,7 @@
       <item>next</item>
       <item>not</item>
       <item>number</item>
+      <item>outrec</item>
       <item>overlay</item>
       <item>pclear</item>
       <item>pdefined</item>
@@ -382,7 +385,7 @@
         <DetectChar attribute="String" context="StringSlash" char="/" />
 
         <!-- Configured literals and record pseudo-variables. -->
-        <RegExpr attribute="Label" context="#stay" String="@@|@!|@[-+]\d{1,3}|@[A-Za-z_][A-Za-z0-9_-]*" />
+	<RegExpr attribute="Label" context="#stay" String="@@|@!|@>|@[-+]\d{1,3}|@[A-Za-z_][A-Za-z0-9_-]*" />
 
         <!-- Counters (#0 - #999). The #name form of a persistent variable
              is only meaningful inside an expression, so it is highlighted
@@ -559,7 +562,7 @@
         <RegExpr attribute="Escape" context="#stay" String="\\." />
         <keyword attribute="Function" context="#stay" String="alufunctions" />
         <RegExpr attribute="Function" context="#stay" String="[A-Za-z_][A-Za-z0-9_]+(?=\s*\()" />
-        <RegExpr attribute="Label" context="#stay" String="@@|@!|@[-+]\d{1,3}|@[A-Za-z_][A-Za-z0-9_]*" />
+	<RegExpr attribute="Label" context="#stay" String="@@|@!|@>|@[-+]\d{1,3}|@[A-Za-z_][A-Za-z0-9_]*" />
         <RegExpr attribute="Counter" context="#stay" String="#\d{1,3}|#[A-Za-z_][A-Za-z0-9_]*" />
         <RegExpr attribute="Number" context="#stay" String="\d+(\.\d+)?|\.\d+" />
         <RegExpr attribute="Field Identifier" context="#stay" String="[A-Za-z](?![A-Za-z0-9_])" />
