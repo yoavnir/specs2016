@@ -63,7 +63,7 @@ jobs:
 
     - name: Prepare manpage
       run: |
-        cp manpage specs.1
+        cp specs/docs/manpage specs.1
         gzip specs.1
 
     - name: Strip version prefix
@@ -178,7 +178,7 @@ jobs:
 
     - name: Prepare manpage
       run: |
-        cp manpage specs.1
+        cp specs/docs/manpage specs.1
         gzip specs.1
 
     - name: Strip version prefix
@@ -551,7 +551,7 @@ jobs:
 
     - name: Prepare manpage
       run: |
-        cp manpage specs.1
+        cp specs/docs/manpage specs.1
         gzip specs.1
 
     - name: Strip version prefix
