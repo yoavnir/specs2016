@@ -625,6 +625,13 @@ except:
 # falls back to C++17 if the compiler does not support C++20. --force_cpp17
 # skips the C++20 probe (for testing the C++17 code path). If neither standard
 # is supported, configuration fails.
+#
+# The C++20 probe deliberately requires std::format to compile, not just that
+# the -std=c++20 flag is accepted. std::format is the last-landing common C++20
+# library feature (GCC 13, Apple Clang 15, libc++ 17, MSVC 16.10), so a
+# toolchain can accept -std=c++20 yet lack it (e.g. GCC 11/12). Gating on it
+# means CPP_STD_LEVEL>=20 is a reliable guard for *all* C++20 features,
+# including std::format; toolchains without full C++20 use the C++17 path.
 testprog = """
 #include <cstddef>
 #include <iostream>
@@ -636,9 +643,21 @@ int main(int argc, char** argv)
     return 0;
 }
 """
-def compiler_supports(std_flag):
+testprog_cpp20 = """
+#include <cstddef>
+#include <format>
+#include <string>
+
+int main(int argc, char** argv)
+{
+    std::byte b{5};
+    std::string s = std::format("{}", std::to_integer<int>(b));
+    return s.empty() ? 1 : 0;
+}
+"""
+def compiler_compiles(std_flag, program):
 	with open("xx.cc", "w") as testfile:
-		testfile.write(testprog)
+		testfile.write(program)
 	cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test_for(std_flag))
 	rc = run_the_cmd(cmd)
 	cleanup_after_compile()
@@ -648,22 +667,22 @@ cpp_std_level = 0
 if force_cpp17:
 	sys.stdout.write("Testing C++17 support (forced).....")
 	sys.stdout.flush()
-	if compiler_supports(std_flag_17):
+	if compiler_compiles(std_flag_17, testprog):
 		sys.stdout.write("Yes.\n")
 		cpp_std_level = 17
 	else:
 		sys.stdout.write("No.  Aborting...\n")
 		exit(-4)
 else:
-	sys.stdout.write("Testing C++20 support.....")
+	sys.stdout.write("Testing C++20 support (including std::format).....")
 	sys.stdout.flush()
-	if compiler_supports(std_flag_20):
+	if compiler_compiles(std_flag_20, testprog_cpp20):
 		sys.stdout.write("Yes.\n")
 		cpp_std_level = 20
 	else:
 		sys.stdout.write("No. Testing C++17 support...")
 		sys.stdout.flush()
-		if compiler_supports(std_flag_17):
+		if compiler_compiles(std_flag_17, testprog):
 			sys.stdout.write("Yes.\n")
 			cpp_std_level = 17
 		else:
