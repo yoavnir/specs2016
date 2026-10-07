@@ -38,39 +38,35 @@ def get_the_version(doPrint):
 			sys.stdout.write("Yes, going with that.")
 		return gittag
 	
-	manpage_version = os.environ.get("SPECS_VERSION", "").strip()
-	if manpage_version.startswith("v"):
-		manpage_version = manpage_version[1:]
-	if manpage_version == "":
+	base_version = os.environ.get("SPECS_VERSION", "").strip()
+	if base_version == "":
 		try:
-			manpage_version = subprocess.check_output(
-				["git", "describe", "--tags", "--abbrev=0"],
-				stderr=subprocess.DEVNULL
-			).decode().strip()
-		except Exception:
-			manpage_version = ""
-	if manpage_version.startswith("v"):
-		manpage_version = manpage_version[1:]
-	if manpage_version == "":
-		sys.stderr.write("\nCould not determine the base version from SPECS_VERSION or git tags\n")
+			with open("../../VERSION", "r") as version_file:
+				base_version = version_file.read().strip()
+		except OSError:
+			base_version = ""
+	if base_version.startswith("v"):
+		base_version = base_version[1:]
+	if base_version == "":
+		sys.stderr.write("\nCould not determine the base version from SPECS_VERSION or VERSION\n")
 		exit(-4)
 
 	if gittag == "dev":
 		if doPrint:
-			sys.stdout.write("Setting to <{}-beta>".format(manpage_version))
-		return "{}-beta".format(manpage_version)
+			sys.stdout.write("Setting to <{}-beta>".format(base_version))
+		return "{}-beta".format(base_version)
 	elif gittag == "stable":
 		if doPrint:
-			sys.stdout.write("Setting to <{}>".format(manpage_version))
-		return "{}".format(manpage_version)
+			sys.stdout.write("Setting to <{}>".format(base_version))
+		return "{}".format(base_version)
 	elif gittag == "":
 		if doPrint:
-			sys.stdout.write("No git branch; Going with {}".format(manpage_version))
-		return manpage_version
+			sys.stdout.write("No git branch; Going with {}".format(base_version))
+		return base_version
 	else:
 		if doPrint:
-			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,manpage_version))
-		return "{}({})".format(gittag,manpage_version)
+			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,base_version))
+		return "{}({})".format(gittag,base_version)
 
 def cleanup_after_compile():
 	global compiler_cleanup_cmd,platform
