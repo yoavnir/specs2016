@@ -38,41 +38,35 @@ def get_the_version(doPrint):
 			sys.stdout.write("Yes, going with that.")
 		return gittag
 	
-	# Get the version from manpage
-	with open("../../manpage", "r") as manpage:
-		foundVersion = False
-		rdline = "XXX"
-		while (False == foundVersion) & (rdline != ''):
-			rdline = manpage.readline().strip()
-			line = rdline.split(' ')
-			if line[0] == '.TH':
-				if (line[1]!='man') | (line[7]!='"specs'):
-					sys.stderr.write("\nMalformed .TH line: Second word is {}; Eighth is {}\n".format(line[1], line[7]))
-					exit(-4)
-				manpage_version = line[6].strip('"')
-				if doPrint:
-					sys.stdout.write("Found version <{}> in manpage...".format(manpage_version))
-				foundVersion = True
-		if False == foundVersion:
-			sys.stderr.write("\nMalformed manpage file: no .TH line found\n")
-			exit(-4)
+	base_version = os.environ.get("SPECS_VERSION", "").strip()
+	if base_version == "":
+		try:
+			with open("../../VERSION", "r") as version_file:
+				base_version = version_file.read().strip()
+		except OSError:
+			base_version = ""
+	if base_version.startswith("v"):
+		base_version = base_version[1:]
+	if base_version == "":
+		sys.stderr.write("\nCould not determine the base version from SPECS_VERSION or VERSION\n")
+		exit(-4)
 
 	if gittag == "dev":
 		if doPrint:
-			sys.stdout.write("Setting to <{}-beta>".format(manpage_version))
-		return "{}-beta".format(manpage_version)
+			sys.stdout.write("Setting to <{}-beta>".format(base_version))
+		return "{}-beta".format(base_version)
 	elif gittag == "stable":
 		if doPrint:
-			sys.stdout.write("Setting to <{}>".format(manpage_version))
-		return "{}".format(manpage_version)
+			sys.stdout.write("Setting to <{}>".format(base_version))
+		return "{}".format(base_version)
 	elif gittag == "":
 		if doPrint:
-			sys.stdout.write("No git branch; Going with {}".format(manpage_version))
-		return manpage_version
+			sys.stdout.write("No git branch; Going with {}".format(base_version))
+		return base_version
 	else:
 		if doPrint:
-			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,manpage_version))
-		return "{}({})".format(gittag,manpage_version)
+			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,base_version))
+		return "{}({})".format(gittag,base_version)
 
 def cleanup_after_compile():
 	global compiler_cleanup_cmd,platform
@@ -198,9 +192,9 @@ TESTOBJS = $(TESTSRC:.cc=.{})
 BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
 
 #default goal
-some: check-format directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL)
+some: check-format directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL) $(DOCS_DIR)/manpage
 
-all: check-format directories $(TEST_EXES) $(BOOK_ALL)
+all: check-format directories $(TEST_EXES) $(BOOK_ALL) $(DOCS_DIR)/manpage
 
 specs: check-format directories $(EXE_DIR)/specs
 
@@ -377,7 +371,7 @@ uninstall_win:
 clear_clean_posix = \
 """
 clean:
-	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz $(DOCS_DIR)/guidebook_tmp.md $(DOCS_DIR)/guidebook.pdf
+	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz $(DOCS_DIR)/guidebook_tmp.md $(DOCS_DIR)/guidebook.pdf $(DOCS_DIR)/manpage
 	
 clear:
 	/bin/rm */*.d */*.o
@@ -396,8 +390,11 @@ clear:
 
 manpart = \
 """
-specs.1.gz: ../../manpage
-	cp ../../manpage specs.1
+$(DOCS_DIR)/manpage: $(DOCS_DIR)/manpage.src $(EXE_DIR)/specs
+	$(EXE_DIR)/specs -i $(DOCS_DIR)/manpage.src -o $(DOCS_DIR)/manpage -f $(DOCS_DIR)/resources/manpage_prepare
+
+specs.1.gz: $(DOCS_DIR)/manpage
+	cp $(DOCS_DIR)/manpage specs.1
 	gzip specs.1
 """
 
