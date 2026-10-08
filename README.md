@@ -73,7 +73,7 @@ New Versions
 ============
 When starting a new version:
 * Update the README file
-* Update the manpage
+* Update VERSION
 * Update specs/Directory.Build.props
 
 Contributors
