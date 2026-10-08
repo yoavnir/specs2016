@@ -9,4 +9,3 @@ ENDIF
 PRINT "substitute(@@,XXDATE,#0,'U')"
 REDO
 PRINT "substitute(@@,XXVERSION,@version,'U')"
-REDO
