@@ -1,0 +1,224 @@
+{
+  "background-color": null,
+  "line-number-background-color": null,
+  "line-number-color": "#aaaaaa",
+  "metadata": {
+    "author": "specs2016",
+    "license": "MIT",
+    "name": "specs",
+    "revision": 1
+  },
+  "text-color": "#000000",
+  "text-styles": {
+    "Alert": {
+      "background-color": null,
+      "bold": true,
+      "italic": false,
+      "text-color": "#cc0000",
+      "underline": false
+    },
+    "Annotation": {
+      "background-color": null,
+      "bold": true,
+      "italic": true,
+      "text-color": "#003333",
+      "underline": false
+    },
+    "Attribute": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#a34400",
+      "underline": false
+    },
+    "BaseN": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#0d4d92",
+      "underline": false
+    },
+    "BuiltIn": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#006e00",
+      "underline": false
+    },
+    "Char": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#008000",
+      "underline": false
+    },
+    "Comment": {
+      "background-color": null,
+      "bold": false,
+      "italic": true,
+      "text-color": "#666666",
+      "underline": false
+    },
+    "CommentVar": {
+      "background-color": null,
+      "bold": true,
+      "italic": true,
+      "text-color": "#666666",
+      "underline": false
+    },
+    "Constant": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#8a1c5c",
+      "underline": false
+    },
+    "ControlFlow": {
+      "background-color": null,
+      "bold": true,
+      "italic": false,
+      "text-color": "#0000cc",
+      "underline": false
+    },
+    "DataType": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#9a1500",
+      "underline": false
+    },
+    "DecVal": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#0d4d92",
+      "underline": false
+    },
+    "Documentation": {
+      "background-color": null,
+      "bold": false,
+      "italic": true,
+      "text-color": "#448844",
+      "underline": false
+    },
+    "Error": {
+      "background-color": null,
+      "bold": true,
+      "italic": false,
+      "text-color": "#ff0000",
+      "underline": false
+    },
+    "Extension": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": null,
+      "underline": false
+    },
+    "Float": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#0d4d92",
+      "underline": false
+    },
+    "Function": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#06287e",
+      "underline": false
+    },
+    "Import": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": null,
+      "underline": false
+    },
+    "Information": {
+      "background-color": null,
+      "bold": true,
+      "italic": true,
+      "text-color": "#60a0b0",
+      "underline": false
+    },
+    "Keyword": {
+      "background-color": null,
+      "bold": true,
+      "italic": false,
+      "text-color": "#000066",
+      "underline": false
+    },
+    "Normal": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": null,
+      "underline": false
+    },
+    "Operator": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#4e4e4e",
+      "underline": false
+    },
+    "Other": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#7a4300",
+      "underline": false
+    },
+    "Preprocessor": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#7a3e00",
+      "underline": false
+    },
+    "SpecialChar": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#2f5377",
+      "underline": false
+    },
+    "SpecialString": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#bb6688",
+      "underline": false
+    },
+    "String": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#2f5377",
+      "underline": false
+    },
+    "Variable": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#19177c",
+      "underline": false
+    },
+    "VerbatimString": {
+      "background-color": null,
+      "bold": false,
+      "italic": false,
+      "text-color": "#4070a0",
+      "underline": false
+    },
+    "Warning": {
+      "background-color": null,
+      "bold": true,
+      "italic": true,
+      "text-color": "#60a0b0",
+      "underline": false
+    }
+  }
+}

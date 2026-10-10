@@ -35,6 +35,15 @@
   }}
 \makeatletter 
 \def\verbatim@font{\color{codecolor}\bfseries\ttfamily}
+% Syntax-highlighted code blocks are typeset by pandoc in fancyvrb's
+% "Highlighting" environment, which does not consult \verbatim@font and so
+% would come out at the normal weight, noticeably thinner than the plain
+% verbatim blocks above. formatcom applies at the start of every fancyvrb
+% environment, which puts the two at the same weight. Note that this also
+% overrides the per-token bold of the highlighting style, so the style in
+% ../../utils/specs.theme must not rely on weight to tell tokens apart.
+% (fontseries=b does not work here: fontspec ignores it.)
+\fvset{formatcom=\bfseries}
 % hyperref is loaded by pandoc's own LaTeX template, but different pandoc
 % versions insert -H/header-includes content either before or after that
 % happens. \AtBeginDocument defers this until the whole preamble (including
