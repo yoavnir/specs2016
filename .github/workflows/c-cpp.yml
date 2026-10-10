@@ -53,6 +53,31 @@ jobs:
       working-directory: specs/src
       run: make run_tests
 
+  build-linux-cpp17:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: configure (force C++17)
+      working-directory: specs/src
+      run: python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12 --force_cpp17 --no_book
+
+    - name: make
+      working-directory: specs/src
+      run: make all
+
+    - name: make check
+      working-directory: specs/src
+      run: make run_tests
+
   build-macos:
     runs-on: macos-latest
 
