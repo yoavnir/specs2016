@@ -704,12 +704,22 @@ public:
 		std::cerr << std::endl;
 	}
 
+#if CPP_STD_LEVEL >= 20
+	virtual bool DebugOne(std::string& funcName) {
+		MYASSERT(m_Initialized);
+		if (m_Functions.contains(funcName)) {
+			std::cerr << m_Functions[funcName]->getStr() << "\n";
+			return true;
+		} else return false;
+	}
+#else
 	virtual bool DebugOne(std::string& funcName) {
 		MYASSERT(m_Initialized);
 		if (m_Functions.find(funcName) == m_Functions.end()) return false;
 		std::cerr << m_Functions[funcName]->getStr() << "\n";
 		return true;
 	}
+#endif
 
 private:
 	std::map<std::string,PPythonFuncRec> m_Functions;

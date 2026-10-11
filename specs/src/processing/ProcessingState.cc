@@ -425,10 +425,17 @@ void ProcessingState::fieldIdentifierSet(char id, PSpecString ps)
 {
 	static std::unordered_set<char> redefined_ids;
 	static std::string sWarnOff("NO_WARN_REDEFINED_FID");
+#if CPP_STD_LEVEL >= 20
+	if (m_fieldIdentifiers[id]!=nullptr && !configSpecLiteralExists(sWarnOff) && !redefined_ids.contains(id)) {
+		redefined_ids.insert(id);
+		std::cerr << "WARNING: Field Identifier <" << id << "> redefined.\n";
+	}
+#else
 	if (m_fieldIdentifiers[id]!=nullptr && !configSpecLiteralExists(sWarnOff) && redefined_ids.end()==redefined_ids.find(id)) {
 		redefined_ids.insert(id);
 		std::cerr << "WARNING: Field Identifier <" << id << "> redefined.\n";
 	}
+#endif
 
 	// Store the PSpecString directly to preserve OOB status
 	m_fieldIdentifiers[id] = ps;
