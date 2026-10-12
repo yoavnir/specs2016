@@ -403,7 +403,7 @@ bool isValidExpression(AluVec& vec);  // To Be Added
 
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
 
-bool breakAluVecByComma(AluVec& source, AluVec& dest);
+bool breakAluVecByComma(AluVec& source, AluVec& dest, std::string& rawExpression);
 
 PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpression);
 PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs);

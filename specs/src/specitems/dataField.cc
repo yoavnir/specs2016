@@ -388,19 +388,19 @@ void DataField::interpretComposedOutputPlacement(std::string& outputPlacement)
 	m_alignment = outputAlignmentLeft;
 
 	MYASSERT(parseAluExpression(outputPlacement, outputPlacementExpression));
-	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression, m_outputStartRaw));
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputStartExpression, true));
 
 	if (outputPlacementExpression.empty()) return;
 
 	m_maxLength = POS_SPECIAL_VALUE_COMPOSED;
-	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression, m_outputWidthRaw));
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputWidthExpression, true));
 
 	if (outputPlacementExpression.empty()) return;
 
 	m_alignment = outputAlignmentComposed;
-	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression, m_outputAlignmentRaw));
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputAlignmentExpression, true));
 
 	MYASSERT(outputPlacementExpression.empty());
@@ -476,12 +476,12 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	if (outputWidth==POS_SPECIAL_VALUE_COMPOSED) {
 		PValue res;
 		if (m_outputWidthExpression.size() > 0) {
-			res = evaluateExpression(m_outputWidthExpression, &g_counters);
+			res = evaluateExpression(m_outputWidthExpression, &g_counters, m_outputWidthRaw);
 		} else if (m_outputStartExpression.size() > 0) {
 			static std::string sName("cols");
 			static std::string sCols = configSpecLiteralGet(sName);
 			static ALUInt cols = std::stoul(sCols);
-			pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
+			pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters, m_outputStartRaw);
 			ALUInt start = pComposedStartingPosition->getInt();
 			if (cols >= start) {
 				res = mkValue(cols - start + 1);
@@ -506,7 +506,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		} else {
 			outputAlignment al = outputAlignmentLeft;
 			ellipsisSpec es = ellipsisSpecNone;
-			PValue res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
+			PValue res = evaluateExpression(m_outputAlignmentExpression, &g_counters, m_outputAlignmentRaw);
 			if (!res) {
 				MYTHROW("Alignment expression evaluated to null");
 			}
@@ -564,7 +564,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		PValue res;
 		if (m_outputStartExpression.size() > 0) {
 			if (nullptr == pComposedStartingPosition) {
-				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
+				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters, m_outputStartRaw);
 			}
 			res = mkValue(pComposedStartingPosition->getInt());
 		} else {

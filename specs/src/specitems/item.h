@@ -245,6 +245,9 @@ private:
 	AluVec            m_outputStartExpression;
 	AluVec            m_outputWidthExpression;
 	AluVec            m_outputAlignmentExpression;
+	std::string       m_outputStartRaw;
+	std::string       m_outputWidthRaw;
+	std::string       m_outputAlignmentRaw;
 };
 
 typedef std::shared_ptr<DataField> PDataField;
@@ -394,6 +397,9 @@ private:
 	AluVec m_outputStartExpression;
 	AluVec m_outputWidthExpression;
 	AluVec m_outputAlignmentExpression;
+	std::string m_outputStartRaw;
+	std::string m_outputWidthRaw;
+	std::string m_outputAlignmentRaw;
 	
 	bool m_splitting;
 	std::vector<PSpecString> m_pieces;

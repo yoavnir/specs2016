@@ -1678,7 +1678,7 @@ bool isHigherPrecedenceBinaryOp(PUnit op1, PUnit op2)
 	return bop1->priority() >= bop2->priority();
 }
 
-bool breakAluVecByComma(AluVec& source, AluVec& dest)
+bool breakAluVecByComma(AluVec& source, AluVec& dest, std::string& rawExpression)
 {
 	int countOpens = 0;
 	int countUnits = 0;
@@ -1688,7 +1688,7 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 		MYTHROW("Entered with non-empty destination vec.");
 	}
 
-
+	if (g_bDebugAluRun) rawExpression = "";
 	for (PUnit pUnit : source) {
 		countUnits++;
 		switch(pUnit->type()) {
@@ -1712,6 +1712,7 @@ bool breakAluVecByComma(AluVec& source, AluVec& dest)
 		}
 		else {
 			dest.push_back(pUnit);
+			if (g_bDebugAluRun) rawExpression += pUnit->_identify(true);
 		}
 	}
 
