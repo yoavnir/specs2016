@@ -1195,7 +1195,7 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 	int index = 0;
 	for (PUnit pUnit : vec) {
 		if (-1==pointer) {
-			os << "- " << pUnit->_identify() << "\n";
+			os << "  - " << pUnit->_identify() << "\n";
 			continue;
 		}
 		if (index==pointer) {
@@ -1206,9 +1206,7 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 		os << std::setw(40) << std::left << pUnit->_identify() << "|\n";
 		index++;
 	}
-	if (-1 == pointer) {
-		os << std::endl;
-	} else {
+	if (pointer >= 0) {
 		os << "       +" << std::setw(42) << std::setfill('-') <<
 			std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << 
 			"\n```\n";
@@ -1584,7 +1582,6 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 #ifdef ALU_DUMP
 	if (g_bDebugAluCompile) {
 		dumpAluVec("Tokenizing the expression", vec);
-		aluDumpStream() << "\n";
 	}
 #endif
 	return true;
@@ -1650,7 +1647,7 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 
 #ifdef ALU_DUMP
 	if (g_bDebugAluCompile) {
-		aluDumpStream() << "**Assigning to counter `" << ctr->_identify(true) << "` with `" << pAssnOp->_identify(true) << "`**\n\n";
+		aluDumpStream() << "- **Assigning to counter `" << ctr->_identify(true) << "` with `" << pAssnOp->_identify(true) << "`**\n";
 	}
 #endif
 
@@ -1835,11 +1832,9 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	}
 
 #ifdef ALU_DUMP
-	if (g_bDebugAluCompile) {
+	if (g_bDebugAluCompile && g_bVerbose) {
 		dumpAluVec("Infix expression to Convert to RPN", source);
-		if (g_bVerbose) {
-			clearSource = false;
-		}
+		clearSource = false;
 	}
 
 	int stepNumber = 0;
