@@ -8,6 +8,7 @@
  */
 
 #include <sstream>
+#include <fstream>
 #include <cmath>
 #include <stack>
 #include <algorithm>
@@ -29,6 +30,26 @@ PValue g_pOOBValue = std::make_shared<ALUValue>(std::string(""));
 
 // Final errors to be printed by `specs`
 std::ostringstream g_FinalErrors;
+
+// Destination for ALU debug output (--debug-alu-comp / --debug-alu-run).
+// Defaults to std::cerr; redirected to a file by --debug-alu-file / -d.
+static std::ofstream g_aluDumpFile;
+std::ostream* g_pAluDumpStream = &std::cerr;
+
+std::ostream& aluDumpStream()
+{
+	return *g_pAluDumpStream;
+}
+
+bool openAluDumpStream(const std::string& filename)
+{
+	g_aluDumpFile.open(filename, std::ios::out | std::ios::trunc);
+	if (!g_aluDumpFile.is_open()) {
+		return false;
+	}
+	g_pAluDumpStream = &g_aluDumpFile;
+	return true;
+}
 
 bool isOOBValue(PValue pv)
 {
@@ -226,8 +247,11 @@ void AluUnitLiteral::_serialize(std::ostream& os) const
 	os << '(' << m_literal.getFloat() << ')';
 }
 
-std::string AluUnitLiteral::_identify()
+std::string AluUnitLiteral::_identify(bool bBare)
 {
+	if (bBare) {
+		return m_literal.getStr();
+	}
 	if (m_hintNumerical) {
 		return std::string("Number(") + m_literal.getStr() + ")";
 	} else {
@@ -247,7 +271,7 @@ void AluUnitNull::_serialize(std::ostream& os) const
 	os << "dummy";
 }
 
-std::string AluUnitNull::_identify()
+std::string AluUnitNull::_identify(bool bBare)
 {
 	return std::string("Dummy");
 }
@@ -263,8 +287,11 @@ void AluUnitCounter::_serialize(std::ostream& os) const
 	os << '#' << m_ctrNumber;
 }
 
-std::string AluUnitCounter::_identify()
+std::string AluUnitCounter::_identify(bool bBare)
 {
+	if (bBare) {
+		return std::string("#") + std::to_string(m_ctrNumber);
+	}
 	return std::string("Counter(") + std::to_string(m_ctrNumber) + ")";
 }
 
@@ -285,12 +312,18 @@ void AluUnitFieldIdentifier::_serialize(std::ostream& os) const
 	os << m_id;
 }
 
-std::string AluUnitFieldIdentifier::_identify()
+std::string AluUnitFieldIdentifier::_identify(bool bBare)
 {
-	if (m_ReturnIdentifier) {
-		return std::string("FI(") + m_id + " - by name)";
+	if (bBare) {
+		if (m_ReturnIdentifier) {
+			return std::string(1, m_id) + " - by name";
+		}
+		return std::string(1, m_id);
 	}
-	return std::string("FI(") + m_id + ")";
+	if (m_ReturnIdentifier) {
+		return std::string("FieldIdentifier(") + m_id + " - by name)";
+	}
+	return std::string("FieldIdentifier(") + m_id + ")";
 }
 
 PValue AluUnitFieldIdentifier::evaluate()
@@ -338,8 +371,8 @@ void AluUnitUnaryOperator::_serialize(std::ostream& os) const
 }
 #undef X
 
-#define X(nm,st)	case UnaryOp__##nm: return ret + st + ")"; break;
-std::string AluUnitUnaryOperator::_identify()
+#define X(nm,st)	case UnaryOp__##nm: return bBare ? std::string(st) : ret + st + ")"; break;
+std::string AluUnitUnaryOperator::_identify(bool bBare)
 {
 	std::string ret = std::string("UOP(");
 	switch (m_op) {
@@ -443,8 +476,8 @@ void AluBinaryOperator::_serialize(std::ostream& os) const
 }
 #undef X
 
-#define X(nm,st,prio)	case BinaryOp__##nm: return ret + st + ")"; break;
-std::string AluBinaryOperator::_identify()
+#define X(nm,st,prio)	case BinaryOp__##nm: return bBare ? std::string(st) : ret + st + ")"; break;
+std::string AluBinaryOperator::_identify(bool bBare)
 {
 	std::string ret = std::string("BOP(");
 	switch (m_op) {
@@ -721,8 +754,8 @@ void AluAssnOperator::_serialize(std::ostream& os) const
 }
 #undef X
 
-#define X(nm,st)	case AssnOp__##nm: return ret + st + ")"; break;
-std::string AluAssnOperator::_identify()
+#define X(nm,st)	case AssnOp__##nm: return bBare ? std::string(st) : ret + st + ")"; break;
+std::string AluAssnOperator::_identify(bool bBare)
 {
 	std::string ret = std::string("ASS(");
 	switch (m_op) {
@@ -892,12 +925,12 @@ void AluInputRecord::_serialize(std::ostream& os) const
 	}
 }
 
-std::string AluInputRecord::_identify()
+std::string AluInputRecord::_identify(bool bBare)
 {
-	if (m_offset == INT_MAX) return "@!";
-	if (m_offset == 0) return "@@";
-	if (m_offset > 0) return "@+" + std::to_string(m_offset);
-	return "@" + std::to_string(m_offset);
+	if (m_offset == INT_MAX) return "@! (current context record)";
+	if (m_offset == 0) return "@@ (current record)";
+	if (m_offset > 0) return "@+" + std::to_string(m_offset) + " beyond current record";
+	return "@" + std::to_string(m_offset) + " before current record";
 }
 
 PValue AluInputRecord::evaluate()
@@ -929,9 +962,9 @@ void AluOutputRecord::_serialize(std::ostream& os) const
 	os << "@>";
 }
 
-std::string AluOutputRecord::_identify()
+std::string AluOutputRecord::_identify(bool bBare)
 {
-	return "@>";
+	return "@> (current output record)";
 }
 
 PValue AluOutputRecord::evaluate()
@@ -960,7 +993,7 @@ void AluOtherToken::_serialize(std::ostream& os) const
 	}
 }
 
-std::string AluOtherToken::_identify()
+std::string AluOtherToken::_identify(bool bBare)
 {
 	switch(m_type) {
 	case UT_OpenParenthesis:
@@ -1156,24 +1189,48 @@ static PUnit getAssnOperator(std::string& s)
 
 void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 {
-	std::cerr << title << ": ALU Vector at " << &vec << " with " << vec.size() << " items:\n";
+	std::ostream& os = aluDumpStream();
+	os << "- **" << title << "**: ALU Vector at " << &vec << " with " << vec.size() << " items:\n";
+	if (pointer >= 0) os << "```\n";
 	int index = 0;
 	for (PUnit pUnit : vec) {
-		if (index==pointer) {
-			std::cerr << "   ==> | ";
-		} else {
-			std::cerr << "       | ";
+		if (-1==pointer) {
+			os << "- " << pUnit->_identify() << "\n";
+			continue;
 		}
-		std::cerr << std::setw(40) << std::left << pUnit->_identify() << "|" << std::endl;
+		if (index==pointer) {
+			os << "   ==> | ";
+		} else {
+			os << "       | ";
+		}
+		os << std::setw(40) << std::left << pUnit->_identify() << "|\n";
 		index++;
 	}
-	std::cerr << "       +" << std::setw(42) << std::setfill('-') <<
-		std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << std::endl;
+	if (-1 == pointer) {
+		os << std::endl;
+	} else {
+		os << "       +" << std::setw(42) << std::setfill('-') <<
+			std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << 
+			"\n```\n";
+	}
 }
 
-void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = std::cerr)
+void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = aluDumpStream())
 {
-	stream << title << ": ALU Stack at " << &stk << " with " << stk.size() << " items:\n";
+	if (stk.empty()) {
+		stream << "- **" << title << "**: Empty\n";
+		return;
+	}
+
+	if (1 == stk.size()) {
+		PValue v = stk.top();
+		stream << "- **" << title << "**: One item: `" << v->getStr() << "`  ("
+			    << ((v->isExact()) ? "exact " : "inexact ")
+				<< ALUCounterType2Str[v->getType()] << ")\n";
+		return;
+	}
+
+	stream << "- **" << title << "**: ALU Stack at " << &stk << " with " << stk.size() << " items:\n```\n";
 	std::stack<PValue> tmp;
 	while (!stk.empty()) {
 		PValue v = stk.top();
@@ -1181,13 +1238,13 @@ void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stre
 		if (v) {
 			stream << "   > " << v->getStr() << "  ("
 			    << ((v->isExact()) ? "exact " : "inexact ")
-				<< ALUCounterType2Str[v->getType()] << ")" << std::endl;
+				<< ALUCounterType2Str[v->getType()] << ")\n";
 		} else {
 			stream << "   > (nil)" << std::endl;
 		}
 		tmp.push(v);
 	}
-	stream << std::endl;
+	stream << "```\n";
 	while (!tmp.empty()) {
 		PValue v = tmp.top();
 		tmp.pop();
@@ -1197,15 +1254,27 @@ void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stre
 
 void dumpAluStack(const char* title, std::stack<PUnit>& stk)
 {
-	std::cerr << title << ": ALU Unit Stack at " << &stk << " with " << stk.size() << " items:\n";
+	std::ostream& os = aluDumpStream();
+	if (stk.empty()) {
+		os << "**" << title << "**: Empty\n";
+		return;
+	}
+
+	if (1 == stk.size()) {
+		PUnit v = stk.top();
+		os << "**" << title << "**: One item: `" << v->_identify() << "`\n";
+		return;
+	}
+
+	os << "**" << title << "**: ALU Unit Stack at " << &stk << " with " << stk.size() << " items:\n```\n";
 	std::stack<PUnit> tmp;
 	while (!stk.empty()) {
 		PUnit v = stk.top();
 		stk.pop();
-		std::cerr << "   > " << v->_identify() << std::endl;
+		os << "   > " << v->_identify() << std::endl;
 		tmp.push(v);
 	}
-	std::cerr << std::endl;
+	os << "```\n";
 	while (!tmp.empty()) {
 		PUnit v = tmp.top();
 		tmp.pop();
@@ -1238,8 +1307,13 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	}
 
 #ifdef ALU_DUMP
+	static bool b_PrintedHeader = false;
 	if (g_bDebugAluCompile) {
-		std::cerr << __FUNCTION__ << ": Parsing Expression: " << s << std::endl;
+		if (!b_PrintedHeader) {
+			b_PrintedHeader = true;
+			aluDumpStream() << "\n# Compilation Phase - Parsing ALU Expressions";
+		}
+		aluDumpStream() << "\n## Parsing Expression: `" << s << "`\n";
 	}
 #endif
 
@@ -1508,7 +1582,10 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 	}
 #ifdef ALU_DUMP
-	if (g_bDebugAluCompile) dumpAluVec("Parsed Expression", vec);
+	if (g_bDebugAluCompile) {
+		dumpAluVec("Tokenizing the expression", vec);
+		aluDumpStream() << "\n";
+	}
 #endif
 	return true;
 }
@@ -1570,6 +1647,12 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 	auto pAssnOp = std::dynamic_pointer_cast<AluAssnOperator>(vec[1]);
 	*pAss = *pAssnOp;
 	k = ctr->getKey();
+
+#ifdef ALU_DUMP
+	if (g_bDebugAluCompile) {
+		aluDumpStream() << "**Assigning to counter `" << ctr->_identify(true) << "` with `" << pAssnOp->_identify(true) << "`**\n\n";
+	}
+#endif
 
 	vec.erase(vec.begin());
 	vec.erase(vec.begin());
@@ -1753,7 +1836,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 
 #ifdef ALU_DUMP
 	if (g_bDebugAluCompile) {
-		dumpAluVec("Expression to Convert to RPN", source);
+		dumpAluVec("Infix expression to Convert to RPN", source);
 		if (g_bVerbose) {
 			clearSource = false;
 		}
@@ -1768,7 +1851,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	for (auto pUnit : source) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluCompile && g_bVerbose) {
-			std::cerr << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
+			aluDumpStream() << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
 			dumpAluVec("Source", source, stepNumber);
 			dumpAluVec("Dest", dest);
 			dumpAluStack("operator stack",operatorStack);
@@ -1900,7 +1983,26 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	return true;
 }
 
-PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
+#ifdef ALU_DUMP
+#define COMPUTE_STACK_PUSH(npopped, item, txt)         \
+{                                                      \
+	if (g_bDebugAluRun) {                              \
+	  	PValue v = (item);                             \
+		if (npopped) {                                 \
+ 			aluDumpStream() << "- **Popping " << npopped << " items off of the stack and pushing `" << *v << "`**" << txt << "\n"; \
+		} else {                                       \
+ 			aluDumpStream() << "- **Pushing `" << *v << "` onto the stack**" << txt << "\n"; \
+		}                                              \
+		computeStack.push(v);                                 \
+	}                                                  \
+	else computeStack.push(item);                             \
+}
+#else
+#define COMPUTE_STACK_PUSH(npopped, item, txt) computeStack.push(item)
+
+#endif
+
+PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpression)
 {
 	std::stack<PValue> computeStack;
 	PValue arg1;
@@ -1908,10 +2010,20 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	PValue arg3;
 	PValue arg4;
 	PValue arg5;
+	PValue result;
 
 #ifdef ALU_DUMP
+	static bool bPrintedTitle = false;
 	if (g_bDebugAluRun) {
-		std::cerr << "\n============= " << __FUNCTION__ << " ==============\n";
+		if (!bPrintedTitle) {
+			aluDumpStream() << "\n# Runtime - Evaluating Expressions\n";
+			bPrintedTitle = true;
+		}
+		if (rawExpression.empty()) {
+			aluDumpStream() << "\n## Evaluate RPN Expression `" << dumpAluVec(expr, false) << "`\n"; 
+		} else {
+			aluDumpStream() << "\n## Evaluate `" << rawExpression << "`\n";
+		}
 	}
 	int index = 0;
 #endif
@@ -1919,30 +2031,39 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	for (PUnit pUnit : expr) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
-			dumpAluVec("Expression Progress", expr, index);
-			dumpAluStack("Execution Stack", computeStack);
-			std::cerr << std::endl << std::endl;
+			aluDumpStream() << "\n### Step " << index+1 << "\n";
+			dumpAluStack("Stack", computeStack);
+			dumpAluVec("RPN expression with index", expr, index);
 		}
 		index++;
 #endif
 		switch (pUnit->type()) {
 		case UT_LiteralNumber:
+			COMPUTE_STACK_PUSH(0, pUnit->evaluate()," - value from literal number");
+			break;
 		case UT_FieldIdentifier:
+			COMPUTE_STACK_PUSH(0, pUnit->evaluate()," - value from field identifier");
+			break;
 		case UT_InputRecord:
+			COMPUTE_STACK_PUSH(0, pUnit->evaluate()," - value from input record");
+			break;
 		case UT_OutputRecord:
+			COMPUTE_STACK_PUSH(0, pUnit->evaluate()," - value from output record");
+			break;
 		case UT_Null:
-			computeStack.push(pUnit->evaluate());
+			COMPUTE_STACK_PUSH(0, pUnit->evaluate()," - value from nothing");
 			break;
 		case UT_Counter: {
 			auto pCtr = std::dynamic_pointer_cast<AluUnitCounter>(pUnit);
-			computeStack.push(pCtr->compute(pctrs));
+			COMPUTE_STACK_PUSH(0, pCtr->compute(pctrs), " - value from counter");
 			break;
 		}
 		case UT_UnaryOp:
 			MYASSERT(computeStack.size()>=1);
 			arg1 = computeStack.top();
 			computeStack.pop();
-			computeStack.push(pUnit->compute(arg1));
+			// computeStack.push(pUnit->compute(arg1));
+			COMPUTE_STACK_PUSH(1, pUnit->compute(arg1), " - value from unary operator");
 			break;
 		case UT_BinaryOp:
 			MYASSERT(computeStack.size()>=2);
@@ -1950,7 +2071,8 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 			computeStack.pop();
 			arg1 = computeStack.top();
 			computeStack.pop();
-			computeStack.push(pUnit->compute(arg1,arg2));
+			// computeStack.push(pUnit->compute(arg1,arg2));
+			COMPUTE_STACK_PUSH(2, pUnit->compute(arg1,arg2), " - value from binary operator");
 			break;
 		case UT_Identifier: {
 			MYASSERT(computeStack.size() >= pUnit->countOperands());
@@ -1978,11 +2100,11 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 
 			switch (pUnit->countOperands()) {
 			case 0:
-				computeStack.push(pUnit->evaluate());
+				result = pUnit->evaluate();
 				break;
 			case 1:
 				try {
-					computeStack.push(pUnit->compute(arg1));
+					result = pUnit->compute(arg1);
 				}
 				catch (const SpecsException&) {
 					throw;
@@ -1990,7 +2112,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				break;
 			case 2:
 				try {
-					computeStack.push(pUnit->compute(arg1, arg2));
+					result = pUnit->compute(arg1, arg2);
 				}
 				catch (const SpecsException&) {
 					throw;
@@ -1998,7 +2120,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				break;
 			case 3:
 				try {
-					computeStack.push(pUnit->compute(arg1, arg2, arg3));
+					result = pUnit->compute(arg1, arg2, arg3);
 				}
 				catch (const SpecsException&) {
 					throw;
@@ -2006,7 +2128,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				break;
 			case 4:
 				try {
-					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4));
+					result = pUnit->compute(arg1, arg2, arg3, arg4);
 				}
 				catch (const SpecsException&) {
 					throw;
@@ -2014,7 +2136,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 				break;
 			case 5:
 				try {
-					computeStack.push(pUnit->compute(arg1, arg2, arg3, arg4, arg5));
+					result = pUnit->compute(arg1, arg2, arg3, arg4, arg5);
 				}
 				catch (const SpecsException&) {
 					throw;
@@ -2023,6 +2145,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 			default:
 				break;
 			}
+			COMPUTE_STACK_PUSH(pUnit->countOperands(), result, " - result of function evaluation");
 			break;
 			default:
 				std::string err = "Logic error, should not have gotten this type of Unit: " + pUnit->_identify();
@@ -2039,7 +2162,8 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	}
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
-			dumpAluStack("Final Stack", computeStack);
+			aluDumpStream() << "### Result\n";
+			dumpAluStack("Returned Value", computeStack);
 		}
 #endif
 	PValue ret = computeStack.top();
@@ -2047,9 +2171,23 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
 	return ret;
 }
 
+PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
+{
+	static std::string rawExpression("");
+	return evaluateExpression(expr, pctrs, rawExpression);
+}
+
+void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs, std::string& rawExpression)
+{
+	PValue exprResult = evaluateExpression(expr, pctrs, rawExpression);
+
+	pAss->perform(k, pctrs, exprResult);
+}
+
 void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs)
 {
-	PValue exprResult = evaluateExpression(expr, pctrs);
+	static std::string rawExpression("");
+	PValue exprResult = evaluateExpression(expr, pctrs, rawExpression);
 
 	pAss->perform(k, pctrs, exprResult);
 }

@@ -2274,6 +2274,8 @@ Prints out detailed information about the parsing and compiling of expressions (
 Prints out detailed step-by-step information about the evaluation of expressions (
 .I only in debug build
 ). 
+.IP "--debug-alu-file or -d" 3
+Redirects the output of --debug-alu-comp and --debug-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits.
 .IP "--no-while-guard" 3
 Disables 
 .I while-guard, 

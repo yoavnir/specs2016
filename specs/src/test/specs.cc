@@ -91,6 +91,13 @@ CONTINUE:
 	}
 
 	// sanity checks
+	if (g_debugAluFile != "") {
+		if (!openAluDumpStream(g_debugAluFile)) {
+			std::cerr << "Could not open debug output file <" << g_debugAluFile << ">\n";
+			return false;
+		}
+	}
+
 	if (g_recfm!="") {
 		if (g_recfm=="d" || g_recfm=="D" || g_recfm=="delimited" || g_recfm=="DELIMITED") {
 			g_recfm = "";

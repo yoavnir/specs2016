@@ -70,6 +70,7 @@ Main Thread:
 * `--spaceWS` -- Makes **specs** only treat spaces as the default word separator. By default all locale-defined whitespace is treated as the word separator.
 * `--debug-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
 * `--debug-alu-run` -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
+* `--debug-alu-file` **filename** or `-d` **filename** -- redirect the output of `--debug-alu-comp` and `--debug-alu-run` to a file rather than standard error. The file is overwritten; if it cannot be opened for writing, **specs** reports an error and exits.
 * `--no-while-guard` -- Disables **while-guard**, allowing specifications to enter endless loops.
 * `--progress` -- While **specs**is running, will print once a second a message to stderr telling the user how many records have already been processed.
 * `--timezone` **name** -- convert to and from time-formatted strings using the selected timezone. Valid values are from the TZ database and look like `Africa/Dakar`, `America/Chicago`, `Asia/Calcutta`, `Australia/Sydney`, or `Europe/Berlin`.  A full list of such timezones is available on [Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).  Note that the same timezones can also be configured in the config

@@ -544,6 +544,10 @@ Disable the while-guard, which normally causes specs to abort after 5000 iterati
 
 *(Debug builds only.)* Print step-by-step evaluation information for ALU expressions at runtime. Very verbose; useful for tracing a complex expression's intermediate values.
 
+### `--debug-alu-file file` or `-d file`
+
+Redirect the output of `--debug-alu-comp` and `--debug-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits.
+
 ### `--timezone name`
 
 Convert to and from time-formatted strings using the named timezone. Values come from the TZ database, such as `America/New_York`, `Europe/London`, or `Asia/Tokyo`. See [Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for the full list. This can also be set in the configuration file.
@@ -4429,6 +4433,7 @@ Do NOT use `--threaded` with:
 | `--EXP-UTF8` | | Experimental UTF-8 character counting |
 | `--debug-alu-comp` | | (Debug builds) Print ALU compile info |
 | `--debug-alu-run` | | (Debug builds) Print ALU eval info |
+| `--debug-alu-file file` | `-d` | Redirect ALU debug output to a file |
 | `--help topic` | | Print help |
 | `--info` | | Print build information |
 
