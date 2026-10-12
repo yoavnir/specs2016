@@ -17,6 +17,7 @@
 #include <cstdlib>   // for std::getenv
 #include <cstdio>    // for popen/_popen
 #include <array>     // for the shell command read buffer
+#include <numbers>   // for e_v and pi_v
 #ifndef WIN64
 #include <sys/wait.h>  // for WIFEXITED/WEXITSTATUS
 #include <unistd.h>    // for mkstemp and close
@@ -1248,8 +1249,13 @@ PValue AluFunc_arctan(PValue pX)
 	return mkValueE(ALUFloat(atan(pX->getFloat())), false);
 }
 
+#if CPP_STD_LEVEL >= 20
+static ALUFloat degrees_to_radians(std::numbers::pi_v<ALUFloat>/180.0);
+static ALUFloat radians_to_degrees(ALUFloat(180)/std::numbers::pi_v<ALUFloat>);
+#else
 static ALUFloat degrees_to_radians = 0.0174532925199433;
 static ALUFloat radians_to_degrees = 57.29577951308232;
+#endif
 
 PValue AluFunc_dsin(PValue pX)
 {
@@ -1309,7 +1315,11 @@ PValue AluFunc_arcdtan(PValue pX)
 	return mkValueE(ALUFloat(radians_to_degrees*atan(pX->getFloat())), false);
 }
 
+#if CPP_STD_LEVEL >= 20
+static ALUFloat e(std::numbers::e_v<ALUFloat>);
+#else
 static ALUFloat e(2.71828182845904523536028747135266249775724709369995);
+#endif
 PValue AluFunc_exp(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
@@ -1898,20 +1908,6 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 
 /* REXX Functions */
 
-PValue AluFunc_abbrev_do(PValue pInformation, PValue pInfo, size_t len)
-{
-	std::string sBig = pInformation->getStr();
-	std::string sLittle = pInfo->getStr().substr(0,len);
-
-	if (sBig.length() >= sLittle.length()) {
-		if (sLittle == sBig.substr(0,sLittle.length())) {
-			return mkValue(ALUInt(1));
-		}
-	}
-
-	return mkValue(ALUInt(0));
-}
-
 PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 {
 	ASSERT_NOT_ELIDED(pInformation,1,information);
@@ -1922,7 +1918,20 @@ PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 		MYTHROW(err);
 	}
 
-	return AluFunc_abbrev_do(pInformation, pInfo, size_t(len));
+	std::string sBig = pInformation->getStr();
+	std::string sLittle = pLen ? pInfo->getStr().substr(0,len) : pInfo->getStr();
+
+#if CPP_STD_LEVEL >= 20
+	return mkValue(ALUInt(sBig.starts_with(sLittle)));
+#else
+	if (sBig.length() >= sLittle.length()) {
+		if (sLittle == sBig.substr(0,sLittle.length())) {
+			return mkValue(ALUInt(1));
+		}
+	}
+
+	return mkValue(ALUInt(0));
+#endif
 }
 
 PValue AluFunc_bitand(PValue pS1, PValue pS2)

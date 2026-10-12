@@ -80,6 +80,25 @@ public:
 		std::cerr << std::endl;
 	}
 private:
+#if CPP_STD_LEVEL >= 20
+	void clearLRU() {
+		MYASSERT(m_map.size()==m_highWM);
+		std::vector<std::shared_ptr<cacheElement<S,T>>> vec;
+		for (auto p : m_map) {
+			vec.insert(vec.end(), p.second);
+		}
+		std::ranges::sort(vec, [](std::shared_ptr<cacheElement<S,T>> p1, std::shared_ptr<cacheElement<S,T>> p2) {
+			return p1->getLRU() > p2->getLRU();
+		});
+
+		uint64_t cutoff = vec[m_lowWM]->getLRU();
+
+		std::erase_if(m_map, [cutoff](const auto& item) {
+			auto const& [key, value] = item;
+			return value->getLRU() < cutoff;
+		});
+	}
+#else
 	void clearLRU() {
 		MYASSERT(m_map.size()==m_highWM);
 		std::vector<std::shared_ptr<cacheElement<S,T>>> vec;
@@ -100,6 +119,7 @@ private:
 			}
 		}
 	}
+#endif
 
 	size_t m_highWM;
 	size_t m_lowWM;

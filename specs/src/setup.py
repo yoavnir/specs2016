@@ -123,7 +123,7 @@ with open("xx.txt","w") as v:
 		return False
 	with open("xx.txt", "r") as flags:
 		filtered_flags = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes']
-		filtered_flags_debug = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes', '-Wp,-D_FORTIFY_SOURCE=2']
+		filtered_flags_debug = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes', '-Wp,-D_FORTIFY_SOURCE=2', '-D_FORTIFY_SOURCE=2']
 		# Multi-word flags to filter: list of (flag, value) tuples to remove
 		# For example: ('-arch', 'x86_64') will remove "-arch x86_64" but keep "-arch arm64"
 		filtered_multi_flags = [('-arch', 'x86_64')]

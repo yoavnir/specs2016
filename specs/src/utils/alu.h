@@ -25,10 +25,17 @@ public:
 	ALUInt			getHex(ALUCounterKey i)		{return m_map[i].getHex();}
 	ALUFloat		getFloat(ALUCounterKey i)		{return m_map[i].getFloat();}
 	bool			getBool(ALUCounterKey i)		{return m_map[i].getBool();}
+#if CPP_STD_LEVEL >= 20
+	PValue		getPointer(ALUCounterKey i)	{
+		if (!m_map.contains(i)) m_map[i].set(ALUInt(0));
+		return mkValue(m_map[i]);
+	}
+#else
 	PValue		getPointer(ALUCounterKey i)	{
 		if (0 == m_map.count(i)) m_map[i].set(ALUInt(0));
 		return mkValue(m_map[i]);
 	}
+#endif
 	void			set(ALUCounterKey i, std::string& s)  {m_map[i].set(s);}
 	void			set(ALUCounterKey i, const char* st)  {m_map[i].set(st);}
 	void			set(ALUCounterKey i, ALUInt l)        {m_map[i].set(l);}

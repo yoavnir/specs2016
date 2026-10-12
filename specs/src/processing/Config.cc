@@ -35,7 +35,7 @@ static std::map<std::string,std::string> ExternalLiterals;
 
 static void useKeyValue(std::string& key, std::string& value)
 {
-	if (!key.empty() && ':'==key.at(key.length() - 1)) {
+	if (!key.empty() && ':'==key.back()) {
 		key = key.substr(0,key.length() - 1);
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
@@ -53,9 +53,15 @@ static void useKeyValue(std::string& key, std::string& value)
 			} catch (...) {
 			}
 		}
+#if CPP_STD_LEVEL >= 20
+		if (!ExternalLiterals.contains(key)) {
+			ExternalLiterals[key] = value;
+		}
+#else
 		if (ExternalLiterals.find(key) == ExternalLiterals.end()) {
 			ExternalLiterals[key] = value;
 		}
+#endif
 	}
 }
 
@@ -213,12 +219,22 @@ void readConfigurationFile(useKeyValueCB cb)
 	ExternalLiterals["platform"] = dequote(STRINGIFY(LITERAL_PLATFORM));
 #endif
 	ExternalLiterals["python"] = pythonInterfaceEnabled() ? "Enabled" : "Disabled";
+
+#if CPP_STD_LEVEL >= 20
+	if (!ExternalLiterals.contains("cols")) {
+		ExternalLiterals["cols"] = getTerminalRowsAndColumns(false);
+	}
+	if (!ExternalLiterals.contains("rows")) {
+		ExternalLiterals["rows"] = getTerminalRowsAndColumns(true);
+	}
+#else
 	if (0==ExternalLiterals.count("cols")) {
 		ExternalLiterals["cols"] = getTerminalRowsAndColumns(false);
 	}
 	if (0==ExternalLiterals.count("rows")) {
 		ExternalLiterals["rows"] = getTerminalRowsAndColumns(true);
 	}
+#endif
 
 	// Build information
 	ExternalLiterals["build-commit"] = dequote(STRINGIFY(SPECS_BUILD_COMMIT));
