@@ -10,6 +10,7 @@
 #include <sstream>
 #include <fstream>
 #include <cmath>
+#include <cstring>  // for std::strcmp
 #include <stack>
 #include <algorithm>
 #include <iomanip>
@@ -1193,7 +1194,7 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 		return;
 	}
 
-	os << "- **" << title << "**: ALU Vector at " << &vec << " with " << vec.size() << " items:\n```\n";
+	os << "- **" << title << "**: ALU Vector with " << vec.size() << " items:\n```\n";
 	int index = 0;
 	for (PUnit pUnit : vec) {
 		if (index==pointer) {
@@ -1206,7 +1207,7 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 	}
 	os << "       +" << std::setw(42) << std::setfill('-') <<
 		std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << 
-		"\n```\n";
+		"```\n";
 }
 
 void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = aluDumpStream())
@@ -1216,15 +1217,7 @@ void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stre
 		return;
 	}
 
-	if (1 == stk.size()) {
-		PValue v = stk.top();
-		stream << "- **" << title << "**: One item: `" << v->getStr() << "`  ("
-			    << ((v->isExact()) ? "exact " : "inexact ")
-				<< ALUCounterType2Str[v->getType()] << ")\n";
-		return;
-	}
-
-	stream << "- **" << title << "**: ALU Stack at " << &stk << " with " << stk.size() << " items:\n```\n";
+	stream << "- **" << title << "**: ALU Value Stack with " << stk.size() << " items:\n```\n";
 	std::stack<PValue> tmp;
 	while (!stk.empty()) {
 		PValue v = stk.top();
@@ -1254,13 +1247,7 @@ void dumpAluStack(const char* title, std::stack<PUnit>& stk)
 		return;
 	}
 
-	if (1 == stk.size()) {
-		PUnit v = stk.top();
-		os << "**" << title << "**: One item: `" << v->_identify() << "`\n";
-		return;
-	}
-
-	os << "**" << title << "**: ALU Unit Stack at " << &stk << " with " << stk.size() << " items:\n```\n";
+	os << "**" << title << "**: ALU Unit Stack with " << stk.size() << " items:\n```\n";
 	std::stack<PUnit> tmp;
 	while (!stk.empty()) {
 		PUnit v = stk.top();
@@ -1976,6 +1963,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 }
 
 #ifdef ALU_DUMP
+
 #define COMPUTE_STACK_PUSH(npopped, item, txt)         \
 {                                                      \
 	if (g_bDebugAluRun) {                              \
@@ -1989,8 +1977,31 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	}                                                  \
 	else computeStack.push(item);                             \
 }
+
+#define COMPUTE_STACK_PUSH_FI(npopped, unit)           \
+{                                                      \
+	if (g_bDebugAluRun) {                              \
+		auto pFI = std::dynamic_pointer_cast<AluUnitFieldIdentifier>(unit); \
+	  	PValue v = pFI->evaluate();                    \
+		if (npopped) {                                 \
+ 			aluDumpStream() << "- **Popping " << npopped << " items off of the stack and pushing "; \
+		} else {                                       \
+ 			aluDumpStream() << "- **Pushing ";         \
+		}                                              \
+		if (pFI->asIdentifier()) {                     \
+			aluDumpStream() << "field identifier `" << char(v->getInt()) << "` onto the stack** - will appear as the number " << v->getInt() << "\n"; \
+		} else {                                       \
+			aluDumpStream() << "'" << *v << "` onto the stack** - value from field identifier\n"; \
+		}                                              \
+		computeStack.push(v);                                 \
+	}                                                  \
+	else computeStack.push(unit->evaluate());                             \
+}
+
 #else
+
 #define COMPUTE_STACK_PUSH(npopped, item, txt) computeStack.push(item)
+#define COMPUTE_STACK_PUSH_FI(npopped, unit)   computeStack.push(unit->evaluate())
 
 #endif
 
@@ -2034,7 +2045,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 			COMPUTE_STACK_PUSH(0, pUnit->evaluate()," - value from literal number");
 			break;
 		case UT_FieldIdentifier:
-			COMPUTE_STACK_PUSH(0, pUnit->evaluate()," - value from field identifier");
+			COMPUTE_STACK_PUSH_FI(0, pUnit);
 			break;
 		case UT_InputRecord:
 			COMPUTE_STACK_PUSH(0, pUnit->evaluate()," - value from input record");
@@ -2152,14 +2163,17 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 		}
 		MYTHROW("Expression did not reduce to a single value");
 	}
-#ifdef ALU_DUMP
-		if (g_bDebugAluRun) {
-			aluDumpStream() << "### Result\n";
-			dumpAluStack("Returned Value", computeStack);
-		}
-#endif
+
 	PValue ret = computeStack.top();
 	computeStack.pop();
+
+#ifdef ALU_DUMP
+	if (g_bDebugAluRun) {
+		aluDumpStream() << "### Result\n**Expression evaluated to** `" << ret->getStr() 
+			<< "` (" << ((ret->isExact()) ? "exact " : "inexact ")
+			<< ALUCounterType2Str[ret->getType()] << ")\n";
+	}
+#endif
 	return ret;
 }
 

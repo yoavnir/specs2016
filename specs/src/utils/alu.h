@@ -186,6 +186,7 @@ public:
 	AluUnitType			type() override			{return UT_FieldIdentifier;}
 	PValue			evaluate() override;
 	void                        setEvaluateToName()  {m_ReturnIdentifier = true;}
+	bool            asIdentifier()              {return m_ReturnIdentifier;}
 private:
 	char         m_id;
 	bool         m_ReturnIdentifier;

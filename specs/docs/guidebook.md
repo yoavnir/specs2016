@@ -538,15 +538,15 @@ Disable the while-guard, which normally causes specs to abort after 5000 iterati
 
 ### `--debug-alu-comp`
 
-*(Debug builds only.)* Print detailed information about the parsing and compilation of ALU expressions. Useful for diagnosing why an expression is being parsed differently than expected.
+Print detailed information about the parsing and compilation of ALU expressions. Useful for diagnosing why an expression is being parsed differently than expected. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag (on Windows, only debug builds carry this output). The output shows how the expression is parsed into tokens both before and after its conversion to reverse polish notation (RPN). It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**. 
 
 ### `--debug-alu-run`
 
-*(Debug builds only.)* Print step-by-step evaluation information for ALU expressions at runtime. Very verbose; useful for tracing a complex expression's intermediate values.
+Print step-by-step evaluation information for ALU expressions at runtime. Very verbose; useful for tracing a complex expression's intermediate values. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag (on Windows, only debug builds carry this output). The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**.
 
 ### `--debug-alu-file file` or `-d file`
 
-Redirect the output of `--debug-alu-comp` and `--debug-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits.
+Redirect the output of `--debug-alu-comp` and `--debug-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As both `--debug-alu-comp` and `--debug-alu-run` produce markdown output, it is recommended to name the file with the suffixe `.md`.
 
 ### `--timezone name`
 
@@ -4431,8 +4431,8 @@ Do NOT use `--threaded` with:
 | `--toASCII` | | Convert non-ASCII to period |
 | `--force-read-input` | | Read input even if unused |
 | `--EXP-UTF8` | | Experimental UTF-8 character counting |
-| `--debug-alu-comp` | | (Debug builds) Print ALU compile info |
-| `--debug-alu-run` | | (Debug builds) Print ALU eval info |
+| `--debug-alu-comp` | | Print ALU compile info (unless built `--no_alu_debug`) |
+| `--debug-alu-run` | | Print ALU eval info (unless built `--no_alu_debug`) |
 | `--debug-alu-file file` | `-d` | Redirect ALU debug output to a file |
 | `--help topic` | | Print help |
 | `--info` | | Print build information |

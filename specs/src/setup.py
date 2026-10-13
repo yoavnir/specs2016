@@ -455,6 +455,8 @@ parser.add_argument("--branch", dest="expbranch", action="store", default="",
                     help="branch to use. Useful when building without git. Examples: 'dev', 'stable', 'dev-1.2.0')")
 parser.add_argument("--force_cpp17", dest="force_cpp17", action="store_true", default=False,
                     help="Force the C++17 standard even if the compiler supports C++20 (for testing)")
+parser.add_argument("--no_alu_debug", dest="no_alu_debug", action="store_true", default=False,
+                    help="Do not define ALU_DUMP, so --debug-alu-comp/--debug-alu-run produce no output (GCC/Clang only; Windows VS builds are unaffected)")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
@@ -466,6 +468,7 @@ avoid_cryptographic_random = args.nocrypt
 python_prefix = args.pyprefix
 explicit_branch = args.expbranch
 force_cpp17 = args.force_cpp17
+no_alu_debug = args.no_alu_debug
 
 # default for use_cached_depends depends on the choice of compiler
 if use_cached_depends is None:
@@ -504,7 +507,7 @@ if compiler=="GCC":
 		condcomp = "-O3"
 	elif variation=="DEBUG":
 		condlink = "-g"
-		condcomp = "-g -DDEBUG -DALU_DUMP"
+		condcomp = "-g -DDEBUG"
 	else:
 		condlink = "-O3 -g"
 		condcomp = "-O3 -g"	
@@ -515,7 +518,7 @@ elif compiler=="CLANG":
 		condcomp = "-O3"
 	elif variation=="DEBUG":
 		condlink = "-g"
-		condcomp = "-g -DDEBUG -DALU_DUMP"
+		condcomp = "-g -DDEBUG"
 	else:
 		condlink = "-O3 -g"
 		condcomp = "-O3 -g"	
@@ -536,7 +539,15 @@ if args.static_link:
 	
 if platform=="NT":
 	condcomp = condcomp + "{}WIN64".format(def_prefix)
-		
+
+# ALU_DUMP enables the --debug-alu-comp / --debug-alu-run output. For GCC/Clang
+# it is defined by default in every variation (RELEASE, DEBUG and PROF), so the
+# switches work in release builds too; --no_alu_debug suppresses it everywhere.
+# Windows VS builds are left exactly as configured above (ALU_DUMP in the DEBUG
+# variation only) and are not affected by --no_alu_debug.
+if compiler!="VS" and not no_alu_debug:
+	condcomp = condcomp + "{}ALU_DUMP".format(def_prefix)
+
 # Other compilers switches go here
 
 if platform=="POSIX":

@@ -2267,15 +2267,34 @@ Executes the output records as shell commands rather than emitting them to stand
 .IP "--spaceWS" 3
 Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
 .IP "--debug-alu-comp" 3
-Prints out detailed information about the parsing and compiling of expressions (
-.I only in debug build
-).
+Prints out detailed information about the parsing and compiling of expressions. This is available in standard builds; it produces no output if
+.B specs
+was built with the
+.I --no_alu_debug
+configure flag (on Windows, only in debug builds). The output shows how each expression is tokenized and then converted to
+.B Reverse Polish Notation (RPN).
+The output is formatted as markdown and can be viewed with any markdown viewer such as
+.B Visual Studio Code
+or
+.B glow.
 .IP "--debug-alu-run" 3
-Prints out detailed step-by-step information about the evaluation of expressions (
-.I only in debug build
-). 
+Prints out detailed step-by-step information about the evaluation of expressions. This is available in standard builds; it produces no output if
+.B specs
+was built with the
+.I --no_alu_debug
+configure flag (on Windows, only in debug builds). The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed with any markdown viewer such as
+.B Visual Studio Code
+or
+.B glow.
 .IP "--debug-alu-file or -d" 3
-Redirects the output of --debug-alu-comp and --debug-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits.
+Redirects the output of --debug-alu-comp and --debug-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits. As both
+.I --debug-alu-comp
+and
+.I --debug-alu-run
+produce markdown content, it is 
+.B recommended
+to name the file something with the suffix 
+.I .md
 .IP "--no-while-guard" 3
 Disables 
 .I while-guard, 
