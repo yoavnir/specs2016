@@ -315,9 +315,6 @@ void AluUnitFieldIdentifier::_serialize(std::ostream& os) const
 std::string AluUnitFieldIdentifier::_identify(bool bBare)
 {
 	if (bBare) {
-		if (m_ReturnIdentifier) {
-			return std::string(1, m_id) + " - by name";
-		}
 		return std::string(1, m_id);
 	}
 	if (m_ReturnIdentifier) {
@@ -374,7 +371,7 @@ void AluUnitUnaryOperator::_serialize(std::ostream& os) const
 #define X(nm,st)	case UnaryOp__##nm: return bBare ? std::string(st) : ret + st + ")"; break;
 std::string AluUnitUnaryOperator::_identify(bool bBare)
 {
-	std::string ret = std::string("UOP(");
+	std::string ret = std::string("UnaryOp(");
 	switch (m_op) {
 	ALU_UOP_LIST
 	default:
@@ -479,7 +476,7 @@ void AluBinaryOperator::_serialize(std::ostream& os) const
 #define X(nm,st,prio)	case BinaryOp__##nm: return bBare ? std::string(st) : ret + st + ")"; break;
 std::string AluBinaryOperator::_identify(bool bBare)
 {
-	std::string ret = std::string("BOP(");
+	std::string ret = std::string("BinaryOp(");
 	switch (m_op) {
 	ALU_BOP_LIST
 	default:
@@ -757,7 +754,7 @@ void AluAssnOperator::_serialize(std::ostream& os) const
 #define X(nm,st)	case AssnOp__##nm: return bBare ? std::string(st) : ret + st + ")"; break;
 std::string AluAssnOperator::_identify(bool bBare)
 {
-	std::string ret = std::string("ASS(");
+	std::string ret = std::string("Assignment(");
 	switch (m_op) {
 	ALU_ASSOP_LIST
 	default:
@@ -997,11 +994,11 @@ std::string AluOtherToken::_identify(bool bBare)
 {
 	switch(m_type) {
 	case UT_OpenParenthesis:
-		return "(";
+		return bBare ? "(" : "Open Bracket - (";
 	case UT_ClosingParenthesis:
-		return ")";
+		return bBare ? "(" : "Close Bracket - )";
 	case UT_Comma:
-		return "COMMA";
+		return bBare ? "," : "COMMA - ,";
 	default:
 		MYTHROW("Unexpected token");
 	}
@@ -1190,14 +1187,15 @@ static PUnit getAssnOperator(std::string& s)
 void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 {
 	std::ostream& os = aluDumpStream();
-	os << "- **" << title << "**: ALU Vector at " << &vec << " with " << vec.size() << " items:\n";
-	if (pointer >= 0) os << "```\n";
+
+	if (0==vec.size()) {
+		os << "- **" << title << "**: ALU Vector empty";
+		return;
+	}
+
+	os << "- **" << title << "**: ALU Vector at " << &vec << " with " << vec.size() << " items:\n```\n";
 	int index = 0;
 	for (PUnit pUnit : vec) {
-		if (-1==pointer) {
-			os << "  - " << pUnit->_identify() << "\n";
-			continue;
-		}
 		if (index==pointer) {
 			os << "   ==> | ";
 		} else {
@@ -1206,11 +1204,9 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 		os << std::setw(40) << std::left << pUnit->_identify() << "|\n";
 		index++;
 	}
-	if (pointer >= 0) {
-		os << "       +" << std::setw(42) << std::setfill('-') <<
-			std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << 
-			"\n```\n";
-	}
+	os << "       +" << std::setw(42) << std::setfill('-') <<
+		std::right << "+" << std::endl << std::setw(0) << std::setfill(' ') << 
+		"\n```\n";
 }
 
 void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = aluDumpStream())
@@ -1596,7 +1592,7 @@ void cleanAluVec(AluVec& vec)
 	}
 }
 
-std::string dumpAluVec(AluVec& vec, bool deleteUnits)
+std::string AluVec2String(AluVec& vec, bool deleteUnits)
 {
 	std::string ret;
 	if (deleteUnits) {
@@ -2016,7 +2012,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 			bPrintedTitle = true;
 		}
 		if (rawExpression.empty()) {
-			aluDumpStream() << "\n## Evaluate RPN Expression `" << dumpAluVec(expr, false) << "`\n"; 
+			aluDumpStream() << "\n## Evaluate RPN Expression `" << AluVec2String(expr, false) << "`\n"; 
 		} else {
 			aluDumpStream() << "\n## Evaluate `" << rawExpression << "`\n";
 		}
@@ -2167,22 +2163,8 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 	return ret;
 }
 
-PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs)
-{
-	static std::string rawExpression("");
-	return evaluateExpression(expr, pctrs, rawExpression);
-}
-
 void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs, std::string& rawExpression)
 {
-	PValue exprResult = evaluateExpression(expr, pctrs, rawExpression);
-
-	pAss->perform(k, pctrs, exprResult);
-}
-
-void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs)
-{
-	static std::string rawExpression("");
 	PValue exprResult = evaluateExpression(expr, pctrs, rawExpression);
 
 	pAss->perform(k, pctrs, exprResult);

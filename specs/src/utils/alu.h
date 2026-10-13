@@ -388,7 +388,7 @@ bool parseAluExpression(std::string& s, AluVec& vec);
 
 bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, AluVec& vec);
 
-std::string dumpAluVec(AluVec& vec, bool deleteUnits);
+std::string AluVec2String(AluVec& vec, bool deleteUnits);
 
 // Destination stream for ALU debug output (--debug-alu-comp / --debug-alu-run).
 std::ostream& aluDumpStream();
@@ -406,10 +406,8 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
 bool breakAluVecByComma(AluVec& source, AluVec& dest, std::string& rawExpression);
 
 PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpression);
-PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs);
 
 void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs, std::string& rawExpression);
-void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs);
 
 bool AluExpressionReadsLines(AluVec& vec);
 
