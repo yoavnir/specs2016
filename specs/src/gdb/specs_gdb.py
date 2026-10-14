@@ -1614,7 +1614,7 @@ class DumpWriter(gdb.Command):
             val = gdb.parse_and_eval(arg)
             count_gen = int(val["m_countGenerated"])
             count_written = int(val["m_countWritten"])
-            ended = bool(val["m_ended"])
+            ended = bool(val["m_ended"]["_M_base"]["_M_i"])
             
             print(f"Writer @ {val.address}")
             print(f"  Count Generated: {count_gen}")

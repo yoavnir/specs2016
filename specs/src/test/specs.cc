@@ -198,6 +198,9 @@ CONTINUE:
 
 int main (int argc, char** argv)
 {
+	std::ios::sync_with_stdio(false);
+	std::cin.tie(nullptr);
+
 	classifyingTimer timer;
 	bool conciseExceptions = true;
 
@@ -211,6 +214,10 @@ int main (int argc, char** argv)
 	
 	if (!parseSwitches(argc, argv)) { // also skips the program name
 		return -4;
+	}
+
+	if (g_bThreaded) {
+		std::cerr.tie(nullptr);
 	}
 
 	readConfigurationFile();

@@ -97,6 +97,14 @@ int setenv(const char *name, const char *value, int overwrite);
 #endif
 
 #ifdef WIN64
+#define getc_nolock(f)  _fgetc_nolock(f)
+#define stdoutIsATTY()  (0 != _isatty(_fileno(stdout)))
+#else
+#define getc_nolock(f)  getc_unlocked(f)
+#define stdoutIsATTY()  (0 != isatty(fileno(stdout)))
+#endif
+
+#ifdef WIN64
 #define PATHSEP "\\"
 #define PATH_LIST_SEPARATOR ";"
 #define PATH_LIST_WSEPARATOR L";"
