@@ -61,9 +61,12 @@ void SplitItem::interpretComposedOutputPlacement(std::string& outputPlacement)
 	// Build expressions for start and width
 	MYASSERT(parseAluExpression(startStr, m_outputStartExpression));
 	MYASSERT(parseAluExpression(widthStr, m_outputWidthExpression));
+	m_outputStartRaw = startStr;
+	m_outputWidthRaw = widthStr;
 	
 	if (!alignStr.empty()) {
 		MYASSERT(parseAluExpression(alignStr, m_outputAlignmentExpression));
+		m_outputAlignmentRaw = alignStr;
 	}
 	
 	m_outStart = POS_SPECIAL_VALUE_COMPOSED;
@@ -355,13 +358,13 @@ ApplyRet SplitItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		// Handle output placement
 		if (m_outStart == POS_SPECIAL_VALUE_COMPOSED) {
 			// Evaluate composed output placement
-			PValue startVal = evaluateExpression(m_outputStartExpression, nullptr);
-			PValue widthVal = evaluateExpression(m_outputWidthExpression, nullptr);
+			PValue startVal = evaluateExpression(m_outputStartExpression, nullptr, m_outputStartRaw);
+			PValue widthVal = evaluateExpression(m_outputWidthExpression, nullptr, m_outputWidthRaw);
 			m_outStart = startVal->getInt();
 			m_maxLength = widthVal->getInt();
 			
 			if (!m_outputAlignmentExpression.empty()) {
-				PValue alignVal = evaluateExpression(m_outputAlignmentExpression, nullptr);
+				PValue alignVal = evaluateExpression(m_outputAlignmentExpression, nullptr, m_outputAlignmentRaw);
 				std::string alignStr = alignVal->getStr();
 				if (alignStr == "left") m_alignment = outputAlignmentLeft;
 				else if (alignStr == "right") m_alignment = outputAlignmentRight;
@@ -402,14 +405,14 @@ ApplyRet SplitItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		
 		// Handle output placement for composed expressions
 		if (m_outStart == POS_SPECIAL_VALUE_COMPOSED) {
-			PValue startVal = evaluateExpression(m_outputStartExpression, nullptr);
-			PValue widthVal = evaluateExpression(m_outputWidthExpression, nullptr);
+			PValue startVal = evaluateExpression(m_outputStartExpression, nullptr, m_outputStartRaw);
+			PValue widthVal = evaluateExpression(m_outputWidthExpression, nullptr, m_outputWidthRaw);
 			size_t outStart = startVal->getInt();
 			size_t maxLength = widthVal->getInt();
 			
 			outputAlignment align = m_alignment;
 			if (!m_outputAlignmentExpression.empty()) {
-				PValue alignVal = evaluateExpression(m_outputAlignmentExpression, nullptr);
+				PValue alignVal = evaluateExpression(m_outputAlignmentExpression, nullptr, m_outputAlignmentRaw);
 				std::string alignStr = alignVal->getStr();
 				if (alignStr == "left") align = outputAlignmentLeft;
 				else if (alignStr == "right") align = outputAlignmentRight;

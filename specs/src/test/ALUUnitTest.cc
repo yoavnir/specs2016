@@ -223,7 +223,7 @@ extern bool g_bWarnAboutGrammars;
 	INC_TEST_INDEX;								\
 	std::string _expr(s);						\
 	parseAluExpression(_expr,vec);				\
-	std::string _dump = dumpAluVec(vec, true);	\
+	std::string _dump = AluVec2String(vec, true);	\
 	PRINT_TEST_HEADER << "<"<< s << "> ==> \"" << e << "\": "; 	\
 	if (_dump==e) std::cout << "OK\n";			\
 	else {										\
@@ -242,7 +242,7 @@ extern bool g_bWarnAboutGrammars;
 	try {													\
 		_res = parseAluStatement(_expr,k,&op,vec);			\
 		if (_res) {											\
-			std::string _dump = dumpAluVec(vec, true);		\
+			std::string _dump = AluVec2String(vec, true);		\
 			_res = (_dump==ex);								\
 			actual = _dump;									\
 		}													\
@@ -268,7 +268,7 @@ extern bool g_bWarnAboutGrammars;
 		try {												\
 			_res = parseAluExpression(_expr,vec);			\
 			_res = convertAluVecToPostfix(vec, rpnVec,true);\
-			_dump = dumpAluVec(rpnVec, true);				\
+			_dump = AluVec2String(rpnVec, true);				\
 		} catch (SpecsException& e) {						\
 			_dump = e.what(true);							\
 		}													\
@@ -298,7 +298,7 @@ extern bool g_bWarnAboutGrammars;
 				if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
 				if (_res) {									\
 					POperator pop = std::make_shared<AluAssnOperator>(op); \
-					ALUPerformAssignment(k,pop,rpnVec,&counters); \
+					ALUPerformAssignment(k,pop,rpnVec,&counters,_expr); \
 					_res2 = (counters.getStr(k)==res);		\
 					cleanAluVec(rpnVec);					\
 				}											\
@@ -306,7 +306,7 @@ extern bool g_bWarnAboutGrammars;
 				_res2 = true;								\
 				_res = convertAluVecToPostfix(vec, rpnVec,true);	\
 				if (_res) try {                             \
-					_result = evaluateExpression(rpnVec, &counters);	\
+					_result = evaluateExpression(rpnVec, &counters, _expr);	\
 				} catch(SpecsException& e) {                \
 					_result = mkValue(e.what(true));        \
 				}                                           \
@@ -314,9 +314,9 @@ extern bool g_bWarnAboutGrammars;
 				_res = (_result!=nullptr) && (_result->getStr()==res);	\
 			}                                               \
 		}                                                   \
-		PRINT_TEST_HEADER << s << " ==> " << res << ": ";					\
+		PRINT_TEST_HEADER << s << " ==> " << res << ": ";			\
 		if (_res && _res2) std::cout << "OK\n";						\
-		else {												\
+		else {														\
 			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
 			countFailures++;  failedTests.push_back(testIndex);		\
 		}															\
@@ -333,7 +333,7 @@ extern bool g_bWarnAboutGrammars;
 		if (_res) _res = convertAluVecToPostfix(vec, rpnVec,true); \
 		if (_res) {												\
 			POperator pop = std::make_shared<AluAssnOperator>(op); \
-			ALUPerformAssignment(k,pop,rpnVec,&counters);			\
+			ALUPerformAssignment(k,pop,rpnVec,&counters,_expr);	\
 			_res2 = (counters.getStr(k)==exp);					\
 		}														\
 		cleanAluVec(rpnVec); 									\
@@ -640,35 +640,35 @@ int runALUUnitTests3(unsigned int onlyTest)
 
 	printHeader(onlyTest, "\nExpressions\n===========\n\n");
 
-	VERIFY_EXPR("23+45", "Number(23);BOP(+);Number(45)");
-	VERIFY_EXPR(" 23 + -8", "Number(23);BOP(+);Number(-8)");
+	VERIFY_EXPR("23+45", "Number(23);BinaryOp(+);Number(45)");
+	VERIFY_EXPR(" 23 + -8", "Number(23);BinaryOp(+);Number(-8)");
 
-	VERIFY_EXPR("34+b-#2","Number(34);BOP(+);FI(b);BOP(-);Counter(2)");
-	VERIFY_EXPR("34+b- -c","Number(34);BOP(+);FI(b);BOP(-);UOP(-);FI(c)");
+	VERIFY_EXPR("34+b-#2","Number(34);BinaryOp(+);FieldIdentifier(b);BinaryOp(-);Counter(2)");
+	VERIFY_EXPR("34+b- -c","Number(34);BinaryOp(+);FieldIdentifier(b);BinaryOp(-);UnaryOp(-);FieldIdentifier(c)");
 
-	VERIFY_EXPR("2*(2+2)","Number(2);BOP(*);(;Number(2);BOP(+);Number(2);)");
+	VERIFY_EXPR("2*(2+2)","Number(2);BinaryOp(*);Open Bracket - (;Number(2);BinaryOp(+);Number(2);Close Bracket - )");
 
-	VERIFY_EXPR("5+sqrt(1)-pow(3,4)","Number(5);BOP(+);FUNC(sqrt);(;Number(1););BOP(-);FUNC(pow);(;Number(3);COMMA;Number(4);)");
-	VERIFY_EXPR("a>b & b>c","FI(a);BOP(>);FI(b);BOP(&);FI(b);BOP(>);FI(c)");
+	VERIFY_EXPR("5+sqrt(1)-pow(3,4)","Number(5);BinaryOp(+);FUNC(sqrt);Open Bracket - (;Number(1);Close Bracket - );BinaryOp(-);FUNC(pow);Open Bracket - (;Number(3);COMMA - ,;Number(4);Close Bracket - )");
+	VERIFY_EXPR("a>b & b>c","FieldIdentifier(a);BinaryOp(>);FieldIdentifier(b);BinaryOp(&);FieldIdentifier(b);BinaryOp(>);FieldIdentifier(c)");
 
-	VERIFY_EXPR("37%10", "Number(37);BOP(%);Number(10)");
+	VERIFY_EXPR("37%10", "Number(37);BinaryOp(%);Number(10)");
 
-	VERIFY_EXPR("length(5)", "FUNC(length);(;Number(5);)");
+	VERIFY_EXPR("length(5)", "FUNC(length);Open Bracket - (;Number(5);Close Bracket - )");
 
-	VERIFY_EXPR("length('hello')", "FUNC(length);(;Literal(hello);)");
+	VERIFY_EXPR("length('hello')", "FUNC(length);Open Bracket - (;Literal(hello);Close Bracket - )");
 
-	VERIFY_EXPR("length(hello)", "FUNC(length);(;Literal(hello);)"); // Issue #141 - arguments without quotes
+	VERIFY_EXPR("length(hello)", "FUNC(length);Open Bracket - (;Literal(hello);Close Bracket - )"); // Issue #141 - arguments without quotes
 
 	// TODO: Yeah, a whole bunch of more expressions
 
 	printHeader(onlyTest, "\nAssignment Statements\n=====================\n\n");
 
-	VERIFY_ASSNMENT("#6 := 2+2","Number(2);BOP(+);Number(2)");
-	VERIFY_ASSNMENT("#6 = 2+2","ALU assignment statements must have an assignment operator as the second element. Got BOP(=) instead.");
-	VERIFY_ASSNMENT("b := 2+2","ALU assignment statements must begin with a counter. Got FI(b) instead.");
-	VERIFY_ASSNMENT("#6 b += 2+2","ALU assignment statements must have an assignment operator as the second element. Got FI(b) instead.");
+	VERIFY_ASSNMENT("#6 := 2+2","Number(2);BinaryOp(+);Number(2)");
+	VERIFY_ASSNMENT("#6 = 2+2","ALU assignment statements must have an assignment operator as the second element. Got BinaryOp(=) instead.");
+	VERIFY_ASSNMENT("b := 2+2","ALU assignment statements must begin with a counter. Got FieldIdentifier(b) instead.");
+	VERIFY_ASSNMENT("#6 b += 2+2","ALU assignment statements must have an assignment operator as the second element. Got FieldIdentifier(b) instead.");
 	VERIFY_ASSNMENT("2+2 := 4","ALU assignment statements must begin with a counter. Got Number(2) instead.");
-	VERIFY_ASSNMENT("#0 += a", "FI(a)");
+	VERIFY_ASSNMENT("#0 += a", "FieldIdentifier(a)");
 
 	// TODO: More
 	return 0;
@@ -678,19 +678,19 @@ int runALUUnitTests4(unsigned int onlyTest)
 {
 	printHeader(onlyTest, "\nInfix to RPN Conversions - Shunting Yard Algorithm\n==================================================\n\n");
 
-	VERIFY_RPN("2+3", "Number(2);Number(3);BOP(+)");
-	VERIFY_RPN("-b","FI(b);UOP(-)");
-	VERIFY_RPN("-2+3","Number(-2);Number(3);BOP(+)");
-	VERIFY_RPN("-(2+3)","Number(2);Number(3);BOP(+);UOP(-)");
-	VERIFY_RPN("37%10","Number(37);Number(10);BOP(%)");
-	VERIFY_RPN("a+b-c","FI(a);FI(b);BOP(+);FI(c);BOP(-)");
-	VERIFY_RPN("a-b+c","FI(a);FI(b);BOP(-);FI(c);BOP(+)")
-	VERIFY_RPN("a*b-c","FI(a);FI(b);BOP(*);FI(c);BOP(-)");
-	VERIFY_RPN("a+b*c","FI(a);FI(b);FI(c);BOP(*);BOP(+)");
-	VERIFY_RPN("(a+b)*c","FI(a);FI(b);BOP(+);FI(c);BOP(*)");
-	VERIFY_RPN("2<3","Number(2);Number(3);BOP(<)");
-	VERIFY_RPN("a>b","FI(a);FI(b);BOP(>)");
-	VERIFY_RPN("a>b & b>c","FI(a);FI(b);BOP(>);FI(b);FI(c);BOP(>);BOP(&)");
+	VERIFY_RPN("2+3", "Number(2);Number(3);BinaryOp(+)");
+	VERIFY_RPN("-b","FieldIdentifier(b);UnaryOp(-)");
+	VERIFY_RPN("-2+3","Number(-2);Number(3);BinaryOp(+)");
+	VERIFY_RPN("-(2+3)","Number(2);Number(3);BinaryOp(+);UnaryOp(-)");
+	VERIFY_RPN("37%10","Number(37);Number(10);BinaryOp(%)");
+	VERIFY_RPN("a+b-c","FieldIdentifier(a);FieldIdentifier(b);BinaryOp(+);FieldIdentifier(c);BinaryOp(-)");
+	VERIFY_RPN("a-b+c","FieldIdentifier(a);FieldIdentifier(b);BinaryOp(-);FieldIdentifier(c);BinaryOp(+)")
+	VERIFY_RPN("a*b-c","FieldIdentifier(a);FieldIdentifier(b);BinaryOp(*);FieldIdentifier(c);BinaryOp(-)");
+	VERIFY_RPN("a+b*c","FieldIdentifier(a);FieldIdentifier(b);FieldIdentifier(c);BinaryOp(*);BinaryOp(+)");
+	VERIFY_RPN("(a+b)*c","FieldIdentifier(a);FieldIdentifier(b);BinaryOp(+);FieldIdentifier(c);BinaryOp(*)");
+	VERIFY_RPN("2<3","Number(2);Number(3);BinaryOp(<)");
+	VERIFY_RPN("a>b","FieldIdentifier(a);FieldIdentifier(b);BinaryOp(>)");
+	VERIFY_RPN("a>b & b>c","FieldIdentifier(a);FieldIdentifier(b);BinaryOp(>);FieldIdentifier(b);FieldIdentifier(c);BinaryOp(>);BinaryOp(&)");
 
 	// Issue #37
 	VERIFY_RPN("tf2mcs(wordrange(1,2),'%d')", "Number(1);Number(2);FUNC(wordrange);Literal(%d);FUNC(tf2mcs)");

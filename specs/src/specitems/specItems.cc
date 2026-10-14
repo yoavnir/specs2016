@@ -977,7 +977,7 @@ SetItem::~SetItem()
 ApplyRet SetItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	auto pAss = std::make_shared<AluAssnOperator>(m_oper);
-	ALUPerformAssignment(m_key, pAss, m_RPNExpression, &g_counters);
+	ALUPerformAssignment(m_key, pAss, m_RPNExpression, &g_counters, m_rawExpression);
 	return ApplyRet__Continue;
 }
 
@@ -1004,7 +1004,7 @@ ApplyRet SkipItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	if (m_bSatisfied) return ApplyRet__Continue;
 
-	PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+	PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters, m_rawExpression);
 
 	// The condition below covers both cases:
 	//   - This is an UNTIL condition and the condition is TRUE
@@ -1117,10 +1117,10 @@ bool ConditionItem::evaluate()
 {
 	bool ret;
 	if (m_isAssignment) {
-		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpression, &g_counters);
+		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpression, &g_counters, m_rawExpression);
 		ret = g_counters.getPointer(m_counter)->getBool();
 	} else {
-		PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+		PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters, m_rawExpression);
 		ret = exprResult->getBool();
 	}
 

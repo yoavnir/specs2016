@@ -254,10 +254,10 @@ PSpecString ExpressionPart::getStr(ProcessingState& pState)
 {
 	PValue res;
 	if (m_isAssignment) {
-		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpr, &g_counters);
+		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpr, &g_counters, m_rawExpression);
 		res = g_counters.getPointer(m_counter);
 	} else {
-		res = evaluateExpression(m_RPNExpr, &g_counters);
+		res = evaluateExpression(m_RPNExpr, &g_counters, m_rawExpression);
 	}
 	std::string ret = res->getStr();
 	return mkSpecString(ret);
