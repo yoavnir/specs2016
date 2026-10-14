@@ -120,13 +120,28 @@ static std::string getTerminalRowsAndColumns(bool bGetRows)
 	if (!alreadyRan) {
 #ifdef WIN64
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
-		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-
-		rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-		cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+			rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+			cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		} else {
+			rows = 24;
+			cols = 80;
+		}
 #else
-		struct winsize w;
-		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+		/*
+		 * Ask whichever standard stream is a terminal, so that the size is
+		 * still known when standard output is redirected. If none is, fall
+		 * back to $LINES / $COLUMNS, and then to 24x80.
+		 */
+		struct winsize w = {};
+		if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != 0 &&
+				ioctl(STDERR_FILENO, TIOCGWINSZ, &w) != 0 &&
+				ioctl(STDIN_FILENO, TIOCGWINSZ, &w) != 0) {
+			const char* envRows = std::getenv("LINES");
+			const char* envCols = std::getenv("COLUMNS");
+			w.ws_row = envRows ? (unsigned short)std::strtoul(envRows, nullptr, 10) : 24;
+			w.ws_col = envCols ? (unsigned short)std::strtoul(envCols, nullptr, 10) : 80;
+		}
 
 		/* sanity */
 

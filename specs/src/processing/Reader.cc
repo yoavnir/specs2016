@@ -277,13 +277,13 @@ PSpecString StandardReader::getNextRecordInternal() {
 			if (m_File) {
 				ok = std::getline(*m_File, line, m_lineDelimiter) ? true : false;
 			} else if (m_pipe) {
-				int c = fgetc(m_pipe.get());
+				int c = getc_nolock(m_pipe.get());
 				ok = !feof(m_pipe.get());
 				if (ok) {
 					line = "";
 					while (c!=EOF && c!=m_lineDelimiter) {
 						line += c;
-						c = fgetc(m_pipe.get());
+						c = getc_nolock(m_pipe.get());
 					}
 				}
 			} else {
@@ -301,13 +301,13 @@ PSpecString StandardReader::getNextRecordInternal() {
 			if (m_File) {
 				ok = std::getline(*m_File, line) ? true : false;
 			} else if (m_pipe) {
-				int c = fgetc(m_pipe.get());
+				int c = getc_nolock(m_pipe.get());
 				ok = !feof(m_pipe.get());
 				if (ok) {
 					line = "";
 					while (c!=EOF && c!='\n') {
 						line += c;
-						c = fgetc(m_pipe.get());
+						c = getc_nolock(m_pipe.get());
 					}
 				}
 			} else {

@@ -520,9 +520,11 @@ gizmos 220
 
 ### `-t` / `--threaded`
 
-Run in threaded mode: separate threads for the reader, the processor, and the writer. This can improve throughput on large files when *processing* is the bottleneck, because the processing thread no longer has to block while records are read and written. If the I/O itself is the bottleneck, threaded mode will not help — there is nothing for the processor to get on with while it waits. The default since version 0.9.5 is single-threaded.
+Run in threaded mode: the reader, the processor, and the writer each run in a separate thread, handing records to one another through queues. The default since version 0.9.5 is single-threaded.
 
-**Deprecated** — threaded mode may be removed in a future release. Most practical specifications turn out to be I/O-bound rather than CPU-bound, so there is rarely anything for threaded mode to gain. Avoid relying on it in new work.
+Threaded mode rarely makes **specs** faster. Handing a record from one thread to the next has a cost that is paid on every record, while the reading and writing it lets overlap with processing are usually quick. It pays off only when records are very large — tens of kilobytes each — the processing is light, and the output goes to a real file, so that writing each record takes long enough to be worth doing in parallel. With ordinary line-sized records, threaded mode is typically two to three times *slower*, and CPU-heavy specifications do not benefit either. See **[When Should I Use `--threaded`?](#when-threaded)** in Appendix A.
+
+Threaded mode may be removed in a future release.
 
 ### `--spaceWS` / `-w`
 
@@ -780,8 +782,8 @@ These exist automatically without any `~/.specs` entry:
 |------|-------|
 | `@version` | The specs version string, e.g., `1.0.0` |
 | `@platform` | Platform description (OS, compiler, Python version) |
-| `@cols` | Number of columns in the terminal |
-| `@rows` | Number of rows in the terminal |
+| `@cols` | Number of columns in the terminal (from `$COLUMNS`, or 80, when no terminal is attached) |
+| `@rows` | Number of rows in the terminal (from `$LINES`, or 24, when no terminal is attached) |
 | `@python` | Either `Enabled` or `Disabled` |
 | `@build-commit` | Short git commit hash of the build |
 | `@build-branch` | Git branch name |
@@ -4386,16 +4388,23 @@ Both trigger the run-out cycle. Choose based on readability:
 - `REDO` (and `SPLITW`/`SPLITF`, which use it internally) intentionally does not clear field identifiers between passes within one cycle, so redefining the same identifier across those passes can trigger a harmless "Field Identifier redefined" warning; suppress it with `NO_WARN_REDEFINED_FID` if needed. See **Chapter 15, Example 6**.
 \newpage
 
-## When Should I Use --threaded?
+## When Should I Use `--threaded`? {#when-threaded}
 
-**Deprecated** — threaded mode may be removed in a future release. Avoid relying on it in new work.
+Almost never. Measured on Linux, threaded mode compares with the default single-threaded mode roughly as follows (exact figures depend on the machine):
 
-Use `--threaded` when:
+| Workload | Threaded mode |
+|----------|---------------|
+| Ordinary line-sized records, simple specification | 2–3 times slower |
+| Ordinary line-sized records, CPU-heavy specification (complex ALU expressions) | About 10% slower |
+| Very large records (tens of KB), moderate processing | About the same |
+| Very large records (tens of KB), light processing, output to a file | 20–30% faster |
+| Very large records (tens of KB), light processing, output discarded (`/dev/null`) | Slower |
 
-- Processing large files (millions of records)
-- *Processing* is the bottleneck (CPU-intensive specifications, complex ALU expressions), so that reads and writes can proceed while the processor works
+The reason is that threaded mode can only save the time spent reading and writing, by doing it while the processor works on other records. Against that it pays a fixed cost on every record for passing the record between threads, and it makes the rest of the program slightly slower because of the bookkeeping needed to make it safe to run in several threads. With line-sized records the reads and writes are so quick that the per-record cost outweighs them.
 
-Threaded mode will **not** help when the I/O itself is the bottleneck (slow disks, network filesystems). In that case the processor is merely waiting for data, and giving the reader and writer their own threads gives it nothing extra to do. Most practical specifications fall into exactly this category — they are I/O-bound rather than CPU-bound — which is why threaded mode is deprecated and may be removed in a future release.
+A CPU-heavy specification does not change the picture. It makes *processing* take longer, but it leaves the reading and writing just as quick, so there is still almost nothing to overlap — and the per-record cost remains.
+
+If you believe your workload is one of the rare ones that qualify, time it both ways on representative data before relying on `--threaded`.
 
 Do NOT use `--threaded` with:
 

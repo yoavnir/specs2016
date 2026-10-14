@@ -23,14 +23,22 @@ private:
     bool m_Done;
     size_t m_highWaterMark;
     size_t m_lowWaterMark;
+    size_t m_notifyThreshold;
+    static constexpr size_t maxNotifyBatch = 64;
+    static constexpr auto maxBatchDelay = std::chrono::milliseconds(10);
     static size_t computeLowWaterMark(size_t hwm) {
         return (hwm > 10) ? (hwm - hwm / 10) : (hwm > 2 ? hwm - 2 : 0);
+    }
+    static size_t computeNotifyThreshold(size_t hwm) {
+        size_t half = hwm / 2;
+        return (half < 1) ? 1 : ((half > maxNotifyBatch) ? maxNotifyBatch : half);
     }
 public:
     MTQueue(size_t highWaterMark = QUEUE_HIGH_WM)
         : m_Done(false)
         , m_highWaterMark(highWaterMark)
         , m_lowWaterMark(computeLowWaterMark(highWaterMark))
+        , m_notifyThreshold(computeNotifyThreshold(highWaterMark))
     {
         m_timer.setCapacity(m_highWaterMark);
     }
@@ -42,9 +50,14 @@ public:
         	cv_QueueFull.wait(lock);
         }
         m_Queue.push(data);
+        size_t queueSize = m_Queue.size();
         m_timer.increment();
         lock.unlock();
-        cv_QueueEmpty.notify_one();
+        // Wake the consumer only once a batch has accumulated; a consumer
+        // waiting on a trickle of records picks them up on its timeout.
+        if (queueSize >= m_notifyThreshold) {
+            cv_QueueEmpty.notify_one();
+        }
     }
 
     bool empty() const
@@ -56,12 +69,16 @@ public:
     bool wait_and_pop(T& popped_value)
     {
         uniqueLock lock(m_Mutex);
-        while(m_Queue.empty() && false==m_Done)
-        {
-            cv_QueueEmpty.wait_for(lock, std::chrono::milliseconds(2000));
+        if (m_Queue.empty()) {
+            while (!m_Done && m_Queue.size() < m_notifyThreshold) {
+                if (cv_QueueEmpty.wait_for(lock, maxBatchDelay) == std::cv_status::timeout
+                        && !m_Queue.empty()) {
+                    break;
+                }
+            }
         }
 
-        if (m_Done && m_Queue.empty()) return false;
+        if (m_Queue.empty()) return false;  // only when m_Done
 
         popped_value=m_Queue.front();
         m_Queue.pop();
@@ -75,14 +92,17 @@ public:
     }
 
     void Done() {
+        uniqueLock lock(m_Mutex);
     	m_Done = true;
     	m_timer.drain();
-    	cv_QueueEmpty.notify_one();
+        lock.unlock();
+    	cv_QueueEmpty.notify_all();
     }
 
     void setCapacity(size_t highWaterMark) {
         m_highWaterMark = highWaterMark;
         m_lowWaterMark = computeLowWaterMark(highWaterMark);
+        m_notifyThreshold = computeNotifyThreshold(highWaterMark);
         m_timer.setCapacity(highWaterMark);
     }
 
