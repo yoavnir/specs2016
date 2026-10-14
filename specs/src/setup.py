@@ -540,12 +540,11 @@ if args.static_link:
 if platform=="NT":
 	condcomp = condcomp + "{}WIN64".format(def_prefix)
 
-# ALU_DUMP enables the --debug-alu-comp / --debug-alu-run output. For GCC/Clang
-# it is defined by default in every variation (RELEASE, DEBUG and PROF), so the
-# switches work in release builds too; --no_alu_debug suppresses it everywhere.
-# Windows VS builds are left exactly as configured above (ALU_DUMP in the DEBUG
-# variation only) and are not affected by --no_alu_debug.
-if compiler!="VS" and not no_alu_debug:
+# ALU_DUMP enables the --debug-alu-comp / --debug-alu-run output.
+# --no_alu_debug suppresses it.
+# For Windows builds using MSBuild rather than make, it is enabled
+# in DEBUG builds but not in RELEASE builds.
+if not no_alu_debug:
 	condcomp = condcomp + "{}ALU_DUMP".format(def_prefix)
 
 # Other compilers switches go here

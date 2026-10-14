@@ -538,11 +538,15 @@ Disable the while-guard, which normally causes specs to abort after 5000 iterati
 
 ### `--debug-alu-comp`
 
-Print detailed information about the parsing and compilation of ALU expressions. Useful for diagnosing why an expression is being parsed differently than expected. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag (on Windows, only debug builds carry this output). The output shows how the expression is parsed into tokens both before and after its conversion to reverse polish notation (RPN). It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**. 
+Print detailed information about the parsing and compilation of ALU expressions. Useful for diagnosing why an expression is being parsed differently than expected. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows how the expression is parsed into tokens both before and after its conversion to reverse polish notation (RPN). It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**. 
+
+**NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
 ### `--debug-alu-run`
 
-Print step-by-step evaluation information for ALU expressions at runtime. Very verbose; useful for tracing a complex expression's intermediate values. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag (on Windows, only debug builds carry this output). The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**.
+Print step-by-step evaluation information for ALU expressions at runtime. Very verbose; useful for tracing a complex expression's intermediate values. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**.
+
+**NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
 ### `--debug-alu-file file` or `-d file`
 

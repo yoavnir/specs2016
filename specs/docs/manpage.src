@@ -2271,7 +2271,7 @@ Prints out detailed information about the parsing and compiling of expressions. 
 .B specs
 was built with the
 .I --no_alu_debug
-configure flag (on Windows, only in debug builds). The output shows how each expression is tokenized and then converted to
+configure flag. The output shows how each expression is tokenized and then converted to
 .B Reverse Polish Notation (RPN).
 The output is formatted as markdown and can be viewed with any markdown viewer such as
 .B Visual Studio Code
@@ -2282,7 +2282,7 @@ Prints out detailed step-by-step information about the evaluation of expressions
 .B specs
 was built with the
 .I --no_alu_debug
-configure flag (on Windows, only in debug builds). The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed with any markdown viewer such as
+configure flag. The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed with any markdown viewer such as
 .B Visual Studio Code
 or
 .B glow.
