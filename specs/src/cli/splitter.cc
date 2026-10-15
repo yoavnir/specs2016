@@ -177,15 +177,17 @@ static bool hasPathComponent(const std::string& name)
 	return false;
 }
 
-static void openSpecFile(std::ifstream& theFile, std::string& fileName)
+static bool endsWithDotSpec(const std::string& s)
 {
-	if (hasPathComponent(fileName)) {
-		// Explicit path -- open directly, don't search the spec path
-		theFile.open(fileName);
-		return;
-	}
+#if CPP_STD_LEVEL >= 20
+	return s.ends_with(".spec");
+#else
+	return s.size()>=5 && s.compare(s.size()-5, 5, ".spec")==0;
+#endif
+}
 
-	// Bare name -- search the spec path
+static bool openInSpecPath(std::ifstream& theFile, const std::string& fileName)
+{
 	char* spath = strdup(getFullSpecPath());
 	if (spath && spath[0]) {
 		char* spath_ctx = spath;
@@ -195,12 +197,29 @@ static void openSpecFile(std::ifstream& theFile, std::string& fileName)
 			theFile.open(fullpath);
 			if (theFile.is_open()) {
 				free(spath);
-				return;
+				return true;
 			}
 			onePath = strtok_r(nullptr, PATH_LIST_SEPARATOR, &spath_ctx);
 		}
 	}
 	if (spath) free(spath);
+	return false;
+}
+
+static void openSpecFile(std::ifstream& theFile, std::string& fileName)
+{
+	if (hasPathComponent(fileName)) {
+		// Explicit path -- open directly, don't search the spec path
+		theFile.open(fileName);
+		return;
+	}
+
+	// Bare name -- search the spec path, preferring NAME.spec over NAME
+	if (endsWithDotSpec(fileName)) {
+		openInSpecPath(theFile, fileName);
+	} else if (!openInSpecPath(theFile, fileName + ".spec")) {
+		openInSpecPath(theFile, fileName);
+	}
 }
 
 std::vector<Token> parseTokensFile(std::string& fileName)
