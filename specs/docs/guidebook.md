@@ -482,7 +482,7 @@ Main Thread:
 
 ### `-f filename` / `--specFile filename`
 
-Read the specification from the named file instead of the command line. This is covered in **[Chapter 5](#chap5)**.
+Read the specification from the named file instead of the command line. This is covered in **[Chapter 5](#chap5)**. A bare name is looked up on the **SPECSPATH** as `name.spec` before `name`.
 
 ### `-c filename` / `--config filename`
 
@@ -853,7 +853,7 @@ You can place a spec file anywhere. Just give an absolute path, and **specs** wi
 $ specs -f /home/alice/specs/myspec
 ```
 
-It's usually better to place the specifications in specific, dedicated directories and then only tell **specs** the name of the specification (`myspec` in the example). When you specify a relative filename with `-f`, specs searches for it in the **SPECSPATH** — a colon-separated list of directories. The SPECSPATH is controlled by:
+It's usually better to place the specifications in specific, dedicated directories and then only tell **specs** the name of the specification (`myspec` in the example). When you specify a relative filename with `-f`, specs searches for it in the **SPECSPATH** — a colon-separated list of directories. It first looks for the name with a `.spec` suffix in every directory, and only then for the name as given, so `-f myspec` finds `myspec.spec` before `myspec`. A name that already ends in `.spec` is looked up as given, and a name with a directory part (such as `./myspec`) is opened exactly as written, with no suffix added. The SPECSPATH is controlled by:
 
 1. The `SPECSPATH` environment variable
 2. The `SPECSPATH` entry in `~/.specs`
@@ -4892,6 +4892,19 @@ the input.
 |---------------|-------|-------|
 | `specs --stats PRINT "2+2" 1` | `Wrote 2 lines.` | `Wrote 1 lines.` |
 | `specs --stats SET "#1:=5"` | `Wrote 1 lines.` | `Wrote 0 lines.` |
+
+### `-f` looks for `NAME.spec` first
+
+A bare file name given with `-f` or `--specFile` is searched for on the
+**SPECSPATH** with a `.spec` suffix first, in every directory, and only then as
+given. A `.spec` file now takes precedence over a file of the same name without
+the suffix, even when the plain file is in an earlier directory. Names that end
+in `.spec`, and names with a directory part, are searched for as given.
+
+| Specification | 1.0.0 | 1.1.0 |
+|---------------|-------|-------|
+| `specs -f foo`, with `foo` = `w1 1` and `foo.spec` = `w2 1`, input `alpha beta` | `alpha` | `beta` |
+| `specs -f bar`, with only `bar` = `w1 1`, input `alpha beta` | `alpha` | `alpha` |
 
 ---
 

@@ -244,6 +244,74 @@ run_test(
     inp="alpha beta\n"
 )
 
+# =====================================================================
+# A bare spec file name is looked up on SPECSPATH as NAME.spec first,
+# then as NAME. Names with a path component, and names already ending
+# in .spec, are not given an extra suffix.
+# =====================================================================
+import shutil
+lookup_dirs = ["cli_sp_a", "cli_sp_b"]
+shutil.rmtree("cli_sp_a", ignore_errors=True)
+shutil.rmtree("cli_sp_b", ignore_errors=True)
+for d in lookup_dirs:
+    os.mkdir(d)
+def write_spec(path, content):
+    with open(path, "w") as f:
+        f.write(content)
+write_spec("cli_sp_a/plain_only", "w2 1\n")       # no .spec counterpart
+write_spec("cli_sp_b/suffixed.spec", "w2 1\n")     # only the .spec exists
+write_spec("cli_sp_a/both", "w1 1\n")              # plain, earlier on SPECSPATH
+write_spec("cli_sp_b/both.spec", "w2 1\n")         # .spec, later on SPECSPATH
+write_spec("cli_sp_a/double.spec.spec", "w1 1\n")  # must not be found by -f double.spec
+write_spec("cli_sp_a/explicit", "w1 1\n")
+saved_specpath = os.environ.get("SPECSPATH")
+os.environ["SPECSPATH"] = os.pathsep.join(lookup_dirs)
+
+run_test(
+    "Bare name falls back to the plain file when no NAME.spec exists",
+    "-f plain_only -i @in@ -o @out@",
+    expected_out="beta\n"
+)
+run_test(
+    "Bare name finds NAME.spec when only the suffixed file exists",
+    "-f suffixed -i @in@ -o @out@",
+    expected_out="beta\n"
+)
+run_test(
+    "NAME.spec on a later SPECSPATH directory beats NAME on an earlier one",
+    "-f both -i @in@ -o @out@",
+    expected_out="beta\n"
+)
+run_test(
+    "A name already ending in .spec is opened as given",
+    "-f both.spec -i @in@ -o @out@",
+    expected_out="beta\n"
+)
+run_test(
+    "A name ending in .spec does not get a second .spec appended",
+    "-f double.spec -i @in@ -o @out@",
+    expected_rc=252,
+    expected_err="Spec file not found"
+)
+run_test(
+    "A name with a path component gets no .spec appended",
+    "-f ./cli_sp_b/both -i @in@ -o @out@",
+    expected_rc=252,
+    expected_err="Spec file not found"
+)
+run_test(
+    "A name with a path component is opened exactly as given",
+    "-f ./cli_sp_a/explicit -i @in@ -o @out@",
+    expected_out="alpha\n"
+)
+
+if saved_specpath is None:
+    del os.environ["SPECSPATH"]
+else:
+    os.environ["SPECSPATH"] = saved_specpath
+for d in lookup_dirs:
+    shutil.rmtree(d, ignore_errors=True)
+
 
 # =====================================================================
 # Done

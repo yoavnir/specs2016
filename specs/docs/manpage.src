@@ -2245,6 +2245,13 @@ defaults to
 on POSIX systems, or
 .B %APPDATA%\especs
 on Windows.
+A name given without a directory part is first searched for with a
+.I .spec
+suffix in every directory on the
+.I SPECSPATH,
+and only then as given. A name that already ends in
+.I .spec,
+or that includes a directory part, is searched for as given.
 A spec file replaces the specification on the command line entirely, so the two cannot be combined:
 .B specs
 rejects an invocation that supplies both
