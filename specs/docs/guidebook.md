@@ -711,7 +711,7 @@ Any other value (or leaving it unset) keeps the warning enabled, which is the de
 
 ### `SPECSPATH`
 
-A colon-separated list of directories where specs looks for spec files ([Chapter 5](#chap5)) and Python functions ([Chapter 14](#chap14)):
+A list of directories where specs looks both for spec files ([Chapter 5](#chap5)) and for the Python functions ([Chapter 14](#chap14)):
 ```
 SPECSPATH: /home/alice/specs:/usr/local/share/specs
 ```
@@ -853,7 +853,7 @@ You can place a spec file anywhere. Just give an absolute path, and **specs** wi
 $ specs -f /home/alice/specs/myspec
 ```
 
-It's usually better to place the specifications in specific, dedicated directories and then only tell **specs** the name of the specification (`myspec` in the example). When you specify a relative filename with `-f`, specs searches for it in the **SPECSPATH** — a colon-separated list of directories. It first looks for the name with a `.spec` suffix in every directory, and only then for the name as given, so `-f myspec` finds `myspec.spec` before `myspec`. A name that already ends in `.spec` is looked up as given, and a name with a directory part (such as `./myspec`) is opened exactly as written, with no suffix added. The SPECSPATH is controlled by:
+It's usually better to place the specifications in specific, dedicated directories and then only tell **specs** the name of the specification (`myspec` in the example). When you specify a relative filename with `-f`, specs searches for it in the **SPECSPATH** — a colon-separated list of directories (semicolon-separated on Windows). It first looks for the name with a `.spec` suffix in every directory, and only then for the name as given, so `-f myspec` finds `myspec.spec` before `myspec`. A name that already ends in `.spec` is looked up as given, and a name with a directory part (such as `./myspec`) is opened exactly as written, with no suffix added. The SPECSPATH is controlled by:
 
 1. The `SPECSPATH` environment variable
 2. The `SPECSPATH` entry in `~/.specs`
