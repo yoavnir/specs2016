@@ -622,13 +622,17 @@ static bool mayBeNamedString(std::string& s)
 	return true;
 }
 
-std::string getLiteral(Token& tok)
+std::string getLiteral(Token& tok, bool bThrowIfNoLiteral=false)
 {
 	if (TokenListType__LITERAL==tok.Type()) {
 		return tok.Literal();
 	}
 	if (mayBeLiteral(tok)) {
 		return tok.Orig();
+	}
+	if (bThrowIfNoLiteral) {
+		std::string err = "Token <" + tok.Orig() + "> at index "+ std::to_string(tok.argIndex())+" is not a valid expression.";
+		MYTHROW(err);
 	}
 	return std::string("");
 }
@@ -741,7 +745,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					do {
 						if (!tok.Literal().empty())
 							tok.appendLiteral(' ');
-						tok.appendLiteral(getLiteral(nextTok));
+						tok.appendLiteral(getLiteral(nextTok,true));
 						tokList->erase(tokList->begin()+(i+1));
 						if (i+1 < tokList->size()) {
 							nextTok = tokList->at(i+1);
