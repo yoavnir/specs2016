@@ -851,14 +851,14 @@ int main(int argc, char** argv)
 
 	// REDO output validation
 	VERIFY("w1 1 REDO", "REDO at index 3 must be followed by output-producing spec units"); // Test #206
-	VERIFY("REDO w1 1", "REDO at index 1 must be preceded by output-producing spec units"); // Test #207
-	VERIFY("w1 a: REDO w1 1", "REDO at index 3 must be preceded by output-producing spec units"); // Test #208
+	VERIFY("REDO w1 1", "REDO at index 1 must follow spec units that produce output"); // Test #207
+	VERIFY("w1 a: REDO w1 1", "REDO at index 3 must follow spec units that produce output"); // Test #208
 	VERIFY("SPLITW REDO w1 1", "The\nquick\nbrown\nfox\njumped\nover\nthe\nlazy\ndog"); // Test #209
-	VERIFY("EOF print '2+2'", "EOF at index 1 must be preceded by data-providing spec units"); // Test #210
+	VERIFY("EOF print '2+2'", "EOF at index 1 must follow spec units that produce output or set variables"); // Test #210
 	VERIFY("w1 a: EOF", "EOF at index 3 must be followed by output-producing spec units"); // Test #211
 	VERIFY2("w1 a: EOF print 'sum(a)'", "1\n2\n3\n4", "10"); // Test #212
-	VERIFY("w1 1 REDO w1 a: REDO hello", "REDO at index 6 must be preceded by output-producing spec units"); // Test #213
-	VERIFY("w1 1 REDO EOF bye", "EOF at index 4 must be preceded by data-providing spec units"); // Test #214
+	VERIFY("w1 1 REDO w1 a: REDO hello", "REDO at index 6 must follow spec units that produce output"); // Test #213
+	VERIFY("w1 1 REDO EOF bye", "EOF at index 4 must follow spec units that produce output or set variables"); // Test #214
 	VERIFY("w1 REDO w1 1", "The"); // Test #215
 	VERIFY2("w1 1 REDO set '#0:=7' EOF print '#0'", "x", "7"); // Test #216
 
