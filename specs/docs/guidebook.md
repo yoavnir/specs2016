@@ -4849,9 +4849,9 @@ as described above under "Verifying the installation."
 
 This guidebook covers version XXVERSION. `specs` is backward-compatible **for
 the most part**, meaning that *specification* will work the same way after an
-upgrade. 
+upgrade. Usually.
 
-This appendix lists the exception to this rule: non-backward-compatible 
+This appendix lists the exceptions to this rule: non-backward-compatible
 changes to the handling of *specifications* — cases where an unchanged 
 *specification* produces different output under a newer version of **specs**. 
 New features are not listed here.
@@ -4866,32 +4866,28 @@ the old and the new one.
 A *specification* that neither reads the input nor builds an output record
 wrote one empty line. It now writes nothing.
 
-Both conditions are required: no input is read (no character, word or field
-range, no `READ`, no `EOF`) *and* no output record is produced.
-
 | Specification | 1.0.0 | 1.1.0 |
 |---------------|-------|-------|
 | `specs SET "#1:=5"` | one empty line | no output |
 | `specs /text/ a:` | one empty line | no output |
-| `specs PRINT "2+2" 1` | `4` | `4` |
+| `specs PRINT "2+2"` | `4` | `4` |
 | `specs /text/ 1` | `text` | `text` |
 
-*Specifications* that read the input were never affected: a cycle has always
-written a record only when it built one. The rule was not applied when no input
-was read, and an untouched output record yields an empty string rather than
-nothing at all. It is now applied in both cases.
+*Specifications* that read the input are not affected: a cycle always writes
+a record only when it builds one. The rule did not apply when no input was
+read, and an untouched output record yielded an empty string rather than
+nothing at all. It now works the same in both cases.
 
 ### `--stats` line counts
 
-The written-line count reported by `--stats` was one too high for a
-*specification* that does not read the input, which counted its single output
-record twice. Output itself was unaffected, as were *specifications* that read
-the input.
+The written-line count reported by `--stats` was incorrect for
+*specifications* that do not read the input. Output was correct, as were
+*specifications* that did read the input.
 
 | Specification | 1.0.0 | 1.1.0 |
 |---------------|-------|-------|
-| `specs --stats PRINT "2+2" 1` | `Wrote 2 lines.` | `Wrote 1 lines.` |
-| `specs --stats SET "#1:=5"` | `Wrote 1 lines.` | `Wrote 0 lines.` |
+| `specs --stats PRINT "2+2"` | Wrote 2 lines. | Wrote 1 lines. |
+| `specs --stats SET "#1:=5"` | Wrote 1 lines. | Wrote 0 lines. |
 
 ### `-f` looks for `NAME.spec` first
 
@@ -4899,13 +4895,47 @@ A bare file name given with `-f` or `--specFile` is searched for on the
 **SPECSPATH** with a `.spec` suffix first, in every directory, and only then as
 given. A `.spec` file now takes precedence over a file of the same name without
 the suffix, even when the plain file is in an earlier directory. Names that end
-in `.spec`, and names with a directory part, are searched for as given.
+in `.spec`, and names with path parts, are searched for as given.
+
+So assuming that **SPECSPATH** is `/etc/specs`, and **pwd** is `~`:
+
+```{=latex}
+{\small\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{|p{0.26\columnwidth}|p{0.28\columnwidth}|p{0.19\columnwidth}|p{0.19\columnwidth}|}
+\hline
+\textbf{Command} & \textbf{Available files} & \textbf{1.0.0} & \textbf{1.1.0} \\
+\hline
+\endhead
+\texttt{specs -f foo} & /etc/specs/foo \newline /etc/specs/foo.spec & /etc/specs/foo & /etc/specs/foo.spec \\
+\hline
+\texttt{specs -f foo} & /etc/specs/foo & /etc/specs/foo & /etc/specs/foo \\
+\hline
+\texttt{specs -f tst/bar} & /etc/specs/bar \newline /etc/specs/bar.spec \newline \textasciitilde/tst/bar \newline \textasciitilde/tst/bar.spec & \textasciitilde/tst/bar & \textasciitilde/tst/bar \\
+\hline
+\texttt{specs -f foo.spec} & /etc/specs/foo \newline /etc/specs/foo.spec & /etc/specs/foo.spec & /etc/specs/foo.spec \\
+\hline
+\texttt{specs -f /opt/myspecs/bar} & /etc/specs/opt/myspecs/bar \newline /etc/specs/bar \newline \textasciitilde/opt/myspecs/bar \newline /opt/myspecs/bar & /opt/myspecs/bar & /opt/myspecs/bar \\
+\hline
+\end{longtable}
+}
+```
+
+### Spec-unit keywords where an expression is required
+
+A spec-unit keyword, or any other token that is not a valid expression, in
+the expression of `IF`, `WHILE`, `SET`, `PRINT`, `ASSERT`, `ABEND`,
+`SKIPUNTIL` or `SKIPWHILE` is now rejected when the *specification* is
+compiled, before any input is read. In 1.0.0 the *specification* was rejected
+with a different message, or it failed at run time after reading input. The
+exit status is 252 in both versions.
 
 | Specification | 1.0.0 | 1.1.0 |
 |---------------|-------|-------|
-| `specs -f foo`, with `foo` = `w1 1` and `foo.spec` = `w2 1`, input `alpha beta` | `alpha` | `beta` |
-| `specs -f bar`, with only `bar` = `w1 1`, input `alpha beta` | `alpha` | `alpha` |
+| `specs WHILE DO` | `Missing DO after WHILE at index 1` | `Token <DO> at index 2 is not a valid expression.` |
+| `specs SET PRINT 1` | `Error in statement in Token SET at index 1 with content <SET>` | `Token <PRINT> at index 2 is not a valid expression.` |
+| `specs PRINT SET 1` | `Expression in Token PRINT at index 1 with content <>: Expression has no units` | `Token <SET> at index 2 is not a valid expression.` |
+| `specs ASSERT NEXT 1`, input of three lines | `Runtime error after reading 1 lines and using 1. Expression did not reduce to a single value` | `Token <NEXT> at index 2 is not a valid expression.` |
 
 ---
 
-*The specs project is hosted at [https://github.com/yoavnir/specs2016](https://github.com/yoavnir/specs2016).*
+*The specs2016 project is hosted at [https://github.com/yoavnir/specs2016](https://github.com/yoavnir/specs2016).*
