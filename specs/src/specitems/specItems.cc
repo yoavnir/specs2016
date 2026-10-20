@@ -134,7 +134,7 @@ static void ValidateRedoAndEOFPlacement(const std::vector<PItem>& items)
 		if (pToken && TokenListType__REDO==pToken->getToken()->Type()) {
 			if (!stateStack[stateStackIdx].sawOutputBeforeRedo) {
 				std::string err = "REDO at index " + std::to_string(pToken->getToken()->argIndex())
-					+ " must be preceded by output-producing spec units";
+					+ " must follow spec units that produce output";
 				MYTHROW(err);
 			}
 			stateStack[stateStackIdx].waitingForOutput = true;
@@ -148,7 +148,7 @@ static void ValidateRedoAndEOFPlacement(const std::vector<PItem>& items)
 		if (pToken && TokenListType__EOF==pToken->getToken()->Type()) {
 			if (!stateStack[stateStackIdx].sawDataBeforeEOF) {
 				std::string err = "EOF at index " + std::to_string(pToken->getToken()->argIndex())
-					+ " must be preceded by data-providing spec units";
+					+ " must follow spec units that produce output or set variables";
 				MYTHROW(err);
 			}
 			stateStack[stateStackIdx].waitingForOutput = true;
