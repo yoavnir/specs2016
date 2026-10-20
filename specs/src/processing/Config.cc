@@ -24,6 +24,7 @@
 
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
+#define CONFIG_FILE_WARN "Invalid configuration file entry at line #" << lineNum << " -- "
 
 #define X(nm,typ,defval,ssw,cliswitch,oval) typ g_##nm = defval;
 CONFIG_PARAMS
@@ -33,8 +34,9 @@ extern unsigned int g_WhileGuardLimit;
 
 static std::map<std::string,std::string> ExternalLiterals;
 
-static void useKeyValue(std::string& key, std::string& value)
+static void useKeyValue(std::string& key, std::string& value, std::string& line, unsigned int lineNum)
 {
+	static std::map<std::string, unsigned int> ExternalLiteralLineMap;
 	if (!key.empty() && ':'==key.back()) {
 		key = key.substr(0,key.length() - 1);
 		if (key == "timezone") {
@@ -51,11 +53,16 @@ static void useKeyValue(std::string& key, std::string& value)
 			try {
 				g_WhileGuardLimit = std::stoul(value);
 			} catch (...) {
+				std::cerr << CONFIG_FILE_WARN << "Bad while-guard-limit value <" << value << ">:\n\t" << line << "\n";
 			}
 		}
 #if CPP_STD_LEVEL >= 20
 		if (!ExternalLiterals.contains(key)) {
 			ExternalLiterals[key] = value;
+			ExternalLiteralLineMap[key] = lineNum;
+		} else {
+			std::cerr << CONFIG_FILE_WARN << "Key <" << key << "> redefined.\n\tPreviously defined in line #" 
+				<< ExternalLiteralLineMap[key] << " with value <" << ExternalLiterals[key] << ">:\n\tNow: " << line << "\n";
 		}
 #else
 		if (ExternalLiterals.find(key) == ExternalLiterals.end()) {
@@ -107,8 +114,7 @@ static bool is_delimiter(char c)
 
 static void alertInvalidLine(std::string& ln, unsigned int lineNum, const char* err)
 {
-	std::cerr << "Invalid configuration file line at line #" << lineNum <<
-			" -- " << err << ":\n\t" << ln << "\n";
+	std::cerr << CONFIG_FILE_WARN << err << ":\n\t" << ln << "\n";
 }
 
 static std::string getTerminalRowsAndColumns(bool bGetRows)
@@ -220,7 +226,7 @@ void readConfigurationFile(useKeyValueCB cb)
 			if (cb) {
 				(*cb)(key, value);
 			} else {
-				useKeyValue(key, value);
+				useKeyValue(key, value, line, lineCounter);
 			}
 		}
 	} else {
