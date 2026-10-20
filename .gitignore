@@ -59,6 +59,10 @@ specs/docs/manpage
 specs/docs/guidebook_tmp.md
 specs/docs/guidebook.pdf
 
+# Examples from the utils dir
+specs/utils/example.html
+specs/utils/example.pdf
+
 # AI agents
 .devin
 
