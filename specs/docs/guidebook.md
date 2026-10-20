@@ -2733,11 +2733,13 @@ This is useful for skipping records that match a condition:
 
 `ABEND` halts the entire specs run with an error message sent to stderr. The current output record is *not* written. No further records are processed.
 
-```
-a: 55-57    NEXTWORD
+```specs
+a: 55-57    NEXTWORD  # "Age" field
    IF "a > 120" THEN
        ABEND "Age in record exceeds limit"
-
+```
+Use example:
+```
 $ seq 118 122 | specs W1 55 | specs -f example
 118
 119
@@ -2745,7 +2747,7 @@ $ seq 118 122 | specs W1 55 | specs -f example
 ABEND: Age in record exceeds limit
 ```
 
-`ABEND` only makes sense inside a conditional.
+`ABEND` usually makes sense only inside a conditional.
 
 ## ASSERT
 
@@ -4924,7 +4926,7 @@ So assuming that **SPECSPATH** is `/etc/specs`, and **pwd** is `~`:
 
 A spec-unit keyword, or any other token that is not a valid expression, in
 the expression of `IF`, `WHILE`, `SET`, `PRINT`, `ASSERT`, `ABEND`,
-`SKIPUNTIL` or `SKIPWHILE` is now rejected when the *specification* is
+`SKIP-UNTIL` or `SKIP-WHILE` is now rejected when the *specification* is
 compiled, before any input is read. In 1.0.0 the *specification* was rejected
 with a different message, or it failed at run time after reading input. The
 exit status is 252 in both versions.
@@ -4936,6 +4938,14 @@ exit status is 252 in both versions.
 | `specs PRINT SET 1` | `Expression in Token PRINT at index 1 with content <>: Expression has no units` | `Token <SET> at index 2 is not a valid expression.` |
 | `specs ASSERT NEXT 1`, input of three lines | `Runtime error after reading 1 lines and using 1. Expression did not reduce to a single value` | `Token <NEXT> at index 2 is not a valid expression.` |
 
+### Warnings on duplicate configured literals
+
+In version 1.0.0, if the configuration file contained more than 1 entry defining the same *configured literal*, **specs** would use the first one and ignore the rest. This still happens, but now a warning is issued to standard error:
+```
+Invalid configuration file entry at line #8 -- Key <pi> redefined.
+        Previously defined in line #7 with value <3.14159265>:
+        Now: pi: 2.4
+```
 ---
 
 *The specs2016 project is hosted at [https://github.com/yoavnir/specs2016](https://github.com/yoavnir/specs2016).*
