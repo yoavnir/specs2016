@@ -78,13 +78,6 @@ test/ALUUnitTest.obj: test/ALUUnitTest.cc utils/platform.h \
  processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
  utils/SpecString.h utils/aluFunctions.h processing/StringBuilder.h \
  processing/persistent.h
-test/readWriteTest.obj: test/readWriteTest.cc utils/ErrorReporting.h \
- processing/Reader.h utils/StringQueue.h utils/SpecString.h \
- utils/platform.h utils/TimeUtils.h utils/SpecString.h utils/directives.h \
- processing/Writer.h processing/StringBuilder.h \
- processing/ProcessingState.h utils/alu.h utils/PythonIntf.h \
- utils/aluValue.h utils/aluFunctions.h
-test/timeTest.obj: test/timeTest.cc utils/TimeUtils.h utils/SpecString.h
 utils/platform.obj: utils/platform.cc utils/platform.h \
  utils/ErrorReporting.h
 utils/directives.obj: utils/directives.cc utils/ErrorReporting.h \
