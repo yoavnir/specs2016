@@ -154,7 +154,9 @@ You will learn all three. A quick decision guide is in Appendix A; details are i
 
 As stated above, you can run **specs** with a *specification* on the command line, or place the *specification* in a file. With a file, you get indentation and comments for better readability. For the readability of this guidebook, some of the examples are given as command line, some as a file, and some with a kind of mixture that is not possible in real usage. See the following example copied from [Chapter 12](#chap12):
 ```
-specs --inCmd "ls -l"
+$ specs --inCmd "ls -l"
+```
+```specs
     /Filename:/ 1
     W-1         NW   # Last word in "ls -l" output is file name
     WRITE            # Skip to next line
@@ -320,6 +322,14 @@ echo "5 3" | specs a: w1 . b: w2 . ID b 1 ID a 2
 ```
 Output: `35`
 
+For clarity, here's the specification above formatted nicer and with comments:
+```specs
+   a: WORD 1  .  # Assign word 1 to a: but do not print
+   b: WORD 2  .  # Assign word 2 to b: but do not print
+      ID b    1  # Print field identifier b in position 1
+      ID a    2  # Print field identifier a in position 2
+```
+
 Field identifiers, and everything you can do with them, are covered in full starting in Chapter 6.
 
 ### STRIP — Trimming Whitespace
@@ -327,7 +337,12 @@ Field identifiers, and everything you can do with them, are covered in full star
 Adding the `STRIP` keyword right after the `InputSource` removes leading and trailing whitespace from the value before it is converted or placed:
 
 ```
-echo "  hello  " | specs "<" 1 1-* strip NEXT ">" NEXT
+echo "  hello  " | specs 
+```
+```specs
+   "<"           1  # In column 1 print a < 
+   1-*  STRIP NEXT  # Strip the entire record and print it next
+   ">"        NEXT  # Append a > at the end
 ```
 Output: `<hello>`
 
@@ -336,10 +351,10 @@ This is handy when a fixed-width or word-delimited source includes surrounding b
 ### Conversions
 
 A **conversion**, placed just before the `OutputPlacement`, transforms the value. `UCASE` and `LCASE` are the two most common examples — there are others, all covered in [Chapter 6](#chap6).
-\newpage
+
 Example:
 ```
-echo "Hello World" | specs 1-* ucase 1
+echo "Hello World" | specs  1-* UCASE 1
 ```
 Output: `HELLO WORLD`
 
@@ -348,7 +363,13 @@ Output: `HELLO WORLD`
 The `OutputPlacement` argument says where the value goes. You've already seen the simplest form — an absolute column number, such as the `1` in `1-5 1`. You can also place output *relative* to whatever was written previously, which avoids having to compute absolute column numbers by hand. Use `N` or `NEXT` to place the output immediately after the previous output. Use `NW` or `NEXTWORD` to place it after a space following the previous output.
 
 ```
-echo "Alice 42" | specs /Name:/ 1 w1 NEXTWORD /Age:/ NEXTWORD w2 NEXTWORD
+echo "Alice 42" | specs 
+```
+```specs
+   /Name:/         1  
+   W1       NEXTWORD 
+   /Age:/   NEXTWORD 
+   W2       NEXTWORD
 ```
 Output: `Name: Alice Age: 42`
 
@@ -361,7 +382,12 @@ Other output placement options are covered in Chapters 6 and 7.
 The optional `alignment` argument comes last, and only makes sense when the output field is wider than the value being placed (for example, when `OutputPlacement` is a range like `1-10`). It can be `left` (the default), `right`, or `center`/`centre`:
 
 ```
-echo "42" | specs "#" 1 1-* 2-10 right "#"
+echo "42" | specs 
+```
+```specs
+   "#"      1        # Plase a hash in column 1
+   1-*   2-10 right  # Write the entire record to columns 2010, right-aligned
+   "#"               # Print another hash as the next word - leave a space.
 ```
 Output: `#       42 #` - also an example of an elided final OutputPlacement.
 
@@ -376,7 +402,7 @@ Suppose you have a log file where each line looks like:
 And you want to extract just the date, severity, and IP address:
 
 ```
-cat logfile.txt | specs w1 1 w3 13 w-1 25
+cat logfile.txt | specs w1 1   w3 13   w-1 25
 ```
 
 Output:
@@ -491,13 +517,13 @@ Use a different configuration file instead of the default one — `~/.specs` on 
 This is useful for testing, and for keeping a separate set of configured literals per project:
 
 ```
-specs -c ~/specs-project1 -f myspec.txt
+specs -c ~/specs-project1 -f myspec
 ```
 
 It is even more useful for sharing one configuration file among several users. A configuration file in a shared location gives an entire team the same configured literals, timezone, and locale, so that everybody's specifications produce identical results — and a correction needs to be made in only one place:
 
 ```
-specs -c /etc/specs/team.cfg -f myspec.txt
+specs -c /etc/specs/team.cfg -f myspec
 ```
 
 ### `-s name=value` / `--set name=value`
@@ -510,11 +536,29 @@ widgets 150
 gadgets 80
 gizmos 220
 
-$ specs -i sales.txt -s threshold=100 WORD 2 a: IF "a > @threshold" THEN w1 1 w2 nw ENDIF
+$ specs -i sales.txt -s threshold=100 
+```
+```specs
+   WORD 2     a:
+   IF "a > @threshold" THEN 
+      WORD 1   1 
+      WORD 2  NW 
+   ENDIF
+```
+```
 widgets 150
 gizmos 220
 
-$ specs -i sales.txt -s threshold=200 WORD 2 a: IF "a > @threshold" THEN w1 1 w2 nw ENDIF
+$ specs -i sales.txt -s threshold=200 
+```
+```specs
+   WORD 2     a: 
+   IF "a > @threshold" THEN 
+      WORD 1   1 
+      WORD 2  nw 
+   ENDIF
+```
+```
 gizmos 220
 ```
 
@@ -593,7 +637,7 @@ specs invoked as 'specs'
         Compiler version: 9.2.1 20191120 (Red Hat 9.2.1-2)
         High/low watermark for queues: 5000 / 4500
         Random Provider: rand48
-        Git tag: dev-1.0.0
+        Git tag: v1.1.0
         Python version: 3.12.1
         Floating point precision: 18 (16 bytes)
 ```
@@ -890,7 +934,7 @@ There are two styles of comments in spec files:
 2. **End-of-line comment**: The comment begins at the last occurrence of "` # `" (space+hash+space) that is also preceded by whitespace, or at a trailing hash mark that is the very last character on the line. Everything from that hash mark onward is ignored.
 
 **Example:**
-```
+```specs
 # Example specification with a comment on every line
 WORD 1  1          # This puts the first word at column 1
 /hello/ NEXTWORD   # This appends the word "hello"
@@ -904,16 +948,16 @@ Comments at the very top of a spec file do double duty: besides documenting the 
 
 Consider a spec file named `wordfreq`:
 
-```
+```specs
 # Count word frequencies in the input.
 # Reads one word per record and prints a
 # frequency table at end of file.
 #
 # Usage: specs -f wordfreq -i words.txt
 printonly eof
-   a: word 1
+   a: WORD 1
 eof
-   print "fmap_dump(a)" 1
+   PRINT "fmap_dump(a)" 1
 ```
 
 There are two ways to ask for this help text, and they deliberately show different amounts of it.
@@ -965,7 +1009,7 @@ Directives are special instructions that must appear at the **very beginning** o
 
 Runs a shell command and stores its first line of output as a configured literal named `name`:
 
-```
+```specs
 +SET mydate date +%Y-%m-%d
 +SET hostname hostname
 ```
@@ -976,28 +1020,29 @@ After this, `@mydate` and `@hostname` are available in the specification.
 
 Runs a shell command and uses its output as the primary input stream. This replaces stdin:
 
-```
+```specs
 +IN ls -l /var/log
 ```
 
 Combined with a spec, this makes a self-contained script:
 
-```
+```specs
 +IN ls -l /var/log
-w9 1 w5 nw
+WORD 9  1
+WORD 5 NW
 ```
 
 ## The `REQUIRES` Keyword
 
 Use `REQUIRES` at the start of a spec (before any spec units but after directives) to declare that a configured literal must be defined. If the literal is absent, specs aborts immediately with a helpful error:
 
-```
+```specs
 REQUIRES threshold
 REQUIRES timezone
 
-w1 1
-IF "w1 > @threshold" THEN
-    /EXCEEDS LIMIT/ nextword
+a:WORD 1 1
+IF "a > @threshold" THEN
+    /EXCEEDS LIMIT/ NEXTWORD
 ENDIF
 ```
 
@@ -1118,9 +1163,18 @@ The special value `default` resets to locale-defined whitespace.
 Similar to `WORDSEPARATOR`, but changes the field separator:
 
 ```
-echo "Good,bye,old,,paint" | specs fieldseparator , /</ 1 f2 n />/ n /</ nw f4 n />/ n
+echo "Good,bye,old,,paint" | specs 
 ```
-Output: `<bye><>`
+```specs
+   fieldseparator , 
+   /</    1 
+   f2     n 
+   />/    n 
+   /</    nw 
+   f4     n 
+   />/    n
+```
+Output: `<bye> <>`
 
 Both `WORDSEPARATOR` and `FIELDSEPARATOR` are **MainOptions** — they apply to the entire specification and should appear before any data fields. 
 Practically, field separators are more often overridden than word separators. One common usecase is using a comma or semicolon to parse a comma-separated values (CSV) file. Another is using the slash character (`/`) as field separator to break a full Unix path into directories.
@@ -1141,7 +1195,7 @@ This is quite verbose, but it is still just an `InputSource`, and it needs an `O
 find . -type f -name "*.md" | specs SUBSTR FS / FIELD -1 OF WORD 1  1
 ```
 
-For the record `./specs/docs/guidebook.md`, this outputs `guidebook.md`.
+For the input record `./specs/docs/guidebook.md`, this outputs `guidebook.md`.
 
 ## Special Input Sources
 
@@ -1246,7 +1300,12 @@ As with `TODclock`, a specification built only from literals, string or hex, rea
 A **field identifier** is a single letter (a–z, A–Z) followed by a colon, placed before the `InputSource`. It captures the input value in a named variable that can be reused later:
 
 ```
-echo "5 3" | specs a: w1 . b: w2 . PRINT "a*b" 1
+echo "5 3" | specs 
+```
+```specs
+   a: WORD 1     . 
+   b: WORD 2     . 
+   PRINT "a*b"   1
 ```
 Output: `15`
 
@@ -1319,7 +1378,12 @@ Output: `1793346382.000000`
 Adding `STRIP` between the input source and the conversion (or output placement) removes leading and trailing whitespace from the value before placing it:
 
 ```
-echo "  hello  " | specs "<" 1 1-* STRIP NEXT ">" NEXT
+echo "  hello  " | specs 
+```
+```specs
+   "<"            1 
+   1-*  STRIP  NEXT 
+   ">"         NEXT
 ```
 Output: `<hello>`
 
