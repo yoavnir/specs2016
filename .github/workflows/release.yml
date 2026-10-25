@@ -308,7 +308,7 @@ jobs:
         EOF
 
     - name: Build specs (Release)
-      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }}
+      run: msbuild specs/specs.sln /t:specs /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }}
 
     - name: Verify binary
       run: specs\bin\Release\specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
@@ -394,7 +394,7 @@ jobs:
         EOF
 
     - name: Build specs with Python (Release)
-      run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }} /p:EnablePython=true
+      run: msbuild specs/specs.sln /t:specs /p:Configuration=Release /p:Platform=x64 /p:GitTag=${{ steps.version.outputs.display }} /p:EnablePython=true
 
     - name: Verify binary
       run: specs\bin\Release\specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"

@@ -31,7 +31,6 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <Import Project="build_info.targets" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -90,29 +89,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="cli\splitter.cc" />
-    <ClCompile Include="cli\tokens.cc" />
-    <ClCompile Include="processing\Config.cc" />
-    <ClCompile Include="processing\ProcessingState.cc" />
-    <ClCompile Include="processing\Reader.cc" />
-    <ClCompile Include="processing\StringBuilder.cc" />
-    <ClCompile Include="processing\Writer.cc" />
-    <ClCompile Include="processing\conversions.cc" />
-    <ClCompile Include="processing\persistent.cc" />
-    <ClCompile Include="specitems\InputPart.cc" />
-    <ClCompile Include="specitems\dataField.cc" />
-    <ClCompile Include="specitems\splitItem.cc" />
-    <ClCompile Include="specitems\specItems.cc" />
-    <ClCompile Include="utils\ErrorReporting.cc" />
-    <ClCompile Include="utils\PythonIntf.cc" />
-    <ClCompile Include="utils\SpecString.cc" />
-    <ClCompile Include="utils\TimeUtils.cc" />
-    <ClCompile Include="utils\alu.cc" />
-    <ClCompile Include="utils\aluFunctions.cc" />
-    <ClCompile Include="utils\aluRand.cc" />
-    <ClCompile Include="utils\aluRegex.cc" />
-    <ClCompile Include="utils\directives.cc" />
-    <ClCompile Include="utils\platform.cc" />
     <ClCompile Include="test\specs.cc" />
   </ItemGroup>
   <ItemGroup>
@@ -143,6 +119,11 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="specs.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="specs_core.vcxproj">
+      <Project>{B12D8A90-1E29-4F6D-8D35-5E0C4A3B7F06}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

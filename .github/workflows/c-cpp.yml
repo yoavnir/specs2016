@@ -44,14 +44,10 @@ jobs:
 
     - name: make
       working-directory: specs/src
-      run: make all
+      run: make ci
 
     - name: Test specs executable
       run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
-
-    - name: make check
-      working-directory: specs/src
-      run: make run_tests
 
   build-linux-cpp17:
     runs-on: ubuntu-latest
@@ -72,11 +68,7 @@ jobs:
 
     - name: make
       working-directory: specs/src
-      run: make all
-
-    - name: make check
-      working-directory: specs/src
-      run: make run_tests
+      run: make ci
 
   build-macos:
     runs-on: macos-latest
@@ -97,14 +89,10 @@ jobs:
 
     - name: make
       working-directory: specs/src
-      run: make all
+      run: make ci
 
     - name: Test specs executable
       run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info"
-
-    - name: make check
-      working-directory: specs/src
-      run: make run_tests      
 
   build-windows:
     runs-on: windows-latest
@@ -144,6 +132,13 @@ jobs:
 
     - name: Build specs with Python (Release)
       run: msbuild specs/specs.sln /p:Configuration=Release /p:Platform=x64 /p:EnablePython=true
+
+    - name: Run unit tests
+      run: |
+        specs/bin/Release/ALUUnitTest.exe
+        specs/bin/Release/cacheTest.exe
+        specs/bin/Release/ProcessingTest.exe
+        specs/bin/Release/TokenTest.exe
 
     - name: Test specs executable
       run: specs/bin/Release/specs.exe "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info"
