@@ -44,14 +44,10 @@ jobs:
 
     - name: make
       working-directory: specs/src
-      run: make all
+      run: make ci
 
     - name: Test specs executable
       run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info" WRITE "Build URL:" 1 "@build-url"
-
-    - name: make check
-      working-directory: specs/src
-      run: make run_tests
 
   build-linux-cpp17:
     runs-on: ubuntu-latest
@@ -72,11 +68,7 @@ jobs:
 
     - name: make
       working-directory: specs/src
-      run: make all
-
-    - name: make check
-      working-directory: specs/src
-      run: make run_tests
+      run: make ci
 
   build-macos:
     runs-on: macos-latest
@@ -97,14 +89,10 @@ jobs:
 
     - name: make
       working-directory: specs/src
-      run: make all
+      run: make ci
 
     - name: Test specs executable
       run:  specs/exe/specs "Version:" 1 "@version" WRITE "Platform:" 1 "@platform" WRITE "Build info:" 1 "@build-info"
-
-    - name: make check
-      working-directory: specs/src
-      run: make run_tests      
 
   build-windows:
     runs-on: windows-latest
