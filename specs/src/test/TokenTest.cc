@@ -2,6 +2,7 @@
 #include <iomanip>
 #include "assert.h"
 #include "string.h"
+#include "utils/platform.h"
 #include "cli/tokens.h"
 
 unsigned long onlyTest = 0;
