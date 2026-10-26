@@ -2503,7 +2503,6 @@ The regular expression grammar itself (`ECMAScript`, `basic`, `extended`, `awk`,
 - *option*: `B` (both leading and trailing, default), `L` (leading only), `T` (trailing only)
 - *pad*: the character to strip (default: space)
 
-\newpage
 **`space(s, len, pad)`** normalizes internal whitespace:
 
 - *s*: the string to process
@@ -2682,6 +2681,7 @@ The below arguments apply to the `fmap_cump` and the `countocc_dump` functions:
 - **format**: `txt`/`0`/empty (default), `lin` (boxed), an integer (fixed width), `csv`, `json`
 - **sortOrder**: `s`/`sa` (alphabetical asc, default), `sd` (alphabetical desc), `c`/`ca` (count asc), `cd` (count desc)
 - **showPct**: boolean — if true, adds a percentage column
+\newpage
 
 Example — distribution of the count of distinct prime factors in natural numbers up to 210:
 ```specs
