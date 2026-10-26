@@ -2967,7 +2967,7 @@ This is useful for skipping records that match a condition:
 
 ## ABEND — ABnormal END
 
-`ABEND` halts the entire specs run with an error message sent to stderr. The current output record is *not* written. No further records are processed.
+`ABEND` (pronounced /ˈɑːbɛnd/) halts the entire specs run with an error message sent to stderr. The current output record is *not* written. No further records are processed.
 
 ```specs
 a: 55-57    NEXTWORD  # "Age" field
@@ -3052,14 +3052,12 @@ Each iteration of **specs** processes one input record. The *spec units* run, ou
 
 The first iteration is called the **run-in cycle**. You can specify actions for the *run-in cycle* using the `first()` function. This is useful for setting up counters, printing headers, or recording the first record's values:
 
-```
+```specs
 # Print only records that start with the same word as the first record
 IF "first()" THEN
-    SET "#0:=word(1)"
+   SET "#0:=word(1)"
 ENDIF
-IF "#0 == word(1)" THEN
-    1-* 1
-ENDIF
+IF "#0 == word(1)"  # grep mode
 ```
 
 ## Run-Out: After the Last Record
@@ -3070,7 +3068,7 @@ The **run-out** cycle runs after the last input record is exhausted. It is used 
 
 When specs encounters an `eof()` function call anywhere in the specification, it performs a *forced* run-out cycle — an extra iteration after the last record is processed. This cycle has no input record (the record is empty), and `eof()` returns 1.
 
-```
+```specs
 # Print a count of records
 IF "eof()" THEN
     /Total records:/ 1 PRINT "#0" nextword
@@ -3083,7 +3081,7 @@ ENDIF
 
 The `EOF` keyword marks a group of spec units that run only during the run-out cycle. The spec units following `EOF` are only executed after all input records have been processed.
 
-```
+```specs
 # Sum and report
 a: word 1 1
    set "#0+=a"
@@ -3109,14 +3107,34 @@ Both `eof()` and `EOF` accomplish similar things: The difference is that when us
 - Use `eof()` inside `IF` when the logic is interleaved with per-record processing.
 
 For comparison:
+```specs
++IN seq 3
+   IF "first()" THEN 
+      /1st/ 
+   ENDIF 
+   "cycle"   NW 
+a: WORD 1 
+   IF "eof()" THEN 
+      "?sum(a)"
 ```
-$ seq 3 | specs IF "first()" THEN 1st ENDIF "cycle" NW a: W1 IF "eof()" THEN "?sum(a)"
+```
 1st cycle 1
 cycle 2
 cycle 3
 cycle 6
+```
 
-$ seq 3 | specs IF "first()" THEN 1st ENDIF "cycle" NW a: W1 EOF "?sum(a)"
+```specs
++IN seq 3
+   IF "first()" THEN 
+      /1st/ 
+   ENDIF 
+   "cycle"   NW 
+a: W1 
+EOF 
+   "?sum(a)"
+```
+```
 1st cycle 1
 cycle 2
 cycle 3
@@ -3153,7 +3171,7 @@ Consider this CSV file of personnel records (department, first name, last name),
 
 Suppose we want to print this out, but suppress repetition of the department field. We track the department in a field identifier, and place a `BREAK` statement in front of the spec units that should run only when that field identifier's value has just changed:
 
-```
+```specs
     IF "first()" THEN
         Dept          1
         "Last, first" 10
@@ -3172,7 +3190,7 @@ Suppose we want to print this out, but suppress repetition of the department fie
 ```
 
 Here, `c` is set to the first field (department name) of each CSV record. Spec units after `BREAK c` — in this case, `ID c 1`, which prints the department name — only run on records where `c` has just changed from the previous record. For this to work, the input needs to be sorted. **specs** processes records one at a time, so it cannot sort on its own.
-
+\newpage
 Result:
 ```
 Dept     Last, first
@@ -3200,18 +3218,17 @@ Spec units following a `BREAK x` statement execute only when break level `x` is 
 
 The `break(a)` function returns 1 if break level `a` is established for the current record, and 0 otherwise. Unlike `BREAK`, which applies to every spec unit that follows it, `break()` is a pseudo-function you can use inside an `IF` condition, so it can be combined with other logic. (It is called a pseudo-function because its only allowed argument is a field identifier.)
 
-```
-specs
-    FIELDSEPARATOR ,
-    a: FIELD 1   .
-    IF break(a) THEN
-        ID a           1
-        /Department:/ NW
-        WRITE
-    ENDIF
-    FIELD 3   10
-    /,/        N
-    FIELD 2   NW
+```specs
+   FIELDSEPARATOR ,
+a: FIELD 1   .
+   IF break(a) THEN
+      ID a           1
+      /Department:/ NW
+      WRITE
+   ENDIF
+   FIELD 3   10
+   /,/        N
+   FIELD 2   NW
 ```
 
 This produces a header line for each department, followed by employees:
@@ -3241,7 +3258,7 @@ Now that break levels are understood, we can use them to control whether a recor
 - A **field identifier** (case matters) — records are suppressed until that break level is established (as described above under Break Levels)
 - The keyword **`EOF`** — records are suppressed until the input is exhausted (i.e., only the run-out output is printed)
 
-```
+```specs
 PRINTONLY EOF
 # ... per-record spec units (all output suppressed) ...
 EOF
@@ -3254,7 +3271,7 @@ EOF
 
 Without `KEEP`, a suppressed record's output is simply thrown away before the next record is read. This is useful when you only care about *one* record per group and want to discard the rest — for example, printing only the first employee listed for each department (imagine the data is sorted so that the department head is listed first):
 
-```
+```specs
 PRINTONLY c
 FIELDSEPARATOR ,
 c: FIELD 1   1
@@ -3281,7 +3298,7 @@ With `KEEP`, the output buffer is *not* cleared when a record is suppressed, so 
 
 Combined with `PRINTONLY EOF`, this lets you accumulate something from every input record and print it as a single line at the very end:
 
-```
+```specs
 PRINTONLY EOF
 KEEP
 FIELDSEPARATOR ,
@@ -3298,7 +3315,7 @@ Eck Polen Cockett Lugo Cheung Mcgillis Scheffer Lind Picone (end)
 
 Compare this with the same specification *without* `KEEP`:
 
-```
+```specs
 PRINTONLY EOF
 FIELDSEPARATOR ,
 a: FIELD 3    NEXTWORD
@@ -3315,11 +3332,25 @@ Now every suppressed record's contribution to the buffer is discarded before the
 This contrast is the key reason `KEEP` exists: use it whenever the *point* of `PRINTONLY` is to gather output across records rather than to simply pick which one record gets to print.
 
 ### A Numerical Example
+```specs
++IN seq 10
+PRINTONLY EOF 
+a: WORD 1      
+EOF 
+   "?sum(a)"
 ```
-$ seq 10 | specs PRINTONLY EOF a: WORD 1 EOF "?sum(a)"
+```
 55
+```
 
-$ seq 10 | specs PRINTONLY EOF KEEP a: WORD 1 EOF "?sum(a)"
+```specs
++IN seq 10
+PRINTONLY EOF KEEP 
+a: WORD 1 
+EOF 
+   "?sum(a)"
+```
+```
 1 2 3 4 5 6 7 8 9 10 55
 ```
 Notes:
@@ -3330,10 +3361,11 @@ Notes:
 ### An Advanced Example
 
 **Question:** Can you figure out why the following specification is producing this output?
-```
+```specs
 PRINTONLY a KEEP 
 a: PRINT "floor(sqrt(word(1)))"
-
+```
+```
 $ seq 81 | specs -f example
 1
 1 1 2
@@ -3345,9 +3377,9 @@ $ seq 81 | specs -f example
 7 7 7 7 7 7 7 7 7 7 7 7 7 7 8
 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9
 ```
-\newpage
+
 Compare and contrast with this version, that is a little nicer, but more complex:
-```
+```specs
    IF "first()" THEN
       SET "#0:=''"
    ENDIF
@@ -3357,7 +3389,8 @@ Compare and contrast with this version, that is a little nicer, but more complex
       SET "#0:=a" 
    ELSE 
       SET "#0:=#0||' '||a"
-
+```
+```
 $ seq 81 | specs -f example
 
 1 1 1
@@ -3381,17 +3414,17 @@ The default one-in-one-out model can be broken in many ways. This chapter covers
 
 Use the `WRITE` spec unit to emit the current output record and start a fresh one, all within the same cycle:
 
-```
-specs --inCmd "ls -l"
-    /Filename:/ 1
-    W-1         NW   # Last word in "ls -l" output is file name
-    WRITE            # Skip to next line
-    /type:/ 1
-    IF "range(1,1)=='d'" THEN
-        /directory/ nw
-    ELSE             # if we wanted to be fancy, we'd add an ELSEIF for 'l' and /link/
-        /file/ nw
-    ENDIF
+```specs
++IN "ls -l"
+   /Filename:/ 1
+   W-1         NW   # Last word in "ls -l" output is file name
+   WRITE            # Skip to next line
+   /type:/ 1
+   IF "range(1,1)=='d'" THEN
+      /directory/ nw
+   ELSE             # if we wanted to be fancy, we'd add an ELSEIF for 'l' and /link/
+      /file/ nw
+   ENDIF
 ```
 
 `WRITE` flushes the current output record and clears the output buffer. The last output record in a cycle is always written automatically — you don't need a trailing `WRITE`. However, if the last output record is empty, it is not emitted, so there's no harm in a trailing `WRITE`.
@@ -3402,15 +3435,14 @@ specs --inCmd "ls -l"
 
 Note that a cycle with no output data fields never emits a record anyway, so `NOWRITE` only matters when the cycle has data fields that emit output. The example below would not demonstrate `NOWRITE` without that "`'LOG: ' 1`" *data field*:
 
-```
+```specs
 # Prefix every line with "LOG: ", but only write lines that contain "error"
-specs
-    'LOG: ' 1
-    IF "includes(,'error')" THEN
-        1-*
-    ELSE
-        NOWRITE
-    ENDIF
+   'LOG: ' 1
+   IF "includes(,'error')" THEN
+      1-*
+   ELSE
+      NOWRITE
+   ENDIF
 ```
 
 Without the `NOWRITE`, every record would be emitted as "`LOG: <record>`" or "`LOG:`", because the "`'LOG: ' 1`" *data field* emits output even if the `IF` condition doesn't hold. The `NOWRITE` in the `ELSE` branch suppresses that output for records that don't contain "error".
@@ -3426,51 +3458,50 @@ Both reset the context offset to zero (the current record) after reading.
 
 **Use case**: Combine multiple input lines into one output line:
 
-```
+```specs
 # Join each pair of lines: "line1 line2"
-specs
-    a: 1-* 1
-    READ
-    1-* nw
+   a: 1-* 1
+   READ
+   1-* nw
 ```
 
 **Use case**: Process git log (variable-length entries):
 
-```
-specs -C "git log"
-    IF "first()" THEN
-        SET "#4:=word(2)"    # save the first commit hash
-    ELSE
-        PRINT "#4" 1         # print the saved hash
-        ASSERT "word(1)=='Author:'"
-        WORD 2-*   NEXTWORD  # print the author's name
-        READ
-        ASSERT "word(1)=='Date:'"
-        WORD 2-6 tf2s "%c" NEXTWORD
-        WHILE "word(1)!='commit'" DO
-            READSTOP
-        DONE
-        SET "#4:=word(2)"    # save the next commit hash
-    ENDIF
+```specs
++IN "git log"
+   IF "first()" THEN
+      SET "#4:=word(2)"    # save the first commit hash
+   ELSE
+      PRINT "#4" 1         # print the saved hash
+      ASSERT "word(1)=='Author:'"
+      WORD 2-*   NEXTWORD  # print the author's name
+      READ
+      ASSERT "word(1)=='Date:'"
+      WORD 2-6 tf2s "%c" NEXTWORD
+      WHILE "word(1)!='commit'" DO
+         READSTOP
+      DONE
+      SET "#4:=word(2)"    # save the next commit hash
+   ENDIF
 ```
 
 ## UNREAD — Pushing Back a Record
 
 `UNREAD` pushes the current record back so it will be re-read as the first record of the next cycle. This avoids the "consumed one record too many" problem when looping with `READ`/`READSTOP`. It also means we don't need the `#4` variable from the previous example to carry the commit hash across cycles — each cycle can simply start on its own "commit" line:
 
-```
-specs -C "git log"
-    WORD 2                     1         # commit hash
-    READ
-    ASSERT "word(1)=='Author:'"
-    WORD 2-*            NEXTWORD         # author name and email
-    READ
-    ASSERT "word(1)=='Date:'"
-    WORD 2-6 tf2s "%c" NEXTWORD          # date
-    WHILE "word(1)!='commit'" DO
-        READSTOP
-    DONE
-    UNREAD                               # push back the next "commit" line
+```specs
++IN "git log"
+   WORD 2                     1         # commit hash
+   READ
+   ASSERT "word(1)=='Author:'"
+   WORD 2-*            NEXTWORD         # author name and email
+   READ
+   ASSERT "word(1)=='Date:'"
+   WORD 2-6 tf2s "%c" NEXTWORD          # date
+   WHILE "word(1)!='commit'" DO
+      READSTOP
+   DONE
+   UNREAD                               # push back the next "commit" line
 ```
 \newpage
 
@@ -3527,7 +3558,7 @@ Output: `one two three two`
 | `CONTEXT` offset | reset to 0 | untouched |
 | Input station | forced back to FIRST | untouched |
 | Compile-time requirement | output-producing units before *and* after | none |
-
+\newpage
 The contrast in one line each:
 
 ```specs
@@ -3576,18 +3607,18 @@ Putting it together — build a shell command from each input line, run it, and
 still have the original line available afterwards:
 
 ```specs
-specs -C "find . -type f"   \
-   "wc -w" 1                \
-   w1      NW               \
-   SET "#0:=@>"             \  
-   SCRATCH                  \
-   PRINT "exec(#0)" a:      \
-   SUBSTR W1 OF ID a b:     \
- EOF                        \
-   PRINT "sum(b)"
++IN "find . -type f"       # Generates a list of files in subdirectories
+   "wc -w" 1
+   w1      NW              # creates "wc -w dir/filename.txt"
+   SET "#0:=@>"            # stores the above in #0
+   SCRATCH                 # clears the output record
+   PRINT "exec(#0)" a:     # Runs the command, output ("582 dir/filename.txt") marked as a:
+   SUBSTR W1 OF ID a b:    # Takes the first word (num of words in the file) into b:
+ EOF
+   PRINT "sum(b)"          # Sum of all words in all files
 ```
 
-`-C` runs `find` and feeds its output in as the input records. For each file
+`+IN` runs `find` and feeds its output in as the input records. For each file
 name, the spec builds `wc -w <name>`, stashes it in `#0`, scratches that working
 text out of the output record, runs the command, keeps its first word (the
 count) in `b`, and finally prints the total. Because `SCRATCH` left the input
@@ -3610,7 +3641,7 @@ record alone, `w1` would still give the file name at any point afterwards.
 `SPLITF` splits the current input record into one output record per **field**.
 
 ```
-echo "one two three" | specs splitw 1
+$ echo "one two three" | specs splitw 1
 ```
 Output:
 ```
@@ -3633,8 +3664,12 @@ prefix: three
 ```
 
 Combined with REDO:
-```
-echo "the boy went to the store" | specs splitw 1 redo /WORD:/ 1 1-* next
+```specs
++IN echo "the boy went to the store"
+   SPLITW  1 
+   REDO 
+   /WORD:/ 1 
+   1-*     NEXT
 ```
 Output:
 ```
@@ -3654,10 +3689,16 @@ Both `SPLITW` and `SPLITF` accept:
 - `WS char` or `FS char` — use a specific separator character
 - `OF range` — split only the specified portion of the record
 
+```specs
++IN echo "The numbers are one:two:three and that is all"
+   SPLITF fs : OF 17:29  1
 ```
-echo "The numbers are one:two:three and that is all" | specs splitf fs : of 17:29 1
+Output:
 ```
-Output: `one`, `two`, `three`
+one
+two
+three
+```
 
 The `OF` clause accepts the same syntax as `SUBSTRING`: character ranges, word ranges, or field ranges.
 
@@ -3667,7 +3708,7 @@ The `OF` clause accepts the same syntax as `SUBSTRING`: character ranges, word r
 
 At the end of each cycle, specs saves the current input record in a buffer called the **second reading station**. During the next cycle, you can switch to it with `SELECT SECOND`, then return to normal input with `SELECT FIRST`:
 
-```
+```specs
 # Combine each record with the previous one
 specs
     WORD 1          1
@@ -3692,10 +3733,15 @@ Key notes:
 
 The `--is2` through `--is8` switches assign additional input files. At each cycle, one record is advanced from every stream, even from streams the specification never reads from.
 
+```specs
+   WORD 1   1 
+   WORD 2  NW 
+   SELECT 2 
+   WORD 2  NW
 ```
-specs -i file1.txt --is2 file2.txt WORD 1 1 WORD 2 NW SELECT 2 WORD 2 NW
 ```
-
+specs -i file1.txt --is2 file2.txt -f example
+```
 This combines the second column of record *n* from `file1.txt` with the second column of record *n* from `file2.txt`, for each *n*, into a three-column output. The two streams are paired only by their position within the cycle — **specs** does not match records by comparing field values the way a database join would; it is up to you to ensure that matching records at the same offset from different streams makes sense.
 
 `SELECT n` (where n is the stream number 1–8) switches between streams. The stream resets to #1 at the start of each new cycle.
@@ -3710,23 +3756,27 @@ This combines the second column of record *n* from `file1.txt` with the second c
 
 The `--os2` through `--os8` switches assign additional output files. `OUTSTREAM n` (or `OUTSTREAM STDERR`) switches between them. The active output stream resets to #1 at the start of each new cycle:
 
+```specs
+   IF "includes(,'ERROR')" THEN
+      OUTSTREAM 2
+   ENDIF
+   1-* 1
 ```
-specs -o main.txt --os2 errors.txt
-    IF "includes(,'ERROR')" THEN
-        OUTSTREAM 2
-    ENDIF
-    1-* 1
+```
+$ specs -o main.txt --os2 errors.txt -f example
 ```
 
 Note that the above example switches output stream for the error records, so the error records go into `errors.txt`, but not to `main.txt`.  If we wanted to write all the records to `main.txt`, we could do it like this:
+```specs
+   1-* 1
+   IF "includes(,'ERROR')" THEN
+      WRITE        # Flush the primary stream
+      OUTSTREAM 2
+      1-* 1        # Write again - this time to the secondary stream
+   ENDIF
 ```
-specs -o main.txt --os2 errors.txt
-    1-* 1
-    IF "includes(,'ERROR')" THEN
-        WRITE        # Flush the primary stream
-        OUTSTREAM 2
-        1-* 1        # Write again - this time to the secondary stream
-    ENDIF
+```
+specs -o main.txt --os2 errors.txt -f example
 ```
 
 ---
