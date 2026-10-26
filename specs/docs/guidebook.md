@@ -1228,6 +1228,33 @@ Because its value is fixed for the whole run, `TODclock` does not force *specs* 
 
 Like `TODclock`, but gives the time of processing the **current** input record rather than the start of the run. Unlike `TODclock`, it *does* force the reading of input records. A specification that only has a data field with `DTODclock` as input produces one output record per input record, and none with no input.
 
+For a readable timestamp, follow either source with the `MCS2TF` conversion. It accepts a time format string using `strftime` conventions; `%3f` includes milliseconds. See [Time Functions](#time-functions) for the related conversions.
+
+**Example — format the start time of a run:**
+
+```sh
+specs TODclock MCS2TF "%Y-%m-%d %H:%M:%S.%3f" 1
+```
+
+Output (example; the timestamp depends on when you run it):
+
+```text
+2026-10-26 05:00:00.123
+```
+
+**Example — format the processing time for each input record:**
+
+```sh
+printf "first\\nsecond\\n" | specs DTODclock MCS2TF "%Y-%m-%d %H:%M:%S.%3f" 1
+```
+
+Output (illustrative; each record gets its own processing timestamp):
+
+```text
+2026-10-26 05:00:00.123
+2026-10-26 05:00:00.124
+```
+
 ### `TIMEDIFF`
 
 A 12-character decimal number giving microseconds since the start of the run. Like `DTODclock`, it forces reading input records. Useful for timing:
