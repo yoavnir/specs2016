@@ -2202,14 +2202,14 @@ specs provides a library of built-in functions for use in expressions. This chap
 
 Functions appear inside ALU expressions:
 
-```
-specs PRINT "length('hello')" 1
+```specs 
+   PRINT "length('hello')"  1
 ```
 Output: `5`
 
 Multiple arguments are separated by commas:
-```
-specs PRINT "substr('hello world', 7, 5)" 1
+```specs 
+   PRINT "substr('hello world', 7, 5)"  1
 ```
 Output: `world`
 
@@ -2221,13 +2221,13 @@ When calling a function, you can pass different kinds of arguments. Here are the
 
 Numbers can be passed without quotes:
 
-```
-specs PRINT "sqrt(16)" 1
+```specs 
+   PRINT "sqrt(16)"  1
 ```
 Output: `4`
 
-```
-specs PRINT "pow(2, 8)" 1
+```specs 
+   PRINT "pow(2, 8)"  1
 ```
 Output: `256`
 
@@ -2235,18 +2235,18 @@ Output: `256`
 
 Strings containing spaces or special characters must be enclosed in delimiters. You can use single quotes, double quotes, or slashes:
 
-```
-specs PRINT "length('hello world')" 1
+```specs 
+   PRINT "length('hello world')"  1
 ```
 Output: `11`
 
-```
-specs PRINT 'substr("hello world", 7, 5)' 1
+```specs 
+   PRINT 'substr("hello world", 7, 5)'  1
 ```
 Output: `world`
 
-```
-specs PRINT "pos(world, /hello world/)" 1
+```specs 
+   PRINT "pos(world, /hello world/)"  1
 ```
 Output: `7`
 
@@ -2254,8 +2254,8 @@ Output: `7`
 
 A single word with no special characters can be passed without quotes, as long as it is unambiguous. For example:
 
-```
-specs PRINT 'length(hello)' 1
+```specs 
+   PRINT 'length(hello)'  1
 ```
 Output: `5`
 
@@ -2275,8 +2275,8 @@ specs PRINT "includes(hello,x)" 1      # ERROR: field identifier x not defined
 
 Always quote single-character arguments:
 
-```
-specs PRINT "length('x')" 1
+```specs 
+   PRINT "length('x')"  1
 ```
 Output: `1`
 
@@ -2284,13 +2284,18 @@ Output: `1`
 
 When you have defined a field identifier (e.g., `a:`), you can use it in expressions by name, without the colon:
 
-```
-echo "hello world" | specs a: WORD 1 . PRINT "length(a)" 1
+```specs
++IN echo "hello world"
+   a: WORD 1            . 
+      PRINT "length(a)" 1
 ```
 Output: `5`
 
-```
-echo "5 3" | specs WORD 1 a: WORD 2 b" PRINT "a * b" 1
+```specs
++IN echo "5 3"
+   WORD 1        a: 
+   WORD 2        b: 
+   PRINT "a * b" 1
 ```
 Output: `15`
 
@@ -2298,16 +2303,19 @@ Output: `15`
 
 Configured literals from your `~/.specs` file (or set with `--set`) are referenced with the `@` prefix:
 
-```
-specs PRINT "@pi" 1
+```specs 
+   PRINT "@pi"  1
 ```
 Output: `3.14159265` (if `pi: 3.14159265` is in your config)
 
-```
-echo 5 | specs W1 r: PRINT "2 * @pi * r" 1
+```specs
++IN echo 5
+   WORD 1              r: 
+   PRINT "2 * @pi * r" 1
 ```
 Output: `31.4159265`
 
+\newpage
 ### Special Values
 
 Several special values are available in expressions:
@@ -2318,13 +2326,14 @@ Several special values are available in expressions:
 - `@>` — the output record built so far in this cycle
 - `#n` — counters (e.g., `#0` is counter 0)
 
-```
-specs PRINT "length(@@)"
+```specs 
+   PRINT "length(@@)"
 ```
 Output: (length of the current input record)
 
-```
-echo "hello world" | specs PRINT "word(1)"
+```specs
++IN echo "hello world"
+   PRINT "word(1)"
 ```
 Output: `hello`
 
@@ -2332,16 +2341,33 @@ Output: `hello`
 
 Functions can be nested. The inner function is evaluated first:
 
-```
-specs PRINT "length(word(1))" 1
+```specs 
+   PRINT "length(word(1))"  1
 ```
 Output: (length of the first word)
 
-```
-specs PRINT "substr(@@, 1, length(word(1)))" 1
+```specs 
+   PRINT "substr(@@, 1, length(word(1)))"  1
 ```
 Output: (the first word)
 
+### Omitted Arguments
+
+For some functions, one or more arguments may be omitted. When an argument is omitted, the function uses a default value for it. For example, `round(x, d)` rounds *x* to *d* decimal places; if *d* is omitted, *x* is rounded to the nearest integer:
+
+```specs
+   PRINT "round(2.567)" 1
+```
+Output: `3`
+
+```specs
+   PRINT "round(2.567, 1)" 1
+```
+Output: `2.6`
+
+Which arguments of a function may be omitted, and what their default values are, is described in the documentation of that function (see the function tables below, the manpage and the built-in help for the particular function). Omitting an argument that is not documented as omittable is an error, and **specs** reports it with an error message.
+
+\newpage
 ### Argument Passing Rules Summary
 
 | Argument Type | Example | Notes |
@@ -2352,6 +2378,7 @@ Output: (the first word)
 | Single-character string | `length('x')` | Quotes required (else interpreted as field identifier) |
 | Field identifier | `length(a)` | Use the letter only, no colon |
 | Configured literal | `2 * @pi` | Prefix with `@` |
+| Omitted argument | `round(x)` | Only where documented; uses the default value |
 | Current record | `length(@@)` | Use `@@` for the full record |
 | Nested function | `length(word(1))` | Inner function evaluated first |
 
@@ -2394,7 +2421,7 @@ Output: (the first word)
 | `fmt(value, format, digits, decimal, separator)` | Format a number (see below) |
 | `pretty(value, flimit, ilimit, locale)` | Format with thousands separators (see below) |
 
-### fmt and pretty
+### The `fmt` and `pretty` Functions
 
 **`fmt(value, format, digits, decimal, separator)`** formats a number with control over the output format:
 
@@ -2476,6 +2503,7 @@ The regular expression grammar itself (`ECMAScript`, `basic`, `extended`, `awk`,
 - *option*: `B` (both leading and trailing, default), `L` (leading only), `T` (trailing only)
 - *pad*: the character to strip (default: space)
 
+\newpage
 **`space(s, len, pad)`** normalizes internal whitespace:
 
 - *s*: the string to process
@@ -2509,7 +2537,7 @@ Characters in *tablein* are replaced with corresponding characters from *tableou
 
 ## REXX-Derived String Functions
 
-REXX is a scripting language that was central to IBM's CMS (Conversational Monitor System) and remains an important part of the CMS experience. CMS Pipelines, the inspiration for specs, included many REXX-derived functions for string manipulation and word/field processing. These functions are provided in specs to maintain compatibility with CMS Pipelines scripts and to leverage the proven utility of REXX's capabilities.
+**REXX** is a scripting language from IBM's CMS (Conversational Monitor System) and part of the CMS experience. *CMS Pipelines*, the inspiration for **specs**, included many REXX-derived functions. These functions are provided in **specs** to maintain compatibility with CMS Pipelines. And because they're useful.
 
 | Function | Description |
 |----------|-------------|
@@ -2612,10 +2640,12 @@ These functions read from the current (or context-affected) input record:
 Time format strings follow strftime conventions. The additional format code `%xf` (where x is 0–6) produces fractional seconds with x digits.
 
 Example:
+```specs
++IN echo "2024-01-15 14:32:07"
+   PRINT "tf2mcs(@@, '%Y-%m-%d %H:%M:%S')"  1
+   /microseconds since the UNIX epoch/      NW
 ```
-echo "2024-01-15 14:32:07" | specs PRINT "tf2mcs(word(1)||' '||word(2),'%Y-%m-%d %H:%M:%S')" 1
-```
-Output: `1705329127000000`
+Output: `1705329127000000 microseconds since the UNIX epoch`
 
 \newpage
 ## Statistical and Frequency Map Functions {#statistical-and-frequency-map-functions}
@@ -2652,11 +2682,16 @@ The below arguments apply to the `fmap_cump` and the `countocc_dump` functions:
 - **format**: `txt`/`0`/empty (default), `lin` (boxed), an integer (fixed width), `csv`, `json`
 - **sortOrder**: `s`/`sa` (alphabetical asc, default), `sd` (alphabetical desc), `c`/`ca` (count asc), `cd` (count desc)
 - **showPct**: boolean — if true, adds a percentage column
-\newpage
 
 Example — distribution of the count of distinct prime factors in natural numbers up to 210:
+```specs
++IN seq 210
+   PRINT "distinct_prime_factors(word(1))" a: 
+EOF 
+   PRINT "fmap_dump(a,lin,sa,1)"
 ```
-$ seq 210 | specs print "distinct_prime_factors(word(1))" a: EOF PRINT "fmap_dump(a,lin,sa,1)"
+Output:
+```
 +---+-----+--------+
 | 0 |   1 |  0.48% |
 | 1 |  60 | 28.57% |
@@ -2690,14 +2725,14 @@ These functions run a shell command and let you process its standard output, sta
 `exec` returns whatever the command wrote to standard output. The command's return code and standard error are saved for the `excrc()` and `excerr()` functions:
 
 ```
-specs PRINT "exec('echo hello')"
+$ specs PRINT "exec('echo hello')"
 hello
 ```
 
 `exc1` is the same as `exec`, except it returns just one line of output:
 
 ```
-specs PRINT "exc1('echo hello')"
+$ specs PRINT "exc1('echo hello')"
 hello
 ```
 
@@ -2705,8 +2740,12 @@ hello
 
 `excrc()` and `excerr()` always reflect **only the last** shell command that was run. Read them right after the relevant `exec`/`exc1` call, and before any other shell command runs:
 
-```
-specs PRINT "exec('grep specs *')" WRITE "stderr" WRITE PRINT "excerr()"
+```specs 
+   PRINT "exec('grep specs *')" 
+   WRITE 
+   "stderr" 
+   WRITE 
+   PRINT "excerr()"
 ```
 
 Be especially careful when `exec` or `exc1` appear inside an `IF` or `WHILE` block, where the order and number of runs may not be obvious.
@@ -2715,14 +2754,27 @@ Be especially careful when `exec` or `exc1` appear inside an `IF` or `WHILE` blo
 
 `exec` and `exc1` launch a new shell for every record they are evaluated on. The following runs `ls | wc` once **per input record**, which is wasteful:
 
-```
-specs -C ls "File" 1 w8 NW "is one of the" NW PRINT "exc1('ls | wc')" NW "files in this directory"
+```specs
++IN ls 
+   "File"                       1 
+   WORD 8                      NW  # filename 
+   "is one of the"             NW 
+   PRINT "exc1('ls | wc -l')"  NW  # counts files
+   "files in this directory"
 ```
 
 A more efficient version runs the command only once — on the first record — and stores the result in a field identifier for reuse:
 
-```
-specs -C ls IF "first()" THEN SET "#0:=exc1('ls | wc')" ENDIF "File" 1 w8 NW "is one of the" NW PRINT "#0" NW "files in this directory"
+```specs
++IN ls 
+   IF "first()" THEN 
+      SET "#0:=exc1('ls | wc -l')"  # counts files 
+   ENDIF 
+   "File" 1 
+   WORD 8          NW  # filename
+   "is one of the" NW 
+   PRINT "#0"      NW  # contains file count
+   "files in this directory"
 ```
 
 ## Special Functions
@@ -2746,16 +2798,16 @@ specs -C ls IF "first()" THEN SET "#0:=exc1('ls | wc')" ENDIF "File" 1 w8 NW "is
 
 `pset` and `pget` store values that persist across separate invocations of specs. They are stored on disk (in the user's home directory or a similar location) and survive between sessions.
 
-```
+```specs
 # Count how many times you've run a script
-specs PRINT "pset(runs, pget(runs,0)+1)" 1
+   PRINT "pset(runs, pget(runs,0)+1)"  1
 ```
 
 An abbreviated form: `#varname` is equivalent to `pget('varname')`:
 
-```
+```specs
 # Count how many times you've run a script
-specs PRINT "pset(runs, #runs+1)" 1
+   PRINT "pset(runs, #runs+1)"  1
 ```
 
 ---
