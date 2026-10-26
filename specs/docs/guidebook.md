@@ -2827,7 +2827,7 @@ Any ALU expression can be a condition.
 
 ## IF / THEN / ELSEIF / ELSE / ENDIF
 
-```
+```specs
 IF "condition" THEN
     spec-block
 ELSEIF "condition" THEN
@@ -2839,16 +2839,24 @@ ENDIF
 
 Rules:
 
-- `THEN` is required after every condition.
+- `THEN` is required after every condition, except in the so-called [grep mode](#grepmode) (see below).
 - `ELSEIF` blocks are optional; you can have as many as you like.
 - The `ELSE` block is optional.
 - `ENDIF` is required, except at the end of the specification, or just prior to the *run-out block*. Otherwise, nested conditionals may become ambiguous.
 
 **Simple example**: Print whether each number is odd or even:
 
+```specs
++IN seq 1 5
+a: WORD 1   1 
+      is    NEXTWORD 
+   IF "a%2" THEN 
+      odd   NEXTWORD 
+   ELSE 
+      even  NEXTWORD 
+   ENDIF
 ```
-seq 1 5 | specs a: WORD 1 1 is NEXTWORD IF "a%2" THEN odd NEXTWORD ELSE even NEXTWORD ENDIF
-```
+\newpage
 Output:
 ```
 1 is odd
@@ -2857,10 +2865,10 @@ Output:
 4 is even
 5 is odd
 ```
-\newpage
+
 **Note:** For ease of reading, most examples in this chapter will be in the form of a *spec file*. Always assume that the spec file is named `example`:
 
-```
+```specs
 a: WORD 1         1
    is             NEXTWORD
    IF "a%2" THEN
@@ -2877,9 +2885,35 @@ $ seq 1 5 | specs -f example
 5 is odd
 ```
 
+## grep Mode {#grepmode}
+
+**specs** can be used as a simple filter of records by having an `IF` statement with a condition, not followed by anything else.  The specification will run as if it was followed by a data field to print the entire record. The following two specifications are equivalent:
+```specs
+# Regular specification printing all records longer than 5 chars
+   IF "length(@@)>5" THEN 1-* 1
+
+# grep-mode specification doing the same thing
+   IF "length(@@)>5"
+```
+
+The logic can, of course, be more complex than what is available in grep:
+```specs
+# Print the perfect squares under 60
++IN seq 1 60
+   WORD 1  a:
+   SET "#0:=sqrt(a)"
+   IF "exact(#0)"
+```
+Or:
+```specs
+# Print the perfect squares under 60
++IN seq 1 60
+   IF "exact(sqrt(word(1)))"
+```
+
 ## WHILE / DO / DONE
 
-```
+```specs
 WHILE "condition" DO
     spec-block
 DONE
@@ -2889,16 +2923,17 @@ As long as the condition is true, the unit sequence is repeated.
 
 **Warning**: **specs** has a **while-guard** feature that aborts execution after 5000 iterations to prevent accidental infinite loops. You can disable it with the `--no-while-guard` switch, or set the maximum number of iterations to something else using the `while-guard-limit` *configured literal* if you need a longer loop.
 
-**Example**: Print n asterisks for each input number:
-
-```
-a: WORD 1  1 
-   SET "#1:=a" 
+**Example**: 
+```specs
+# Print n asterisks for each input number:
+   SET "#1:=word(1)"
+   PRINT "#1" 1 
    WHILE "#1>0" DO 
       /*/  NEXT
       SET "#1-=1" 
    DONE
-   
+```
+```   
 $ echo -e "1\n3\n5" | specs -f example 
 1*
 3***
@@ -2907,7 +2942,14 @@ $ echo -e "1\n3\n5" | specs -f example
 
 (In bash, you need to escape the `*` with `\*` to prevent shell glob expansion.)
 
-**Off-by-one warning**: Using an assignment expression like `WHILE "#1-=1"` as the condition is tricky — the decrement happens before the loop body, so you lose one iteration. Prefer the form `SET "#1:=a"  WHILE "#1>0" DO ... SET "#1-=1" DONE`.
+**Off-by-one warning**: Using an assignment expression like `WHILE "#1-=1"` as the condition is tricky — the decrement happens before the loop body, so you lose one iteration. Prefer this form:
+```specs
+   SET "#1:=@initial_value"  
+   WHILE "#1>0" DO 
+   ... 
+      SET "#1-=1" 
+   DONE
+```
 
 ## CONTINUE
 
@@ -2915,8 +2957,8 @@ $ echo -e "1\n3\n5" | specs -f example
 
 This is useful for skipping records that match a condition:
 
-```
-# Skip comment lines (lines starting with #)
+```specs
+# Skip comment lines (lines starting with "# ")
    IF "word(1)=='#'" THEN 
       CONTINUE 
    ENDIF 
@@ -2947,10 +2989,11 @@ ABEND: Age in record exceeds limit
 
 `ASSERT` is like `ABEND` but takes a condition rather than a message. If the condition is false, specs aborts with a message that includes the text of the failed condition:
 
-```
+```specs
 a: 55-57    NEXTWORD
    ASSERT "a <= 120"
-
+```
+```
 $ seq 118 122 | specs W1 55 | specs -f example
 118
 119
@@ -2962,11 +3005,12 @@ Use `ASSERT` for sanity checks that should always be true. Use `ABEND` for condi
 
 **Note:** In both of the above examples, the value **121** triggered the `a > 120` condition or the failure of the `a <= 120` assertion. The reason we never see that value printed is because the abnormal end of **specs** left that last output line unprinted. To demonstrate this, we'll add a `WRITE` keyword that flushes that buffer. See [Chapter 12](#chap12).
 
-```
+```specs
 a: 55-57    NEXTWORD
    WRITE
    ASSERT "a <= 120"
-
+```
+```
 $ seq 118 122 | specs W1 55 | specs -f example
 118
 119
@@ -2979,7 +3023,7 @@ ASSERTION failed: a <= 120
 
 These cause specs to skip input records while a condition holds (or until it holds). Once the condition for passing is satisfied once, future records are never re-evaluated — all subsequent records pass through.
 
-```
+```specs
 SKIP-WHILE "condition"    # skip while condition is true
 SKIP-UNTIL "condition"    # skip until condition becomes true
 ```
@@ -2988,7 +3032,7 @@ They work like `CONTINUE` within an implicit `IF`, but they "turn off" after the
 
 **Example**: Print all records from the first one whose date is after July 1st, 2020:
 
-```
+```specs
    WORD 1   a:        # date in yyyymmdd format
    SKIP-WHILE "a < 20200701"
    1-*      1
