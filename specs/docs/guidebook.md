@@ -85,7 +85,7 @@ specs @platform
 which prints something like this:
 
 ```
-POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
+POSIX (linux) system using the g++ 15.2.0 compiler with C++20 and Python 3.14.4 - release variationf
 ```
 
 ### Terminology
@@ -391,7 +391,7 @@ Output:
 
 ---
 
-# Chapter 3: When to Use Command-Line Flags (#chap3)
+# Chapter 3: When to Use Command-Line Flags
 
 Command-line flags (switches) modify how specs behaves. They come *before* the spec units on the command line. Most simple invocations don't need any flags — the defaults cover the common case.
 
@@ -533,7 +533,7 @@ $ specs -i sales.txt -s threshold=200
    ENDIF
 ```
 ```
-gizmos 220`
+gizmos 220
 ```
 
 ### `-t` / `--threaded`
@@ -641,7 +641,7 @@ The **configuration file** is a plain-text file that defines *configured literal
 
 ## Location
 
-- **Linux and macOS**: `~/.specs` (in your home directory)
+- **Linux and macOS**: `~/.specs` (file `.specs` in your home directory)
 - **Windows**: `%HOME%\specs.cfg`
 
 You can override this with the `--config` flag (Chapter 3).
@@ -668,27 +668,15 @@ Motto: "memento mori"
 
 Configured literals are referenced with a leading `@` in expressions. For example, with `pi: 3.14159265` in `~/.specs`:
 
-```
-specs PRINT "@pi*2" 1
-```
+`$ specs ` `PRINT "@pi*2" 1`{.specs}
 
 Output: `6.28318530`
 
-Outside of expressions, `@name` is expanded directly. In the following data field:
-```
-specs @pi 1
-```
-...`@pi` is expanded to `3.14159265` before specs sees it, so this becomes equivalent to:
-```
-specs 3.14159265 1
-```
-which is a literal (treated as a string `3.14159265`).
+Outside of expressions, the configured literal is expanded directly. In "`specs ` `@pi 1`{.specs}", `@pi` is expanded to `3.14159265` 
+before **specs** sees it, so this specification becomes equivalent to "`specs ` `3.14159265 1`{.specs}", where the
+data field source is treated as the string `3.14159265`.
 
-Inside expressions, `@pi` is the numeric value of pi and participates in arithmetic:
-```
-specs PRINT "@pi * @pi" 1
-```
-Output: `9.86960440108936`
+Inside expressions, `@pi` is the numeric value of pi and participates in arithmetic, so "`$ specs ` `PRINT "@pi * @pi" 1`{.specs}" generates the output `9.86960440108936`.
 
 ## Special configured literals that act as settings {#configured-literal-settings}
 
@@ -747,8 +735,9 @@ pythonDisable: 1
 ### `NO_WARN_REDEFINED_FID`
 
 Set to any value to suppress the warning that specs emits when a field identifier is re-defined within the same spec. Setting this would eliminate the warning below:
+
+`$ echo "hello there" | specs ` `a: WORD 1 1 a: WORD 2 NEXTWORD`{.specs}
 ```
-$ echo "hello there" | specs a: WORD 1 1 a: WORD 2 NEXTWORD
 WARNING: Field Identifier <a> redefined.
 hello there
 ```
@@ -762,8 +751,9 @@ This key sets the string that `fmap_dump()` returns when the frequency map conta
 EmptyFrequencyMapMessage: "(no data)"
 ```
 Then you get the following:
+
+`$ echo "hello" | specs ` `WORD 1 1  PRINT "fmap_dump(a)" NEXTWORD`{.specs}
 ```
-$ echo "hello" | specs WORD 1 1 PRINT "fmap_dump(a)" NEXTWORD
 hello (no data)
 ```
 
@@ -853,7 +843,7 @@ specs --specFile myspec.txt
 
 A spec file replaces the command-line specification entirely, so the two cannot be combined. If you supply both a spec file and spec units, specs rejects the invocation rather than silently ignoring one of them:
 
-`$ specs -f myspec.txt -i input.txt ` `WORD 1  1`{.specs}
+`$ specs -f myspec.txt -i input.txt ` `w1  1`{.specs}
 ```
 A spec file (--specFile) cannot be combined with spec units on the command line: <w1>
 ```
@@ -975,7 +965,7 @@ The opening comment block obeys stricter rules than comments elsewhere in the fi
 
 Files whose names begin with a period or an underscore, and files whose names contain `.py`, are not treated as specifications and are not listed.
 
-## Directives (#directives)
+## Directives {#directives}
 
 Directives are special instructions that must appear at the **very beginning** of the spec file, before any spec units. Every directive line must begin with a `+` character in the first column.
 
