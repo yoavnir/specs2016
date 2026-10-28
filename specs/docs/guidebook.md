@@ -186,9 +186,7 @@ Switches begin with `--` (or `-` for single-letter forms) and must come before s
 
 The very simplest specification is a *pass-through*: copy the entire input record to position 1 of the output:
 
-```
-echo "Hello, world" | specs 1-* 1
-```
+`$ echo "Hello, world" | specs ` `1-* 1`{.specs}
 
 Output:
 ```
@@ -218,9 +216,7 @@ Most parts are optional. At minimum you need an `InputSource` and an `OutputPlac
 
 **Example:** - A specification with one **Data Field** Spec Unit that has only an **InputSource** and an **OutputPlacement**: 
 
-```
-echo "Hello, world" | specs 1-5 1
-```
+`$ echo "Hello, world" | specs ` `1-5 1`{.specs}
 
 Output:
 ```
@@ -243,19 +239,16 @@ Character ranges use 1-based indexing, with negative indices counting back from 
 
 Let's try a few:
 
-```
-echo ABCDEFGH | specs 3-5 1
-```
+`$ echo ABCDEFGH | specs ` `3-5 1`{.specs}
+
 Output: `CDE`
 
-```
-echo ABCDEFGH | specs 1:-3 1
-```
+`$ echo ABCDEFGH | specs ` `1:-3 1`{.specs}
+
 Output: `ABCDEF` (from position 1 to the 3rd-from-last character)
 
-```
-echo ABCDEFGH | specs 5:3 1
-```
+`$ echo ABCDEFGH | specs ` `5:3 1`{.specs}
+
 Output: `EFGHABC`
 
 **[Chapter 6](#chap6)** covers the full set of range forms.
@@ -272,19 +265,16 @@ A **word** is a sequence of non-whitespace characters. Words are separated by on
 
 **Note**: Similar to character ranges, you can use `w2-4` here as well, with the same limitations.
 
-```
-echo "the quick brown fox" | specs w2 1
-```
+`$ echo "the quick brown fox" | specs ` `w2 1`{.specs}
+
 Output: `quick`
 
-```
-echo "the quick brown fox" | specs w1:2 1
-```
+`$ echo "the quick brown fox" | specs ` `w1:2 1`{.specs}
+
 Output: `the quick`
 
-```
-echo "the quick brown fox" | specs w-1 1
-```
+`$ echo "the quick brown fox" | specs ` `w-1 1`{.specs}
+
 Output: `fox`
 
 The whitespace separator can be set with the `WORDSEPARATOR` or `WS` keywords. **specs** also has **fields**. Unlike words, fields are separated by a single *field separator*, which by default is a `tab`. More on this in **[Chapter 6](#chap6)**.
@@ -293,41 +283,38 @@ The whitespace separator can be set with the `WORDSEPARATOR` or `WS` keywords. *
 
 You can place literal text in the output by using a string literal as the input source:
 
-```
-specs "Hello, there" 1
-```
+`$ specs ` `"Hello, there" 1`{.specs}
+
 Output: `Hello, there`
 
 Delimiters can be used when necessary to avoid confusion:
 
-```
-specs /word/ 1
-```
+`$ specs ` `/word/ 1`{.specs}
+
 Output: `word`
 
 On the command line, double quotes are a signal to the **shell** rather than to **specs**. They tell the shell that everything enclosed — spaces, special characters and all — is a single argument. **specs** then treats that whole argument as a *string literal*, unless the entire thing looks like something else: a keyword, a token, a range, and so on. So a command-line literal usually needs no delimiters of its own.
 
 In a *spec file* (see **[Chapter 5](#chap5)**) there is no shell to group words into arguments for you, so a string literal that contains spaces **must** be surrounded by a delimiter. A double quote can serve as that delimiter, but slashes are the most common:
 
-```
-/Hello, there/  1
+```specs
+   /Hello, there/  1
 ```
 
 ### Field Identifiers
 
 A **fieldIdentifier** is a single letter followed by a colon, such as `a:`, placed at the start of a data field. It saves the value under that name so it can be reused elsewhere in the specification, either in an *expression* (see **[Chapter 8](#chap8)**), or with the `ID` keyword:
 
-```
-echo "5 3" | specs a: w1 . b: w2 . ID b 1 ID a 2
-```
+`$ echo "5 3" | specs ` `a: w1 .  b: w2 .  ID b 1  ID a 2`{.specs}
+
 Output: `35`
 
 For clarity, here's the specification above formatted nicer and with comments:
 ```specs
-   a: WORD 1  .  # Assign word 1 to a: but do not print
-   b: WORD 2  .  # Assign word 2 to b: but do not print
-      ID b    1  # Print field identifier b in position 1
-      ID a    2  # Print field identifier a in position 2
+a: WORD 1  .  # Assign word 1 to a: but do not print
+b: WORD 2  .  # Assign word 2 to b: but do not print
+   ID b    1  # Print field identifier b in position 1
+   ID a    2  # Print field identifier a in position 2
 ```
 
 Field identifiers, and everything you can do with them, are covered in full starting in Chapter 6.
@@ -353,18 +340,15 @@ This is handy when a fixed-width or word-delimited source includes surrounding b
 A **conversion**, placed just before the `OutputPlacement`, transforms the value. `UCASE` and `LCASE` are the two most common examples — there are others, all covered in [Chapter 6](#chap6).
 
 Example:
-```
-echo "Hello World" | specs  1-* UCASE 1
-```
+`$ echo "Hello World" | specs ` `1-* UCASE 1`{.specs}
+
 Output: `HELLO WORLD`
 
 ### Output Placement
 
 The `OutputPlacement` argument says where the value goes. You've already seen the simplest form — an absolute column number, such as the `1` in `1-5 1`. You can also place output *relative* to whatever was written previously, which avoids having to compute absolute column numbers by hand. Use `N` or `NEXT` to place the output immediately after the previous output. Use `NW` or `NEXTWORD` to place it after a space following the previous output.
 
-```
-echo "Alice 42" | specs 
-```
+`$ echo "Alice 42" | specs `
 ```specs
    /Name:/         1  
    W1       NEXTWORD 
@@ -382,7 +366,7 @@ Other output placement options are covered in Chapters 6 and 7.
 The optional `alignment` argument comes last, and only makes sense when the output field is wider than the value being placed (for example, when `OutputPlacement` is a range like `1-10`). It can be `left` (the default), `right`, or `center`/`centre`:
 
 ```
-echo "42" | specs 
+$ echo "42" | specs 
 ```
 ```specs
    "#"      1        # Plase a hash in column 1
@@ -401,9 +385,7 @@ Suppose you have a log file where each line looks like:
 
 And you want to extract just the date, severity, and IP address:
 
-```
-cat logfile.txt | specs w1 1   w3 13   w-1 25
-```
+`$ cat logfile.txt | specs ` `w1 1   w3 13   w-1 25`{.specs}
 
 Output:
 ```
@@ -424,25 +406,20 @@ Here is a guided tour of when each flag is useful.
 
 Read input from a file instead of stdin. Use this when you're not piping from another command:
 
-```
-specs -i mydata.txt 1-* 1
-```
+`$ specs -i mydata.txt ` `1-* 1`{.specs}
 
 ### `-o filename` / `--outFile filename`
 
 Write output to a file instead of stdout. Useful when the output is large or when you want to avoid it appearing on screen:
 
-```
-cat input.txt | specs -o output.txt w2 1
-```
+`$ cat input.txt | specs -o output.txt ` `WORD 2  1`{.specs}
 
 ### `-C cmd` / `--inCmd cmd`
 
 Use the output of a shell command as the input stream:
 
-```
-specs --inCmd "ls -l /tmp" w9 1
-```
+`$ specs --inCmd "ls -l /tmp" ` `w9 1`{.specs}
+
 
 This avoids a pipe when you want the input to be the output of a command.
 
@@ -490,9 +467,9 @@ Use `-v` as your first step when a specification produces unexpected output.
 
 Print runtime statistics to **standard error** at the end of the run: record counts, wall-clock time, and CPU time. Useful for performance tuning:
 
-```
-$ specs --stats -i large_file.txt -o /dev/null 1-* 1
 
+`$ specs --stats -i large_file.txt -o /dev/null ` `1-* 1`{.specs}
+```
 Read  36160 lines.
 Wrote 36160 lines.
 Run Time: 0.030199 seconds.
@@ -559,7 +536,7 @@ $ specs -i sales.txt -s threshold=200
    ENDIF
 ```
 ```
-gizmos 220
+gizmos 220`
 ```
 
 ### `-t` / `--threaded`
@@ -2202,15 +2179,13 @@ specs provides a library of built-in functions for use in expressions. This chap
 
 Functions appear inside ALU expressions:
 
-```specs 
-   PRINT "length('hello')"  1
-```
+`$ specs ` `PRINT "length('hello')"  1`{.specs}
+
 Output: `5`
 
 Multiple arguments are separated by commas:
-```specs 
-   PRINT "substr('hello world', 7, 5)"  1
-```
+`$ specs ` `PRINT "substr('hello world', 7, 5)"  1`{.specs}
+
 Output: `world`
 
 ## Passing Arguments
@@ -2221,46 +2196,40 @@ When calling a function, you can pass different kinds of arguments. Here are the
 
 Numbers can be passed without quotes:
 
-```specs 
-   PRINT "sqrt(16)"  1
-```
+`$ specs ` `PRINT "sqrt(16)"  1`{.specs}
+
 Output: `4`
 
-```specs 
-   PRINT "pow(2, 8)"  1
-```
+`$ specs ` `PRINT "pow(2, 8)"  1`{.specs}
+
 Output: `256`
 
 ### String Literals with Quotes
 
 Strings containing spaces or special characters must be enclosed in delimiters. You can use single quotes, double quotes, or slashes:
 
-```specs 
-   PRINT "length('hello world')"  1
-```
+`$ specs ` `PRINT "length('hello world')"  1`{.specs}
+
 Output: `11`
 
-```specs 
-   PRINT 'substr("hello world", 7, 5)'  1
-```
+`$ specs ` `PRINT 'substr("hello world", 7, 5)'  1`{.specs}
+
 Output: `world`
 
-```specs 
-   PRINT "pos(world, /hello world/)"  1
-```
+`$ specs ` `PRINT "pos(world, /hello world/)"  1`{.specs}
+
 Output: `7`
 
 ### Unquoted String Literals
 
 A single word with no special characters can be passed without quotes, as long as it is unambiguous. For example:
 
-```specs 
-   PRINT 'length(hello)'  1
-```
+`$ specs ` `PRINT 'length(hello)'  1`{.specs}
+
 Output: `5`
 
+`$ specs ` `PRINT 'length(hello!)' 1`{.specs}
 ```
-$ specs PRINT 'length(hello!)' 1
 Error while parsing command-line arguments:
 Expression in Token PRINT at index 1 with content <length(hello!)>:
 Operator '!' is invalid.
@@ -2268,16 +2237,15 @@ Operator '!' is invalid.
 
 However, **you cannot pass a single-character unquoted argument** because **specs** will interpret it as a field identifier reference (see below). These fail:
 
-```
-specs PRINT "length(x)" 1              # ERROR: field identifier x not defined
-specs PRINT "includes(hello,x)" 1      # ERROR: field identifier x not defined
+```specs
+$ specs PRINT "length(x)" 1              # ERROR: field identifier x not defined
+$ specs PRINT "includes(hello,x)" 1      # ERROR: field identifier x not defined
 ```
 
 Always quote single-character arguments:
 
-```specs 
-   PRINT "length('x')"  1
-```
+`$ specs ` `PRINT "length('x')"  1`{.specs}
+
 Output: `1`
 
 ### Field Identifiers
@@ -2303,9 +2271,8 @@ Output: `15`
 
 Configured literals from your `~/.specs` file (or set with `--set`) are referenced with the `@` prefix:
 
-```specs 
-   PRINT "@pi"  1
-```
+`$ specs ` `PRINT "@pi"  1`{.specs}
+
 Output: `3.14159265` (if `pi: 3.14159265` is in your config)
 
 ```specs
@@ -2326,43 +2293,36 @@ Several special values are available in expressions:
 - `@>` — the output record built so far in this cycle
 - `#n` — counters (e.g., `#0` is counter 0)
 
-```specs 
-   PRINT "length(@@)"
-```
+`$ specs ` `PRINT "length(@@)"`{.specs}
+
 Output: (length of the current input record)
 
-```specs
-+IN echo "hello world"
-   PRINT "word(1)"
-```
+`$ echo "hello world" | specs` `PRINT "word(1)"`{.specs}
+
 Output: `hello`
 
 ### Nested Function Calls
 
 Functions can be nested. The inner function is evaluated first:
 
-```specs 
-   PRINT "length(word(1))"  1
-```
+`$ specs ` `PRINT "length(word(1))"  1`{.specs}
+
 Output: (length of the first word)
 
-```specs 
-   PRINT "substr(@@, 1, length(word(1)))"  1
-```
-Output: (the first word)
+`$ specs ` `PRINT "substr(@@, 1, length(word(1)))"  1`{.specs}
+
+Output: *the first word*
 
 ### Omitted Arguments
 
 For some functions, one or more arguments may be omitted. When an argument is omitted, the function uses a default value for it. For example, `round(x, d)` rounds *x* to *d* decimal places; if *d* is omitted, *x* is rounded to the nearest integer:
 
-```specs
-   PRINT "round(2.567)" 1
-```
+`$ specs ` `PRINT "round(2.567)" 1`{.specs}
+
 Output: `3`
 
-```specs
-   PRINT "round(2.567, 1)" 1
-```
+`$ specs ` `PRINT "round(2.567, 1)" 1`{.specs}
+
 Output: `2.6`
 
 Which arguments of a function may be omitted, and what their default values are, is described in the documentation of that function (see the function tables below, the manpage and the built-in help for the particular function). Omitting an argument that is not documented as omittable is an error, and **specs** reports it with an error message.
@@ -2490,26 +2450,26 @@ The regular expression grammar itself (`ECMAScript`, `basic`, `extended`, `awk`,
 
 ### String Manipulation Functions with Multiple Parameters
 
-**`substitute(haystack, needle, subst, max)`** replaces occurrences of a substring:
+**`substitute(haystack, needle, subst, max)`{.specs}** replaces occurrences of a substring:
 
 - *haystack*: the string to search in
 - *needle*: the substring to find and replace
 - *subst*: the replacement string
 - *max*: maximum number of replacements to make; use `U` to replace all occurrences
 
-**`strip(s, option, pad)`** removes leading and/or trailing characters:
+**`strip(s, option, pad)`{.specs}** removes leading and/or trailing characters:
 
 - *s*: the string to strip
 - *option*: `B` (both leading and trailing, default), `L` (leading only), `T` (trailing only)
 - *pad*: the character to strip (default: space)
 
-**`space(s, len, pad)`** normalizes internal whitespace:
+**`space(s, len, pad)`{.specs}** normalizes internal whitespace:
 
 - *s*: the string to process
 - *len*: number of occurrences of *pad* to use between words (default: 1)
 - *pad*: the character to use as separator (default: space)
 
-**`translate(s, tableout, tablein, pad)`** translates characters according to a mapping:
+**`translate(s, tableout, tablein, pad)`{.specs}** translates characters according to a mapping:
 
 - *s*: the string to translate
 - *tableout*: output characters (the translation table)
@@ -2518,7 +2478,7 @@ The regular expression grammar itself (`ECMAScript`, `basic`, `extended`, `awk`,
 
 Characters in *tablein* are replaced with corresponding characters from *tableout*. If *tableout* is shorter than *tablein*, unmatched characters are replaced with *pad*.
 
-**`insert(s, target, pos, len, pad)`** inserts a string into another string:
+**`insert(s, target, pos, len, pad)`{.specs}** inserts a string into another string:
 
 - *s*: the string to insert
 - *target*: the string to insert into
@@ -2526,7 +2486,7 @@ Characters in *tablein* are replaced with corresponding characters from *tableou
 - *len*: length of the insertion (if *s* is shorter, it is padded with *pad*)
 - *pad*: padding character (default: space)
 
-**`overlay(s1, s2, start, len, pad)`** overlays one string onto another:
+**`overlay(s1, s2, start, len, pad)`{.specs}** overlays one string onto another:
 
 - *s1*: the string to overlay
 - *s2*: the base string
@@ -2597,31 +2557,31 @@ These functions read from the current (or context-affected) input record:
 
 ### Record Output and Substring Functions
 
-**`split(sep, hdr, ftr)`** outputs all fields on separate lines:
+**`split(sep, hdr, ftr)`{.specs}** outputs all fields on separate lines:
 
 - *sep*: field separator (default: space)
 - *hdr*: header to print before each field (optional)
 - *ftr*: footer to print after each field (optional)
 
-**`splitw(sep, hdr, ftr)`** outputs all words on separate lines:
+**`splitw(sep, hdr, ftr)`{.specs}** outputs all words on separate lines:
 
 - *sep*: word separator (default: space)
 - *hdr*: header to print before each word (optional)
 - *ftr*: footer to print after each word (optional)
 
-**`splus(s, o, l)`** extracts a substring at a specified offset from the first occurrence of a string:
+**`splus(s, o, l)`{.specs}** extracts a substring at a specified offset from the first occurrence of a string:
 
 - *s*: the string to search for
 - *o*: offset from the start of *s* (can be negative to start before *s*)
 - *l*: length of the substring to extract
 
-**`wplus(s, o, l)`** extracts a substring at a specified word offset from the first occurrence of a word:
+**`wplus(s, o, l)`{.specs}** extracts a substring at a specified word offset from the first occurrence of a word:
 
 - *s*: the word to search for
 - *o*: word offset from *s* (can be negative)
 - *l*: number of words to extract
 
-**`fplus(s, o, l)`** extracts a substring at a specified field offset from the first occurrence of a field:
+**`fplus(s, o, l)`{.specs}** extracts a substring at a specified field offset from the first occurrence of a field:
 
 - *s*: the field to search for
 - *o*: field offset from *s* (can be negative)
@@ -2706,9 +2666,9 @@ Notes:
 - The `distinct_prime_factors` is an [example](#dpf) in [Chapter 14](#chap14).
 
 Example — the sum of the numbers from 1 to 10
-```
-seq 10 | specs w1 a: EOF PRINT "sum(a)"
-```
+
+`$ seq 10 | specs` `w1 a: EOF PRINT "sum(a)"`{.specs}
+
 Output: `55`
 
 ## Shell Command Functions
@@ -2724,15 +2684,15 @@ These functions run a shell command and let you process its standard output, sta
 
 `exec` returns whatever the command wrote to standard output. The command's return code and standard error are saved for the `excrc()` and `excerr()` functions:
 
+`$ specs ` `PRINT "exec('echo hello')"`{.specs}
 ```
-$ specs PRINT "exec('echo hello')"
 hello
 ```
 
 `exc1` is the same as `exec`, except it returns just one line of output:
 
+`$ specs ` `PRINT "exc1('echo hello')"`{.specs}
 ```
-$ specs PRINT "exc1('echo hello')"
 hello
 ```
 
@@ -2967,7 +2927,7 @@ This is useful for skipping records that match a condition:
 
 ## ABEND — ABnormal END
 
-`ABEND` (pronounced /ˈɑːbɛnd/) halts the entire specs run with an error message sent to stderr. The current output record is *not* written. No further records are processed.
+`ABEND` (pronounced /ɑˈbɛnd/) halts the entire specs run with an error message sent to stderr. The current output record is *not* written. No further records are processed.
 
 ```specs
 a: 55-57    NEXTWORD  # "Age" field
@@ -2975,8 +2935,9 @@ a: 55-57    NEXTWORD  # "Age" field
        ABEND "Age in record exceeds limit"
 ```
 Use example:
+
+`$ seq 118 122 | specs ` `W1 55`{.specs} ` | specs -f example`
 ```
-$ seq 118 122 | specs W1 55 | specs -f example
 118
 119
 120
@@ -2993,8 +2954,9 @@ ABEND: Age in record exceeds limit
 a: 55-57    NEXTWORD
    ASSERT "a <= 120"
 ```
+
+`$ seq 118 122 | specs ` `W1 55`{.specs} ` | specs -f example`
 ```
-$ seq 118 122 | specs W1 55 | specs -f example
 118
 119
 120
@@ -3010,8 +2972,9 @@ a: 55-57    NEXTWORD
    WRITE
    ASSERT "a <= 120"
 ```
+
+`$ seq 118 122 | specs ` `W1 55`{.specs} ` | specs -f example`
 ```
-$ seq 118 122 | specs W1 55 | specs -f example
 118
 119
 120
@@ -3509,15 +3472,15 @@ Both reset the context offset to zero (the current record) after reading.
 
 `REDO` takes the current output record, makes it the new current input record, and continues executing the specification from the point after `REDO`. This lets you process a record in two passes without piping through a second specs command:
 
-```
+```specs
 # Extract field after the colon, then get just its first word
-grep "^Name:" file.txt | specs fs : f2-* 1 REDO w1 1
 ```
+`grep "^Name:" file.txt | specs` `fs : f2-* 1 REDO WORD 1 1`{.specs}
 
 Without `REDO`:
-```
-grep "^Name:" file.txt | specs fs : f2-* 1 | specs w1 1
-```
+
+`grep "^Name:" file.txt | specs` `fs : f2-* 1`{.specs} `| specs` `WORD 1 1`{.specs}
+
 
 Both produce the same result, but `REDO` keeps it in one invocation.
 
@@ -3637,13 +3600,10 @@ record alone, `w1` would still give the file name at any point afterwards.
 
 ## SPLITW and SPLITF — Splitting Records
 
-`SPLITW` splits the current input record into one output record per **word**.
-`SPLITF` splits the current input record into one output record per **field**.
+`SPLITW`{.specs} splits the current input record into one output record per **word**.
+`SPLITF`{.specs} splits the current input record into one output record per **field**.
 
-```
-$ echo "one two three" | specs splitw 1
-```
-Output:
+`$ echo "one two three" | specs ` `splitw 1`{.specs}
 ```
 one
 two
@@ -3653,10 +3613,8 @@ three
 Spec units appearing **before** the split form a prefix replicated in every output record. Spec units appearing **after** the split are applied to each split piece individually.
 
 With a prefix:
-```
-echo "one two three" | specs /prefix:/ 1 splitw nextword
-```
-Output:
+
+`$ echo "one two three" | specs ` `/prefix:/ 1 splitw nextword`{.specs}
 ```
 prefix: one
 prefix: two
@@ -3748,9 +3706,9 @@ This combines the second column of record *n* from `file1.txt` with the second c
 
 **When all streams have equal record counts**, this positional pairing is straightforward. If stream lengths differ, the `STOP` MainOption controls behavior:
 
-- `STOP ALLEOF` (default): continue until *all* streams are exhausted; **specs** treats READs from exhausted streams as if they return empty records
-- `STOP ANYEOF`: stop when *any* stream runs out
-- `STOP n`: stop when stream `n` runs out
+- `STOP ALLEOF`{.specs} (default): continue until *all* streams are exhausted; **specs** treats READs from exhausted streams as if they return empty records
+- `STOP ANYEOF`{.specs}: stop when *any* stream runs out
+- `STOP n`{.specs}: stop when stream `n` runs out
 
 ## Multiple Output Streams
 
@@ -3795,16 +3753,16 @@ The `CONTEXT` spec unit provides a general solution.
 
 ## The CONTEXT Spec Unit
 
-`CONTEXT n` changes the active input record to the one at offset n from the current record:
+`CONTEXT n`{.specs} changes the active input record to the one at offset n from the current record:
 
-- `CONTEXT 1` — look ahead one record (the next record)
-- `CONTEXT -1` — look back one record (the previous record)
-- `CONTEXT 0` — reset to the current record
-- `CONTEXT 3` — look ahead three records
+- `CONTEXT 1`{.specs} — look ahead one record (the next record)
+- `CONTEXT -1`{.specs} — look back one record (the previous record)
+- `CONTEXT 0`{.specs} — reset to the current record
+- `CONTEXT 3`{.specs} — look ahead three records
 
 After a `CONTEXT` spec unit, all subsequent input parts (character ranges, word ranges, etc.) read from the offset record instead of the current one. Multiple `CONTEXT` tokens can appear in a single spec.
 
-```
+```specs
 specs 1-* 1 CONTEXT 1 1-* NEXTWORD
 ```
 
@@ -3816,7 +3774,7 @@ gamma
 ```
 
 Looking backward:
-```
+```specs
 specs 1-* 1 CONTEXT -1 1-* NEXTWORD
 ```
 Output:
@@ -3833,14 +3791,19 @@ When the context record doesn't exist (before the first record or past the last)
 
 You can switch context multiple times in one specification:
 
-```
+```specs
 # Print previous, current, and next record's first word
-specs CONTEXT -1 WORD 1 1 CONTEXT 0 WORD 1 NEXTWORD CONTEXT 1 WORD 1 NEXTWORD
+   CONTEXT -1 
+   WORD 1         1
+   CONTEXT 0 
+   WORD 1  NEXTWORD
+   CONTEXT 1 
+   WORD 1  NEXTWORD
 ```
 
 On input `alpha`, `beta`, `gamma`:
 ```
- alpha beta
+alpha beta
 alpha beta gamma
 beta gamma
 ```
@@ -3851,7 +3814,7 @@ beta gamma
 
 In expressions, `@+n` refers to the record n positions ahead and `@-n` to n positions behind:
 
-```
+```specs
 specs PRINT "length(@+1)" 1
 ```
 
@@ -3862,8 +3825,9 @@ Notes:
 - Reading out-of-bounds with `@+n` or `@-n` does not stop processing, even if `READSTOP` is present.
 - The `@+n` / `@-n` elements in expressions are not affected by global context. The following *specification* has exactly the same output as the one above:
 
-```
-specs CONTEXT 2 PRINT "length(@+1)" 1
+```specs
+   CONTEXT 2 
+   PRINT "length(@+1)"  1
 ```
 
 ## @@ vs. @! and record() vs. cfrecord()
@@ -3872,14 +3836,14 @@ When `CONTEXT` is active, there is an important distinction:
 
 | Expression | Returns |
 |------------|---------|
-| `@@` | Original current record (ignoring CONTEXT) |
-| `@!` | Context-affected record |
-| `record()` | Context-affected record (same as `@!`) |
-| `cfrecord()` | Original current record (same as `@@`) |
+| `@@`{.specs} | Original current record (ignoring CONTEXT) |
+| `@!`{.specs} | Context-affected record |
+| `record()`{.specs} | Context-affected record (same as `@!`) |
+| `cfrecord()`{.specs} | Original current record (same as `@@`) |
 
 Example:
-```
-specs CONTEXT 1 PRINT "@!" 1 WRITE PRINT "@@" 1 WRITE
+```specs
+   CONTEXT 1 PRINT "@!" 1 WRITE PRINT "@@" 1 WRITE
 ```
 
 On input `alpha\nbeta\ngamma`:
@@ -3895,10 +3859,12 @@ gamma
 
 ## The ctxrecno() Function
 
-`ctxrecno()` returns the record number that the context record would have if it were the current record:
+`ctxrecno()`{.specs} returns the record number that the context record would have if it were the current record:
 
-```
-specs PRINT "ctxrecno()" 1 CONTEXT 1 PRINT "ctxrecno()" NEXTWORD
+```specs
+   PRINT "ctxrecno()"         1 
+   CONTEXT 1 
+   PRINT "ctxrecno()"  NEXTWORD
 ```
 
 On three input records:
@@ -3912,8 +3878,9 @@ On three input records:
 
 When `CONTEXT` refers to a position before the first record or past the last, the context record is an **out-of-bounds** (OOB) record. It behaves like an empty string, but carries a hidden OOB flag you can test with `ctxoob()`:
 
-```
-specs CONTEXT 2 PRINT "ctxoob()" 1
+```specs
+   CONTEXT 2 
+   PRINT "ctxoob()"  1
 ```
 
 On the last two records of a three-record input, this outputs `0`, `0`, `1` (wait — actually on the third record `CONTEXT 2` would look two ahead which is past the end, so `ctxoob()` returns 1).
@@ -3932,7 +3899,7 @@ specs determines the maximum forward and backward context offsets at compile tim
 - A **forward buffer** of up to the maximum forward offset
 - A **backward buffer** of up to the maximum backward offset
 
-With `CONTEXT 3`, specs reads three records ahead before processing begins. This is automatic and transparent.
+With `CONTEXT 3`{.specs}, specs reads three records ahead before processing begins. This is automatic and transparent.
 
 In verbose mode (`-v`), specs reports the buffer sizes:
 ```
@@ -3950,12 +3917,12 @@ specs: Using a 3-record rolling context: 2 records forward and 1 records backwar
 
 | Situation | Better approach |
 |-----------|----------------|
-| Look at the next record without consuming it | `CONTEXT 1` |
-| Look at the previous record | `CONTEXT -1` |
-| Look several records ahead or behind | `CONTEXT n` |
-| Consume multiple records in one cycle | `READ` / `READSTOP` |
-| Back up after consuming one too many | `UNREAD` |
-| Process variable-length blocks | `READ` + `WHILE` + `UNREAD` |
+| Look at the next record without consuming it | `CONTEXT 1`{.specs} |
+| Look at the previous record | `CONTEXT -1`{.specs} |
+| Look several records ahead or behind | `CONTEXT n`{.specs} |
+| Consume multiple records in one cycle | `READ`{.specs} / `READSTOP`{.specs} |
+| Back up after consuming one too many | `UNREAD`{.specs} |
+| Process variable-length blocks | `READ`{.specs} + `WHILE`{.specs} + `UNREAD`{.specs} |
 
 ---
 
@@ -3966,7 +3933,7 @@ Although **specs** has a rich library of built-in functions, sometimes you need 
 Note that not all installations of **specs** include Python support. The following command will show you if Python function support is enabled in your installation:
 ```
 $ specs @python
-Enabled`
+Enabled
 ```
 If it isn't, check [Appendix C](#appendixc) to see how you can get a version that supports Python.
 
@@ -3986,7 +3953,7 @@ All functions whose names **do not** begin with an underscore (`_`) are automati
 
 Suppose you want a `commas` function that formats integers with thousands separators:
 
-```
+```python
 def commas(x):
     '''Convert the integer x into a string with thousands groups separated by commas'''
     ret = ""
@@ -3998,35 +3965,32 @@ def commas(x):
         ret = str(x) + ret
     return ret
 ```
-
+\newpage
 Place this in `$HOME/specs/localfuncs.py` or in `%HOME%\specs\localfuncs.py`. Now use it in **specs**:
 
-```
-$ echo "1398234" | specs PRINT "commas(word(1))" 1.12 right
-```
+`$ echo "1398234" | specs ` `PRINT "commas(word(1))" 1.12 right`{.specs}
+
 Output: `   1,398,234`
 
 ## A Bug
 
 Unfortunately, bugs are part of life for those who write code, so:
 
-```
-$ echo 2048 | specs PRINT "commas(word(1))"
-```
+`$ echo 2048 | specs ` `PRINT "commas(word(1))"`{.specs}
+
 Output: `2,48`
 
-That is not quite what we intended. The problem is that the `rm = str(x % 1000)` line could end up with an `rm` value that is not three-digit. But this function requires three-digit groups. So we need to pad it with zeros. But wait! there's more:
+That is not quite what we intended. The problem is that the `rm = str(x % 1000)`{.python} line could end up with an `rm` value that is not three-digit. But this function requires three-digit groups. So we need to pad it with zeros. But wait! there's more:
 
-```
-$ echo 9003.14159265 | specs PRINT "commas(word(1))"
-```
+`$ echo 9003.14159265 | specs ` `PRINT "commas(word(1))"`{.specs}
+
 Output: `9.0,3.1415926499994384`
 
 Can you figure out what happened here?
 
 Here's a fixed version:
 
-```
+```python
 def commas(x):
     '''Convert the integer x into a string with thousands groups separated by commas'''
     try:
@@ -4047,8 +4011,9 @@ def commas(x):
 ```
 
 Yes, this works:
+
+`$ echo -e "2048\n9003.14159265\nhello" | specs ` `PRINT "commas(word(1))"`{.specs}
 ```
-$ echo -e "2048\n9003.14159265\nhello" | specs PRINT "commas(word(1))"
 2,048
 9,003
 0
@@ -4058,7 +4023,7 @@ $ echo -e "2048\n9003.14159265\nhello" | specs PRINT "commas(word(1))"
 ## A more elaborate example {#dpf}
 
 Given an integer n, how many distinct prime factors does it have?  While **specs** contains many built-in functions, it doesn't cover all needs, so if you happen to need the number of distinct prime factors, here's one possible implementations
-```
+```python
 def distinct_prime_factors(n):
     '''Return the number of distinct prime factors of n'''
     n = int(n)                  # Sanitize input
@@ -4080,7 +4045,7 @@ def distinct_prime_factors(n):
 
 Your functions can use any module available in the Python environment:
 
-```
+```python
 import math
 import datetime
 
@@ -4099,7 +4064,7 @@ def days_since(date_str):
 
 **specs** imports the `localfuncs` module only once per run, so module-level variables persist across calls and can be used to maintain state:
 
-```
+```python
 running_max = None
 def update_max(x):
     '''Return the running maximum value seen so far'''
@@ -4112,7 +4077,7 @@ def update_max(x):
 
 Or, for frequency counting (the `countocc` pattern from the docs):
 
-```
+```python
 occ_dict = dict()
 def countocc_py(haystack, needle):
     '''Count occurrences of needle in haystack across all calls'''
@@ -4128,7 +4093,7 @@ def countocc_py(haystack, needle):
 
 Python's docstrings integrate with specs's help system. Document your functions as you would any Python function:
 
-```
+```python
 def commas(x):
     '''Convert the integer x into a string with thousands groups separated by commas'''
     ...
@@ -4137,7 +4102,7 @@ def commas(x):
 There are two ways to ask specs about your Python functions: `--help pyfuncs` lists **all** of them at once, while `--help <name>` shows the full detail for **one** function by name.
 
 ```
-specs --help pyfuncs
+$ specs --help pyfuncs
 ```
 Output:
 ```
@@ -4147,7 +4112,7 @@ Python Interface Functions:
 ```
 
 ```
-specs --help commas
+$ specs --help commas
 ```
 Output:
 ```
@@ -4156,7 +4121,7 @@ commas (x) : Convert the integer x into a string with thousands groups separated
 
 For a function with a single-line docstring like `commas`, both forms show the same text. The difference matters once a docstring spans multiple lines, as is common when a function needs a longer explanation:
 
-```
+```python
 def prime_factors(n):
     '''
     Return the prime factors of n as a comma-separated string.
@@ -4223,7 +4188,7 @@ By default:
 
 To override, return a 2-tuple `(value, bool)` instead of a plain value:
 
-```
+```python
 def exact_pi():
     '''Return an exact value of pi'''
     return (3.141592653589793, True)   # exact
@@ -4239,7 +4204,7 @@ The tuple must have exactly 2 elements, and the second must be a Python `bool`.
 
 If your function needs to know whether its arguments are exact, set `arg_type = "exact"`:
 
-```
+```python
 def lowindex(x):
     '''Returns the lower 16 bits, preserving exactness'''
     return (int(x[0]) % 65536, x[1])
@@ -4251,7 +4216,7 @@ When `arg_type = "exact"` is set, **all** arguments are passed as 2-tuples `(val
 
 ### Combining Argument and Return Exactness
 
-```
+```python
 def add_exact(a, b):
     '''Add two numbers, exact only if both inputs are exact'''
     return (a[0] + b[0], a[1] and b[1])
@@ -4263,7 +4228,7 @@ add_exact.arg_type = "exact"
 
 If `arg_type` is set to an unrecognized value, specs reports an error at initialization:
 
-```
+```python
 def bad_function(x):
     pass
 
@@ -4284,8 +4249,9 @@ This chapter presents worked examples that combine multiple features. Each examp
 
 ```
 find /var/log -maxdepth 1 -type f -exec ls -l {} \;
-   | specs substr fs / field -1 of word -1 1.40 right   w5 nw.10 right
 ```
+`   | specs ` `substr fs / field -1 of word -1 1.40 right   w5 nw.10 right`{.specs}
+
 
 This uses a `SUBSTRING` to extract the filename by treating `/` as the field separator within the last word.
 
@@ -4307,7 +4273,7 @@ Output:
 
 **Problem**: Given a file with one number per line, print each number and a running total, then print the grand total.
 
-```
+```specs
 # summing.spec
    a: word 1   1
       set "#0+=a"
@@ -4341,7 +4307,7 @@ Grand total: 45
 
 **Problem**: Process a CSV file with `department,firstname,lastname` records. Print employees grouped by department, showing the department name only when it changes.
 
-```
+```specs
 # dept_report.spec
 FIELDSEPARATOR ,
 c: FIELD 1   .
@@ -4383,17 +4349,17 @@ Note that `sort` breaks ties within a department by comparing the rest of the li
 
 **Problem**: Parse `git log` output to extract one line per commit: hash, author username, and date as seconds since epoch.
 
-```
+```specs
 # gitlog.spec
 IF "first()" THEN
     SET "#4:=word(2)"                              # prime #4 with the hash from the very first "commit <hash>" line
 ELSE
     PRINT "#4"                1                    # print the hash saved in #4 on the previous iteration
     WORD 2             NEXTWORD                    # append the author name (word 2 of the "Author:" line)
-    READ                                            # advance to the "Date:" line
+    READ                                           # advance to the "Date:" line
     WORD 2-6 tf2s "%a %b %d %H:%M:%S %Y" NEXTWORD  # convert the date words to seconds since epoch and append
     WHILE "word(1)!='commit'" DO
-        READSTOP                                    # skip the commit message/blank lines until the next commit header
+        READSTOP                                   # skip the commit message/blank lines until the next commit header
     DONE
     SET "#4:=word(2)"                              # save the next commit's hash in #4 for the following iteration's PRINT
 ENDIF
@@ -4413,7 +4379,7 @@ e6d7f9ac591379d653a5685f9d75deccc1792545 synp71 1548011387.000000
 
 **Problem**: Given a file of daily temperatures, print each day's temperature and the change from the previous day.
 
-```
+```specs
 # temps.spec
 t: w1 1
 IF "first()" THEN
@@ -4442,8 +4408,7 @@ On input `20`, `23`, `19`, `25`:
 
 `SPLITW` turns each input record into one output record per word, and `REDO` feeds each of those back in as a new input record, so the rest of the spec (`w1 a:`) only ever sees one word at a time — no external preprocessing needed. `PRINTONLY EOF` suppresses per-record output entirely, so `fmap_dump` only ever sees the words that were actually assigned to `a`, and doesn't pick up a spurious empty entry from the end-of-file cycle. (Since `REDO` revisits the `a:` definition, specs prints a harmless "Field Identifier redefined" warning; set `NO_WARN_REDEFINED_FID` to suppress it.)
 
-```
-specs -i file.txt 
+```specs
 PRINTONLY EOF 
    SPLITW 
 REDO 
@@ -4454,7 +4419,7 @@ EOF
 
 Run `head -10` on the output if you only want the top 10; the `fmap_dump` sort order `cd` (count descending) already puts the most frequent words first.
 
-Input (`file.txt`):
+Input:
 ```
 the quick brown fox
 jumps over the lazy dog
@@ -4479,7 +4444,7 @@ away  1   7.69%
 
 **Problem**: Estimate pi using random points in a unit square.
 
-```
+```specs
 # pi_estimate.spec
    WORD 1 .                       # consume the input record
    SET  "#0:=2*(rand()-0.5)"      # random x in [-1,1]  (rand() returns float when no arg)
@@ -4508,12 +4473,12 @@ For 100,000 iterations, you get about 3–4 significant digits of pi.
 
 `fmap_dump` tabulates every value ever assigned to its field, whether or not the record was written, so `a` must only be assigned for 404s — not assigned unconditionally and then merely hidden with `NOWRITE`:
 
-```
+```specs
 # log404.spec
    fs " "
    b: f9  .                   # status code field (9th word)
    IF "b == 404" THEN
-       a: f7  .                # URL field (7th word) — only captured for 404s
+       a: f7  .               # URL field (7th word) — only captured for 404s
    ELSE
        NOWRITE
    ENDIF
@@ -4521,7 +4486,7 @@ EOF
    PRINT "fmap_dump(a,'txt','cd',0)" 1
 ```
 
-Run: `cat access.log | specs -f log404.spec`
+Run: `$ cat access.log | specs -f log404.spec`
 
 Input (`access.log`):
 ```
@@ -4546,9 +4511,7 @@ Output:
 
 The literal must be quoted so the shell passes `gzip -9` to **specs** as one argument instead of splitting it on the space:
 
-```
-cat filelist.txt | specs --shell "/gzip -9/" 1 w1 nw
-```
+`$ cat filelist.txt | specs --shell ` `"gzip -9" 1  w1 nw`{.specs}
 
 The `--shell` flag executes each output line as a shell command. Remove `--shell` first to verify the commands look correct.
 
@@ -4570,16 +4533,16 @@ gzip -9 notes.txt
 
 **Problem**: Generate a report with a name column of exactly 30 characters, truncated with ellipsis in the middle if too long.
 
-```
+```specs
 # report.spec
-FIELDSEPARATOR ,
-f1 (1, 30, "R3")    # name: centered ellipsis if too long
-f2 nw               # second field: value
+   FIELDSEPARATOR ,
+   f1 (1, 30, "R3")    # name: centered ellipsis if too long
+   f2 nw               # second field: value
 ```
 
 The name is a `FIELD` (`f1`), not a `WORD` (`w1`) — with `FIELDSEPARATOR` set to `,`, a `WORD` would swallow the whole comma-separated line since there's no blank in it.
 
-Run: `cat report.txt | specs -f report.spec`
+Run: `$ cat report.txt | specs -f report.spec`
 
 Input (`report.txt`):
 ```
@@ -5158,10 +5121,10 @@ wrote one empty line. It now writes nothing.
 
 | Specification | 1.0.0 | 1.1.0 |
 |---------------|-------|-------|
-| `specs SET "#1:=5"` | one empty line | no output |
-| `specs /text/ a:` | one empty line | no output |
-| `specs PRINT "2+2"` | `4` | `4` |
-| `specs /text/ 1` | `text` | `text` |
+| `specs SET "#1:=5"`{.specs} | one empty line | no output |
+| `specs /text/ a:`{.specs} | one empty line | no output |
+| `specs PRINT "2+2"`{.specs} | `4` | `4` |
+| `specs /text/ 1`{.specs} | `text` | `text` |
 
 *Specifications* that read the input are not affected: a cycle always writes
 a record only when it builds one. The rule did not apply when no input was
@@ -5176,8 +5139,8 @@ The written-line count reported by `--stats` was incorrect for
 
 | Specification | 1.0.0 | 1.1.0 |
 |---------------|-------|-------|
-| `specs --stats PRINT "2+2"` | Wrote 2 lines. | Wrote 1 lines. |
-| `specs --stats SET "#1:=5"` | Wrote 1 lines. | Wrote 0 lines. |
+| `specs --stats PRINT "2+2"`{.specs} | Wrote 2 lines. | Wrote 1 lines. |
+| `specs --stats SET "#1:=5"`{.specs} | Wrote 1 lines. | Wrote 0 lines. |
 
 ### `-f` looks for `NAME.spec` first
 
@@ -5221,10 +5184,10 @@ exit status is 252 in both versions.
 
 | Specification | 1.0.0 | 1.1.0 |
 |---------------|-------|-------|
-| `specs WHILE DO` | `Missing DO after WHILE at index 1` | `Token <DO> at index 2 is not a valid expression.` |
-| `specs SET PRINT 1` | `Error in statement in Token SET at index 1 with content <SET>` | `Token <PRINT> at index 2 is not a valid expression.` |
-| `specs PRINT SET 1` | `Expression in Token PRINT at index 1 with content <>: Expression has no units` | `Token <SET> at index 2 is not a valid expression.` |
-| `specs ASSERT NEXT 1`, input of three lines | `Runtime error after reading 1 lines and using 1. Expression did not reduce to a single value` | `Token <NEXT> at index 2 is not a valid expression.` |
+| `specs WHILE DO`{.specs} | `Missing DO after WHILE at index 1` | `Token <DO> at index 2 is not a valid expression.` |
+| `specs SET PRINT 1`{.specs} | `Error in statement in Token SET at index 1 with content <SET>` | `Token <PRINT> at index 2 is not a valid expression.` |
+| `specs PRINT SET 1`{.specs} | `Expression in Token PRINT at index 1 with content <>: Expression has no units` | `Token <SET> at index 2 is not a valid expression.` |
+| `specs ASSERT NEXT 1`{.specs}, input of three lines | `Runtime error after reading 1 lines and using 1. Expression did not reduce to a single value` | `Token <NEXT> at index 2 is not a valid expression.` |
 
 ### Warnings on duplicate configured literals
 
