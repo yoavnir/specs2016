@@ -77,14 +77,14 @@
       "background-color": null,
       "bold": true,
       "italic": false,
-      "text-color": "#0000cc",
+      "text-color": "#9a1500",
       "underline": false
     },
     "DataType": {
       "background-color": null,
       "bold": false,
       "italic": false,
-      "text-color": "#9a1500",
+      "text-color": "#0000cc",
       "underline": false
     },
     "DecVal": {
