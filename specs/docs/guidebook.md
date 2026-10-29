@@ -150,6 +150,14 @@ You can give **specs** its specification in two places: either as arguments on t
 
 You will learn all three. A quick decision guide is in Appendix A; details are in Chapters 3, 4, and 5.
 
+## Specification State
+
+During processing, **specs** has several places to keep state:
+
+- Field identifiers keep the input or output of a **data field** - see [chapter 2](#chap2). They persist within the same cycle - usually, only for the current record.
+- Counters (see [chapter 8](#counters)) that last for the duration of the run
+- Persistent variables (see [chapter 9](#chap9)) that are saved to disk and persist between runs of a specification.
+
 ## A Note About Examples
 
 As stated above, you can run **specs** with a *specification* on the command line, or place the *specification* in a file. With a file, you get indentation and comments for better readability. For the readability of this guidebook, some of the examples are given as command line, some as a file, and some with a kind of mixture that is not possible in real usage. For the most part, they will look something like this:
@@ -171,7 +179,7 @@ Commands entered on the command-line are preceded by a `$` sign, the default **b
 
 ---
 
-# Chapter 2: Basic Specifications - Data Fields
+# Chapter 2: Basic Specifications - Data Fields {#chap2}
 
 ## Running specs
 
@@ -263,6 +271,8 @@ A **word** is a sequence of non-whitespace characters. Words are separated by on
 | `w-1`{.specs} or `WORD -1`{.specs} | Last word |
 
 **Note**: Similar to character ranges, you can use `w2-4` here as well, with the same limitations.
+\newpage
+**Examples**
 
 `$ echo "the quick brown fox" | specs ` `WORD 2 1`{.specs}
 
@@ -1032,9 +1042,13 @@ Use the command line when:
 
 Every data field begins with an **input source** — a description of where to get the data for this field. This chapter covers all input source types and the conversions that can be applied to them.
 
-## Character Ranges
+## Ranges
 
-The simplest input source is a range of character positions (1-based):
+The most common input source is a range of characters, of words, or of fields from the input record.
+
+### Character Ranges
+
+Every input record is a string of characters, and we can take a range of them.
 
 | Syntax | Meaning |
 |--------|---------|
@@ -1059,7 +1073,7 @@ Output: `efghab`
 
 Wrap-around is available only through the colon and semicolon forms; `5-2` is a string literal.
 
-## Words
+### Word Ranges
 
 Words are separated by the **word separator**, which defaults to any locale-defined whitespace character.
 
@@ -1077,7 +1091,7 @@ The keyword may be abbreviated to any prefix, so `word 2:4`, `wor 2:4`, `wo 2:4`
 
 Output: `"world   foo"`
 
-## Fields
+### Field Ranges
 
 Fields are separated by the **field separator**, which defaults to a tab character. Unlike words, the separator between fields is exactly one character, so empty fields are possible.
 
@@ -1091,7 +1105,7 @@ Fields are separated by the **field separator**, which defaults to a tab charact
 
 As with words, the keyword `FIELD` may be abbreviated to any prefix and used in any capitalization. On the tab-separated input `a\t\tb`, field 1 is `a`, field 2 is empty, and field 3 is `b`.
 
-## Words vs. Fields: The Key Distinction
+### Words vs. Fields
 
 - **Words**: Separated by *one or more* separator characters. Multiple consecutive separators count as one. Empty words are impossible.
 - **Fields**: Separated by *exactly one* separator character. Two consecutive separators produce an empty field between them.
@@ -1101,9 +1115,10 @@ Example with comma as both word and field separator on `hello,,,,there`:
 - Word 1 = `hello`, word 2 = `there` (the commas collapse)
 - Field 1 = `hello`, fields 2–4 = `""` (empty), field 5 = `there`
 
-## Changing the Separator
+\newpage
+### Changing the Separator
 
-### WORDSEPARATOR (WS)
+#### WORDSEPARATOR (WS)
 
 Use at the beginning of a spec to change what counts as a word separator:
 
@@ -1119,7 +1134,7 @@ This treats commas, colons, and semicolons all as word separators.
 
 The special value `default` resets to locale-defined whitespace.
 
-### FIELDSEPARATOR (FS)
+#### FIELDSEPARATOR (FS)
 
 Similar to `WORDSEPARATOR`, but changes the field separator:
 
@@ -1219,7 +1234,7 @@ Output (just an example):
          118
 ```
 
-### The `PRINT` / `?` Source
+## The `PRINT` / `?` Source
 
 Evaluates an ALU expression and uses the result as input. Covered in **[Chapter 8](#chap8)**.
 
@@ -1231,17 +1246,9 @@ Evaluates an ALU expression and uses the result as input. Covered in **[Chapter 
 12
 ```
 
-### The `ID` keyword
+## Literals
 
-Uses the stored value of a **field identifier** as the input source. Field identifiers are covered below.
-
-`$ echo -e "1\n2\n3\n4" | specs ` `WORD 1 a: ID a 1 PRINT "a*a" NEXTWORD`{.specs}
-```
-1 1
-2 4
-3 9
-4 16
-```
+Input sources can be specified right in the specification
 
 ### String Literals
 
@@ -1252,6 +1259,12 @@ A string enclosed in delimiters is placed literally in the output:
 Output: `Hello test!`
 
 Supported delimiters: `/`, `'`, `"`, `|`, and others. The delimiter must not appear in the literal itself (or use a different delimiter).
+
+When used as an input source, numbers can also be string literals, and they're treated as such. But integers need to be delimited to avoid being mis-identified as single-character ranges. Decimal numbers also have to be delimited to avoid being mis-identified as ranges with lengths:
+
+`$ specs ` `"/3/" 1  + NEXT  "/2.5/" NEXT`{.specs}
+
+Output: `3+2.5`
 
 ### Hex Literals
 
@@ -1274,7 +1287,7 @@ As with `TODclock`, a specification built only from literals, string or hex, rea
 
 ## Field Identifiers
 
-A **field identifier** is a single letter (a–z, A–Z) followed by a colon, placed before the `InputSource`. It captures the input value in a named variable that can be reused later:
+A **field identifier** is a single letter (a–z, A–Z) followed by a colon, placed before the `InputSource`. It captures the input value for the duration of the cycle and can be reused later:
 
 `$ echo "5 3" | specs`
 ```specs
@@ -1284,13 +1297,25 @@ A **field identifier** is a single letter (a–z, A–Z) followed by a colon, pl
 ```
 Output: `15`
 
-Here `a:` captures word 1 into the variable `a`, and `b:` captures word 2 into `b`. Then `PRINT "a*b"` multiplies them.
+Here `a:` captures word 1 into the identifier `a`, and `b:` captures word 2 into `b`. Then `PRINT "a*b"` multiplies them.
 
-A field identifier can also appear as the **OutputPlacement**, in which case it captures the output value:
+A field identifier can also appear as the **OutputPlacement**, in which case it captures the *output** value:
 
 `$ echo "hello world" | specs ` `w1 ucase a:`{.specs}
 
 Here `a:` captures the uppercased first word into `a`. The `.` (period) as OutputPlacement means "no output, just save the value."
+
+### The `ID` keyword
+
+Uses the stored value of a **field identifier** as the input source.
+
+`$ echo -e "1\n2\n3\n4" | specs ` `WORD 1 a: ID a 1 PRINT "a*a" NEXTWORD`{.specs}
+```
+1 1
+2 4
+3 9
+4 16
+```
 
 ## Conversions
 
@@ -1313,6 +1338,7 @@ InputSource conversion OutputPlacement
 
 Output: `HELLO WORLD`
 
+\newpage
 ### Binary/Hex/Character Conversions
 
 | Conversion | Effect | Example |
@@ -1356,6 +1382,7 @@ Adding `STRIP` between the input source and the conversion (or output placement)
 ```
 Output: `<hello>`
 
+\newpage
 ## Record Formats — When Records Are Not Lines {#recfm}
 
 By default, specs treats each newline-terminated line of input as one record. This is the right choice for most text files and shell pipelines. But some data — especially binary files, packed logs, and files generated by mainframe or legacy systems — is organized differently. The `--recfm` flag (short for **record format**) lets you tell specs how to slice the byte stream into records.
@@ -1404,6 +1431,7 @@ In this example, lines may vary in actual length but are logically 132 character
 
 `$ specs --recfm FD --lrecl 132 -i report.txt ` `1-10 1 101-110 nw`{.specs}
 
+\newpage
 ### Summary Table
 
 | `--recfm` | Nickname | `--lrecl` | `--linedel` | What a "record" is |
@@ -1778,9 +1806,9 @@ Output: `84`
 
 Test whether a field identifier is set with `present(a)`.
 
-### Counters
+### Counters {#counters}
 
-Counters are numbered variables, written `#0`, `#1`, `#2`, ... They are initialized to zero and persist across records.
+Counters are numbered variables, written `#0`, `#1`, `#2`, ... They are initialized to zero and persist through a run.
 
 ```specs
 +IN echo -e "10\n20\n30"
@@ -3386,7 +3414,7 @@ Both reset the context offset to zero (the current record) after reading.
 
 ## UNREAD — Pushing Back a Record
 
-`UNREAD` pushes the current record back so it will be re-read as the first record of the next cycle. This avoids the "consumed one record too many" problem when looping with `READ`/`READSTOP`. It also means we don't need the `#4` variable from the previous example to carry the commit hash across cycles — each cycle can simply start on its own "commit" line:
+`UNREAD` pushes the current record back so it will be re-read as the first record of the next cycle. This avoids the "consumed one record too many" problem when looping with `READ`/`READSTOP`. It also means we don't need the `#4` counter from the previous example to carry the commit hash across cycles — each cycle can simply start on its own "commit" line:
 
 ```specs
 +IN "git log"
