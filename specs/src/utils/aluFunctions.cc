@@ -1166,7 +1166,7 @@ PValue AluFunc_rand(PValue pLimit)
 {
 	if (pLimit) {
 		if (pLimit->getInt() <= 0) {
-			MYTHROW("rand: limit must be a positive integer");
+			MYTHROW("rand limit must be a positive integer");
 		}
 		ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
 		return mkValue(res);
@@ -1192,7 +1192,7 @@ PValue AluFunc_round(PValue pX, PValue pDecimals)
 	ASSERT_NOT_ELIDED(pX,1,x);
 	if (pDecimals) {
 		if (pDecimals->getInt() < 0) {
-			MYTHROW("round: value for 'decimals' must not be negative");
+			MYTHROW("'decimals' argument to round must not be negative");
 		}
 		ALUFloat scale = pow(((ALUFloat)(10.0)), pDecimals->getInt());
 		return mkValueE(ALUFloat((round(scale * pX->getFloat())) / scale), false);

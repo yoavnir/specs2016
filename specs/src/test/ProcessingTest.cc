@@ -863,8 +863,8 @@ int main(int argc, char** argv)
 	VERIFY2("w1 1 REDO set '#0:=7' EOF print '#0'", "x", "7"); // Test #216
 
 	// rand() with non-positive limit
-	VERIFY2("print 'rand(0)' 1", "x", "rand: limit must be a positive integer"); // Test #217
-	VERIFY2("print 'rand(-5)' 1", "x", "rand: limit must be a positive integer"); // Test #218
+	VERIFY2("print 'rand(0)' 1", "x", "Expression:rand(0) - rand limit must be a positive integer"); // Test #217
+	VERIFY2("print 'rand(-5)' 1", "x", "Expression:rand(-5) - rand limit must be a positive integer"); // Test #218
 
 	// Security fix regression tests (Issue #336)
 	// strip() on all-whitespace string (was crash due to npos in substr)
@@ -1204,7 +1204,7 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "", "Expression in Token PRINT at index 1 with content <>:\nExpression has no units"); // TEST #278
 
 	spec = "PRINT '1+1hello'";
-	VERIFY2(spec, "1", "Expression did not reduce to a single value"); // TEST #279
+	VERIFY2(spec, "1", "Expression:1+1hello - Expression did not reduce to a single value"); // TEST #279
 
 	// early and late field identifier
 	spec = "a: w1 UCASE .  ID a 1";
@@ -1308,6 +1308,14 @@ int main(int argc, char** argv)
 
 	spec = "SET PRINT";
 	VERIFY2(spec, "", "Token <PRINT> at index 2 is not a valid expression."); // TEST #307
+
+	VERIFY2("print 'round(5.62)' 1", "x", "6"); // Test #308
+	VERIFY2("print 'round(5.42)' 1", "x", "5"); // Test #309
+	VERIFY2("print 'round(5.42, 1)' 1", "x", "5.4");  // #Test #310
+	VERIFY2("print 'round(5.42, -1)' 1", "x", "Expression:round(5.42, -1) - 'decimals' argument to round must not be negative");  // Test #311
+	VERIFY2("print 'round(5.42, 1.2)' 1", "x", "5.4");  // TEST #312
+	VERIFY2("print 'round(5.42, x)' 1", "x", "Expression:round(5.42, x) - At run-out cycle, field identifier <x> used as argument to a non-statistical function");  // Test #313
+	VERIFY2("print 'round(5.42, hello)' 1", "x", "5");   // Test #314
 
 	if (errorCount) {
 		if (onlyTest == 0) {
