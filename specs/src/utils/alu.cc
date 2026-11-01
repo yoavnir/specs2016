@@ -335,7 +335,13 @@ PValue AluUnitFieldIdentifier::evaluate()
 	if (g_fieldIdentifierGetter->isOOB(m_id)) {
 		return g_pOOBValue;
 	}
-	return mkValue(g_fieldIdentifierGetter->Get(m_id));
+    try {
+	    return mkValue(g_fieldIdentifierGetter->Get(m_id));
+    } catch (const SpecsException& e) {
+        std::string err = std::string("At run-out cycle, field identifier <") + m_id + "> used as argument to a non-statistical function";
+        MYTHROW(err);
+    }
+
 }
 
 #define X(nm,st)	if (s==st) {m_op = UnaryOp__##nm; return;}

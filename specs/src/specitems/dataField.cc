@@ -448,7 +448,15 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	bool bWritingWasDone = false;
 	PValue pComposedStartingPosition = nullptr;
-	PSpecString pInput = m_InputPart->getStr(pState);
+    PSpecString pInput;
+
+    try {
+	    pInput = m_InputPart->getStr(pState);
+    } catch (const SpecsException& e) {
+        std::string err = m_InputPart->Debug() + " - " + e.what(true);
+        MYTHROW(err);
+    }
+
 	size_t outputWidth = m_maxLength;
 
 	if (!pInput) pInput = mkSpecString();
