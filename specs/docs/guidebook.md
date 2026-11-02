@@ -1024,11 +1024,11 @@ a: WORD 1 1
 
 The *specification* language defined in this guidebook is a Turing-complete programming language, and the specification files described in this chapter are programs.
 Just like any other language, from `C` to `REXX` or `Python` to `bash`, programs you write can and will have bugs.
-The way to handle such bugs is the same as for any language: reviewing the code, running code in your head or on paper (known as *desk checking*, *dry run*, or *hand simulation*), and decomposing the specification into smaller units.
+The way to handle such bugs is the same as for any language: review the code, run the specification in your head or on paper, and decompose the specification into smaller units.
 
 ### Incorrect Assumptions
 
-A very common source for specification bugs is making incorrect assumptions about the input. A typical line in the output of the `ls -l` command on Linux looke something like the below - I've run it on the **specs** `src` directory:
+A very common source for specification bugs is making incorrect assumptions about the input. A typical line in the output of the `ls -l` command on Linux looks something like the below - I've run it on the **specs** `src` directory:
 ```
 -rw-rw-r-- 1 jsmith users  8556 Nov  1 10:51 Makefile
 ```
@@ -1042,13 +1042,13 @@ Good. We got a number. It happens to be `138811`, but is this the correct output
 ```
 total 168
 ```
-This mysterious `168` is the number of filesystem blocks consumed by the listed files. But the point is that this line has no `WORD 5` and no `WORD -1`. If your specification relies on the content of these words, you may get unexpected results. In this case it's fine. With no `WORD 5`, the field identifier `a` is not set, so it's not added to the sum, so everything is correct. But look at this line:
+This mysterious `168` is the number of filesystem blocks consumed by the listed files. But the point is that this line has no `WORD 5`, and its `WORD -1` is not a file name. If your specification relies on the content of these words, you may get unexpected results. In this case it's fine. With no `WORD 5`, the field identifier `a` is not set, so it's not added to the sum, so everything is correct. But look at this line:
 ```
 drwxrwxr-x 2 jsmith users  4096 Nov  1 10:51 processing
 ```
-This is about the `processing` subdirectory (as indicated by the `d` in the first character. But what is this `4096` in the 5th word? This represents the filesystem block that the file system uses to hold the description of the subdirectory. The point is, we don't want to count this as part of our sum of file sizes. The six subdirectories in our `src` directory have cause us to over-estimate the combined size of the files by 24,576 bytes.
+This is about the `processing` subdirectory (as indicated by the `d` in the first character. But what is this `4096` in the 5th word? This represents the filesystem block that the file system uses to hold the description of the subdirectory. The point is, we don't want to count this as part of our sum of file sizes. The six subdirectories in our `src` directory have caused us to over-estimate the combined size of the files by 24,576 bytes.
 
-How about the file name assumption. Is it always on the last word?
+How about the file name assumption. On records that *do* contain it, is it always on the last word?
 ```
 lrwxrwxrwx 1 root root 24 Nov  1 10:03 /usr/bin/python -> /etc/alternatives/python
 ```
@@ -1056,9 +1056,9 @@ Not for symbolic links. Would it be safe to assume it's on the 9th word?  Not al
 ```
 -rw-r--r-- 1 jsmith users 123456 Nov  1 10:00 Quarterly Report 2026.pdf
 ```
-The filename extends here from word 9 to word 11. And even `WORD 9-*`{.specs} won't work, because of the symbolic link.
+The filename extends here from word 9 to word 11. And even `WORD 9-*`{.specs} won't work, because of the symbolic link. And because of the first line with the total blocks.
 
-Fixing this specification is hard. You'll need some **Control Flow** structures from ([Chapter 10](#chap10)). Here's what that might look like:
+Fixing this specification is hard. You'll need some **Control Flow** structures from [Chapter 10](#chap10). Here's what that might look like:
 ```specs
 +IN ls -l
    1  x:
@@ -1069,7 +1069,7 @@ EOF
    PRINT "sum(a)"
 ```
 
-And before proceeding to the next sub-section, in case you figure that `WORD 8`{.specs] will always hold a `HH:MM` timestamp, here's a file from the same directory:
+And before proceeding to the next sub-section, in case you figure that `WORD 8`{.specs} will always hold a `HH:MM` timestamp, here's a file from the same directory:
 ```
 -rwxrwxr-x 1 jsmith users   170 Apr 13  2022 mkcache.sh
 ```
@@ -1085,7 +1085,7 @@ There's no magic bullet. Try your specification with several inputs while printi
 
 Imagine a unit circle enclosed in a square two units to the side. The area of the circle is πr², and since this is the unit circle, the area is just π.  The area of the square is 4, and the ratio between the circle and the square is π/4.
 
-If we pick random points within the square, π/4 of them should turn out to be within the circle. Let's try that.  You'll have to run without while-guard to make this work:
+If we pick random points within the square, π/4 of them (~78.54%) should turn out to be within the circle. Let's try that.  You'll have to run without while-guard to make this work:
 \newpage
 ```specs
 # Estimate pi using random points.
@@ -1148,7 +1148,7 @@ $ specs -s iterations=10 -f pi_estimate --no-while-guard
 \newpage
 Geometry tells us to expect the largest value for `#2` to be the square root of 2 - about 1.41 - but we're seeing here values over 5.7.  How did that happen?
 
-The problem is the coordinate systems. The `rand()` function returns a random value between zero and one. Multiplying by 2 means that `#0` and `#1` are between 0 and 2. However, we calculate the distance from the circle center assuming that the center of the circle is at the origin - at point (0,0). It is not enclosed in the square. So what can we do? We could subtract 0.5 from both invocations of the `rand()` function, effectively moving the square to enclose the circle. But better yet, let's get rid of the 2 factor, meaning that we only pick dots from a square than encloses the top right quadrant of the circle. The ratio remains the same.  Let's try it with the same 10 iterations:
+The problem is the coordinate systems. The `rand()` function returns a random value between zero and one. Multiplying by 2 means that `#0` and `#1` are between 0 and 2. However, we calculate the distance from the circle center assuming that the center of the circle is at the origin - at point (0,0). It is not enclosed in the square. So what can we do? We could subtract 0.5 from both invocations of the `rand()` function, effectively making `#0` and `#1` between -1 and 1 (rather than between 0 and 2), and moving the square to enclose the circle. But better yet, let's get rid of the 2 factor, meaning that we only pick dots from a square than encloses the top right quadrant of the circle. The ratio remains the same.  Let's try it with the same 10 iterations:
 ```specs
 # Estimate pi using random points.
 REQUIRES iterations
