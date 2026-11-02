@@ -1020,6 +1020,196 @@ a: WORD 1 1
    ENDIF
 ```
 
+## Debugging
+
+The *specification* language defined in this guidebook is a Turing-complete programming language, and the specification files described in this chapter are programs.
+Just like any other language, from `C` to `REXX` or `Python` to `bash`, programs you write can and will have bugs.
+The way to handle such bugs is the same as for any language: reviewing the code, running code in your head or on paper (known as *desk checking*, *dry run*, or *hand simulation*), and decomposing the specification into smaller units.
+
+### Incorrect Assumptions
+
+A very common source for specification bugs is making incorrect assumptions about the input. A typical line in the output of the `ls -l` command on Linux looke something like the below - I've run it on the **specs** `src` directory:
+```
+-rw-rw-r-- 1 jsmith users  8556 Nov  1 10:51 Makefile
+```
+Simple, no?
+- `Word 5` holds the byte count
+- Last word, or `Word -1` holds the file name
+
+`$ ls -l | specs ` `WORD 5 a:  EOF PRINT "sum(a)"`{.specs}
+
+Good. We got a number. It happens to be `138811`, but is this the correct output? Not quite.  Try running this command yourself. Here's what the first output line of the command looks like:
+```
+total 168
+```
+This mysterious `168` is the number of filesystem blocks consumed by the listed files. But the point is that this line has no `WORD 5` and no `WORD -1`. If your specification relies on the content of these words, you may get unexpected results. In this case it's fine. With no `WORD 5`, the field identifier `a` is not set, so it's not added to the sum, so everything is correct. But look at this line:
+```
+drwxrwxr-x 2 jsmith users  4096 Nov  1 10:51 processing
+```
+This is about the `processing` subdirectory (as indicated by the `d` in the first character. But what is this `4096` in the 5th word? This represents the filesystem block that the file system uses to hold the description of the subdirectory. The point is, we don't want to count this as part of our sum of file sizes. The six subdirectories in our `src` directory have cause us to over-estimate the combined size of the files by 24,576 bytes.
+
+How about the file name assumption. Is it always on the last word?
+```
+lrwxrwxrwx 1 root root 24 Nov  1 10:03 /usr/bin/python -> /etc/alternatives/python
+```
+Not for symbolic links. Would it be safe to assume it's on the 9th word?  Not always:
+```
+-rw-r--r-- 1 jsmith users 123456 Nov  1 10:00 Quarterly Report 2026.pdf
+```
+The filename extends here from word 9 to word 11. And even `WORD 9-*`{.specs} won't work, because of the symbolic link.
+
+Fixing this specification is hard. You'll need some **Control Flow** structures from ([Chapter 10](#chap10)). Here's what that might look like:
+```specs
++IN ls -l
+   1  x:
+   IF x=='-' THEN  # exclude directories, links, anything that's not a file.
+      WORD 5 a:
+   ENDIF
+EOF
+   PRINT "sum(a)"
+```
+
+And before proceeding to the next sub-section, in case you figure that `WORD 8`{.specs] will always hold a `HH:MM` timestamp, here's a file from the same directory:
+```
+-rwxrwxr-x 1 jsmith users   170 Apr 13  2022 mkcache.sh
+```
+And the width of the length field is determined by the largest number in the listing. It's like the output of `ls` was not really made for machine consumption, isn't it?
+
+### Miscounting
+
+It is very common when writing a specification, whether on the command-line or in a file, to miscount words, fields, and characters. You end up omitting the first or last character, looking at the wrong field, etc.
+
+There's no magic bullet. Try your specification with several inputs while printing the intermediate values. 
+
+### Logic Errors
+
+Imagine a unit circle enclosed in a square two units to the side. The area of the circle is πr², and since this is the unit circle, the area is just π.  The area of the square is 4, and the ratio between the circle and the square is π/4.
+
+If we pick random points within the square, π/4 of them should turn out to be within the circle. Let's try that.  You'll have to run without while-guard to make this work:
+\newpage
+```specs
+# Estimate pi using random points.
+REQUIRES iterations
+    SET "#5 := @iterations"
+
+    WHILE "#5 > 0" DO
+       SET "#0:=2*(rand())"         # random x in the square - [0..1]
+       SET "#1:=2*(rand())"         # random y in the square
+       SET "#2:=((#0*#0)+(#1*#1))"  # squared distance from origin
+       IF "#2<=1.0" THEN
+           SET "#3:=#3+1" # points inside unit circle
+       ENDIF
+       SET "#5 -= 1"
+    DONE
+
+    PRINT "4*#3/@iterations" 1 # pi estimate
+```
+I tried this with a million iterations:
+```
+$ specs -f estimate_pi -s iterations=1000000 --no-while-guard
+0.785244
+```
+That is not right. What went wrong?  Let's run it with only 10 iterations, but add a line printing the counters:
+```specs
+# Estimate pi using random points.
+REQUIRES iterations
+    SET "#5 := @iterations"
+
+    WHILE "#5 > 0" DO
+       SET "#0:=2*(rand())"         # random x in the square
+       SET "#1:=2*(rand())"         # random y in the square
+       SET "#2:=((#0*#0)+(#1*#1))"  # squared distance from origin
+       PRINT #0   1  
+       PRINT #1  NW  
+       PRINT #2  NW  
+       WRITE # print the random point and its distance from the origin
+       IF "#2<=1.0" THEN
+           SET "#3:=#3+1" # points inside unit circle
+       ENDIF
+       SET "#5 -= 1"
+    DONE
+
+    PRINT "4*#3/@iterations" 1 # pi estimate
+```
+```
+$ specs -s iterations=10 -f pi_estimate --no-while-guard
+1.01566683383790354 1.6857030200616233 3.87317378920318913
+1.97447646799254406 1.35853157741087334 5.74416536947878761
+0.60617367385339416 0.72936488765081872 0.899419662210812489
+1.52978340643375992 0.1677607035941682 2.36838092427048865
+1.60124466344839378 1.37145694898682082 4.4448786351461991
+0.1618714381407522 0.87255760339808324 0.787559133733562091
+1.74396447116711916 0.77827948872629378 3.64713103926527085
+1.40470537014467412 0.7102617174946807 2.47766888425177955
+0.10573810697832018 0.11379994932133698 0.0241309757328975477
+0.32891523318575674 0.9743290540637352 1.05750233621437376
+1.2
+```
+\newpage
+Geometry tells us to expect the largest value for `#2` to be the square root of 2 - about 1.41 - but we're seeing here values over 5.7.  How did that happen?
+
+The problem is the coordinate systems. The `rand()` function returns a random value between zero and one. Multiplying by 2 means that `#0` and `#1` are between 0 and 2. However, we calculate the distance from the circle center assuming that the center of the circle is at the origin - at point (0,0). It is not enclosed in the square. So what can we do? We could subtract 0.5 from both invocations of the `rand()` function, effectively moving the square to enclose the circle. But better yet, let's get rid of the 2 factor, meaning that we only pick dots from a square than encloses the top right quadrant of the circle. The ratio remains the same.  Let's try it with the same 10 iterations:
+```specs
+# Estimate pi using random points.
+REQUIRES iterations
+    SET "#5 := @iterations"
+
+    WHILE "#5 > 0" DO
+       SET "#0:=rand()"         # random x in the small square
+       SET "#1:=rand()"         # random y in the small square
+       SET "#2:=((#0*#0)+(#1*#1))"  # squared distance from origin
+       PRINT #0   1  
+       PRINT #1  NW  
+       PRINT #2  NW  
+       WRITE # print the random point and its distance from the origin
+       IF "#2<=1.0" THEN
+           SET "#3:=#3+1" # points inside unit circle
+       ENDIF
+       SET "#5 -= 1"
+    DONE
+
+    PRINT "4*#3/@iterations" 1 # pi estimate
+```
+```
+$ specs -s iterations=10 -f pi_estimate --no-while-guard
+0.6838448883118734 0.80418084859409672 1.11435066851580012
+0.16481781860516598 0.94369061039012126 0.917716881468245037
+0.14183754982708335 0.82041361329417251 0.693196387419350385
+0.09684622925263439 0.84778727111132741 0.72812244917884518
+0.46551411855075116 0.87461660162571372 0.98165759440939522
+0.55780953181369757 0.10382851003186381 0.321931833277653325
+0.70914120915985433 0.91345766922281628 1.33728616799068031
+0.02139689502270717 0.79725742646571742 0.63607723117135157
+0.13216680989179052 0.37624632481879132 0.159029362576620121
+0.4980085540507848 0.17593152596612275 0.278964421736521969
+3.2
+```
+Looks better. 
+\newpage
+Let's remove the debug print and try with a million iterations:
+```specs
+# Estimate pi using random points.
+REQUIRES iterations
+    SET "#5 := @iterations"
+
+    WHILE "#5 > 0" DO
+       SET "#0:=rand()"         # random x in the small square
+       SET "#1:=rand()"         # random y in the small square
+       SET "#2:=((#0*#0)+(#1*#1))"  # squared distance from origin
+       IF "#2<=1.0" THEN
+           SET "#3:=#3+1" # points inside unit circle
+       ENDIF
+       SET "#5 -= 1"
+    DONE
+
+    PRINT "4*#3/@iterations" 1 # pi estimate
+```
+```
+$ specs -s iterations=1000000 -f pi_estimate --no-while-guard
+3.141252
+```
+Not great, but not bad either.
+
 ## When to Use a Spec File Instead of the Command Line
 
 Use a spec file when:
