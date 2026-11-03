@@ -112,7 +112,7 @@ These are optional spec units that appear at the beginning of the specification 
 
 Directives
 ==========
-**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MIUST** precede all spec units. Below are the supported directives:
+**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MUST** precede all spec units. Below are the supported directives:
 * `+SET`
 * `+IN`
 
@@ -120,7 +120,7 @@ Conditions and Loops
 ====================
 **specs** also supports conditions and loops. 
 
-Conditions  begin  with  the  word  **if** followed by an **expression** that evaluates to true of false, followed by the token **then**, followed by some **Spec Units**.  Those will be executed only if the condition evaluates to true. They may be followed by an **else** token followed by more **Spec Units** that will be executed if the expression does not evaluate to true, or they may be followed by one or more **elseif** tokens, each with its own condition, **then** token, and set of **Spec Units**.  The chain of **elseif** tokens may be arbitrarily long, but there may only be at most one **else** token. The conditional block ends with an **endif** token.  For example:
+Conditions  begin  with  the  word  **if** followed by an **expression** that evaluates to true or false, followed by the token **then**, followed by some **Spec Units**.  Those will be executed only if the condition evaluates to true. They may be followed by an **else** token followed by more **Spec Units** that will be executed if the expression does not evaluate to true, or they may be followed by one or more **elseif** tokens, each with its own condition, **then** token, and set of **Spec Units**.  The chain of **elseif** tokens may be arbitrarily long, but there may only be at most one **else** token. The conditional block ends with an **endif** token.  For example:
 ```
             if #2 > 5 then
                 /big/ 1
@@ -130,7 +130,7 @@ Conditions  begin  with  the  word  **if** followed by an **expression** that ev
                 /small/ 1
             endif
 ```
-The loop available in specs is a **while** loop.  It begins with the **while** token, followed by an **expression** that evaluates to true of false, followed by the token **do**, and a series of **Spec Units** that will be executed as long as the expression evaluates to true. The series of Spec Units is terminated by the token **done**.  Example:
+The loop available in specs is a **while** loop.  It begins with the **while** token, followed by an **expression** that evaluates to true or false, followed by the token **do**, and a series of **Spec Units** that will be executed as long as the expression evaluates to true. The series of Spec Units is terminated by the token **done**.  Example:
 ```
             while #2 > 0 do
                 print /#2/ 1
@@ -149,7 +149,7 @@ The **while-guard** feature, available from version 0.9.5 makes an effort to pre
 ```
 Without **while-guard** this specification will loop forever. To solve this, **specs** keeps a counter for each while statement that it increments each time the loop is entered. This counter is reset to zero if a record is read from any input.  The **specs** program exits when the counter reaches 5000.
 
-**While-Guard** is not perfect. To disable it, you can use the command-line switch `--no-while-guard` or you can override the maximum iteration count at which the program exist by setting the `while-guard-limit` to some integer value.
+**While-Guard** is not perfect. To disable it, you can use the command-line switch `--no-while-guard` or you can override the maximum iteration count at which the program exits by setting the `while-guard-limit` to some integer value.
 
 Run-In and Run-Out Cycles
 =========================

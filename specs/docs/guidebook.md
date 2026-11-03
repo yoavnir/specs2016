@@ -137,7 +137,7 @@ Output can go to four places:
 
 1. **Standard output**, which is the default output stream.
 1. A file, specified with `-o` or `--outfile` for the primary output stream, or `--os2`, `--os3` ... `--os8` for secondary output streams.
-1. The command-line processor. the `-X` or `--shell` command-line switches channel the primary output stream to the command line processor for execution as commands.
+1. The command-line processor. The `-X` or the `--shell` command-line switch channels the primary output stream to the command line processor for execution as commands.
 1. A **field identifier**, which is a temporary buffer for use within the same iteration of the specification and in statistics.
 
 For more information about secondary input and output streams, see the [relevant sections in chapter 12](#multstrm)
@@ -580,7 +580,7 @@ Print step-by-step evaluation information for ALU expressions at runtime. Very v
 
 ### `--debug-alu-file file` or `-d file`
 
-Redirect the output of `--debug-alu-comp` and `--debug-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As both `--debug-alu-comp` and `--debug-alu-run` produce markdown output, it is recommended to name the file with the suffixe `.md`.
+Redirect the output of `--debug-alu-comp` and `--debug-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As both `--debug-alu-comp` and `--debug-alu-run` produce markdown output, it is recommended to name the file with the suffix `.md`.
 
 ### `--timezone name`
 
@@ -1666,7 +1666,7 @@ The width suffix works with both absolute and relative placement.
 
 | Keyword | Meaning |
 |---------|---------|
-| `N` or `NEXT` | Append the value mmediately after the previous output, no gap |
+| `N` or `NEXT` | Append the value immediately after the previous output, no gap |
 | `NW` or `NEXTWORD` | Add a space, then append the value |
 | `NF` or `NEXTFIELD` | Add a tab, then append the value |
 | `.` (single dot) | No output — the value is captured but not placed (used with field identifiers) |
@@ -2015,7 +2015,7 @@ Output:
 
 The counter `#0` accumulates the sum as each record is processed.
 
-See also **[Chapter 9](#chap9)** for the **Named persistent variables** available thgouth the  `pset()` and `pget()` functions.
+See also **[Chapter 9](#chap9)** for the **Named persistent variables** available through the `pset()` and `pget()` functions.
 
 ### Configured Literals
 
@@ -2687,7 +2687,7 @@ These functions read from the current (or context-affected) input record:
 | `wordcount(s, p)` | Number of words in *s* (default: current record); *p*: separator pattern |
 | `wordstart(n)` | Start position of word *n* |
 | `wordend(n)` | End position of word *n* |
-| `wordlength(n)` | Length of word *n* |
+| `wordlen(n)` | Length of word *n* |
 | `field(n)` | *n*-th field of the current record |
 | `fieldrange(n, m)` | Fields *n* through *m* |
 | `fieldcount(s, p)` | Number of fields in *s* (default: current record); *p*: separator pattern |
@@ -4082,7 +4082,7 @@ specs: Using a 3-record rolling context: 2 records forward and 1 records backwar
 
 # Chapter 14: Python Functions  {#chap14}
 
-Although **specs** has a rich library of built-in functions, sometimes you need logic that isn't available. You can use the powerful language features of Python, and the [seemingly endless library of modules](https://xkcd.com/353/) to give extra functionality to your *specifications*. This chapter explains to to extend **specs** by writing **external functions** in Python.
+Although **specs** has a rich library of built-in functions, sometimes you need logic that isn't available. You can use the powerful language features of Python, and the [seemingly endless library of modules](https://xkcd.com/353/) to give extra functionality to your *specifications*. This chapter explains how to extend **specs** by writing **external functions** in Python.
 
 Note that not all installations of **specs** include Python support. The following command will show you if Python function support is enabled in your installation:
 ```
@@ -5037,7 +5037,7 @@ Every release of **specs** publishes pre-built packages for Linux (RPM and DEB),
 ### Finding the right release
 
 1. Go to the [GitHub releases page](https://github.com/yoavnir/specs2016/releases).
-2. GitHub lists releases newest-first, and the most recent one is tagged **Latest** with a green badge next to its version number, near the top of the page. There may be newer ones, but they will either be marked as **Pre-release* or not marked at all. Make sure you pick the latest release, or the specific pre-relase or older version that you intend to use.
+2. GitHub lists releases newest-first, and the most recent one is tagged **Latest** with a green badge next to its version number, near the top of the page. There may be newer ones, but they will either be marked as **Pre-release** or not marked at all. Make sure you pick the latest release, or the specific pre-release or older version that you intend to use.
 3. Scroll down to your release's **Assets** section, which lists every downloadable file for that release.
 
 ![The GitHub releases page, with the most recent release marked with a "Latest" badge](XXDOCS/resources/releases_page.png)

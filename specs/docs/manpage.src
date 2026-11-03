@@ -572,7 +572,7 @@ Conditions begin with the word
 .B if
 followed by an 
 .B expression 
-that evaluates to true of false, followed by the token
+that evaluates to true or false, followed by the token
 .B then,
 followed by some 
 .B Spec Units.
@@ -622,7 +622,7 @@ loop.  It begins with the
 .B while
 token, followed by an 
 .B expression 
-that evaluates to true of false, followed by the token
+that evaluates to true or false, followed by the token
 .B do,
 and a series of 
 .B Spec Units
@@ -682,7 +682,7 @@ program exists when the counter reaches 5000.
 .I While-Guard
 is not perfect. To disable it, you can use the command-line switch
 .B --no-while-guard
-or you can override the maximum iteration count at which the program exist by setting the 
+or you can override the maximum iteration count at which the program exits by setting the 
 .B while-guard-limit
 to some integer value.
 
@@ -1049,13 +1049,13 @@ will evaluate to 5.
 .IP "substitute(haystack,needle,subst,max)"
 Returns the string in 
 .I haystack
-where occurences of 
+where occurrences of 
 .I needle
 are replaced by the string 
 .I subst
 for at most 
 .I max
-(by defualt: 1) times. The special value 
+(by default: 1) times. The special value 
 .B """U"""
 for 
 .I max
@@ -1166,6 +1166,8 @@ Returns the ending position of the i-th word in the input record.
 is equivalent to 
 .I word(i)
 but less efficient.
+.IP "wordlen(i)" 3
+Returns the length of the i-th word in the input record.
 .IP "wordrange(s,e)" 3
 Returns the string from the start of the 
 .B s-th
@@ -1781,6 +1783,10 @@ or an empty string if not found.
 Returns the index of the first field of the input string that contains
 .I substr
 or zero if not found.
+.IP "fieldindex(i)" 3
+Returns the character position in the current record where the i-th field begins.
+.IP "fieldlength(i)" 3
+Returns the length of the i-th field in the current record.
 .IP "xrange(start,end)" 3
 Returns a string composed of all the characters between 
 .I start 
@@ -1923,7 +1929,7 @@ Returns the string value with least but non-zero occurrences of
 .B Field Identifier
 a. In case of a tie, one of the values is returned.
 .IP "fmap_count(a,s)" 3
-Returns the number of occurences of the 
+Returns the number of occurrences of the 
 .B string 
 s in
 .B Field Identifier
@@ -1945,7 +1951,7 @@ Treats the value of the
 .B string 
 s as a new sample for
 .B Field Identifier
-a. Returns the count of occurences of s. 
+a. Returns the count of occurrences of s. 
 .IP "fmap_dump(a,format,sortOrder,showPct)" 3
 Returns a string containing a dump of the frequency map for
 .B Field Identifier
@@ -2071,7 +2077,7 @@ specifications that are specified in a
 can include some directives that influence the processing. Directives
 .I MUST
 begin with a plus (+) sign on the left-most column of the line in the specification file. All directives 
-.I MIUST
+.I MUST
 precede all spec units. Below are the supported directives:
 .IP "+SET" 3
 This directive followed by a single word and then a command-line command, sets a 

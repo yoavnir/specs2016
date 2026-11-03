@@ -306,9 +306,10 @@ specs  if "word(1)=='#' THEN CONTINUE ENDIF  1-* 1"
 ```
 
 ### SKIPS
-The `SKIP-WHILE` and `SKIP-UNTIL` units cause the specification to skip input lines **while** a condition is true, or **until** if becomes false. More precisely, the specification  stops and goes to the next record, similar to the `CONTINUE` unit, but once the condition for passing occurs once, the condition is never evalu ated again and future records are passed unchecked. It usually only makes sense to place `SKIP-WHILE` and `SKIP-UNTIL` units at the beginning of a specification. Example:
+The `SKIP-WHILE` and `SKIP-UNTIL` units cause the specification to skip input lines **while** a condition is true, or **until** it becomes false. More precisely, the specification  stops and goes to the next record, similar to the `CONTINUE` unit, but once the condition for passing occurs once, the condition is never evaluated again and future records pass unchecked. It usually only makes sense to place `SKIP-WHILE` and `SKIP-UNTIL` units at the beginning of a specification. Example:
 ```
 # Print all records with date after July 1st, 2020
+# Assumes that the input is sorted
 w1 a:  # The date in yyyymmdd format
 SKIP-WHILE 'a<20200701'
 1-* 1

@@ -161,7 +161,7 @@ There are three division operands:
 | -- | ---- | ------- | ------- |
 | `/` | Division | returns the quotient of dividing two numbers | 17 / 4 ==> 4.25 |
 | `//` | Integer Division | returns the integer quotient of two numbers | 17 // 4 ==> 4 |
-| `%` | Remainder or Modulu | returns the remainder in division | 17 % 4 ==> 1 |
+| `%` | Remainder or Modulus | returns the remainder in division | 17 % 4 ==> 1 |
 
 **Note:** The roles of the `//` and `%` operators is reversed compared to *CMS Pipelines*. The reason for this is that CMS Pipelines was written for people who know the *REXX* language, where the `//` is the remainder operand and `%` is the integer division. Unix and Windows users are more accustomed to languages like C/C++, Java, Javascript and Python, where `%` is the remainder operator.
 
@@ -175,7 +175,7 @@ The specs ALU has a bunch of built-in functions. The full list is available at [
 * words(start, count) - returns a substring of the input record, similar to what `words start.count` would yield in a data field.
 * tf2mcs(s,f) and mcs2tf(x,f) - convert a formatted date string to the internal representation, which is measured in microseconds since the Unix epoch (1-Jan-1970 at midnight), and convert the other way.  The format is similar to that of the C function strftime(), plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * pos(needle,haystack)
-* includes(hatstack,needle)
+* includes(haystack,needle)
 
 Examples:
 ```

@@ -172,7 +172,7 @@ This is used to set the word separator characters to something other than the de
 ```
 specs wordseparator / word 2 1
 ```
-will output `bye` from the folowing input record:
+will output `bye` from the following input record:
 ```
 /Good///bye/old///paint
 ```
@@ -198,7 +198,7 @@ These are optional spec units that appear at the beginning of the specification 
 
 Directives
 ==========
-**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MIUST** precede all spec units. Below are the supported directives:
+**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MUST** precede all spec units. Below are the supported directives:
 * `+SET` - This directive followed by a single word and then a command-line command, sets a *Configured String* to the output of the command. If the command issues multiple lines of output, only the first line is stored in the configured string. For example, the following directive may lead the configured string ex1 to contain a value such as  `total  120` on Unix-like systems:
 ```
               +SET ex1 ls -l
