@@ -209,6 +209,9 @@ PPart DataField::getInputPart(std::vector<Token> &tokenVec, unsigned int& _index
 	case TokenListType__ID:
 		ret = std::make_shared<IDPart>(token.Literal());
 		break;
+	case TokenListType__OUTREC:
+		ret = std::make_shared<OutRecPart>();
+		break;
 	case TokenListType__PRINT:
 	{
 		try {
@@ -316,6 +319,7 @@ void DataField::parse(std::vector<Token> &tokenVec, unsigned int& index)
 	case TokenListType__READSTOP:
 	case TokenListType__EOF:
 	case TokenListType__REDO:
+	case TokenListType__SCRATCH:
 		/* This is a control structure?  Assume NEXTWORD and re-use this one */
 		REUSE_CURRENT_TOKEN;
 	case TokenListType__DUMMY:
@@ -384,19 +388,19 @@ void DataField::interpretComposedOutputPlacement(std::string& outputPlacement)
 	m_alignment = outputAlignmentLeft;
 
 	MYASSERT(parseAluExpression(outputPlacement, outputPlacementExpression));
-	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression, m_outputStartRaw));
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputStartExpression, true));
 
 	if (outputPlacementExpression.empty()) return;
 
 	m_maxLength = POS_SPECIAL_VALUE_COMPOSED;
-	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression, m_outputWidthRaw));
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputWidthExpression, true));
 
 	if (outputPlacementExpression.empty()) return;
 
 	m_alignment = outputAlignmentComposed;
-	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression));
+	MYASSERT(breakAluVecByComma(outputPlacementExpression, infixExpression, m_outputAlignmentRaw));
 	MYASSERT(convertAluVecToPostfix(infixExpression, m_outputAlignmentExpression, true));
 
 	MYASSERT(outputPlacementExpression.empty());
@@ -427,7 +431,7 @@ void DataField::stripString(PSpecString &pOrig)
 	}
 
 	if (!len) {
-		pOrig = std::make_shared<std::string>();
+		pOrig = mkSpecString();
 		return;
 	}
 
@@ -437,17 +441,25 @@ void DataField::stripString(PSpecString &pOrig)
 		len--;
 	}
 
-	pOrig = std::make_shared<std::string>(s, len);
+	pOrig = mkSpecString(s, len);
 }
 
 ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	bool bWritingWasDone = false;
 	PValue pComposedStartingPosition = nullptr;
-	PSpecString pInput = m_InputPart->getStr(pState);
+    PSpecString pInput;
+
+    try {
+	    pInput = m_InputPart->getStr(pState);
+    } catch (const SpecsException& e) {
+        std::string err = m_InputPart->Debug() + " - " + e.what(true);
+        MYTHROW(err);
+    }
+
 	size_t outputWidth = m_maxLength;
 
-	if (!pInput) pInput = std::make_shared<std::string>();
+	if (!pInput) pInput = mkSpecString();
 
 	if (m_label) {
 		try {
@@ -464,7 +476,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	if (m_conversion) {
 		std::string currentString(pInput->data(), pInput->length());
 		std::string convertedString = stringConvert(currentString, m_conversion, m_conversionParam);
-		pInput = std::make_shared<std::string>(convertedString);
+		pInput = mkSpecString(convertedString);
 	}
 
 	// truncate or expand if necessary
@@ -472,12 +484,12 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 	if (outputWidth==POS_SPECIAL_VALUE_COMPOSED) {
 		PValue res;
 		if (m_outputWidthExpression.size() > 0) {
-			res = evaluateExpression(m_outputWidthExpression, &g_counters);
+			res = evaluateExpression(m_outputWidthExpression, &g_counters, m_outputWidthRaw);
 		} else if (m_outputStartExpression.size() > 0) {
 			static std::string sName("cols");
 			static std::string sCols = configSpecLiteralGet(sName);
 			static ALUInt cols = std::stoul(sCols);
-			pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
+			pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters, m_outputStartRaw);
 			ALUInt start = pComposedStartingPosition->getInt();
 			if (cols >= start) {
 				res = mkValue(cols - start + 1);
@@ -502,7 +514,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		} else {
 			outputAlignment al = outputAlignmentLeft;
 			ellipsisSpec es = ellipsisSpecNone;
-			PValue res = evaluateExpression(m_outputAlignmentExpression, &g_counters);
+			PValue res = evaluateExpression(m_outputAlignmentExpression, &g_counters, m_outputAlignmentRaw);
 			if (!res) {
 				MYTHROW("Alignment expression evaluated to null");
 			}
@@ -560,7 +572,7 @@ ApplyRet DataField::apply(ProcessingState& pState, StringBuilder* pSB)
 		PValue res;
 		if (m_outputStartExpression.size() > 0) {
 			if (nullptr == pComposedStartingPosition) {
-				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters);
+				pComposedStartingPosition = evaluateExpression(m_outputStartExpression, &g_counters, m_outputStartRaw);
 			}
 			res = mkValue(pComposedStartingPosition->getInt());
 		} else {

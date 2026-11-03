@@ -14,12 +14,12 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-7-Dec-2026: Version 1.1.0 is here
+30-Nov-2026: Version 1.1.0 is here
 
 What's new:
  * Current output record (re-)processing
- * Syntax definition and colorization
- * Usability enhancements
+ * Syntax definition and colorization, including guidebook examples
+ * Usability enhancements (`.spec` suffix)
  * C++20
 
 ---
@@ -73,7 +73,7 @@ New Versions
 ============
 When starting a new version:
 * Update the README file
-* Update the manpage
+* Update VERSION
 * Update specs/Directory.Build.props
 
 Contributors
@@ -82,6 +82,7 @@ Contributors
 - Jean-Baptiste Jouband ([Gawesomer](https://github.com/Gawesomer))
 - donglrd ([donglrd](https://github.com/donglrd))
 - Miriam-R-coder ([Miriam-R-coder](https://github.com/Miriam))
+- Aaqibhafeezkhan ([Aaqibhafeezkhan](https://github.com/Aaqibhafeezkhan))
 
 Documentation
 =============

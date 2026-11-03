@@ -19,6 +19,7 @@
 	X(bLocalWhiteSpace,             bool,         true,   w,spaceWS,            false)      \
 	X(bDebugAluCompile,             bool,         false,  0,debug-alu-comp,     true)       \
 	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
+	X(debugAluFile,                 std::string,  "",     d,debug-alu-file,     NEXTARG)    \
 	X(bNoWhileGuard,                bool,         false,  0,no-while-guard,     true)       \
 	X(bShowProgress,                bool,         false,  0,progress,           true)       \
 	X(configurationFile,            std::string,  "",     c,config,             NEXTARG)    \

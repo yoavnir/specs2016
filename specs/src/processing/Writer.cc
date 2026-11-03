@@ -2,6 +2,11 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
+#ifdef WIN64
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 #include "utils/ErrorReporting.h"
 #include "Reader.h"
 #include "utils/directives.h"
@@ -158,8 +163,12 @@ void SimpleWriter::WriteOutDo(PSpecString ps, classifyingTimer& tmr)
 	tmr.changeClass(timeClassIO);
 	switch (m_WriterType) {
 		case writerType__COUT:
+		{
+			static const bool flushEachRecord = stdoutIsATTY();
 			std::cout << *ps << '\n';
+			if (flushEachRecord) std::cout.flush();
 			break;
+		}
 		case writerType__CERR:
 			std::cerr << *ps << '\n';
 			break;

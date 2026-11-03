@@ -37,7 +37,11 @@ void GetFilesByPrefix(StringVector& sv, const char* path, std::string& prefix)
     for (auto const& dirEnt : std::filesystem::directory_iterator(specPath)) {
         if (!dirEnt.is_regular_file()) continue;
         auto fname = dirEnt.path().filename().string();
+#if CPP_STD_LEVEL >= 20
+        if (prefix.empty() || 0 == fname.starts_with(prefix)) {
+#else
         if (prefix.empty() || 0 == fname.compare(0, prefix.size(), prefix)) {
+#endif
             sv.push_back(fname);
         }
     }
@@ -63,7 +67,11 @@ int CompleteUncertain_SystemLabels(std::string& incomplete)
     readConfigurationFile(AddToSystemDefineLabels);
     StringVector vec;
     for (auto s : SystemDefinedLabels) {
+#if CPP_STD_LEVEL >= 20
+        if (0==s.starts_with(incomplete)) {
+#else
         if (0==s.compare(0, incomplete.size(), incomplete)) {
+#endif
             vec.push_back(s);
         }
     }
@@ -100,6 +108,18 @@ int CompleteIfUnambiguous_SystemLabels(std::string& incomplete)
     readConfigurationFile(AddToSystemDefineLabels);
     std::string res;
     for (auto s : SystemDefinedLabels) {
+#if CPP_STD_LEVEL >= 20
+        if (0==s.starts_with(incomplete)) {
+            if (res.empty()) { // First match
+                res = s;
+            } else { // not-first match
+                // trim non-matching characters
+                while (s.starts_with(res)) {
+                    res.pop_back();
+                }
+            }
+        }
+#else
         if (0==s.compare(0, incomplete.size(), incomplete)) {
             if (res.empty()) { // First match
                 res = s;
@@ -110,6 +130,7 @@ int CompleteIfUnambiguous_SystemLabels(std::string& incomplete)
                 }
             }
         }
+#endif
     }
 
     std::cout << res;

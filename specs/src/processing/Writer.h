@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <memory>
+#include <atomic>
 #include "utils/StringQueue.h"
 #include "utils/TimeUtils.h"
 
@@ -26,7 +27,7 @@ protected:
 	virtual void WriteOutDo(PSpecString, classifyingTimer& tmr);
 	unsigned long m_countGenerated;
 	unsigned long m_countWritten;
-	bool  m_ended;
+	std::atomic<bool>  m_ended;
 	StringQueue m_queue;
 	std::unique_ptr<std::thread> mp_thread;
 	classifyingTimer m_Timer;

@@ -20,9 +20,11 @@ def get_the_version(doPrint):
 				gittag = output.read().strip()
 				if doPrint:
 					sys.stdout.write("Found git branch <{}>...".format(gittag))
+					sys.stdout.flush()
 		else:
 			if doPrint:
 				sys.stdout.write("git not present. Going with <unknown>...")
+				sys.stdout.flush()
 			gittag = "unknown"
 
 		if platform=="NT":
@@ -32,47 +34,42 @@ def get_the_version(doPrint):
 	else:
 		gittag = explicit_branch
 		sys.stdout.write("Set explicitly to <{}>...".format(explicit_branch))
+		sys.stdout.flush()
 
 	if gittag.startswith("dev-"):
 		if doPrint:
 			sys.stdout.write("Yes, going with that.")
 		return gittag
 	
-	# Get the version from manpage
-	with open("../../manpage", "r") as manpage:
-		foundVersion = False
-		rdline = "XXX"
-		while (False == foundVersion) & (rdline != ''):
-			rdline = manpage.readline().strip()
-			line = rdline.split(' ')
-			if line[0] == '.TH':
-				if (line[1]!='man') | (line[7]!='"specs'):
-					sys.stderr.write("\nMalformed .TH line: Second word is {}; Eighth is {}\n".format(line[1], line[7]))
-					exit(-4)
-				manpage_version = line[6].strip('"')
-				if doPrint:
-					sys.stdout.write("Found version <{}> in manpage...".format(manpage_version))
-				foundVersion = True
-		if False == foundVersion:
-			sys.stderr.write("\nMalformed manpage file: no .TH line found\n")
-			exit(-4)
+	base_version = os.environ.get("SPECS_VERSION", "").strip()
+	if base_version == "":
+		try:
+			with open("../../VERSION", "r") as version_file:
+				base_version = version_file.read().strip()
+		except OSError:
+			base_version = ""
+	if base_version.startswith("v"):
+		base_version = base_version[1:]
+	if base_version == "":
+		sys.stderr.write("\nCould not determine the base version from SPECS_VERSION or VERSION\n")
+		exit(-4)
 
 	if gittag == "dev":
 		if doPrint:
-			sys.stdout.write("Setting to <{}-beta>".format(manpage_version))
-		return "{}-beta".format(manpage_version)
+			sys.stdout.write("Setting to <{}-beta>".format(base_version))
+		return "{}-beta".format(base_version)
 	elif gittag == "stable":
 		if doPrint:
-			sys.stdout.write("Setting to <{}>".format(manpage_version))
-		return "{}".format(manpage_version)
+			sys.stdout.write("Setting to <{}>".format(base_version))
+		return "{}".format(base_version)
 	elif gittag == "":
 		if doPrint:
-			sys.stdout.write("No git branch; Going with {}".format(manpage_version))
-		return manpage_version
+			sys.stdout.write("No git branch; Going with {}".format(base_version))
+		return base_version
 	else:
 		if doPrint:
-			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,manpage_version))
-		return "{}({})".format(gittag,manpage_version)
+			sys.stdout.write("Non-standard git branch; Going with {}({})".format(gittag,base_version))
+		return "{}({})".format(gittag,base_version)
 
 def cleanup_after_compile():
 	global compiler_cleanup_cmd,platform
@@ -126,7 +123,7 @@ with open("xx.txt","w") as v:
 		return False
 	with open("xx.txt", "r") as flags:
 		filtered_flags = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes']
-		filtered_flags_debug = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes', '-Wp,-D_FORTIFY_SOURCE=2']
+		filtered_flags_debug = ['-g', '-O0', '-O1', '-O2', '-O3', '-Wstrict-prototypes', '-Wp,-D_FORTIFY_SOURCE=2', '-D_FORTIFY_SOURCE=2']
 		# Multi-word flags to filter: list of (flag, value) tuples to remove
 		# For example: ('-arch', 'x86_64') will remove "-arch x86_64" but keep "-arch arm64"
 		filtered_multi_flags = [('-arch', 'x86_64')]
@@ -168,9 +165,11 @@ with open("xx.txt","w") as v:
 	sys.stdout.write("Yes - found version {}.\n".format(full_python_version))
 	return True
 
-cppflags_gcc = "-Werror $(CONDCOMP) --std=c++17 -I ."
-cppflags_clang = "-Werror $(CONDCOMP) -std=c++17 -I ."
-cppflags_vs = "$(CONDCOMP) /std:c++17 /nologo /I."
+# The {} placeholder is filled in with the chosen C++ standard flag (e.g.
+# --std=c++20 or --std=c++17) once compiler support has been probed below.
+cppflags_gcc = "-Werror $(CONDCOMP) {} -I ."
+cppflags_clang = "-Werror $(CONDCOMP) {} -I ."
+cppflags_vs = "$(CONDCOMP) {} /nologo /I."
 
 body1 = \
 """
@@ -198,9 +197,9 @@ TESTOBJS = $(TESTSRC:.cc=.{})
 BUILD_INFO_DEPS = $(filter-out processing/Config.o processing/Config.obj,$(LIBOBJS))
 
 #default goal
-some: check-format directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL)
+some: check-format directories $(EXE_DIR)/specs $(EXE_DIR)/specs-autocomplete $(BOOK_ALL) $(DOCS_DIR)/manpage
 
-all: check-format directories $(TEST_EXES) $(BOOK_ALL)
+all: check-format directories $(TEST_EXES) $(BOOK_ALL) $(DOCS_DIR)/manpage
 
 specs: check-format directories $(EXE_DIR)/specs
 
@@ -377,7 +376,7 @@ uninstall_win:
 clear_clean_posix = \
 """
 clean:
-	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz $(DOCS_DIR)/guidebook_tmp.md $(DOCS_DIR)/guidebook.pdf
+	/bin/rm -rf $(EXE_DIR) */*.d */*.o specs.1.gz $(DOCS_DIR)/guidebook_tmp.md $(DOCS_DIR)/guidebook.pdf $(DOCS_DIR)/manpage
 	
 clear:
 	/bin/rm */*.d */*.o
@@ -396,8 +395,11 @@ clear:
 
 manpart = \
 """
-specs.1.gz: ../../manpage
-	cp ../../manpage specs.1
+$(DOCS_DIR)/manpage: $(DOCS_DIR)/manpage.src $(EXE_DIR)/specs
+	$(EXE_DIR)/specs -i $(DOCS_DIR)/manpage.src -o $(DOCS_DIR)/manpage -f $(DOCS_DIR)/resources/manpage_prepare
+
+specs.1.gz: $(DOCS_DIR)/manpage
+	cp $(DOCS_DIR)/manpage specs.1
 	gzip specs.1
 """
 
@@ -409,9 +411,9 @@ book: $(DOCS_DIR)/guidebook.pdf
 # The recipe runs $(EXE_DIR)/specs, so it must depend on it - otherwise a
 # parallel "make -j all" can start generating the guidebook before specs has
 # been linked ("specs: Command not found").
-$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/resources/header.tex $(EXE_DIR)/specs
+$(DOCS_DIR)/guidebook.pdf: $(DOCS_DIR)/guidebook.md $(DOCS_DIR)/resources/header.tex $(UTILS_DIR)/specs.xml $(UTILS_DIR)/specs.theme $(EXE_DIR)/specs
 	$(EXE_DIR)/specs --set docsdir=../docs -i $(DOCS_DIR)/guidebook.md -o $(DOCS_DIR)/guidebook_tmp.md -f $(DOCS_DIR)/resources/guidebook_prepare
-	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex -H $(DOCS_DIR)/resources/header.tex
+	pandoc $(DOCS_DIR)/guidebook_tmp.md -o $(DOCS_DIR)/guidebook.pdf --pdf-engine=xelatex --highlight-style $(UTILS_DIR)/specs.theme --syntax-definition=$(UTILS_DIR)/specs.xml -H $(DOCS_DIR)/resources/header.tex
 	/bin/rm $(DOCS_DIR)/guidebook_tmp.md
 """
 
@@ -451,6 +453,10 @@ parser.add_argument("--python", dest="pyprefix", action="store", default="",
                     help="Python prefix to use. 'python' is the default, optional if unspecified; 'no' means no.  Examples: 'python', 'python2', 'python3.7', 'no'")
 parser.add_argument("--branch", dest="expbranch", action="store", default="",
                     help="branch to use. Useful when building without git. Examples: 'dev', 'stable', 'dev-1.2.0')")
+parser.add_argument("--force_cpp17", dest="force_cpp17", action="store_true", default=False,
+                    help="Force the C++17 standard even if the compiler supports C++20 (for testing)")
+parser.add_argument("--no_alu_debug", dest="no_alu_debug", action="store_true", default=False,
+                    help="Do not define ALU_DUMP, so --debug-alu-comp/--debug-alu-run produce no output (GCC/Clang only; Windows VS builds are unaffected)")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
@@ -461,6 +467,8 @@ use_cached_depends = args.ucd
 avoid_cryptographic_random = args.nocrypt
 python_prefix = args.pyprefix
 explicit_branch = args.expbranch
+force_cpp17 = args.force_cpp17
+no_alu_debug = args.no_alu_debug
 
 # default for use_cached_depends depends on the choice of compiler
 if use_cached_depends is None:
@@ -499,7 +507,7 @@ if compiler=="GCC":
 		condcomp = "-O3"
 	elif variation=="DEBUG":
 		condlink = "-g"
-		condcomp = "-g -DDEBUG -DALU_DUMP"
+		condcomp = "-g -DDEBUG"
 	else:
 		condlink = "-O3 -g"
 		condcomp = "-O3 -g"	
@@ -510,7 +518,7 @@ elif compiler=="CLANG":
 		condcomp = "-O3"
 	elif variation=="DEBUG":
 		condlink = "-g"
-		condcomp = "-g -DDEBUG -DALU_DUMP"
+		condcomp = "-g -DDEBUG"
 	else:
 		condlink = "-O3 -g"
 		condcomp = "-O3 -g"	
@@ -531,7 +539,14 @@ if args.static_link:
 	
 if platform=="NT":
 	condcomp = condcomp + "{}WIN64".format(def_prefix)
-		
+
+# ALU_DUMP enables the --debug-alu-comp / --debug-alu-run output.
+# --no_alu_debug suppresses it.
+# For Windows builds using MSBuild rather than make, it is enabled
+# in DEBUG builds but not in RELEASE builds.
+if not no_alu_debug:
+	condcomp = condcomp + "{}ALU_DUMP".format(def_prefix)
+
 # Other compilers switches go here
 
 if platform=="POSIX":
@@ -539,6 +554,7 @@ if platform=="POSIX":
 	exe_dir = "../exe"
 	tests_dir = "../tests"
 	docs_dir = "../docs"
+	utils_dir = "../utils"
 	clear_clean_part = clear_clean_posix
 	compiler_cleanup_cmd = "/bin/rm xx.cc xx.o xx.exe xx.txt a.out"
 	bashrc = "/etc/bash.bashrc" if os.path.isfile("/etc/bash.bashrc") else "/etc/bashrc"
@@ -547,6 +563,7 @@ elif platform=="NT":
 	exe_dir = "..\\exe"
 	tests_dir = "..\\tests"
 	docs_dir = "..\\docs"
+	utils_dir = "..\\utils"
 	clear_clean_part = clear_clean_nt
 	compiler_cleanup_cmd = "del xx.cc xx.o xx.exe xx.txt"
 	bashrc = "/dev/null"
@@ -556,22 +573,32 @@ else:
 
 body2 = body2.replace("BASHRC", bashrc)
 
+# C++ standard flags, per compiler. cppflags_test_base is the set of flags
+# (other than the standard flag) used when probing compiler features below.
 if compiler=="VS":
-	cppflags = cppflags_vs
-	cppflags_test = "/EHsc /nologo /std:c++17"
+	std_flag_20 = "/std:c++20"
+	std_flag_17 = "/std:c++17"
+	cppflags_test_base = "/EHsc /nologo"
 elif compiler=="CLANG":
-	cppflags = cppflags_clang
-	cppflags_test = "-std=c++17"
+	std_flag_20 = "-std=c++20"
+	std_flag_17 = "-std=c++17"
+	cppflags_test_base = ""
 else:
-	cppflags = cppflags_gcc
-	cppflags_test = "--std=c++17"
-	
-	
-# Test if the compiler exists
-test_compiler_exists_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
+	std_flag_20 = "--std=c++20"
+	std_flag_17 = "--std=c++17"
+	cppflags_test_base = ""
+
+def cppflags_test_for(std_flag):
+	return "{} {}".format(cppflags_test_base, std_flag).strip()
+
+# Test if the compiler exists.  This is probed without pinning a C++ standard
+# so that a missing compiler and an unsupported standard are reported as
+# distinct failures (the standard is probed right after).
+test_compiler_exists_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test_base)
 with open("xx.cc", "w") as testfile:
 	testfile.write('void iefbr14() {}\n')
 sys.stdout.write("Testing compiler exists...")
+sys.stdout.flush()
 rc = run_the_cmd(test_compiler_exists_cmd)
 cleanup_after_compile()
 if 0==rc:
@@ -582,6 +609,7 @@ else:
 
 # Get compiler version
 sys.stdout.write("Getting compiler version...")
+sys.stdout.flush()
 if compiler == "VS":
 	version_cmd = cxx
 else:
@@ -601,8 +629,17 @@ try:
 except:
 	sys.stdout.write("unknown\n")
 
-# Test if the compiler supports C++17
-test_cpp11_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
+# Determine which C++ standard to build with. C++20 is preferred; the build
+# falls back to C++17 if the compiler does not support C++20. --force_cpp17
+# skips the C++20 probe (for testing the C++17 code path). If neither standard
+# is supported, configuration fails.
+#
+# The C++20 probe deliberately requires std::format to compile, not just that
+# the -std=c++20 flag is accepted. std::format is the last-landing common C++20
+# library feature (GCC 13, Apple Clang 15, libc++ 17, MSVC 16.10), so a
+# toolchain can accept -std=c++20 yet lack it (e.g. GCC 11/12). Gating on it
+# means CPP_STD_LEVEL>=20 is a reliable guard for *all* C++20 features,
+# including std::format; toolchains without full C++20 use the C++17 path.
 testprog = """
 #include <cstddef>
 #include <iostream>
@@ -614,16 +651,61 @@ int main(int argc, char** argv)
     return 0;
 }
 """
-with open("xx.cc", "w") as testfile:
-	testfile.write(testprog)
-sys.stdout.write("Testing C++17 support.....")
-rc = run_the_cmd(test_cpp11_cmd)
-cleanup_after_compile()
-if 0==rc:
-	sys.stdout.write("Yes.\n")
+testprog_cpp20 = """
+#include <cstddef>
+#include <format>
+#include <string>
+
+int main(int argc, char** argv)
+{
+    std::byte b{5};
+    std::string s = std::format("{}", std::to_integer<int>(b));
+    return s.empty() ? 1 : 0;
+}
+"""
+def compiler_compiles(std_flag, program):
+	with open("xx.cc", "w") as testfile:
+		testfile.write(program)
+	cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test_for(std_flag))
+	rc = run_the_cmd(cmd)
+	cleanup_after_compile()
+	return 0==rc
+
+cpp_std_level = 0
+if force_cpp17:
+	sys.stdout.write("Testing C++17 support (forced).....")
+	sys.stdout.flush()
+	if compiler_compiles(std_flag_17, testprog):
+		sys.stdout.write("Yes.\n")
+		cpp_std_level = 17
+	else:
+		sys.stdout.write("No.  Aborting...\n")
+		exit(-4)
 else:
-	sys.stdout.write("No.  Aborting...\n")
-	exit(-4)
+	sys.stdout.write("Testing C++20 support (including std::format).....")
+	sys.stdout.flush()
+	if compiler_compiles(std_flag_20, testprog_cpp20):
+		sys.stdout.write("Yes.\n")
+		cpp_std_level = 20
+	else:
+		sys.stdout.write("No. Testing C++17 support...")
+		sys.stdout.flush()
+		if compiler_compiles(std_flag_17, testprog):
+			sys.stdout.write("Yes.\n")
+			cpp_std_level = 17
+		else:
+			sys.stdout.write("No.  Neither C++20 nor C++17 is supported.  Aborting...\n")
+			exit(-4)
+
+sys.stdout.write("Building with C++{}.\n".format(cpp_std_level))
+chosen_std_flag = std_flag_20 if cpp_std_level==20 else std_flag_17
+cppflags_test = cppflags_test_for(chosen_std_flag)
+if compiler=="VS":
+	cppflags = cppflags_vs.format(chosen_std_flag)
+elif compiler=="CLANG":
+	cppflags = cppflags_clang.format(chosen_std_flag)
+else:
+	cppflags = cppflags_gcc.format(chosen_std_flag)
 
 # Test if the -lstdc++fs linkage flag is needed
 testprog = """
@@ -640,9 +722,10 @@ int main(int argc, char** argv)
 """
 if compiler == "GCC":
 	sys.stdout.write("Testing linkage without the -lstdc++fs flag....")
+	sys.stdout.flush()
 	with open("xx.cc", "w") as testfile:
 		testfile.write(testprog)
-	test_fslib_cmd = "g++ --std=c++17 xx.cc"
+	test_fslib_cmd = "{} {} xx.cc".format(cxx,chosen_std_flag)
 	rc = run_the_cmd(test_fslib_cmd)
 	cleanup_after_compile()
 	if 0==rc:
@@ -653,6 +736,7 @@ if compiler == "GCC":
 
 # Find the version of the code
 sys.stdout.write("Figuring out code version...")
+sys.stdout.flush()
 gittag = get_the_version(True)
 sys.stdout.write("\n")
 
@@ -661,6 +745,7 @@ test_put_time_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write('#include <iomanip>\nvoid x() { std::put_time(NULL,""); }\n')
 sys.stdout.write("Testing std::put_time()...")
+sys.stdout.flush()
 if 0==run_the_cmd(test_put_time_cmd):
 	sys.stdout.write("Supported.\n")
 	CFG_put_time = True
@@ -680,8 +765,10 @@ with open("xx.cc", "w") as testfile:
 	testfile.write('    return b ? 0 : -4;\n')
 	testfile.write('}\n')
 sys.stdout.write("Testing std::regex_search()...")
+sys.stdout.flush()
 if 0==run_the_cmd(test_advanced_regex_cmd):
 	sys.stdout.write("Compiled...")
+	sys.stdout.flush()
 	test_advanced_regex_cmd = "./xx.exe" if platform!="NT" else "xx.exe"
 	if 0==run_the_cmd(test_advanced_regex_cmd):
 		sys.stdout.write("Supported\n")
@@ -699,8 +786,10 @@ test_spanish_locale_cmd = "{} {} -o xx.exe xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write('#include <locale>\nint main(int argc, char** argv){std::locale l("es_ES"); return 0;}')
 sys.stdout.write("Testing Spanish locale (for unit tests)...")
+sys.stdout.flush()
 if 0==run_the_cmd(test_spanish_locale_cmd):
 	sys.stdout.write("Compiled...")
+	sys.stdout.flush()
 	test_spanish_locale_cmd = "./xx.exe" if platform!="NT" else "xx.exe"
 	if 0==run_the_cmd(test_spanish_locale_cmd):
 		sys.stdout.write("Supported\n")
@@ -730,8 +819,10 @@ with open("xx.cc", "w") as testfile:
 	testfile.write('    return 0;\n')
 	testfile.write('}\n')
 sys.stdout.write("Testing German locale (for unit tests)...")
+sys.stdout.flush()
 if 0==run_the_cmd(test_german_locale_cmd):
 	sys.stdout.write("Compiled...")
+	sys.stdout.flush()
 	test_spanish_locale_cmd = "./xx.exe" if platform!="NT" else "xx.exe"
 	if 0==run_the_cmd(test_spanish_locale_cmd):
 		with open("xx.txt", "r") as output:
@@ -758,6 +849,7 @@ test_rand_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write("#include <CommonCrypto/CommonRandom.h>\nvoid x() {}\n")
 sys.stdout.write("Testing if the CommonCrypto library is available...")
+sys.stdout.flush()
 if 0==run_the_cmd(test_rand_cmd):
 	sys.stdout.write("Yes.\n")
 	if not avoid_cryptographic_random:
@@ -771,6 +863,7 @@ test_rand_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write("#include <windows.h>\n#include <wincrypt.h>\nvoid x() {}\n")
 sys.stdout.write("Testing if the wincrypt library is available...")
+sys.stdout.flush()
 if 0==run_the_cmd(test_rand_cmd):
 	sys.stdout.write("Yes.\n")
 	if not found_random_source and not avoid_cryptographic_random:
@@ -784,6 +877,7 @@ test_rand_cmd = "{} {} -o xx.o -c xx.cc".format(cxx,cppflags_test)
 with open("xx.cc", "w") as testfile:
 	testfile.write("#include <stdlib.h>\nint x() { return drand48_r(NULL, NULL); }\n")
 sys.stdout.write("Testing if the rand48 extension to stdlib is available...")
+sys.stdout.flush()
 if 0==run_the_cmd(test_rand_cmd):
 	sys.stdout.write("Yes.\n")
 	if not found_random_source:
@@ -796,6 +890,7 @@ cleanup_after_compile()
 #
 # Python support
 sys.stdout.write("Testing if Python support is available...")	
+sys.stdout.flush()
 if platform=="NT":
 	if python_prefix=="no":
 		sys.stdout.write("Python support configured off.\n")
@@ -854,6 +949,10 @@ condcomp = condcomp + '{}REGEX_GRAMMARS="{}"'.format(def_prefix,regex_grammars_p
 	
 condcomp = condcomp + '{}GITTAG="{}"'.format(def_prefix,gittag)
 
+# Expose the C++ standard level to the code so features can be written in two
+# versions (e.g. #if CPP_STD_LEVEL >= 20).
+condcomp = condcomp + "{}CPP_STD_LEVEL={}".format(def_prefix,cpp_std_level)
+
 if CFG_put_time:
 	condcomp = condcomp + "{}PUT_TIME__SUPPORTED".format(def_prefix)
 	
@@ -871,9 +970,9 @@ if rand_source is not None:
 
 cxx_display = "{} {}".format(cxx, cxx_version) if cxx_version else cxx
 if (CFG_python==True) & (full_python_version!="N/A"):
-	literalPlatform = "{} ({}) system using the {} compiler and Python {} - {} variation".format(platform,sys.platform,cxx_display,full_python_version,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler with C++{} and Python {} - {} variation".format(platform,sys.platform,cxx_display,cpp_std_level,full_python_version,variation.lower())
 else:
-	literalPlatform = "{} ({}) system using the {} compiler and no Python - {} variation".format(platform,sys.platform,cxx_display,variation.lower())
+	literalPlatform = "{} ({}) system using the {} compiler with C++{} and no Python - {} variation".format(platform,sys.platform,cxx_display,cpp_std_level,variation.lower())
 condcomp = condcomp + '{}LITERAL_PLATFORM="{}"'.format(def_prefix,literalPlatform)
 
 if CFG_python:
@@ -945,6 +1044,7 @@ if CFG_python:
 	)
 
 sys.stdout.write("Testing is pandoc, xelatex and soul.sty are available...")
+sys.stdout.flush()
 if args.no_book:
 	sys.stdout.write("Doesn't matter. Guidebook generation is configured off.\n")
 	CFG_book = False
@@ -980,6 +1080,7 @@ with open("Makefile", "w") as makefile:
 	makefile.write("EXE_DIR={}\n".format(exe_dir))
 	makefile.write("TESTS_DIR={}\n".format(tests_dir))
 	makefile.write("DOCS_DIR={}\n".format(docs_dir))
+	makefile.write("UTILS_DIR={}\n".format(utils_dir))
 	makefile.write("BOOK_ALL={}\n".format("book" if CFG_book else ""))
 	makefile.write("CPPFLAGS = {}\n".format(cppflags))
 	

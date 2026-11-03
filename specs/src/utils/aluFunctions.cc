@@ -17,6 +17,7 @@
 #include <cstdlib>   // for std::getenv
 #include <cstdio>    // for popen/_popen
 #include <array>     // for the shell command read buffer
+#include <numbers>   // for e_v and pi_v
 #ifndef WIN64
 #include <sys/wait.h>  // for WIFEXITED/WEXITSTATUS
 #include <unistd.h>    // for mkstemp and close
@@ -27,16 +28,16 @@
 #define PERCENTS (ALUFloat(100.0))
 
 stateQueryAgent* g_pStateQueryAgent = nullptr;
-positionGetter* g_PositionGetter = nullptr;
+outputAgent* g_pOutputAgent = nullptr;
 
 void setStateQueryAgent(stateQueryAgent* qa)
 {
 	g_pStateQueryAgent = qa;
 }
 
-void setPositionGetter(positionGetter* pGetter)
+void setOutputAgent(outputAgent* pAgent)
 {
-	g_PositionGetter = pGetter;
+	g_pOutputAgent = pAgent;
 }
 
 static bool g_localeSpecified = false;
@@ -527,6 +528,15 @@ static PValue AluFunc_range(ALUInt start, ALUInt end)
 PValue AluFunc_record()
 {
 	return AluFunc_range(1,-1);
+}
+
+PValue AluFunc_outrec()
+{
+	if (!g_pOutputAgent) {
+		return mkValue("");
+	}
+	PSpecString ps = g_pOutputAgent->outputRecord();
+	return mkValue2(ps->data(), int(ps->length()));
 }
 
 PValue AluFunc_cfrecord()
@@ -1156,7 +1166,7 @@ PValue AluFunc_rand(PValue pLimit)
 {
 	if (pLimit) {
 		if (pLimit->getInt() <= 0) {
-			MYTHROW("rand: limit must be a positive integer");
+			MYTHROW("rand limit must be a positive integer");
 		}
 		ALUInt res = AluRandGetIntUpTo(pLimit->getInt());
 		return mkValue(res);
@@ -1182,7 +1192,7 @@ PValue AluFunc_round(PValue pX, PValue pDecimals)
 	ASSERT_NOT_ELIDED(pX,1,x);
 	if (pDecimals) {
 		if (pDecimals->getInt() < 0) {
-			MYTHROW("round: value for 'decimals' must not be negative");
+			MYTHROW("'decimals' argument to round must not be negative");
 		}
 		ALUFloat scale = pow(((ALUFloat)(10.0)), pDecimals->getInt());
 		return mkValueE(ALUFloat((round(scale * pX->getFloat())) / scale), false);
@@ -1239,8 +1249,13 @@ PValue AluFunc_arctan(PValue pX)
 	return mkValueE(ALUFloat(atan(pX->getFloat())), false);
 }
 
+#if CPP_STD_LEVEL >= 20
+static ALUFloat degrees_to_radians(std::numbers::pi_v<ALUFloat>/180.0);
+static ALUFloat radians_to_degrees(ALUFloat(180)/std::numbers::pi_v<ALUFloat>);
+#else
 static ALUFloat degrees_to_radians = 0.0174532925199433;
 static ALUFloat radians_to_degrees = 57.29577951308232;
+#endif
 
 PValue AluFunc_dsin(PValue pX)
 {
@@ -1300,7 +1315,11 @@ PValue AluFunc_arcdtan(PValue pX)
 	return mkValueE(ALUFloat(radians_to_degrees*atan(pX->getFloat())), false);
 }
 
+#if CPP_STD_LEVEL >= 20
+static ALUFloat e(std::numbers::e_v<ALUFloat>);
+#else
 static ALUFloat e(2.71828182845904523536028747135266249775724709369995);
+#endif
 PValue AluFunc_exp(PValue pX)
 {
 	ASSERT_NOT_ELIDED(pX,1,x);
@@ -1889,20 +1908,6 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 
 /* REXX Functions */
 
-PValue AluFunc_abbrev_do(PValue pInformation, PValue pInfo, size_t len)
-{
-	std::string sBig = pInformation->getStr();
-	std::string sLittle = pInfo->getStr().substr(0,len);
-
-	if (sBig.length() >= sLittle.length()) {
-		if (sLittle == sBig.substr(0,sLittle.length())) {
-			return mkValue(ALUInt(1));
-		}
-	}
-
-	return mkValue(ALUInt(0));
-}
-
 PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 {
 	ASSERT_NOT_ELIDED(pInformation,1,information);
@@ -1913,7 +1918,20 @@ PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 		MYTHROW(err);
 	}
 
-	return AluFunc_abbrev_do(pInformation, pInfo, size_t(len));
+	std::string sBig = pInformation->getStr();
+	std::string sLittle = pLen ? pInfo->getStr().substr(0,len) : pInfo->getStr();
+
+#if CPP_STD_LEVEL >= 20
+	return mkValue(ALUInt(sBig.starts_with(sLittle)));
+#else
+	if (sBig.length() >= sLittle.length()) {
+		if (sLittle == sBig.substr(0,sLittle.length())) {
+			return mkValue(ALUInt(1));
+		}
+	}
+
+	return mkValue(ALUInt(0));
+#endif
 }
 
 PValue AluFunc_bitand(PValue pS1, PValue pS2)
@@ -2891,8 +2909,8 @@ PValue AluFunc_pretty(PValue pVal, PValue pflimit, PValue pilimit, PValue pLocal
 
 PValue AluFunc_next()
 {
-	if (!g_PositionGetter) return mkValue(ALUInt(1));
-	return mkValue(ALUInt(g_PositionGetter->pos()));
+	if (!g_pOutputAgent) return mkValue(ALUInt(1));
+	return mkValue(ALUInt(g_pOutputAgent->pos()));
 }
 
 PValue AluFunc_exact(PValue pval)
@@ -2905,7 +2923,7 @@ PValue AluFunc_rest()
 	static std::string sName("cols");
 	static std::string sCols = configSpecLiteralGet(sName);
 	static ALUInt cols = std::stoul(sCols);
-	return mkValue(ALUInt(cols - g_PositionGetter->pos() + 1));
+	return mkValue(ALUInt(cols - g_pOutputAgent->pos() + 1));
 }
 
 frequencyMap g_OccuranceMap;

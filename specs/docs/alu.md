@@ -140,6 +140,13 @@ PRINT @+1 1 WRITE            CONTEXT +1  PRINT @! 1 WRITE            CONTEXT +1 
 PRINT @+2 1 WRITE            CONTEXT +2  PRINT @! 1 WRITE            CONTEXT +2 1-* 1 WRITE
 ```
 
+While all of the above read from the input, the `@>` string stands for the *output* record built so far in the current cycle -- that is, whatever the spec units to the left of the expression have already placed, including any pad characters they introduced. It is the empty string before anything has been placed. Reading it has no effect on it; the `SCRATCH` spec unit discards it. Outside of expressions the same value is available as the `OUTREC` spec unit, and within expressions also as the `outrec()` function. See [Streams and Records](streams.md) for both.
+
+```
+echo hello | specs "wc -w" 1 w1 NW PRINT "length(@>)" NW
+```
+Output: `wc -w hello 11`
+
 `@python` contains either "Enabled" or "Disabled" depending on whether python function support is enabled.
 
 **Note:** The timezone used in the date conversion can also be set in the configuration file with a `timezone` entry. Similarly, the locale used can be set with a `locale` entry.
@@ -154,7 +161,7 @@ There are three division operands:
 | -- | ---- | ------- | ------- |
 | `/` | Division | returns the quotient of dividing two numbers | 17 / 4 ==> 4.25 |
 | `//` | Integer Division | returns the integer quotient of two numbers | 17 // 4 ==> 4 |
-| `%` | Remainder or Modulu | returns the remainder in division | 17 % 4 ==> 1 |
+| `%` | Remainder or Modulus | returns the remainder in division | 17 % 4 ==> 1 |
 
 **Note:** The roles of the `//` and `%` operators is reversed compared to *CMS Pipelines*. The reason for this is that CMS Pipelines was written for people who know the *REXX* language, where the `//` is the remainder operand and `%` is the integer division. Unix and Windows users are more accustomed to languages like C/C++, Java, Javascript and Python, where `%` is the remainder operator.
 
@@ -168,7 +175,7 @@ The specs ALU has a bunch of built-in functions. The full list is available at [
 * words(start, count) - returns a substring of the input record, similar to what `words start.count` would yield in a data field.
 * tf2mcs(s,f) and mcs2tf(x,f) - convert a formatted date string to the internal representation, which is measured in microseconds since the Unix epoch (1-Jan-1970 at midnight), and convert the other way.  The format is similar to that of the C function strftime(), plus %xf for fractional seconds, where x represents number of digits from 0 to 6.
 * pos(needle,haystack)
-* includes(hatstack,needle)
+* includes(haystack,needle)
 
 Examples:
 ```

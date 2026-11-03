@@ -80,6 +80,8 @@
 	X(SPLITW,         false, false) \
 	X(SPLITF,         false, false) \
 	X(CONTEXT,        false, true)  \
+	X(OUTREC,         false, false) \
+	X(SCRATCH,        false, false) \
 	X(DUMMY,          false, false)
 
 #define X(t,r,l) TokenListType__##t,

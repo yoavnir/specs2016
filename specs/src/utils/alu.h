@@ -25,10 +25,17 @@ public:
 	ALUInt			getHex(ALUCounterKey i)		{return m_map[i].getHex();}
 	ALUFloat		getFloat(ALUCounterKey i)		{return m_map[i].getFloat();}
 	bool			getBool(ALUCounterKey i)		{return m_map[i].getBool();}
+#if CPP_STD_LEVEL >= 20
+	PValue		getPointer(ALUCounterKey i)	{
+		if (!m_map.contains(i)) m_map[i].set(ALUInt(0));
+		return mkValue(m_map[i]);
+	}
+#else
 	PValue		getPointer(ALUCounterKey i)	{
 		if (0 == m_map.count(i)) m_map[i].set(ALUInt(0));
 		return mkValue(m_map[i]);
 	}
+#endif
 	void			set(ALUCounterKey i, std::string& s)  {m_map[i].set(s);}
 	void			set(ALUCounterKey i, const char* st)  {m_map[i].set(st);}
 	void			set(ALUCounterKey i, ALUInt l)        {m_map[i].set(l);}
@@ -97,6 +104,7 @@ enum AluUnitType {
 	UT_BinaryOp,
 	UT_AssignmentOp,
 	UT_InputRecord,
+	UT_OutputRecord,
 	UT_Null,
 };
 
@@ -110,7 +118,7 @@ public:
 	virtual ~AluUnit()	{}
 	virtual unsigned int    countOperands()		{return 0;}
 	virtual void   			_serialize(std::ostream& os) const = 0;
-	virtual std::string     _identify() = 0;
+	virtual std::string     _identify(bool bBare = false) = 0;
 	virtual AluUnitType		type()	{return UT_Invalid;}
 	virtual PValue		evaluate();
 	virtual PValue		compute(PValue op);
@@ -128,7 +136,7 @@ public:
 	AluUnitLiteral(std::string& s, bool hintNumerical=false):m_literal(s),m_hintNumerical(hintNumerical)	{}
 	~AluUnitLiteral() override					{}
 	void				_serialize(std::ostream& os) const override;
-	std::string			_identify() override;
+	std::string			_identify(bool bBare = false) override;
 	AluUnitType			type() override			{return UT_LiteralNumber;}
 	PValue			evaluate() override;
 private:
@@ -141,7 +149,7 @@ public:
 	AluUnitNull() {}
 	~AluUnitNull() override             {}
 	void				_serialize(std::ostream& os) const override;
-	std::string			_identify() override;
+	std::string			_identify(bool bBare = false) override;
 	AluUnitType			type() override			{return UT_Null;}
 	PValue			evaluate() override;
 };
@@ -151,7 +159,7 @@ public:
 	explicit AluUnitCounter(ALUCounterKey ctrNumber):m_ctrNumber(ctrNumber) {};
 	~AluUnitCounter() override			{}
 	void				_serialize(std::ostream& os) const override;
-	std::string			_identify() override;
+	std::string			_identify(bool bBare = false) override;
 	AluUnitType			type() override			{return UT_Counter;}
 	using AluUnit::compute;  // prevent a warning about overloading
 	PValue			compute(ALUCounters* pCtrs);
@@ -174,10 +182,11 @@ public:
 	explicit AluUnitFieldIdentifier(char _fId):m_id(_fId),m_ReturnIdentifier(false) {};
 	~AluUnitFieldIdentifier() override			{}
 	void				_serialize(std::ostream& os) const override;
-	std::string			_identify() override;
+	std::string			_identify(bool bBare = false) override;
 	AluUnitType			type() override			{return UT_FieldIdentifier;}
 	PValue			evaluate() override;
 	void                        setEvaluateToName()  {m_ReturnIdentifier = true;}
+	bool            asIdentifier()              {return m_ReturnIdentifier;}
 private:
 	char         m_id;
 	bool         m_ReturnIdentifier;
@@ -197,7 +206,7 @@ public:
 	~AluUnitUnaryOperator() override			{}
 	unsigned int	countOperands() override		{return 1;}
 	void			_serialize(std::ostream& os) const override;
-	std::string		_identify() override;
+	std::string		_identify(bool bBare = false) override;
 	AluUnitType		type() override			{return UT_UnaryOp;}
 	PValue		compute(PValue operand) override;
 private:
@@ -221,7 +230,7 @@ public:
 	~AluBinaryOperator() override			{}
 	unsigned int	countOperands() override		{return 2;}
 	void			_serialize(std::ostream& os) const override;
-	std::string		_identify() override;
+	std::string		_identify(bool bBare = false) override;
 	AluUnitType		type() override			{return UT_BinaryOp;}
 	PValue		compute(PValue op1, PValue op2) override;
 	unsigned int			priority()	{return m_priority;}
@@ -248,7 +257,7 @@ public:
 	~AluAssnOperator() override			{}
 	unsigned int		countOperands() override	{return 1;}
 	void				_serialize(std::ostream& os) const override;
-	std::string 		_identify() override;
+	std::string 		_identify(bool bBare = false) override;
 	AluUnitType			type() override			{return UT_AssignmentOp;}
 	void	perform(ALUCounterKey ctrNumber, ALUCounters* ctrs, PValue operand);
 private:
@@ -266,7 +275,7 @@ public:
 	~AluFunction() override		{}
 	unsigned int		countOperands() override		{return m_ArgCount;}
 	void				_serialize(std::ostream& os) const override;
-	std::string			_identify() override	{return "FUNC("+m_FuncName+")";}
+	std::string			_identify(bool bBare = false) override	{return bBare ? m_FuncName : "FUNC("+m_FuncName+")";}
 	AluUnitType			type() override		{return UT_Identifier;}
 	PValue			evaluate() override;
 	PValue			compute(PValue op) override;
@@ -294,7 +303,7 @@ public:
 	explicit AluInputRecord(int offset) : m_offset(offset)	{}
 	~AluInputRecord() override			{}
 	void   			_serialize(std::ostream& os) const override;
-	std::string     _identify() override;
+	std::string     _identify(bool bBare = false) override;
 	AluUnitType		type() override	{return UT_InputRecord;}
 	PValue		evaluate() override;
 	bool            requiresRead() override {return true;}
@@ -303,12 +312,24 @@ private:
 	int m_offset;
 };
 
+// The @> pseudo-variable: the output record built so far in this cycle.
+// Unlike AluInputRecord it does not rely on any input having been read.
+class AluOutputRecord : public AluUnit {
+public:
+	AluOutputRecord()					{}
+	~AluOutputRecord() override			{}
+	void   			_serialize(std::ostream& os) const override;
+	std::string     _identify(bool bBare = false) override;
+	AluUnitType		type() override	{return UT_OutputRecord;}
+	PValue		evaluate() override;
+};
+
 class AluOtherToken : public AluUnit {
 public:
 	explicit AluOtherToken(AluUnitType _t)		{m_type = _t;}
 	~AluOtherToken() override			{}
 	void				_serialize(std::ostream& os) const override;
-	std::string 		_identify() override;
+	std::string 		_identify(bool bBare = false) override;
 	AluUnitType			type() override	{return m_type;}
 private:
 	AluUnitType		m_type;
@@ -368,7 +389,14 @@ bool parseAluExpression(std::string& s, AluVec& vec);
 
 bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, AluVec& vec);
 
-std::string dumpAluVec(AluVec& vec, bool deleteUnits);
+std::string AluVec2String(AluVec& vec, bool deleteUnits);
+
+// Destination stream for ALU debug output (--debug-alu-comp / --debug-alu-run).
+std::ostream& aluDumpStream();
+
+// Redirect ALU debug output to a file (--debug-alu-file / -d). Returns false
+// if the file could not be opened for writing.
+bool openAluDumpStream(const std::string& filename);
 
 void cleanAluVec(AluVec& vec);
 
@@ -376,11 +404,11 @@ bool isValidExpression(AluVec& vec);  // To Be Added
 
 bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource);
 
-bool breakAluVecByComma(AluVec& source, AluVec& dest);
+bool breakAluVecByComma(AluVec& source, AluVec& dest, std::string& rawExpression);
 
-PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs);
+PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpression);
 
-void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs);
+void ALUPerformAssignment(ALUCounterKey& k, POperator pAss, AluVec& expr, ALUCounters* pctrs, std::string& rawExpression);
 
 bool AluExpressionReadsLines(AluVec& vec);
 

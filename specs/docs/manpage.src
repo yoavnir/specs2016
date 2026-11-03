@@ -1,7 +1,7 @@
 .\" Manpage for specs.
 .\" Open an issue at https://github.com/yoavnir/specs2016 to correct errors or typos
 .mso www.tmac
-.TH man 1 "7 Dec 2026" "1.1.0" "specs man page"
+.TH man 1 "XXDATE" "XXVERSION" "specs man page"
 .SH NAME
 specs \- a text processing tool
 .SH SYNOPSIS
@@ -273,6 +273,35 @@ to make all whitespace defined by the locale work as a word separator. This keyw
 spec unit.
 .IP "REDO" 3
 Causes the current output line to become the new input line.
+.IP "SCRATCH" 3
+Discards the output record built so far in this cycle, so that following spec units start building a fresh one. Unlike
+.B REDO
+it leaves everything about the input side alone: the current input record, the context offset and the selected input station are all untouched. This makes the output record usable as a scratch pad. Capture its content first if you need it, either into a counter with
+.B SET
+.I "\(dq#0:=@>\(dq"
+or into a field identifier with
+.B "OUTREC a:"
+(see
+.B OUTREC
+and the
+.B @>
+pseudo-variable below). A cycle whose output record has been scratched and not rebuilt writes no line at all, not even an empty one.
+.IP "OUTREC" 3
+An input part that yields the output record built so far in this cycle. It may be used wherever an input part is accepted, for example
+.I "OUTREC 1"
+to duplicate it,
+.I "OUTREC a:"
+to capture it into a field identifier without producing output, or
+.I "SUBSTR W2 OF OUTREC"
+to take it apart. Reading the output record does not modify it. In an expression, use the
+.B @>
+pseudo-variable or the
+.B outrec()
+function instead. Note that
+.B OUTREC
+takes no argument: all output streams share a single output record, and
+.B OUTSTREAM
+only selects which stream receives it when it is written.
 .IP "SPLITW" 3
 Splits the current input record by words and produces one output record for each word. 
 Any spec units before the 
@@ -543,7 +572,7 @@ Conditions begin with the word
 .B if
 followed by an 
 .B expression 
-that evaluates to true of false, followed by the token
+that evaluates to true or false, followed by the token
 .B then,
 followed by some 
 .B Spec Units.
@@ -593,7 +622,7 @@ loop.  It begins with the
 .B while
 token, followed by an 
 .B expression 
-that evaluates to true of false, followed by the token
+that evaluates to true or false, followed by the token
 .B do,
 and a series of 
 .B Spec Units
@@ -653,7 +682,7 @@ program exists when the counter reaches 5000.
 .I While-Guard
 is not perfect. To disable it, you can use the command-line switch
 .B --no-while-guard
-or you can override the maximum iteration count at which the program exist by setting the 
+or you can override the maximum iteration count at which the program exits by setting the 
 .B while-guard-limit
 to some integer value.
 
@@ -878,6 +907,18 @@ still returns the original input record, while
 .B @!
 returns the context-affected record.
 Out-of-bounds offsets return the empty string. The forward and backward buffer sizes are computed automatically at parse time. This feature requires non-threaded mode and a single input stream.
+.P
+The
+.B @>
+syntax substitutes for the
+.I output
+record built so far in the current cycle, which is also available as the
+.B outrec()
+function and, outside expressions, as the
+.B OUTREC
+spec unit. It reflects only the spec units that precede it, including any pad characters they caused, and is empty before anything has been placed. Reading it does not modify it; use the
+.B SCRATCH
+spec unit to discard the output record.
 
 .SS "Built-In Functions"
 .IP "abs(x)" 3
@@ -1008,13 +1049,13 @@ will evaluate to 5.
 .IP "substitute(haystack,needle,subst,max)"
 Returns the string in 
 .I haystack
-where occurences of 
+where occurrences of 
 .I needle
 are replaced by the string 
 .I subst
 for at most 
 .I max
-(by defualt: 1) times. The special value 
+(by default: 1) times. The special value 
 .B """U"""
 for 
 .I max
@@ -1088,6 +1129,14 @@ returns the context-affected record, while
 .B cfrecord()
 returns the original input record. Equivalent to
 .B @@.
+.IP "outrec()" 3
+Returns the output record built so far in the current cycle, rather than anything from the input. Equivalent to
+.B @>.
+It reflects only the spec units preceding it in the cycle, and is the empty string before anything has been placed. See the
+.B OUTREC
+and
+.B SCRATCH
+spec units.
 .IP "range(s,e)" 3
 Returns the range of characters from
 .B s
@@ -1117,6 +1166,8 @@ Returns the ending position of the i-th word in the input record.
 is equivalent to 
 .I word(i)
 but less efficient.
+.IP "wordlen(i)" 3
+Returns the length of the i-th word in the input record.
 .IP "wordrange(s,e)" 3
 Returns the string from the start of the 
 .B s-th
@@ -1732,6 +1783,10 @@ or an empty string if not found.
 Returns the index of the first field of the input string that contains
 .I substr
 or zero if not found.
+.IP "fieldindex(i)" 3
+Returns the character position in the current record where the i-th field begins.
+.IP "fieldlength(i)" 3
+Returns the length of the i-th field in the current record.
 .IP "xrange(start,end)" 3
 Returns a string composed of all the characters between 
 .I start 
@@ -1874,7 +1929,7 @@ Returns the string value with least but non-zero occurrences of
 .B Field Identifier
 a. In case of a tie, one of the values is returned.
 .IP "fmap_count(a,s)" 3
-Returns the number of occurences of the 
+Returns the number of occurrences of the 
 .B string 
 s in
 .B Field Identifier
@@ -1896,7 +1951,7 @@ Treats the value of the
 .B string 
 s as a new sample for
 .B Field Identifier
-a. Returns the count of occurences of s. 
+a. Returns the count of occurrences of s. 
 .IP "fmap_dump(a,format,sortOrder,showPct)" 3
 Returns a string containing a dump of the frequency map for
 .B Field Identifier
@@ -2022,7 +2077,7 @@ specifications that are specified in a
 can include some directives that influence the processing. Directives
 .I MUST
 begin with a plus (+) sign on the left-most column of the line in the specification file. All directives 
-.I MIUST
+.I MUST
 precede all spec units. Below are the supported directives:
 .IP "+SET" 3
 This directive followed by a single word and then a command-line command, sets a 
@@ -2196,6 +2251,13 @@ defaults to
 on POSIX systems, or
 .B %APPDATA%\especs
 on Windows.
+A name given without a directory part is first searched for with a
+.I .spec
+suffix in every directory on the
+.I SPECSPATH,
+and only then as given. A name that already ends in
+.I .spec,
+or that includes a directory part, is searched for as given.
 A spec file replaces the specification on the command line entirely, so the two cannot be combined:
 .B specs
 rejects an invocation that supplies both
@@ -2218,13 +2280,34 @@ Executes the output records as shell commands rather than emitting them to stand
 .IP "--spaceWS" 3
 Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
 .IP "--debug-alu-comp" 3
-Prints out detailed information about the parsing and compiling of expressions (
-.I only in debug build
-).
+Prints out detailed information about the parsing and compiling of expressions. This is available in standard builds; it produces no output if
+.B specs
+was built with the
+.I --no_alu_debug
+configure flag. The output shows how each expression is tokenized and then converted to
+.B Reverse Polish Notation (RPN).
+The output is formatted as markdown and can be viewed with any markdown viewer such as
+.B Visual Studio Code
+or
+.B glow.
 .IP "--debug-alu-run" 3
-Prints out detailed step-by-step information about the evaluation of expressions (
-.I only in debug build
-). 
+Prints out detailed step-by-step information about the evaluation of expressions. This is available in standard builds; it produces no output if
+.B specs
+was built with the
+.I --no_alu_debug
+configure flag. The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed with any markdown viewer such as
+.B Visual Studio Code
+or
+.B glow.
+.IP "--debug-alu-file or -d" 3
+Redirects the output of --debug-alu-comp and --debug-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits. As both
+.I --debug-alu-comp
+and
+.I --debug-alu-run
+produce markdown content, it is 
+.B recommended
+to name the file something with the suffix 
+.I .md
 .IP "--no-while-guard" 3
 Disables 
 .I while-guard, 

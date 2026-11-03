@@ -52,11 +52,13 @@
 			"() - Returns TRUE (1) if this is the run-out phase.","") \
 	X(break,          1, ALUFUNC_REGULAR,     false,  \
 			"(fid) - Returns TRUE (1) if the break for field-identifier 'fid' is established, or FALSE (0) otherwise.","") \
-	H(Record Functions,16) \
+	H(Record Functions,17) \
 	X(record,         0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the entire record.","Equivalent to the @@ pseudo-variable when CONTEXT is not in effect.") \
 	X(cfrecord,       0, ALUFUNC_REGULAR,      true,  \
 			"() - Returns the entire input record, disregarding rolling context.","Equivalent to the @@ pseudo-variable. Same as record() when CONTEXT is not in effect.") \
+	X(outrec,         0, ALUFUNC_REGULAR,     false,  \
+			"() - Returns the output record built so far in this cycle.","Equivalent to the @> pseudo-variable. The output record is discarded by the SCRATCH spec unit\nand written out at the end of the cycle or at a WRITE.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
 			"(s) - Returns the length of the string s","") \
 	X(wordcount,      2, ALUFUNC_REGULAR,     false,  \
@@ -459,14 +461,19 @@ public:
 	virtual bool    fieldIdentifierIsSet(char id) = 0;
 };
 
-class positionGetter {
+// Provides the ALU and the input parts with access to the output record that
+// is currently being built -- both its next writing position and its content.
+class outputAgent {
 public:
-	virtual ~positionGetter() = default;
+	virtual ~outputAgent() = default;
 	virtual size_t pos() = 0;
+	// Returns a *copy* of the output record built so far. A copy is essential
+	// because the result may be inserted back into the very same buffer.
+	virtual PSpecString outputRecord() = 0;
 };
 
 void setStateQueryAgent(stateQueryAgent* qa);
-void setPositionGetter(positionGetter* pGetter);
+void setOutputAgent(outputAgent* pAgent);
 
 void aluFunc_help_builtin();
 bool aluFunc_help_one_builtin(std::string& funcName);
