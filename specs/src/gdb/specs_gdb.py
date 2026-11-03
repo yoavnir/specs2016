@@ -1303,8 +1303,8 @@ class DumpProcessingState(gdb.Command):
             
             # --- Separators & Padding ---
             try:
-                pad = chr(int(val["m_pad"]))
-                print(f"  Pad Char:          '{pad}' (0x{ord(pad):02x})")
+                pad = std_string_to_str(val["m_pad"])
+                print(f"  Pad Char:          '{pad}' (0x{pad.encode('utf-8', 'surrogateescape').hex()})")
             except Exception as e:
                 print(f"  Pad Char:          (error: {e})")
             
@@ -1572,12 +1572,12 @@ class DumpStringBuilder(gdb.Command):
                 str_content = "<nullptr>"
             
             pos = int(val["m_pos"])
-            pad = chr(int(val["m_pad"]))
+            pad = std_string_to_str(val["m_pad"])
             
             print(f"StringBuilder @ {val.address}")
             print(f"  Current String: \"{str_content[:50]}{'...' if len(str_content) > 50 else ''}\"")
             print(f"  Position:       {pos}")
-            print(f"  Pad Char:       '{pad}' (0x{ord(pad):02x})")
+            print(f"  Pad Char:       '{pad}' (0x{pad.encode('utf-8', 'surrogateescape').hex()})")
         except Exception as e:
             print(f"Error: {e}")
 

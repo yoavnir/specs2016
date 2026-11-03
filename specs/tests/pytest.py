@@ -1,9 +1,10 @@
 import os,sys,subprocess
 
-def run_cmd(spec, force=False):
+def run_cmd(spec, force=False, switches=[]):
 	args = ["../exe/specs", "--set", "SPECSPATH=/tmp", "-o", "theout"]
 	if force:
 		args.extend(["--pythonFuncs", "on"])
+	args.extend(switches)
 	args.append(spec)
 	
 	with open("theerr", "w") as err_file:
@@ -17,7 +18,7 @@ def run_cmd(spec, force=False):
 		theerr_content = ""
 
 	if os.path.exists("theout"):
-		with open("theout", "r") as f:
+		with open("theout", "r", encoding="utf-8", errors="surrogateescape") as f:
 			theout_content = f.read()
 		os.system("/bin/rm theout")
 	else:
@@ -339,4 +340,49 @@ else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
 	exit(4)
 
-sys.stdout.write("\n*** All 24 tests passed.\n")
+# Non-ASCII strings: converted to "" without --EXP-UTF8, passed through with it
+lff_utf8 = '''
+def greet():
+	return "h\\u00e9llo w\\u00f6rld"
+
+def plen(s):
+	return len(s)
+
+def pecho(s):
+	return s
+'''
+set_localfuncs(lff_utf8)
+
+sys.stdout.write("Test 25 (non-ASCII return without --EXP-UTF8) -- ")
+ret = run_cmd('print "\'[\'||greet()||\']\'" 1', True)
+if ret=="[]":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+sys.stdout.write("Test 26 (non-ASCII return with --EXP-UTF8) -- ")
+ret = run_cmd('print "\'[\'||greet()||\']\'" 1', True, ["--EXP-UTF8"])
+if ret=="[h\u00e9llo w\u00f6rld]":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+sys.stdout.write("Test 27 (Python sees characters with --EXP-UTF8) -- ")
+ret = run_cmd('print "plen(\'\u65e5\u672c\u8a9e\')" 1', True, ["--EXP-UTF8"])
+if ret=="3":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+sys.stdout.write("Test 28 (non-ASCII round trip with --EXP-UTF8) -- ")
+ret = run_cmd('print "pecho(\'na\u00efve caf\u00e9\')" 1', True, ["--EXP-UTF8"])
+if ret=="na\u00efve caf\u00e9":
+	sys.stdout.write("OK\n")
+else:
+	sys.stdout.write("Not OK: <"+ret+">\n")
+	exit(4)
+
+sys.stdout.write("\n*** All 28 tests passed.\n")

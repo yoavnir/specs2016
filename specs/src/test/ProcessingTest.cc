@@ -9,6 +9,7 @@
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
 #include "processing/Reader.h"
+#include "utils/utf8.h"
 
 extern ALUCounters g_counters;
 extern char        g_printonly_rule;
@@ -1317,6 +1318,63 @@ int main(int argc, char** argv)
 	VERIFY2("print 'round(5.42, 1.2)' 1", "x", "5.4");  // TEST #312
 	VERIFY2("print 'round(5.42, x)' 1", "x", "Expression:round(5.42, x) - At run-out cycle, field identifier <x> used as argument to a non-statistical function");  // Test #313
 	VERIFY2("print 'round(5.42, hello)' 1", "x", "5");   // Test #314
+
+	// ---- UTF-8 support (--EXP-UTF8) ----
+	// The non-ASCII characters are spelled out as escapes so that the source
+	// is read the same way by every compiler.
+#define U_E_ACUTE  "\xc3\xa9"          /* é  U+00E9 */
+#define U_O_UMLAUT "\xc3\xb6"          /* ö  U+00F6 */
+#define U_I_UMLAUT "\xc3\xaf"          /* ï  U+00EF */
+#define U_MIDDOT   "\xc2\xb7"          /* ·  U+00B7 */
+#define U_NBSP     "\xc2\xa0"          /*    U+00A0 */
+#define U_ALPHA    "\xce\xb1"          /* α  U+03B1 */
+#define U_BETA     "\xce\xb2"          /* β  U+03B2 */
+#define U_NICHI    "\xe6\x97\xa5"      /* 日 U+65E5 */
+#define U_HON      "\xe6\x9c\xac"      /* 本 U+672C */
+#define U_GO       "\xe8\xaa\x9e"      /* 語 U+8A9E */
+#define U_FW_SEMI  "\xef\xbc\x9b"      /* ； U+FF1B */
+#define U_GRIN     "\xf0\x9f\x98\x80"  /* 😀 U+1F600 */
+
+	// The utf8 helpers
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("h" U_E_ACUTE "llo"))==5), "");  // TEST #315
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string(U_GRIN U_NICHI "a"))==3), "");  // TEST #316
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("\xff" "a\x80"))==3), "");  // TEST #317
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("\xe6\x97"))==2 && !utf8::isValid(std::string("\xe6\x97"))), "");  // TEST #318
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("\xc0\xaf"))==2 && !utf8::isValid(std::string("\xc0\xaf"))), "");  // TEST #319
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("\xed\xa0\x80"))==3 && utf8::isValid(std::string(U_GRIN))), "");  // TEST #320
+	VERIFYCMD(MYASSERT(utf8::charToByte(std::string("a" U_E_ACUTE "b"),2)==3 && utf8::charToByte(std::string("a" U_E_ACUTE "b"),4)==std::string::npos), "");  // TEST #321
+	VERIFYCMD(MYASSERT(utf8::substr(std::string("a" U_NICHI U_HON "b"),1,2)==U_NICHI U_HON && utf8::substr(std::string("ab"),5,1)==""), "");  // TEST #322
+	VERIFYCMD(MYASSERT(utf8::isSpace(0xA0) && utf8::isSpace(0x3000) && utf8::isSpace('\t') && !utf8::isSpace('A') && !utf8::isSpace(0xB7)), "");  // TEST #323
+	VERIFYCMD({ std::string src("x" U_GRIN "\xff\xc3" U_E_ACUTE); std::string dst; for (char32_t cp : utf8::toCodePoints(src)) utf8::append(dst, cp); MYASSERT(dst==src); }, "");  // TEST #324
+
+	g_bSupportUTF8 = true;
+
+	// Character ranges, words, fields and output positions count characters
+	VERIFY2("1-3 1", "h" U_E_ACUTE "llo w" U_O_UMLAUT "rld", "h" U_E_ACUTE "l");  // TEST #325
+	VERIFY2("w2 1 '|' n", "h" U_E_ACUTE "llo w" U_O_UMLAUT "rld", "w" U_O_UMLAUT "rld|");  // TEST #326
+	VERIFY2("w1 1 3 10", U_E_ACUTE U_E_ACUTE "x", U_E_ACUTE U_E_ACUTE "x      x");  // TEST #327
+	VERIFY2("w2 1.4 right", "h" U_E_ACUTE "llo w" U_O_UMLAUT "rld", U_O_UMLAUT "rld");  // TEST #328
+	VERIFY2("pad " U_MIDDOT " w1 1.8 center '!' n", U_NICHI U_HON U_GO, U_MIDDOT U_MIDDOT U_NICHI U_HON U_GO U_MIDDOT U_MIDDOT U_MIDDOT "!");  // TEST #329
+	VERIFY2("1-* (1,10,\"L3\")", "W" U_O_UMLAUT "rterb" "\xc3\xbc" "cher-Eintr" "\xc3\xa4" "ge", "W" U_O_UMLAUT "r...r" "\xc3\xa4" "ge");  // TEST #330
+	VERIFY2("fs " U_FW_SEMI " f2 1 f3 nw", "a" U_FW_SEMI "b" U_FW_SEMI "c", "b c");  // TEST #331
+	VERIFY2("w2 1", U_ALPHA U_NBSP U_BETA, U_BETA);  // TEST #332
+	VERIFY2("print 'wordstart(2)' 1 print 'wordend(1)' nw", "na" U_I_UMLAUT "ve caf" U_E_ACUTE, "7 5");  // TEST #333
+	VERIFY2("-3;-1 1", "a" U_E_ACUTE U_NICHI "b", U_E_ACUTE U_NICHI "b");  // TEST #334
+	VERIFY2("pad " U_MIDDOT " number 1", "x", U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT "1");  // TEST #335
+	VERIFY2("pad ab 1 1", "x", "Bad pad character <ab>  with length 2 at index 2. Must be single character.");  // TEST #336
+	VERIFY2("1-* 1 3 nw", "ab\xff" "cd", "ab\xff" "cd \xff");  // TEST #337
+	VERIFY2("'" U_NICHI U_HON U_GO "' 1 'x' 2", "x", U_NICHI "x" U_GO);  // TEST #338
+	VERIFY2("'" U_NICHI "' 3 'x' 1", "x", "x " U_NICHI);  // TEST #339
+	VERIFY2("SUBSTR 2-3 OF w2 1", "h" U_E_ACUTE "llo w" U_O_UMLAUT "rld", U_O_UMLAUT "r");  // TEST #340
+	VERIFY2("ws " U_MIDDOT " w2 1", "a" U_MIDDOT "b" U_MIDDOT "c", "b");  // TEST #341
+	VERIFY2("w1 1 w2 nw", U_GRIN U_GRIN " " U_GRIN, U_GRIN U_GRIN " " U_GRIN);  // TEST #342
+
+	g_bSupportUTF8 = false;
+
+	// ... while without the flag, everything is still counted in bytes
+	VERIFY2("1-3 1", "h" U_E_ACUTE "llo", "h" U_E_ACUTE);  // TEST #343
+	VERIFY2("pad " U_MIDDOT " 1 1", "x", "Bad pad character <" U_MIDDOT ">  with length 2 at index 2. Must be single character.");  // TEST #344
+	VERIFY2("fs " U_FW_SEMI " f2 1", "a" U_FW_SEMI "b", "");  // TEST #345
 
 	if (errorCount) {
 		if (onlyTest == 0) {

@@ -2,6 +2,7 @@
 #include <unordered_set>
 #include "Config.h"
 #include "utils/ErrorReporting.h"
+#include "utils/utf8.h"
 #include "Reader.h"
 #include "ProcessingState.h"
 
@@ -52,6 +53,7 @@ void ProcessingState::Reset()
 	m_contextOffset = 0;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
+	m_currRecordAscii = -1;
 }
 ProcessingState::ProcessingState()
 {
@@ -83,6 +85,7 @@ ProcessingState::ProcessingState(ProcessingState& ps)
 	m_inputRecord = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
+	m_currRecordAscii = -1;
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
 	m_bNoWrite = false;
@@ -107,6 +110,7 @@ ProcessingState::ProcessingState(ProcessingState* pPS)
 	m_inputRecord = nullptr;
 	m_inputStation = STATION_FIRST;
 	m_breakLevel = 0;
+	m_currRecordAscii = -1;
 	m_inputStream = DEFAULT_READER_IDX;
 	m_inputStreamChanged = false;
 	m_bNoWrite = false;
@@ -131,6 +135,7 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 	}
 	m_inputRecord = ps;
 	m_ps = ps;
+	m_currRecordAscii = -1;
 	m_wordCount = -1;
 	m_fieldCount = -1;
 	m_contextOffset = 0;
@@ -143,11 +148,13 @@ void ProcessingState::setString(PSpecString ps, bool bResetState)
 void ProcessingState::setStringInPlace(PSpecString ps)
 {
 	m_ps = ps;
+	m_currRecordAscii = -1;
 }
 
 void ProcessingState::setContextString(PSpecString ps, int offset)
 {
 	m_ps = ps;
+	m_currRecordAscii = -1;
 	m_wordCount = -1;
 	m_fieldCount = -1;
 	m_contextOffset = offset;
@@ -157,6 +164,7 @@ void ProcessingState::setFirst()
 {
 	if (m_inputStation != STATION_FIRST) {
 		m_inputStation = STATION_FIRST;
+		m_currRecordAscii = -1;
 		m_wordCount = -1;
 		m_fieldCount = -1;
 	}
@@ -166,6 +174,7 @@ void ProcessingState::setSecond()
 {
 	if (m_inputStation != STATION_SECOND) {
 		m_inputStation = STATION_SECOND;
+		m_currRecordAscii = -1;
 		m_wordCount = -1;
 		m_fieldCount = -1;
 	}
@@ -203,22 +212,34 @@ PWriter ProcessingState::getCurrentWriter()
 	return m_Writers[m_outputIndex];
 }
 
+bool ProcessingState::currRecordIsAscii()
+{
+	if (m_currRecordAscii < 0) {
+		m_currRecordAscii = utf8::isAscii(*currRecord()) ? 1 : 0;
+	}
+	return m_currRecordAscii == 1;
+}
+
 PSpecString ProcessingState::extractCurrentRecord()
 {
 	PSpecString ret = m_ps;
 	m_ps = mkSpecString(); // empty string
+	m_currRecordAscii = -1;
 	return ret;
 }
 
-#define IS_WHITESPACE(c) ((m_wordSeparatorLocal) ? (isspace((c))) : (std::string::npos != m_wordSeparator.find(c)))
+#define IS_WHITESPACE(c) ((m_wordSeparatorLocal) ? (isspace((unsigned char)(c))) : (std::string::npos != m_wordSeparator.find(c)))
 void ProcessingState::identifyWords()
 {
 	m_wordStart.clear();
 	m_wordEnd.clear();
 	m_wordCount = 0;
 	if (!currRecord()) return;
-	if (g_bSupportUTF8) {
-		MYTHROW("UTF-8 is not yet supported");
+	// An ASCII record gives the same result either way, as ASCII bytes never
+	// match the bytes of a multi-byte separator
+	if (g_bSupportUTF8 && !currRecordIsAscii()) {
+		identifyWordsUTF8();
+		return;
 	}
 	const char* pc = currRecord()->data();
 	int i = 0;
@@ -240,8 +261,9 @@ void ProcessingState::identifyFields()
 	m_fieldEnd.clear();
 	m_fieldCount = 0;
 	if (!currRecord()) return;
-	if (g_bSupportUTF8) {
-		MYTHROW("UTF-8 is not yet supported");
+	if (g_bSupportUTF8 && !currRecordIsAscii()) {
+		identifyFieldsUTF8();
+		return;
 	}
 	const char* pc = currRecord()->data();
 	int i = 0;
@@ -257,6 +279,72 @@ void ProcessingState::identifyFields()
 		}
 		m_fieldEnd.insert(m_fieldEnd.end(), bFieldHasContent ? i : EMPTY_FIELD_MARKER);
 		if (std::string::npos != m_fieldSeparator.find(pc[i])) i++;
+	}
+}
+
+// The UTF-8 variants mirror the byte-oriented ones above, including stopping
+// at a NUL byte, but the separators are sets of code points and the recorded
+// positions are character positions.
+
+void ProcessingState::identifyWordsUTF8()
+{
+	const std::string& rec = *currRecord();
+	const char* pc = rec.data();
+	size_t len = rec.size();
+	std::u32string separators = utf8::toCodePoints(m_wordSeparator);
+
+	size_t i = 0;    // byte offset
+	int ci = 0;      // character offset
+	size_t cl = 0;   // length in bytes of the character at i
+	char32_t cp = 0; // the character at i
+
+	auto load = [&]() { cp = (i < len && pc[i]) ? utf8::decode(pc + i, len - i, cl) : 0; };
+	auto advance = [&]() { i += cl; ci++; load(); };
+	auto isWS = [&]() {
+		return cp != 0 && (m_wordSeparatorLocal ? utf8::isSpace(cp) : utf8::contains(separators, cp));
+	};
+
+	load();
+	/* skip over initial whitespace */
+	while (isWS()) advance();
+
+	while (cp != 0) {
+		m_wordCount++;
+		m_wordStart.push_back(ci+1);
+		while (cp != 0 && !isWS()) advance();
+		m_wordEnd.push_back(ci);
+		while (isWS()) advance();
+	}
+}
+
+void ProcessingState::identifyFieldsUTF8()
+{
+	const std::string& rec = *currRecord();
+	const char* pc = rec.data();
+	size_t len = rec.size();
+	std::u32string separators = utf8::toCodePoints(m_fieldSeparator);
+
+	size_t i = 0;
+	int ci = 0;
+	size_t cl = 0;
+	char32_t cp = 0;
+
+	auto load = [&]() { cp = (i < len && pc[i]) ? utf8::decode(pc + i, len - i, cl) : 0; };
+	auto advance = [&]() { i += cl; ci++; load(); };
+	auto isFS = [&]() { return cp != 0 && utf8::contains(separators, cp); };
+
+	load();
+	while (cp != 0) {
+		bool bFieldHasContent = true;
+		m_fieldCount++;
+		m_fieldStart.push_back(ci+1);
+		if (isFS()) {
+			bFieldHasContent = false;
+		} else {
+			while (cp != 0 && !isFS()) advance();
+		}
+		m_fieldEnd.push_back(bFieldHasContent ? ci : EMPTY_FIELD_MARKER);
+		if (isFS()) advance();
 	}
 }
 
@@ -370,7 +458,13 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 	if (Reader::isOOBRecord(currRecord())) {
 		return currRecord();
 	}
-	int slen = (int)(currRecord()->length());
+	const std::string& rec = *currRecord();
+	// In UTF-8 mode positions are characters; for ASCII records they coincide with bytes
+	bool bByChars = g_bSupportUTF8 && !currRecordIsAscii();
+	int slen = bByChars ? int(utf8::charCount(rec)) : int(rec.length());
+	auto sub = [&](int pos, int count) {
+		return bByChars ? utf8::substr(rec, size_t(pos), size_t(count)) : rec.substr(size_t(pos), size_t(count));
+	};
 
 	if (0==from && 0==to) return mkSpecString();
 
@@ -396,13 +490,13 @@ PSpecString ProcessingState::getFromTo(int from, int to)
 
 	// to < from ==> wrap-around
 	if (to<from) {
-		PSpecString pRet = mkSpecString(currRecord()->substr(from-1, slen-from+1));
-		PSpecString pWrappedAroundPart = mkSpecString(currRecord()->substr(0, to));
+		PSpecString pRet = mkSpecString(sub(from-1, slen-from+1));
+		PSpecString pWrappedAroundPart = mkSpecString(sub(0, to));
 		*pRet += *pWrappedAroundPart;
 		return pRet;
 	}
 
-	return mkSpecString(currRecord()->substr(from-1, to-from+1));
+	return mkSpecString(sub(from-1, to-from+1));
 }
 
 void ProcessingState::fieldIdentifierClear()

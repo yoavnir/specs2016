@@ -8,7 +8,7 @@
 #include "utils/alu.h"
 #include "utils/aluFunctions.h"
 
-#define DEFAULT_PAD_CHAR ' '
+#define DEFAULT_PAD_CHAR " "
 #define LOCAL_WHITESPACE  ""
 #define DEFAULT_WORDSEPARATOR " "
 #define DEFAULT_FIELDSEPARATOR "\t"
@@ -32,11 +32,11 @@ public:
 	~ProcessingState();
 	void    Reset();
 
-	void    setPadChar(char c) {m_pad = c;}
+	void    setPadChar(const std::string& c) {m_pad = c;}
 	void    setWSChars(const std::string& c) {m_wordSeparator = c; m_wordSeparatorLocal = c.empty(); m_wordCount=-1;}
 	void    setFSChars(const std::string& c) {m_fieldSeparator = c; m_fieldCount=-1;}
 
-	char    getPadChar() { return m_pad;            }
+	const std::string& getPadChar() { return m_pad; }
 	std::string& getWSChars()  { return m_wordSeparator;  }
 	std::string& getFSChars()  { return m_fieldSeparator; }
 
@@ -113,7 +113,7 @@ private:
 		bTrue,
 		bDontCare
 	};
-	char    m_pad;
+	std::string m_pad;   // a single character, possibly multi-byte in UTF-8 mode
 	bool m_wordSeparatorLocal;
 	std::string m_wordSeparator;
 	std::string m_fieldSeparator;
@@ -131,6 +131,10 @@ private:
 	std::vector<int> m_fieldEnd;
 	void identifyWords();
 	void identifyFields();
+	void identifyWordsUTF8();
+	void identifyFieldsUTF8();
+	bool currRecordIsAscii();
+	int  m_currRecordAscii;  // -1 = not yet known; reset whenever currRecord() may change
 	std::map<char,PSpecString> m_fieldIdentifiers;
 	std::map<char,PAluValueStats> m_fiStatistics;
 	std::map<char,PSpecString> m_breakValues;

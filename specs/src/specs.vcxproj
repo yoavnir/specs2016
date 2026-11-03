@@ -107,6 +107,7 @@
     <ClInclude Include="utils\SpecString.h" />
     <ClInclude Include="utils\StringQueue.h" />
     <ClInclude Include="utils\TimeUtils.h" />
+    <ClInclude Include="utils\utf8.h" />
     <ClInclude Include="utils\alu.h" />
     <ClInclude Include="utils\aluFunctions.h" />
     <ClInclude Include="utils\aluRand.h" />

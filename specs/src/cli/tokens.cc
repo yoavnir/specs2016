@@ -6,6 +6,7 @@
 #include "tokens.h"
 #include "processing/Config.h"
 #include "utils/ErrorReporting.h"
+#include "utils/utf8.h"
 #include "processing/conversions.h"
 #include "processing/Reader.h"
 #include "processing/ProcessingState.h"
@@ -608,12 +609,12 @@ static bool mayBeNamedString(std::string& s)
 	if (0 == s.length()) return false;
 
 	// first should be letter or underscore
-	if (s[0]!='_' && !isalpha(s[0])) {
+	if (s[0]!='_' && !isalpha((unsigned char)s[0])) {
 		return false;
 	}
 
 	// other chars should be underscore or alphanumeric
-	for (auto c : s) {
+	for (unsigned char c : s) {
 		if (c!='_' && !isalnum(c)) {
 			return false;
 		}
@@ -670,9 +671,10 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__PAD:
 			if (tok.Literal()=="") {
 				if (mayBeLiteral(nextTok)) {
-					if (TokenListType__PAD == tok.Type() && getLiteral(nextTok).length()!=1) {
+					size_t padLen = g_bSupportUTF8 ? utf8::charCount(getLiteral(nextTok)) : getLiteral(nextTok).length();
+					if (TokenListType__PAD == tok.Type() && padLen!=1) {
 						std::string err = "Bad pad character <"+nextTok.Orig() +
-								">  with length " + std::to_string(getLiteral(nextTok).length()) +
+								">  with length " + std::to_string(padLen) +
 								" at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 						MYTHROW(err);
 					}

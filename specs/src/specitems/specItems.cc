@@ -75,10 +75,10 @@ bool CheckValiditySetStatement(std::string& setSpec)
 
 static void Strip(std::string& s)
 {
-	while (!s.empty() && std::isspace(s[0])) {
+	while (!s.empty() && std::isspace((unsigned char)s[0])) {
 		s.erase(0,1);
 	}
-	while (!s.empty() && std::isspace(s.back())) {
+	while (!s.empty() && std::isspace((unsigned char)s.back())) {
 		s.erase(s.size()-1);
 	}
 }
@@ -918,7 +918,7 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		pState.setWSChars(mp_Token->Literal());
 		return ApplyRet__Continue;
 	case TokenListType__PAD:
-		pState.setPadChar(mp_Token->Literal()[0]);
+		pState.setPadChar(mp_Token->Literal());
 		return ApplyRet__Continue;
 	case TokenListType__NOWRITE:
 		pState.setNoWrite();

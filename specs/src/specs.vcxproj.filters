@@ -69,6 +69,9 @@
     <ClCompile Include="utils\TimeUtils.cc">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\utf8.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="utils\alu.cc">
       <Filter>utils</Filter>
     </ClCompile>
@@ -135,6 +138,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\TimeUtils.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\utf8.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\alu.h">

@@ -564,7 +564,22 @@ Disable the while-guard, which normally causes specs to abort after 5000 iterati
 
 ### `--EXP-UTF8`
 
-**Experimental** — enable UTF-8 aware character counting. When this flag is set, multi-byte UTF-8 sequences are treated as a single logical character for the purposes of character-range selection, word start/end positions, and output column calculations. This flag is marked experimental because it is not fully tested across all features.
+**Experimental** — treat the input records, the output records and the literals in the specification as UTF-8 text. A *character* is then a Unicode code point, however many bytes it takes to encode. When this flag is set:
+
+- Character ranges (`1-5`, `-3;-1`), word and field positions, output positions and widths, alignment, truncation and ellipsis all count characters rather than bytes.
+- `WORDSEPARATOR` and `FIELDSEPARATOR` accept non-ASCII characters, such as `fs ；`, and the default word separator includes the Unicode whitespace characters, such as the no-break space (U+00A0) and the ideographic space (U+3000).
+- `PAD` accepts any single character, such as `pad ·`.
+- Python functions can return non-ASCII strings (see **[Chapter 14](#chap14)**).
+- A byte that is not part of a well-formed UTF-8 sequence counts as one character and is passed through unchanged.
+
+Without the flag, **specs** counts bytes, as it always has. With ASCII data both modes produce the same results.
+
+Notes:
+
+- Characters are code points, not what the eye sees as one character: an accented letter written as a base letter plus a combining accent counts as two.
+- Widths count characters, not screen columns. Wide characters such as 日 take two columns on most terminals, so columns of CJK text will not line up.
+
+This flag is experimental because not all features are UTF-8 aware yet. ALU functions such as `length()` and `substr()`, regular expressions and the `UCASE`/`LCASE` conversions still treat strings as bytes.
 
 ### `--debug-alu-comp`
 
@@ -4328,6 +4343,12 @@ Controls what happens when a Python function raises an exception:
 
 Use `NaN` or `nullstr` when you want specs to tolerate Python errors gracefully.
 
+## Non-ASCII Strings in Python Functions
+
+Without `--EXP-UTF8`, a string returned from a Python function must be pure ASCII; a string containing any other character is returned as an empty string.
+
+With `--EXP-UTF8`, a Python function can return any string, which is encoded as UTF-8. String arguments are decoded from UTF-8, so `len()` and slicing in the function count characters, as **specs** does in this mode. Bytes that are not valid UTF-8 reach the function as lone surrogates (Python's `surrogateescape` handler) and are restored if returned unchanged.
+
 ## Exactness in Python Functions
 
 specs tracks whether numerical values are **exact** (no rounding has occurred) or **inexact**. This is used by the `exact()` function to let you reason about precision.
@@ -4850,7 +4871,7 @@ Do NOT use `--threaded` with:
 | `--no-while-guard` | | Disable while-guard (default limit: 5000) |
 | `--toASCII` | | Convert non-ASCII to period |
 | `--force-read-input` | | Read input even if unused |
-| `--EXP-UTF8` | | Experimental UTF-8 character counting |
+| `--EXP-UTF8` | | Experimental: count UTF-8 characters rather than bytes |
 | `--debug-alu-comp` | | Print ALU compile info (unless built `--no_alu_debug`) |
 | `--debug-alu-run` | | Print ALU eval info (unless built `--no_alu_debug`) |
 | `--debug-alu-file file` | `-d` | Redirect ALU debug output to a file |

@@ -1,27 +1,29 @@
 cli/tokens.obj: cli/tokens.cc utils/platform.h cli/tokens.h \
- utils/ErrorReporting.h processing/Config.h processing/conversions.h \
- processing/Reader.h utils/StringQueue.h utils/SpecString.h \
- utils/TimeUtils.h utils/SpecString.h utils/directives.h \
- processing/ProcessingState.h processing/Writer.h utils/alu.h \
- utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
+ utils/ErrorReporting.h processing/Config.h utils/utf8.h \
+ processing/conversions.h processing/Reader.h utils/StringQueue.h \
+ utils/SpecString.h utils/TimeUtils.h utils/SpecString.h \
+ utils/directives.h processing/ProcessingState.h processing/Writer.h \
+ utils/alu.h utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h \
+ specitems/specItems.h specitems/item.h cli/tokens.h \
+ processing/StringBuilder.h processing/ProcessingState.h
 cli/splitter.obj: cli/splitter.cc utils/platform.h utils/directives.h \
  utils/ErrorReporting.h processing/Config.h cli/tokens.h
 processing/Reader.obj: processing/Reader.cc utils/ErrorReporting.h \
  processing/Reader.h utils/StringQueue.h utils/SpecString.h \
  utils/platform.h utils/TimeUtils.h utils/SpecString.h utils/directives.h
 processing/StringBuilder.obj: processing/StringBuilder.cc \
- processing/Config.h utils/ErrorReporting.h processing/ProcessingState.h \
- processing/Writer.h utils/StringQueue.h utils/SpecString.h \
- utils/platform.h utils/TimeUtils.h utils/SpecString.h utils/alu.h \
- utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h \
+ processing/Config.h utils/ErrorReporting.h utils/utf8.h \
+ processing/ProcessingState.h processing/Writer.h utils/StringQueue.h \
+ utils/SpecString.h utils/platform.h utils/TimeUtils.h utils/SpecString.h \
+ utils/alu.h utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h \
  processing/StringBuilder.h
 processing/Config.obj: processing/Config.cc utils/platform.h \
  utils/TimeUtils.h utils/SpecString.h utils/PythonIntf.h utils/aluValue.h \
  utils/aluRegex.h processing/Config.h
 processing/ProcessingState.obj: processing/ProcessingState.cc \
- processing/Config.h utils/ErrorReporting.h processing/Reader.h \
- utils/StringQueue.h utils/SpecString.h utils/platform.h \
- utils/TimeUtils.h utils/SpecString.h utils/directives.h \
+ processing/Config.h utils/ErrorReporting.h utils/utf8.h \
+ processing/Reader.h utils/StringQueue.h utils/SpecString.h \
+ utils/platform.h utils/TimeUtils.h utils/SpecString.h utils/directives.h \
  processing/ProcessingState.h processing/Writer.h utils/alu.h \
  utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h
 processing/Writer.obj: processing/Writer.cc utils/ErrorReporting.h \
@@ -60,7 +62,7 @@ test/ProcessingTest.obj: test/ProcessingTest.cc utils/platform.h \
  utils/StringQueue.h utils/SpecString.h utils/TimeUtils.h utils/alu.h \
  utils/PythonIntf.h utils/aluValue.h utils/aluFunctions.h \
  processing/ProcessingState.h processing/Reader.h utils/directives.h \
- processing/Config.h
+ processing/Config.h utils/utf8.h
 test/specs.obj: test/specs.cc utils/platform.h cli/tokens.h \
  utils/ErrorReporting.h processing/Config.h processing/persistent.h \
  specitems/specItems.h specitems/item.h processing/conversions.h \
@@ -100,6 +102,7 @@ utils/alu.obj: utils/alu.cc utils/ErrorReporting.h utils/alu.h \
 utils/aluRegex.obj: utils/aluRegex.cc utils/platform.h utils/aluRegex.h \
  utils/aluValue.h utils/lruCache.h utils/ErrorReporting.h
 utils/SpecString.obj: utils/SpecString.cc processing/Config.h \
- utils/ErrorReporting.h utils/SpecString.h
+ utils/ErrorReporting.h utils/utf8.h utils/SpecString.h
 utils/TimeUtils.obj: utils/TimeUtils.cc utils/ErrorReporting.h \
  utils/platform.h utils/TimeUtils.h utils/SpecString.h
+utils/utf8.obj: utils/utf8.cc utils/utf8.h

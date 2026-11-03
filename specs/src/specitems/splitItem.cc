@@ -385,7 +385,7 @@ ApplyRet SplitItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		} else if (m_outStart == POS_SPECIAL_VALUE_NEXT) {
 			pSB->insertNext(firstPiece);
 		} else if (m_outStart > 0) {
-			pSB->insert(firstPiece, m_outStart, true);
+			pSB->insert(firstPiece, m_outStart);
 		}
 		
 		m_splitting = true;
@@ -424,7 +424,7 @@ ApplyRet SplitItem::apply(ProcessingState& pState, StringBuilder* pSB)
 			}
 			
 			if (outStart > 0) {
-				pSB->insert(piece, outStart, true);
+				pSB->insert(piece, outStart);
 			}
 		} else {
 			// Apply width and alignment if specified
@@ -440,7 +440,7 @@ ApplyRet SplitItem::apply(ProcessingState& pState, StringBuilder* pSB)
 			} else if (m_outStart == POS_SPECIAL_VALUE_NEXT) {
 				pSB->insertNext(piece);
 			} else if (m_outStart > 0) {
-				pSB->insert(piece, m_outStart, true);
+				pSB->insert(piece, m_outStart);
 			}
 		}
 		
