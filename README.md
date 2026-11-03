@@ -14,12 +14,12 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
-7-Dec-2026: Version 1.1.0 is here
+30-Nov-2026: Version 1.1.0 is here
 
 What's new:
  * Current output record (re-)processing
- * Syntax definition and colorization
- * Usability enhancements
+ * Syntax definition and colorization, including guidebook examples
+ * Usability enhancements (`.spec` suffix)
  * C++20
 
 ---
