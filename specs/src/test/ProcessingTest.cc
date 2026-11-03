@@ -543,7 +543,8 @@ int main(int argc, char** argv)
            "if '#1 > 900 & #1 < 1100' then       " \
            "   /OK/ 1                            " \
            "else                                 " \
-           "   /NOT OK/ 1                        " \
+           "   /NOT OK:/ 1                       " \
+		   "   PRINT '#1' NEXTWORD               " \
            "endif                                ";
 	VERIFY(spec, "OK");  // TEST #106
 
