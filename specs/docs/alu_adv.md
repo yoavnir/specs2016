@@ -12,16 +12,16 @@
 | `*` | Binary Multiplication | Returns the product of its two operands |
 | `/` | Binary Division | Returns the quotient from dividing the left-hand operand by the right-hand operand |
 | `//` | Binary Integer Division | Returns the integer quotient from dividing the left-hand operand by the right-hand operand |
-| `%` | Binary Modulu | Returns the remainder from dividing the left-hand operand (the dividend) by the right-hand operand (the divisor) |
+| `%` | Binary Modulus | Returns the remainder from dividing the left-hand operand (the dividend) by the right-hand operand (the divisor) |
 | `\|\|` | Concatenation | Returns the concatenation of its two operands |
-| `<` | Logical LT | Returns `1` is the left-hand operand is smaller than the right-hand operand, or `0` otherwise |
-| `<=` | Logical LTE | Returns `1` is the left-hand operand is smaller than or equal to the right-hand operand, or `0` otherwise |
-| `>` | Logical GT | Returns `1` is the left-hand operand is greater than the right-hand operand, or `0` otherwise |
-| `>=` | Logical GTE | Returns `1` is the left-hand operand is greater than or equal to the right-hand operand, or `0` otherwise |
-| `<<` | Logical SLT | Returns `1` is the left-hand operand is alphabetically smaller than the right-hand operand, or `0` otherwise. For example, `3` will be smaller than `3.0` |
-| `<<=` | Logical SLTE | Returns `1` is the left-hand operand is alphabetically smaller than or equal to the right-hand operand, or `0` otherwise |
-| `>>` | Logical SGT | Returns `1` is the left-hand operand is alphabetically greater than the right-hand operand, or `0` otherwise |
-| `>>=` | Logical SGTE | Returns `1` is the left-hand operand is alphabetically greater than or equal to the right-hand operand, or `0` otherwise |
+| `<` | Logical LT | Returns `1` if the left-hand operand is smaller than the right-hand operand, or `0` otherwise |
+| `<=` | Logical LTE | Returns `1` if the left-hand operand is smaller than or equal to the right-hand operand, or `0` otherwise |
+| `>` | Logical GT | Returns `1` if the left-hand operand is greater than the right-hand operand, or `0` otherwise |
+| `>=` | Logical GTE | Returns `1` if the left-hand operand is greater than or equal to the right-hand operand, or `0` otherwise |
+| `<<` | Logical SLT | Returns `1` if the left-hand operand is alphabetically smaller than the right-hand operand, or `0` otherwise. For example, `3` will be smaller than `3.0` |
+| `<<=` | Logical SLTE | Returns `1` if the left-hand operand is alphabetically smaller than or equal to the right-hand operand, or `0` otherwise |
+| `>>` | Logical SGT | Returns `1` if the left-hand operand is alphabetically greater than the right-hand operand, or `0` otherwise |
+| `>>=` | Logical SGTE | Returns `1` if the left-hand operand is alphabetically greater than or equal to the right-hand operand, or `0` otherwise |
 | `=` | Logical Equality | Returns `1` if its two operands are equal numerically or string-wise, or `0` otherwise |
 | `==` | Strict Equality | Returns `1` if its two operands are equal string-wise, or `0` otherwise |
 | `!=` | Logical Inequality | Returns `1` if its two operands are not equal numerically or string-wise, or `0` otherwise |
@@ -40,7 +40,7 @@
 | `/=` | Div | Divides the value of the left-hand counter by the right-hand counter, storing the quotient in that counter |
 | `//=` | IntDiv | Divides the value of the left-hand counter by the right-hand counter, storing the **integer** quotient in that counter |
 | `%=` | RemDiv | Divides the value of the left-hand counter by the right-hand counter, storing the **remainder** in that counter |
-| `\|\|=` | Appnd | Appends the string value of the right-hand operand to the string value of the left-hand counter, storing the concatenation in that counter |
+| `\|\|=` | Append | Appends the string value of the right-hand operand to the string value of the left-hand counter, storing the concatenation in that counter |
 
 ## Table of Numerical and Logical Functions
 | Function | Description |
@@ -199,11 +199,11 @@ The regular expression *grammar* (`ECMAScript`, `basic`, `extended`, `awk`, `gre
 | `fmap_nsamples(a)` | Returns the number of samples collected of *field identifier* `a` |
 | `fmap_common(a)` | Returns the string value with most occurrences of *field identifier* `a`. In case of a tie, one of the values is returned. |
 | `fmap_rare(a)` | Returns the string value with least but non-zero occurrences of *field identifier* `a`. In case of a tie, one of the values is returned. |
-| `fmap_count(a,s)` | Returns the number of occurences of string `s` in *field identifier* `a` |
+| `fmap_count(a,s)` | Returns the number of occurrences of string `s` in *field identifier* `a` |
 | `fmap_frac(a,s)` | Returns the fraction of *field identifier* `a` values that are equal to `s` |
 | `fmap_pct(a,s)` | Returns the percentage of *field identifier* `a` values that are equal to `s` |
-| `fmap_sample(a,s)` | Treats the value of the string in `s` as a new sample for *field identifier* `a`. Returns the count of occurences of `s`. This is useful mainly in tests. |
-| `fmap_dump(a,format,sortOrder,showPct)` | Returns a string containing a dump of the frequency map for *field identifier* `a`. If the frequency map contains no data, returns the content fo the configuration string `EmptyFrequencyMapMessage`, and if that is not defined, returns an empty string |
+| `fmap_sample(a,s)` | Treats the value of the string in `s` as a new sample for *field identifier* `a`. Returns the count of occurrences of `s`. This is useful mainly in tests. |
+| `fmap_dump(a,format,sortOrder,showPct)` | Returns a string containing a dump of the frequency map for *field identifier* `a`. If the frequency map contains no data, returns the content of the configuration string `EmptyFrequencyMapMessage`, and if that is not defined, returns an empty string |
 | `countocc(n,h)` | Returns the number of matches for this particular needle so far |
 | `countocc_get(n)` | Returns the number of matches for this particular needle so far. No match is made here |
 | `countocc_dump(format,sortOrder,showPct)` | Returns a string containing a dump of the frequency map used in `countocc` |
@@ -213,7 +213,7 @@ The parameters for the `fmap_dump` functions are as follows:
   * *txt* or *0* or empty string: textual representation of string and count, with the field width adjusted to fit the largest value of the field. This is the default.
   * *lin*: same as *txt*, but surrounded by lines.
   * Integer value: same as *txt*, but the width of the string field is fixed.
-  * *csv*: a Commad Seperated Value dataset.
+  * *csv*: a Comma Separated Value dataset.
   * *json*: a JavaScript Object Notation dataset.
 * *sortOrder*. Possible values:
   * *s*, *sa*, or empty string: Sort by ascending alphabetical order of the string key. This is the default.
@@ -254,7 +254,7 @@ The `excrc()` and `excerr()` functions reflect **only the last run** of a shell 
 | `s2tf(x,f)` | Returns the string representation of the number `x` treated as seconds since the UNIX epoch and formatted according to the string in `f`. |
 | `string(x)` | Returns the same value as the argument, but forced to be stored as a string. Such a value can still be evaluated as a number, so `string(3)+2` evaluates to `5`. |
 | `next()` | Returns the index of the print position. `w1 "(next())"` should do the same as `w1 next`. |
-| `exact(expression)` | Returns `1` if the evaluation of the `expression` results in an exact value, or `0` if some rounding and/or loss of precision has been involved in the computaion. The function has some limitations and will err on the side of returning `0` when it's unsure. |
+| `exact(expression)` | Returns `1` if the evaluation of the `expression` results in an exact value, or `0` if some rounding and/or loss of precision has been involved in the computation. The function has some limitations and will err on the side of returning `0` when it's unsure. |
 
 ## Out-of-Bounds (OOB) Records
 
