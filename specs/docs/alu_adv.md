@@ -81,9 +81,19 @@
 | `not(expr)` | Returns 1 if the `expr` is an integer zero, or 0 if it is anything else.  It serves as an alternative to the **unary logical not** operator (!). |
 
 ## Table of String Functions
+
+In UTF8 mode, character lengths and positions in the string functions below
+count Unicode code points rather than bytes. This includes length arguments,
+start positions, returned positions, and the lengths returned by `length`,
+`wordlength`, `wordlen`, and `fieldlength`. Arguments that count words, such as
+the length arguments to `delword` and `subword`, still count words.
+`bytelength` always returns the number of bytes. In ASCII mode, character
+lengths and byte lengths are the same.
+
 | Function | Description |
 | -------- | ----------- |
 | `abbrev(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. If `l` is omitted, all of 'n' is considered. |
+| `bytelength(s)` | Returns the length of `s` in bytes, in both ASCII mode and UTF8 mode. |
 | `center(s,n)` or `centre(s,n)` | Returns the `n` center-most characters of the string `s`. The result is padded with spaces on both sides if `n` is greater than the length of `s`. |
 | `includes(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **any** of `needle1`, `needle2`, `needle3`, or `needle4` is a substring of `haystack`, or `0` otherwise. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `includesall(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **all** of `needle1`, `needle2`, `needle3`, or `needle4` are substrings of `haystack`, or `0` otherwise. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
@@ -91,7 +101,7 @@
 | `rsearch(string,exp, [matchFlags])` | Returns `1` if the regular expression `regEx` matches any substring of `string`, or `0` otherwise. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
 | `rreplace(string,exp,fmt [matchFlags])` | Returns the string `string`, with all matches of the regular expression `regEx` replaced by what's in `fmt`. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s` |
-| `length(s)` | Returns the length (in characters) of the string `s` |
+| `length(s)` | Returns the length of `s` in Unicode code points in UTF8 mode, or bytes in ASCII mode. |
 | `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |
 | `substitute(haystack,needle,subst,max)` | Returns the string `haystack` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. The default for `max` is 1 |
 | `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |
@@ -274,7 +284,6 @@ The OOB flag is **not** preserved once the value is copied into a plain-text val
 - Other operations that materialize the working string as ordinary text may likewise drop the flag.
 
 In short: query OOB status as close as possible to where the OOB record is read, and do not expect it to survive a round trip through a counter or other plain-text storage.
-
 
 
 

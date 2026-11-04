@@ -1075,7 +1075,11 @@ Returns a binary representation of the unsigned integer in x with field of lengt
 .IP "tobin(x)" 3
 Returns a binary representation of the unsigned integer in x. The field length is automatically determined by the value of x, but will be 1, 2, 4, or 8 characters in length.
 .IP "length(x)" 3
-Returns the length of the argument when viewed as a string. For example, len(37) is 2; len('hello') is 5.
+Returns the length of the argument when viewed as a string. In UTF8 mode the
+result is the number of Unicode code points; in ASCII mode it is the number of
+bytes. For example, length(37) is 2 and length('hello') is 5.
+.IP "bytelength(x)" 3
+Returns the length of the argument in bytes, in both ASCII mode and UTF8 mode.
 .IP "first()" 3
 Returns 1 during the 
 .B run-in
@@ -2665,6 +2669,19 @@ Finally, let's make our own version of the multi-column display:
 .SH SEE ALSO
 sed(1), awk(1)
 .SH BUGS
-Likely some. Open a ticket in github if you find them.
+In UTF8 mode,
+.B specs
+currently counts Unicode code points rather than grapheme clusters. Thus
+precomposed
+.B é
+(U+00E9) has length 1, while the visually identical decomposed form
+.B e
+followed by U+0301 has length 2. This behavior is not stable; a future version
+may count non-precomposed graphemes differently.
+.PP
+Widths count code points rather than display columns, so wide characters such
+as CJK ideographs may not align on a terminal.
+.PP
+Open a ticket on GitHub if you find other bugs.
 .SH AUTHOR
 Yoav Nir (yoav.nir@gmail.com)

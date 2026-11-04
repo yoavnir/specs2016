@@ -188,4 +188,12 @@ void append(std::string& s, char32_t cp)
 	}
 }
 
+std::string fromCodePoints(const std::u32string& cps)
+{
+	std::string ret;
+	ret.reserve(cps.size());
+	for (char32_t cp : cps) append(ret, cp);
+	return ret;
+}
+
 }  // namespace utf8

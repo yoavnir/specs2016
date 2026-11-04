@@ -7,6 +7,7 @@
 #include "processing/persistent.h"
 #include "processing/ProcessingState.h"
 #include "processing/Reader.h"
+#include "utils/utf8.h"
 #include <cstring>
 #include <cmath>
 #include <functional>
@@ -24,6 +25,45 @@
 #endif
 
 #define PAD_CHAR ' '
+
+/*
+ * In UTF8 mode, the string functions count code points rather than bytes, in
+ * both lengths and positions. A string that is all ASCII gives the same count
+ * either way, so the code-point versions are only used when one of the
+ * strings involved is not.
+ *
+ * Functions that need it are written as templates over the string type:
+ * std::string for bytes, and std::u32string for code points.
+ */
+static bool byCodePoints(std::initializer_list<const std::string*> strs)
+{
+	if (!g_bSupportUTF8) return false;
+	for (const std::string* p : strs) {
+		if (!utf8::isAscii(*p)) return true;
+	}
+	return false;
+}
+
+static size_t strLength(const std::string& s)
+{
+	if (g_bSupportUTF8)
+		return byCodePoints({&s}) ? utf8::charCount(s) : s.length();
+	return s.length();
+}
+
+// Like std::string::substr, but pos and count are characters
+static std::string strSubstr(const std::string& s, size_t pos, size_t count = std::string::npos)
+{
+	if (g_bSupportUTF8)
+		return byCodePoints({&s}) ? utf8::substr(s, pos, count) : s.substr(pos, count);
+	return s.substr(pos, count);
+}
+
+// A pad argument must be a single character
+static bool isOneChar(const std::string& s)
+{
+	return 1 == strLength(s);
+}
 
 #define PERCENTS (ALUFloat(100.0))
 
@@ -407,6 +447,14 @@ PValue AluFunc_tobin(PValue op)
 PValue AluFunc_length(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
+	if (!g_bSupportUTF8)
+		return mkValue(ALUInt(op->getStr().length()));
+	return mkValue(ALUInt(utf8::charCount(op->getStr())));
+}
+
+PValue AluFunc_bytelength(PValue op)
+{
+	ASSERT_NOT_ELIDED(op,1,op);
 	return mkValue(ALUInt(op->getStr().length()));
 }
 
@@ -673,34 +721,75 @@ PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
 
 // Substring functions
 
-static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt length)
+// start must not be zero
+template <class S>
+static S substring_do(const S& str, ALUInt start, ALUInt length)
 {
+	ALUInt strLen = ALUInt(str.length());
+
 	// handle start
-	if (start==0) {    // invalid string index in specs
-		return mkValue0();  // NaN
-	}
-	else if (start > ALUInt(pStr->length())) {
-		return mkValue2("",0);
+	if (start > strLen) {
+		return S();
 	} else if (start < 0) {
-		start += pStr->length() + 1;
+		start += strLen + 1;
 		if (start < 1) {
-			return mkValue2("",0);
+			return S();
 		}
 	}
 
 	// handle length
 	if (length < 0) {
-		length += pStr->length() + 1; // length=-1 means the length of the string
+		length += strLen + 1; // length=-1 means the length of the string
 		if (length < 0) {
-			return mkValue2("",0);
+			return S();
 		}
 	}
-	if (size_t(start + length - 1) > pStr->length()) {
-		length = pStr->length() - start + 1;
+	if (start + length - 1 > strLen) {
+		length = strLen - start + 1;
 	}
 
 	// Finally:
-	return mkValue(pStr->substr(start-1,length));
+	return str.substr(start-1,length);
+}
+
+static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt length)
+{
+	if (start==0) {    // invalid string index in specs
+		return mkValue0();  // NaN
+	}
+	if (g_bSupportUTF8 && byCodePoints({pStr})) {
+		return mkValue(utf8::fromCodePoints(substring_do(utf8::toCodePoints(*pStr), start, length)));
+	}
+	return mkValue(substring_do(*pStr, start, length));
+}
+
+// The substring of length len at the start, end or middle of str, padded with
+// blanks if str is shorter. A negative len counts from the length of str.
+enum class strAlign { left, right, center };
+
+template <class S>
+static S align_do(const S& str, ALUInt len, strAlign how)
+{
+	ALUInt bigLength = ALUInt(str.length());
+	if (len < 0) len = len + bigLength + 1;
+	if (len <= 0) return S();
+	if (len > bigLength) {
+		ALUInt padding = len - bigLength;
+		ALUInt before = (how==strAlign::right) ? padding : (how==strAlign::center) ? padding / 2 : 0;
+		return S(size_t(before), PAD_CHAR) + str + S(size_t(padding - before), PAD_CHAR);
+	}
+	ALUInt start = (how==strAlign::right) ? bigLength-len+1 : (how==strAlign::center) ? (bigLength - len) / 2 + 1 : 1;
+	return substring_do(str, start, len);
+}
+
+static PValue AluFunc_align(PValue pBigString, PValue pLength, strAlign how)
+{
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
+	ALUInt len = pLength->getInt();
+	if (g_bSupportUTF8 && byCodePoints({pBigStr})) {
+		return mkValue(utf8::fromCodePoints(align_do(utf8::toCodePoints(*pBigStr), len, how)));
+	}
+	return mkValue(align_do(*pBigStr, len, how));
 }
 
 PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
@@ -720,56 +809,43 @@ PValue AluFunc_left(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	auto bigLength = pBigStr->length();
-	ALUInt len = pLength->getInt();
-	if (len==0) return mkValue2("",0);
-	if (len < 0) len = len + bigLength + 1;
-	if (size_t(len) > bigLength) {
-		return mkValue(*pBigStr
-				+ std::string(len-bigLength, PAD_CHAR));
-	}
-	return AluFunc_substring_do(pBigStr, 1, len);
+	return AluFunc_align(pBigString, pLength, strAlign::left);
 }
 
 PValue AluFunc_right(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	auto bigLength = pBigStr->length();
-	ALUInt len = pLength->getInt();
-	if (len==0) return mkValue2("",0);
-	if (len < 0) len = len + bigLength + 1;
-	if (size_t(len) > bigLength) {
-		return mkValue(std::string(len-bigLength, PAD_CHAR)
-				+ *pBigString->getStrPtr());
-	}
-	return AluFunc_substring_do(pBigStr, bigLength-len+1, len);
+	return AluFunc_align(pBigString, pLength, strAlign::right);
 }
 
 PValue AluFunc_center(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	auto bigLength = pBigStr->length();
-	ALUInt len = pLength->getInt();
-	if (len==0) return mkValue2("",0);
-	if (len < 0) len = len + bigLength + 1;
-	if (size_t(len) > bigLength) {
-		size_t smallHalf = (len-bigLength) / 2;
-		size_t bigHalf = (len-bigLength) - smallHalf;
-		return mkValue(std::string(smallHalf, PAD_CHAR)
-				+ *pBigStr
-				+ std::string(bigHalf, PAD_CHAR));
-	}
-	return AluFunc_substring_do(pBigStr, (bigLength - len) / 2 + 1, len);
+	return AluFunc_align(pBigString, pLength, strAlign::center);
 }
 
 PValue AluFunc_centre(PValue pBigString, PValue pLength)
 {
 	return AluFunc_center(pBigString, pLength);
+}
+
+// The 1-based position of needle in haystack, searching from the 0-based
+// offset from, or backwards from the end. Zero if not found.
+template <class S>
+static ALUInt find_do(const S& haystack, const S& needle, size_t from, bool bLast)
+{
+	size_t pos = bLast ? haystack.rfind(needle) : haystack.find(needle, from);
+	return (S::npos == pos) ? 0 : ALUInt(pos+1);
+}
+
+static ALUInt strFind(const std::string& haystack, const std::string& needle, size_t from = 0, bool bLast = false)
+{
+	if (g_bSupportUTF8 && byCodePoints({&haystack, &needle})) {
+		return find_do(utf8::toCodePoints(haystack), utf8::toCodePoints(needle), from, bLast);
+	}
+	return find_do(haystack, needle, from, bLast);
 }
 
 PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
@@ -778,12 +854,21 @@ PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
 	ASSERT_ARG_OR_RECORD(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	size_t pos = pHaystack->find(*pNeedle);
-	if (std::string::npos == pos) {
-		return mkValue(ALUInt(0));
-	} else {
-		return mkValue(ALUInt(pos+1));
+	return mkValue(strFind(*pHaystack, *pNeedle));
+}
+
+template <class S>
+static S splus_do(const S& haystack, const S& needle, ALUInt offset, size_t count)
+{
+	size_t pos = haystack.find(needle);
+	if (S::npos == pos) {
+		return S();   // TBD - fail instead?
 	}
+	ALUInt start = ALUInt(pos) + offset;
+	if (start < 0 || start >= ALUInt(haystack.length())) {
+		return S();
+	}
+	return haystack.substr(size_t(start), count);
 }
 
 PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
@@ -793,25 +878,13 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 	size_t count = _pCount ? _pCount->getInt() : 1;
 	
 	std::string* pHaystack = g_pStateQueryAgent->currRecord().get();
-	
-	size_t pos = pHaystack->find(_pNeedle->getStr());
-	if (std::string::npos == pos) {
-		return mkValue("");   // TBD - fail instead?
-	}
-	if ((ALUInt(pos) + _pOffset->getInt()) < 0) {
-		return mkValue("");
-	}
-	if ((ALUInt(pos) + _pOffset->getInt()) >= ALUInt(pHaystack->length())) {
-		return mkValue("");
-	}
-	
+	std::string* pNeedle = _pNeedle->getStrPtr();
 	ALUInt offset = _pOffset->getInt();
-	char* resultStart = (char*)(pHaystack->c_str()) + size_t(ALUInt(pos) + offset);
-	if (size_t(ALUInt(pos) + offset + ALUInt(count)) > pHaystack->length()) {
-		count = size_t(pHaystack->length() - pos - offset); 
+
+	if (g_bSupportUTF8 && byCodePoints({pHaystack, pNeedle})) {
+		return mkValue(utf8::fromCodePoints(splus_do(utf8::toCodePoints(*pHaystack), utf8::toCodePoints(*pNeedle), offset, count)));
 	}
-		
-	return mkValue2(resultStart, int(count));
+	return mkValue(splus_do(*pHaystack, *pNeedle, offset, count));
 }
 
 PValue AluFunc_wplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
@@ -894,12 +967,7 @@ PValue AluFunc_lastpos(PValue _pNeedle, PValue _pHaystack)
 	ASSERT_ARG_OR_RECORD(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	size_t pos = pHaystack->rfind(*pNeedle);
-	if (std::string::npos == pos) {
-		return mkValue(ALUInt(0));
-	} else {
-		return mkValue(ALUInt(pos+1));
-	}
+	return mkValue(strFind(*pHaystack, *pNeedle, 0, true));
 }
 
 PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, PValue _pNeedle3, PValue _pNeedle4)
@@ -1015,7 +1083,8 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 	}
 
 	if (len > SZLL) len = SZLL;
-	while (size_t(len) > hex.length()) len--;
+	ALUInt hexLen = ALUInt(strLength(hex));
+	if (len > hexLen) len = hexLen;
 
 	if (hex.length()==0) return mkValue(ALUInt(0));
 
@@ -1023,9 +1092,9 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 
 	auto firstDigit = hex[0];
 	if (firstDigit >= '0' && firstDigit <= '7') {
-		hex = zeropad.substr(0,(SZLL-len)) + hex.substr(0,len);
+		hex = zeropad.substr(0,(SZLL-len)) + strSubstr(hex,0,len);
 	} else {
-		hex = ffffpad.substr(0,(SZLL-len)) + hex.substr(0,len);
+		hex = ffffpad.substr(0,(SZLL-len)) + strSubstr(hex,0,len);
 	}
 
 	long long int value;
@@ -1919,7 +1988,7 @@ PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 	}
 
 	std::string sBig = pInformation->getStr();
-	std::string sLittle = pLen ? pInfo->getStr().substr(0,len) : pInfo->getStr();
+	std::string sLittle = pLen ? strSubstr(pInfo->getStr(), 0, size_t(len)) : pInfo->getStr();
 
 #if CPP_STD_LEVEL >= 20
 	return mkValue(ALUInt(sBig.starts_with(sLittle)));
@@ -2003,35 +2072,40 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 	return pRet;
 }
 
-PValue AluFunc_compare_do(PValue pS1, PValue pS2, char pad)
+template <class S>
+static ALUInt compare_do(const S& s1, const S& s2, typename S::value_type pad)
 {
-	auto s1 = pS1->getStr();
-	auto s2 = pS2->getStr();
-	if (s1 == s2) {
-		return mkValue(ALUInt(0));
-	}
 	auto s1Len = s1.length();
 	auto s2Len = s2.length();
 
 	auto maxLen = std::max(s1Len, s2Len);
 
 	for (size_t l = 0 ; l < maxLen ; l++) {
-		char c1 = (l < s1Len) ? s1[l] : pad;
-		char c2 = (l < s2Len) ? s2[l] : pad;
+		auto c1 = (l < s1Len) ? s1[l] : pad;
+		auto c2 = (l < s2Len) ? s2[l] : pad;
 
 		if (c1 != c2) {
-			return mkValue(ALUInt(l)+1);
+			return ALUInt(l)+1;
 		}
 	}
 
-	if (s1Len==s2Len) {
-		std::string err = "compare/comparep: different character was not found; s1=<"
-				+ s1 + ">; s2=>" + s2 + ">";
-		MYTHROW(err);
-	}
+	MYASSERT_WITH_MSG(s1Len!=s2Len, "compare/comparep: different character was not found");
 
 	// The padding made them equal
-	return mkValue(ALUInt(0));
+	return 0;
+}
+
+static PValue AluFunc_compare_do(PValue pS1, PValue pS2, const std::string& pad)
+{
+	auto s1 = pS1->getStr();
+	auto s2 = pS2->getStr();
+	if (s1 == s2) {
+		return mkValue(ALUInt(0));
+	}
+	if (g_bSupportUTF8 && byCodePoints({&s1, &s2, &pad})) {
+		return mkValue(compare_do(utf8::toCodePoints(s1), utf8::toCodePoints(s2), utf8::toCodePoints(pad)[0]));
+	}
+	return mkValue(compare_do(s1, s2, pad[0]));
 }
 
 PValue AluFunc_compare(PValue pS1, PValue pS2, PValue pPad)
@@ -2039,11 +2113,11 @@ PValue AluFunc_compare(PValue pS1, PValue pS2, PValue pPad)
 	ASSERT_NOT_ELIDED(pS1,1,s1);
 	ASSERT_NOT_ELIDED(pS2,2,s2);
 	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (sPad.length() != 1) {
+	if (!isOneChar(sPad)) {
 		std::string err = "compare: Pad argument should be 1 char. Got <" + sPad + ">";
 		MYTHROW(err);
 	}
-	return AluFunc_compare_do(pS1, pS2, sPad[0]);
+	return AluFunc_compare_do(pS1, pS2, sPad);
 }
 
 PValue AluFunc_copies(PValue pString, PValue pTimes)
@@ -2067,27 +2141,36 @@ PValue AluFunc_copies(PValue pString, PValue pTimes)
 	return mkValue(res);
 }
 
+template <class S>
+static S delstr_do(const S& theString, ALUInt start, ALUInt length)
+{
+	if (start < 1) start = 1;
+
+	// If start is after end of the string, we return the whole string
+	if (size_t(start) > theString.length()) return theString;
+
+	S res = theString.substr(0,start-1);
+
+	// zero is a special value meaning delete to the end. If the length is greater
+	// than the remainder, also delete to the end.
+	if (0>=length || size_t(length+start) > theString.length()) return res;
+
+	res += theString.substr(start+length-1);
+	return res;
+}
+
 PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pStart,2,start);
 	auto theString = pString->getStr();
 	auto start = pStart->getInt();
-
-	if (start < 1) start = 1;
-
-	// If start is after end of the string, we return the whole string
-	if (size_t(start) > theString.length()) return mkValue(theString);
-
-	std::string res = theString.substr(0,start-1);
-
 	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
-	// zero is a special value meaning delete to the end. If the length is greater
-	// than the remainder, also delete to the end.
-	if (0>=length || size_t(length+start) > theString.length()) return mkValue(res);
 
-	res += theString.substr(start+length-1);
-	return mkValue(res);
+	if (g_bSupportUTF8 && byCodePoints({&theString})) {
+		return mkValue(utf8::fromCodePoints(delstr_do(utf8::toCodePoints(theString), start, length)));
+	}
+	return mkValue(delstr_do(theString, start, length));
 }
 
 PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
@@ -2250,17 +2333,13 @@ PValue AluFunc_index(PValue _pHaystack, PValue _pNeedle, PValue _pStart)
 
 	if (start < 1) start = 1;
 
-	size_t pos = pHaystack->find(*pNeedle, (start-1));
-	if (std::string::npos == pos) {
-		return mkValue(ALUInt(0));
-	} else {
-		return mkValue(ALUInt(pos+1));
-	}
+	return mkValue(strFind(*pHaystack, *pNeedle, size_t(start-1)));
 }
 
-static PValue insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
+template <class S>
+static S insert_do(const S& str, const S& tgt, size_t pos, size_t len, typename S::value_type pad)
 {
-	std::string paddedStr;
+	S paddedStr;
 
 	if (0==len) {
 		paddedStr = str;
@@ -2273,14 +2352,14 @@ static PValue insert_do(std::string& str, std::string& tgt, size_t pos, size_t l
 		}
 	}
 
-	std::string ret;
+	S ret;
 	if (pos > 0) ret = tgt.substr(0,pos);
 
 	ret += paddedStr;
 
 	if (pos < tgt.length()) ret += tgt.substr(pos);
 
-	return mkValue(ret);
+	return ret;
 }
 
 PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue pLength, PValue pPad)
@@ -2300,20 +2379,24 @@ PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue p
 		MYTHROW(err);
 	}
 	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (1 != sPad.length()) {
+	if (!isOneChar(sPad)) {
 		std::string err = "insert: Invalid pad argument: <" + sPad + ">";
 		MYTHROW(err);
 	}
 
-	return insert_do(theString, theTarget, position, length, sPad[0]);
+	if (g_bSupportUTF8 && byCodePoints({&theString, &theTarget, &sPad})) {
+		return mkValue(utf8::fromCodePoints(insert_do(utf8::toCodePoints(theString), utf8::toCodePoints(theTarget),
+				size_t(position), size_t(length), utf8::toCodePoints(sPad)[0])));
+	}
+	return mkValue(insert_do(theString, theTarget, size_t(position), size_t(length), sPad[0]));
 }
 
-static PValue justify_do(std::string& str, size_t len, char pad)
+static PValue justify_do(std::string& str, size_t len, const std::string& pad)
 {
 	auto wordVector = breakIntoWords(str);
 	int numOfSpaces = int(len);
 	for (const auto & word : wordVector) {
-		numOfSpaces -= int(word.length());
+		numOfSpaces -= int(strLength(word));
 	}
 
 	if (numOfSpaces < 0) numOfSpaces = 0;
@@ -2330,8 +2413,8 @@ static PValue justify_do(std::string& str, size_t len, char pad)
 		}
 	}
 
-	if (ret.size() > len) ret = ret.substr(0,len);
-	MYASSERT(ret.size() == len);
+	if (strLength(ret) > len) ret = strSubstr(ret,0,len);
+	MYASSERT(strLength(ret) == len);
 
 	return mkValue(ret);
 }
@@ -2347,12 +2430,38 @@ PValue AluFunc_justify(PValue pStr, PValue pLen, PValue pPad)
 		MYTHROW(err);
 	}
 	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (1 != sPad.length()) {
+	if (!isOneChar(sPad)) {
 		std::string err = "justify: Invalid pad argument: <" + sPad + ">";
 		MYTHROW(err);
 	}
 
-	return justify_do(str,size_t(len), sPad[0]);
+	return justify_do(str,size_t(len), sPad);
+}
+
+template <class S>
+static S overlay_do(S str1, S str2, ALUInt start, ALUInt length, typename S::value_type pad)
+{
+	// str2 shall serve as return value
+	// first pad if needed to reach start
+	while (str2.length() < (size_t(start)-1)) {
+		str2 += pad;
+	}
+
+	// now prepare the overwrite string -- re-use str1
+	if (str1.length() > size_t(length) && length>0) {
+		str1 = str1.substr(0,length);
+	}
+	while (str1.length() < size_t(length)) {
+		str1 += pad;
+	}
+
+	S ret = str2.substr(0,start-1);
+	ret += str1;
+	if ((str1.length() + start - 1) < str2.length()) {
+		ret += str2.substr(str1.length() + start - 1);
+	}
+
+	return ret;
 }
 
 PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue pLength, PValue pPad)
@@ -2375,34 +2484,16 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 		std::string err = "overlay: length argument should be positive. Got: " + std::to_string(length);
 		MYTHROW(err);
 	}
-	if (length>0 && padStr.length()!=1) {
+	if (length>0 && !isOneChar(padStr)) {
 		std::string err = "overlay: Invalid pad argument: <" + padStr + ">";
 		MYTHROW(err);
 	}
 
-	char pad = padStr[0];
-
-	// str2 shall serve as return value
-	// first pad if needed to reach start
-	while (str2.length() < (size_t(start)-1)) {
-		str2 += pad;
+	if (g_bSupportUTF8 && byCodePoints({&str1, &str2, &padStr})) {
+		return mkValue(utf8::fromCodePoints(overlay_do(utf8::toCodePoints(str1), utf8::toCodePoints(str2),
+				start, length, utf8::toCodePoints(padStr)[0])));
 	}
-
-	// now prepare the overwrite string -- re-use str1
-	if (str1.length() > size_t(length) && length>0) {
-		str1 = str1.substr(0,length);
-	}
-	while (str1.length() < size_t(length)) {
-		str1 += pad;
-	}
-
-	std::string ret = str2.substr(0,start-1);
-	ret += str1;
-	if ((str1.length() + start - 1) < str2.length()) {
-		ret += str2.substr(str1.length() + start - 1);
-	}
-
-	return mkValue(ret);
+	return mkValue(overlay_do(str1, str2, start, length, padStr[0]));
 }
 
 PValue AluFunc_reverse(PValue pStr)
@@ -2446,11 +2537,11 @@ PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 	ASSERT_NOT_ELIDED(pStr,1,string);
 	auto wordVector = breakIntoWords(pStr->getStr());
 	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (sPad.length() != 1) {
+	if (!isOneChar(sPad)) {
 		std::string err = "space: Pad argument should be 1 char. Got <" + sPad + ">";
 		MYTHROW(err);
 	}
-	char pad = sPad[0];
+	const std::string& pad = sPad;
 	ALUInt len = ARG_INT_WITH_DEFAULT(pLength, 1);
 	if (len < 0 || len > 1000) {
 		std::string err = "space: Invalid length argument: <" + pLength->getStr() + ">";
@@ -2588,6 +2679,21 @@ PValue AluFunc_translate(PValue pString, PValue pTableOut, PValue pTableIn, PVal
 	return mkValue(str);
 }
 
+// The position of the first character at or after start that is (option 'M')
+// or is not (option 'N') in reference, or zero if there is none
+template <class S>
+static ALUInt verify_do(const S& str, const S& reference, char option, size_t start)
+{
+	for (size_t i=start-1 ; i < str.length() ; i++) {
+		bool bMatch = (S::npos != reference.find(str[i]));
+		if ((option=='M') == bMatch) {
+			return ALUInt(i + 1);
+		}
+	}
+
+	return 0;
+}
+
 PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue pStart)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
@@ -2612,21 +2718,10 @@ PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue 
 		MYTHROW(err);
 	}
 
-	ALUInt ret = 0;
-	bool bFound = false;
-	for (size_t i=start-1 ; !bFound && i < str.length() ; i++) {
-		size_t cntMatch=0;
-		for (size_t j=0 ; !cntMatch && j < reference.length() ; j++) {
-			if (str[i] == reference[j]) ++cntMatch;
-		}
-
-		if ((option=='M' && cntMatch>0) || (option=='N' && cntMatch==0)) {
-			bFound = true;
-			ret = i + 1;
-		}
+	if (g_bSupportUTF8 && byCodePoints({&str, &reference})) {
+		return mkValue(verify_do(utf8::toCodePoints(str), utf8::toCodePoints(reference), option, start));
 	}
-
-	return mkValue(ret);
+	return mkValue(verify_do(str, reference, option, start));
 }
 
 PValue AluFunc_wordindex(PValue pString, PValue pIdx)
@@ -2645,7 +2740,8 @@ PValue AluFunc_wordindex(PValue pString, PValue pIdx)
 
 	ALUInt ret = 0;
 	if (size_t(idx-1) < wordvec.size()) {
-		ret = wordvec[idx-1] + 1;
+		size_t offset = wordvec[idx-1];
+		ret = ALUInt((g_bSupportUTF8 && byCodePoints({&str})) ? utf8::charCount(str.data(), offset) : offset) + 1;
 	}
 
 	return mkValue(ret);
@@ -2667,7 +2763,7 @@ PValue AluFunc_wordlength(PValue pString, PValue pIdx)
 
 	ALUInt ret = 0;
 	if (size_t(idx-1) < wordvec.size()) {
-		ret = wordvec[idx-1].length();
+		ret = strLength(wordvec[idx-1]);
 	}
 
 	return mkValue(ret);

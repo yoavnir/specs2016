@@ -211,6 +211,7 @@
       <item>bitxor</item>
       <item>break</item>
       <item>bswap</item>
+      <item>bytelength</item>
       <item>c2d</item>
       <item>c2f</item>
       <item>c2u</item>

@@ -51,6 +51,9 @@ std::u32string toCodePoints(const std::string& s);
 // byte, so that toCodePoints followed by encoding round-trips any input.
 void append(std::string& s, char32_t cp);
 
+// Encode a sequence of code points; the inverse of toCodePoints.
+std::string fromCodePoints(const std::u32string& cps);
+
 // Is cp one of the code points in set?
 inline bool contains(const std::u32string& set, char32_t cp)
 {
