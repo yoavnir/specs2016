@@ -202,94 +202,6 @@ Hello, world
 
 `1-*` means "characters 1 to the end of the record." `1` means "place the result at output column 1." That is a complete, minimal spec.
 
-## ASCII Mode and UTF8 Mode {#utf8-mode}
-
-**specs** runs in one of two modes: **ASCII mode**, which is the default, or
-**UTF8 mode**, which is experimental. The mode determines what **specs** means
-by a *character*.
-
-- In ASCII mode, every byte counts as one character. The name does not mean
-  that bytes above 127 are rejected; **specs** simply handles each byte
-  separately.
-- In UTF8 mode, input, output and specifications are all expected to use
-  UTF-8. A character is one Unicode code point, which may occupy between one
-  and four bytes.
-
-The modes cannot be mixed: input, output and specifications must all use the
-same mode. Plain ASCII text behaves identically in both modes. The difference
-appears with non-ASCII text. For example, the Hebrew word *shalom*, encoded as
-U+05E9 U+05DC U+05D5 U+05DD, contains four Unicode code points but occupies
-eight bytes, so it has length 4 in UTF8 mode and length 8 in ASCII mode.
-
-In UTF8 mode:
-
-- Character ranges (`1-5`, `-3;-1`), word and field positions, output
-  positions and widths, alignment, truncation and ellipsis count Unicode code
-  points rather than bytes.
-- `WORDSEPARATOR` and `FIELDSEPARATOR` accept non-ASCII characters, and the
-  default word separator recognizes Unicode whitespace such as the no-break
-  space (U+00A0) and ideographic space (U+3000).
-- `PAD` accepts any single Unicode code point, such as `pad ·`.
-- String functions introduced in [Chapter 8](#chap8), such as `length()`,
-  `center()` and `insert()`, use code-point lengths and positions.
-  `bytelength()` is available when the byte count is needed.
-- Python functions can receive and return non-ASCII strings (see
-  **[Chapter 14](#chap14)**).
-- A byte that is not part of a well-formed UTF-8 sequence counts as one
-  character and is passed through unchanged.
-
-### Selecting the Mode
-
-The mode is selected in the following order, from highest precedence to
-lowest:
-
-1. A `+UTF8 on|off` or `+UNICODE on|off` directive in a spec file (see
-   **[Directives](#directives)** in Chapter 5).
-2. The `utf8` configured literal, set in the configuration file or with
-   `-s`/`--set` (see **[Chapter 4](#chap4)**). `1` selects UTF8 mode and `0`
-   selects ASCII mode; any other value is an error.
-3. The `SPECS_UTF8` environment variable. `1` selects UTF8 mode and `0`
-   selects ASCII mode. An empty value is ignored; any other value produces a
-   warning and selects ASCII mode.
-4. If none of these is set, **specs** uses ASCII mode.
-
-For a single invocation, use `-s utf8=1` or `-s utf8=0`. To make UTF8 mode
-your usual interactive default, put this in your shell profile, such as
-`~/.bashrc` or `~/.zshrc`:
-
-```
-export SPECS_UTF8=1
-```
-
-The `utf8` entry in the configuration file has the same effect and also
-applies to programs that do not read your shell profile, such as `cron` jobs.
-A command-line `-s utf8=0` can still switch one invocation back to ASCII mode,
-while a directive in a spec file overrides every other setting.
-
-### Code Points and Visible Characters
-
-A Unicode code point is not always the same thing as one character on the
-screen. For example, the grapheme `é` has two valid encodings:
-
-| Appearance | Encoding | Code points | `length()` | `bytelength()` |
-|------------|----------|-------------|------------|----------------|
-| `é` | U+00E9 (precomposed) | 1 | 1 | 2 |
-| `é` | U+0065 U+0301 (e + combining acute accent) | 2 | 2 | 3 |
-
-The two strings normally look identical, but the second currently has length
-2 in UTF8 mode. The `length()` and `bytelength()` functions are introduced in
-Chapter 8; the table uses them only to illustrate the two ways of counting.
-Do not rely on the distinction between these encodings: this behavior is not
-stable, and a future version of **specs** may count non-precomposed graphemes
-differently.
-
-Widths also count code points, not screen columns. Wide characters such as
-日 take two columns on most terminals, so columns of CJK text may not line up.
-
-UTF8 mode remains experimental because not every feature is UTF-8 aware.
-Features such as regular expressions, `reverse()`, and the `UCASE`/`LCASE`
-conversions still treat strings as bytes.
-
 ## Spec Units and Data Fields {#datafield}
 
 A **data field** is the workhorse spec unit. Its full form is:
@@ -486,6 +398,94 @@ Output:
 ```
 2024-01-15  ERROR       192.168.1.100
 ```
+
+## ASCII Mode and UTF8 Mode {#utf8-mode}
+
+**specs** runs in one of two modes: **ASCII mode**, which is the default, or
+**UTF8 mode**, which is experimental. The mode determines what **specs** means
+by a *character*.
+
+- In ASCII mode, every byte counts as one character. The name does not mean
+  that bytes above 127 are rejected; **specs** simply handles each byte
+  separately.
+- In UTF8 mode, input, output and specifications are all expected to use
+  UTF-8. A character is one Unicode code point, which may occupy between one
+  and four bytes.
+
+The modes cannot be mixed: input, output and specifications must all use the
+same mode. Plain ASCII text behaves identically in both modes. The difference
+appears with non-ASCII text. For example, the Hebrew word *shalom*, encoded as
+U+05E9 U+05DC U+05D5 U+05DD, contains four Unicode code points but occupies
+eight bytes, so it has length 4 in UTF8 mode and length 8 in ASCII mode.
+
+In UTF8 mode:
+
+- Character ranges (`1-5`, `-3;-1`), word and field positions, output
+  positions and widths, alignment, truncation and ellipsis count Unicode code
+  points rather than bytes.
+- `WORDSEPARATOR` and `FIELDSEPARATOR` accept non-ASCII characters, and the
+  default word separator recognizes Unicode whitespace such as the no-break
+  space (U+00A0) and ideographic space (U+3000).
+- `PAD` accepts any single Unicode code point, such as `pad ·`.
+- String functions introduced in [Chapter 8](#chap8), such as `length()`,
+  `center()` and `insert()`, use code-point lengths and positions.
+  `bytelength()` is available when the byte count is needed.
+- Python functions can receive and return non-ASCII strings (see
+  **[Chapter 14](#chap14)**).
+- A byte that is not part of a well-formed UTF-8 sequence counts as one
+  character and is passed through unchanged.
+
+### Selecting the Mode
+
+The mode is selected in the following order, from highest precedence to
+lowest:
+
+1. A `+UTF8 on|off` or `+UNICODE on|off` directive in a spec file (see
+   **[Directives](#directives)** in Chapter 5).
+2. The `utf8` configured literal, set in the configuration file or with
+   `-s`/`--set` (see **[Chapter 4](#chap4)**). `1` selects UTF8 mode and `0`
+   selects ASCII mode; any other value is an error.
+3. The `SPECS_UTF8` environment variable. `1` selects UTF8 mode and `0`
+   selects ASCII mode. An empty value is ignored; any other value produces a
+   warning and selects ASCII mode.
+4. If none of these is set, **specs** uses ASCII mode.
+
+For a single invocation, use `-s utf8=1` or `-s utf8=0`. To make UTF8 mode
+your usual interactive default, put this in your shell profile, such as
+`~/.bashrc` or `~/.zshrc`:
+
+```
+export SPECS_UTF8=1
+```
+
+The `utf8` entry in the configuration file has the same effect and also
+applies to programs that do not read your shell profile, such as `cron` jobs.
+A command-line `-s utf8=0` can still switch one invocation back to ASCII mode,
+while a directive in a spec file overrides every other setting.
+
+### Code Points and Visible Characters
+
+A Unicode code point is not always the same thing as one character on the
+screen. For example, the grapheme `é` has two valid encodings:
+
+| Appearance | Encoding | Code points | `length()` | `bytelength()` |
+|------------|----------|-------------|------------|----------------|
+| `é` | U+00E9 (precomposed) | 1 | 1 | 2 |
+| `é` | U+0065 U+0301 (e + combining acute accent) | 2 | 2 | 3 |
+
+The two strings normally look identical, but the second currently has length
+2 in UTF8 mode. The `length()` and `bytelength()` functions are introduced in
+Chapter 8; the table uses them only to illustrate the two ways of counting.
+Do not rely on the distinction between these encodings: this behavior is not
+stable, and a future version of **specs** may count non-precomposed graphemes
+differently.
+
+Widths also count code points, not screen columns. Wide characters such as
+日 take two columns on most terminals, so columns of CJK text may not line up.
+
+UTF8 mode remains experimental because not every feature is UTF-8 aware.
+Features such as regular expressions, `reverse()`, and the `UCASE`/`LCASE`
+conversions still treat strings as bytes.
 
 ---
 
