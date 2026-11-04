@@ -801,8 +801,10 @@ Every **specs** you run then starts in UTF8 mode, and `-s utf8=0` still switches
 In UTF8 mode:
 
 - Character ranges (`1-5`, `-3;-1`), word and field positions, output positions and widths, alignment, truncation and ellipsis all count characters rather than bytes.
+- String functions that report or accept character lengths or positions — including `length()`, `wordlen()`, `fieldlength()`, `wordlength()`, `substr()`, `left()`, `right()`, `center()`, `centre()`, `x2d()`, `abbrev()`, `delstr()`, `insert()`, `justify()`, `overlay()`, `pos()`, `lastpos()`, `index()`, `compare()`, `verify()`, `wordindex()` and `splus()` — also count Unicode code points. `bytelength()` always counts bytes. The length arguments of `delword()` and `subword()` remain counts of words, and the length argument of `space()` remains a count of inserted pad characters.
 - `WORDSEPARATOR` and `FIELDSEPARATOR` accept non-ASCII characters, such as `fs ；`, and the default word separator includes the Unicode whitespace characters, such as the no-break space (U+00A0) and the ideographic space (U+3000).
 - `PAD` accepts any single character, such as `pad ·`.
+- Pad arguments to ALU string functions accept any single Unicode code point.
 - Python functions can return non-ASCII strings (see **[Chapter 14](#chap14)**).
 - A byte that is not part of a well-formed UTF-8 sequence counts as one character and is passed through unchanged.
 
@@ -810,10 +812,17 @@ In ASCII mode, **specs** counts bytes, as it always has. With ASCII data both mo
 
 Notes:
 
-- Characters are code points, not what the eye sees as one character: an accented letter written as a base letter plus a combining accent counts as two.
+- Characters currently mean Unicode code points, not what the eye sees as one character. For example, the grapheme `é` has two valid encodings:
+
+  | Appearance | Encoding | Code points | `length()` | `bytelength()` |
+  |------------|----------|-------------|------------|----------------|
+  | `é` | U+00E9 (precomposed) | 1 | 1 | 2 |
+  | `é` | U+0065 U+0301 (e + combining acute accent) | 2 | 2 | 3 |
+
+  The two strings normally look identical, but the second currently has length 2 in UTF8 mode. Do not rely on that distinction: this behavior is not stable, and a future version of **specs** may count non-precomposed graphemes differently.
 - Widths count characters, not screen columns. Wide characters such as 日 take two columns on most terminals, so columns of CJK text will not line up.
 
-UTF8 mode is experimental because not all features are UTF-8 aware yet. ALU functions such as `length()` and `substr()`, regular expressions and the `UCASE`/`LCASE` conversions still treat strings as bytes.
+UTF8 mode is experimental because not all features are UTF-8 aware yet. Features such as regular expressions, `reverse()`, and the `UCASE`/`LCASE` conversions still treat strings as bytes.
 
 ## Useful Personal Constants
 
@@ -2605,7 +2614,8 @@ Which arguments of a function may be omitted, and what their default values are,
 
 | Function | Description |
 |----------|-------------|
-| `length(s)` or `length(s)` | Length of string *s* |
+| `length(s)` | Length of string *s*: Unicode code points in UTF8 mode, bytes in ASCII mode |
+| `bytelength(s)` | Length of string *s* in bytes in either mode |
 | `left(s, n)` | Leftmost *n* characters of string *s* (space-padded if shorter) |
 | `right(s, n)` | Rightmost *n* characters of string *s* (space-padded if shorter) |
 | `center(s, n)` / `centre(s, n)` | Middle *n* characters of string *s* (space-padded if shorter) |

@@ -1334,6 +1334,13 @@ int main(int argc, char** argv)
 #define U_GO       "\xe8\xaa\x9e"      /* 語 U+8A9E */
 #define U_FW_SEMI  "\xef\xbc\x9b"      /* ； U+FF1B */
 #define U_GRIN     "\xf0\x9f\x98\x80"  /* 😀 U+1F600 */
+#define U_SHIN     "\xd7\xa9"           /* ש U+05E9 */
+#define U_LAMED    "\xd7\x9c"           /* ל U+05DC */
+#define U_VAV      "\xd7\x95"           /* ו U+05D5 */
+#define U_FINALMEM "\xd7\x9d"           /* ם U+05DD */
+#define U_AYIN     "\xd7\xa2"           /* ע U+05E2 */
+#define U_SHALOM   U_SHIN U_LAMED U_VAV U_FINALMEM
+#define U_OLAM     U_AYIN U_VAV U_LAMED U_FINALMEM
 
 	// The utf8 helpers
 	VERIFYCMD(MYASSERT(utf8::charCount(std::string("h" U_E_ACUTE "llo"))==5), "");  // TEST #315
@@ -1375,6 +1382,41 @@ int main(int argc, char** argv)
 	VERIFY2("1-3 1", "h" U_E_ACUTE "llo", "h" U_E_ACUTE);  // TEST #343
 	VERIFY2("pad " U_MIDDOT " 1 1", "x", "Bad pad character <" U_MIDDOT ">  with length 2 at index 2. Must be single character.");  // TEST #344
 	VERIFY2("fs " U_FW_SEMI " f2 1", "a" U_FW_SEMI "b", "");  // TEST #345
+
+	// ALU string lengths and positions are code points in UTF8 mode
+	VERIFY2("print 'length(@@)' 1", U_SHALOM, "8");  // TEST #346
+
+	g_bSupportUTF8 = true;
+
+	VERIFY2("print 'length(@@)' 1", U_SHALOM, "4");  // TEST #347
+	VERIFY2("print 'bytelength(@@)' 1", U_SHALOM, "8");  // TEST #348
+	VERIFY2("print 'length(@@)' 1 print 'wordlen(1)' nw print 'fieldlength(1)' nw print 'wordlength(@@,2)' nw",
+			U_SHALOM " " U_OLAM, "9 4 9 4");  // TEST #349
+	VERIFY2("print 'substr(@@,2,2)' 1 print 'left(@@,2)' nw print 'right(@@,2)' nw print 'center(@@,2)' nw",
+			U_SHALOM, U_LAMED U_VAV " " U_SHIN U_LAMED " " U_VAV U_FINALMEM " " U_LAMED U_VAV);  // TEST #350
+	VERIFY2("print 'pos(\"" U_LAMED "\",@@)' 1 print 'lastpos(\"" U_LAMED "\",@@)' nw "
+			"print 'index(@@,\"" U_LAMED "\",3)' nw print 'wordindex(@@,2)' nw",
+			U_SHALOM " " U_OLAM, "2 8 8 6");  // TEST #351
+	VERIFY2("print 'abbrev(@@,\"" U_SHIN U_LAMED "x\",2)' 1 print 'delstr(@@,2,2)' nw",
+			U_SHALOM, "1 " U_SHIN U_FINALMEM);  // TEST #352
+	VERIFY2("print 'insert(word(1),word(2),1,2)' 1 print 'overlay(word(1),word(2),2,2)' nw",
+			U_SHALOM " " U_OLAM, U_AYIN U_SHIN U_LAMED U_VAV U_LAMED U_FINALMEM " "
+			U_AYIN U_SHIN U_LAMED U_FINALMEM);  // TEST #353
+	VERIFY2("print 'justify(@@,12,\"" U_MIDDOT "\")' 1 print 'space(@@,2,\"" U_MIDDOT "\")' nw",
+			U_SHALOM " " U_OLAM, U_SHALOM U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_OLAM " "
+			U_SHALOM U_MIDDOT U_MIDDOT U_OLAM);  // TEST #354
+	VERIFY2("print 'compare(\"a" U_E_ACUTE "b\",\"a" U_E_ACUTE "c\")' 1 "
+			"print 'verify(\"a" U_E_ACUTE "b\",\"" U_E_ACUTE "\",\"M\")' nw",
+			"x", "3 2");  // TEST #355
+	VERIFY2("print 'delword(@@,1,1)' 1 print 'subword(@@,2,1)' nw",
+			U_SHALOM " " U_OLAM, U_OLAM " " U_OLAM);  // TEST #356
+	VERIFY2("print 'splus(\"" U_LAMED "\",1,2)' 1",
+			U_SHALOM, U_VAV U_FINALMEM);  // TEST #357
+	VERIFY2("print 'insert(\"" U_E_ACUTE "\",\"a\",3,3,\"" U_MIDDOT "\")' 1 "
+			"print 'overlay(\"" U_E_ACUTE "\",\"a\",3,3,\"" U_MIDDOT "\")' nw",
+			"x", "a" U_E_ACUTE U_MIDDOT U_MIDDOT " a" U_MIDDOT U_E_ACUTE U_MIDDOT U_MIDDOT);  // TEST #358
+
+	g_bSupportUTF8 = false;
 
 	if (errorCount) {
 		if (onlyTest == 0) {

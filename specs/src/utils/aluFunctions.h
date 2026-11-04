@@ -60,7 +60,9 @@
 	X(outrec,         0, ALUFUNC_REGULAR,     false,  \
 			"() - Returns the output record built so far in this cycle.","Equivalent to the @> pseudo-variable. The output record is discarded by the SCRATCH spec unit\nand written out at the end of the cycle or at a WRITE.") \
 	X(length,         1, ALUFUNC_REGULAR,     false,  \
-			"(s) - Returns the length of the string s","") \
+			"(s) - Returns the length of the string s","In UTF8 mode the length is in characters (Unicode code points); otherwise it is in bytes.") \
+	X(bytelength,     1, ALUFUNC_REGULAR,     false,  \
+			"(s) - Returns the length of the string s in bytes","Unlike length(), this counts bytes even in UTF8 mode.") \
 	X(wordcount,      2, ALUFUNC_REGULAR,     false,  \
 			"(s,p) - Returns the number of words in the input string 's' or in the current record.","Result depends on the current word separator, or the one given in 'p'.") \
 	X(wordstart,      1, ALUFUNC_REGULAR,      true,  \
