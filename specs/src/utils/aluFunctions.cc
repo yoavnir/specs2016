@@ -443,7 +443,9 @@ PValue AluFunc_tobin(PValue op)
 PValue AluFunc_length(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
-	return mkValue(ALUInt(strLength(op->getStr())));
+	if (!g_bSupportUTF8)
+		return mkValue(ALUInt(op->getStr().length()));
+	return mkValue(ALUInt(utf8::charCount(op->getStr())));
 }
 
 PValue AluFunc_bytelength(PValue op)
