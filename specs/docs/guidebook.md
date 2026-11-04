@@ -562,25 +562,6 @@ Treat only the space character as a word separator, rather than all locale-defin
 
 Disable the while-guard, which normally causes specs to abort after 5000 iterations of a `WHILE` loop (a safety net against infinite loops). Use this when you intentionally have a long-running loop. The default limit of 5000 can also be changed via the `while-guard-limit` key in the configuration file (**[Chapter 4](#chap4)**).
 
-### `--EXP-UTF8`
-
-**Experimental** — treat the input records, the output records and the literals in the specification as UTF-8 text. A *character* is then a Unicode code point, however many bytes it takes to encode. When this flag is set:
-
-- Character ranges (`1-5`, `-3;-1`), word and field positions, output positions and widths, alignment, truncation and ellipsis all count characters rather than bytes.
-- `WORDSEPARATOR` and `FIELDSEPARATOR` accept non-ASCII characters, such as `fs ；`, and the default word separator includes the Unicode whitespace characters, such as the no-break space (U+00A0) and the ideographic space (U+3000).
-- `PAD` accepts any single character, such as `pad ·`.
-- Python functions can return non-ASCII strings (see **[Chapter 14](#chap14)**).
-- A byte that is not part of a well-formed UTF-8 sequence counts as one character and is passed through unchanged.
-
-Without the flag, **specs** counts bytes, as it always has. With ASCII data both modes produce the same results.
-
-Notes:
-
-- Characters are code points, not what the eye sees as one character: an accented letter written as a base letter plus a combining accent counts as two.
-- Widths count characters, not screen columns. Wide characters such as 日 take two columns on most terminals, so columns of CJK text will not line up.
-
-This flag is experimental because not all features are UTF-8 aware yet. ALU functions such as `length()` and `substr()`, regular expressions and the `UCASE`/`LCASE` conversions still treat strings as bytes.
-
 ### `--debug-alu-comp`
 
 Print detailed information about the parsing and compilation of ALU expressions. Useful for diagnosing why an expression is being parsed differently than expected. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows how the expression is parsed into tokens both before and after its conversion to reverse polish notation (RPN). It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**. 
@@ -791,6 +772,48 @@ while-guard-limit: 100000
 ```
 
 This is equivalent to using `--no-while-guard` if you set it high enough, but safer because it still caps runaway loops. Use `--no-while-guard` only when you truly need unlimited iterations.
+
+### `utf8` {#utf8-mode}
+
+**Experimental** — selects between the two modes in which **specs** runs: **ASCII mode** (the default) and **UTF8 mode**. In UTF8 mode, the input records, the output records and the literals in the specification are all treated as UTF-8 text, and a *character* is a Unicode code point, however many bytes it takes to encode. The two modes cannot be mixed.
+
+```
+utf8: 1
+```
+
+The mode is decided as follows, from the highest precedence to the lowest:
+
+1. The `+UTF8` or `+UNICODE` directive in a spec file (see **[Directives](#directives)** in Chapter 5). `on` selects UTF8 mode and `off` selects ASCII mode.
+2. The `utf8` configured literal, set either in the configuration file or with `-s`/`--set`. `1` selects UTF8 mode and `0` selects ASCII mode. Any other value is an error, and **specs** exits without running.
+3. The `SPECS_UTF8` environment variable. `1` selects UTF8 mode and `0` selects ASCII mode. An empty value is treated as if the variable were not set. Any other value causes a warning on standard error, and **specs** runs in ASCII mode.
+4. If none of these is set, **specs** runs in ASCII mode.
+
+So, unless a spec file says otherwise, `specs -s utf8=1` always runs in UTF8 mode and `specs -s utf8=0` always runs in ASCII mode, whatever the environment says, while `specs -s utf8=2` exits with an error. To choose the mode for a single invocation, `-s utf8=1` is the simplest way.
+
+The environment variable is meant for making UTF8 mode your default. Set it in your shell's profile script, such as `~/.bashrc` or `~/.zshrc`:
+
+```
+export SPECS_UTF8=1
+```
+
+Every **specs** you run then starts in UTF8 mode, and `-s utf8=0` still switches a single invocation back to ASCII mode. The `utf8` entry in the configuration file has the same effect, but it also applies to programs and scripts that do not read your profile, such as `cron` jobs.
+
+In UTF8 mode:
+
+- Character ranges (`1-5`, `-3;-1`), word and field positions, output positions and widths, alignment, truncation and ellipsis all count characters rather than bytes.
+- `WORDSEPARATOR` and `FIELDSEPARATOR` accept non-ASCII characters, such as `fs ；`, and the default word separator includes the Unicode whitespace characters, such as the no-break space (U+00A0) and the ideographic space (U+3000).
+- `PAD` accepts any single character, such as `pad ·`.
+- Python functions can return non-ASCII strings (see **[Chapter 14](#chap14)**).
+- A byte that is not part of a well-formed UTF-8 sequence counts as one character and is passed through unchanged.
+
+In ASCII mode, **specs** counts bytes, as it always has. With ASCII data both modes produce the same results.
+
+Notes:
+
+- Characters are code points, not what the eye sees as one character: an accented letter written as a base letter plus a combining accent counts as two.
+- Widths count characters, not screen columns. Wide characters such as 日 take two columns on most terminals, so columns of CJK text will not line up.
+
+UTF8 mode is experimental because not all features are UTF-8 aware yet. ALU functions such as `length()` and `substr()`, regular expressions and the `UCASE`/`LCASE` conversions still treat strings as bytes.
 
 ## Useful Personal Constants
 
@@ -1020,6 +1043,17 @@ Combined with a spec, this makes a self-contained script:
    WORD 9  1
    WORD 5 NW
 ```
+
+### `+UTF8 on|off` / `+UNICODE on|off`
+
+Selects UTF8 mode (`on`) or ASCII mode (`off`) for this specification (see **[`utf8`](#utf8-mode)** in Chapter 4). The two names are equivalent, and the value is not case-sensitive. The directive overrides the `utf8` configured literal and the `SPECS_UTF8` environment variable, so a spec file written for UTF-8 data behaves the same for every user:
+
+```specs
++UTF8 on
+   1-10  1
+```
+
+Any value other than `on` or `off`, or a missing value, is an error.
 
 ## The `REQUIRES` Keyword
 
@@ -4345,9 +4379,9 @@ Use `NaN` or `nullstr` when you want specs to tolerate Python errors gracefully.
 
 ## Non-ASCII Strings in Python Functions
 
-Without `--EXP-UTF8`, a string returned from a Python function must be pure ASCII; a string containing any other character is returned as an empty string.
+In ASCII mode, a string returned from a Python function must be pure ASCII; a string containing any other character is returned as an empty string.
 
-With `--EXP-UTF8`, a Python function can return any string, which is encoded as UTF-8. String arguments are decoded from UTF-8, so `len()` and slicing in the function count characters, as **specs** does in this mode. Bytes that are not valid UTF-8 reach the function as lone surrogates (Python's `surrogateescape` handler) and are restored if returned unchanged.
+In UTF8 mode (see **[`utf8`](#utf8-mode)** in Chapter 4), a Python function can return any string, which is encoded as UTF-8. String arguments are decoded from UTF-8, so `len()` and slicing in the function count characters, as **specs** does in this mode. Bytes that are not valid UTF-8 reach the function as lone surrogates (Python's `surrogateescape` handler) and are restored if returned unchanged.
 
 ## Exactness in Python Functions
 
@@ -4871,7 +4905,6 @@ Do NOT use `--threaded` with:
 | `--no-while-guard` | | Disable while-guard (default limit: 5000) |
 | `--toASCII` | | Convert non-ASCII to period |
 | `--force-read-input` | | Read input even if unused |
-| `--EXP-UTF8` | | Experimental: count UTF-8 characters rather than bytes |
 | `--debug-alu-comp` | | Print ALU compile info (unless built `--no_alu_debug`) |
 | `--debug-alu-run` | | Print ALU eval info (unless built `--no_alu_debug`) |
 | `--debug-alu-file file` | `-d` | Redirect ALU debug output to a file |
@@ -4893,6 +4926,7 @@ These are keys that, when set in `~/.specs` (or via `-s`), change **specs** beha
 | `NO_WARN_REDEFINED_FID` | unset | Set to suppress the "Field Identifier redefined" warning |
 | `EmptyFrequencyMapMessage` | `""` | String returned by `fmap_dump()` for an empty frequency map |
 | `while-guard-limit` | `5000` | Maximum `WHILE` loop iterations before specs aborts |
+| `utf8` | `$SPECS_UTF8`, else `0` | Experimental: `1` for UTF8 mode (count UTF-8 characters rather than bytes), `0` for ASCII mode. Overridden by the `+UTF8`/`+UNICODE` directive |
 
 ## Input Record Formats (--recfm)
 

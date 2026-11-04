@@ -42,9 +42,9 @@ And you can `import` other python modules.  It's all available to you.  Just mak
 
 ## Non-ASCII Strings
 
-Without the `--EXP-UTF8` switch, a string returned from a Python function must be pure ASCII. A string containing any other character is returned to **specs** as an empty string.
+In ASCII mode (the default), a string returned from a Python function must be pure ASCII. A string containing any other character is returned to **specs** as an empty string.
 
-With `--EXP-UTF8`, string arguments are passed to the function decoded from UTF-8, and a returned string may contain any character; it is encoded back as UTF-8. Python's `len()` and slicing then count characters, as **specs** does in this mode. Bytes that are not valid UTF-8 reach the function as lone surrogates (Python's `surrogateescape` error handler), and are restored to the original bytes if the function returns them unchanged.
+In UTF8 mode (selected by setting the `utf8` configured literal or the `SPECS_UTF8` environment variable to `1`), string arguments are passed to the function decoded from UTF-8, and a returned string may contain any character; it is encoded back as UTF-8. Python's `len()` and slicing then count characters, as **specs** does in this mode. Bytes that are not valid UTF-8 reach the function as lone surrogates (Python's `surrogateescape` error handler), and are restored to the original bytes if the function returns them unchanged.
 
 ## Options
 

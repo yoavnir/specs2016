@@ -1319,7 +1319,7 @@ int main(int argc, char** argv)
 	VERIFY2("print 'round(5.42, x)' 1", "x", "Expression:round(5.42, x) - At run-out cycle, field identifier <x> used as argument to a non-statistical function");  // Test #313
 	VERIFY2("print 'round(5.42, hello)' 1", "x", "5");   // Test #314
 
-	// ---- UTF-8 support (--EXP-UTF8) ----
+	// ---- UTF-8 support (utf8 configured literal / SPECS_UTF8) ----
 	// The non-ASCII characters are spelled out as escapes so that the source
 	// is read the same way by every compiler.
 #define U_E_ACUTE  "\xc3\xa9"          /* é  U+00E9 */

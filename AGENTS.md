@@ -19,6 +19,7 @@
 `specs/utils/specs.xml` is a KDE-style syntax definition for specification files, used by Kate, KSyntaxHighlighting, skylighting and pandoc. It duplicates knowledge that lives in the sources, so it has to be kept in step with them:
 
 - When adding, removing or renaming a spec-unit keyword or one of its accepted abbreviations in `specs/src/cli/tokens.cc` (the `SIMPLETOKEN` / `SIMPLETOKENV` block, or the `NEXTWORD`/`NEXTFIELD`/`NEXT` block), update the matching keyword list in `specs/utils/specs.xml`. Every abbreviation the tokenizer accepts is listed explicitly there.
+- When adding, removing or renaming a `+` directive in `specs/src/utils/directives.cc`, update the directive rules (and their contexts) in `specs/utils/specs.xml`.
 - When changing `STRING_CONVERSIONS_LIST` or `PARAMETRIZED_CONVERSIONS_LIST` in `specs/src/processing/conversions.h`, update the `conversions` list in `specs/utils/specs.xml`.
 - The `alufunctions` list in `specs/utils/specs.xml` is kept sorted alphabetically.
 - After editing the file, check it with `xmllint --noout specs/utils/specs.xml`, and check the highlighting itself by rendering the sample specification `specs/utils/example.spec`:
@@ -56,6 +57,11 @@ Some attributes are close enough in colour to read as one, which is fine where t
 
 - When adding or changing an ALU function - those are the functions defined in `aluFunctions.h` and implemented in `aluFunctions.cc` - document it in `manpage`, in `specs/docs/alu_adv.md`, and in `specs/docs/guidebook.md`.  Add unit tests as necessary in `specs/src/test/ALUUnitTest.cc`.  Add the function name to the `alufunctions` list in `specs/utils/specs.xml`.
 - Always consider the exactness of the arguments to the ALU function and of the return value.
+
+## UTF8 Support
+
+- **specs** runs in either UTF8 mode, or ASCII mode. This is the terminology we will use in defining tasks and in documentation. 
+- The modes cannot be mixed. In UTF8 mode, all of input, output, and specifications are in UTF8. Outside, everything is treated as ASCII.
 
 ## Rolling Context Feature (Issue #106)
 

@@ -2089,6 +2089,22 @@ to contain a value such as "total 120" on Unix-like systems:
     +SET ex1 ls -l
 .IP "+IN" 3
 This directive followed by a command runs the command and uses its output as the input stream for the specification.
+.IP "+UTF8 or +UNICODE" 3
+This directive followed by
+.B on
+or
+.B off
+makes the specification run in UTF8 mode or in ASCII mode respectively (see
+.B utf8
+under
+.B CONFIGURATION FILE).
+The value is not case-sensitive, and any other value is an error. The directive overrides both the
+.B utf8
+configured literal and the
+.B SPECS_UTF8
+environment variable. For example:
+
+    +UTF8 on
 
 .SH ELISIONS
 .B specs
@@ -2413,8 +2429,9 @@ This file contains some configuration options. For now, it only allows you to se
 .B while-guard-limit,
 .B SPECSPATH,
 .B regexType,
+.B regexWarn,
 and
-.B regexWarn.
+.B utf8.
 For example, an entry such as this:
 .P
     timezone: "Europe/Belfast"
@@ -2463,6 +2480,60 @@ to silence the warning:
     regexWarn: 0
 .P
 Any other value, or leaving it unset, keeps the warning enabled, which is the default.
+.IP "utf8" 3
+Experimental. Selects the mode in which
+.B specs
+runs. In
+.B UTF8 mode
+the input records, the output records and the specification are treated as UTF-8 text, and character ranges, word and field positions, output positions, widths, alignment and padding count Unicode code points rather than bytes. In
+.B ASCII mode,
+which is the default, everything counts bytes. The mode is decided as follows, from the highest precedence to the lowest:
+.RS
+.IP 1. 3
+The
+.B +UTF8
+or
+.B +UNICODE
+directive in a specification file (see
+.B DIRECTIVES).
+.B on
+selects UTF8 mode and
+.B off
+selects ASCII mode.
+.IP 2. 3
+The
+.B utf8
+configured literal, set in the configuration file or with
+.B --set.
+.B 1
+selects UTF8 mode and
+.B 0
+selects ASCII mode. Any other value is an error, and
+.B specs
+exits without running.
+.IP 3. 3
+The
+.B SPECS_UTF8
+environment variable.
+.B 1
+selects UTF8 mode and
+.B 0
+selects ASCII mode. An empty value is treated as if the variable were not set. Any other value causes a warning on standard error, and
+.B specs
+runs in ASCII mode.
+.IP 4. 3
+Otherwise,
+.B specs
+runs in ASCII mode.
+.RE
+.IP "" 3
+So, unless a specification file says otherwise,
+.B specs --set utf8=1
+always runs in UTF8 mode,
+.B specs --set utf8=0
+always runs in ASCII mode, and
+.B specs --set utf8=2
+exits with an error.
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
