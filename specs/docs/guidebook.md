@@ -788,11 +788,15 @@ The mode is decided as follows, from the highest precedence to the lowest:
 3. The `SPECS_UTF8` environment variable. `1` selects UTF8 mode and `0` selects ASCII mode. An empty value is treated as if the variable were not set. Any other value causes a warning on standard error, and **specs** runs in ASCII mode.
 4. If none of these is set, **specs** runs in ASCII mode.
 
-So, unless a spec file says otherwise, `specs -s utf8=1` always runs in UTF8 mode and `specs -s utf8=0` always runs in ASCII mode, whatever the environment says, while `specs -s utf8=2` exits with an error. The environment variable is the convenient way to switch modes for a whole shell session:
+So, unless a spec file says otherwise, `specs -s utf8=1` always runs in UTF8 mode and `specs -s utf8=0` always runs in ASCII mode, whatever the environment says, while `specs -s utf8=2` exits with an error. To choose the mode for a single invocation, `-s utf8=1` is the simplest way.
+
+The environment variable is meant for making UTF8 mode your default. Set it in your shell's profile script, such as `~/.bashrc` or `~/.zshrc`:
 
 ```
-$ export SPECS_UTF8=1
+export SPECS_UTF8=1
 ```
+
+Every **specs** you run then starts in UTF8 mode, and `-s utf8=0` still switches a single invocation back to ASCII mode. The `utf8` entry in the configuration file has the same effect, but it also applies to programs and scripts that do not read your profile, such as `cron` jobs.
 
 In UTF8 mode:
 
