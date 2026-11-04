@@ -57,6 +57,11 @@ Some attributes are close enough in colour to read as one, which is fine where t
 - When adding or changing an ALU function - those are the functions defined in `aluFunctions.h` and implemented in `aluFunctions.cc` - document it in `manpage`, in `specs/docs/alu_adv.md`, and in `specs/docs/guidebook.md`.  Add unit tests as necessary in `specs/src/test/ALUUnitTest.cc`.  Add the function name to the `alufunctions` list in `specs/utils/specs.xml`.
 - Always consider the exactness of the arguments to the ALU function and of the return value.
 
+## UTF8 Support
+
+- **specs** runs in either UTF8 mode, or ASCII mode. This is the terminology we will use in defining tasks and in documentation. 
+- The modes cannot be mixed. In UTF8 mode, all of input, output, and specifications are in UTF8. Outside, everything is treated as ASCII.
+
 ## Rolling Context Feature (Issue #106)
 
 ### Token Normalization in tokens.cc

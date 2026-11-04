@@ -30,6 +30,8 @@
 CONFIG_PARAMS
 #undef X
 
+bool g_bSupportUTF8 = false;
+
 extern unsigned int g_WhileGuardLimit;
 
 static std::map<std::string,std::string> ExternalLiterals;
@@ -316,6 +318,31 @@ std::string& configSpecLiteralGetWithDefault(std::string& key, std::string& _def
 void configSpecLiteralSet(std::string& key, std::string& value)
 {
 	ExternalLiterals[key] = value;
+}
+
+bool configureUTF8Mode()
+{
+	static std::string utf8Key("utf8");
+	g_bSupportUTF8 = false;
+
+	if (configSpecLiteralDefined(utf8Key)) {
+		std::string& value = ExternalLiterals[utf8Key];
+		if (value != "0" && value != "1") {
+			std::cerr << "Invalid value <" << value << "> for configured literal utf8. Valid values are 0 and 1.\n";
+			return false;
+		}
+		g_bSupportUTF8 = (value == "1");
+		return true;
+	}
+
+	if (const char* env = std::getenv("SPECS_UTF8")) {
+		if (0 == strcmp(env, "1")) {
+			g_bSupportUTF8 = true;
+		} else if (env[0] && 0 != strcmp(env, "0")) {
+			std::cerr << "Warning: Ignoring invalid value <" << env << "> for environment variable SPECS_UTF8. Valid values are 0 and 1.\n";
+		}
+	}
+	return true;
 }
 
 bool anyNonPrimaryInputStreamDefined()

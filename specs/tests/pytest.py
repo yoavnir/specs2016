@@ -340,7 +340,7 @@ else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
 	exit(4)
 
-# Non-ASCII strings: converted to "" without --EXP-UTF8, passed through with it
+# Non-ASCII strings: converted to "" in ASCII mode, passed through in UTF8 mode
 lff_utf8 = '''
 def greet():
 	return "h\\u00e9llo w\\u00f6rld"
@@ -353,32 +353,32 @@ def pecho(s):
 '''
 set_localfuncs(lff_utf8)
 
-sys.stdout.write("Test 25 (non-ASCII return without --EXP-UTF8) -- ")
-ret = run_cmd('print "\'[\'||greet()||\']\'" 1', True)
+sys.stdout.write("Test 25 (non-ASCII return in ASCII mode) -- ")
+ret = run_cmd('print "\'[\'||greet()||\']\'" 1', True, ["--set", "utf8=0"])
 if ret=="[]":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
 	exit(4)
 
-sys.stdout.write("Test 26 (non-ASCII return with --EXP-UTF8) -- ")
-ret = run_cmd('print "\'[\'||greet()||\']\'" 1', True, ["--EXP-UTF8"])
+sys.stdout.write("Test 26 (non-ASCII return in UTF8 mode) -- ")
+ret = run_cmd('print "\'[\'||greet()||\']\'" 1', True, ["--set", "utf8=1"])
 if ret=="[h\u00e9llo w\u00f6rld]":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
 	exit(4)
 
-sys.stdout.write("Test 27 (Python sees characters with --EXP-UTF8) -- ")
-ret = run_cmd('print "plen(\'\u65e5\u672c\u8a9e\')" 1', True, ["--EXP-UTF8"])
+sys.stdout.write("Test 27 (Python sees characters in UTF8 mode) -- ")
+ret = run_cmd('print "plen(\'\u65e5\u672c\u8a9e\')" 1', True, ["--set", "utf8=1"])
 if ret=="3":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
 	exit(4)
 
-sys.stdout.write("Test 28 (non-ASCII round trip with --EXP-UTF8) -- ")
-ret = run_cmd('print "pecho(\'na\u00efve caf\u00e9\')" 1', True, ["--EXP-UTF8"])
+sys.stdout.write("Test 28 (non-ASCII round trip in UTF8 mode) -- ")
+ret = run_cmd('print "pecho(\'na\u00efve caf\u00e9\')" 1', True, ["--set", "utf8=1"])
 if ret=="na\u00efve caf\u00e9":
 	sys.stdout.write("OK\n")
 else:

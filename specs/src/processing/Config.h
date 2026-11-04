@@ -6,7 +6,6 @@
 // For the ssw parameter, use zero (0) for the short switch if none is needed
 #define CONFIG_PARAMS  \
 	X(bDummy,                       bool,         false,  0,DummyOption,        true)       \
-	X(bSupportUTF8,                 bool,         false,  0,EXP-UTF8,           true)       \
 	X(bThreaded,                    bool,         false,  t,threaded,           true)       \
 	X(bOutputTranslatedAscii,       bool,         false,  0,toASCII,            true)       \
 	X(bForceFileRead,               bool,         false,  0,force-read-input,   true)       \
@@ -53,6 +52,8 @@
 CONFIG_PARAMS
 #undef X
 
+extern bool g_bSupportUTF8;
+
 #define EXTERNAL_FUNC_AUTO  "auto"
 #define EXTERNAL_FUNC_ON    "on"
 #define EXTERNAL_FUNC_OFF   "off"
@@ -64,6 +65,10 @@ CONFIG_PARAMS
 
 typedef void (*useKeyValueCB)(std::string& key, std::string& value);
 void readConfigurationFile(useKeyValueCB cb = nullptr);
+
+// Sets g_bSupportUTF8 from the utf8 configured literal or the SPECS_UTF8
+// environment variable. Returns false if the configured literal is invalid.
+bool configureUTF8Mode();
 
 bool configSpecLiteralExists(std::string& key);
 

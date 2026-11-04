@@ -221,6 +221,9 @@ int main (int argc, char** argv)
 	}
 
 	readConfigurationFile();
+	if (!configureUTF8Mode()) {
+		dumpErrorsAndExit(-4);
+	}
 	persistentVarLoad();
 
 	if (g_timeZone != "") {
