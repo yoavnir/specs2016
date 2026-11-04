@@ -19,6 +19,7 @@
 `specs/utils/specs.xml` is a KDE-style syntax definition for specification files, used by Kate, KSyntaxHighlighting, skylighting and pandoc. It duplicates knowledge that lives in the sources, so it has to be kept in step with them:
 
 - When adding, removing or renaming a spec-unit keyword or one of its accepted abbreviations in `specs/src/cli/tokens.cc` (the `SIMPLETOKEN` / `SIMPLETOKENV` block, or the `NEXTWORD`/`NEXTFIELD`/`NEXT` block), update the matching keyword list in `specs/utils/specs.xml`. Every abbreviation the tokenizer accepts is listed explicitly there.
+- When adding, removing or renaming a `+` directive in `specs/src/utils/directives.cc`, update the directive rules (and their contexts) in `specs/utils/specs.xml`.
 - When changing `STRING_CONVERSIONS_LIST` or `PARAMETRIZED_CONVERSIONS_LIST` in `specs/src/processing/conversions.h`, update the `conversions` list in `specs/utils/specs.xml`.
 - The `alufunctions` list in `specs/utils/specs.xml` is kept sorted alphabetically.
 - After editing the file, check it with `xmllint --noout specs/utils/specs.xml`, and check the highlighting itself by rendering the sample specification `specs/utils/example.spec`:

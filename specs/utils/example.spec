@@ -1,6 +1,7 @@
 # Sample specification, used to eyeball specs.xml syntax highlighting.
 # It is not meant to do anything useful, but every construct here is valid.
 +SET today date "+%Y-%m-%d"
++UTF8 on
 
            FIELDSEPARATOR ,
            WORDSEPARATOR default

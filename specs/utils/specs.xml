@@ -375,6 +375,7 @@
         <!-- Directives. Only valid on their own line, before any spec text. -->
         <RegExpr attribute="Directive" context="DirectiveSet" String="^\+SET\b" insensitive="false" />
         <RegExpr attribute="Directive" context="DirectiveCmd" String="^\+IN\b" insensitive="false" />
+        <RegExpr attribute="Directive" context="DirectiveOnOff" String="^\+(UTF8|UNICODE)\b" insensitive="false" />
 
         <!-- The splitter honours a backslash escape anywhere. -->
         <RegExpr attribute="Escape" context="#stay" String="\\." />
@@ -461,6 +462,12 @@
 
       <!-- "+IN shell command" -->
       <context name="DirectiveCmd" attribute="Shell Command" lineEndContext="#pop" />
+
+      <!-- "+UTF8 on|off" and "+UNICODE on|off" -->
+      <context name="DirectiveOnOff" attribute="Normal Text" lineEndContext="#pop">
+        <DetectSpaces />
+        <RegExpr attribute="Keyword" context="#stay" String="\b(on|off)\b" insensitive="true" />
+      </context>
 
       <!-- The one-letter field identifier argument of ID / BREAK / PRINTONLY. -->
       <context name="FidArg" attribute="Normal Text" lineEndContext="#pop">

@@ -783,11 +783,12 @@ utf8: 1
 
 The mode is decided as follows, from the highest precedence to the lowest:
 
-1. The `utf8` configured literal, set either in the configuration file or with `-s`/`--set`. `1` selects UTF8 mode and `0` selects ASCII mode. Any other value is an error, and **specs** exits without running.
-2. The `SPECS_UTF8` environment variable. `1` selects UTF8 mode and `0` selects ASCII mode. An empty value is treated as if the variable were not set. Any other value causes a warning on standard error, and **specs** runs in ASCII mode.
-3. If neither is set, **specs** runs in ASCII mode.
+1. The `+UTF8` or `+UNICODE` directive in a spec file (see **[Directives](#directives)** in Chapter 5). `on` selects UTF8 mode and `off` selects ASCII mode.
+2. The `utf8` configured literal, set either in the configuration file or with `-s`/`--set`. `1` selects UTF8 mode and `0` selects ASCII mode. Any other value is an error, and **specs** exits without running.
+3. The `SPECS_UTF8` environment variable. `1` selects UTF8 mode and `0` selects ASCII mode. An empty value is treated as if the variable were not set. Any other value causes a warning on standard error, and **specs** runs in ASCII mode.
+4. If none of these is set, **specs** runs in ASCII mode.
 
-So `specs -s utf8=1` always runs in UTF8 mode and `specs -s utf8=0` always runs in ASCII mode, whatever the environment says, while `specs -s utf8=2` exits with an error. The environment variable is the convenient way to switch modes for a whole shell session:
+So, unless a spec file says otherwise, `specs -s utf8=1` always runs in UTF8 mode and `specs -s utf8=0` always runs in ASCII mode, whatever the environment says, while `specs -s utf8=2` exits with an error. The environment variable is the convenient way to switch modes for a whole shell session:
 
 ```
 $ export SPECS_UTF8=1
@@ -1038,6 +1039,17 @@ Combined with a spec, this makes a self-contained script:
    WORD 9  1
    WORD 5 NW
 ```
+
+### `+UTF8 on|off` / `+UNICODE on|off`
+
+Selects UTF8 mode (`on`) or ASCII mode (`off`) for this specification (see **[`utf8`](#utf8-mode)** in Chapter 4). The two names are equivalent, and the value is not case-sensitive. The directive overrides the `utf8` configured literal and the `SPECS_UTF8` environment variable, so a spec file written for UTF-8 data behaves the same for every user:
+
+```specs
++UTF8 on
+   1-10  1
+```
+
+Any value other than `on` or `off`, or a missing value, is an error.
 
 ## The `REQUIRES` Keyword
 
@@ -4910,7 +4922,7 @@ These are keys that, when set in `~/.specs` (or via `-s`), change **specs** beha
 | `NO_WARN_REDEFINED_FID` | unset | Set to suppress the "Field Identifier redefined" warning |
 | `EmptyFrequencyMapMessage` | `""` | String returned by `fmap_dump()` for an empty frequency map |
 | `while-guard-limit` | `5000` | Maximum `WHILE` loop iterations before specs aborts |
-| `utf8` | `$SPECS_UTF8`, else `0` | Experimental: `1` for UTF8 mode (count UTF-8 characters rather than bytes), `0` for ASCII mode |
+| `utf8` | `$SPECS_UTF8`, else `0` | Experimental: `1` for UTF8 mode (count UTF-8 characters rather than bytes), `0` for ASCII mode. Overridden by the `+UTF8`/`+UNICODE` directive |
 
 ## Input Record Formats (--recfm)
 
