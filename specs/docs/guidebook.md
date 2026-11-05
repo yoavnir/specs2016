@@ -409,8 +409,8 @@ by a *character*.
   that bytes above 127 are rejected; **specs** simply handles each byte
   separately.
 - In UTF8 mode, input, output and specifications are all expected to use
-  UTF-8. A character is one Unicode code point, which may occupy between one
-  and four bytes.
+  UTF-8. A character is one user-perceived character (an extended grapheme
+  cluster), which may contain more than one Unicode code point.
 
 The modes cannot be mixed: input, output and specifications must all use the
 same mode. Plain ASCII text behaves identically in both modes. The difference
@@ -421,14 +421,14 @@ eight bytes, so it has length 4 in UTF8 mode and length 8 in ASCII mode.
 In UTF8 mode:
 
 - Character ranges (`1-5`, `-3;-1`), word and field positions, output
-  positions and widths, alignment, truncation and ellipsis count Unicode code
-  points rather than bytes.
+  positions and widths, alignment, truncation and ellipsis count grapheme
+  clusters rather than bytes.
 - `WORDSEPARATOR` and `FIELDSEPARATOR` accept non-ASCII characters, and the
   default word separator recognizes Unicode whitespace such as the no-break
   space (U+00A0) and ideographic space (U+3000).
-- `PAD` accepts any single Unicode code point, such as `pad ·`.
+- `PAD` accepts any single grapheme, such as `pad ·`.
 - String functions introduced in [Chapter 8](#chap8), such as `length()`,
-  `center()` and `insert()`, use code-point lengths and positions.
+  `center()` and `insert()`, use grapheme lengths and positions.
   `bytelength()` is available when the byte count is needed.
 - Python functions can receive and return non-ASCII strings (see
   **[Chapter 14](#chap14)**).
@@ -463,24 +463,22 @@ applies to programs that do not read your shell profile, such as `cron` jobs.
 A command-line `-s utf8=0` can still switch one invocation back to ASCII mode,
 while a directive in a spec file overrides every other setting.
 
-### Code Points and Visible Characters
+### Graphemes and Code Points
 
-A Unicode code point is not always the same thing as one character on the
-screen. For example, the grapheme `é` has two valid encodings:
+A character on the screen may contain more than one Unicode code point. For
+example, the grapheme `é` has two valid encodings:
 
 | Appearance | Encoding | Code points | `length()` | `bytelength()` |
 |------------|----------|-------------|------------|----------------|
 | `é` | U+00E9 (precomposed) | 1 | 1 | 2 |
-| `é` | U+0065 U+0301 (e + combining acute accent) | 2 | 2 | 3 |
+| `é` | U+0065 U+0301 (e + combining acute accent) | 2 | 1 | 3 |
 
-The two strings normally look identical, but the second currently has length
-2 in UTF8 mode. The `length()` and `bytelength()` functions are introduced in
-Chapter 8; the table uses them only to illustrate the two ways of counting.
-Do not rely on the distinction between these encodings: this behavior is not
-stable, and a future version of **specs** may count non-precomposed graphemes
-differently.
+The two strings look identical and both have length 1 in UTF8 mode. The
+`length()` and `bytelength()` functions are introduced in Chapter 8; the table
+uses them only to illustrate the two ways of counting. Both encodings form one
+extended grapheme cluster.
 
-Widths also count code points, not screen columns. Wide characters such as
+Widths count grapheme clusters, not screen columns. Wide characters such as
 日 take two columns on most terminals, so columns of CJK text may not line up.
 
 UTF8 mode remains experimental because not every feature is UTF-8 aware.
@@ -2661,17 +2659,17 @@ Which arguments of a function may be omitted, and what their default values are,
 ## String Functions
 
 In UTF8 mode, character lengths and positions used by these functions count
-Unicode code points rather than bytes; `length()`, `center()` and `insert()`
+grapheme clusters rather than bytes; `length()`, `center()` and `insert()`
 are examples. Use `bytelength()` when the byte count is needed. Arguments that
 expressly count words, such as the length arguments to `delword()` and
 `subword()`, still count words, and the length argument to `space()` remains a
 count of inserted pad characters. A pad argument may be any single Unicode
-code point. See
+grapheme. See
 **[ASCII Mode and UTF8 Mode](#utf8-mode)** in Chapter 2.
 
 | Function | Description |
 |----------|-------------|
-| `length(s)` | Length of string *s*: Unicode code points in UTF8 mode, bytes in ASCII mode |
+| `length(s)` | Length of string *s*: grapheme clusters in UTF8 mode, bytes in ASCII mode |
 | `bytelength(s)` | Length of string *s* in bytes in either mode |
 | `left(s, n)` | Leftmost *n* characters of string *s* (space-padded if shorter) |
 | `right(s, n)` | Rightmost *n* characters of string *s* (space-padded if shorter) |

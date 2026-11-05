@@ -33,9 +33,9 @@
  * strings involved is not.
  *
  * Functions that need it are written as templates over the string type:
- * std::string for bytes, and std::u32string for code points.
+ * std::string for bytes, and utf8::GraphemeString for grapheme clusters.
  */
-static bool byCodePoints(std::initializer_list<const std::string*> strs)
+static bool byGraphemes(std::initializer_list<const std::string*> strs)
 {
 	if (!g_bSupportUTF8) return false;
 	for (const std::string* p : strs) {
@@ -47,7 +47,7 @@ static bool byCodePoints(std::initializer_list<const std::string*> strs)
 static size_t strLength(const std::string& s)
 {
 	if (g_bSupportUTF8)
-		return byCodePoints({&s}) ? utf8::charCount(s) : s.length();
+		return byGraphemes({&s}) ? utf8::charCount(s) : s.length();
 	return s.length();
 }
 
@@ -55,7 +55,7 @@ static size_t strLength(const std::string& s)
 static std::string strSubstr(const std::string& s, size_t pos, size_t count = std::string::npos)
 {
 	if (g_bSupportUTF8)
-		return byCodePoints({&s}) ? utf8::substr(s, pos, count) : s.substr(pos, count);
+		return byGraphemes({&s}) ? utf8::substr(s, pos, count) : s.substr(pos, count);
 	return s.substr(pos, count);
 }
 
@@ -757,8 +757,8 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 	if (start==0) {    // invalid string index in specs
 		return mkValue0();  // NaN
 	}
-	if (g_bSupportUTF8 && byCodePoints({pStr})) {
-		return mkValue(utf8::fromCodePoints(substring_do(utf8::toCodePoints(*pStr), start, length)));
+	if (g_bSupportUTF8 && byGraphemes({pStr})) {
+		return mkValue(utf8::fromGraphemes(substring_do(utf8::toGraphemes(*pStr), start, length)));
 	}
 	return mkValue(substring_do(*pStr, start, length));
 }
@@ -786,8 +786,8 @@ static PValue AluFunc_align(PValue pBigString, PValue pLength, strAlign how)
 {
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	ALUInt len = pLength->getInt();
-	if (g_bSupportUTF8 && byCodePoints({pBigStr})) {
-		return mkValue(utf8::fromCodePoints(align_do(utf8::toCodePoints(*pBigStr), len, how)));
+	if (g_bSupportUTF8 && byGraphemes({pBigStr})) {
+		return mkValue(utf8::fromGraphemes(align_do(utf8::toGraphemes(*pBigStr), len, how)));
 	}
 	return mkValue(align_do(*pBigStr, len, how));
 }
@@ -842,8 +842,8 @@ static ALUInt find_do(const S& haystack, const S& needle, size_t from, bool bLas
 
 static ALUInt strFind(const std::string& haystack, const std::string& needle, size_t from = 0, bool bLast = false)
 {
-	if (g_bSupportUTF8 && byCodePoints({&haystack, &needle})) {
-		return find_do(utf8::toCodePoints(haystack), utf8::toCodePoints(needle), from, bLast);
+	if (g_bSupportUTF8 && byGraphemes({&haystack, &needle})) {
+		return find_do(utf8::toGraphemes(haystack), utf8::toGraphemes(needle), from, bLast);
 	}
 	return find_do(haystack, needle, from, bLast);
 }
@@ -881,8 +881,8 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	ALUInt offset = _pOffset->getInt();
 
-	if (g_bSupportUTF8 && byCodePoints({pHaystack, pNeedle})) {
-		return mkValue(utf8::fromCodePoints(splus_do(utf8::toCodePoints(*pHaystack), utf8::toCodePoints(*pNeedle), offset, count)));
+	if (g_bSupportUTF8 && byGraphemes({pHaystack, pNeedle})) {
+		return mkValue(utf8::fromGraphemes(splus_do(utf8::toGraphemes(*pHaystack), utf8::toGraphemes(*pNeedle), offset, count)));
 	}
 	return mkValue(splus_do(*pHaystack, *pNeedle, offset, count));
 }
@@ -2102,8 +2102,8 @@ static PValue AluFunc_compare_do(PValue pS1, PValue pS2, const std::string& pad)
 	if (s1 == s2) {
 		return mkValue(ALUInt(0));
 	}
-	if (g_bSupportUTF8 && byCodePoints({&s1, &s2, &pad})) {
-		return mkValue(compare_do(utf8::toCodePoints(s1), utf8::toCodePoints(s2), utf8::toCodePoints(pad)[0]));
+	if (g_bSupportUTF8 && byGraphemes({&s1, &s2, &pad})) {
+		return mkValue(compare_do(utf8::toGraphemes(s1), utf8::toGraphemes(s2), utf8::toGraphemes(pad)[0]));
 	}
 	return mkValue(compare_do(s1, s2, pad[0]));
 }
@@ -2167,8 +2167,8 @@ PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
 	auto start = pStart->getInt();
 	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
 
-	if (g_bSupportUTF8 && byCodePoints({&theString})) {
-		return mkValue(utf8::fromCodePoints(delstr_do(utf8::toCodePoints(theString), start, length)));
+	if (g_bSupportUTF8 && byGraphemes({&theString})) {
+		return mkValue(utf8::fromGraphemes(delstr_do(utf8::toGraphemes(theString), start, length)));
 	}
 	return mkValue(delstr_do(theString, start, length));
 }
@@ -2384,9 +2384,9 @@ PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue p
 		MYTHROW(err);
 	}
 
-	if (g_bSupportUTF8 && byCodePoints({&theString, &theTarget, &sPad})) {
-		return mkValue(utf8::fromCodePoints(insert_do(utf8::toCodePoints(theString), utf8::toCodePoints(theTarget),
-				size_t(position), size_t(length), utf8::toCodePoints(sPad)[0])));
+	if (g_bSupportUTF8 && byGraphemes({&theString, &theTarget, &sPad})) {
+		return mkValue(utf8::fromGraphemes(insert_do(utf8::toGraphemes(theString), utf8::toGraphemes(theTarget),
+				size_t(position), size_t(length), utf8::toGraphemes(sPad)[0])));
 	}
 	return mkValue(insert_do(theString, theTarget, size_t(position), size_t(length), sPad[0]));
 }
@@ -2489,9 +2489,9 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 		MYTHROW(err);
 	}
 
-	if (g_bSupportUTF8 && byCodePoints({&str1, &str2, &padStr})) {
-		return mkValue(utf8::fromCodePoints(overlay_do(utf8::toCodePoints(str1), utf8::toCodePoints(str2),
-				start, length, utf8::toCodePoints(padStr)[0])));
+	if (g_bSupportUTF8 && byGraphemes({&str1, &str2, &padStr})) {
+		return mkValue(utf8::fromGraphemes(overlay_do(utf8::toGraphemes(str1), utf8::toGraphemes(str2),
+				start, length, utf8::toGraphemes(padStr)[0])));
 	}
 	return mkValue(overlay_do(str1, str2, start, length, padStr[0]));
 }
@@ -2718,8 +2718,8 @@ PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue 
 		MYTHROW(err);
 	}
 
-	if (g_bSupportUTF8 && byCodePoints({&str, &reference})) {
-		return mkValue(verify_do(utf8::toCodePoints(str), utf8::toCodePoints(reference), option, start));
+	if (g_bSupportUTF8 && byGraphemes({&str, &reference})) {
+		return mkValue(verify_do(utf8::toGraphemes(str), utf8::toGraphemes(reference), option, start));
 	}
 	return mkValue(verify_do(str, reference, option, start));
 }
@@ -2741,7 +2741,7 @@ PValue AluFunc_wordindex(PValue pString, PValue pIdx)
 	ALUInt ret = 0;
 	if (size_t(idx-1) < wordvec.size()) {
 		size_t offset = wordvec[idx-1];
-		ret = ALUInt((g_bSupportUTF8 && byCodePoints({&str})) ? utf8::charCount(str.data(), offset) : offset) + 1;
+		ret = ALUInt((g_bSupportUTF8 && byGraphemes({&str})) ? utf8::charCount(str.data(), offset) : offset) + 1;
 	}
 
 	return mkValue(ret);

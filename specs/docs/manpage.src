@@ -1076,7 +1076,7 @@ Returns a binary representation of the unsigned integer in x with field of lengt
 Returns a binary representation of the unsigned integer in x. The field length is automatically determined by the value of x, but will be 1, 2, 4, or 8 characters in length.
 .IP "length(x)" 3
 Returns the length of the argument when viewed as a string. In UTF8 mode the
-result is the number of Unicode code points; in ASCII mode it is the number of
+result is the number of extended grapheme clusters; in ASCII mode it is the number of
 bytes. For example, length(37) is 2 and length('hello') is 5.
 .IP "bytelength(x)" 3
 Returns the length of the argument in bytes, in both ASCII mode and UTF8 mode.
@@ -2489,7 +2489,7 @@ Experimental. Selects the mode in which
 .B specs
 runs. In
 .B UTF8 mode
-the input records, the output records and the specification are treated as UTF-8 text, and character ranges, word and field positions, output positions, widths, alignment and padding count Unicode code points rather than bytes. In
+the input records, the output records and the specification are treated as UTF-8 text, and character ranges, word and field positions, output positions, widths, alignment and padding count extended grapheme clusters rather than bytes. In
 .B ASCII mode,
 which is the default, everything counts bytes. The mode is decided as follows, from the highest precedence to the lowest:
 .RS
@@ -2671,15 +2671,14 @@ sed(1), awk(1)
 .SH BUGS
 In UTF8 mode,
 .B specs
-currently counts Unicode code points rather than grapheme clusters. Thus
+counts extended grapheme clusters. Thus
 precomposed
 .B é
-(U+00E9) has length 1, while the visually identical decomposed form
+(U+00E9) and the visually identical decomposed form
 .B e
-followed by U+0301 has length 2. This behavior is not stable; a future version
-may count non-precomposed graphemes differently.
+followed by U+0301 both have length 1.
 .PP
-Widths count code points rather than display columns, so wide characters such
+Widths count grapheme clusters rather than display columns, so wide characters such
 as CJK ideographs may not align on a terminal.
 .PP
 Open a ticket on GitHub if you find other bugs.

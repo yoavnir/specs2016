@@ -2,9 +2,10 @@
 #define SPECS2016__UTILS__UTF8__H
 
 #include <string>
+#include <vector>
 
 // Helpers for treating a byte string as a sequence of UTF-8 encoded Unicode
-// code points.  A "character" here is a code point, not a grapheme cluster.
+// grapheme clusters. A "character" here is an extended grapheme cluster.
 //
 // Decoding is lenient: a byte that does not start a well-formed sequence
 // (stray continuation byte, truncated or overlong sequence, encoded surrogate,
@@ -53,6 +54,40 @@ void append(std::string& s, char32_t cp);
 
 // Encode a sequence of code points; the inverse of toCodePoints.
 std::string fromCodePoints(const std::u32string& cps);
+
+// A string split into extended grapheme clusters. It supplies the subset of
+// std::string's interface used by the ALU's byte/grapheme-generic algorithms.
+class GraphemeString {
+public:
+	using value_type = std::string;
+	static const size_t npos = std::string::npos;
+
+	GraphemeString() = default;
+	GraphemeString(size_t count, char c);
+	explicit GraphemeString(std::vector<std::string> chars);
+
+	size_t length() const { return m_chars.size(); }
+	size_t size() const { return m_chars.size(); }
+	bool empty() const { return m_chars.empty(); }
+	const value_type& operator[](size_t i) const { return m_chars[i]; }
+	GraphemeString substr(size_t pos, size_t count = npos) const;
+	size_t find(const GraphemeString& needle, size_t pos = 0) const;
+	size_t rfind(const GraphemeString& needle) const;
+	size_t find(const value_type& ch) const;
+	GraphemeString& operator+=(const GraphemeString& other);
+	GraphemeString& operator+=(const value_type& ch);
+	friend GraphemeString operator+(GraphemeString lhs, const GraphemeString& rhs)
+	{
+		return lhs += rhs;
+	}
+	const std::vector<std::string>& data() const { return m_chars; }
+
+private:
+	std::vector<std::string> m_chars;
+};
+
+GraphemeString toGraphemes(const std::string& s);
+std::string fromGraphemes(const GraphemeString& s);
 
 // Is cp one of the code points in set?
 inline bool contains(const std::u32string& set, char32_t cp)

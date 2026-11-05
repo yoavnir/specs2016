@@ -1,5 +1,8 @@
 #include <cstdint>
 #include <cstring>
+#include <algorithm>
+#define UTF8PROC_STATIC
+#include "utils/utf8proc/utf8proc.h"
 #include "utf8.h"
 
 namespace utf8 {
@@ -94,12 +97,30 @@ bool isValid(const char* p, size_t len)
 	return true;
 }
 
+static size_t nextGraphemeEnd(const char* p, size_t len, size_t start)
+{
+	size_t firstLen;
+	char32_t previous = decode(p + start, len - start, firstLen);
+	size_t i = start + firstLen;
+	utf8proc_int32_t state = 0;
+	while (i < len) {
+		size_t nextLen;
+		char32_t next = decode(p + i, len - i, nextLen);
+		bool invalid = previous >= INVALID_BYTE_BASE && previous <= INVALID_BYTE_BASE + 0xFF;
+		invalid = invalid || (next >= INVALID_BYTE_BASE && next <= INVALID_BYTE_BASE + 0xFF);
+		if (invalid || utf8proc_grapheme_break_stateful(previous, next, &state)) break;
+		previous = next;
+		i += nextLen;
+	}
+	return i;
+}
+
 size_t charCount(const char* p, size_t len)
 {
 	size_t ret = 0;
 	size_t i = 0;
 	while (i < len) {
-		i += (p[i] & 0x80) ? seqLen(p + i, len - i) : 1;
+		i = nextGraphemeEnd(p, len, i);
 		ret++;
 	}
 	return ret;
@@ -111,7 +132,7 @@ size_t charToByte(const std::string& s, size_t charIdx)
 	size_t len = s.size();
 	size_t i = 0;
 	while (charIdx > 0 && i < len) {
-		i += (p[i] & 0x80) ? seqLen(p + i, len - i) : 1;
+		i = nextGraphemeEnd(p, len, i);
 		charIdx--;
 	}
 	return (charIdx == 0) ? i : std::string::npos;
@@ -123,11 +144,10 @@ std::string substr(const std::string& s, size_t charStart, size_t count)
 	if (bStart == std::string::npos) return std::string();
 	if (count == std::string::npos) return s.substr(bStart);
 
-	const char* p = s.data();
 	size_t len = s.size();
 	size_t bEnd = bStart;
 	while (count > 0 && bEnd < len) {
-		bEnd += (p[bEnd] & 0x80) ? seqLen(p + bEnd, len - bEnd) : 1;
+		bEnd = nextGraphemeEnd(s.data(), len, bEnd);
 		count--;
 	}
 	return s.substr(bStart, bEnd - bStart);
@@ -193,6 +213,78 @@ std::string fromCodePoints(const std::u32string& cps)
 	std::string ret;
 	ret.reserve(cps.size());
 	for (char32_t cp : cps) append(ret, cp);
+	return ret;
+}
+
+GraphemeString::GraphemeString(size_t count, char c)
+	: m_chars(count, std::string(1, c))
+{
+}
+
+GraphemeString::GraphemeString(std::vector<std::string> chars)
+	: m_chars(std::move(chars))
+{
+}
+
+GraphemeString GraphemeString::substr(size_t pos, size_t count) const
+{
+	if (pos > m_chars.size()) return GraphemeString();
+	size_t end = count == npos || count > m_chars.size() - pos
+			? m_chars.size() : pos + count;
+	return GraphemeString(std::vector<std::string>(m_chars.begin() + pos, m_chars.begin() + end));
+}
+
+size_t GraphemeString::find(const GraphemeString& needle, size_t pos) const
+{
+	if (pos > m_chars.size()) return npos;
+	if (needle.empty()) return pos;
+	auto it = std::search(m_chars.begin() + pos, m_chars.end(),
+			needle.m_chars.begin(), needle.m_chars.end());
+	return it == m_chars.end() ? npos : size_t(it - m_chars.begin());
+}
+
+size_t GraphemeString::rfind(const GraphemeString& needle) const
+{
+	if (needle.empty()) return m_chars.size();
+	auto it = std::find_end(m_chars.begin(), m_chars.end(),
+			needle.m_chars.begin(), needle.m_chars.end());
+	return it == m_chars.end() ? npos : size_t(it - m_chars.begin());
+}
+
+size_t GraphemeString::find(const value_type& ch) const
+{
+	auto it = std::find(m_chars.begin(), m_chars.end(), ch);
+	return it == m_chars.end() ? npos : size_t(it - m_chars.begin());
+}
+
+GraphemeString& GraphemeString::operator+=(const GraphemeString& other)
+{
+	m_chars.insert(m_chars.end(), other.m_chars.begin(), other.m_chars.end());
+	return *this;
+}
+
+GraphemeString& GraphemeString::operator+=(const value_type& ch)
+{
+	m_chars.push_back(ch);
+	return *this;
+}
+
+GraphemeString toGraphemes(const std::string& s)
+{
+	std::vector<std::string> ret;
+	size_t start = 0;
+	while (start < s.size()) {
+		size_t end = nextGraphemeEnd(s.data(), s.size(), start);
+		ret.push_back(s.substr(start, end - start));
+		start = end;
+	}
+	return GraphemeString(std::move(ret));
+}
+
+std::string fromGraphemes(const GraphemeString& s)
+{
+	std::string ret;
+	for (const std::string& ch : s.data()) ret += ch;
 	return ret;
 }
 
