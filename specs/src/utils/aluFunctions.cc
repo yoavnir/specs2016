@@ -2499,6 +2499,11 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 PValue AluFunc_reverse(PValue pStr)
 {
 	ASSERT_NOT_ELIDED(pStr,1,str);
+	if (g_bSupportUTF8 && byGraphemes({pStr->getStrPtr()})) {
+		auto gStr = utf8::toGraphemes(pStr->getStr());
+		gStr.reverse();
+		return mkValue(utf8::fromGraphemes(gStr)); 
+	}
 	auto str = pStr->getStr();
 	std::reverse(str.begin(), str.end());
 	return mkValue(str);

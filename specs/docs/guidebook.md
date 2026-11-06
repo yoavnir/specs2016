@@ -482,8 +482,8 @@ Widths count grapheme clusters, not screen columns. Wide characters such as
 日 take two columns on most terminals, so columns of CJK text may not line up.
 
 UTF8 mode remains experimental because not every feature is UTF-8 aware.
-Features such as regular expressions, `reverse()`, and the `UCASE`/`LCASE`
-conversions still treat strings as bytes.
+Features such as regular expressions and conversions such as `UCASE` and 
+`LCASE` still treat strings as bytes.
 
 ---
 

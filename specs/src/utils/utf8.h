@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 // Helpers for treating a byte string as a sequence of UTF-8 encoded Unicode
 // grapheme clusters. A "character" here is an extended grapheme cluster.
@@ -69,6 +70,7 @@ public:
 	size_t length() const { return m_chars.size(); }
 	size_t size() const { return m_chars.size(); }
 	bool empty() const { return m_chars.empty(); }
+	void reverse() { std::reverse(m_chars.begin(), m_chars.end()); }
 	const value_type& operator[](size_t i) const { return m_chars[i]; }
 	GraphemeString substr(size_t pos, size_t count = npos) const;
 	size_t find(const GraphemeString& needle, size_t pos = 0) const;
