@@ -1334,6 +1334,10 @@ int main(int argc, char** argv)
 #define U_GO       "\xe8\xaa\x9e"      /* 語 U+8A9E */
 #define U_FW_SEMI  "\xef\xbc\x9b"      /* ； U+FF1B */
 #define U_GRIN     "\xf0\x9f\x98\x80"  /* 😀 U+1F600 */
+#define U_COMBINING_ACUTE "\xcc\x81"   /* U+0301 */
+#define U_THUMBS_SKIN "\xf0\x9f\x91\x8d\xf0\x9f\x8f\xbd" /* 👍🏽 */
+#define U_JAPAN_FLAG "\xf0\x9f\x87\xaf\xf0\x9f\x87\xb5"  /* 🇯🇵 */
+#define U_FAMILY "\xf0\x9f\x91\xa8\xe2\x80\x8d\xf0\x9f\x91\xa9\xe2\x80\x8d\xf0\x9f\x91\xa7" /* 👨‍👩‍👧 */
 #define U_SHIN     "\xd7\xa9"           /* ש U+05E9 */
 #define U_LAMED    "\xd7\x9c"           /* ל U+05DC */
 #define U_VAV      "\xd7\x95"           /* ו U+05D5 */
@@ -1415,6 +1419,14 @@ int main(int argc, char** argv)
 	VERIFY2("print 'insert(\"" U_E_ACUTE "\",\"a\",3,3,\"" U_MIDDOT "\")' 1 "
 			"print 'overlay(\"" U_E_ACUTE "\",\"a\",3,3,\"" U_MIDDOT "\")' nw",
 			"x", "a" U_E_ACUTE U_MIDDOT U_MIDDOT " a" U_MIDDOT U_E_ACUTE U_MIDDOT U_MIDDOT);  // TEST #358
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("e" U_COMBINING_ACUTE "clair"))==6), "");  // TEST #359
+	VERIFY2("print 'length(@@)' 1 1-3 nw", U_E_ACUTE "clair", "6 " U_E_ACUTE "cl");  // TEST #360
+	VERIFY2("print 'length(@@)' 1 1-3 nw", "e" U_COMBINING_ACUTE "clair", "6 e" U_COMBINING_ACUTE "cl");  // TEST #361
+	VERIFY2("print 'length(@@)' 1 print 'wordlen(1)' nw print 'fieldlength(1)' nw print 'wordlength(@@,1)' nw",
+			"e" U_COMBINING_ACUTE "clair", "6 6 6 6");  // TEST #362
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string(U_THUMBS_SKIN U_JAPAN_FLAG U_FAMILY))==3), "");  // TEST #363
+	VERIFY2("print 'pos(\"c\",@@)' 1 print 'substr(@@,1,2)' nw print 'delstr(@@,2,1)' nw",
+			"e" U_COMBINING_ACUTE "clair", "2 e" U_COMBINING_ACUTE "c e" U_COMBINING_ACUTE "lair");  // TEST #364
 
 	g_bSupportUTF8 = false;
 

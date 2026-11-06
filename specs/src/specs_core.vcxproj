@@ -96,6 +96,7 @@
     <ClCompile Include="utils\SpecString.cc" />
     <ClCompile Include="utils\TimeUtils.cc" />
     <ClCompile Include="utils\utf8.cc" />
+    <ClCompile Include="utils\utf8proc.cc" />
     <ClCompile Include="utils\alu.cc" />
     <ClCompile Include="utils\aluFunctions.cc" />
     <ClCompile Include="utils\aluRand.cc" />
@@ -120,6 +121,7 @@
     <ClInclude Include="utils\StringQueue.h" />
     <ClInclude Include="utils\TimeUtils.h" />
     <ClInclude Include="utils\utf8.h" />
+    <ClInclude Include="utils\utf8proc\utf8proc.h" />
     <ClInclude Include="utils\alu.h" />
     <ClInclude Include="utils\aluFunctions.h" />
     <ClInclude Include="utils\aluRand.h" />

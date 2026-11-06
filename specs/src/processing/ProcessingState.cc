@@ -289,62 +289,57 @@ void ProcessingState::identifyFields()
 void ProcessingState::identifyWordsUTF8()
 {
 	const std::string& rec = *currRecord();
-	const char* pc = rec.data();
-	size_t len = rec.size();
+	auto chars = utf8::toGraphemes(rec);
 	std::u32string separators = utf8::toCodePoints(m_wordSeparator);
 
-	size_t i = 0;    // byte offset
-	int ci = 0;      // character offset
-	size_t cl = 0;   // length in bytes of the character at i
-	char32_t cp = 0; // the character at i
-
-	auto load = [&]() { cp = (i < len && pc[i]) ? utf8::decode(pc + i, len - i, cl) : 0; };
-	auto advance = [&]() { i += cl; ci++; load(); };
+	size_t ci = 0;
+	auto cp = [&]() {
+		if (ci >= chars.size() || chars[ci][0] == 0) return char32_t(0);
+		size_t len;
+		return utf8::decode(chars[ci].data(), chars[ci].size(), len);
+	};
 	auto isWS = [&]() {
-		return cp != 0 && (m_wordSeparatorLocal ? utf8::isSpace(cp) : utf8::contains(separators, cp));
+		char32_t c = cp();
+		return c != 0 && (m_wordSeparatorLocal ? utf8::isSpace(c) : utf8::contains(separators, c));
 	};
 
-	load();
 	/* skip over initial whitespace */
-	while (isWS()) advance();
+	while (isWS()) ci++;
 
-	while (cp != 0) {
+	while (cp() != 0) {
 		m_wordCount++;
 		m_wordStart.push_back(ci+1);
-		while (cp != 0 && !isWS()) advance();
+		while (cp() != 0 && !isWS()) ci++;
 		m_wordEnd.push_back(ci);
-		while (isWS()) advance();
+		while (isWS()) ci++;
 	}
 }
 
 void ProcessingState::identifyFieldsUTF8()
 {
 	const std::string& rec = *currRecord();
-	const char* pc = rec.data();
-	size_t len = rec.size();
+	auto chars = utf8::toGraphemes(rec);
 	std::u32string separators = utf8::toCodePoints(m_fieldSeparator);
 
-	size_t i = 0;
-	int ci = 0;
-	size_t cl = 0;
-	char32_t cp = 0;
+	size_t ci = 0;
+	auto cp = [&]() {
+		if (ci >= chars.size() || chars[ci][0] == 0) return char32_t(0);
+		size_t len;
+		return utf8::decode(chars[ci].data(), chars[ci].size(), len);
+	};
+	auto isFS = [&]() { return cp() != 0 && utf8::contains(separators, cp()); };
 
-	auto load = [&]() { cp = (i < len && pc[i]) ? utf8::decode(pc + i, len - i, cl) : 0; };
-	auto advance = [&]() { i += cl; ci++; load(); };
-	auto isFS = [&]() { return cp != 0 && utf8::contains(separators, cp); };
-
-	load();
-	while (cp != 0) {
+	while (cp() != 0) {
 		bool bFieldHasContent = true;
 		m_fieldCount++;
 		m_fieldStart.push_back(ci+1);
 		if (isFS()) {
 			bFieldHasContent = false;
 		} else {
-			while (cp != 0 && !isFS()) advance();
+			while (cp() != 0 && !isFS()) ci++;
 		}
 		m_fieldEnd.push_back(bFieldHasContent ? ci : EMPTY_FIELD_MARKER);
-		if (isFS()) advance();
+		if (isFS()) ci++;
 	}
 }
 

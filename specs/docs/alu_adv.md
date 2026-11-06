@@ -83,7 +83,7 @@
 ## Table of String Functions
 
 In UTF8 mode, character lengths and positions in the string functions below
-count Unicode code points rather than bytes. This includes length arguments,
+count extended grapheme clusters rather than bytes. This includes length arguments,
 start positions, returned positions, and the lengths returned by `length`,
 `wordlength`, `wordlen`, and `fieldlength`. Arguments that count words, such as
 the length arguments to `delword` and `subword`, still count words.
@@ -101,7 +101,7 @@ lengths and byte lengths are the same.
 | `rsearch(string,exp, [matchFlags])` | Returns `1` if the regular expression `regEx` matches any substring of `string`, or `0` otherwise. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
 | `rreplace(string,exp,fmt [matchFlags])` | Returns the string `string`, with all matches of the regular expression `regEx` replaced by what's in `fmt`. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s` |
-| `length(s)` | Returns the length of `s` in Unicode code points in UTF8 mode, or bytes in ASCII mode. |
+| `length(s)` | Returns the length of `s` in grapheme clusters in UTF8 mode, or bytes in ASCII mode. |
 | `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |
 | `substitute(haystack,needle,subst,max)` | Returns the string `haystack` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. The default for `max` is 1 |
 | `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |

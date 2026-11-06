@@ -72,6 +72,9 @@
     <ClCompile Include="utils\utf8.cc">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\utf8proc.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="utils\alu.cc">
       <Filter>utils</Filter>
     </ClCompile>
@@ -141,6 +144,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\utf8.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\utf8proc\utf8proc.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\alu.h">

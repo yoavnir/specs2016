@@ -18,6 +18,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 extern void setRegexType(std::string& s);
 extern bool g_bWarnAboutGrammars;
+extern bool g_bSupportUTF8;
 
 // REGEX_GRAMMARS arrives on the command line as a bare (unquoted) token; see
 // the comment in aluRegex.cc for why STRINGIFY()+dequote() is needed here.
@@ -1260,6 +1261,9 @@ int runALUUnitTests12(unsigned int onlyTest)
 	VERIFY_EXPR_RES("reverse('12')", "21");
 	VERIFY_EXPR_RES("reverse('bird')", "drib");
 	VERIFY_EXPR_RES("reverse('chuck')", "kcuhc");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("reverse('שלום')", "םולש");
+	g_bSupportUTF8 = false;
 	return 0;
 }
 
