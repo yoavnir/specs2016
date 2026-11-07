@@ -1235,8 +1235,8 @@ int runALUUnitTests12(unsigned int onlyTest)
 	VERIFY_EXPR_RES("insert('xy','hello',0,-1)", "insert: Invalid negative length value: -1");
 	VERIFY_EXPR_RES("insert('xy','hello',0,1,'q')", "xhello");
 	VERIFY_EXPR_RES("insert('xy','hello',0,4,'q')", "xyqqhello");
-	VERIFY_EXPR_RES("insert('xy','hello',0,4,'')", "insert: Invalid pad argument: <>");
-	VERIFY_EXPR_RES("insert('xy','hello',0,4,'qq')", "insert: Invalid pad argument: <qq>");
+	VERIFY_EXPR_RES("insert('xy','hello',0,4,'')", "insert: Pad argument should be 1 char. Got <>");
+	VERIFY_EXPR_RES("insert('xy','hello',0,4,'qq')", "insert: Pad argument should be 1 char. Got <qq>");
 
 	VERIFY_EXPR_RES("justify('this is it',18)", "this     is     it");
 	VERIFY_EXPR_RES("justify('this is it',19)", "this     is      it");
@@ -1247,8 +1247,8 @@ int runALUUnitTests12(unsigned int onlyTest)
 	VERIFY_EXPR_RES("justify('this is it',-1)", "justify: len argument should be non-negative. Got -1");
 	VERIFY_EXPR_RES("justify('this is it',18,'x')", "thisxxxxxisxxxxxit");
 	VERIFY_EXPR_RES("justify('     this is it',18,'x')", "thisxxxxxisxxxxxit");
-	VERIFY_EXPR_RES("justify('this is it',18,'')", "justify: Invalid pad argument: <>");
-	VERIFY_EXPR_RES("justify('this is it',18,'qq')", "justify: Invalid pad argument: <qq>");
+	VERIFY_EXPR_RES("justify('this is it',18,'')", "justify: Pad argument should be 1 char. Got <>");
+	VERIFY_EXPR_RES("justify('this is it',18,'qq')", "justify: Pad argument should be 1 char. Got <qq>");
 
 	VERIFY_EXPR_RES("overlay('not','this is really right',9,6,'.')", "this is not... right");
 	VERIFY_EXPR_RES("overlay('eous','this is right',14,0,' ')", "this is righteous");
