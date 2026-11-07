@@ -3,6 +3,7 @@
 #include <algorithm>
 #define UTF8PROC_STATIC
 #include "utils/utf8proc/utf8proc.h"
+#include "utils/ErrorReporting.h"
 #include "utf8.h"
 
 namespace utf8 {
@@ -74,6 +75,8 @@ bool isAscii(const char* p, size_t len)
 {
 	// Eight bytes at a time; memcpy keeps this free of alignment and aliasing issues
 	static const uint64_t highBits = 0x8080808080808080ULL;
+	uint64_t ptrasint = uint64_t(p);
+	if (ptrasint%8) MYTHROW("indivisible");
 	size_t i = 0;
 	for ( ; i + 8 <= len; i += 8) {
 		uint64_t w;
@@ -84,6 +87,12 @@ bool isAscii(const char* p, size_t len)
 		if (p[i] & 0x80) return false;
 	}
 	return true;
+}
+
+bool isAscii(const std::string& s)
+{
+	return !std::any_of(s.begin(), s.end(),
+        [](unsigned char c) { return c & 0x80; });
 }
 
 bool isValid(const char* p, size_t len)

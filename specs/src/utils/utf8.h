@@ -26,7 +26,7 @@ size_t seqLen(const char* p, size_t avail);
 char32_t decode(const char* p, size_t avail, size_t& len);
 
 bool isAscii(const char* p, size_t len);
-inline bool isAscii(const std::string& s) { return isAscii(s.data(), s.size()); }
+bool isAscii(const std::string& s);
 
 // Is every byte part of a well-formed sequence?
 bool isValid(const char* p, size_t len);
