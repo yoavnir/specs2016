@@ -27,42 +27,28 @@
 #define PAD_CHAR ' '
 
 /*
- * In UTF8 mode, the string functions count code points rather than bytes, in
+ * In UTF8 mode, the string functions count graphemes rather than bytes, in
  * both lengths and positions. A string that is all ASCII gives the same count
- * either way, so the code-point versions are only used when one of the
+ * either way, so the grapheme versions are only used when one of the
  * strings involved is not.
  *
  * Functions that need it are written as templates over the string type:
  * std::string for bytes, and utf8::GraphemeString for grapheme clusters.
  */
-static bool byGraphemes(std::initializer_list<const std::string*> strs)
-{
-	if (!g_bSupportUTF8) return false;
-	for (const std::string* p : strs) {
-		if (!utf8::isAscii(*p)) return true;
-	}
-	return false;
-}
 
 static size_t strLength(const std::string& s)
 {
-	if (g_bSupportUTF8)
-		return byGraphemes({&s}) ? utf8::charCount(s) : s.length();
-	return s.length();
+	if (!g_bSupportUTF8 || utf8::isAscii(s))
+		return s.length();
+	return utf8::charCount(s);
 }
 
 // Like std::string::substr, but pos and count are characters
 static std::string strSubstr(const std::string& s, size_t pos, size_t count = std::string::npos)
 {
-	if (g_bSupportUTF8)
-		return byGraphemes({&s}) ? utf8::substr(s, pos, count) : s.substr(pos, count);
-	return s.substr(pos, count);
-}
-
-// A pad argument must be a single character
-static bool isOneChar(const std::string& s)
-{
-	return 1 == strLength(s);
+	if (!g_bSupportUTF8 || utf8::isAscii(s))
+		return s.substr(pos, count);
+	return utf8::substr(s, pos, count);
 }
 
 #define PERCENTS (ALUFloat(100.0))
@@ -144,6 +130,16 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
 
 #define ARG_STR_WITH_DEFAULT(arg,def)       \
 		((nullptr == (arg)) ? def : (arg)->getStr())
+
+#define ARG_SINGLECHAR_WITH_DEFAULT(s,arg,def,fn)	\
+		std::string s;					\
+		if ((nullptr!=(arg))) {			\
+			s = (arg)->getStr();		\
+			if (1 != strLength(s)) {	\
+				std::string err = #fn ": Pad argument should be 1 char. Got <" + s + ">"; \
+				MYTHROW(err);			\
+			}							\
+		} else s = def;
 
 #define ARG_FLOAT_WITH_DEFAULT(arg,def)       \
 		((nullptr == (arg)) ? def : (arg)->getFloat())
@@ -757,7 +753,7 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 	if (start==0) {    // invalid string index in specs
 		return mkValue0();  // NaN
 	}
-	if (g_bSupportUTF8 && byGraphemes({pStr})) {
+	if (g_bSupportUTF8 && !utf8::isAscii(*pStr)) {
 		return mkValue(utf8::fromGraphemes(substring_do(utf8::toGraphemes(*pStr), start, length)));
 	}
 	return mkValue(substring_do(*pStr, start, length));
@@ -786,7 +782,7 @@ static PValue AluFunc_align(PValue pBigString, PValue pLength, strAlign how)
 {
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	ALUInt len = pLength->getInt();
-	if (g_bSupportUTF8 && byGraphemes({pBigStr})) {
+	if (g_bSupportUTF8 && !utf8::isAscii(*pBigStr)) {
 		return mkValue(utf8::fromGraphemes(align_do(utf8::toGraphemes(*pBigStr), len, how)));
 	}
 	return mkValue(align_do(*pBigStr, len, how));
@@ -842,7 +838,7 @@ static ALUInt find_do(const S& haystack, const S& needle, size_t from, bool bLas
 
 static ALUInt strFind(const std::string& haystack, const std::string& needle, size_t from = 0, bool bLast = false)
 {
-	if (g_bSupportUTF8 && byGraphemes({&haystack, &needle})) {
+	if (g_bSupportUTF8 && !(utf8::isAscii(haystack) && utf8::isAscii(needle))) {
 		return find_do(utf8::toGraphemes(haystack), utf8::toGraphemes(needle), from, bLast);
 	}
 	return find_do(haystack, needle, from, bLast);
@@ -881,7 +877,7 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	ALUInt offset = _pOffset->getInt();
 
-	if (g_bSupportUTF8 && byGraphemes({pHaystack, pNeedle})) {
+	if (g_bSupportUTF8 && !(utf8::isAscii(*pHaystack) && utf8::isAscii(*pNeedle))) {
 		return mkValue(utf8::fromGraphemes(splus_do(utf8::toGraphemes(*pHaystack), utf8::toGraphemes(*pNeedle), offset, count)));
 	}
 	return mkValue(splus_do(*pHaystack, *pNeedle, offset, count));
@@ -2102,7 +2098,7 @@ static PValue AluFunc_compare_do(PValue pS1, PValue pS2, const std::string& pad)
 	if (s1 == s2) {
 		return mkValue(ALUInt(0));
 	}
-	if (g_bSupportUTF8 && byGraphemes({&s1, &s2, &pad})) {
+	if (g_bSupportUTF8 && !(utf8::isAscii(s1) && utf8::isAscii(s2) && utf8::isAscii(pad))) {
 		return mkValue(compare_do(utf8::toGraphemes(s1), utf8::toGraphemes(s2), utf8::toGraphemes(pad)[0]));
 	}
 	return mkValue(compare_do(s1, s2, pad[0]));
@@ -2112,11 +2108,9 @@ PValue AluFunc_compare(PValue pS1, PValue pS2, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pS1,1,s1);
 	ASSERT_NOT_ELIDED(pS2,2,s2);
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (!isOneChar(sPad)) {
-		std::string err = "compare: Pad argument should be 1 char. Got <" + sPad + ">";
-		MYTHROW(err);
-	}
+
+	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", compare);
+
 	return AluFunc_compare_do(pS1, pS2, sPad);
 }
 
@@ -2167,7 +2161,7 @@ PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
 	auto start = pStart->getInt();
 	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
 
-	if (g_bSupportUTF8 && byGraphemes({&theString})) {
+	if (g_bSupportUTF8 && !utf8::isAscii(theString)) {
 		return mkValue(utf8::fromGraphemes(delstr_do(utf8::toGraphemes(theString), start, length)));
 	}
 	return mkValue(delstr_do(theString, start, length));
@@ -2378,13 +2372,11 @@ PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue p
 		std::string err = "insert: Invalid negative length value: " + std::to_string(length);
 		MYTHROW(err);
 	}
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (!isOneChar(sPad)) {
-		std::string err = "insert: Invalid pad argument: <" + sPad + ">";
-		MYTHROW(err);
-	}
 
-	if (g_bSupportUTF8 && byGraphemes({&theString, &theTarget, &sPad})) {
+	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", insert);
+
+	if (g_bSupportUTF8 && 
+		!(utf8::isAscii(theString) && utf8::isAscii(theTarget) && utf8::isAscii(sPad))) {
 		return mkValue(utf8::fromGraphemes(insert_do(utf8::toGraphemes(theString), utf8::toGraphemes(theTarget),
 				size_t(position), size_t(length), utf8::toGraphemes(sPad)[0])));
 	}
@@ -2429,11 +2421,8 @@ PValue AluFunc_justify(PValue pStr, PValue pLen, PValue pPad)
 		std::string err = "justify: len argument should be non-negative. Got " + std::to_string(len);
 		MYTHROW(err);
 	}
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (!isOneChar(sPad)) {
-		std::string err = "justify: Invalid pad argument: <" + sPad + ">";
-		MYTHROW(err);
-	}
+
+	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", justify);
 
 	return justify_do(str,size_t(len), sPad);
 }
@@ -2472,7 +2461,8 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 	auto str2 = pString2->getStr();
 	ALUInt start = ARG_INT_WITH_DEFAULT(pStart, 1);
 	ALUInt length = ARG_INT_WITH_DEFAULT(pLength, 0);
-	std::string padStr = ARG_STR_WITH_DEFAULT(pPad, " ");
+
+	ARG_SINGLECHAR_WITH_DEFAULT(padStr, pPad, " ", overlay);
 
 	// sanity checks
 	if (0 == str1.length()) return mkValue(str2);
@@ -2484,12 +2474,9 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 		std::string err = "overlay: length argument should be positive. Got: " + std::to_string(length);
 		MYTHROW(err);
 	}
-	if (length>0 && !isOneChar(padStr)) {
-		std::string err = "overlay: Invalid pad argument: <" + padStr + ">";
-		MYTHROW(err);
-	}
 
-	if (g_bSupportUTF8 && byGraphemes({&str1, &str2, &padStr})) {
+	if (g_bSupportUTF8 && 
+		!(utf8::isAscii(str1) && utf8::isAscii(str2) && utf8::isAscii(padStr))) {
 		return mkValue(utf8::fromGraphemes(overlay_do(utf8::toGraphemes(str1), utf8::toGraphemes(str2),
 				start, length, utf8::toGraphemes(padStr)[0])));
 	}
@@ -2499,12 +2486,14 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 PValue AluFunc_reverse(PValue pStr)
 {
 	ASSERT_NOT_ELIDED(pStr,1,str);
-	if (g_bSupportUTF8 && byGraphemes({pStr->getStrPtr()})) {
-		auto gStr = utf8::toGraphemes(pStr->getStr());
+	auto str = pStr->getStr();
+
+	if (g_bSupportUTF8 && !utf8::isAscii(str)) {
+		auto gStr = utf8::toGraphemes(str);
 		gStr.reverse();
 		return mkValue(utf8::fromGraphemes(gStr)); 
 	}
-	auto str = pStr->getStr();
+
 	std::reverse(str.begin(), str.end());
 	return mkValue(str);
 }
@@ -2541,11 +2530,9 @@ PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pStr,1,string);
 	auto wordVector = breakIntoWords(pStr->getStr());
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (!isOneChar(sPad)) {
-		std::string err = "space: Pad argument should be 1 char. Got <" + sPad + ">";
-		MYTHROW(err);
-	}
+
+	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", space);
+
 	const std::string& pad = sPad;
 	ALUInt len = ARG_INT_WITH_DEFAULT(pLength, 1);
 	if (len < 0 || len > 1000) {
@@ -2723,7 +2710,7 @@ PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue 
 		MYTHROW(err);
 	}
 
-	if (g_bSupportUTF8 && byGraphemes({&str, &reference})) {
+	if (g_bSupportUTF8 && !(utf8::isAscii(str) && utf8::isAscii(reference))) {
 		return mkValue(verify_do(utf8::toGraphemes(str), utf8::toGraphemes(reference), option, start));
 	}
 	return mkValue(verify_do(str, reference, option, start));
@@ -2746,7 +2733,9 @@ PValue AluFunc_wordindex(PValue pString, PValue pIdx)
 	ALUInt ret = 0;
 	if (size_t(idx-1) < wordvec.size()) {
 		size_t offset = wordvec[idx-1];
-		ret = ALUInt((g_bSupportUTF8 && byGraphemes({&str})) ? utf8::charCount(str.data(), offset) : offset) + 1;
+		if (g_bSupportUTF8 && !utf8::isAscii(str))
+			ret = ALUInt(utf8::charCount(str.data(), offset) + 1);
+		else ret = ALUInt(offset + 1);
 	}
 
 	return mkValue(ret);
