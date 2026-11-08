@@ -38,7 +38,7 @@
 
 static size_t strLength(const std::string& s)
 {
-	if (!g_bSupportUTF8 || utf8::isAscii(s))
+	if (UTF8_STRING_IS_ASCII(s))
 		return s.length();
 	return utf8::charCount(s);
 }
@@ -46,7 +46,7 @@ static size_t strLength(const std::string& s)
 // Like std::string::substr, but pos and count are characters
 static std::string strSubstr(const std::string& s, size_t pos, size_t count = std::string::npos)
 {
-	if (!g_bSupportUTF8 || utf8::isAscii(s))
+	if (UTF8_STRING_IS_ASCII(s))
 		return s.substr(pos, count);
 	return utf8::substr(s, pos, count);
 }
@@ -443,9 +443,10 @@ PValue AluFunc_tobin(PValue op)
 PValue AluFunc_length(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
-	if (!g_bSupportUTF8)
-		return mkValue(ALUInt(op->getStr().length()));
-	return mkValue(ALUInt(utf8::charCount(op->getStr())));
+	auto s = op->getStr();
+	if (UTF8_STRING_IS_ASCII(s))
+		return mkValue(ALUInt(s.length()));
+	return mkValue(ALUInt(utf8::charCount(s)));
 }
 
 PValue AluFunc_bytelength(PValue op)
@@ -753,7 +754,7 @@ static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt lengt
 	if (start==0) {    // invalid string index in specs
 		return mkValue0();  // NaN
 	}
-	if (g_bSupportUTF8 && !utf8::isAscii(*pStr)) {
+	if (UTF8_STRING_NOT_ASCII(*pStr)) {
 		return mkValue(utf8::fromGraphemes(substring_do(utf8::toGraphemes(*pStr), start, length)));
 	}
 	return mkValue(substring_do(*pStr, start, length));
@@ -782,7 +783,7 @@ static PValue AluFunc_align(PValue pBigString, PValue pLength, strAlign how)
 {
 	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	ALUInt len = pLength->getInt();
-	if (g_bSupportUTF8 && !utf8::isAscii(*pBigStr)) {
+	if (UTF8_STRING_NOT_ASCII(*pBigStr)) {
 		return mkValue(utf8::fromGraphemes(align_do(utf8::toGraphemes(*pBigStr), len, how)));
 	}
 	return mkValue(align_do(*pBigStr, len, how));
@@ -838,7 +839,7 @@ static ALUInt find_do(const S& haystack, const S& needle, size_t from, bool bLas
 
 static ALUInt strFind(const std::string& haystack, const std::string& needle, size_t from = 0, bool bLast = false)
 {
-	if (g_bSupportUTF8 && !(utf8::isAscii(haystack) && utf8::isAscii(needle))) {
+	if (UTF8_STRINGS_NOT_ASCII2(haystack,needle)) {
 		return find_do(utf8::toGraphemes(haystack), utf8::toGraphemes(needle), from, bLast);
 	}
 	return find_do(haystack, needle, from, bLast);
@@ -877,7 +878,7 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	ALUInt offset = _pOffset->getInt();
 
-	if (g_bSupportUTF8 && !(utf8::isAscii(*pHaystack) && utf8::isAscii(*pNeedle))) {
+	if (UTF8_STRINGS_NOT_ASCII2(*pHaystack, *pNeedle)) {
 		return mkValue(utf8::fromGraphemes(splus_do(utf8::toGraphemes(*pHaystack), utf8::toGraphemes(*pNeedle), offset, count)));
 	}
 	return mkValue(splus_do(*pHaystack, *pNeedle, offset, count));
@@ -2098,7 +2099,7 @@ static PValue AluFunc_compare_do(PValue pS1, PValue pS2, const std::string& pad)
 	if (s1 == s2) {
 		return mkValue(ALUInt(0));
 	}
-	if (g_bSupportUTF8 && !(utf8::isAscii(s1) && utf8::isAscii(s2) && utf8::isAscii(pad))) {
+	if (UTF8_STRINGS_NOT_ASCII3(s1,s2,pad)) {
 		return mkValue(compare_do(utf8::toGraphemes(s1), utf8::toGraphemes(s2), utf8::toGraphemes(pad)[0]));
 	}
 	return mkValue(compare_do(s1, s2, pad[0]));
@@ -2161,7 +2162,7 @@ PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
 	auto start = pStart->getInt();
 	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
 
-	if (g_bSupportUTF8 && !utf8::isAscii(theString)) {
+	if (UTF8_STRING_NOT_ASCII(theString)) {
 		return mkValue(utf8::fromGraphemes(delstr_do(utf8::toGraphemes(theString), start, length)));
 	}
 	return mkValue(delstr_do(theString, start, length));
@@ -2375,8 +2376,7 @@ PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue p
 
 	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", insert);
 
-	if (g_bSupportUTF8 && 
-		!(utf8::isAscii(theString) && utf8::isAscii(theTarget) && utf8::isAscii(sPad))) {
+	if (UTF8_STRINGS_NOT_ASCII3(theString, theTarget, sPad)) {
 		return mkValue(utf8::fromGraphemes(insert_do(utf8::toGraphemes(theString), utf8::toGraphemes(theTarget),
 				size_t(position), size_t(length), utf8::toGraphemes(sPad)[0])));
 	}
@@ -2475,8 +2475,7 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 		MYTHROW(err);
 	}
 
-	if (g_bSupportUTF8 && 
-		!(utf8::isAscii(str1) && utf8::isAscii(str2) && utf8::isAscii(padStr))) {
+	if (UTF8_STRINGS_NOT_ASCII3(str1, str2, padStr)) {
 		return mkValue(utf8::fromGraphemes(overlay_do(utf8::toGraphemes(str1), utf8::toGraphemes(str2),
 				start, length, utf8::toGraphemes(padStr)[0])));
 	}
@@ -2488,7 +2487,7 @@ PValue AluFunc_reverse(PValue pStr)
 	ASSERT_NOT_ELIDED(pStr,1,str);
 	auto str = pStr->getStr();
 
-	if (g_bSupportUTF8 && !utf8::isAscii(str)) {
+	if (UTF8_STRING_NOT_ASCII(str)) {
 		auto gStr = utf8::toGraphemes(str);
 		gStr.reverse();
 		return mkValue(utf8::fromGraphemes(gStr)); 
@@ -2710,7 +2709,7 @@ PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue 
 		MYTHROW(err);
 	}
 
-	if (g_bSupportUTF8 && !(utf8::isAscii(str) && utf8::isAscii(reference))) {
+	if (UTF8_STRINGS_NOT_ASCII2(str, reference)) {
 		return mkValue(verify_do(utf8::toGraphemes(str), utf8::toGraphemes(reference), option, start));
 	}
 	return mkValue(verify_do(str, reference, option, start));
@@ -2733,7 +2732,7 @@ PValue AluFunc_wordindex(PValue pString, PValue pIdx)
 	ALUInt ret = 0;
 	if (size_t(idx-1) < wordvec.size()) {
 		size_t offset = wordvec[idx-1];
-		if (g_bSupportUTF8 && !utf8::isAscii(str))
+		if (UTF8_STRING_NOT_ASCII(str))
 			ret = ALUInt(utf8::charCount(str.data(), offset) + 1);
 		else ret = ALUInt(offset + 1);
 	}

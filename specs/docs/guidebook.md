@@ -482,8 +482,7 @@ Widths count grapheme clusters, not screen columns. Wide characters such as
 日 take two columns on most terminals, so columns of CJK text may not line up.
 
 UTF8 mode remains experimental because not every feature is UTF-8 aware.
-Features such as regular expressions and conversions such as `UCASE` and 
-`LCASE` still treat strings as bytes.
+Features such as regular expressions still treat strings as bytes.
 
 ---
 
@@ -893,6 +892,7 @@ These exist automatically without any `~/.specs` entry:
 |------|-------|
 | `@version` | The specs version string, e.g., `1.0.0` |
 | `@platform` | Platform description (OS, compiler, Python version) |
+| `@unicode` | Describes the Unicode version supported in UTF8 mode, and the library version |
 | `@cols` | Number of columns in the terminal (from `$COLUMNS`, or 80, when no terminal is attached) |
 | `@rows` | Number of rows in the terminal (from `$LINES`, or 24, when no terminal is attached) |
 | `@python` | Either `Enabled` or `Disabled` |

@@ -2561,9 +2561,13 @@ or
 .B Disabled
 depending on whether support for python function is available.
 .IP "platform" 3
-contains a string describing this build. For example:
+contains a string describing the platform this build is running on. For example:
 .p
     POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
+.IP "unicode" 3
+contains a string describing the unicode support in this executable. For example:
+.p
+    Unicode version 18.0.0 provided by utf8proc version 2.12.0
 .IP "build-commit" 3
 contains the git commit hash (short form) of the build. For example:
 .p
@@ -2669,17 +2673,9 @@ Finally, let's make our own version of the multi-column display:
 .SH SEE ALSO
 sed(1), awk(1)
 .SH BUGS
-In UTF8 mode,
+The UTF8 mode of
 .B specs
-counts extended grapheme clusters. Thus
-precomposed
-.B é
-(U+00E9) and the visually identical decomposed form
-.B e
-followed by U+0301 both have length 1.
-.PP
-Widths count grapheme clusters rather than display columns, so wide characters such
-as CJK ideographs may not align on a terminal.
+is still experimental. Not all functionality is Unicode-aware.
 .PP
 Open a ticket on GitHub if you find other bugs.
 .SH AUTHOR

@@ -1428,7 +1428,13 @@ int main(int argc, char** argv)
 	VERIFY2("print 'pos(\"c\",@@)' 1 print 'substr(@@,1,2)' nw print 'delstr(@@,2,1)' nw",
 			"e" U_COMBINING_ACUTE "clair", "2 e" U_COMBINING_ACUTE "c e" U_COMBINING_ACUTE "lair");  // TEST #364
 
+	VERIFY("/éclair/ ucase 1", "ÉCLAIR");        // Test #365
+	VERIFY("/ÉCLAIR/ lcase 1", "éclair");        // Test #366
+
 	g_bSupportUTF8 = false;
+
+	VERIFY("/éclair/ ucase 1", "éCLAIR");        // Test #367
+	VERIFY("/ÉCLAIR/ lcase 1", "Éclair");        // Test #368
 
 	if (errorCount) {
 		if (onlyTest == 0) {

@@ -199,6 +199,7 @@ Now you can shorted the former specification to this:
 There are some pre-configured labels that do not need to be explicitly defined:
 * version - contains the version of *specs*
 * platform - contains a string with the OS type, the compiler and the variation used to build *specs*
+* unicode - contains a string with the Unicode version (18.0.0) and the library version (currently, 2.12.0)
 * cols - contains the number of screen columns - useful for composed output placement.
 * rows - contains the number of screen rows.
 * build-commit - contains the git commit hash (short form) of the build

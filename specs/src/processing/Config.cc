@@ -20,6 +20,7 @@
 #include "utils/aluRegex.h"
 #include "utils/aluFunctions.h"
 #include "utils/build_info.h"
+#include "utils/utf8proc/utf8proc.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -258,6 +259,9 @@ void readConfigurationFile(useKeyValueCB cb)
 		ExternalLiterals["rows"] = getTerminalRowsAndColumns(true);
 	}
 #endif
+
+	// Unicode
+	ExternalLiterals["unicode"] = std::string("Unicode version ") + utf8proc_unicode_version() + " provided by utf8proc version " + utf8proc_version();
 
 	// Build information
 	ExternalLiterals["build-commit"] = dequote(STRINGIFY(SPECS_BUILD_COMMIT));

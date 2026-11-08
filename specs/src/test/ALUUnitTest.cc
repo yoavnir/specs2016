@@ -972,12 +972,20 @@ int runALUUnitTests9(unsigned int onlyTest)
 	VERIFY_EXPR_RES("ucase('7-')", "7-");
 	VERIFY_EXPR_RES("ucase('UpPeRcAsE')", "UPPERCASE");
 	VERIFY_EXPR_RES("ucase('')", "");
+	VERIFY_EXPR_RES("ucase('éclair')", "éCLAIR");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("ucase('éclair')", "ÉCLAIR");
+	g_bSupportUTF8 = false;
 
 	VERIFY_EXPR_RES("lcase('a')", "a");
 	VERIFY_EXPR_RES("lcase('A')", "a");
 	VERIFY_EXPR_RES("lcase('7-')", "7-");
 	VERIFY_EXPR_RES("lcase('LoWeRcAsE')", "lowercase");
 	VERIFY_EXPR_RES("lcase('')", "");
+	VERIFY_EXPR_RES("lcase('ÉCLAIR')", "Éclair");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lcase('ÉCLAIR')", "éclair");
+	g_bSupportUTF8 = false;
 
 	VERIFY_EXPR_RES("bswap('a')", "a");
 	VERIFY_EXPR_RES("bswap('A')", "A");
