@@ -225,26 +225,45 @@ GraphemeString GraphemeString::substr(size_t pos, size_t count) const
 	return GraphemeString(std::vector<std::string>(m_chars.begin() + pos, m_chars.begin() + end));
 }
 
+static std::string canonicalGrapheme(const std::string& g)
+{
+	if (isAscii(g)) return g;
+	utf8proc_uint8_t* p = utf8proc_NFC(reinterpret_cast<const utf8proc_uint8_t*>(g.c_str()));
+	if (!p) return g;
+	std::string ret(reinterpret_cast<char*>(p));
+	free(p);
+	return ret;
+}
+
+static std::vector<std::string> canonicalGraphemes(const std::vector<std::string>& v)
+{
+	std::vector<std::string> ret;
+	ret.reserve(v.size());
+	for (const std::string& g : v) ret.push_back(canonicalGrapheme(g));
+	return ret;
+}
+
 size_t GraphemeString::find(const GraphemeString& needle, size_t pos) const
 {
 	if (pos > m_chars.size()) return npos;
 	if (needle.empty()) return pos;
-	auto it = std::search(m_chars.begin() + pos, m_chars.end(),
-			needle.m_chars.begin(), needle.m_chars.end());
-	return it == m_chars.end() ? npos : size_t(it - m_chars.begin());
+	std::vector<std::string> h = canonicalGraphemes(m_chars), n = canonicalGraphemes(needle.m_chars);
+	auto it = std::search(h.begin() + pos, h.end(), n.begin(), n.end());
+	return it == h.end() ? npos : size_t(it - h.begin());
 }
 
 size_t GraphemeString::rfind(const GraphemeString& needle) const
 {
 	if (needle.empty()) return m_chars.size();
-	auto it = std::find_end(m_chars.begin(), m_chars.end(),
-			needle.m_chars.begin(), needle.m_chars.end());
-	return it == m_chars.end() ? npos : size_t(it - m_chars.begin());
+	std::vector<std::string> h = canonicalGraphemes(m_chars), n = canonicalGraphemes(needle.m_chars);
+	auto it = std::find_end(h.begin(), h.end(), n.begin(), n.end());
+	return it == h.end() ? npos : size_t(it - h.begin());
 }
 
 size_t GraphemeString::find(const value_type& ch) const
 {
-	auto it = std::find(m_chars.begin(), m_chars.end(), ch);
+	std::string c = canonicalGrapheme(ch);
+	auto it = std::find_if(m_chars.begin(), m_chars.end(), [&](const std::string& g) { return canonicalGrapheme(g) == c; });
 	return it == m_chars.end() ? npos : size_t(it - m_chars.begin());
 }
 

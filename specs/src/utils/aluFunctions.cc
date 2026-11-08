@@ -973,6 +973,18 @@ PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, P
 	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 
+	if (g_bSupportUTF8) {
+		if (0 != strFind(*pHaystack, _pNeedle1->getStr()))
+			return mkValue(ALUInt(1));
+		else if (_pNeedle2 && 0 != strFind(*pHaystack, _pNeedle2->getStr()))
+			return mkValue(ALUInt(1));
+		else if (_pNeedle3 && 0 != strFind(*pHaystack, _pNeedle3->getStr()))
+			return mkValue(ALUInt(1));
+		else if (_pNeedle4 && 0 != strFind(*pHaystack, _pNeedle4->getStr()))
+			return mkValue(ALUInt(1));
+		return mkValue(ALUInt(0));
+	}
+
 	if (std::string::npos != pHaystack->find(*_pNeedle1->getStrPtr())) {
 		return mkValue(ALUInt(1));
 	} else if (_pNeedle2 && (std::string::npos != pHaystack->find(*_pNeedle2->getStrPtr()))) {
@@ -991,6 +1003,18 @@ PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
 	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
+
+	if (g_bSupportUTF8) {
+		if (0 == strFind(*pHaystack, _pNeedle1->getStr()))
+			return mkValue(ALUInt(0));
+		else if (_pNeedle2 && 0 == strFind(*pHaystack, _pNeedle2->getStr()))
+			return mkValue(ALUInt(0));
+		else if (_pNeedle3 && 0 == strFind(*pHaystack, _pNeedle3->getStr()))
+			return mkValue(ALUInt(0));
+		else if (_pNeedle4 && 0 == strFind(*pHaystack, _pNeedle4->getStr()))
+			return mkValue(ALUInt(0));
+		return mkValue(ALUInt(1));
+	}
 
 	if (std::string::npos == pHaystack->find(*_pNeedle1->getStrPtr())) {
 		return mkValue(ALUInt(0));
