@@ -855,6 +855,7 @@ int runALUUnitTests8(unsigned int onlyTest)
 {
 	// String processing functions
 	counters.set(9,"Magna Carta");
+	counters.set(8,"Université Paris-Saclay");
 	VERIFY_EXPR_RES("substr(#9,2,4)", "agna");
 	VERIFY_EXPR_RES("substr(#9,5,-1)", "a Carta");
 	VERIFY_EXPR_RES("substr(#9,-3,-1)", "rta");
@@ -917,6 +918,13 @@ int runALUUnitTests8(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includes(,'fast','fox')", "1");
 	VERIFY_EXPR_RES("includes(,'quick','goose')", "1");
 	VERIFY_EXPR_RES("includes(,'fast','goose')", "0");
+	VERIFY_EXPR_RES("includes(#8,'Paris','Universite')", "1");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Universite')", "0");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "1");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "0");  // The é is not encoded quite the same
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "1");  // The é is encoded like the last time, but now it matches
+	g_bSupportUTF8 = false;
 
 	VERIFY_EXPR_RES("includesall(#9, 'a')", "1");
 	VERIFY_EXPR_RES("includesall(#9, 'x')", "0");
