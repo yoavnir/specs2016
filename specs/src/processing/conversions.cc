@@ -166,7 +166,8 @@ std::string conv_LCASE(std::string& s) {
 		utf8proc_ssize_t n_src, n_dst;
 		utf8proc_int32_t cp;
 		utf8proc_uint8_t buf[4];
-		while ((n_src = utf8proc_iterate(p, -1, &cp)) > 0) {
+		utf8proc_ssize_t remaining = ret.length();
+		while ((n_src = utf8proc_iterate(p, remaining, &cp)) > 0) {
 			cp = utf8proc_tolower(cp);
 			n_dst = utf8proc_encode_char(cp, buf);
 			if (n_src != n_dst) {
@@ -175,6 +176,7 @@ std::string conv_LCASE(std::string& s) {
 			}
 			memcpy(p, buf, n_dst);
 			p += n_src;
+			remaining -= n_src;
 		}
 	}
 	return ret;
@@ -189,7 +191,8 @@ std::string conv_UCASE(std::string& s) {
 		utf8proc_ssize_t n_src, n_dst;
 		utf8proc_int32_t cp;
 		utf8proc_uint8_t buf[4];
-		while ((n_src = utf8proc_iterate(p, -1, &cp)) > 0) {
+		utf8proc_ssize_t remaining = ret.length();
+		while ((n_src = utf8proc_iterate(p, remaining, &cp)) > 0) {
 			cp = utf8proc_toupper(cp);
 			n_dst = utf8proc_encode_char(cp, buf);
 			if (n_src != n_dst) {
@@ -198,6 +201,7 @@ std::string conv_UCASE(std::string& s) {
 			}
 			memcpy(p, buf, n_dst);
 			p += n_src;
+			remaining -= n_src;
 		}
 	}
 	return ret;
