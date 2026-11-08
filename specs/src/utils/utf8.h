@@ -5,6 +5,8 @@
 #include <vector>
 #include <algorithm>
 
+extern bool g_bSupportUTF8;
+
 // Helpers for treating a byte string as a sequence of UTF-8 encoded Unicode
 // grapheme clusters. A "character" here is an extended grapheme cluster.
 //
@@ -25,7 +27,6 @@ size_t seqLen(const char* p, size_t avail);
 // Decode the character starting at p; its length in bytes goes into len.
 char32_t decode(const char* p, size_t avail, size_t& len);
 
-bool isAscii(const char* p, size_t len);
 bool isAscii(const std::string& s);
 
 // Is every byte part of a well-formed sequence?
@@ -98,5 +99,10 @@ inline bool contains(const std::u32string& set, char32_t cp)
 }
 
 }  // namespace utf8
+
+#define UTF8_STRING_IS_ASCII(s)           ((!g_bSupportUTF8) || utf8::isAscii((s)))
+#define UTF8_STRING_NOT_ASCII(s)          (g_bSupportUTF8 && (false==utf8::isAscii((s))))
+#define UTF8_STRINGS_NOT_ASCII2(s1,s2)    (g_bSupportUTF8 && ((false==utf8::isAscii((s1))) || (false==utf8::isAscii((s2)))))
+#define UTF8_STRINGS_NOT_ASCII3(s1,s2,s3) (g_bSupportUTF8 && ((false==utf8::isAscii((s1))) || (false==utf8::isAscii((s2))) || (false==utf8::isAscii((s3)))))
 
 #endif

@@ -7,6 +7,8 @@
 #include "conversions.h"
 #include "utils/SpecString.h"
 #include "utils/TimeUtils.h"
+#include "utils/utf8.h"
+#include "utils/utf8proc/utf8proc.h"
 
 static std::string conv_identity(std::string& s) {
 	return s;
@@ -14,6 +16,10 @@ static std::string conv_identity(std::string& s) {
 
 static std::string conv_ROT13(std::string& s) {
 	std::string ret;
+	if (UTF8_STRING_NOT_ASCII(s)) {
+		std::string err = "ROT13 only applies to ASCII strings. Got: <" + s + ">";
+		MYTHROW(err); 
+	}
 	ret.resize(s.length());
 	for (size_t i=0; i<s.length(); i++) {
 		if ((s[i]>='A' && s[i]<='M') || (s[i]>='a' && s[i]<='m')) {
@@ -153,13 +159,47 @@ std::string conv_BSWAP(std::string& s) {
 
 std::string conv_LCASE(std::string& s) {
 	std::string ret(s);
-	for (auto & c : ret) c = tolower(c);
+	if (UTF8_STRING_IS_ASCII(s)) {
+		for (auto & c : ret) c = tolower(c);
+	} else {
+		utf8proc_uint8_t *p = (utf8proc_uint8_t*)(ret.data());
+		utf8proc_ssize_t n_src, n_dst;
+		utf8proc_int32_t cp;
+		utf8proc_uint8_t buf[4];
+		while ((n_src = utf8proc_iterate(p, -1, &cp)) > 0) {
+			cp = utf8proc_tolower(cp);
+			n_dst = utf8proc_encode_char(cp, buf);
+			if (n_src != n_dst) {
+				std::string err = "LCASE: Unexpected length discrepancy for " + s;
+				MYTHROW(err);
+			}
+			memcpy(p, buf, n_dst);
+			p += n_src;
+		}
+	}
 	return ret;
 }
 
 std::string conv_UCASE(std::string& s) {
 	std::string ret(s);
-	for (auto & c : ret) c = toupper(c);
+	if (UTF8_STRING_IS_ASCII(s)) {
+		for (auto & c : ret) c = toupper(c);
+	} else {
+		utf8proc_uint8_t *p = (utf8proc_uint8_t*)(ret.data());
+		utf8proc_ssize_t n_src, n_dst;
+		utf8proc_int32_t cp;
+		utf8proc_uint8_t buf[4];
+		while ((n_src = utf8proc_iterate(p, -1, &cp)) > 0) {
+			cp = utf8proc_toupper(cp);
+			n_dst = utf8proc_encode_char(cp, buf);
+			if (n_src != n_dst) {
+				std::string err = "UCASE: Unexpected length discrepancy for " + s;
+				MYTHROW(err);
+			}
+			memcpy(p, buf, n_dst);
+			p += n_src;
+		}
+	}
 	return ret;
 }
 

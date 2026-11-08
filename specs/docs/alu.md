@@ -115,6 +115,10 @@ Another is `@platform` it can return something like this:
 ```
 POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
 ```
+And there's also one to tell us about `@unicode` support:
+```
+Unicode version 18.0.0 provided by utf8proc version 2.12.0
+```
 Others are `@cols`, which contains the number of columns in the terminal screen, and `@rows`, which contains the number of rows on that same screen.
 
 Build information is also available via the following labels:
