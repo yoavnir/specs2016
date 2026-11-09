@@ -225,7 +225,7 @@ GraphemeString GraphemeString::substr(size_t pos, size_t count) const
 	return GraphemeString(std::vector<std::string>(m_chars.begin() + pos, m_chars.begin() + end));
 }
 
-static std::string canonicalGrapheme(const std::string& g)
+std::string canonicalGrapheme(const std::string& g)
 {
 	if (isAscii(g)) return g;
 	utf8proc_uint8_t* p = utf8proc_NFC(reinterpret_cast<const utf8proc_uint8_t*>(g.c_str()));

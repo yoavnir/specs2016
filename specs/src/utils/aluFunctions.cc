@@ -1822,6 +1822,21 @@ PValue AluFunc_substitute(PValue pSrc, PValue pSearchString, PValue pSubstitute,
 		MYTHROW("substitute: Search string must not be empty");
 	}
 
+	if (UTF8_STRINGS_NOT_ASCII3(res, pSearchString->getStr(), pSubstitute->getStr())) {
+		utf8::GraphemeString gRes = utf8::toGraphemes(res);
+		const utf8::GraphemeString gSearch = utf8::toGraphemes(pSearchString->getStr());
+		const utf8::GraphemeString gSubst = utf8::toGraphemes(pSubstitute->getStr());
+		while (count > 0) {
+			findRet = gRes.find(gSearch, findRet);
+			if (findRet == utf8::GraphemeString::npos) break;
+
+			gRes = gRes.substr(0,findRet) + gSubst + gRes.substr(findRet + gSearch.length());
+
+			count--;
+		}
+		return mkValue(utf8::fromGraphemes(gRes));
+	}
+
 	while (count > 0) {
 		findRet = res.find(pSearchString->getStr(), findRet);
 		if (findRet == std::string::npos) break;
@@ -1851,6 +1866,24 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 	if (0 == count) {
 		MYTHROW("sfield: Called with count equal to zero");
 	}
+
+	if (UTF8_STRING_NOT_ASCII(str)) {
+		std::string sepStr = (pSep && pSep->getStrPtr()->length() > 0) ? pSep->getStr() : std::string(1, DEFAULT_FIELDSEPARATOR_C);
+		utf8::GraphemeString gSep = utf8::toGraphemes(sepStr);
+		MYASSERT_WITH_MSG(1 == gSep.length(), "sfield: Separator must be a single character");
+		const std::string canonSep = utf8::canonicalGrapheme(gSep[0]);
+		std::vector<std::string> fields(1);
+		for (const std::string& g : utf8::toGraphemes(str)) {
+			if (utf8::canonicalGrapheme(g) == canonSep) fields.emplace_back();
+			else fields.back() += g;
+		}
+		size_t n = fields.size();
+		size_t want = (count > 0) ? size_t(count) : size_t(-count);
+		if (want > n) return mkValue("");
+		return mkValue(fields[(count > 0) ? want-1 : n-want]);
+	}
+	MYASSERT_WITH_MSG(!(g_bSupportUTF8 && pSep && !utf8::isAscii(pSep->getStr())),
+			"sfield: Separator must be ASCII when the string is ASCII");
 
 	// The following ensures that the string is not zero-length for the rest of the code
 	// which does make that assumption
@@ -1946,6 +1979,29 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 		MYTHROW("sword: Called with count equal to zero");
 	}
 
+	if (UTF8_STRING_NOT_ASCII(str)) {
+		std::string sepStr = (pSep && pSep->getStrPtr()->length() > 0) ? pSep->getStr() : std::string(1, DEFAULT_WORDSEPARATOR_C);
+		utf8::GraphemeString gSep = utf8::toGraphemes(sepStr);
+		MYASSERT_WITH_MSG(1 == gSep.length(), "sword: Separator must be a single character");
+		const std::string canonSep = utf8::canonicalGrapheme(gSep[0]);
+		std::vector<std::string> words;
+		bool inWord = false;
+		for (const std::string& g : utf8::toGraphemes(str)) {
+			if (utf8::canonicalGrapheme(g) == canonSep) inWord = false;
+			else {
+				if (!inWord) words.emplace_back();
+				words.back() += g;
+				inWord = true;
+			}
+		}
+		size_t n = words.size();
+		size_t want = (count > 0) ? size_t(count) : size_t(-count);
+		if (want > n) return mkValue("");
+		return mkValue(words[(count > 0) ? want-1 : n-want]);
+	}
+	MYASSERT_WITH_MSG(!(g_bSupportUTF8 && pSep && !utf8::isAscii(pSep->getStr())),
+			"sword: Separator must be ASCII when the string is ASCII");
+
 	// The following ensures that the string is not zero-length for the rest of the code
 	// which does make that assumption
 	if (0 == str.length()) {
@@ -1998,6 +2054,18 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 
 /* REXX Functions */
 
+// Grapheme-wise prefix test. Assumes the strings are non-ASCII (it also works on ASCII).
+static PValue AluFunc_abbrev_do(const std::string& sBig, const std::string& sLittle)
+{
+	const utf8::GraphemeString gBig = utf8::toGraphemes(sBig);
+	const utf8::GraphemeString gLittle = utf8::toGraphemes(sLittle);
+	if (gBig.length() < gLittle.length()) return mkValue(ALUInt(0));
+	for (size_t i = 0; i < gLittle.length(); i++) {
+		if (utf8::canonicalGrapheme(gBig[i]) != utf8::canonicalGrapheme(gLittle[i])) return mkValue(ALUInt(0));
+	}
+	return mkValue(ALUInt(1));
+}
+
 PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 {
 	ASSERT_NOT_ELIDED(pInformation,1,information);
@@ -2012,15 +2080,12 @@ PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 	std::string sLittle = pLen ? strSubstr(pInfo->getStr(), 0, size_t(len)) : pInfo->getStr();
 
 #if CPP_STD_LEVEL >= 20
+	if (UTF8_STRINGS_NOT_ASCII2(sBig, sLittle)) {
+		return AluFunc_abbrev_do(sBig, sLittle);
+	}
 	return mkValue(ALUInt(sBig.starts_with(sLittle)));
 #else
-	if (sBig.length() >= sLittle.length()) {
-		if (sLittle == sBig.substr(0,sLittle.length())) {
-			return mkValue(ALUInt(1));
-		}
-	}
-
-	return mkValue(ALUInt(0));
+	return AluFunc_abbrev_do(sBig, sLittle);
 #endif
 }
 

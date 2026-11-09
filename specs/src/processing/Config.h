@@ -79,6 +79,7 @@ std::string& configSpecLiteralGet(std::string& key);
 std::string& configSpecLiteralGetWithDefault(std::string& key, std::string& _default);
 
 void configSpecLiteralSet(std::string& key, std::string& value);
+void configSpecLiteralSet(const char* key, const char* value);
 
 bool anyNonPrimaryInputStreamDefined();
 
