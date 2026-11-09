@@ -2079,13 +2079,20 @@ PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 	std::string sBig = pInformation->getStr();
 	std::string sLittle = pLen ? strSubstr(pInfo->getStr(), 0, size_t(len)) : pInfo->getStr();
 
-#if CPP_STD_LEVEL >= 20
 	if (UTF8_STRINGS_NOT_ASCII2(sBig, sLittle)) {
 		return AluFunc_abbrev_do(sBig, sLittle);
 	}
+	
+#if CPP_STD_LEVEL >= 20
 	return mkValue(ALUInt(sBig.starts_with(sLittle)));
 #else
-	return AluFunc_abbrev_do(sBig, sLittle);
+	if (sBig.length() >= sLittle.length()) {
+		if (sLittle == sBig.substr(0,sLittle.length())) {
+			return mkValue(ALUInt(1));
+		}
+	}
+
+	return mkValue(ALUInt(0));
 #endif
 }
 
