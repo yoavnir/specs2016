@@ -1848,6 +1848,46 @@ int runALUUnitTests17(unsigned int onlyTest)
 	g_bSupportUTF8 = true;
 	VERIFY_EXPR_RES("abbrev(@sml_eclair, @big_eclair)", "1");
 	g_bSupportUTF8 = false;
+	
+	// compare
+	VERIFY_EXPR_RES("compare(@sml_eclair, @big_eclair)", "1");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("compare(@sml_eclair, @big_eclair)", "0");
+	g_bSupportUTF8 = false;
+
+	// copies
+	VERIFY_EXPR_RES("length(copies(@big_eclair,3))", "24");
+	VERIFY_EXPR_RES("length(copies(@sml_eclair,3))", "21");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(copies(@big_eclair,3))", "18");
+	VERIFY_EXPR_RES("length(copies(@sml_eclair,3))", "18");
+	g_bSupportUTF8 = false;
+
+	// delstr, delword
+	VERIFY_EXPR_RES("length(delstr(#8, 5, 18))", "6");
+	VERIFY_EXPR_RES("length(delword(#9, 3, 2))", "11");
+	VERIFY_EXPR_RES("delword(#9, 2, 2)", "The good");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(delstr(#8, 5, 18))", "5");
+	VERIFY_EXPR_RES("length(delword(#9, 3, 2))", "10");
+	VERIFY_EXPR_RES("delword(#9, 2, 2)", "The good");
+	g_bSupportUTF8 = false;
+
+	// find
+	VERIFY_EXPR_RES("find(#9, @sml_eclair)", "2");
+	VERIFY_EXPR_RES("find(#9, @big_eclair)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("find(#9, @sml_eclair)", "2");
+	VERIFY_EXPR_RES("find(#9, @big_eclair)", "2");
+	g_bSupportUTF8 = false;
+
+	// index
+	VERIFY_EXPR_RES("index(#9, @sml_eclair)", "5");
+	VERIFY_EXPR_RES("index(#9, @big_eclair)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("index(#9, @sml_eclair)", "5");
+	VERIFY_EXPR_RES("index(#9, @big_eclair)", "5");
+	g_bSupportUTF8 = false;
 
 	if (countFailures) {
 		if (onlyTest == 0) {

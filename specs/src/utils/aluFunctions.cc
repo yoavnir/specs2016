@@ -2165,8 +2165,7 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 	return pRet;
 }
 
-template <class S>
-static ALUInt compare_do(const S& s1, const S& s2, typename S::value_type pad)
+static ALUInt compare_do_ascii(const std::string& s1, const std::string& s2, char pad)
 {
 	auto s1Len = s1.length();
 	auto s2Len = s2.length();
@@ -2188,6 +2187,26 @@ static ALUInt compare_do(const S& s1, const S& s2, typename S::value_type pad)
 	return 0;
 }
 
+static ALUInt compare_do_unicode(const utf8::GraphemeString& s1, const utf8::GraphemeString& s2, typename utf8::GraphemeString::value_type pad)
+{
+	auto s1Len = s1.length();
+	auto s2Len = s2.length();
+
+	auto maxLen = std::max(s1Len, s2Len);
+
+	for (size_t l = 0 ; l < maxLen ; l++) {
+		auto c1 = (l < s1Len) ? s1[l] : pad;
+		auto c2 = (l < s2Len) ? s2[l] : pad;
+
+		if (utf8::canonicalGrapheme(c1) != utf8::canonicalGrapheme(c2)) {
+			return ALUInt(l)+1;
+		}
+	}
+
+	// The padding made them equal
+	return 0;
+}
+
 static PValue AluFunc_compare_do(PValue pS1, PValue pS2, const std::string& pad)
 {
 	auto s1 = pS1->getStr();
@@ -2196,9 +2215,9 @@ static PValue AluFunc_compare_do(PValue pS1, PValue pS2, const std::string& pad)
 		return mkValue(ALUInt(0));
 	}
 	if (UTF8_STRINGS_NOT_ASCII3(s1,s2,pad)) {
-		return mkValue(compare_do(utf8::toGraphemes(s1), utf8::toGraphemes(s2), utf8::toGraphemes(pad)[0]));
+		return mkValue(compare_do_unicode(utf8::toGraphemes(s1), utf8::toGraphemes(s2), utf8::toGraphemes(pad)[0]));
 	}
-	return mkValue(compare_do(s1, s2, pad[0]));
+	return mkValue(compare_do_ascii(s1, s2, pad[0]));
 }
 
 PValue AluFunc_compare(PValue pS1, PValue pS2, PValue pPad)
@@ -2397,6 +2416,8 @@ PValue AluFunc_find(PValue string, PValue phrase)
 	auto phraseWords = breakIntoWords(phrase->getStr());
 	auto stringWords = breakIntoWords(string->getStr());
 
+	bool bCompareGraphemes = UTF8_STRINGS_NOT_ASCII2(phrase->getStr(), string->getStr());
+
 	int phraseWordCount = int(phraseWords.size());
 	int stringWordCount = int(stringWords.size());
 
@@ -2405,7 +2426,12 @@ PValue AluFunc_find(PValue string, PValue phrase)
  		bool foundMismatch = false;
 		for (int j=0; !foundMismatch && j < phraseWordCount; j++)
 		{
-			if (phraseWords[j] != stringWords[i+j]) foundMismatch = true;
+			if (bCompareGraphemes) {
+				if (compare_do_unicode(utf8::toGraphemes(phraseWords[j]), utf8::toGraphemes(stringWords[i+j]), ""))
+					foundMismatch = true;
+			} else {
+				if (phraseWords[j] != stringWords[i+j]) foundMismatch = true;
+			}
 		}
 
 		if (!foundMismatch) return mkValue(ALUInt(i+1));
