@@ -42,27 +42,36 @@ std::string prettify(std::string label, std::string src)
 	std::string ret(label);
 	int max_chars = (label == "Res") ? 160 : 256;
 	ret += ": <";
-	for (char c : src) {
-		if (max_chars <= 0) {
-			if (max_chars == 0) {
-				ret += "...";
-				max_chars--;
+	if (UTF8_STRING_IS_ASCII(src)) {
+		for (char c : src) {
+			if (max_chars <= 0) {
+				if (max_chars == 0) {
+					ret += "...";
+					max_chars--;
+				}
+				continue;
 			}
-			continue;
+			switch (c) {
+				case '\n':
+					ret.append("\\n");
+					break;
+				case '\t':
+				    do {
+						ret+=' ';
+					} while (0 != ret.size() % 4);
+					break;
+				default:
+					ret+=c;
+			}
+			max_chars--;
 		}
-		switch (c) {
-			case '\n':
-				ret.append("\\n");
-				break;
-			case '\t':
-			    do {
-					ret+=' ';
-				} while (0 != ret.size() % 4);
-				break;
-			default:
-				ret+=c;
+	} else {
+		auto graphemes = utf8::toGraphemes(src);
+		for (auto& g : graphemes) {
+			if (1==g.size() && g[0]>=32 && g[0]<=127)
+				ret += g[0];
+			else ret += '.';
 		}
-		max_chars--;
 	}
 	ret += ">";
 	return ret;

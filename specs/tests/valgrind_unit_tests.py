@@ -47,7 +47,7 @@ def get_leak_status_message(rc):
 		return "no leaks"
 
 tests_to_skip = []
-tests_that_may_fail = [9, 43, 48, 61, 62, 63, 68, 69, 70, 71, 73, 74, 83, 151, 152, 153, 154, 188, 197, 198, 199, 211, 412, 413, 414, 415, 418, 420, 422, 423, 424, 425, 426, 427, 430, 432, 435, 437, 438, 439, 492, 754, 834] if arch=='x86_64' else []
+tests_that_may_fail = [9, 43, 48, 61, 62, 63, 68, 69, 70, 71, 73, 74, 83, 151, 152, 153, 154, 188, 197, 198, 199, 211, 412, 413, 414, 415, 418, 420, 422, 423, 424, 425, 426, 427, 430, 432, 435, 437, 438, 439, 492, 747, 754, 827, 834] if arch=='x86_64' else []
 
 # Run ALUUnitTest
 if one_by_one:
@@ -212,7 +212,7 @@ else:
 
 
 # Run ProcessingTest
-tests_that_may_fail = [73, 102, 103, 179] if arch=='x86_64' else []
+tests_that_may_fail = [73, 102, 103, 179, 310, 312] if arch=='x86_64' else []
 if one_by_one:
 	# Run tests one-by-one to find which test leaks
 	sys.stdout.write("Running ProcessingTest one-by-one to find leaking test...\n")

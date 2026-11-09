@@ -84,6 +84,11 @@ public:
 		return lhs += rhs;
 	}
 	const std::vector<std::string>& data() const { return m_chars; }
+	using const_iterator = std::vector<std::string>::const_iterator;
+	const_iterator begin() const { return m_chars.begin(); }
+	const_iterator end() const { return m_chars.end(); }
+	const_iterator cbegin() const { return m_chars.cbegin(); }
+	const_iterator cend() const { return m_chars.cend(); }
 
 private:
 	std::vector<std::string> m_chars;
