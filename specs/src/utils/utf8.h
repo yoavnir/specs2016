@@ -94,6 +94,9 @@ private:
 	std::vector<std::string> m_chars;
 };
 
+// The NFC form of a single grapheme, so that equivalent encodings compare equal.
+std::string canonicalGrapheme(const std::string& g);
+
 GraphemeString toGraphemes(const std::string& s);
 std::string fromGraphemes(const GraphemeString& s);
 

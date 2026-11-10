@@ -324,6 +324,13 @@ void configSpecLiteralSet(std::string& key, std::string& value)
 	ExternalLiterals[key] = value;
 }
 
+void configSpecLiteralSet(const char* key, const char* value)
+{
+	std::string k(key);
+	std::string v(value);
+	configSpecLiteralSet(k,v);
+}
+
 bool configureUTF8Mode()
 {
 	static std::string utf8Key("utf8");

@@ -10,6 +10,7 @@
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
 #include "processing/persistent.h"
+#include "processing/Config.h"
 
 ALUCounters counters;
 ProcessingState g_ps;
@@ -282,6 +283,7 @@ extern bool g_bSupportUTF8;
 		}													\
 	} while(0);
 
+static bool g_bUnicodeIndication = false;
 
 #define VERIFY_EXPR_RES(s,res) 								\
 		INC_TEST_INDEX2 {									\
@@ -316,11 +318,14 @@ extern bool g_bSupportUTF8;
 			}                                               \
 		}                                                   \
 		PRINT_TEST_HEADER << s << " ==> " << res << ": ";			\
-		if (_res && _res2) std::cout << "OK\n";						\
+		if (_res && _res2) std::cout << "OK";						\
 		else {														\
-			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
+			std::cout << "*** NOT OK *** - " << *_result;			\
 			countFailures++;  failedTests.push_back(testIndex);		\
 		}															\
+		if (g_bUnicodeIndication) 									\
+			std::cout << (g_bSupportUTF8 ? " (U)" : " (A)") << "\n"; \
+		else std::cout << "\n";										\
 	}
 
 #define VERIFY_ASSN_RES(s,exp) do {								\
@@ -855,7 +860,6 @@ int runALUUnitTests8(unsigned int onlyTest)
 {
 	// String processing functions
 	counters.set(9,"Magna Carta");
-	counters.set(8,"Université Paris-Saclay");
 	VERIFY_EXPR_RES("substr(#9,2,4)", "agna");
 	VERIFY_EXPR_RES("substr(#9,5,-1)", "a Carta");
 	VERIFY_EXPR_RES("substr(#9,-3,-1)", "rta");
@@ -918,13 +922,6 @@ int runALUUnitTests8(unsigned int onlyTest)
 	VERIFY_EXPR_RES("includes(,'fast','fox')", "1");
 	VERIFY_EXPR_RES("includes(,'quick','goose')", "1");
 	VERIFY_EXPR_RES("includes(,'fast','goose')", "0");
-	VERIFY_EXPR_RES("includes(#8,'Paris','Universite')", "1");
-	VERIFY_EXPR_RES("includes(#8,'Lyons','Universite')", "0");
-	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "1");
-	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "0");  // The é is not encoded quite the same
-	g_bSupportUTF8 = true;
-	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "1");  // The é is encoded like the last time, but now it matches
-	g_bSupportUTF8 = false;
 
 	VERIFY_EXPR_RES("includesall(#9, 'a')", "1");
 	VERIFY_EXPR_RES("includesall(#9, 'x')", "0");
@@ -980,20 +977,12 @@ int runALUUnitTests9(unsigned int onlyTest)
 	VERIFY_EXPR_RES("ucase('7-')", "7-");
 	VERIFY_EXPR_RES("ucase('UpPeRcAsE')", "UPPERCASE");
 	VERIFY_EXPR_RES("ucase('')", "");
-	VERIFY_EXPR_RES("ucase('éclair')", "éCLAIR");
-	g_bSupportUTF8 = true;
-	VERIFY_EXPR_RES("ucase('éclair')", "ÉCLAIR");
-	g_bSupportUTF8 = false;
 
 	VERIFY_EXPR_RES("lcase('a')", "a");
 	VERIFY_EXPR_RES("lcase('A')", "a");
 	VERIFY_EXPR_RES("lcase('7-')", "7-");
 	VERIFY_EXPR_RES("lcase('LoWeRcAsE')", "lowercase");
 	VERIFY_EXPR_RES("lcase('')", "");
-	VERIFY_EXPR_RES("lcase('ÉCLAIR')", "Éclair");
-	g_bSupportUTF8 = true;
-	VERIFY_EXPR_RES("lcase('ÉCLAIR')", "éclair");
-	g_bSupportUTF8 = false;
 
 	VERIFY_EXPR_RES("bswap('a')", "a");
 	VERIFY_EXPR_RES("bswap('A')", "A");
@@ -1742,6 +1731,164 @@ int runALUUnitTests16(unsigned int onlyTest)
 	VERIFY_EXPR_RES("'['||@>||']'", "[hello world]");
 	setOutputAgent(nullptr);
 
+	return 0;
+}
+
+int runALUUnitTests17(unsigned int onlyTest)
+{
+	printHeader(onlyTest, "\nUnicode\n======================\n\n");
+
+	g_bUnicodeIndication = true;
+
+	configSpecLiteralSet("asc_eclair", "eclair");
+	configSpecLiteralSet("sml_eclair", "éclair");  // pre-composed é
+	configSpecLiteralSet("big_eclair", "éclair");  // not precomposed
+
+	counters.set(8,"Université Paris-Saclay");
+	counters.set(9, "The éclair tastes good");  // same as @sml_eclair
+
+	VERIFY_EXPR_RES("substr(#9,5,6)", "éclai");  // The accented e was counted as 2
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("substr(#9,5,6)", "éclair");
+	g_bSupportUTF8 = false;
+
+	VERIFY_EXPR_RES("pos('l',@asc_eclair)", "3");
+	VERIFY_EXPR_RES("pos('l',@sml_eclair)", "4");
+	VERIFY_EXPR_RES("pos('l',@big_eclair)", "5");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("pos('l',@asc_eclair)", "3");
+	VERIFY_EXPR_RES("pos('l',@sml_eclair)", "3");
+	VERIFY_EXPR_RES("pos('l',@big_eclair)", "3");
+	g_bSupportUTF8 = false;
+
+	// lastpos
+	VERIFY_EXPR_RES("lastpos(@sml_eclair, #9)", "5");
+	VERIFY_EXPR_RES("lastpos(@big_eclair, #9)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lastpos(@sml_eclair, #9)", "5");
+	VERIFY_EXPR_RES("lastpos(@big_eclair, #9)", "5");
+	g_bSupportUTF8 = false;
+
+	// includes
+	VERIFY_EXPR_RES("includes(#8,'Paris','Universite')", "1");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Universite')", "0");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "1");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "0");  // The é is not encoded quite the same
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "1");  // The é is encoded like the last time, but now it matches
+	g_bSupportUTF8 = false;
+
+	// includesall
+	VERIFY_EXPR_RES("includesall(#8, 'Paris', 'Université')", "1");  // composed e
+	VERIFY_EXPR_RES("includesall(#8, 'Paris', 'Université')", "0");  // non-composed e
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("includesall(#8, 'Paris', 'Université')", "1");  // composed e
+	VERIFY_EXPR_RES("includesall(#8, 'Paris', 'Université')", "1");  // non-composed e
+	g_bSupportUTF8 = false;
+
+	// left
+	VERIFY_EXPR_RES("left(@asc_eclair,3)", "ecl");
+	VERIFY_EXPR_RES("left(@sml_eclair,3)", "éc");
+	VERIFY_EXPR_RES("left(@big_eclair,3)", "é");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("left(@asc_eclair,3)", "ecl");
+	VERIFY_EXPR_RES("left(@sml_eclair,3)", "écl");
+	VERIFY_EXPR_RES("left(@big_eclair,3)", "écl");
+	g_bSupportUTF8 = false;
+
+	// center
+	VERIFY_EXPR_RES("center(#8, 10)", "ité Paris");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("center(#8, 10)", "sité Paris");
+	g_bSupportUTF8 = false;
+
+	// substitute
+	VERIFY_EXPR_RES("substitute(#9, @sml_eclair, 'X', 1)", "The X tastes good");
+	VERIFY_EXPR_RES("substitute(#9, @big_eclair, 'X', 1)", "The éclair tastes good");  // ASCII mode: different encoding, no match
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("substitute(#9, @sml_eclair, 'X', 1)", "The X tastes good");
+	VERIFY_EXPR_RES("substitute(#9, @big_eclair, 'X', 1)", "The X tastes good");
+	g_bSupportUTF8 = false;
+
+	VERIFY_EXPR_RES("ucase('éclair')", "éCLAIR");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("ucase('éclair')", "ÉCLAIR");
+	g_bSupportUTF8 = false;
+	VERIFY_EXPR_RES("lcase('ÉCLAIR')", "Éclair");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lcase('ÉCLAIR')", "éclair");
+	g_bSupportUTF8 = false;
+
+	// sfield
+	VERIFY_EXPR_RES("length(sfield('Hélvética', 2, 'é'))", "10");
+	VERIFY_EXPR_RES("length(sfield('Hélvética', 2, 'é'))", "6");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(sfield('Hélvética', 2, 'é'))", "2");
+	VERIFY_EXPR_RES("length(sfield('Hélvética', 2, 'é'))", "2");
+	g_bSupportUTF8 = false;
+
+	//lvalue, rvalue
+	VERIFY_EXPR_RES("lvalue('pié3.14','é')", "pié3.14");
+	VERIFY_EXPR_RES("rvalue('pié3.14','é')", "");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lvalue('pié3.14','é')", "pi");
+	VERIFY_EXPR_RES("rvalue('pié3.14','é')", "3.14");
+	g_bSupportUTF8 = false;
+
+	// sword
+	VERIFY_EXPR_RES("length(sword('Héélvética', 2, 'é'))", "13");
+	VERIFY_EXPR_RES("length(sword('Héélvética', 2, 'é'))", "4");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(sword('Héélvética', 2, 'é'))", "2");
+	VERIFY_EXPR_RES("length(sword('Héélvética', 2, 'é'))", "2");
+	g_bSupportUTF8 = false;
+
+	// abbrev
+	VERIFY_EXPR_RES("abbrev(@sml_eclair, @big_eclair)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("abbrev(@sml_eclair, @big_eclair)", "1");
+	g_bSupportUTF8 = false;
+	
+	// compare
+	VERIFY_EXPR_RES("compare(@sml_eclair, @big_eclair)", "1");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("compare(@sml_eclair, @big_eclair)", "0");
+	g_bSupportUTF8 = false;
+
+	// copies
+	VERIFY_EXPR_RES("length(copies(@big_eclair,3))", "24");
+	VERIFY_EXPR_RES("length(copies(@sml_eclair,3))", "21");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(copies(@big_eclair,3))", "18");
+	VERIFY_EXPR_RES("length(copies(@sml_eclair,3))", "18");
+	g_bSupportUTF8 = false;
+
+	// delstr, delword
+	VERIFY_EXPR_RES("length(delstr(#8, 5, 18))", "6");
+	VERIFY_EXPR_RES("length(delword(#9, 3, 2))", "11");
+	VERIFY_EXPR_RES("delword(#9, 2, 2)", "The good");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(delstr(#8, 5, 18))", "5");
+	VERIFY_EXPR_RES("length(delword(#9, 3, 2))", "10");
+	VERIFY_EXPR_RES("delword(#9, 2, 2)", "The good");
+	g_bSupportUTF8 = false;
+
+	// find
+	VERIFY_EXPR_RES("find(#9, @sml_eclair)", "2");
+	VERIFY_EXPR_RES("find(#9, @big_eclair)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("find(#9, @sml_eclair)", "2");
+	VERIFY_EXPR_RES("find(#9, @big_eclair)", "2");
+	g_bSupportUTF8 = false;
+
+	// index
+	VERIFY_EXPR_RES("index(#9, @sml_eclair)", "5");
+	VERIFY_EXPR_RES("index(#9, @big_eclair)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("index(#9, @sml_eclair)", "5");
+	VERIFY_EXPR_RES("index(#9, @big_eclair)", "5");
+	g_bSupportUTF8 = false;
+
 	if (countFailures) {
 		if (onlyTest == 0) {
 			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
@@ -1789,6 +1936,7 @@ int main (int argc, char** argv)
 	rc += runALUUnitTests14(onlyTest);
 	rc += runALUUnitTests15(onlyTest);
 	rc += runALUUnitTests16(onlyTest);
+	rc += runALUUnitTests17(onlyTest);
 
 	persistentVarSaveIfNeeded();
 
