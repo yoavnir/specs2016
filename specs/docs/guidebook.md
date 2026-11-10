@@ -687,6 +687,7 @@ before **specs** sees it, so this specification becomes equivalent to "`specs ` 
 data field source is treated as the string `3.14159265`.
 
 Inside expressions, `@pi` is the numeric value of pi and participates in arithmetic, so "`$ specs ` `PRINT "@pi * @pi" 1`{.specs}" generates the output `9.86960440108936`.
+\newpage
 
 ## Special configured literals that act as settings {#configured-literal-settings}
 
@@ -974,6 +975,7 @@ The opening comment block obeys stricter rules than comments elsewhere in the fi
 - Write the hash mark followed by a space. A hash mark with nothing after it is fine and produces a blank line in the help text, but `#likethis` is *not* a comment as far as the specification parser is concerned — it appears in the help text and then makes the specification fail to compile.
 
 Files whose names begin with a period or an underscore, and files whose names contain `.py`, are not treated as specifications and are not listed.
+\newpage
 
 ## Directives {#directives}
 
@@ -1019,6 +1021,7 @@ a: WORD 1 1
       /EXCEEDS LIMIT/ NEXTWORD
    ENDIF
 ```
+\newpage
 
 ## Debugging
 
@@ -1073,7 +1076,7 @@ And before proceeding to the next sub-section, in case you figure that `WORD 8`{
 ```
 -rwxrwxr-x 1 jsmith users   170 Apr 13  2022 mkcache.sh
 ```
-And the width of the length field is determined by the largest number in the listing. It's like the output of `ls` was not really made for machine consumption, isn't it?
+The width of the length field is determined by the largest number in the listing. It's as if the output of `ls` was not really made for machine consumption, isn't it?
 
 ### Miscounting
 
@@ -1086,7 +1089,6 @@ There's no magic bullet. Try your specification with several inputs while printi
 Imagine a unit circle enclosed in a square two units to the side. The area of the circle is πr², and since this is the unit circle, the area is just π.  The area of the square is 4, and the ratio between the circle and the square is π/4.
 
 If we pick random points within the square, π/4 of them (~78.54%) should turn out to be within the circle. Let's try that.  You'll have to run without while-guard to make this work:
-\newpage
 ```specs
 # Estimate pi using random points.
 REQUIRES iterations
@@ -1145,7 +1147,6 @@ $ specs -s iterations=10 -f pi_estimate --no-while-guard
 0.32891523318575674 0.9743290540637352 1.05750233621437376
 1.2
 ```
-\newpage
 Geometry tells us to expect the largest value for `#2` to be the square root of 2 - about 1.41 - but we're seeing here values over 5.7.  How did that happen?
 
 The problem is the coordinate systems. The `rand()` function returns a random value between zero and one. Multiplying by 2 means that `#0` and `#1` are between 0 and 2. However, we calculate the distance from the circle center assuming that the center of the circle is at the origin - at point (0,0). It is not enclosed in the square. So what can we do? We could subtract 0.5 from both invocations of the `rand()` function, effectively making `#0` and `#1` between -1 and 1 (rather than between 0 and 2), and moving the square to enclose the circle. But better yet, let's get rid of the 2 factor, meaning that we only pick dots from a square than encloses the top right quadrant of the circle. The ratio remains the same.  Let's try it with the same 10 iterations:
@@ -1185,7 +1186,7 @@ $ specs -s iterations=10 -f pi_estimate --no-while-guard
 3.2
 ```
 Looks better. 
-\newpage
+
 Let's remove the debug print and try with a million iterations:
 ```specs
 # Estimate pi using random points.
@@ -4880,6 +4881,7 @@ These are keys that, when set in `~/.specs` (or via `-s`), change **specs** beha
 | `D` | delimited | n/a | optional | Default. Records end at OS line separator |
 | `F` | fixed | required | n/a | Exactly lrecl characters per record |
 | `FD` | fixed-delimited | required | optional | Fixed length with line delimiter |
+\newpage
 
 ## Output Placement Syntax
 
@@ -4897,7 +4899,6 @@ These are keys that, when set in `~/.specs` (or via `-s`), change **specs** beha
 | `(start, width)` | Composed: dynamic start and width |
 | `(start, width, align)` | Composed: dynamic alignment |
 
-\newpage
 ## Input Source Syntax
 
 | Syntax | Example | Meaning |
