@@ -298,4 +298,22 @@ std::string fromGraphemes(const GraphemeString& s)
 	return ret;
 }
 
+
+std::string make_printable(const std::string& s)
+{
+	auto gs = toGraphemes(s);
+	GraphemeString gt;
+	bool bLastGraphemeUnprintable = false;
+	for (auto& g : gs) {
+		if (bLastGraphemeUnprintable) {
+			gt += ".";
+			bLastGraphemeUnprintable = false;
+		}
+		if (1==g.length() && g[0]<32) {
+			bLastGraphemeUnprintable = true;  // Will print a dot on the next char, but not if this is the last
+		} else gt += g;
+	}
+	return fromGraphemes(gt);
+}
+
 }  // namespace utf8

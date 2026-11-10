@@ -478,11 +478,17 @@ The two strings look identical and both have length 1 in UTF8 mode. The
 uses them only to illustrate the two ways of counting. Both encodings form one
 extended grapheme cluster.
 
-Widths count grapheme clusters, not screen columns. Wide characters such as
-日 take two columns on most terminals, so columns of CJK text may not line up.
+Widths count grapheme clusters, not screen columns. Wide characters such as the
+Han character 'sun' (U+65E5) take two columns on most terminals, so columns of CJK 
+text may not line up. This is not unique to CJK - Latin letters also have 
+fullwidth forms such as U+FF21 -- the fullwidth Latin capital letter A.
 
-UTF8 mode remains experimental because not every feature is UTF-8 aware.
-Features such as regular expressions still treat strings as bytes.
+UTF8 mode remains experimental because not every feature is UTF-8 aware. Specifically: 
+
+- Regular expressions still treat strings as bytes. You will get a warning if you 
+  try to feed a regular expression a non-ASCII string, but that warning can be
+  disabled with the regexWarn configured literal - see the 
+  [Special configured literals](#configured-literal-settings) section in chapter 4.
 
 ---
 
@@ -800,7 +806,9 @@ See **[Regular Expressions](#regex-portability)** in Chapter 8 for the list of v
 
 ### `regexWarn`
 
-Controls whether specs warns when a regular expression grammar known to behave differently across platforms is selected (see **[Regular Expressions](#regex-portability)** in Chapter 8). Set to `0`, `false`, or `no` to silence the warning:
+Controls whether specs warns when a regular expression grammar known to behave differently across platforms is selected (see **[Regular Expressions](#regex-portability)** in Chapter 8). 
+It also warns the first time one of the regex functions (`rmatch`, `rsearch`, or `rreplace`) is called with a non-ASCII regular expression or string.
+Set to `0`, `false`, or `no` to silence the warnings:
 ```
 regexWarn: 0
 ```

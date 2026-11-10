@@ -2031,6 +2031,9 @@ known to be affected on the platform it is running on. See the guidebook, Chapte
 grammar (the default) is not affected and is the recommended choice when portability across
 platforms matters.
 .P
+A warning is also emitted when you try to use the regex functions with non-ASCII strings. This 
+is not (yet?) supported.
+.P
 To silence the warning, set the
 .B regexWarn
 configuration label to
@@ -2475,7 +2478,9 @@ Controls whether
 warns when a regular expression grammar known to behave differently across platforms is selected
 (see the
 .B Regular Expressions
-section above). Set to
+section above), and also when 
+.B UTF8
+(non-ASCII) strings are used with the regex functions. Set to
 .B 0, false,
 or
 .B no

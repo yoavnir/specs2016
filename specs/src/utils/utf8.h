@@ -100,6 +100,8 @@ std::string canonicalGrapheme(const std::string& g);
 GraphemeString toGraphemes(const std::string& s);
 std::string fromGraphemes(const GraphemeString& s);
 
+std::string make_printable(const std::string& s);
+
 // Is cp one of the code points in set?
 inline bool contains(const std::u32string& set, char32_t cp)
 {
