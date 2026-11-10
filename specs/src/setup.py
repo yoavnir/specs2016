@@ -46,22 +46,34 @@ def get_the_version(doPrint):
 		try:
 			with open("../../VERSION", "r") as version_file:
 				base_version = version_file.read().strip()
+				sys.stdout.write("Got version {} from file VERSION...".format(base_version))
 		except OSError:
 			base_version = ""
+	else:
+		sys.stdout.write("Got version {} from env variable...".format(base_version))
 	if base_version.startswith("v"):
 		base_version = base_version[1:]
 	if base_version == "":
 		sys.stderr.write("\nCould not determine the base version from SPECS_VERSION or VERSION\n")
 		exit(-4)
+		
+	if base_version.endswith("-alpha") or base_version.endswith("-beta"):
+		is_prerelease = True
+	else:
+		is_prerelease = False
 
 	if gittag == "dev":
+		ret = base_version if is_prerelease else "{}-beta".format(base_version)
 		if doPrint:
-			sys.stdout.write("Setting to <{}-beta>".format(base_version))
-		return "{}-beta".format(base_version)
+			sys.stdout.write("Setting to <{}>".format(ret))
+		return ret
 	elif gittag == "stable":
+		if is_prerelease:
+			sys.stderr.write("\nGot prerelease version {} in the stable branch\n".format(base_version))
+			exit(-4)
 		if doPrint:
 			sys.stdout.write("Setting to <{}>".format(base_version))
-		return "{}".format(base_version)
+		return base_version
 	elif gittag == "":
 		if doPrint:
 			sys.stdout.write("No git branch; Going with {}".format(base_version))
