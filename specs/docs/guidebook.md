@@ -621,7 +621,7 @@ specs invoked as 'specs'
         Compiler version: 9.2.1 20191120 (Red Hat 9.2.1-2)
         High/low watermark for queues: 5000 / 4500
         Random Provider: rand48
-        Git tag: v1.1.0
+        Git tag: v1.2.0
         Python version: 3.12.1
         Floating point precision: 18 (16 bytes)
 ```
@@ -5270,6 +5270,10 @@ New features are not listed here.
 
 Sections are newest-first. When skipping versions, read every section between
 the old and the new one.
+
+## Changes from Version 1.1.0 to 1.2.0
+
+TBA
 
 ## Changes from Version 1.0.0 to 1.1.0
 
