@@ -14,6 +14,13 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+1-Mar-2027: Version 1.2.0 is here
+
+What's new:
+ * Debugging tool for specifications
+
+---
+
 30-Nov-2026: Version 1.1.0 is here
 
 What's new:
@@ -21,20 +28,6 @@ What's new:
  * Syntax definition and colorization, including guidebook examples
  * Usability enhancements (`.spec` suffix)
  * C++20
-
----
-
-7-Sep-2026: Version 1.0.0 is here
-
-What's new:
- * Rolling context allows processing previous and future records.
- * Exactness in Python function arguments and return value.
- * Shell command execution from ALU functions (`exec`, `exc1`, `excrc`, `excerr`).
- * Build information system-defined labels, such as `@build-info` and `@build-url`.
- * Packages for Linux, Mac OS and Windows, bundled with Python 3.12.[^pythonwindows]
- * New guidebook.
- * Debugging aids for GDB.
-
 
 Sources
 =======
