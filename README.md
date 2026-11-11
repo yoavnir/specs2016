@@ -41,7 +41,7 @@ The binaries for the latest release can be downloaded from [**the release page**
 
 **Notes:**
  * On Windows for ARM, you may install the x64 version.
- * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.1.0.pkg`
+ * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.2.0.pkg`
 
 Building
 ========
