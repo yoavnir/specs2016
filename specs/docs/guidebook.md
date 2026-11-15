@@ -578,9 +578,21 @@ Print step-by-step evaluation information for ALU expressions at runtime. Very v
 
 **NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
+### `--trace-comp`
+
+Print detailed information about the parsing and compilation of specifications.
+
+**NOTE**: EXPAND!!!!!!
+
+### `--trace-run`
+
+Print detailed information about record processing during a **specs** run. Specifying `--trace-run` implies `--trace_comp`. You do not need to specify both.
+
+**NOTE**: EXPAND!!!!!!
+
 ### `--trace-file file` or `-d file`
 
-Redirect the output of `--trace-alu-comp` and `--trace-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As both `--trace-alu-comp` and `--trace-alu-run` produce markdown output, it is recommended to name the file with the suffix `.md`.
+Redirect the output of `--trace-comp`, `--trace_run`, `--trace-alu-comp` and `--trace-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As these commands produce markdown output, it is recommended to name the file with the suffix `.md`.
 
 ### `--timezone name`
 
@@ -4856,8 +4868,10 @@ Do NOT use `--threaded` with:
 | `--toASCII` | | Convert non-ASCII to period |
 | `--force-read-input` | | Read input even if unused |
 | `--EXP-UTF8` | | Experimental UTF-8 character counting |
-| `--trace-alu-comp` | | Print ALU compile info (unless built `--no_alu_debug`) |
-| `--trace-alu-run` | | Print ALU eval info (unless built `--no_alu_debug`) |
+| `--trace-comp` | | Print specification compile info |
+| `--trace-run` | | Print record processing info. **NOTE**: implies `--trace-comp` |
+| `--trace-alu-comp` | | Print ALU compile info |
+| `--trace-alu-run` | | Print ALU eval info |
 | `--trace-file file` | `-d` | Redirect trace debug output to a file |
 | `--help topic` | | Print help |
 | `--info` | | Print build information |
