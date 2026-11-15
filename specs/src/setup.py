@@ -468,7 +468,7 @@ parser.add_argument("--branch", dest="expbranch", action="store", default="",
 parser.add_argument("--force_cpp17", dest="force_cpp17", action="store_true", default=False,
                     help="Force the C++17 standard even if the compiler supports C++20 (for testing)")
 parser.add_argument("--no_alu_debug", dest="no_alu_debug", action="store_true", default=False,
-                    help="Do not define ALU_DUMP, so --debug-alu-comp/--debug-alu-run produce no output (GCC/Clang only; Windows VS builds are unaffected)")
+                    help="Do not define ALU_DUMP, so --trace-alu-comp/--trace-alu-run produce no output (GCC/Clang only; Windows VS builds are unaffected)")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
@@ -552,7 +552,7 @@ if args.static_link:
 if platform=="NT":
 	condcomp = condcomp + "{}WIN64".format(def_prefix)
 
-# ALU_DUMP enables the --debug-alu-comp / --debug-alu-run output.
+# ALU_DUMP enables the --trace-alu-comp / --trace-alu-run output.
 # --no_alu_debug suppresses it.
 # For Windows builds using MSBuild rather than make, it is enabled
 # in DEBUG builds but not in RELEASE builds.

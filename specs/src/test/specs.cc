@@ -92,13 +92,21 @@ CONTINUE:
 	}
 
 	// sanity checks
-	if (g_debugAluFile != "") {
-		if (!g_bDebugAluCompile && !g_bDebugAluRun) {
-			std::cerr << "debug-alu-file rejected, since neither debug-alu-compile nor debug-alu-run were specified\n";
+	if (g_bDebugSpecsRun && !g_bDebugSpecsCompile)
+	{
+		// --trace-run implies --trace-comp
+		g_bDebugSpecsCompile = true;
+		if (g_bVerbose) {
+			std::cerr << "Enabling spec compiler trace because spec run trace is enabled\n";
+		}
+	}
+	if (g_TraceFile != "") {
+		if (!g_bDebugAluCompile && !g_bDebugAluRun && !g_bDebugSpecsCompile) {
+			std::cerr << "trace-alu-file rejected, since no trace-enabling switches were specified\n";
 			return false;
 		}
-		if (!openTraceStream(g_debugAluFile)) {
-			std::cerr << "Could not open debug output file <" << g_debugAluFile << ">\n";
+		if (!openTraceStream(g_TraceFile)) {
+			std::cerr << "Could not open debug output file <" << g_TraceFile << ">\n";
 			return false;
 		}
 	}

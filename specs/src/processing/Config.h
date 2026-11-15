@@ -17,9 +17,11 @@
 	X(outputFile,                   std::string,  "",     o,outFile,            NEXTARG)    \
 	X(bShellCmd,                    bool,         false,  X,shell,              true)       \
 	X(bLocalWhiteSpace,             bool,         true,   w,spaceWS,            false)      \
-	X(bDebugAluCompile,             bool,         false,  0,debug-alu-comp,     true)       \
-	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
-	X(debugAluFile,                 std::string,  "",     d,debug-alu-file,     NEXTARG)    \
+	X(bDebugSpecsCompile,           bool,         false,  0,trace-comp,         true)       \
+	X(bDebugSpecsRun,               bool,         false,  0,trace-run,          true)       \
+	X(bDebugAluCompile,             bool,         false,  0,trace-alu-comp,     true)       \
+	X(bDebugAluRun,                 bool,         false,  0,trace-alu-run,      true)       \
+	X(TraceFile,                    std::string,  "",     d,trace-file,         NEXTARG)    \
 	X(bNoWhileGuard,                bool,         false,  0,no-while-guard,     true)       \
 	X(bShowProgress,                bool,         false,  0,progress,           true)       \
 	X(configurationFile,            std::string,  "",     c,config,             NEXTARG)    \
