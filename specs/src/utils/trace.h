@@ -3,10 +3,10 @@
 
 #include <ostream>
 
-// Destination stream for ALU debug output (--debug-alu-comp / --debug-alu-run).
+// Destination stream for ALU debug output (--trace-alu-comp / --trace-alu-run).
 std::ostream& traceStream();
 
-// Redirect ALU debug output to a file (--debug-alu-file / -d). Returns false
+// Redirect ALU debug output to a file (--trace-file / -d). Returns false
 // if the file could not be opened for writing.
 bool openTraceStream(const std::string& filename);
 

@@ -566,21 +566,33 @@ Disable the while-guard, which normally causes specs to abort after 5000 iterati
 
 **Experimental** — enable UTF-8 aware character counting. When this switch is set, multi-byte UTF-8 sequences are treated as a single logical character for the purposes of character-range selection, word start/end positions, and output column calculations. This flag is marked experimental because it mostly does not work yet.
 
-### `--debug-alu-comp`
+### `--trace-alu-comp`
 
 Print detailed information about the parsing and compilation of ALU expressions. Useful for diagnosing why an expression is being parsed differently than expected. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows how the expression is parsed into tokens both before and after its conversion to reverse polish notation (RPN). It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**. 
 
 **NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
-### `--debug-alu-run`
+### `--trace-alu-run`
 
 Print step-by-step evaluation information for ALU expressions at runtime. Very verbose; useful for tracing a complex expression's intermediate values. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**.
 
 **NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
-### `--debug-alu-file file` or `-d file`
+### `--trace-comp`
 
-Redirect the output of `--debug-alu-comp` and `--debug-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As both `--debug-alu-comp` and `--debug-alu-run` produce markdown output, it is recommended to name the file with the suffix `.md`.
+Print detailed information about the parsing and compilation of specifications.
+
+**NOTE**: EXPAND!!!!!!
+
+### `--trace-run`
+
+Print detailed information about record processing during a **specs** run. Specifying `--trace-run` implies `--trace_comp`. You do not need to specify both.
+
+**NOTE**: EXPAND!!!!!!
+
+### `--trace-file file` or `-d file`
+
+Redirect the output of `--trace-comp`, `--trace_run`, `--trace-alu-comp` and `--trace-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As these commands produce markdown output, it is recommended to name the file with the suffix `.md`.
 
 ### `--timezone name`
 
@@ -4856,9 +4868,11 @@ Do NOT use `--threaded` with:
 | `--toASCII` | | Convert non-ASCII to period |
 | `--force-read-input` | | Read input even if unused |
 | `--EXP-UTF8` | | Experimental UTF-8 character counting |
-| `--debug-alu-comp` | | Print ALU compile info (unless built `--no_alu_debug`) |
-| `--debug-alu-run` | | Print ALU eval info (unless built `--no_alu_debug`) |
-| `--debug-alu-file file` | `-d` | Redirect ALU debug output to a file |
+| `--trace-comp` | | Print specification compile info |
+| `--trace-run` | | Print record processing info. **NOTE**: implies `--trace-comp` |
+| `--trace-alu-comp` | | Print ALU compile info |
+| `--trace-alu-run` | | Print ALU eval info |
+| `--trace-file file` | `-d` | Redirect trace debug output to a file |
 | `--help topic` | | Print help |
 | `--info` | | Print build information |
 

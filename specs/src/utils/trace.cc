@@ -2,8 +2,8 @@
 #include <fstream>
 #include "trace.h"
 
-// Destination for ALU debug output (--debug-alu-comp / --debug-alu-run).
-// Defaults to std::cerr; redirected to a file by --debug-alu-file / -d.
+// Destination for ALU debug output (--trace-alu-comp / --trace-alu-run).
+// Defaults to std::cerr; redirected to a file by --trace-file / -d.
 static std::ofstream g_traceFile;
 std::ostream* g_pTraceStream = &std::cerr;
 

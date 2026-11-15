@@ -2279,7 +2279,13 @@ Makes the program write the output records to a file rather than to standard out
 Executes the output records as shell commands rather than emitting them to standard output.
 .IP "--spaceWS" 3
 Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
-.IP "--debug-alu-comp" 3
+.IP "--trace-comp" 3
+Prints out detailed information about the parsing and compiling of specifications.
+.B EXPAND!!!
+.IP "--trace-run" 3
+Prints out detailed step-by-step information about record processing.
+.B EXPAND!!!
+.IP "--trace-alu-comp" 3
 Prints out detailed information about the parsing and compiling of expressions. This is available in standard builds; it produces no output if
 .B specs
 was built with the
@@ -2290,7 +2296,7 @@ The output is formatted as markdown and can be viewed with any markdown viewer s
 .B Visual Studio Code
 or
 .B glow.
-.IP "--debug-alu-run" 3
+.IP "--trace-alu-run" 3
 Prints out detailed step-by-step information about the evaluation of expressions. This is available in standard builds; it produces no output if
 .B specs
 was built with the
@@ -2299,12 +2305,9 @@ configure flag. The output shows the RPN expression and the execution stack step
 .B Visual Studio Code
 or
 .B glow.
-.IP "--debug-alu-file or -d" 3
-Redirects the output of --debug-alu-comp and --debug-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits. As both
-.I --debug-alu-comp
-and
-.I --debug-alu-run
-produce markdown content, it is 
+.IP "--trace-file or -d" 3
+Redirects the output of --trace-comp, --trace-run, --trace-alu-comp and --trace-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits. As all
+the trace switches produce markdown content, it is 
 .B recommended
 to name the file something with the suffix 
 .I .md

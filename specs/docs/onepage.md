@@ -25,9 +25,11 @@ Switches
 * --shell or -X -- executes the output records as shell commands rather than emitting them to standard output. 
 * --spaceWS -- Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
 * --inCmd or -C -- get the input records from the output of a command specified following this switch.
-* --debug-alu-comp -- Prints out detailed information about the parsing and compiling of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag.
-* --debug-alu-run -- Prints out detailed step-by-step information about the evaluation of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag.
-* --debug-alu-file **filename** or -d **filename** -- redirect the output of --debug-alu-comp and --debug-alu-run to a file rather than standard error. The file is overwritten.
+* --trace-comp -- Prints out detailed information about the parsing and compiling of specifications. EXPAND!!!
+* --trace-run -- Prints out detailed step-by-step information about record processing. EXPAND!!!
+* --trace-alu-comp -- Prints out detailed information about the parsing and compiling of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag.
+* --trace-alu-run -- Prints out detailed step-by-step information about the evaluation of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag.
+* --trace-file **filename** or -d **filename** -- redirect the output of the above 4 switches to a file rather than standard error. The file is overwritten.
 * --no-while-guard -- Disables **while-guard**, allowing specifications to enter endless loops.
 * --progress -- While **specs**is running, will print once a second a message to stderr telling the user how many records have already been processed.
 * --help -- prints out some help information.
