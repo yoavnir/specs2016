@@ -391,13 +391,6 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 
 std::string AluVec2String(AluVec& vec, bool deleteUnits);
 
-// Destination stream for ALU debug output (--debug-alu-comp / --debug-alu-run).
-std::ostream& aluDumpStream();
-
-// Redirect ALU debug output to a file (--debug-alu-file / -d). Returns false
-// if the file could not be opened for writing.
-bool openAluDumpStream(const std::string& filename);
-
 void cleanAluVec(AluVec& vec);
 
 bool isValidExpression(AluVec& vec);  // To Be Added

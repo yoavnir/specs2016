@@ -20,6 +20,7 @@
 #include "processing/Config.h"  // for configured literals
 #include "processing/Reader.h"  // for g_pReader
 #include "specitems/specItems.h"  // for MAX_CONTEXT_SIZE
+#include "utils/trace.h"
 
 extern stateQueryAgent* g_pStateQueryAgent;
 extern outputAgent* g_pOutputAgent;
@@ -31,26 +32,6 @@ PValue g_pOOBValue = std::make_shared<ALUValue>(std::string(""));
 
 // Final errors to be printed by `specs`
 std::ostringstream g_FinalErrors;
-
-// Destination for ALU debug output (--debug-alu-comp / --debug-alu-run).
-// Defaults to std::cerr; redirected to a file by --debug-alu-file / -d.
-static std::ofstream g_aluDumpFile;
-std::ostream* g_pAluDumpStream = &std::cerr;
-
-std::ostream& aluDumpStream()
-{
-	return *g_pAluDumpStream;
-}
-
-bool openAluDumpStream(const std::string& filename)
-{
-	g_aluDumpFile.open(filename, std::ios::out | std::ios::trunc);
-	if (!g_aluDumpFile.is_open()) {
-		return false;
-	}
-	g_pAluDumpStream = &g_aluDumpFile;
-	return true;
-}
 
 bool isOOBValue(PValue pv)
 {
@@ -1193,7 +1174,7 @@ static PUnit getAssnOperator(std::string& s)
 
 void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 {
-	std::ostream& os = aluDumpStream();
+	std::ostream& os = traceStream();
 
 	if (0==vec.size()) {
 		os << "- **" << title << "**: ALU Vector empty";
@@ -1216,7 +1197,7 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 		"```\n";
 }
 
-void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = aluDumpStream())
+void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = traceStream())
 {
 	if (stk.empty()) {
 		stream << "- **" << title << "**: Empty\n";
@@ -1247,7 +1228,7 @@ void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stre
 
 void dumpAluStack(const char* title, std::stack<PUnit>& stk)
 {
-	std::ostream& os = aluDumpStream();
+	std::ostream& os = traceStream();
 	if (stk.empty()) {
 		os << "**" << title << "**: Empty\n";
 		return;
@@ -1298,9 +1279,9 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	if (g_bDebugAluCompile) {
 		if (!b_PrintedHeader) {
 			b_PrintedHeader = true;
-			aluDumpStream() << "\n# Compilation Phase - Parsing ALU Expressions";
+			traceStream() << "\n# Compilation Phase - Parsing ALU Expressions";
 		}
-		aluDumpStream() << "\n## Parsing Expression: `" << s << "`\n";
+		traceStream() << "\n## Parsing Expression: `" << s << "`\n";
 	}
 #endif
 
@@ -1636,7 +1617,7 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 
 #ifdef ALU_DUMP
 	if (g_bDebugAluCompile) {
-		aluDumpStream() << "- **Assigning to counter `" << ctr->_identify(true) << "` with `" << pAssnOp->_identify(true) << "`**\n";
+		traceStream() << "- **Assigning to counter `" << ctr->_identify(true) << "` with `" << pAssnOp->_identify(true) << "`**\n";
 	}
 #endif
 
@@ -1836,7 +1817,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	for (auto pUnit : source) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluCompile && g_bVerbose) {
-			aluDumpStream() << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
+			traceStream() << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
 			dumpAluVec("Source", source, stepNumber);
 			dumpAluVec("Dest", dest);
 			dumpAluStack("operator stack",operatorStack);
@@ -1975,9 +1956,9 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	if (g_bDebugAluRun) {                              \
 	  	PValue v = (item);                             \
 		if (npopped) {                                 \
- 			aluDumpStream() << "- **Popping " << npopped << " items off of the stack and pushing `" << *v << "`**" << txt << "\n"; \
+ 			traceStream() << "- **Popping " << npopped << " items off of the stack and pushing `" << *v << "`**" << txt << "\n"; \
 		} else {                                       \
- 			aluDumpStream() << "- **Pushing `" << *v << "` onto the stack**" << txt << "\n"; \
+ 			traceStream() << "- **Pushing `" << *v << "` onto the stack**" << txt << "\n"; \
 		}                                              \
 		computeStack.push(v);                                 \
 	}                                                  \
@@ -1990,14 +1971,14 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		auto pFI = std::dynamic_pointer_cast<AluUnitFieldIdentifier>(unit); \
 	  	PValue v = pFI->evaluate();                    \
 		if (npopped) {                                 \
- 			aluDumpStream() << "- **Popping " << npopped << " items off of the stack and pushing "; \
+ 			traceStream() << "- **Popping " << npopped << " items off of the stack and pushing "; \
 		} else {                                       \
- 			aluDumpStream() << "- **Pushing ";         \
+ 			traceStream() << "- **Pushing ";         \
 		}                                              \
 		if (pFI->asIdentifier()) {                     \
-			aluDumpStream() << "field identifier `" << char(v->getInt()) << "` onto the stack** - will appear as the number " << v->getInt() << "\n"; \
+			traceStream() << "field identifier `" << char(v->getInt()) << "` onto the stack** - will appear as the number " << v->getInt() << "\n"; \
 		} else {                                       \
-			aluDumpStream() << "'" << *v << "` onto the stack** - value from field identifier\n"; \
+			traceStream() << "'" << *v << "` onto the stack** - value from field identifier\n"; \
 		}                                              \
 		computeStack.push(v);                                 \
 	}                                                  \
@@ -2025,13 +2006,13 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 	static bool bPrintedTitle = false;
 	if (g_bDebugAluRun) {
 		if (!bPrintedTitle) {
-			aluDumpStream() << "\n# Runtime - Evaluating Expressions\n";
+			traceStream() << "\n# Runtime - Evaluating Expressions\n";
 			bPrintedTitle = true;
 		}
 		if (rawExpression.empty()) {
-			aluDumpStream() << "\n## Evaluate RPN Expression `" << AluVec2String(expr, false) << "`\n"; 
+			traceStream() << "\n## Evaluate RPN Expression `" << AluVec2String(expr, false) << "`\n"; 
 		} else {
-			aluDumpStream() << "\n## Evaluate `" << rawExpression << "`\n";
+			traceStream() << "\n## Evaluate `" << rawExpression << "`\n";
 		}
 	}
 	int index = 0;
@@ -2040,7 +2021,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 	for (PUnit pUnit : expr) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
-			aluDumpStream() << "\n### Step " << index+1 << "\n";
+			traceStream() << "\n### Step " << index+1 << "\n";
 			dumpAluStack("Stack", computeStack);
 			dumpAluVec("RPN expression with index", expr, index);
 		}
@@ -2175,7 +2156,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 
 #ifdef ALU_DUMP
 	if (g_bDebugAluRun) {
-		aluDumpStream() << "### Result\n**Expression evaluated to** `" << ret->getStr() 
+		traceStream() << "### Result\n**Expression evaluated to** `" << ret->getStr() 
 			<< "` (" << ((ret->isExact()) ? "exact " : "inexact ")
 			<< ALUCounterType2Str[ret->getType()] << ")\n";
 	}
