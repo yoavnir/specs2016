@@ -87,6 +87,9 @@
     <ClCompile Include="utils\platform.cc">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\trace.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="test\specs.cc">
       <Filter>test</Filter>
     </ClCompile>
@@ -159,6 +162,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\platform.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\trace.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
