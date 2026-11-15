@@ -1,8 +1,7 @@
 #ifndef SPECS2016__UTILS__TRACE__H
 #define SPECS2016__UTILS__TRACE__H
 
-#include <sstream>
-#include <fstream>
+#include <ostream>
 
 // Destination stream for ALU debug output (--debug-alu-comp / --debug-alu-run).
 std::ostream& traceStream();

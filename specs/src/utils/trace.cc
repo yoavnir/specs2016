@@ -1,5 +1,5 @@
 #include <iostream>
-#include <ostream>
+#include <fstream>
 #include "trace.h"
 
 // Destination for ALU debug output (--debug-alu-comp / --debug-alu-run).
