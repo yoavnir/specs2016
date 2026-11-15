@@ -15,6 +15,7 @@
 #include "utils/ErrorReporting.h"
 #include "utils/PythonIntf.h"
 #include "utils/aluRegex.h"
+#include "utils/trace.h"
 #include "utils/directives.h"
 
 extern int g_stop_stream;
@@ -96,7 +97,7 @@ CONTINUE:
 			std::cerr << "debug-alu-file rejected, since neither debug-alu-compile nor debug-alu-run were specified\n";
 			return false;
 		}
-		if (!openAluDumpStream(g_debugAluFile)) {
+		if (!openTraceStream(g_debugAluFile)) {
 			std::cerr << "Could not open debug output file <" << g_debugAluFile << ">\n";
 			return false;
 		}
