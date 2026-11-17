@@ -92,6 +92,12 @@ CONTINUE:
 	}
 
 	// sanity checks
+	if (g_bDebugAll) {
+		g_bDebugSpecsCompile = true;
+		g_bDebugSpecsRun = true;
+		g_bDebugAluCompile = true;
+		g_bDebugAluRun = true;
+	}
 	if (g_bDebugSpecsRun && !g_bDebugSpecsCompile)
 	{
 		// --trace-run implies --trace-comp

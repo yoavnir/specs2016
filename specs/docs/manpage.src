@@ -2305,6 +2305,8 @@ configure flag. The output shows the RPN expression and the execution stack step
 .B Visual Studio Code
 or
 .B glow.
+.IP "--trace-all" 3
+Enables all four of the above tracing switches.
 .IP "--trace-file or -d" 3
 Redirects the output of --trace-comp, --trace-run, --trace-alu-comp and --trace-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits. As all
 the trace switches produce markdown content, it is 
