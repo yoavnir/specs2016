@@ -72,6 +72,7 @@ Main Thread:
 * `--trace-run` -- Prints out detailed step-by-step information about record processing.  EXPAND!!!
 * `--trace-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag. On Windows builds created with **MSBuild** (such as official GitHub builds), ALU debug is available in DEBUG builds but not RELEASE builds.
 * `--trace-alu-run` -- Prints out detailed step-by-step information about the evaluation of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag. On Windows builds created with **MSBuild** (such as official GitHub builds), ALU debug is available in DEBUG builds but not RELEASE builds.
+* `--trace-all` -- Enables all of the above 4 tracing switches.
 * `--trace-file` **filename** or `-d` **filename** -- redirect the output of `--trace-alu-comp` and `--trace-alu-run` to a file rather than standard error. The file is overwritten; if it cannot be opened for writing, **specs** reports an error and exits.
 * `--no-while-guard` -- Disables **while-guard**, allowing specifications to enter endless loops.
 * `--progress` -- While **specs**is running, will print once a second a message to stderr telling the user how many records have already been processed.

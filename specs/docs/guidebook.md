@@ -590,6 +590,10 @@ Print detailed information about record processing during a **specs** run. Speci
 
 **NOTE**: EXPAND!!!!!!
 
+### `--trace-all`
+
+Print detailed information about all four of the above categories.
+
 ### `--trace-file file` or `-d file`
 
 Redirect the output of `--trace-comp`, `--trace_run`, `--trace-alu-comp` and `--trace-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As these commands produce markdown output, it is recommended to name the file with the suffix `.md`.
@@ -4872,6 +4876,7 @@ Do NOT use `--threaded` with:
 | `--trace-run` | | Print record processing info. **NOTE**: implies `--trace-comp` |
 | `--trace-alu-comp` | | Print ALU compile info |
 | `--trace-alu-run` | | Print ALU eval info |
+| `--trace-all` | | Print the info for all of the above four categories |
 | `--trace-file file` | `-d` | Redirect trace debug output to a file |
 | `--help topic` | | Print help |
 | `--info` | | Print build information |

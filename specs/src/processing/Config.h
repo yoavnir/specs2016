@@ -17,6 +17,7 @@
 	X(outputFile,                   std::string,  "",     o,outFile,            NEXTARG)    \
 	X(bShellCmd,                    bool,         false,  X,shell,              true)       \
 	X(bLocalWhiteSpace,             bool,         true,   w,spaceWS,            false)      \
+	X(bDebugAll,                    bool,         false,  0,trace-all,          true)       \
 	X(bDebugSpecsCompile,           bool,         false,  0,trace-comp,         true)       \
 	X(bDebugSpecsRun,               bool,         false,  0,trace-run,          true)       \
 	X(bDebugAluCompile,             bool,         false,  0,trace-alu-comp,     true)       \

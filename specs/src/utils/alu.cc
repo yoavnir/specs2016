@@ -1275,12 +1275,8 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	}
 
 #ifdef ALU_DUMP
-	static bool b_PrintedHeader = false;
 	if (g_bDebugAluCompile) {
-		if (!b_PrintedHeader) {
-			b_PrintedHeader = true;
-			traceStream() << "\n# Compilation Phase - Parsing ALU Expressions";
-		}
+		pushTraceStream();
 		traceStream() << "\n## Parsing Expression: `" << s << "`\n";
 	}
 #endif
@@ -1943,7 +1939,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	}
 
 #ifdef ALU_DUMP
-	if (g_bDebugAluCompile) dumpAluVec("RPN Expression", dest);
+	if (g_bDebugAluCompile) {
+		dumpAluVec("RPN Expression", dest);
+		traceAccumulateStrings(popTraceStream());
+	}
 #endif
 
 	return true;
@@ -2003,16 +2002,11 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 	PValue result;
 
 #ifdef ALU_DUMP
-	static bool bPrintedTitle = false;
 	if (g_bDebugAluRun) {
-		if (!bPrintedTitle) {
-			traceStream() << "\n# Runtime - Evaluating Expressions\n";
-			bPrintedTitle = true;
-		}
 		if (rawExpression.empty()) {
-			traceStream() << "\n## Evaluate RPN Expression `" << AluVec2String(expr, false) << "`\n"; 
+			traceStream() << "\n### Evaluate RPN Expression `" << AluVec2String(expr, false) << "`\n"; 
 		} else {
-			traceStream() << "\n## Evaluate `" << rawExpression << "`\n";
+			traceStream() << "\n### Evaluate `" << rawExpression << "`\n";
 		}
 	}
 	int index = 0;
@@ -2021,7 +2015,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 	for (PUnit pUnit : expr) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
-			traceStream() << "\n### Step " << index+1 << "\n";
+			traceStream() << "\n#### Step " << index+1 << "\n";
 			dumpAluStack("Stack", computeStack);
 			dumpAluVec("RPN expression with index", expr, index);
 		}
@@ -2156,7 +2150,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 
 #ifdef ALU_DUMP
 	if (g_bDebugAluRun) {
-		traceStream() << "### Result\n**Expression evaluated to** `" << ret->getStr() 
+		traceStream() << "\n#### Result\n**Expression evaluated to** `" << ret->getStr() 
 			<< "` (" << ((ret->isExact()) ? "exact " : "inexact ")
 			<< ALUCounterType2Str[ret->getType()] << ")\n";
 	}
