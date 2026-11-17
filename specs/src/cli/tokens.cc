@@ -10,6 +10,7 @@
 #include "processing/Reader.h"
 #include "processing/ProcessingState.h"
 #include "specitems/specItems.h"
+#include "utils/trace.h"
 
 extern std::string conv_X2CH(std::string& s);
 
@@ -642,6 +643,10 @@ void normalizeTokenList(std::vector<Token> *tokList)
 	if (tokList->size()==0) return;
 	bool bMayAccumulateConditions;
 
+	if (g_bDebugSpecsCompile) {
+		traceStream() << "\n### Tokens Before Normalization\n";
+	}
+
 	for (size_t i=0; i<tokList->size()-1; i++) {
 		Token& tok = tokList->at(i);
 		Token& nextTok = tokList->at(i+1);
@@ -967,6 +972,9 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		default:
 			break;
 		}
+	}
+	if (g_bDebugSpecsCompile) {
+		traceStream() << "\n### Tokens After Normalization\n";
 	}
 }
 

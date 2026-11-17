@@ -1,5 +1,6 @@
 #include "utils/platform.h"
 #include "utils/ErrorReporting.h"
+#include "utils/trace.h"
 #include "processing/Config.h"
 #include "specItems.h"
 
@@ -774,6 +775,9 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		pState.setString(ps);
 		pState.setFirst();
 		pState.incrementCycleCounter();
+
+		TRACE_RUN << "\n## Cycle " << pState.getIterationCount()
+			<< "\n\n- Record: `" << *ps << "`\n";
 
 		if (g_bShowProgress && (time(nullptr)!=progressTick)) {
 			progressTick = time(nullptr);
