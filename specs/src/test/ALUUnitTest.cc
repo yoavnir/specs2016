@@ -1889,6 +1889,16 @@ int runALUUnitTests17(unsigned int onlyTest)
 	VERIFY_EXPR_RES("index(#9, @big_eclair)", "5");
 	g_bSupportUTF8 = false;
 
+	// ucase/lcase where the mapped character has a different byte length
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lcase('İstanbul')", "istanbul");
+	VERIFY_EXPR_RES("ucase('ſ')", "S");
+	VERIFY_EXPR_RES("length('straße')", "6");
+	VERIFY_EXPR_RES("length(ucase('straße'))", "6");
+	VERIFY_EXPR_RES("bytelength('ÉCLAIR')", "7");
+	VERIFY_EXPR_RES("bytelength(lcase('ÉCLAIR'))", "7");
+	g_bSupportUTF8 = false;
+
 	if (countFailures) {
 		if (onlyTest == 0) {
 			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
