@@ -25,4 +25,6 @@ std::string traceReturnAccumulatedStrings();
 
 #define TRACE_RUN if (g_bDebugSpecsRun) traceStream()
 
+#define TRACE_COMP if (g_bDebugSpecsCompile) traceStream()
+
 #endif // SPECS2016__UTILS__TRACE__H

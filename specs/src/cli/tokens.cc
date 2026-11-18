@@ -36,9 +36,9 @@ class TokenFieldRangeSimple : public TokenFieldRange {
 		}
 		virtual std::string Debug() {
 			if (bIsSingleNumber) {
-				return std::string("S:") + std::to_string(m_first);
+				return std::string("Single:") + std::to_string(m_first);
 			}
-			return std::string("S:")+
+			return std::string("Range:")+
 				std::to_string(m_first) +
 				"-" +
 				((m_last==LAST_POS_END) ? "end" : std::to_string(m_last));
@@ -120,7 +120,7 @@ void TokenFieldRangeComplex::setDone()
 
 std::string TokenFieldRangeComplex::Debug()
 {
-	std::string ret = "C:(";
+	std::string ret = "Complex:(";
 	for (size_t i=0; i<rangeVec.size(); i++) {
 		if (i>0) {
 			ret += " ";
@@ -150,12 +150,27 @@ Token::Token(TokenListTypes _type, PTokenFieldRange pRange, std::string literal,
 					if (r && m_pRange) ret += "; " + m_pRange->Debug(); \
 					if (l) ret +=  (m_literal.empty()) ? ("; EMPTY!!!") : ("; /" + m_literal + "/");  \
 					break;
-std::string Token::Debug(int digits)
+std::string Token::Debug()
 {
 	std::string ret = TokenListType__2str(m_type);
-	if (digits) {
-		ret.resize(16-digits,' ');
+	switch (m_type) {
+		TOKEN_TYPE_LIST
+		case TokenListType__COUNT_ITEMS:
+			MYTHROW("Bad m_type in Token");
 	}
+	return ret;
+}
+#undef X
+
+#define X(t,r,l) case TokenListType__##t: \
+					if (r) { if (m_pRange) ret += m_pRange->Debug() + " | "; else ret += "-- | "; } else ret += "N/A | "; \
+					if (l) { if (m_literal.empty()) ret += "-- |\n"; else ret = ret + "`" + m_literal + "` |\n"; } else ret += "N/A |\n"; \
+					break;
+std::string Token::DebugMarkdown()
+{
+	std::string ret("| `");
+	ret += TokenListType__2str(m_type);
+	ret += "` | ";
 	switch (m_type) {
 		TOKEN_TYPE_LIST
 		case TokenListType__COUNT_ITEMS:
@@ -638,13 +653,25 @@ std::string getLiteral(Token& tok, bool bThrowIfNoLiteral=false)
 	return std::string("");
 }
 
+void dumpTokenVector(std::vector<Token> *tokList, const char* title)
+{
+	MYASSERT(g_bDebugSpecsCompile);
+	auto& stream = traceStream();
+	stream << "\n### " << title << "\n| Token | Range | Literal |\n|---|---|---|\n";
+	for (auto& tok : *tokList) {
+		stream << tok.DebugMarkdown();
+	}
+	stream << "\n";
+}
+
 void normalizeTokenList(std::vector<Token> *tokList)
 {
 	if (tokList->size()==0) return;
 	bool bMayAccumulateConditions;
 
 	if (g_bDebugSpecsCompile) {
-		traceStream() << "\n### Tokens Before Normalization\n";
+		dumpTokenVector(tokList, "Tokens Before Normalization");
+		traceStream() << "\n### Normalization\n";
 	}
 
 	for (size_t i=0; i<tokList->size()-1; i++) {
@@ -659,12 +686,15 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					std::string err = "Bad word/field range <"+nextTok.Orig()+"> at index "+ std::to_string(nextTok.argIndex())+".";
 					MYTHROW(err);
 				}
+				TRACE_COMP << "- Setting the **range** for token " << i << " (" << tok.Debug() 
+						<< ") from the next token - `" << nextTok.Range()->Debug() << "` and removing the next token.\n";
 				tok.setRange(nextTok.Range());
 				tokList->erase(tokList->begin()+(i+1));
 			}
 			break;
 		case TokenListType__WORDSEPARATOR:
 			if (tok.Literal()=="" && getLiteral(nextTok)=="default") {
+				TRACE_COMP << "- WORDSEPARATOR: Setting next token's literal to standard whitespace.\n";
 				if (g_bLocalWhiteSpace) {
 					nextTok.setLiteral(LOCAL_WHITESPACE);
 				} else {
@@ -681,6 +711,8 @@ void normalizeTokenList(std::vector<Token> *tokList)
 								" at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 						MYTHROW(err);
 					}
+					TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << ": Setting literal on token " << i 
+							<< " to literal of next token - `" << getLiteral(nextTok) << "` and removing the next one.\n";
 					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
 				} else if (nextTok.Type()==TokenListType__RANGE) {
@@ -694,6 +726,8 @@ void normalizeTokenList(std::vector<Token> *tokList)
 						std::string err = "Bad field separator <"+nextTok.Orig()+"> at index "+std::to_string(nextTok.argIndex())+". Must be single character.";
 						MYTHROW(err);
 					}
+					TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << ": Setting literal on token " << i
+							<< " to the number from the range of the next token - " << num << " - and removing the next one.\n";
 					tok.setLiteral(std::to_string(num));
 					tokList->erase(tokList->begin()+(i+1));
 				} else {
@@ -706,10 +740,18 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		case TokenListType__ID:
 		{
 			if (tok.Literal()=="") {
+				TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << ": Setting the literal of token " << i 
+						<< " to literal of next token as it may be a field identifier - " << getLiteral(nextTok)
+						<< " - and removing the next token.\n";
 				if (mayBeFieldIdentifier(nextTok)) {
+					TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << ": Setting the literal of token " << i 
+							<< " to literal of next token as it may be a field identifier - " << getLiteral(nextTok)
+							<< " - and removing the next token.\n";
 					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
 				} else if (TokenListType__PRINTONLY == tok.Type() && TokenListType__EOF == nextTok.Type()) {
+					TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << ": Setting the literal of token " << i 
+							<< " to `EOF` - the next token (removed) was mis-identified as EOF.\n";
 					tok.setLiteral("EOF");
 					tokList->erase(tokList->begin()+(i+1));
 				} else {
@@ -746,10 +788,13 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					expression += ")";
 					tokList->erase(tokList->begin()+(i+1));
 					tok.setLiteral(expression);
+					TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << ": Setting literal for token " << i
+							<< "to total of next group and deleting the group - `" << expression << "`.\n";
 				} else {
 					do {
 						if (!tok.Literal().empty())
 							tok.appendLiteral(' ');
+						TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << ": Appending the literal of the next token to token " << i << " and deleting it.\n";
 						tok.appendLiteral(getLiteral(nextTok,true));
 						tokList->erase(tokList->begin()+(i+1));
 						if (i+1 < tokList->size()) {
@@ -794,6 +839,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					MYTHROW(err);
 				}
 				tokList->erase(tokList->begin()+(i+1));
+				TRACE_COMP << "- SELECT: Set literal from next token (removed) to " << tok.Literal() << ".\n";
 			}
 			break;
 		}
@@ -828,6 +874,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					MYTHROW(err);
 				}
 				tokList->erase(tokList->begin()+(i+1));
+				TRACE_COMP << "- OUTSTREAM: Set literal from next token (removed) to " << tok.Literal() << ".\n";
 			}
 			break;
 		}
@@ -837,6 +884,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				if (mayBeFieldIdentifier(nextTok)) {
 					tok.setLiteral(getLiteral(nextTok));
 					tokList->erase(tokList->begin()+(i+1));
+					TRACE_COMP << "- BREAK: Set literal field identifier from next token (removed) to " << tok.Literal() << ".\n";
 				} else {
 					std::string err = "Bad field identifier <"+nextTok.Orig()+"> for BREAK at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
@@ -859,6 +907,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				}
 				nextTok.deallocDynamic();
 				tokList->erase(tokList->begin()+(i+1));
+				TRACE_COMP << "- STOP: Set literal from next token (removed) to " << tok.Literal() << ".\n";
 			}
 			break;
 		}
@@ -875,6 +924,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				if (mayBeNamedString(nextTok.Orig())) {
 					tok.setLiteral(nextTok.Orig());
 					tokList->erase(tokList->begin()+(i+1));
+					TRACE_COMP << "- REQUIRES: Set literal from next token (removed) origin to " << tok.Literal() << ".\n";
 				} else {
 					std::string err = "Bad name <"+nextTok.Orig()+"> follows REQUIRES at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
@@ -883,6 +933,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				if (mayBeNamedString(nextTok.Literal())) {
 					tok.setLiteral(nextTok.Literal());
 					tokList->erase(tokList->begin()+(i+1));
+					TRACE_COMP << "- REQUIRES: Set literal from next token (removed) literal to " << tok.Literal() << ".\n";
 				} else {
 					std::string err = "Bad name <"+nextTok.Orig()+"> follows REQUIRES at index "+std::to_string(nextTok.argIndex());
 					MYTHROW(err);
@@ -905,10 +956,14 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					}
 					separator = maybeSep.Literal();
 					tokList->erase(tokList->begin()+(i+1));
+					TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << " token " << i << ": Treating next token's literal - "
+							<< separator << " - and removing that next token.\n";
 					// If the WS token's literal was empty, it hasn't absorbed its value yet
 					if (separator.empty() && i+1 < tokList->size() && mayBeLiteral(tokList->at(i+1))) {
 						separator = getLiteral(tokList->at(i+1));
 						tokList->erase(tokList->begin()+(i+1));
+						TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << " token " << i << ": Treating next token's literal - "
+								<< separator << " - and removing that next token (2).\n";
 					}
 				} else if (TokenListType__FIELDSEPARATOR == maybeSep.Type()) {
 					if (TokenListType__SPLITW == tok.Type()) {
@@ -917,10 +972,14 @@ void normalizeTokenList(std::vector<Token> *tokList)
 					}
 					separator = maybeSep.Literal();
 					tokList->erase(tokList->begin()+(i+1));
+					TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << " token " << i << ": Treating next token's literal - "
+							<< separator << " - and removing that next token (3).\n";
 					// If the FS token's literal was empty, it hasn't absorbed its value yet
 					if (separator.empty() && i+1 < tokList->size() && mayBeLiteral(tokList->at(i+1))) {
 						separator = getLiteral(tokList->at(i+1));
 						tokList->erase(tokList->begin()+(i+1));
+						TRACE_COMP << "- " << TokenListType__2str(tok.Type()) << " token " << i << ": Treating next token's literal - "
+							<< separator << " - and removing that next token (4).\n";
 					}
 				}
 			}
@@ -961,6 +1020,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 				tok.setLiteral(std::to_string(offset));
 				nextTok.deallocDynamic();
 				tokList->erase(tokList->begin()+(i+1));
+				TRACE_COMP << "- CONTEXT token " << i << ": set literal from next token's literal to " << tok.Literal() << ".\n";
 			}
 			if (tok.Literal()=="") {
 				std::string err = "CONTEXT at index " + std::to_string(tok.argIndex()) +
@@ -974,7 +1034,7 @@ void normalizeTokenList(std::vector<Token> *tokList)
 		}
 	}
 	if (g_bDebugSpecsCompile) {
-		traceStream() << "\n### Tokens After Normalization\n";
+		dumpTokenVector(tokList, "Tokens After Normalization");
 	}
 }
 
