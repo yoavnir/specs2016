@@ -15,7 +15,7 @@ std::string callParseTokens(int argc, char** argv)
 	std::string ret;
 
 	for (size_t i=0; i<vec.size(); i++) {
-		ret += vec[i].Debug(0);
+		ret += vec[i].Debug();
 		if (vec.size()>1 && i<vec.size()-1) {
 			ret += '|';
 		}
@@ -78,28 +78,28 @@ int main(int argc, char** argv)
 	}
 	unsigned int failedTests = 0;
 
-	TESTNS("w1 1","WORDRANGE; S:1|RANGE; S:1");
-	TESTNS("1 2 1-3 4;-2 -2:-1 *-7 *;-2 1-*", "RANGE; S:1|RANGE; S:2|RANGE; S:1-3|RANGE; S:4--2|RANGE; S:-2--1|LITERAL; /*-7/|LITERAL; /*;-2/|RANGE; S:1-end");
-	TESTNS("w1 word 2 word 2-3 word 2;-4 word3 wor 5", "WORDRANGE; S:1|WORDRANGE; S:2|WORDRANGE; S:2-3|WORDRANGE; S:2--4|LITERAL; /word3/|WORDRANGE; S:5");
+	TESTNS("w1 1","WORDRANGE; Single:1|RANGE; Single:1");
+	TESTNS("1 2 1-3 4;-2 -2:-1 *-7 *;-2 1-*", "RANGE; Single:1|RANGE; Single:2|RANGE; Range:1-3|RANGE; Range:4--2|RANGE; Range:-2--1|LITERAL; /*-7/|LITERAL; /*;-2/|RANGE; Range:1-end");
+	TESTNS("w1 word 2 word 2-3 word 2;-4 word3 wor 5", "WORDRANGE; Single:1|WORDRANGE; Single:2|WORDRANGE; Range:2-3|WORDRANGE; Range:2--4|LITERAL; /word3/|WORDRANGE; Single:5");
 	TESTNS("nextword  nw nextw nextwo", "NEXTWORD|NEXTWORD|NEXTWORD|NEXTWORD");
 	TESTNS("nextfield nf nextf nextfie", "NEXTFIELD|NEXTFIELD|NEXTFIELD|NEXTFIELD");
 	TESTNS("fieldseparator , fs , fieldsepa , fieldsep , fieldse","FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|FIELDSEPARATOR; /,/|LITERAL; /fieldse/");
 	TESTNS("substring substri substr subst of","SUBSTRING|SUBSTRING|SUBSTRING|LITERAL; /subst/|OF");
 	TESTNS("x x2 x2c x2cf x2c4e x2c4e X2cfe x2p4e","LITERAL; /x/|LITERAL; /x2/|LITERAL; /,/|LITERAL; /x2cf/|LITERAL; /,N/|LITERAL; /,N/|LITERAL; /X2cfe/|LITERAL; /x2p4e/");
-	TESTNS("1.8 n.8 nw.8 nf.8 nextword.8","RANGE; S:1-8|NEXT; S:1-8|NEXTWORD; S:1-8|NEXTFIELD; S:1-8|NEXTWORD; S:1-8");
+	TESTNS("1.8 n.8 nw.8 nf.8 nextword.8","RANGE; Range:1-8|NEXT; Range:1-8|NEXTWORD; Range:1-8|NEXTFIELD; Range:1-8|NEXTWORD; Range:1-8");
 	TESTNS("left center centre right lefta lef cent centrer", "LEFT|CENTER|CENTER|RIGHT|LITERAL; /lefta/|LITERAL; /lef/|LITERAL; /cent/|LITERAL; /centrer/");
 	TESTNS("C2B B2C X2CH C2X", "CONVERSION; /C2B/|CONVERSION; /B2C/|CONVERSION; /X2CH/|CONVERSION; /C2X/");
 	TESTNS("numBER NUMbe numBERa", "NUMBER|LITERAL; /NUMbe/|LITERAL; /numBERa/");
 	TESTNS("recNO RECno RecN ReCnOm", "NUMBER|NUMBER|LITERAL; /RecN/|LITERAL; /ReCnOm/");
 	TESTNS("reAd wrIte ReadStop", "READ|WRITE|READSTOP");
-	TESTNS("a: w1 . ID a 1", "RANGELABEL; /a/|WORDRANGE; S:1|PERIOD|ID; /a/|RANGE; S:1");
-	TESTNS("stop anyeof printonly eof w1 1", "STOP; /any/|PRINTONLY; /EOF/|WORDRANGE; S:1|RANGE; S:1");
-	TESTNS("stop 1 printonly a keep a: w1 . w2 nw", "STOP; /1/|PRINTONLY; /a/|KEEP|RANGELABEL; /a/|WORDRANGE; S:1|PERIOD|WORDRANGE; S:2|NEXTWORD");
+	TESTNS("a: w1 . ID a 1", "RANGELABEL; /a/|WORDRANGE; Single:1|PERIOD|ID; /a/|RANGE; Single:1");
+	TESTNS("stop anyeof printonly eof w1 1", "STOP; /any/|PRINTONLY; /EOF/|WORDRANGE; Single:1|RANGE; Single:1");
+	TESTNS("stop 1 printonly a keep a: w1 . w2 nw", "STOP; /1/|PRINTONLY; /a/|KEEP|RANGELABEL; /a/|WORDRANGE; Single:1|PERIOD|WORDRANGE; Single:2|NEXTWORD");
 	// OUTREC and SCRATCH are exact-match keywords. 'outstream' must not be
 	// shadowed by 'outrec', and abbreviations of either are plain literals.
 	TESTNS("outrec OUTREC scratch SCRATCH", "OUTREC|OUTREC|SCRATCH|SCRATCH");
 	TESTNS("outstream 2 outre outrecs scrat scratchy", "OUTSTREAM; /2/|LITERAL; /outre/|LITERAL; /outrecs/|LITERAL; /scrat/|LITERAL; /scratchy/");
-	TESTNS("substr w2 of outrec 1 scratch", "SUBSTRING|WORDRANGE; S:2|OF|OUTREC|RANGE; S:1|SCRATCH");
+	TESTNS("substr w2 of outrec 1 scratch", "SUBSTRING|WORDRANGE; Single:2|OF|OUTREC|RANGE; Single:1|SCRATCH");
 
 	if (failedTests) {
 		std::cout << "\n" << failedTests << " failed tests.\n";
