@@ -13,6 +13,8 @@
 #define STOP_STREAM_INVALID 99
 #define IS_SPECIFIC_STREAM(x)  ((x)<STOP_STREAM_ALL)
 
+std::string& StopStreamToStr(unsigned int stream);
+
 // Sentinel pointer for out-of-bounds records
 extern PSpecString g_pOOBSpecString;
 

@@ -163,12 +163,13 @@ std::string Token::Debug()
 #undef X
 
 #define X(t,r,l) case TokenListType__##t: \
-					if (r) { if (m_pRange) ret += m_pRange->Debug() + " | "; else ret += "-- | "; } else ret += "N/A | "; \
-					if (l) { if (m_literal.empty()) ret += "-- |\n"; else ret = ret + "`" + m_literal + "` |\n"; } else ret += "N/A |\n"; \
+					if (r) { if (m_pRange) ret += m_pRange->Debug() + " | "; else ret += "-- | "; } else ret += "n/a | "; \
+					if (l) { if (m_literal.empty()) ret += "-- |\n"; else ret = ret + "`" + m_literal + "` |\n"; } else ret += "n/a |\n"; \
 					break;
-std::string Token::DebugMarkdown()
+std::string Token::DebugMarkdown(unsigned int index)
 {
-	std::string ret("| `");
+	std::string ret("| ");
+	ret += std::to_string(index) + " | '";
 	ret += TokenListType__2str(m_type);
 	ret += "` | ";
 	switch (m_type) {
@@ -657,9 +658,10 @@ void dumpTokenVector(std::vector<Token> *tokList, const char* title)
 {
 	MYASSERT(g_bDebugSpecsCompile);
 	auto& stream = traceStream();
-	stream << "\n### " << title << "\n| Token | Range | Literal |\n|---|---|---|\n";
+	unsigned int index = 0;
+	stream << "\n### " << title << "\n| # | Token | Range | Literal |\n|---|---|---|---|\n";
 	for (auto& tok : *tokList) {
-		stream << tok.DebugMarkdown();
+		stream << tok.DebugMarkdown(index++);
 	}
 	stream << "\n";
 }
