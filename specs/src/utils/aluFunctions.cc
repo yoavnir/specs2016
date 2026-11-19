@@ -2672,6 +2672,32 @@ PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 	return mkValue(ret);
 }
 
+static bool inStripSet(const std::string& pad, char c)
+{
+	return std::string::npos != pad.find(c);
+}
+
+// A CR LF pair is a single grapheme cluster, but strip's default set lists CR and LF separately
+static bool inStripSet(const utf8::GraphemeString& pad, const std::string& g)
+{
+	return utf8::GraphemeString::npos != pad.find(g) ||
+			(g == "\r\n" && utf8::GraphemeString::npos != pad.find("\r") && utf8::GraphemeString::npos != pad.find("\n"));
+}
+
+// S is std::string for bytes, and utf8::GraphemeString for grapheme clusters
+template <class S>
+static S strip_do(const S& str, const S& pad, char option)
+{
+	size_t first = 0, end = str.length();
+	if (option != 'T') {
+		while (first < end && inStripSet(pad, str[first])) first++;
+	}
+	if (option != 'L') {
+		while (end > first && inStripSet(pad, str[end-1])) end--;
+	}
+	return str.substr(first, end - first);
+}
+
 PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
@@ -2690,27 +2716,17 @@ PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 
 	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " \t\n\r");
 
+	// An invalid option strips both ends, and is reported only if something is left
 	std::string ret;
-	auto first = str.find_first_not_of(sPad);
-	auto last = str.find_last_not_of(sPad);
-	if (first == std::string::npos) {
-		return mkValue(std::string());
+	if (UTF8_STRINGS_NOT_ASCII2(str, sPad)) {
+		ret = utf8::fromGraphemes(strip_do(utf8::toGraphemes(str), utf8::toGraphemes(sPad), option));
+	} else {
+		ret = strip_do(str, sPad, option);
 	}
-	switch (option) {
-	case 'B':
-		ret = str.substr(first, last-first+1);
-		break;
-	case 'L':
-		ret = str.substr(first);
-		break;
-	case 'T':
-		ret = str.substr(0,last+1);
-		break;
-	default:
+	if (!ret.empty() && 'B' != option && 'L' != option && 'T' != option) {
 		std::string err = "strip: Invalid option argument: <"+pOption->getStr()+">";
 		MYTHROW(err);
 	}
-
 	return mkValue(ret);
 }
 
@@ -2758,6 +2774,21 @@ PValue AluFunc_subword(PValue pString, PValue pStart, PValue pLength)
 	}
 }
 
+// In-place sequential replacement of each tablein character, as the byte version does
+static utf8::GraphemeString translate_do(const utf8::GraphemeString& str, const utf8::GraphemeString& tableout,
+		const utf8::GraphemeString& tablein, const std::string& pad)
+{
+	std::vector<std::string> chars = str.data();
+	for (size_t i=0; i<tablein.length(); i++) {
+		const std::string oldValue = utf8::canonicalGrapheme(tablein[i]);
+		const std::string& newValue = (tableout.length() <= i) ? pad : tableout[i];
+		for (std::string& g : chars) {
+			if (utf8::canonicalGrapheme(g) == oldValue) g = newValue;
+		}
+	}
+	return utf8::GraphemeString(chars);
+}
+
 PValue AluFunc_translate(PValue pString, PValue pTableOut, PValue pTableIn, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
@@ -2773,20 +2804,30 @@ PValue AluFunc_translate(PValue pString, PValue pTableOut, PValue pTableIn, PVal
 
 	if (0 == tableout.length() && 0 == tablein.length()) {
 		// just uppercase the whole thing
-		for (auto & c : str) c = toupper(c);
-	} else {
-		std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-		if (sPad.length() != 1) {
+		return mkValue(conv_UCASE(str));
+	}
+
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
+	if (UTF8_STRINGS_NOT_ASCII3(str, tableout, tablein) || UTF8_STRING_NOT_ASCII(sPad)) {
+		auto gPad = utf8::toGraphemes(sPad);
+		if (gPad.length() != 1) {
 			std::string err = "translate: Pad argument should be 1 char. Got <" + sPad + ">";
 			MYTHROW(err);
 		}
-		char pad = sPad[0];
+		return mkValue(utf8::fromGraphemes(translate_do(utf8::toGraphemes(str), utf8::toGraphemes(tableout),
+				utf8::toGraphemes(tablein), gPad[0])));
+	}
 
-		for (size_t i=0; i<tablein.length(); i++) {
-			char oldValue = tablein[i];
-			char newValue = (tableout.length() <= i) ? pad : tableout[i];
-			std::replace(str.begin(), str.end(), oldValue, newValue);
-		}
+	if (sPad.length() != 1) {
+		std::string err = "translate: Pad argument should be 1 char. Got <" + sPad + ">";
+		MYTHROW(err);
+	}
+	char pad = sPad[0];
+
+	for (size_t i=0; i<tablein.length(); i++) {
+		char oldValue = tablein[i];
+		char newValue = (tableout.length() <= i) ? pad : tableout[i];
+		std::replace(str.begin(), str.end(), oldValue, newValue);
 	}
 
 	return mkValue(str);

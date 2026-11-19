@@ -1899,6 +1899,24 @@ int runALUUnitTests17(unsigned int onlyTest)
 	VERIFY_EXPR_RES("bytelength(lcase('ÉCLAIR'))", "7");
 	g_bSupportUTF8 = false;
 
+	// translate and strip with non-ASCII characters
+	VERIFY_EXPR_RES("length(strip('éxé', 'B', 'è'))", "4");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("strip('éxé', 'B', 'é')", "x");
+	VERIFY_EXPR_RES("strip('éxé', 'B', 'è')", "éxé");
+	VERIFY_EXPR_RES("strip('ééxéé', 'L', 'é')", "xéé");
+	VERIFY_EXPR_RES("strip('ééxéé', 'T', 'é')", "ééx");
+	VERIFY_EXPR_RES("strip('  éx  ', 'B')", "éx");
+	VERIFY_EXPR_RES("strip('xéx', 'B', 'x')", "é");
+	VERIFY_EXPR_RES("strip('éé', 'B', 'é')", "");
+	VERIFY_EXPR_RES("translate('abc','é','a')", "ébc");
+	VERIFY_EXPR_RES("translate('hello wörld','üa','öe')", "hallo würld");
+	VERIFY_EXPR_RES("translate('abc','xy','ab','é')", "xyc");
+	VERIFY_EXPR_RES("translate('abc','x','ab','é')", "xéc");
+	VERIFY_EXPR_RES("translate('éclair')", "ÉCLAIR");
+	VERIFY_EXPR_RES("translate('éclair', 'e', 'é')", "eclair");
+	g_bSupportUTF8 = false;
+
 	if (countFailures) {
 		if (onlyTest == 0) {
 			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
