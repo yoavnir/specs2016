@@ -174,13 +174,22 @@ run_test(
 # Test: UTF8 fixed format with lrecl=1 keeps each grapheme whole
 # é is two bytes but one grapheme, so it must appear as a single record.
 run_test(
-    "UTF8 fixed format - single grapheme records",
+    "UTF8 fixed format - single composed grapheme records",
     "1 1",
-    "aébcd",
+    "a\u00E9bcd",
     "a\né\nb\nc\nd\n",
     extra_flags="-s utf8=1 --recfm f --lrecl 1"
 )
 
+# Test: UTF8 fixed format with lrecl=1 keeps each grapheme whole
+# é is three bytes but one grapheme, so it must appear as a single record.
+run_test(
+    "UTF8 fixed format - single decomposed grapheme records",
+    "1 1",
+    "ae\u0301bcd",
+    "a\ne\u0301\nb\nc\nd\n",
+    extra_flags="-s utf8=1 --recfm f --lrecl 1"
+)
 
 # =====================================================================
 # FIXED-DELIMITED record format (--recfm fd --lrecl N)
