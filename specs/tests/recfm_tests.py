@@ -160,6 +160,27 @@ run_test(
     binary_input=True
 )
 
+# Test: UTF8 fixed format cuts at grapheme clusters, not bytes
+# "aébcd" is 5 graphemes; lrecl=2 gives "aé" and "bc"; the trailing "d"
+# is a partial record and is discarded. The multi-byte é is never split.
+run_test(
+    "UTF8 fixed format - grapheme record boundaries",
+    "1-* 1",
+    "aébcd",
+    "aé\nbc\n",
+    extra_flags="-s utf8=1 --recfm f --lrecl 2"
+)
+
+# Test: UTF8 fixed format with lrecl=1 keeps each grapheme whole
+# é is two bytes but one grapheme, so it must appear as a single record.
+run_test(
+    "UTF8 fixed format - single grapheme records",
+    "1 1",
+    "aébcd",
+    "a\né\nb\nc\nd\n",
+    extra_flags="-s utf8=1 --recfm f --lrecl 1"
+)
+
 
 # =====================================================================
 # FIXED-DELIMITED record format (--recfm fd --lrecl N)
@@ -209,6 +230,26 @@ run_test(
     "AB\nABCDE\nABCDEFGH\n",
     "  \nDE\nDE\n",
     extra_flags="--recfm fd --lrecl 5"
+)
+
+# Test: UTF8 fixed-delimited truncates at grapheme clusters
+# "aébcd" is 5 graphemes; lrecl=2 truncates to "aé" (é stays whole).
+run_test(
+    "UTF8 fixed-delimited - grapheme truncation",
+    "1-* 1",
+    "aébcd\n",
+    "aé\n",
+    extra_flags="-s utf8=1 --recfm fd --lrecl 2"
+)
+
+# Test: UTF8 fixed-delimited pads to grapheme count
+# "é" is one grapheme; lrecl=3 pads with two spaces to "é  ".
+run_test(
+    "UTF8 fixed-delimited - grapheme padding",
+    "1-* 1",
+    "é\n",
+    "é  \n",
+    extra_flags="-s utf8=1 --recfm fd --lrecl 3"
 )
 
 

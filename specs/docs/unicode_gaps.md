@@ -51,7 +51,10 @@ Severity:
 
 | Severity | Gap |
 |----------|-----|
-| Wrong output | Fixed record formats (`--recfm F`, `--recfm FD`, `--lrecl n`) cut records at *n bytes*, not *n characters*. A multi-byte character can be split across two records. `printf 'aébcd\n' \| specs -s utf8=1 --recfm F --lrecl 2 1-* 1` yields `a\xc3` and `\xa9b`. The guidebook says that "widths count grapheme clusters" in UTF8 mode, so this contradicts it. |
+| ~~Wrong output~~ fixed | Fixed record formats (`--recfm F`, `--recfm FD`, `--lrecl n`) now cut records at *n graphemes* in UTF8 mode, not *n bytes*. A multi-byte character is never split across two records. `printf 'aébcd\n' \| specs -s utf8=1 --recfm F --lrecl 2 1-* 1` now yields `aé`, `bc` and `d\n` (the newline is data, as in fixed format). |
+
+All widths are in graphemes in UTF-8 mode. This is now implemented: `--lrecl 80` means that records are
+80 bytes in ASCII mode, and 80 graphemes in UTF-8 mode. 
 
 ## Identifiers and tokenizer
 
@@ -67,7 +70,7 @@ Widths count grapheme clusters, not terminal columns. CJK and fullwidth characte
 
 1. Case conversion errors. They abort the run on valid input, and the fix is local.
 2. `translate` and `strip`, where the output can be invalid UTF-8.
-3. Fixed-length records, where the output can be invalid UTF-8.
+3. ~~Fixed-length records, where the output can be invalid UTF-8.~~ (solved)
 4. A single definition of whitespace for the ALU word functions and the record-level splitter.
 5. Normalisation in the comparison operators, or documentation of the difference.
 6. Regular expressions. This is the largest change and needs a decision on the engine, for example ICU or PCRE2 with UTF support, versus `std::regex` over code points.

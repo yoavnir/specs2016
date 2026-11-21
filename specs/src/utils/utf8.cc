@@ -129,6 +129,60 @@ size_t charToByte(const std::string& s, size_t charIdx)
 	return (charIdx == 0) ? i : std::string::npos;
 }
 
+// A lead byte that would start a well-formed sequence but has too few
+// continuation bytes available is a *truncated* sequence: it needs more
+// bytes before it can be treated as a complete grapheme.
+static bool isTruncatedLead(const char* p, size_t avail)
+{
+	unsigned char b0 = (unsigned char)p[0];
+	if (b0 >= 0xC2 && b0 <= 0xDF) return avail < 2;
+	if (b0 >= 0xE0 && b0 <= 0xEF) return avail < 3;
+	if (b0 >= 0xF0 && b0 <= 0xF4) return avail < 4;
+	return false;
+}
+
+size_t nthGraphemeEnd(const char* p, size_t len, size_t n)
+{
+	size_t i = 0;
+	size_t count = 0;
+	while (count < n && i < len) {
+		size_t wfl = wellFormedLen(p + i, len - i);
+		if (wfl == 0) {
+			if (isTruncatedLead(p + i, len - i)) {
+				return std::string::npos;   // need more bytes for this cluster
+			}
+			// A non-truncated invalid byte is a complete single invalid
+			// character, so it forms a one-byte cluster.
+			i += 1;
+			count++;
+			continue;
+		}
+		size_t firstLen = wfl;
+		char32_t first = decode(p + i, len - i, firstLen);
+		size_t clusterEnd = i + firstLen;
+		utf8proc_int32_t state = 0;
+		char32_t previous = first;
+		while (clusterEnd < len) {
+			size_t wfl2 = wellFormedLen(p + clusterEnd, len - clusterEnd);
+			if (wfl2 == 0) {
+				if (isTruncatedLead(p + clusterEnd, len - clusterEnd)) {
+					return std::string::npos;   // cluster incomplete
+				}
+				// A complete invalid byte ends the cluster here.
+				break;
+			}
+			size_t nextLen = wfl2;
+			char32_t next = decode(p + clusterEnd, len - clusterEnd, nextLen);
+			if (utf8proc_grapheme_break_stateful(previous, next, &state)) break;
+			previous = next;
+			clusterEnd += nextLen;
+		}
+		i = clusterEnd;
+		count++;
+	}
+	return (count == n) ? i : std::string::npos;
+}
+
 std::string substr(const std::string& s, size_t charStart, size_t count)
 {
 	size_t bStart = charToByte(s, charStart);

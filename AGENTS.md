@@ -62,6 +62,7 @@ Some attributes are close enough in colour to read as one, which is fine where t
 
 - **specs** runs in either UTF8 mode, or ASCII mode. This is the terminology we will use in defining tasks and in documentation. 
 - The modes cannot be mixed. In UTF8 mode, all of input, output, and specifications are in UTF8. Outside, everything is treated as ASCII.
+- String sizes are measured in characters in ASCII mode, and in graphemes in UTF-8 mode. This affects ALU functions that return lengths, such as `length`; it affects arguments to ALU functions for offset, position, and length, like the `start` and `length` arguments to the `overlay` ALU function, and also widths of output record and the offsets is data fields.
 
 ## Rolling Context Feature (Issue #106)
 

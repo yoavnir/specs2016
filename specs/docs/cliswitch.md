@@ -105,7 +105,7 @@ With **specs**, each specification on the **SPECSPATH** is listed with the first
 |recfm|nickname|lrecl|linedel|comment|
 |-----|--------|-----|-------|-------|
 | `D` | delimited | *n/a* | *optional* | This is the default. Records are delimited by the OS line separator if *linedel* is not specified. |
-| `F` | fixed | *required* | *n/a* | **specs** will read exactly *lrecl* characters from the input stream regardless of what those characters may be. |
+| `F` | fixed | *required* | *n/a* | **specs** will read exactly *lrecl* characters from the input stream regardless of what those characters may be. In UTF8 mode *lrecl* counts grapheme clusters rather than bytes. |
 | `FD` | fixed-delimited | *required* | *optional* | **specs** will read one line at a time delimited by the OS line separator if *linedel* is not specified. Lines that are longer than *lrecl* will be truncated; lines that are shorter will be padded by spaces. |
 
 ## Table of syntax options
