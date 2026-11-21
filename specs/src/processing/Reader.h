@@ -4,6 +4,7 @@
 #include <deque>
 #include <fstream>
 #include <memory>
+#include <string>
 #include "utils/StringQueue.h"
 #include "utils/TimeUtils.h"
 #include "utils/directives.h"
@@ -106,6 +107,9 @@ private:
 	recordFormat m_recfm;
 	unsigned int m_lrecl;
 	char         m_lineDelimiter;
+	// In UTF8 mode with RECFM_FIXED, bytes are accumulated here until a
+	// record boundary falls on a complete grapheme cluster.
+	std::string  m_fixedPending;
 	// Rolling context buffers
 	unsigned int m_forwardContextSize;
 	unsigned int m_backwardContextSize;
