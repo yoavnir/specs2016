@@ -143,10 +143,10 @@ static bool isTruncatedLead(const char* p, size_t avail)
 
 size_t nthGraphemeEnd(const char* p, size_t len, size_t n)
 {
-	size_t i = 0;
-	size_t count = 0;
+	size_t i = 0;          // byte offset into p; advances past each complete cluster
+	size_t count = 0;      // number of complete grapheme clusters already passed
 	while (count < n && i < len) {
-		size_t wfl = wellFormedLen(p + i, len - i);
+		size_t wfl = wellFormedLen(p + i, len - i);   // byte length of the sequence starting at p+i
 		if (wfl == 0) {
 			if (isTruncatedLead(p + i, len - i)) {
 				return std::string::npos;   // need more bytes for this cluster
@@ -157,13 +157,13 @@ size_t nthGraphemeEnd(const char* p, size_t len, size_t n)
 			count++;
 			continue;
 		}
-		size_t firstLen = wfl;
-		char32_t first = decode(p + i, len - i, firstLen);
-		size_t clusterEnd = i + firstLen;
-		utf8proc_int32_t state = 0;
-		char32_t previous = first;
+		size_t firstLen = wfl;   // byte length of the first sequence of the cluster at i
+		char32_t first = decode(p + i, len - i, firstLen);   // decoded code point of that first sequence
+		size_t clusterEnd = i + firstLen;   // byte offset just past the end of the cluster being built
+		utf8proc_int32_t state = 0;   // utf8proc grapheme-break state carried across the cluster's members
+		char32_t previous = first;   // decoded code point of the last member included in the cluster
 		while (clusterEnd < len) {
-			size_t wfl2 = wellFormedLen(p + clusterEnd, len - clusterEnd);
+			size_t wfl2 = wellFormedLen(p + clusterEnd, len - clusterEnd);   // byte length of the next candidate member
 			if (wfl2 == 0) {
 				if (isTruncatedLead(p + clusterEnd, len - clusterEnd)) {
 					return std::string::npos;   // cluster incomplete
@@ -171,8 +171,8 @@ size_t nthGraphemeEnd(const char* p, size_t len, size_t n)
 				// A complete invalid byte ends the cluster here.
 				break;
 			}
-			size_t nextLen = wfl2;
-			char32_t next = decode(p + clusterEnd, len - clusterEnd, nextLen);
+			size_t nextLen = wfl2;   // byte length of that next member
+			char32_t next = decode(p + clusterEnd, len - clusterEnd, nextLen);   // decoded code point of that next member
 			if (utf8proc_grapheme_break_stateful(previous, next, &state)) break;
 			previous = next;
 			clusterEnd += nextLen;

@@ -68,8 +68,8 @@ Widths count grapheme clusters, not terminal columns. CJK and fullwidth characte
 
 ## Suggested priority
 
-1. Case conversion errors. They abort the run on valid input, and the fix is local.
-2. `translate` and `strip`, where the output can be invalid UTF-8.
+1. Case conversion errors. They abort the run on valid input, and the fix is local. (solved)
+2. `translate` and `strip`, where the output can be invalid UTF-8. (solved)
 3. ~~Fixed-length records, where the output can be invalid UTF-8.~~ (solved)
 4. A single definition of whitespace for the ALU word functions and the record-level splitter.
 5. Normalisation in the comparison operators, or documentation of the difference.
