@@ -355,7 +355,9 @@ PSpecString StandardReader::getNextRecordInternal() {
 			constexpr size_t CHUNK = 4096;
 			char buf[CHUNK];
 			m_Timer.changeClass(timeClassIO);
-			while (utf8::nthGraphemeEnd(m_fixedPending, m_lrecl) == std::string::npos) {
+			for (;;) {
+				size_t bEnd = utf8::nthGraphemeEnd(m_fixedPending, m_lrecl, false);
+				if (bEnd != std::string::npos) break;   // boundary confirmed (a byte follows it)
 				std::streamsize got;
 				if (m_File) {
 					m_File->read(buf, CHUNK);
@@ -366,18 +368,27 @@ PSpecString StandardReader::getNextRecordInternal() {
 					std::cin.read(buf, CHUNK);
 					got = std::cin.gcount();
 				}
-				if (got == 0) break;
+				if (got == 0) {
+					// End of source: the n-th cluster (if present) is complete.
+					size_t bEndFinal = utf8::nthGraphemeEnd(m_fixedPending, m_lrecl, true);
+					if (bEndFinal != std::string::npos) {
+						std::string rec = m_fixedPending.substr(0, bEndFinal);
+						m_fixedPending = m_fixedPending.substr(bEndFinal);
+						if (m_fixedPending.empty()) m_EOF = true;   // final record
+						g_readRecordCounter++;
+						m_Timer.changeClass(timeClassProcessing);
+						return mkSpecString(rec);
+					}
+					// Fewer than n complete graphemes: drop the partial record.
+					if (!m_EOF) g_readRecordCounter++;
+					m_EOF = true;
+					m_Timer.changeClass(timeClassProcessing);
+					return nullptr;
+				}
 				m_fixedPending.append(buf, size_t(got));
-				if (got < (std::streamsize)CHUNK) break;   // short read: end of source
 			}
 			m_Timer.changeClass(timeClassProcessing);
-			if (utf8::nthGraphemeEnd(m_fixedPending, m_lrecl) == std::string::npos) {
-				// Not enough bytes for a full record.
-				if (!m_EOF) g_readRecordCounter++;
-				m_EOF = true;
-				return nullptr;
-			}
-			size_t bEnd = utf8::nthGraphemeEnd(m_fixedPending, m_lrecl);
+			size_t bEnd = utf8::nthGraphemeEnd(m_fixedPending, m_lrecl, false);
 			std::string rec = m_fixedPending.substr(0, bEnd);
 			m_fixedPending = m_fixedPending.substr(bEnd);
 			g_readRecordCounter++;

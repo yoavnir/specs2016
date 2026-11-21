@@ -141,7 +141,7 @@ static bool isTruncatedLead(const char* p, size_t avail)
 	return false;
 }
 
-size_t nthGraphemeEnd(const char* p, size_t len, size_t n)
+size_t nthGraphemeEnd(const char* p, size_t len, size_t n, bool bFinal)
 {
 	size_t i = 0;          // byte offset into p; advances past each complete cluster
 	size_t count = 0;      // number of complete grapheme clusters already passed
@@ -180,7 +180,9 @@ size_t nthGraphemeEnd(const char* p, size_t len, size_t n)
 		i = clusterEnd;
 		count++;
 	}
-	return (count == n) ? i : std::string::npos;
+	if (count != n) return std::string::npos;
+	if (i == len && !bFinal) return std::string::npos;   // may be extended by a combining mark not yet read
+	return i;
 }
 
 std::string substr(const std::string& s, size_t charStart, size_t count)

@@ -45,8 +45,12 @@ size_t charToByte(const std::string& s, size_t charIdx);
 // A trailing truncated multi-byte sequence (a lead byte with too few
 // continuation bytes) is not counted as a complete cluster, so callers can
 // keep reading until a record boundary is well-formed.
-size_t nthGraphemeEnd(const char* p, size_t len, size_t n);
-inline size_t nthGraphemeEnd(const std::string& s, size_t n) { return nthGraphemeEnd(s.data(), s.size(), n); }
+// bFinal is false unless the caller has consumed the whole input and p,len
+// point to the rest of the available bytes. When bFinal is false, reaching
+// the end of the len bytes means the n-th cluster may still be extended by a
+// combining mark not yet read, so the function returns npos.
+size_t nthGraphemeEnd(const char* p, size_t len, size_t n, bool bFinal);
+inline size_t nthGraphemeEnd(const std::string& s, size_t n, bool bFinal) { return nthGraphemeEnd(s.data(), s.size(), n, bFinal); }
 
 // Substring by character offset and count, with std::string::substr semantics
 // for an over-long count.  charStart beyond the end yields an empty string.
