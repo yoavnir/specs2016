@@ -2367,7 +2367,7 @@ Sets the record length for
 .B fixed
 and
 .B fixed-delimited
-records.
+records. In UTF8 mode the length counts grapheme clusters rather than bytes, so a multi-byte character is never split across records.
 .IP "--linedel" 3
 For 
 .B delimited

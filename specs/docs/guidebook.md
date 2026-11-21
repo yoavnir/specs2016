@@ -1711,7 +1711,7 @@ In this example, the records are separated by a pipe character:
 specs ... --recfm F --lrecl N
 ```
 
-specs reads exactly **N** bytes from the input stream per record, regardless of what those bytes are. There are no separators; the record boundary is purely positional. This is the right choice for tightly packed binary data, certain instrument outputs, or mainframe flat files where each record occupies a known, constant number of bytes.
+specs reads exactly **N** bytes from the input stream per record, regardless of what those bytes are. There are no separators; the record boundary is purely positional. This is the right choice for tightly packed binary data, certain instrument outputs, or mainframe flat files where each record occupies a known, constant number of bytes. In UTF8 mode, **N** counts grapheme clusters rather than bytes, so a multi-byte character is never split across two records.
 
 `--lrecl` (logical record length) is **required** with `--recfm F`.
 
@@ -1719,7 +1719,7 @@ In this example, each record is exactly 80 bytes — no newlines:
 
 `$ specs --recfm F --lrecl 80 -i punched-card-image.bin ` `1-10 1 21-30 nw`{.specs}
 
-Note that character positions are still 1-based from the start of each record, so column 1 is the first byte of each 80-byte chunk, column 80 is the last, and so on.
+Note that character positions are still 1-based from the start of each record, so column 1 is the first byte of each 80-byte chunk, column 80 is the last, and so on. In UTF8 mode, column 1 is the first grapheme cluster and column 80 is the 80th.
 
 ### `--recfm FD` — Fixed Length with Delimiter
 
@@ -1727,7 +1727,7 @@ Note that character positions are still 1-based from the start of each record, s
 specs ... --recfm FD --lrecl N
 ```
 
-A hybrid: specs reads one delimited line at a time (using the OS line-ending or a custom `--linedel`), but then treats the result as a fixed-length field of exactly **N** characters. Lines longer than N are truncated; lines shorter than N are padded with spaces on the right. This is useful for data that has line endings for human readability but whose fields are always at fixed positions within those lines.
+A hybrid: specs reads one delimited line at a time (using the OS line-ending or a custom `--linedel`), but then treats the result as a fixed-length field of exactly **N** characters. Lines longer than N are truncated; lines shorter than N are padded with spaces on the right. This is useful for data that has line endings for human readability but whose fields are always at fixed positions within those lines. In UTF8 mode, **N** counts grapheme clusters rather than bytes, so truncation and padding never split a multi-byte character.
 
 In this example, lines may vary in actual length but are logically 132 characters wide:
 
@@ -1739,8 +1739,8 @@ In this example, lines may vary in actual length but are logically 132 character
 | `--recfm` | Nickname | `--lrecl` | `--linedel` | What a "record" is |
 |-----------|----------|-----------|-------------|---------------------|
 | `D` | delimited | not used | optional | One line (custom or OS delimiter) |
-| `F` | fixed | required | not used | Exactly `--lrecl` bytes, no delimiter |
-| `FD` | fixed-delimited | required | optional | One delimited line, normalized to `--lrecl` chars |
+| `F` | fixed | required | not used | Exactly `--lrecl` bytes (graphemes in UTF8 mode), no delimiter |
+| `FD` | fixed-delimited | required | optional | One delimited line, normalized to `--lrecl` chars (graphemes in UTF8 mode) |
 
 ---
 
