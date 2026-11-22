@@ -69,7 +69,18 @@ def cleanup():
 def cleanup_valgrind():
     os.system("/bin/rm valgrind.out* 2> /dev/null")
 
-def leak_check_specs(spec, inp, testid, confFile, inp2=None):
+def write_input(filename, data):
+    # data may be str (written as UTF-8), bytes (written as is, e.g. invalid UTF-8) or None
+    if data is None:
+        data = ""
+    if isinstance(data, bytes):
+        with open(filename, "wb") as f:
+            f.write(data)
+    else:
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(data)
+
+def leak_check_specs(spec, inp, testid, confFile, inp2=None, extra=""):
     global keep_specs_output
     if keep_specs_output:
     	specfile = "thespec."+str(testid)
@@ -83,24 +94,16 @@ def leak_check_specs(spec, inp, testid, confFile, inp2=None):
     	inp2file = "theinp2"
     	outfile = "theout"
     	conffile = "theconf"
-    with open(specfile, "w") as s:
+    with open(specfile, "w", encoding="utf-8") as s:
         s.write(spec)
-    with open(conffile,"w") as c:
+    with open(conffile,"w", encoding="utf-8") as c:
     	c.write(confFile)
-    with open(inpfile, "w") as i:
-        if inp is None:
-            i.write("")
-        else:
-            i.write(inp)
-    with open(inp2file, "w") as i:
-    	if inp2 is None:
-    		i.write("")
-    	else:
-    		i.write(inp2)
+    write_input(inpfile, inp)
+    write_input(inp2file, inp2)
     		
     if inp2 is None:
-    	cmd = "../exe/specs -c {} -f {} -i {} -o {}".format(conffile, specfile,inpfile,outfile)
+    	cmd = "../exe/specs {}-c {} -f {} -i {} -o {}".format(extra, conffile, specfile,inpfile,outfile)
     else:
-    	cmd = "../exe/specs -c {} -f {} -i {} --is2 {} -o {}".format(conffile, specfile,inpfile,inp2file,outfile)
+    	cmd = "../exe/specs {}-c {} -f {} -i {} --is2 {} -o {}".format(extra, conffile, specfile,inpfile,inp2file,outfile)
     return leak_check(cmd,str(testid))
 

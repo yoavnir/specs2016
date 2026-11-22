@@ -4,12 +4,12 @@ case_counter = 0
 
 tests_to_run = None
 
-def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, conf="", inp2=None):
+def run_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, conf="", inp2=None, extra=""):
     global case_counter, tests_to_run
     case_counter = case_counter + 1
     if tests_to_run is not None and str(case_counter) not in tests_to_run:
     	return
-    (rc,info) = memcheck.leak_check_specs(spec,input,case_counter,conf,inp2)
+    (rc,info) = memcheck.leak_check_specs(spec,input,case_counter,conf,inp2,extra)
     sys.stdout.write("\nTest case #{} - {} - ".format(case_counter,description))
     if rc!=expected_rc:
         sys.stdout.write("Failed. RC={}; info={}; expected: {}\n".format(memcheck.RetCode_strings[rc],info,memcheck.RetCode_strings[expected_rc]))
@@ -863,6 +863,134 @@ s = "print 'fact(1760)' 1"
 i = "test"
 run_case(s,i,"Security: fact() overflow limit")
 
+
+# UTF-8 mode flows
+
+def run_utf8_case(spec, input, description, expected_rc=memcheck.RetCode_SUCCESS, conf="", inp2=None, extra=""):
+    run_case("+UTF8 on\n" + spec, input, "UTF-8: " + description, expected_rc, conf, inp2, extra)
+
+utf8_text = "Éclair à la crème\nstraße İstanbul ǅ\ne\u0301te\u0301 日本語 ñandú\n"
+utf8_words = "a b é　c  d\nαβγ　δε ζ\n"
+
+s = "1-* 1 w2 nw 3.4 nw"
+run_utf8_case(s,utf8_text,"ranges, words and substrings")
+
+s = "1-* lcase 1 1-* ucase nw"
+run_utf8_case(s,utf8_text,"LCASE and UCASE conversions")
+
+s = "print 'lcase(@@) || ucase(@@) || length(@@) || bytelength(@@)' 1"
+run_utf8_case(s,utf8_text,"lcase, ucase, length and bytelength")
+
+s = "print 'translate(@@,\"xyz\",\"éàç\")' 1 print 'translate(@@)' nw"
+run_utf8_case(s,utf8_text,"translate")
+
+s = "print 'strip(@@,\"B\",\"Ée\")' 1 print 'strip(@@,\"L\")' nw print 'strip(@@,\"T\",\"ñ\")' nw"
+run_utf8_case(s,utf8_text,"strip")
+
+s = "print 'substr(@@,2,4)' 1 print 'left(@@,10)' nw print 'right(@@,10)' nw print 'center(@@,30)' nw"
+run_utf8_case(s,utf8_text,"substr, left, right and center")
+
+s = "print 'insert(\"é\",@@,3,2,\"à\")' 1 print 'overlay(\"日本\",@@,2)' nw print 'delstr(@@,2,3)' nw print 'reverse(@@)' nw"
+run_utf8_case(s,utf8_text,"insert, overlay, delstr and reverse")
+
+s = "print 'compare(@@,\"é\")' 1 print 'abbrev(@@,\"e\")' nw print 'pos(\"é\",@@)' nw print 'lastpos(\"é\",@@)' nw print 'verify(@@,\"éte\")' nw"
+run_utf8_case(s,utf8_text,"compare, abbrev, pos, lastpos and verify")
+
+s = "print 'record()==\"\u00e9te\u00e9 日本語 ñandú\"' 1 print 'record()<\"z\"' nw"
+run_utf8_case(s,utf8_text,"comparison operators")
+
+s = "print 'words(@@)' 1 print 'wordlength(@@,2)' nw print 'wordindex(@@,3)' nw print 'subword(@@,2,2)' nw print 'delword(@@,2,1)' nw print 'wordpos(\"d\",@@)' nw print 'find(@@,\"d\")' nw print 'space(@@,2,\"é\")' nw print 'justify(@@,30)' nw"
+run_utf8_case(s,utf8_words,"word functions with Unicode whitespace")
+
+s = "w1 1 w2 nw w3 nw print 'wordcount()' nw print 'wordcount(@@)' nw print 'wordcount(@@,\"é\")' nw"
+run_utf8_case(s,utf8_words,"words, word ranges and wordcount")
+
+s = "fs é f2 1 f1 nw print 'fieldcount()' nw print 'fieldcount(@@,\"é\")' nw"
+run_utf8_case(s,"aébéc\néé\nñéü","non-ASCII field separator")
+
+s = "ws é w2 1 w1 nw"
+run_utf8_case(s,"aébéc éd\nñéü","non-ASCII word separator")
+
+s = "splitw 1"
+run_utf8_case(s,utf8_words,"SPLITW")
+
+s = "fs é splitf 1"
+run_utf8_case(s,"aébéc\néé\nñéü","SPLITF with a non-ASCII separator")
+
+s = "1-* 1 print 'rmatch(@@,\"[a-z]+\")' nw print 'rreplace(@@,\"^.\",\"X\")' nw"
+run_utf8_case(s,utf8_text,"regular expressions on non-ASCII input")
+
+s = "1-* 1 print 'length(@@)' nw print 'bytelength(@@)' nw"
+run_utf8_case(s,"e\u0301\n\U0001F468\u200d\U0001F469\u200d\U0001F467\nabc\n","grapheme clusters")
+
+s = "print 'wordcount()' 1 print 'translate(@@,\"é\",\"e\")' nw"
+run_utf8_case(s,"","empty input")
+
+s = "1-* 1"
+run_utf8_case(s,"aébcd\nxyz\n","fixed records (F)",extra="--recfm F --lrecl 2 ")
+run_utf8_case(s,utf8_text,"fixed records (F) with combining marks",extra="--recfm F --lrecl 3 ")
+run_utf8_case(s,utf8_text,"fixed-delimited records (FD)",extra="--recfm FD --lrecl 8 ")
+run_utf8_case(s,"aébcd\nxyz\n","fixed records (F) with a partial last record",extra="--recfm F --lrecl 4 ")
+
+s = "1.5 1 w2 nw 1-* 25"
+run_utf8_case(s,utf8_text,"output positions and padding")
+
+s = "print 'strip(@@,\"B\",\"é\",\"x\")' 1"
+run_utf8_case(s,utf8_text,"strip with too many arguments",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+
+s = "print 'translate(@@,\"é\",\"e\",\"ab\")' 1"
+run_utf8_case(s,utf8_text,"translate with an invalid pad",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+
+
+# UTF-8 mode with invalid UTF-8 in the input (the input is given as bytes)
+
+bad_text = b"a\xffb c\x80d \xc3 e\xe2\x82 \xf0\x9f\x98\nok \xc3\xa9\xcc \xe2\x82\xac\xc0\xaf x\n\xff\xfe\n"
+bad_words = b"a\xc2\xa0\xffb \xe3\x80\x80\x80c\xe2\x82 d\n\xa0 \xc2\n"
+
+s = "1-* 1 w2 nw 3.4 nw"
+run_utf8_case(s,bad_text,"invalid input: ranges, words and substrings")
+
+s = "1-* lcase 1 1-* ucase nw"
+run_utf8_case(s,bad_text,"invalid input: LCASE and UCASE conversions")
+
+s = "print 'lcase(@@) || ucase(@@) || length(@@) || bytelength(@@)' 1"
+run_utf8_case(s,bad_text,"invalid input: lcase, ucase, length and bytelength")
+
+s = "print 'translate(@@,\"xyz\",\"abc\")' 1 print 'strip(@@,\"B\",\"a\")' nw print 'strip(@@,\"L\")' nw"
+run_utf8_case(s,bad_text,"invalid input: translate and strip")
+
+s = "print 'substr(@@,2,4)' 1 print 'left(@@,6)' nw print 'right(@@,6)' nw print 'center(@@,20)' nw print 'reverse(@@)' nw"
+run_utf8_case(s,bad_text,"invalid input: substr, left, right, center and reverse")
+
+s = "print 'insert(\"é\",@@,3,2,\"à\")' 1 print 'overlay(\"日本\",@@,2)' nw print 'delstr(@@,2,3)' nw"
+run_utf8_case(s,bad_text,"invalid input: insert, overlay and delstr")
+
+s = "print 'compare(@@,\"a\")' 1 print 'pos(\"b\",@@)' nw print 'lastpos(\"d\",@@)' nw print 'verify(@@,\"ab\")' nw"
+run_utf8_case(s,bad_text,"invalid input: compare, pos, lastpos and verify")
+
+s = "print 'words(@@)' 1 print 'wordlength(@@,2)' nw print 'wordindex(@@,3)' nw print 'subword(@@,2,2)' nw print 'delword(@@,2,1)' nw print 'wordpos(\"d\",@@)' nw print 'find(@@,\"d\")' nw print 'space(@@,2,\"-\")' nw print 'justify(@@,30)' nw"
+run_utf8_case(s,bad_words,"invalid input: word functions")
+
+s = "w1 1 w2 nw w3 nw splitw nw"
+run_utf8_case(s,bad_words,"invalid input: words and SPLITW")
+
+s = "1-* 1"
+run_utf8_case(s,b"a\xe2\x82\xacb\xe2\x82",
+	"invalid input: fixed records (F) ending in a truncated sequence",extra="--recfm F --lrecl 2 ")
+run_utf8_case(s,b"\xc3\xa9\xc3\xa9\xc3",
+	"invalid input: fixed records (F) with a truncated lead byte at the end",extra="--recfm F --lrecl 2 ")
+run_utf8_case(s,b"\xffe\xcc\x81\xff\xc3\xa9\x80x\xf0\x9f\x98\x80\xe2\x82",
+	"invalid input: fixed records (F) with invalid bytes between combining marks",extra="--recfm F --lrecl 1 ")
+run_utf8_case(s,bad_text,"invalid input: fixed records (F)",extra="--recfm F --lrecl 3 ")
+run_utf8_case(s,bad_text,"invalid input: fixed-delimited records (FD)",extra="--recfm FD --lrecl 5 ")
+run_utf8_case(s,bad_text,"invalid input: fixed-delimited records (FD) padding",extra="--recfm FD --lrecl 40 ")
+
+s = "1.5 1 w2 nw 1-* 25"
+run_utf8_case(s,bad_text,"invalid input: output positions and padding")
+
+s = "1-* 1"
+run_utf8_case(s,b"\xff",  "invalid input: a single invalid byte")
+run_utf8_case(s,b"\xe2\x82","invalid input: a single truncated sequence")
 
 sys.stdout.write("\n*** All tests passed.\n\n")
 memcheck.cleanup()
