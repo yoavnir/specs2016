@@ -46,22 +46,34 @@ def get_the_version(doPrint):
 		try:
 			with open("../../VERSION", "r") as version_file:
 				base_version = version_file.read().strip()
+				sys.stdout.write("Got version {} from file VERSION...".format(base_version))
 		except OSError:
 			base_version = ""
+	else:
+		sys.stdout.write("Got version {} from env variable...".format(base_version))
 	if base_version.startswith("v"):
 		base_version = base_version[1:]
 	if base_version == "":
 		sys.stderr.write("\nCould not determine the base version from SPECS_VERSION or VERSION\n")
 		exit(-4)
+		
+	if base_version.endswith("-alpha") or base_version.endswith("-beta"):
+		is_prerelease = True
+	else:
+		is_prerelease = False
 
 	if gittag == "dev":
+		ret = base_version if is_prerelease else "{}-beta".format(base_version)
 		if doPrint:
-			sys.stdout.write("Setting to <{}-beta>".format(base_version))
-		return "{}-beta".format(base_version)
+			sys.stdout.write("Setting to <{}>".format(ret))
+		return ret
 	elif gittag == "stable":
+		if is_prerelease:
+			sys.stderr.write("\nGot prerelease version {} in the stable branch\n".format(base_version))
+			exit(-4)
 		if doPrint:
 			sys.stdout.write("Setting to <{}>".format(base_version))
-		return "{}".format(base_version)
+		return base_version
 	elif gittag == "":
 		if doPrint:
 			sys.stdout.write("No git branch; Going with {}".format(base_version))
@@ -456,7 +468,7 @@ parser.add_argument("--branch", dest="expbranch", action="store", default="",
 parser.add_argument("--force_cpp17", dest="force_cpp17", action="store_true", default=False,
                     help="Force the C++17 standard even if the compiler supports C++20 (for testing)")
 parser.add_argument("--no_alu_debug", dest="no_alu_debug", action="store_true", default=False,
-                    help="Do not define ALU_DUMP, so --debug-alu-comp/--debug-alu-run produce no output (GCC/Clang only; Windows VS builds are unaffected)")
+                    help="Do not define ALU_DUMP, so --trace-alu-comp/--trace-alu-run produce no output (GCC/Clang only; Windows VS builds are unaffected)")
 args = parser.parse_args()
 
 compiler = args.compiler.upper()
@@ -540,7 +552,7 @@ if args.static_link:
 if platform=="NT":
 	condcomp = condcomp + "{}WIN64".format(def_prefix)
 
-# ALU_DUMP enables the --debug-alu-comp / --debug-alu-run output.
+# ALU_DUMP enables the --trace-alu-comp / --trace-alu-run output.
 # --no_alu_debug suppresses it.
 # For Windows builds using MSBuild rather than make, it is enabled
 # in DEBUG builds but not in RELEASE builds.

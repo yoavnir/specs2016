@@ -61,7 +61,7 @@ include-before: |
 
 ## What is specs?
 
-**specs** is a command-line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as an alternative to `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
+**specs** is a command line utility for parsing and re-arranging text. Its name comes from "specifications" — you describe *what you want done* rather than *how to do it* imperatively. Think of it as an alternative to `awk`, one that also handles multi-record aggregation, time conversion, regular expressions, statistics, and arithmetic.
 
 **specs** was originally a **stage** in the **CMS Pipelines** system on IBM mainframes running **VM/ESA** and later **z/VM**. This version is a re-implementation for Linux, Mac OS, and Windows, liberally extended with new features, and with many (but not all!) of the "Mainframe-isms" replaced with "UNIX-isms". As an example, **REXX** integration was replaced with **Python** integration. It does, however, keep the base-1 indexing, meaning that `WORD 1` is the first word in the record.
 
@@ -90,8 +90,8 @@ POSIX (linux) system using the g++ 15.2.0 compiler with C++20 and Python 3.14.4 
 
 ### Terminology
 
-The program itself is called **specs**, although the original CMS Pipelines stage could be shortened to **spec**. The arguments to the program form a **specification**, whether that is given on the command line or in a file.
-The act of giving the program instructions - of writing a *specification* - is called **specifying**.
+The program itself is called **specs**, while the original CMS Pipelines stage could be abbreviated to **spec**. The arguments to the program form a **specification**, whether that is given on the command line or in a file.
+The act of giving the program instructions, or writing a *specification*, is called **specifying**.
 So if you've written a *specification* that converts all the FROM/IN/ON/AT fields of a TZDATA file to seconds-since-the-epoch, you have *specified* to make that conversion, and you are now a **specifier**.
 
 \newpage
@@ -137,7 +137,7 @@ Output can go to four places:
 
 1. **Standard output**, which is the default output stream.
 1. A file, specified with `-o` or `--outfile` for the primary output stream, or `--os2`, `--os3` ... `--os8` for secondary output streams.
-1. The command-line processor. The `-X` or the `--shell` command-line switch channels the primary output stream to the command line processor for execution as commands.
+1. The command line processor. The `-X` or the `--shell` command line switch channels the primary output stream to the command line processor for execution as commands.
 1. A **field identifier**, which is a temporary buffer for use within the same iteration of the specification and in statistics.
 
 For more information about secondary input and output streams, see the [relevant sections in chapter 12](#multstrm)
@@ -175,7 +175,7 @@ We have the **specs** command, followed by some switches, but no `--specFile` sw
 
 The example specifications will, for the most part, use longer formats and full spelling, so a lot more `WORD 3`{.specs} than `w3`{.specs}.  This is also done for readability. In actual usage, especially on the command line, specifiers almost always use the shortest allowable form.
 
-Commands entered on the command-line are preceded by a `$` sign, the default **bash** prompt.
+Commands entered on the command line are preceded by a `$` sign, the default **bash** prompt.
 
 ---
 
@@ -302,7 +302,7 @@ Delimiters can be used when necessary to avoid confusion:
 
 Output: `word`
 
-On the command line, double quotes are a signal to the **shell** rather than to **specs**. They tell the shell that everything enclosed — spaces, special characters and all — is a single argument. **specs** then treats that whole argument as a *string literal*, unless the entire thing looks like something else: a keyword, a token, a range, and so on. So a command-line literal usually needs no delimiters of its own.
+On the command line, double quotes are a signal to the **shell** rather than to **specs**. They tell the shell that everything enclosed — spaces, special characters and all — is a single argument. **specs** then treats that whole argument as a *string literal*, unless the entire thing looks like something else: a keyword, a token, a range, and so on. So a command line literal usually needs no delimiters of its own.
 
 In a *spec file* (see **[Chapter 5](#chap5)**) there is no shell to group words into arguments for you, so a string literal that contains spaces **must** be surrounded by a delimiter. A double quote can serve as that delimiter, but slashes are the most common:
 
@@ -492,11 +492,11 @@ UTF8 mode remains experimental because not every feature is UTF-8 aware. Specifi
 
 ---
 
-# Chapter 3: When to Use Command-Line Flags
+# Chapter 3: When to Use Command Line Switches
 
-Command-line flags (switches) modify how specs behaves. They come *before* the spec units on the command line. Most simple invocations don't need any flags — the defaults cover the common case.
+Command line switches modify how specs behaves. They come *before* the spec units on the command line. Most simple invocations don't need any switches — the defaults cover the common case.
 
-Here is a guided tour of when each flag is useful.
+Here is a guided tour of when each switch is useful.
 
 ## Input and Output
 
@@ -519,7 +519,7 @@ Use the output of a shell command as the input stream:
 `$ specs --inCmd "ls -l /tmp" ` `w9 1`{.specs}
 
 
-This avoids a pipe when you want the input to be the output of a command.
+This avoids a pipe when you want the **specs** input to be the output of another command.
 
 ### `--is2` through `--is8` / `--os2` through `--os8`
 
@@ -533,7 +533,7 @@ Control how input records are structured. The default (`D` for delimited) reads 
 
 ### `-X` / `--shell`
 
-Execute each output record as a shell command rather than printing it. This is a powerful but dangerous flag — make sure your specification is correct before using it! A typical use is generating a series of shell commands:
+Execute each output record as a shell command rather than printing it. This is a powerful but dangerous switch — make sure your specification is correct before using it! A typical use is generating a series of shell commands:
 
 ```
 ls *.log | specs --shell /rm/ 1 w1 nextword
@@ -587,7 +587,7 @@ Read the specification from the named file instead of the command line. This is 
 
 ### `-c filename` / `--config filename`
 
-Use a different configuration file instead of the default one — `~/.specs` on POSIX systems (Linux and macOS), or `specs.cfg` in your home directory on Windows.
+Use a different configuration file instead of the default one — `~/.specs` on POSIX systems (Linux and Mac OS), or `specs.cfg` in your home directory on Windows.
 
 This is useful for testing, and for keeping a separate set of configured literals per project:
 
@@ -653,21 +653,37 @@ Treat only the space character as a word separator, rather than all locale-defin
 
 Disable the while-guard, which normally causes specs to abort after 5000 iterations of a `WHILE` loop (a safety net against infinite loops). Use this when you intentionally have a long-running loop. The default limit of 5000 can also be changed via the `while-guard-limit` key in the configuration file (**[Chapter 4](#chap4)**).
 
-### `--debug-alu-comp`
+### `--trace-alu-comp`
 
 Print detailed information about the parsing and compilation of ALU expressions. Useful for diagnosing why an expression is being parsed differently than expected. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows how the expression is parsed into tokens both before and after its conversion to reverse polish notation (RPN). It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**. 
 
 **NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
-### `--debug-alu-run`
+### `--trace-alu-run`
 
 Print step-by-step evaluation information for ALU expressions at runtime. Very verbose; useful for tracing a complex expression's intermediate values. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**.
 
 **NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
-### `--debug-alu-file file` or `-d file`
+### `--trace-comp`
 
-Redirect the output of `--debug-alu-comp` and `--debug-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As both `--debug-alu-comp` and `--debug-alu-run` produce markdown output, it is recommended to name the file with the suffix `.md`.
+Print detailed information about the parsing and compilation of specifications.
+
+**NOTE**: EXPAND!!!!!!
+
+### `--trace-run`
+
+Print detailed information about record processing during a **specs** run. Specifying `--trace-run` implies `--trace_comp`. You do not need to specify both.
+
+**NOTE**: EXPAND!!!!!!
+
+### `--trace-all`
+
+Print detailed information about all four of the above categories.
+
+### `--trace-file file` or `-d file`
+
+Redirect the output of `--trace-comp`, `--trace_run`, `--trace-alu-comp` and `--trace-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As these commands produce markdown output, it is recommended to name the file with the suffix `.md`.
 
 ### `--timezone name`
 
@@ -687,7 +703,7 @@ The default is `ECMAScript`. Other options include `basic`, `extended`, `awk`, `
 
 Control loading of Python functions (see **[Chapter 14](#chap14)**). The default, `auto`, loads Python only when an unknown function name is encountered. Set to `off` to disable Python entirely. Set to `on` to always load Python even when no unknown functions appear.
 
-If your build of specs was compiled without Python support, this flag makes no difference — Python functions are never loaded in any case.
+If your build of specs was compiled without Python support, this switch makes no difference — Python functions are never loaded in any case.
 
 ### `--pythonErr throw/NaN/zero/nullstr`
 
@@ -708,14 +724,14 @@ specs invoked as 'specs'
         Compiler version: 9.2.1 20191120 (Red Hat 9.2.1-2)
         High/low watermark for queues: 5000 / 4500
         Random Provider: rand48
-        Git tag: v1.1.0
+        Git tag: v1.2.0
         Python version: 3.12.1
         Floating point precision: 18 (16 bytes)
 ```
 
 ### `--force-read-input`
 
-Force specs to read input records even if no spec unit references input. By default, if no spec unit reads from the input (e.g., `specs @version 1`), specs does not bother reading stdin. Use this flag to still consume and count records.
+Force specs to read input records even if no spec unit references input. By default, if no spec unit reads from the input (e.g., `specs @version 1`), specs does not bother reading stdin. Use this switch to still consume and count records.
 
 ## Summary: When to Add a Flag
 
@@ -738,10 +754,10 @@ The **configuration file** is a plain-text file that defines *configured literal
 
 ## Location
 
-- **Linux and macOS**: `~/.specs` (file `.specs` in your home directory)
+- **Linux and Mac OS**: `~/.specs` (file `.specs` in your home directory)
 - **Windows**: `%HOME%\specs.cfg`
 
-You can override this with the `--config` flag (Chapter 3).
+You can override this with the `--config` switch (Chapter 3).
 
 ## Format
 
@@ -774,6 +790,7 @@ before **specs** sees it, so this specification becomes equivalent to "`specs ` 
 data field source is treated as the string `3.14159265`.
 
 Inside expressions, `@pi` is the numeric value of pi and participates in arithmetic, so "`$ specs ` `PRINT "@pi * @pi" 1`{.specs}" generates the output `9.86960440108936`.
+\newpage
 
 ## Special configured literals that act as settings {#configured-literal-settings}
 
@@ -820,7 +837,7 @@ A list of directories where specs looks both for spec files ([Chapter 5](#chap5)
 ```
 SPECSPATH: /home/alice/specs:/usr/local/share/specs
 ```
-**Note:** On Microsoft Windows the directories are separated by semicolons.
+**Note:** On Windows the directories are separated by semicolons.
 
 If not set, `SPECSPATH` defaults to `$HOME/specs` on POSIX systems and to `%APPDATA%\specs` on Windows.
 
@@ -930,7 +947,7 @@ If your specification depends on a configured literal, you can protect it with `
 
 If `pi` is not defined in `~/.specs` or via the `--set` switch on the command line, specs will abort with a clear error message while parsing the specification:
 ```
-Error while parsing command-line arguments:
+Error while parsing command line arguments:
 Missing required configured literal <pi>
 ```
 
@@ -938,7 +955,7 @@ Missing required configured literal <pi>
 
 # Chapter 5: Specification Files {#chap5}
 
-When a specification grows beyond a few data fields, putting it all on the command line becomes unwieldy. **Specification Files** (or just **Spec files**) let you write specifications in a file with comments, indentation, and blank lines.
+When a specification grows beyond a few data fields, putting it all on the command line becomes unwieldy. **specification files** (or just **spec files**) let you write specifications in a file with comments, indentation, and blank lines.
 
 ## Using a Spec File
 
@@ -952,7 +969,7 @@ or equivalently:
 specs --specFile myspec.txt
 ```
 
-A spec file replaces the command-line specification entirely, so the two cannot be combined. If you supply both a spec file and spec units, specs rejects the invocation rather than silently ignoring one of them:
+A spec file replaces the command line specification entirely, so the two cannot be combined. If you supply both a spec file and spec units, specs rejects the invocation rather than silently ignoring one of them:
 
 `$ specs -f myspec.txt -i input.txt ` `w1  1`{.specs}
 ```
@@ -976,7 +993,7 @@ It's usually better to place the specifications in specific, dedicated directori
 
 1. The `SPECSPATH` environment variable
 2. The `SPECSPATH` entry in `~/.specs`
-3. The default: `$HOME/specs` on Linux/macOS, `%APPDATA%\specs` on Windows
+3. The default: `$HOME/specs` on Linux/Mac OS, `%APPDATA%\specs` on Windows
 
 So if your `SPECSPATH` is `/home/alice/specs`, you can store your spec files there and reference them as `-f myspec` without specifying a full path.
 
@@ -984,7 +1001,7 @@ So if your `SPECSPATH` is `/home/alice/specs`, you can store your spec files the
 
 ## Format
 
-A spec file is a plain text file. Spec units are written as if they were command-line arguments, but you can spread them across multiple lines and add comments:
+A spec file is a plain text file. Spec units are written as if they were command line arguments, but you can spread them across multiple lines and add comments:
 
 ```specs
 # This counts and adds up a list of numbers
@@ -1075,6 +1092,7 @@ The opening comment block obeys stricter rules than comments elsewhere in the fi
 - Write the hash mark followed by a space. A hash mark with nothing after it is fine and produces a blank line in the help text, but `#likethis` is *not* a comment as far as the specification parser is concerned — it appears in the help text and then makes the specification fail to compile.
 
 Files whose names begin with a period or an underscore, and files whose names contain `.py`, are not treated as specifications and are not listed.
+\newpage
 
 ## Directives {#directives}
 
@@ -1131,10 +1149,11 @@ a: WORD 1 1
       /EXCEEDS LIMIT/ NEXTWORD
    ENDIF
 ```
+\newpage
 
 ## Debugging
 
-The *specification* language defined in this guidebook is a Turing-complete programming language, and the specification files described in this chapter are programs.
+The *specification* language defined in this guidebook is a Turing-complete programming language, and the spec files described in this chapter are programs.
 Just like any other language, from `C` to `REXX` or `Python` to `bash`, programs you write can and will have bugs.
 The way to handle such bugs is the same as for any language: review the code, run the specification in your head or on paper, and decompose the specification into smaller units.
 
@@ -1185,11 +1204,11 @@ And before proceeding to the next sub-section, in case you figure that `WORD 8`{
 ```
 -rwxrwxr-x 1 jsmith users   170 Apr 13  2022 mkcache.sh
 ```
-And the width of the length field is determined by the largest number in the listing. It's like the output of `ls` was not really made for machine consumption, isn't it?
+The width of the length field is determined by the largest number in the listing. It's as if the output of `ls` was not really made for machine consumption, isn't it?
 
 ### Miscounting
 
-It is very common when writing a specification, whether on the command-line or in a file, to miscount words, fields, and characters. You end up omitting the first or last character, looking at the wrong field, etc.
+It is very common when writing a specification, whether on the command line or in a file, to miscount words, fields, and characters. You end up omitting the first or last character, looking at the wrong field, etc.
 
 There's no magic bullet. Try your specification with several inputs while printing the intermediate values. 
 
@@ -1198,7 +1217,6 @@ There's no magic bullet. Try your specification with several inputs while printi
 Imagine a unit circle enclosed in a square two units to the side. The area of the circle is πr², and since this is the unit circle, the area is just π.  The area of the square is 4, and the ratio between the circle and the square is π/4.
 
 If we pick random points within the square, π/4 of them (~78.54%) should turn out to be within the circle. Let's try that.  You'll have to run without while-guard to make this work:
-\newpage
 ```specs
 # Estimate pi using random points.
 REQUIRES iterations
@@ -1257,7 +1275,6 @@ $ specs -s iterations=10 -f pi_estimate --no-while-guard
 0.32891523318575674 0.9743290540637352 1.05750233621437376
 1.2
 ```
-\newpage
 Geometry tells us to expect the largest value for `#2` to be the square root of 2 - about 1.41 - but we're seeing here values over 5.7.  How did that happen?
 
 The problem is the coordinate systems. The `rand()` function returns a random value between zero and one. Multiplying by 2 means that `#0` and `#1` are between 0 and 2. However, we calculate the distance from the circle center assuming that the center of the circle is at the origin - at point (0,0). It is not enclosed in the square. So what can we do? We could subtract 0.5 from both invocations of the `rand()` function, effectively making `#0` and `#1` between -1 and 1 (rather than between 0 and 2), and moving the square to enclose the circle. But better yet, let's get rid of the 2 factor, meaning that we only pick dots from a square than encloses the top right quadrant of the circle. The ratio remains the same.  Let's try it with the same 10 iterations:
@@ -1297,7 +1314,7 @@ $ specs -s iterations=10 -f pi_estimate --no-while-guard
 3.2
 ```
 Looks better. 
-\newpage
+
 Let's remove the debug print and try with a million iterations:
 ```specs
 # Estimate pi using random points.
@@ -1687,7 +1704,7 @@ Output: `<hello>`
 \newpage
 ## Record Formats — When Records Are Not Lines {#recfm}
 
-By default, specs treats each newline-terminated line of input as one record. This is the right choice for most text files and shell pipelines. But some data — especially binary files, packed logs, and files generated by mainframe or legacy systems — is organized differently. The `--recfm` flag (short for **record format**) lets you tell specs how to slice the byte stream into records.
+By default, specs treats each newline-terminated line of input as one record. This is the right choice for most text files and shell pipelines. But some data — especially binary files, packed logs, and files generated by mainframe or legacy systems — is organized differently. The `--recfm` switch (short for **record format**) lets you tell specs how to slice the byte stream into records.
 
 The concept comes directly from mainframe operating systems (IBM z/OS, MVS, and their ancestors) where **record format** is an OS-level attribute of every file and data set, not just a convention. On those systems the OS itself knows whether a file is line-delimited, fixed-length, or variable-length — and programs read records rather than bytes. specs borrows this vocabulary so that the same kind of data can be processed the same way on any platform.
 
@@ -1697,7 +1714,7 @@ The concept comes directly from mainframe operating systems (IBM z/OS, MVS, and 
 specs ... --recfm D
 ```
 
-Records are separated by a delimiter character. If `--linedel` is not specified the platform's native line-ending sequence is used (LF on Linux/macOS, CRLF on Windows). This is the default mode and what you get if you omit `--recfm` entirely.
+Records are separated by a delimiter character. If `--linedel` is not specified the platform's native line-ending sequence is used (LF on Linux/Mac OS, CRLF on Windows). This is the default mode and what you get if you omit `--recfm` entirely.
 
 You can supply a custom delimiter with `--linedel`:
 
@@ -2204,20 +2221,20 @@ Note: specs uses `//` for integer division and `%` for remainder, matching C/Pyt
 
 | Operator | Name | Notes |
 |----------|------|-------|
-| `<` | Less than | Smart: float if either side is numeric, string otherwise |
-| `<=` | Less than or equal | Smart: float if either side is numeric, string otherwise |
-| `>` | Greater than | Smart: float if either side is numeric, string otherwise |
-| `>=` | Greater than or equal | Smart: float if either side is numeric, string otherwise |
-| `=` | Equal | Smart: float if either side is numeric, string otherwise |
+| `<` | Less than | Smart: float if both sides are numeric, string otherwise |
+| `<=` | Less than or equal | Smart: float if both sides are numeric, string otherwise |
+| `>` | Greater than | Smart: float if both sides are numeric, string otherwise |
+| `>=` | Greater than or equal | Smart: float if both sides are numeric, string otherwise |
+| `=` | Equal | Smart: float if both sides are numeric, string otherwise |
 | `==` | Strict equal | String comparison only (always) |
-| `!=` | Not equal | Smart: float if either side is numeric, string otherwise |
+| `!=` | Not equal | Smart: float if both sides are numeric, string otherwise |
 | `!==` | Strict not equal | String comparison only (always) |
 | `<<` | String less than | Alphabetical comparison (always) |
 | `<<=` | String less than or equal | Alphabetical comparison (always) |
 | `>>` | String greater than | Alphabetical comparison (always) |
 | `>>=` | String greater than or equal | Alphabetical comparison (always) |
 
-All of `<`, `<=`, `>`, `>=`, `=`, and `!=` use the same **smart** rule: if *either* operand looks like a number, both are compared as floating-point; otherwise they are compared as strings. This means `3 < 3.5` is true (numeric), but `apple < banana` is also true (string alphabetical order).
+All of `<`, `<=`, `>`, `>=`, `=`, and `!=` use the same **smart** rule: if *both* operands look like numbers, they are compared as floating-point; otherwise they are compared as strings. This means `3 < 3.5` is true (numeric), but `apple < banana` is also true (string alphabetical order), and `0 = hello` is false, because `hello` is not a number. A counter that has no value yet counts as a number, so `#1 = 0` is true for a counter that was never set.
 
 The **strict** operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) always compare as strings regardless of whether the operands look like numbers. So `3 == 3.0` is false (different string representations), but `3 = 3.0` is true (same numeric value).
 
@@ -2348,7 +2365,7 @@ When a string is used in a numeric context, specs tries to parse it as a number.
 
 ## Exactness
 
-Besides its value, every result of an expression carries an **exactness** flag: it is either **exact** (no rounding has occurred) or **inexact**. Integers and strings are normally exact; results of floating-point computations are normally inexact, since they may have lost precision along the way.
+Besides its value, every result of an expression carries an **exactness** attribute: it is either **exact** (no rounding has occurred) or **inexact**. Integers and strings are normally exact; results of floating-point computations are normally inexact, since they may have lost precision along the way.
 
 ```specs
    PRINT "exact(3+4)"  1 
@@ -2363,7 +2380,11 @@ The built-in `exact()` function, introduced in **[Chapter 9](#chap9)**, lets you
 
 ## Regular Expressions {#regex-portability}
 
-specs's regular-expression functions — `rmatch()`, `rsearch()`, and `rreplace()` (all described in **[Chapter 9](#chap9)**) — are built on the C++ standard library's `std::regex`. `std::regex` supports several regular expression *grammars*, selected with the [`--regexType`](#regextype) command-line switch or the [`regexType`](#configured-literal-settings) configured literal. This section explains what those grammars are, and — because this is an area where C++ standard library implementations genuinely disagree — where the behavior of **specs** can differ from one platform to another.
+specs's regular-expression functions — `rmatch()`, `rsearch()`, and `rreplace()` (all described in **[Chapter 9](#chap9)**) — are built on the C++ standard library's `std::regex`. 
+`std::regex` supports several regular expression *grammars*, selected with the [`--regexType`](#regextype) command line switch or the [`regexType`](#configured-literal-settings) configured literal. 
+This section explains what those grammars are. 
+This is one area where C++ standard library implementations genuinely disagree — where the behavior of **specs** can differ from one platform to another. 
+That will be covered here as well.
 
 This is **not** a tutorial on regular expression syntax; see any general regular expression reference for that. It focuses on the parts of the picture that are specific to **specs**.
 
@@ -2380,7 +2401,8 @@ This is **not** a tutorial on regular expression syntax; see any general regular
 
 You can combine a grammar with *match flags* such as `icase` (case-insensitive matching), e.g. `--regexType extended,icase`.
 
-**Recommendation:** unless you specifically need POSIX syntax, leave the grammar at its default, `ECMAScript`. It is the grammar with the most predictable, most thoroughly-specified behavior, and (as explained below) the one least affected by cross-platform inconsistencies.
+**Recommendation:** unless you specifically need POSIX syntax, leave the grammar at its default, `ECMAScript`. 
+It is the grammar with the most predictable, most thoroughly-specified behavior, and (as explained below) the one least affected by cross-platform inconsistencies.
 
 ### Why Results Can Differ Across Platforms
 
@@ -2392,7 +2414,7 @@ The C++ standard specifies, in detail, how each grammar is supposed to choose *w
 In practice, not every C++ standard library implements leftmost-longest matching correctly. As of this writing:
 
 - **Linux (libstdc++/GCC):** `extended`, `awk`, and `egrep` do **not** implement leftmost-longest matching for patterns that combine an unbounded quantifier with an alternation, such as `.*(a|xayy)`. This is a long-standing, still-open GCC bug (GCC bugzilla #61424). Results from these three grammars end up looking like `ECMAScript`'s leftmost-first answer instead of the POSIX-correct leftmost-longest one.
-- **macOS (libc++/Clang)** and **Windows (MSVC STL, current toolchains):** all grammars implement leftmost-longest matching correctly for this class of pattern. (Older MSVC releases, prior to a March 2025 fix, had their own separate bugs in this area; if you are using a very old Windows toolchain, verify your results independently.)
+- **Mac OS (libc++/Clang)** and **Windows (MSVC STL, current toolchains):** all grammars implement leftmost-longest matching correctly for this class of pattern. (Older MSVC releases, prior to a March 2025 fix, had their own separate bugs in this area; if you are using a very old Windows toolchain, verify your results independently.)
 - **`basic` and `grep`** behave identically on every platform: since `+`, `?`, and unescaped `\|` are not special in POSIX BRE, patterns using them are matched literally everywhere. This is expected, not a bug — it just means those two grammars support less pattern syntax than the others.
 
 **Example** — the same call can give two different answers depending on the platform:
@@ -2400,7 +2422,7 @@ In practice, not every C++ standard library implements leftmost-longest matching
 `$ specs -s z='zzxayyzz' --regexType extended ` `PRINT "rreplace(z,'.*(a|xayy)','O')" 1`{.specs}
 
 - On Linux: `Ozz` was expected before the leftmost-first fallback described above, but the actual (buggy) result is `Oyyzz`.
-- On macOS and current Windows: `Ozz`, the POSIX-correct leftmost-longest answer.
+- On Mac OS and current Windows: `Ozz`, the POSIX-correct leftmost-longest answer.
 
 Since `specs` warns you whenever you pick a grammar known to be buggy on the running platform (see below), you do not need to memorize this table to be safe — just default to `ECMAScript`, or pay attention to the warning if you deliberately choose a POSIX grammar.
 
@@ -2412,7 +2434,7 @@ Patterns like `.*?` (a `*` immediately followed by `?`) apply *two* repetition o
 
 This is not a library bug to track and wait for a fix — POSIX explicitly leaves it open, so different implementations are free to do different things, and they do:
 
-- macOS (libc++) and Windows (MSVC STL) both **reject** such patterns outright, throwing a regular-expression parse error, when used with `extended`, `awk`, or `egrep`.
+- Mac OS (libc++) and Windows (MSVC STL) both **reject** such patterns outright, throwing a regular-expression parse error, when used with `extended`, `awk`, or `egrep`.
 - Linux (libstdc++) **accepts** such patterns silently and returns a match.
 
 Since no result is guaranteed to be portable here, it is best to avoid stacked repetition operators (`.*?`, `a+*`, `a**`, `a?{2,3}`, and similar) with `basic`, `extended`, `awk`, `grep`, or `egrep` — regardless of whether your current platform happens to accept them. This restriction does not apply to `ECMAScript`, where `*?`, `+?`, and `??` are simply the well-defined non-greedy quantifiers.
@@ -2426,7 +2448,6 @@ Because of the leftmost-longest issue described above, `specs` prints a warning 
 Warning: the 'extended' regular expression grammar has known matching bugs on this platform
 Xbc
 ```
-
 The warning only fires for the specific grammar/platform combinations described above (currently: `extended`, `awk`, and `egrep` on Linux). Choosing `ECMAScript`, `basic`, or `grep` never triggers it, and choosing any grammar on a platform without known bugs never triggers it either.
 
 If you have already accounted for this behavior — for example, your specs and test suite were written and verified against the platform you deploy to — you can silence the warning with the `regexWarn` configured literal:
@@ -2496,7 +2517,7 @@ Output: `5`
 
 `$ specs ` `PRINT 'length(hello!)' 1`{.specs}
 ```
-Error while parsing command-line arguments:
+Error while parsing command line arguments:
 Expression in Token PRINT at index 1 with content <length(hello!)>:
 Operator '!' is invalid.
 ```
@@ -2914,7 +2935,7 @@ These pseudo-functions work with **field identifiers** to accumulate statistics 
 
 The below arguments apply to the `fmap_cump` and the `countocc_dump` functions:
 
-- **format**: `txt`/`0`/empty (default), `lin` (boxed), an integer (fixed width), `csv`, `json`
+- **format**: `txt`/`0`/empty (default), `lin` (boxed), an integer (for fixed-width columns), `csv`, `json`
 - **sortOrder**: `s`/`sa` (alphabetical asc, default), `sd` (alphabetical desc), `c`/`ca` (count asc), `cd` (count desc)
 - **showPct**: boolean — if true, adds a percentage column
 \newpage
@@ -4152,7 +4173,7 @@ On three input records:
 
 ## Out-of-Bounds Records
 
-When `CONTEXT` refers to a position before the first record or past the last, the context record is an **out-of-bounds** (OOB) record. It behaves like an empty string, but carries a hidden OOB flag you can test with `ctxoob()`:
+When `CONTEXT` refers to a position before the first record or past the last, the context record is an **out-of-bounds** (OOB) record. It behaves like an empty string, but carries a hidden OOB attribute you can test with `ctxoob()`:
 
 ```specs
    CONTEXT 2 
@@ -4161,7 +4182,7 @@ When `CONTEXT` refers to a position before the first record or past the last, th
 
 On the last two records of a three-record input, this outputs `0`, `0`, `1` (wait — actually on the third record `CONTEXT 2` would look two ahead which is past the end, so `ctxoob()` returns 1).
 
-**Important**: The OOB flag is preserved when you use the OOB record directly in input parts or expressions. It is **not** preserved after:
+**Important**: The OOB attribute is preserved when you use the OOB record directly in input parts or expressions. It is **not** preserved after:
 
 - Assignment into a numbered counter (`SET "#n:=record()"`)
 - Values that pass through an output-producing spec unit
@@ -4184,7 +4205,7 @@ specs: Using a 3-record rolling context: 2 records forward and 1 records backwar
 
 ## Restrictions
 
-1. Rolling context is not compatible with threading (`-t` flag).
+1. Rolling context is not compatible with threading (`-t` switch).
 2. Rolling context is not compatible with multiple input streams.
 3. The integer offset of the context record, whether it appears as a `CONTEXT ±n` spec unit or as a `@±n` expression, is limited to an absolute value of 256.
 \newpage
@@ -4795,7 +4816,7 @@ The literal must be quoted so the shell passes `gzip -9` to **specs** as one arg
 
 `$ cat filelist.txt | specs --shell ` `"gzip -9" 1  w1 nw`{.specs}
 
-The `--shell` flag executes each output line as a shell command. Remove `--shell` first to verify the commands look correct.
+The `--shell` switch executes each output line as a shell command. Remove `--shell` first to verify the commands look correct.
 
 Input (`filelist.txt`):
 ```
@@ -4856,7 +4877,7 @@ Is the spec short enough to type on one line?
 └─ No, or you'll reuse it → Write a spec file (-f)
 ```
 
-## Should I Use a Configuration File Entry or a Command-Line -s Flag?
+## Should I Use a Configuration File Entry or a Command Line -s Switch?
 
 ```
 Is the value used across many different specs?
@@ -4950,7 +4971,7 @@ Do NOT use `--threaded` with:
 
 # Appendix B: Quick Reference  {#appendixb}
 
-## Command-Line Switches
+## Command Line Switches
 
 | Switch | Short | Description |
 |--------|-------|-------------|
@@ -4978,9 +4999,12 @@ Do NOT use `--threaded` with:
 | `--no-while-guard` | | Disable while-guard (default limit: 5000) |
 | `--toASCII` | | Convert non-ASCII to period |
 | `--force-read-input` | | Read input even if unused |
-| `--debug-alu-comp` | | Print ALU compile info (unless built `--no_alu_debug`) |
-| `--debug-alu-run` | | Print ALU eval info (unless built `--no_alu_debug`) |
-| `--debug-alu-file file` | `-d` | Redirect ALU debug output to a file |
+| `--trace-comp` | | Print specification compile info |
+| `--trace-run` | | Print record processing info. **NOTE**: implies `--trace-comp` |
+| `--trace-alu-comp` | | Print ALU compile info |
+| `--trace-alu-run` | | Print ALU eval info |
+| `--trace-all` | | Print the info for all of the above four categories |
+| `--trace-file file` | `-d` | Redirect trace debug output to a file |
 | `--help topic` | | Print help |
 | `--info` | | Print build information |
 
@@ -5008,6 +5032,7 @@ These are keys that, when set in `~/.specs` (or via `-s`), change **specs** beha
 | `D` | delimited | n/a | optional | Default. Records end at OS line separator |
 | `F` | fixed | required | n/a | Exactly lrecl characters per record |
 | `FD` | fixed-delimited | required | optional | Fixed length with line delimiter |
+\newpage
 
 ## Output Placement Syntax
 
@@ -5019,13 +5044,12 @@ These are keys that, when set in `~/.specs` (or via `-s`), change **specs** beha
 | `n` or `NEXT` | Immediately after previous output |
 | `nw` or `NEXTWORD` | After one space |
 | `nf` or `NEXTFIELD` | After one tab |
-| `n.W` / `nw.W` / `nf.W` | Relative placement with fixed width W |
+| `n.W` / `nw.W` / `nf.W` | Relative placement with a fixed width W |
 | `.` | No output (used with field identifiers) |
 | `(start)` | Composed: dynamic start column |
 | `(start, width)` | Composed: dynamic start and width |
 | `(start, width, align)` | Composed: dynamic alignment |
 
-\newpage
 ## Input Source Syntax
 
 | Syntax | Example | Meaning |
@@ -5131,7 +5155,7 @@ The table below holds conversions used within **Data Fields**. Where you see `fm
 | `//` | Integer divide | |
 | `%` | Remainder | |
 | `||` | Concatenate | |
-| `<` `<=` `>` `>=` | Numeric compare | |
+| `<` `<=` `>` `>=` | Smart compare | Numeric if both numeric |
 | `=` `!=` | Smart equality | Numeric if both numeric |
 | `==` `!==` | Strict equality | Always string |
 | `<<` `<<=` `>>` `>>=` | String compare | Alphabetical |
@@ -5160,7 +5184,7 @@ There are two ways to get **specs** running on your machine: installing a pre-bu
 
 ## Installing from Binaries
 
-Every release of **specs** publishes pre-built packages for Linux (RPM and DEB), macOS (PKG), and Windows (MSI and a standalone EXE). This guidebook is also available from the same webpage - see below.
+Every release of **specs** publishes pre-built packages for Linux (RPM and DEB), Mac OS (PKG), and Windows (MSI and a standalone EXE). This guidebook is also available from the same webpage - see below.
 
 ### Finding the right release
 
@@ -5179,7 +5203,7 @@ The assets section of a release contains several files. Pick the one that matche
 | `specs-<version>-1.x86_64.rpm` | Linux, RPM-based (Fedora, RHEL, CentOS, openSUSE, ...) | Built for 64-bit Intel/AMD (`x86_64`) machines |
 | `specs_<version>_amd64.deb` | Linux, DEB-based (Ubuntu, Debian, Mint, ...) | 64-bit Intel/AMD |
 | `specs_<version>_arm64.deb` | Linux, DEB-based, ARM64 | e.g. Raspberry Pi (64-bit OS), other ARM-based PCs, or Linux running under Parallels on an Apple Silicon Mac |
-| `specs-<version>.pkg` | macOS | Apple Silicon package, bundled with Python 3.12 |
+| `specs-<version>.pkg` | Mac OS | Apple Silicon package, bundled with Python 3.12 |
 | `specs-<version>.msi` | Windows | Installer, no Python support |
 | `specs-<version>-python312.msi` | Windows | Installer, bundled with Python 3.12 |
 | `specs-<version>-windows-x64.exe` | Windows | Standalone executable, no installer, no Python support |
@@ -5207,13 +5231,13 @@ or:
 sudo dpkg -i specs_1.0.0_amd64.deb
 ```
 
-**macOS:**
+**Mac OS:**
 
 Double-click the downloaded `.pkg` file and follow the installer prompts, or from the command line:
 ```
 sudo installer -pkg specs-1.0.0.pkg -target /
 ```
-Recent versions of macOS are strict about where packages come from and may refuse to run the installer, complaining that it is from an "unidentified developer" or quarantining it. If that happens, clear the quarantine flag before installing:
+Recent versions of Mac OS are strict about where packages come from and may refuse to run the installer, complaining that it is from an "unidentified developer" or quarantining it. If that happens, clear the quarantine flag before installing:
 ```
 xattr -dr com.apple.quarantine /path/to/specs-1.0.0.pkg
 ```
@@ -5270,7 +5294,7 @@ Download your copy of **specs** from [GitHub](https://github.com/yoavnir/specs20
 * Python 3 runtime if you are building with `make`.
 * Python 3 development environment (optional, for Python integration support)
   * On Linux: the `python3-devel` (or `python3-dev`) package that matches your Python version
-  * On Mac OS: the Xcode command-line tools (which include Python headers)
+  * On Mac OS: the Xcode command line tools (which include Python headers)
   * On Windows: a standard Python 3 installation includes the required headers and libraries
 * `pandoc` and `tex` if you intend to generate this **guidebook**.
   * On Mac OS you will need to install `MacTex.pkg` because this guidebook includes `purple text` and [links](#appendixc) that look like links.
@@ -5295,7 +5319,7 @@ Change to the `specs/src` directory, and run the following commands:
 2. `make -j 8 ci` -- equivalent to the targets `clean`, `all`, and `run_tests`.
 3. `sudo make install`
 
-The `setup.py` script auto-detects your compiler, Python installation, and platform capabilities. It generates a `Makefile` tailored to your environment. It also supports some optional flags, for specifying **DEBUG** vs **RELEASE** builds, for Python version, etc.  Run `python setup.py --help` for details.
+The `setup.py` script auto-detects your compiler, Python installation, and platform capabilities. It generates a `Makefile` tailored to your environment. It also supports some optional config flags, for specifying **DEBUG** vs **RELEASE** builds, for Python version, etc.  Run `python setup.py --help` for details.
 
 **Python support**
 
@@ -5393,6 +5417,28 @@ New features are not listed here.
 
 Sections are newest-first. When skipping versions, read every section between
 the old and the new one.
+
+## Changes from Version 1.1.0 to 1.2.0
+
+### Comparisons are numeric only if both operands are numbers
+
+The comparison operators `=`, `!=`, `<`, `<=`, `>` and `>=` compared their
+operands as numbers if *either* of them looked like a number. A string that
+is not a number counted as zero. They now compare as numbers only if *both*
+operands look like numbers, and compare as strings otherwise. A counter that
+has no value counts as a number, as before. The strict operators (`==`, `!==`,
+`<<`, `<<=`, `>>`, `>>=`) are not affected.
+
+| Specification | 1.1.0 | 1.2.0 |
+|---------------|-------|-------|
+| `specs PRINT "0='hello'" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'hello'!=0" 1`{.specs} | `0` | `1` |
+| `specs PRINT "5>'abc'" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'abc'<1" 1`{.specs} | `1` | `0` |
+| `specs PRINT "''=0" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'5 '=5" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'007'=7" 1`{.specs} | `1` | `1` |
+| `specs PRINT "#1=0" 1`{.specs} | `1` | `1` |
 
 ## Changes from Version 1.0.0 to 1.1.0
 

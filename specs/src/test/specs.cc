@@ -15,6 +15,7 @@
 #include "utils/ErrorReporting.h"
 #include "utils/PythonIntf.h"
 #include "utils/aluRegex.h"
+#include "utils/trace.h"
 #include "utils/directives.h"
 
 extern int g_stop_stream;
@@ -91,13 +92,27 @@ CONTINUE:
 	}
 
 	// sanity checks
-	if (g_debugAluFile != "") {
-		if (!g_bDebugAluCompile && !g_bDebugAluRun) {
-			std::cerr << "debug-alu-file rejected, since neither debug-alu-compile nor debug-alu-run were specified\n";
+	if (g_bDebugAll) {
+		g_bDebugSpecsCompile = true;
+		g_bDebugSpecsRun = true;
+		g_bDebugAluCompile = true;
+		g_bDebugAluRun = true;
+	}
+	if (g_bDebugSpecsRun && !g_bDebugSpecsCompile)
+	{
+		// --trace-run implies --trace-comp
+		g_bDebugSpecsCompile = true;
+		if (g_bVerbose) {
+			std::cerr << "Enabling spec compiler trace because spec run trace is enabled\n";
+		}
+	}
+	if (g_TraceFile != "") {
+		if (!g_bDebugAluCompile && !g_bDebugAluRun && !g_bDebugSpecsCompile) {
+			std::cerr << "trace-file rejected, since no trace-enabling switches were specified\n";
 			return false;
 		}
-		if (!openAluDumpStream(g_debugAluFile)) {
-			std::cerr << "Could not open debug output file <" << g_debugAluFile << ">\n";
+		if (!openTraceStream(g_TraceFile)) {
+			std::cerr << "Could not open debug output file <" << g_TraceFile << ">\n";
 			return false;
 		}
 	}
@@ -268,6 +283,28 @@ int main (int argc, char** argv)
 
 	std::vector<Token> vec;
 
+	// Start debugging the compilation phase if warranted
+	if (g_bDebugAluCompile || g_bDebugSpecsCompile) {
+		traceStream() << "\n# Compilation Phase - Processing ";
+		if (g_bDebugSpecsCompile) {
+			traceStream() << "the Spec Units";
+			if (g_bDebugAluCompile)
+				traceStream() << " and the ALU Expressions";
+		} else {
+			traceStream() << "the ALU Expressions";
+		}
+		traceStream() << "\n";
+	}
+
+	if (g_bDebugSpecsCompile) {
+		traceStream() << "\n## Parsing the Spec Tokens\n\n**NOTE:** Spec Tokens come from ";
+		if (g_specFile != "") {
+			traceStream() << "file `" << g_specFile << "`.\n";
+		} else {
+			traceStream() << "the command line.\n";
+		}
+	}
+
 	try {
 		if (g_specFile != "") {
 			vec = parseTokensFile(g_specFile);
@@ -289,7 +326,9 @@ int main (int argc, char** argv)
 	setStateQueryAgent(&ps);
 	setOutputAgent(&sb);
 
-	// memset(pWrtrs, 0, sizeof(void*) * (1 + MAX_INPUT_STREAMS));
+	if (g_bDebugSpecsCompile) {
+		traceStream() << "\n## Compilation of the Spec Tokens\n";
+	}
 
 	unsigned int index = 0;
 	try {
@@ -305,6 +344,10 @@ int main (int argc, char** argv)
 			std::cerr << "\n" << ig.Debug();
 		}
 		dumpErrorsAndExit(-4);
+	}
+
+	if (g_bDebugSpecsCompile) {
+		traceStream() << traceReturnAccumulatedStrings();
 	}
 
 	// Check for rolling context incompatibilities
@@ -379,16 +422,29 @@ int main (int argc, char** argv)
 		setPrimaryInputPipe(p);
 	}
 
+	if (g_bDebugSpecsRun || g_bDebugAluRun) {
+		traceStream() << "\n\n# Run Phase - ";
+		if (g_bDebugSpecsRun) {
+			traceStream() << "Processing Records";
+			if (g_bDebugAluRun)
+				traceStream() << " and Evaluating Expressions";
+		} else traceStream() << "Evaluating Expressions";
+		traceStream() << "\n\n";
+	}
 
 	if (ig.readsLines() || g_bForceFileRead) {
+		TRACE_RUN << "- Reading input records" << (g_bForceFileRead ? " (forced)" : "");
 		if (g_inputFile.empty()) {
 			if (nullptr == primaryInputPipe()) {
+				TRACE_RUN << " from standard input\n";
 				pRd = std::make_shared<StandardReader>();
 			} else {
+				TRACE_RUN << " from primary input pipe\n";
 				pRd = std::make_shared<StandardReader>(primaryInputPipe());
 			}
 		} else {
 			try {
+				TRACE_RUN << " from file `" << g_inputFile << "`\n";
 				pRd = std::make_shared<StandardReader>(g_inputFile);
 			} catch (const SpecsException& e) {
 				std::cerr << "Error: Failed to open input file: " << e.what(!g_bVerbose) << "\n";
@@ -401,9 +457,19 @@ int main (int argc, char** argv)
 		}
 
 		if (g_recfm=="F") {
+			TRACE_RUN << "- Record format: FIXED with lrecl " << g_lrecl << "\n";
 			pRd->setFormatFixed(g_lrecl,false);
 		} else if (g_recfm=="FD") {
+			TRACE_RUN << "- Record format: FIXED-DELIMITED with lrecl " 
+				<< g_lrecl << " delimited by <" << g_linedel << ">\n";
 			pRd->setFormatFixed(g_lrecl,true);
+		}
+		else if (g_bDebugSpecsRun) {
+			if (g_linedel=="") {
+				traceStream() << "- Record format: Natural\n";
+			} else {
+				traceStream() << "- Record format: Delimited by <" << g_linedel << ">\n";
+			}
 		}
 
 		if (g_linedel!="") {
@@ -464,6 +530,7 @@ int main (int argc, char** argv)
 			pRd->endCollectingTimeData();
 		}
 	} else {
+		TRACE_RUN << "- Not reading input records\n";
 		bool bSomethingWasDone = false;
 		try {
 			unsigned int readerCount = 0;

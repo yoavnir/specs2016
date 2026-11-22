@@ -1,5 +1,6 @@
 #include "utils/platform.h"
 #include "utils/ErrorReporting.h"
+#include "utils/trace.h"
 #include "processing/Config.h"
 #include "specItems.h"
 
@@ -217,15 +218,28 @@ std::vector<std::string> SplitSetSpecification(std::string setSpec)
 	return ret;
 }
 
+static std::string tokenRangeTrace(unsigned int start, unsigned int finish)
+{
+	if (start==finish) return std::string("- Token ") + std::to_string(start);
+	return std::string("- Tokens ") + std::to_string(start) + "-" + std::to_string(finish);
+}
+
+#define TRACE_COMP_TOKEN  TRACE_COMP << tokenRangeTrace(startIndex, index-1) \
+			<< " (" << TokenListType__2str(tokenVec[startIndex].Type()) \
+			<< "): "
 void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 {
 	predicateStackItem predicateStack[MAX_DEPTH_CONDITION_STATEMENTS];
 	unsigned int predicateStackIdx = 0;
 
+	TRACE_COMP << "\n### Generating Spec Units from Tokens\n\nProcessing " << tokenVec.size() << " tokens:\n";
+
 	while (index < tokenVec.size()) {
+		unsigned int startIndex = index;
 		g_currentTokenArgIndex = tokenVec[index].argIndex();
 		switch (tokenVec[index].Type()) {
 		case TokenListType__EOF:
+			TRACE_COMP_TOKEN << "Requiring run-out cycle\n";
 			bNeedRunoutCycle = true;
 		case TokenListType__FIELDSEPARATOR:
 		case TokenListType__WORDSEPARATOR:
@@ -242,6 +256,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		{
 			auto pItem = std::make_shared<TokenItem>(tokenVec[index++]);
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding Generic Token " << pItem->Debug() << "\n";
 			break;
 		}
 			/* check here for other types of items, whether plainItem, ifGroup, whileGroup */
@@ -264,6 +279,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			if (pItem->forcesRunoutCycle()) {
 				bNeedRunoutCycleFromStart = bNeedRunoutCycle = true;
 			}
+			TRACE_COMP_TOKEN << "Adding Data Field " << pItem->Debug() << "\n";
 			addItem(pItem);
 			break;
 		}
@@ -274,6 +290,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				std::vector<std::string> vec = SplitSetSpecification(tokenVec[index].Literal());
 				for (auto& s : vec) {
 					auto pItem = std::make_shared<SetItem>(s);
+					TRACE_COMP_TOKEN << "Adding SET item " << pItem->Debug() << "\n";
 					addItem(pItem);
 				}
 				index++;
@@ -293,6 +310,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				auto pItem = std::make_shared<SkipItem>(tokenVec[index].Literal(), (tokenVec[index].Type()==TokenListType__SKIPUNTIL));
 				index++;
 				addItem(pItem);
+				TRACE_COMP_TOKEN << "Adding SKIP unit " << pItem->Debug() << "\n";
 			} catch(const SpecsException& e) {
 				if (g_bVerbose) {
 					std::cerr << "While parsing statement, got: " << e.what(true) << "\n";
@@ -360,6 +378,8 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				}
 				index++;
 				addItem(pItem);
+				TRACE_COMP_TOKEN << "Adding Condition unit " << pItem->Debug() << "\n";
+				
 			} catch (const SpecsException& e) {
 				if (g_bVerbose) {
 					std::cerr << "While parsing conditional expression, got: " << e.what(true) << "\n";
@@ -374,6 +394,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_THEN);
 			index++;
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding Condition unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__ELSE:
@@ -381,6 +402,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_ELSE);
 			index++;
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding Condition unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__ENDIF:
@@ -401,6 +423,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_ENDIF);
 			index++;
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding Condition unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__DO:
@@ -408,6 +431,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_DO);
 			index++;
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding Condition unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__DONE:
@@ -428,6 +452,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			auto pItem = std::make_shared<ConditionItem>(ConditionItem::PRED_DONE);
 			index++;
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding Condition unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__BREAK:
@@ -436,6 +461,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			auto pItem = std::make_shared<BreakItem>(tokenVec[index].Literal()[0]);
 			index++;
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding BREAK unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__SELECT:
@@ -443,6 +469,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			auto pItem = std::make_shared<SelectItem>(tokenVec[index].Literal(), false /* bIsOutput */);
 			index++;
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding SELECT unit " << pItem->Debug() << "\n";
 			if (pItem->isSelectSecond()) setRegularRunAtEOF();
 			break;
 		}
@@ -451,6 +478,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			auto pItem = std::make_shared<SelectItem>(tokenVec[index].Literal(), true /* bIsOutput */);
 			index++;
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding OUTSTREAM unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__SPLITW:
@@ -470,6 +498,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			index++;
 			pItem->parse(tokenVec, index);
 			addItem(pItem);
+			TRACE_COMP_TOKEN << "Adding Split unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__CONTEXT:
@@ -487,6 +516,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			if (offset < 0 && (unsigned int)(-offset) > g_backwardContext)
 				g_backwardContext = (unsigned int)(-offset);
 			index++;
+			TRACE_COMP_TOKEN << "Adding CONTEXT unit " << pItem->Debug() << "\n";
 			break;
 		}
 		case TokenListType__REQUIRES:
@@ -496,6 +526,8 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				MYTHROW(err);
 			}
 			index++;
+			TRACE_COMP_TOKEN << "Requiring literal `" <<  tokenVec[index].Literal()
+					<< "` which exists: " << configSpecLiteralGet(tokenVec[index].Literal()) << "\n";
 			break;
 		}
 		case TokenListType__STOP:
@@ -517,7 +549,8 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 			std::string err = "Input stream "+tokenVec[index].Literal()+" from STOP condition is not defined";
 			MYASSERT_WITH_MSG(inputStreamIsDefined(g_stop_stream), err);
 			index++;
-			break;
+			TRACE_COMP_TOKEN << "Setting a stop for " << StopStreamToStr(g_stop_stream) << "\n";
+ 			break;
 		}
 		case TokenListType__PRINTONLY:
 		{
@@ -533,6 +566,11 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 				g_printonly_rule = c;
 			}
 			index++;
+			if (g_printonly_rule==PRINTONLY_EOF) {
+				TRACE_COMP_TOKEN << "Printing only at run-out cycle\n";
+			} else {
+				TRACE_COMP_TOKEN << "Printing only at break level " << std::to_string(g_printonly_rule) << "\n";
+			} 
 			break;
 		}
 		case TokenListType__KEEP:
@@ -541,6 +579,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 					"KEEP must follow a PRINTONLY unit");
 			g_keep_suppressed_record = true;
 			index++;
+			TRACE_COMP_TOKEN << "Keeping suppressed records between cycles.\n";
 			break;
 		}
 		default:
@@ -557,10 +596,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 	do {
 		bAddedMissingPredicate = false;
 		if (predicateStackIdx > 0) {
+			unsigned int _start;
 			switch (predicateStack[predicateStackIdx-1].pred->pred()) {
 				case ConditionItem::PRED_IF:
 					predicateStackIdx--;
-					addItemBeforeEof(std::make_shared<ConditionItem>(ConditionItem::PRED_ENDIF), predicateStack[predicateStackIdx].argIndex);
+					_start = predicateStack[predicateStackIdx].argIndex;
+					addItemBeforeEof(std::make_shared<ConditionItem>(ConditionItem::PRED_ENDIF), _start);
+					TRACE_COMP << "- Adding predicate ENDIF to IF condition at argIndex " 
+							<< _start << "\n";
 					bAddedMissingPredicate = true;
 #ifdef DEBUG
 					if (g_bVerbose) std::cerr << "specs: Adding an ENDIF\n";
@@ -568,7 +611,10 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 					break;
 				case ConditionItem::PRED_WHILE:
 					predicateStackIdx--;
-					addItemBeforeEof(std::make_shared<ConditionItem>(ConditionItem::PRED_DONE), predicateStack[predicateStackIdx].argIndex);
+					_start = predicateStack[predicateStackIdx].argIndex;
+					addItemBeforeEof(std::make_shared<ConditionItem>(ConditionItem::PRED_DONE), _start);
+					TRACE_COMP << "- Adding predicate DONE to WHILE condition at argIndex " 
+							<< _start << "\n";
 					bAddedMissingPredicate = true;
 #ifdef DEBUG
 					if (g_bVerbose) std::cerr << "specs: Adding a DONE\n";
@@ -589,6 +635,14 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 	}
 
 	ValidateRedoAndEOFPlacement(m_items);
+
+	if (g_bDebugSpecsCompile) {
+		traceStream() << "\n### The Spec Item Group\n\n| # | Type | Content |\n|---|---|---|\n";
+		unsigned int idx = 0;
+		for (auto& pItem : m_items) {
+			traceStream() << "| " << idx++ << " | " << pItem->Type() << " | " << pItem->Debug() << " |\n";
+		}
+	}
 }
 
 std::string itemGroup::Debug()
@@ -774,6 +828,9 @@ void itemGroup::process(StringBuilder& sb, ProcessingState& pState, Reader& rd, 
 		pState.setString(ps);
 		pState.setFirst();
 		pState.incrementCycleCounter();
+
+		TRACE_RUN << "\n## Cycle " << pState.getIterationCount()
+			<< "\n\n- Record: `" << *ps << "`\n";
 
 		if (g_bShowProgress && (time(nullptr)!=progressTick)) {
 			progressTick = time(nullptr);

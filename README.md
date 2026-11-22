@@ -14,6 +14,16 @@ This version is liberally based on the [**CMS Pipelines User's Guide and Referen
 
 News
 ====
+1-Mar-2027: Version 1.2.0 is here
+
+What's new:
+ * Debugging tool for specifications
+
+Behavior change:
+ * The comparison operators `=`, `!=`, `<`, `<=`, `>` and `>=` compare numerically only if *both* operands are numbers. Previously one numeric operand was enough, so `0='hello'` was true. See Appendix D of the guidebook.
+
+---
+
 30-Nov-2026: Version 1.1.0 is here
 
 What's new:
@@ -21,20 +31,6 @@ What's new:
  * Syntax definition and colorization, including guidebook examples
  * Usability enhancements (`.spec` suffix)
  * C++20
-
----
-
-7-Sep-2026: Version 1.0.0 is here
-
-What's new:
- * Rolling context allows processing previous and future records.
- * Exactness in Python function arguments and return value.
- * Shell command execution from ALU functions (`exec`, `exc1`, `excrc`, `excerr`).
- * Build information system-defined labels, such as `@build-info` and `@build-url`.
- * Packages for Linux, Mac OS and Windows, bundled with Python 3.12.[^pythonwindows]
- * New guidebook.
- * Debugging aids for GDB.
-
 
 Sources
 =======
@@ -48,7 +44,7 @@ The binaries for the latest release can be downloaded from [**the release page**
 
 **Notes:**
  * On Windows for ARM, you may install the x64 version.
- * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.1.0.pkg`
+ * Recent Mac OS versions are very strict on where packages come from.  You may need to issue the following command to get the .pkg file to install: `xattr -dr com.apple.quarantine /path/to/specs-1.2.0.pkg`
 
 Building
 ========

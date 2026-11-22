@@ -602,3 +602,22 @@ PSpecString multiReader::getNextRecord()
 	MYTHROW("multiReader::getNextRecord() should not have been called.");
 	return nullptr;
 }
+
+std::string& StopStreamToStr(unsigned int stream)
+{
+	static std::string sAll("ALL");
+	static std::string sAny("ANY");
+	static std::string sInvalid("invalid");
+	static std::string sRet;
+
+	switch(stream) {
+		case STOP_STREAM_ALL: return sAll;
+		case STOP_STREAM_ANY: return sAny;
+		case STOP_STREAM_INVALID: return sInvalid;
+		default:
+			if (!IS_SPECIFIC_STREAM(stream)) return sInvalid;
+			sRet.clear();
+			sRet = std::to_string(stream);
+			return sRet;
+	}
+}

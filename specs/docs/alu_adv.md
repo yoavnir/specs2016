@@ -22,9 +22,9 @@
 | `<<=` | Logical SLTE | Returns `1` if the left-hand operand is alphabetically smaller than or equal to the right-hand operand, or `0` otherwise |
 | `>>` | Logical SGT | Returns `1` if the left-hand operand is alphabetically greater than the right-hand operand, or `0` otherwise |
 | `>>=` | Logical SGTE | Returns `1` if the left-hand operand is alphabetically greater than or equal to the right-hand operand, or `0` otherwise |
-| `=` | Logical Equality | Returns `1` if its two operands are equal numerically or string-wise, or `0` otherwise |
+| `=` | Logical Equality | Returns `1` if its two operands are equal, or `0` otherwise. The comparison is numeric if both operands are numbers, and string-wise otherwise |
 | `==` | Strict Equality | Returns `1` if its two operands are equal string-wise, or `0` otherwise |
-| `!=` | Logical Inequality | Returns `1` if its two operands are not equal numerically or string-wise, or `0` otherwise |
+| `!=` | Logical Inequality | Returns `1` if its two operands are not equal, or `0` otherwise. The comparison is numeric if both operands are numbers, and string-wise otherwise |
 | `!==` | Strict Equality | Returns `1` if its two operands are not equal string-wise, or `0` otherwise |
 | `&` | Logical And | Returns `1` if both of its two operands are non-zero, non-NaN, or `0` otherwise |
 | `\|` | Logical Or | Returns `1` if either of its two operands are non-zero, non-NaN, or `0` otherwise |
