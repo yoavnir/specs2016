@@ -116,6 +116,7 @@
     <ClInclude Include="utils\directives.h" />
     <ClInclude Include="utils\lruCache.h" />
     <ClInclude Include="utils\platform.h" />
+    <ClInclude Include="utils\trace.h" />
     <ClInclude Include="specs_version.h" />
   </ItemGroup>
   <ItemGroup>

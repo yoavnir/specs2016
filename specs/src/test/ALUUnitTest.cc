@@ -1195,6 +1195,19 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("compare('Hello','Hello ')", "0");
 	VERIFY_EXPR_RES("compare('Hello', 'He', 'x')", "3");
 	VERIFY_EXPR_RES("compare('Hello', 'He', 'l')", "5");
+
+	// Smart comparisons are numeric only if both operands are numeric
+	VERIFY_EXPR_RES("0='hello'", "0");
+	VERIFY_EXPR_RES("'hello'=0", "0");
+	VERIFY_EXPR_RES("0!='hello'", "1");
+	VERIFY_EXPR_RES("''=0", "0");
+	VERIFY_EXPR_RES("5>'abc'", "0");
+	VERIFY_EXPR_RES("'abc'<1", "0");
+	VERIFY_EXPR_RES("'5 '=5", "0");
+	VERIFY_EXPR_RES("'9'<'10'", "1");
+	VERIFY_EXPR_RES("'9'<'1a'", "0");
+	VERIFY_EXPR_RES("'007'=7", "1");
+	VERIFY_EXPR_RES("'a'<'b'", "1");
 	return 0;
 }
 

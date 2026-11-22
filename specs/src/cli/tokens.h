@@ -127,7 +127,8 @@ PTokenFieldRange GetUniversalRange();
 class Token {
 public:
 	Token(TokenListTypes _type, PTokenFieldRange pRange, std::string literal, int argc, std::string orig);
-	std::string     Debug(int digits =  0);
+	std::string     Debug();
+	std::string     DebugMarkdown(unsigned int);
 	TokenListTypes  Type() {return m_type;}
 	PTokenFieldRange Range() {return m_pRange;}
 	void            setRange(PTokenFieldRange prng) {MYASSERT(m_pRange==nullptr); m_pRange = prng;}
