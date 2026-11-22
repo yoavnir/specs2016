@@ -21,6 +21,7 @@
 #include "processing/Reader.h"  // for g_pReader
 #include "specitems/specItems.h"  // for MAX_CONTEXT_SIZE
 #include "utils/trace.h"
+#include "utils/utf8.h"
 
 extern stateQueryAgent* g_pStateQueryAgent;
 extern outputAgent* g_pOutputAgent;
@@ -617,6 +618,23 @@ static bool compareAsNumbers(const PValue& op1, const PValue& op2)
 			(counterType__None==op2->getType() || op2->isNumeric());
 }
 
+// String comparison for the smart operators. In UTF8 mode, non-ASCII strings are compared grapheme by grapheme,
+// each in its canonical (NFC) form, so that composed and decomposed forms are equal. Different graphemes are
+// ordered by their UTF-8 bytes, which for valid text is code point order. A prefix sorts before its extensions.
+static int smartStrCompare(const std::string& s1, const std::string& s2)
+{
+	if (!UTF8_STRINGS_NOT_ASCII2(s1, s2)) {
+		return s1.compare(s2);
+	}
+	auto g1 = utf8::toGraphemes(s1);
+	auto g2 = utf8::toGraphemes(s2);
+	for (size_t i = 0; i < g1.length() && i < g2.length(); i++) {
+		int c = utf8::canonicalGrapheme(g1[i]).compare(utf8::canonicalGrapheme(g2[i]));
+		if (c != 0) return c;
+	}
+	return (g1.length() == g2.length()) ? 0 : (g1.length() < g2.length() ? -1 : 1);
+}
+
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeEQ(PValue op1, PValue op2)
 {
@@ -624,7 +642,7 @@ PValue		AluBinaryOperator::computeEQ(PValue op1, PValue op2)
 		RETURN_COND(op1->getFloat() == op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr() == op2->getStr());
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) == 0);
 }
 
 // Simple floating point or string comparison
@@ -634,7 +652,7 @@ PValue		AluBinaryOperator::computeNE(PValue op1, PValue op2)
 		RETURN_COND(op1->getFloat() != op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr() != op2->getStr());
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) != 0);
 }
 
 // Simple floating point or string comparison
@@ -644,7 +662,7 @@ PValue		AluBinaryOperator::computeGT(PValue op1, PValue op2)
 		RETURN_COND(op1->getFloat() > op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr().compare(op2->getStr()) > 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) > 0);
 }
 
 // Simple floating point or string comparison
@@ -654,7 +672,7 @@ PValue		AluBinaryOperator::computeGE(PValue op1, PValue op2)
 		RETURN_COND(op1->getFloat() >= op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr().compare(op2->getStr()) >= 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) >= 0);
 }
 
 // Simple floating point or string comparison
@@ -664,7 +682,7 @@ PValue		AluBinaryOperator::computeLT(PValue op1, PValue op2)
 		RETURN_COND(op1->getFloat() < op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr().compare(op2->getStr()) < 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) < 0);
 }
 
 // Simple floating point or string comparison
@@ -674,7 +692,7 @@ PValue		AluBinaryOperator::computeLE(PValue op1, PValue op2)
 		RETURN_COND(op1->getFloat() <= op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr().compare(op2->getStr()) <= 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) <= 0);
 }
 
 // Strict floating point or string comparison

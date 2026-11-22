@@ -992,5 +992,9 @@ s = "1-* 1"
 run_utf8_case(s,b"\xff",  "invalid input: a single invalid byte")
 run_utf8_case(s,b"\xe2\x82","invalid input: a single truncated sequence")
 
+s = "print 'record()=\"\u00e9te\u00e9 日本語 ñandú\"' 1 print 'record()!=\"x\"' nw print 'record()<=\"z\"' nw print 'record()>=\"\u00e9\"' nw print 'record()>\"\u00e9te\"' nw"
+run_utf8_case(s,utf8_text+bad_text.decode("utf-8","replace"),"smart comparisons of decomposed and precomposed text")
+run_utf8_case(s,bad_text,"invalid input: smart comparisons")
+
 sys.stdout.write("\n*** All tests passed.\n\n")
 memcheck.cleanup()

@@ -1940,6 +1940,27 @@ int runALUUnitTests17(unsigned int onlyTest)
 	VERIFY_EXPR_RES("space('é b', 1, '-')", "é-b");
 	g_bSupportUTF8 = false;
 
+	// Smart string comparisons in UTF8 mode are grapheme by grapheme, in canonical form
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("'é'='é'", "1");
+	VERIFY_EXPR_RES("'é'!='é'", "0");
+	VERIFY_EXPR_RES("'aéb'='aéb'", "1");
+	VERIFY_EXPR_RES("'aéb'<='aéb'", "1");
+	VERIFY_EXPR_RES("'aéb'>'aéb'", "0");
+	VERIFY_EXPR_RES("'é'>'z'", "1");
+	VERIFY_EXPR_RES("'é'>'f'", "1");
+	VERIFY_EXPR_RES("'é'<'ê'", "1");
+	VERIFY_EXPR_RES("'Z'<'a'", "1");
+	VERIFY_EXPR_RES("'ab'<'aéb'", "1");
+	VERIFY_EXPR_RES("'aé'<'aéb'", "1");
+	VERIFY_EXPR_RES("'aéb'>='aé'", "1");
+	VERIFY_EXPR_RES("'日本'='日本'", "1");
+	VERIFY_EXPR_RES("'日本'<'日本語'", "1");
+	VERIFY_EXPR_RES("'é'=='é'", "0");
+	VERIFY_EXPR_RES("'é'<<'é'", "1");
+	g_bSupportUTF8 = false;
+	VERIFY_EXPR_RES("'é'='é'", "0");
+
 	if (countFailures) {
 		if (onlyTest == 0) {
 			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";

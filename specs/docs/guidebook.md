@@ -430,6 +430,11 @@ In UTF8 mode:
 - String functions introduced in [Chapter 8](#chap8), such as `length()`,
   `center()` and `insert()`, use grapheme lengths and positions.
   `bytelength()` is available when the byte count is needed.
+- The comparison operators `=`, `!=`, `<`, `<=`, `>` and `>=` compare strings
+  grapheme by grapheme, in canonical form, so the two encodings of `é` (see below)
+  are equal. Different graphemes are ordered by code point, not by a dictionary
+  or locale collation: `é` sorts after `z`, as `Z` sorts before `a`. The strict
+  operators (`==`, `<<` and so on) compare the bytes exactly.
 - Python functions can receive and return non-ASCII strings (see
   **[Chapter 14](#chap14)**).
 - A byte that is not part of a well-formed UTF-8 sequence counts as one
