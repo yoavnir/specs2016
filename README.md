@@ -19,6 +19,9 @@ News
 What's new:
  * Debugging tool for specifications
 
+Behavior change:
+ * The comparison operators `=`, `!=`, `<`, `<=`, `>` and `>=` compare numerically only if *both* operands are numbers. Previously one numeric operand was enough, so `0='hello'` was true. See Appendix D of the guidebook.
+
 ---
 
 30-Nov-2026: Version 1.1.0 is here
