@@ -2109,20 +2109,20 @@ Note: specs uses `//` for integer division and `%` for remainder, matching C/Pyt
 
 | Operator | Name | Notes |
 |----------|------|-------|
-| `<` | Less than | Smart: float if either side is numeric, string otherwise |
-| `<=` | Less than or equal | Smart: float if either side is numeric, string otherwise |
-| `>` | Greater than | Smart: float if either side is numeric, string otherwise |
-| `>=` | Greater than or equal | Smart: float if either side is numeric, string otherwise |
-| `=` | Equal | Smart: float if either side is numeric, string otherwise |
+| `<` | Less than | Smart: float if both sides are numeric, string otherwise |
+| `<=` | Less than or equal | Smart: float if both sides are numeric, string otherwise |
+| `>` | Greater than | Smart: float if both sides are numeric, string otherwise |
+| `>=` | Greater than or equal | Smart: float if both sides are numeric, string otherwise |
+| `=` | Equal | Smart: float if both sides are numeric, string otherwise |
 | `==` | Strict equal | String comparison only (always) |
-| `!=` | Not equal | Smart: float if either side is numeric, string otherwise |
+| `!=` | Not equal | Smart: float if both sides are numeric, string otherwise |
 | `!==` | Strict not equal | String comparison only (always) |
 | `<<` | String less than | Alphabetical comparison (always) |
 | `<<=` | String less than or equal | Alphabetical comparison (always) |
 | `>>` | String greater than | Alphabetical comparison (always) |
 | `>>=` | String greater than or equal | Alphabetical comparison (always) |
 
-All of `<`, `<=`, `>`, `>=`, `=`, and `!=` use the same **smart** rule: if *either* operand looks like a number, both are compared as floating-point; otherwise they are compared as strings. This means `3 < 3.5` is true (numeric), but `apple < banana` is also true (string alphabetical order).
+All of `<`, `<=`, `>`, `>=`, `=`, and `!=` use the same **smart** rule: if *both* operands look like numbers, they are compared as floating-point; otherwise they are compared as strings. This means `3 < 3.5` is true (numeric), but `apple < banana` is also true (string alphabetical order), and `0 = hello` is false, because `hello` is not a number. A counter that has no value yet counts as a number, so `#1 = 0` is true for a counter that was never set.
 
 The **strict** operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) always compare as strings regardless of whether the operands look like numbers. So `3 == 3.0` is false (different string representations), but `3 = 3.0` is true (same numeric value).
 
@@ -5027,7 +5027,7 @@ The table below holds conversions used within **Data Fields**. Where you see `fm
 | `//` | Integer divide | |
 | `%` | Remainder | |
 | `||` | Concatenate | |
-| `<` `<=` `>` `>=` | Numeric compare | |
+| `<` `<=` `>` `>=` | Smart compare | Numeric if both numeric |
 | `=` `!=` | Smart equality | Numeric if both numeric |
 | `==` `!==` | Strict equality | Always string |
 | `<<` `<<=` `>>` `>>=` | String compare | Alphabetical |
@@ -5292,7 +5292,25 @@ the old and the new one.
 
 ## Changes from Version 1.1.0 to 1.2.0
 
-TBA
+### Comparisons are numeric only if both operands are numbers
+
+The comparison operators `=`, `!=`, `<`, `<=`, `>` and `>=` compared their
+operands as numbers if *either* of them looked like a number. A string that
+is not a number counted as zero. They now compare as numbers only if *both*
+operands look like numbers, and compare as strings otherwise. A counter that
+has no value counts as a number, as before. The strict operators (`==`, `!==`,
+`<<`, `<<=`, `>>`, `>>=`) are not affected.
+
+| Specification | 1.1.0 | 1.2.0 |
+|---------------|-------|-------|
+| `specs PRINT "0='hello'" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'hello'!=0" 1`{.specs} | `0` | `1` |
+| `specs PRINT "5>'abc'" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'abc'<1" 1`{.specs} | `1` | `0` |
+| `specs PRINT "''=0" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'5 '=5" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'007'=7" 1`{.specs} | `1` | `1` |
+| `specs PRINT "#1=0" 1`{.specs} | `1` | `1` |
 
 ## Changes from Version 1.0.0 to 1.1.0
 

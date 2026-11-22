@@ -610,10 +610,17 @@ PValue		AluBinaryOperator::computeOR(PValue op1, PValue op2)
 	RETURN_COND(op1->getBool() || op2->getBool());
 }
 
+// Smart comparisons are numeric only if both operands are. An operand with no value (NaN) counts as numeric.
+static bool compareAsNumbers(const PValue& op1, const PValue& op2)
+{
+	return (counterType__None==op1->getType() || op1->isNumeric()) &&
+			(counterType__None==op2->getType() || op2->isNumeric());
+}
+
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeEQ(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() == op2->getFloat());
 	}
 
@@ -623,7 +630,7 @@ PValue		AluBinaryOperator::computeEQ(PValue op1, PValue op2)
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeNE(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() != op2->getFloat());
 	}
 
@@ -633,7 +640,7 @@ PValue		AluBinaryOperator::computeNE(PValue op1, PValue op2)
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeGT(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() > op2->getFloat());
 	}
 
@@ -643,7 +650,7 @@ PValue		AluBinaryOperator::computeGT(PValue op1, PValue op2)
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeGE(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() >= op2->getFloat());
 	}
 
@@ -653,7 +660,7 @@ PValue		AluBinaryOperator::computeGE(PValue op1, PValue op2)
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeLT(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() < op2->getFloat());
 	}
 
@@ -663,7 +670,7 @@ PValue		AluBinaryOperator::computeLT(PValue op1, PValue op2)
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeLE(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() <= op2->getFloat());
 	}
 

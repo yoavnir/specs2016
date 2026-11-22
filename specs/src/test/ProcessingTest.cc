@@ -399,7 +399,7 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "0", "");           // Test #71
 	VERIFY2(spec, "-5", "");          // Test #72
 	VERIFY2(spec, "3.14", "3.142.141.140.14");  // Test #73
-	VERIFY2(spec, "yes", "");         // Test #74
+	VERIFY2(spec, "yes", "yes");      // Test #74
 
 	spec =  "  a: w1 1 /:/ n   " \
 			"  set #0:=a       " \
@@ -421,8 +421,8 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "67", "67: 67(1)");       // Test #77
 	VERIFY2(spec, "0", "0:");               // Test #78
 	VERIFY2(spec, "-3", "-3:");             // Test #79
-	VERIFY2(spec, "to keep the number", "to:");// VERIFY2(spec, "6.2", "6.2: 2(1) 3(1)"); -- this goes into an endless loop
-	VERIFY2(spec, "hello", "hello:");       // Test #81
+	VERIFY2(spec, "to keep the number", "to: 2(1)");// VERIFY2(spec, "6.2", "6.2: 2(1) 3(1)"); -- this goes into an endless loop
+	VERIFY2(spec, "hello", "hello: 2(1)");  // Test #81
 
 	// Test run-out cycle
 	VERIFY2("one 1 EOF two 2", " ", "one\n two");     // Test #82
