@@ -33,12 +33,12 @@ Severity:
 |----------|----------|-----|
 | ~~Wrong output~~ fixed | `translate` | Now works on graphemes in UTF8 mode. The sequential-replacement semantics of the byte version are kept (so `translate('ab','ba','ab')` gives `aa`, unlike REXX). |
 | ~~Wrong output~~ fixed | `strip` | Now works on graphemes in UTF8 mode. |
-| Inconsistent | `delword`, `subword`, `wordindex`, `wordlength` (the `breakIntoWords*` helpers) | They split words with the C `isspace()` on bytes. U+00A0 and U+3000 are not separators, although the default word separator for `w1`, `w2` and so on does treat them as separators (see *Whitespace* below). |
-| Inconsistent | `wordcount`, `fieldcount` with an explicit separator | An ASCII-only separator argument is required in UTF8 mode, and the call fails on a non-ASCII one. `wordcount` without a separator, which is the common case, does not apply the Unicode whitespace rules. |
+| ~~Inconsistent~~ fixed | `delword`, `subword`, `wordindex`, `wordlength`, `words`, `find`, `space`, `justify`, `wordpos` (the `breakIntoWords*` helpers) | Now split words on Unicode whitespace (`utf8::isSpace`, applied to the first code point of each grapheme) in UTF8 mode, as the record-level splitter does. ASCII strings, and ASCII mode, still use the byte-wise `isspace`. |
+| Not a gap | `wordcount`, `fieldcount` with an explicit separator | A non-ASCII separator works in UTF8 mode. Without a separator, `wordcount(s)` splits on a blank, as documented in `alu_adv.md`; `wordcount()` uses the record's word separator. |
 
-## Whitespace and word splitting
+## Whitespace and word splitting - FIXED
 
-`a<U+00A0>b` is a single word for `wordcount(record())`, `subword`, `delword` and `wordlength`. It is two words for the `w1` / `w2` word ranges. The cause is that the record-level splitter (`identifyWordsUTF8`) uses `utf8::isSpace`, while the ALU functions above use byte-wise `isspace`.
+`a<U+00A0>b` is now two words for `words`, `subword`, `delword`, `wordlength` and the `w1` / `w2` word ranges alike. The ALU word functions use `utf8::isSpace`, as the record-level splitter (`identifyWordsUTF8`) does when the whitespace is local.
 
 ## Comparison and equality
 
@@ -71,6 +71,6 @@ Widths count grapheme clusters, not terminal columns. CJK and fullwidth characte
 1. Case conversion errors. They abort the run on valid input, and the fix is local. (solved)
 2. `translate` and `strip`, where the output can be invalid UTF-8. (solved)
 3. ~~Fixed-length records, where the output can be invalid UTF-8.~~ (solved)
-4. A single definition of whitespace for the ALU word functions and the record-level splitter.
+4. ~~A single definition of whitespace for the ALU word functions and the record-level splitter.~~ (solved)
 5. Normalisation in the comparison operators, or documentation of the difference.
 6. Regular expressions. This is the largest change and needs a decision on the engine, for example ICU or PCRE2 with UTF support, versus `std::regex` over code points.
