@@ -2283,6 +2283,45 @@ PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
 	return mkValue(delstr_do(theString, start, length));
 }
 
+static inline bool unitIsSpace(char c) { return isspace((unsigned char)c) != 0; }
+
+// A grapheme is whitespace if its first code point is, as in the record-level word splitter
+static inline bool unitIsSpace(const std::string& g)
+{
+	size_t len;
+	return utf8::isSpace(utf8::decode(g.data(), g.size(), len));
+}
+
+// S is std::string for bytes, and utf8::GraphemeString for grapheme clusters
+template <class S>
+static std::string delword_do(const S& theString, ALUInt start, ALUInt length)
+{
+	bool inWhitespace = unitIsSpace(theString[0]);
+	unsigned int  wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
+	std::string res = "";
+	for (size_t i=0; i<theString.length(); i++) {
+		// check if we've moved from non-ws to ws or vice versa
+		if (inWhitespace) {
+			if (!unitIsSpace(theString[i])) {
+				inWhitespace = false;
+				wordIndex++;
+			}
+		} else {
+			if (unitIsSpace(theString[i])) {
+				inWhitespace = true;
+			}
+		}
+
+		if ((wordIndex < (start-1)) ||
+			((wordIndex == (start-1)) && !inWhitespace) || // remove the whitespace before the first word to be deleted
+			(wordIndex > (start+length-1)) ||
+			((wordIndex == (start+length-1)) && inWhitespace && (start>1))) {
+			res += theString[i];
+		}
+	}
+	return res;
+}
+
 PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
@@ -2298,114 +2337,67 @@ PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
 
 	if (0 == theString.length()) return mkValue(theString);
 
-	bool inWhitespace = isspace(theString[0]);
-	unsigned int  wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
-	std::string res = "";
-	for (size_t i=0; i<theString.length(); i++) {
-		// check if we've moved from non-ws to ws or vice versa
-		if (inWhitespace) {
-			if (!isspace(theString[i])) {
-				inWhitespace = false;
-				wordIndex++;
-			}
-		} else {
-			if (isspace(theString[i])) {
-				inWhitespace = true;
-			}
-		}
-
-		if ((wordIndex < (start-1)) ||
-			((wordIndex == (start-1)) && !inWhitespace) || // remove the whitespace before the first word to be deleted
-			(wordIndex > (start+length-1)) ||
-			((wordIndex == (start+length-1)) && inWhitespace && (start>1))) {
-			res += theString[i];
-		}
+	if (UTF8_STRING_NOT_ASCII(theString)) {
+		return mkValue(delword_do(utf8::toGraphemes(theString), start, length));
 	}
+	return mkValue(delword_do(theString, start, length));
+}
 
-	return mkValue(res);
+// Calls f(first, last) with the byte offsets of the start of each word of s, and of the byte after its end.
+// In UTF8 mode a word is delimited by Unicode whitespace, as in the record-level splitter.
+// forEachWord is a template so that callers can pass lambdas that capture local variables
+template <class F>
+static void forEachWord(const std::string& s, F&& f)
+{
+	if (UTF8_STRING_IS_ASCII(s)) {
+		size_t i = 0, n = s.length();
+		while (true) {
+			while (i < n && isspace((unsigned char)s[i])) i++;
+			if (i >= n) break;
+			size_t first = i;
+			while (i < n && !isspace((unsigned char)s[i])) i++;
+			f(first, i);
+		}
+	} else {
+		size_t offset = 0, first = 0;
+		bool inWord = false;
+		const utf8::GraphemeString graphemes = utf8::toGraphemes(s);
+		for (size_t gi = 0; gi < graphemes.length(); gi++) {
+			const std::string& g = graphemes[gi];
+			if (unitIsSpace(g)) {
+				if (inWord) f(first, offset);
+				inWord = false;
+			} else if (!inWord) {
+				inWord = true;
+				first = offset;
+			}
+			offset += g.length();
+		}
+		if (inWord) f(first, offset);
+	}
 }
 
 /*
  * Returns a vector of the words of s
  */
-static std::vector<std::string> breakIntoWords(std::string s)
+static std::vector<std::string> breakIntoWords(const std::string& s)
 {
 	std::vector<std::string> ret;
-
-	if (0 == s.length()) return ret;
-
-	bool inWhitespace = isspace(s[0]);
-	int wordStart = (inWhitespace) ? -1 : 0;
-	for (size_t i=0; i<s.length(); i++) {
-		// check if we've moved from non-ws to ws or vice versa
-		if (inWhitespace) {
-			if (!isspace(s[i])) {
-				inWhitespace = false;
-				wordStart = int(i);
-			}
-		} else {
-			if (isspace(s[i])) {
-				inWhitespace = true;
-				ret.push_back(s.substr(wordStart, i-wordStart));
-			} else if (i == s.length()-1) {
-				ret.push_back(s.substr(wordStart));
-			}
-		}
-
-	}
-
+	forEachWord(s, [&](size_t first, size_t end) { ret.push_back(s.substr(first, end-first)); });
 	return ret;
 }
 
-static std::vector<size_t> breakIntoWords_start(std::string s)
+static std::vector<size_t> breakIntoWords_start(const std::string& s)
 {
 	std::vector<size_t> ret;
-
-	if (0 == s.length()) return ret;
-
-	bool inWhitespace = isspace(s[0]);
-	if (!inWhitespace) ret.push_back(0);
-	for (size_t i=0; i<s.length(); i++) {
-		// check if we've moved from non-ws to ws or vice versa
-		if (inWhitespace) {
-			if (!isspace(s[i])) {
-				inWhitespace = false;
-				ret.push_back(i);
-			}
-		} else {
-			if (isspace(s[i])) {
-				inWhitespace = true;
-			}
-		}
-
-	}
-
+	forEachWord(s, [&](size_t first, size_t) { ret.push_back(first); });
 	return ret;
 }
 
-static std::vector<size_t> breakIntoWords_end(std::string s)
+static std::vector<size_t> breakIntoWords_end(const std::string& s)
 {
 	std::vector<size_t> ret;
-
-	if (0 == s.length()) return ret;
-
-	bool inWhitespace = isspace(s[0]);
-	for (size_t i=0; i<s.length(); i++) {
-		// check if we've moved from non-ws to ws or vice versa
-		if (inWhitespace) {
-			if (!isspace(s[i])) {
-				inWhitespace = false;
-			}
-		} else {
-			if (isspace(s[i])) {
-				inWhitespace = true;
-				ret.push_back(i-1);
-			} else if (i == s.length()-1) {
-				ret.push_back(i);
-			}
-		}
-
-	}
+	forEachWord(s, [&](size_t, size_t end) { ret.push_back(end-1); });
 	return ret;
 }
 

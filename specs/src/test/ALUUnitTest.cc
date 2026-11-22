@@ -1917,6 +1917,16 @@ int runALUUnitTests17(unsigned int onlyTest)
 	VERIFY_EXPR_RES("translate('éclair', 'e', 'é')", "eclair");
 	g_bSupportUTF8 = false;
 
+	// Word functions use Unicode whitespace in UTF8 mode
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("words('a b é')", "3");
+	VERIFY_EXPR_RES("wordlength('éa　b', 1)", "2");
+	VERIFY_EXPR_RES("wordindex('é　bé', 2)", "3");
+	VERIFY_EXPR_RES("subword('é b　c d', 2, 2)", "b　c");
+	VERIFY_EXPR_RES("delword('é b　c d', 2, 2)", "é d");
+	VERIFY_EXPR_RES("space('é b', 1, '-')", "é-b");
+	g_bSupportUTF8 = false;
+
 	if (countFailures) {
 		if (onlyTest == 0) {
 			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
