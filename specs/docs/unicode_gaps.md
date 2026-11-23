@@ -40,12 +40,9 @@ Severity:
 
 `a<U+00A0>b` is now two words for `words`, `subword`, `delword`, `wordlength` and the `w1` / `w2` word ranges alike. The ALU word functions use `utf8::isSpace`, as the record-level splitter (`identifyWordsUTF8`) does when the whitespace is local.
 
-## Comparison and equality
+## Comparison and equality - FIXED
 
-| Severity | Gap |
-|----------|-----|
-| Inconsistent | `==`, `!=`, `<`, `>`, `<=`, `>=` and the strict operators compare raw bytes. `e` + U+0301 and U+00E9 both have `length()` 1 and look identical, but `record()=="é"` is 0. The `compare`, `abbrev` and `wordpos` functions normalise each grapheme to NFC (`canonicalGrapheme`), so they treat the two as equal. |
-| Missing | The ordering operators give code point order, not a collation order. This is probably acceptable, but it should be documented. |
+`=`, `!=`, `<`, `<=`, `>` and `>=` compare non-numeric strings grapheme by grapheme, each in its canonical (NFC) form, so `e` + U+0301 equals U+00E9. Different graphemes are ordered by their UTF-8 bytes, which is code point order for valid text. This is not a collation order (`é` sorts after `z`); that is documented in the guidebook. The strict operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) still compare raw bytes, by design.
 
 ## Record I/O
 
@@ -72,5 +69,5 @@ Widths count grapheme clusters, not terminal columns. CJK and fullwidth characte
 2. `translate` and `strip`, where the output can be invalid UTF-8. (solved)
 3. ~~Fixed-length records, where the output can be invalid UTF-8.~~ (solved)
 4. ~~A single definition of whitespace for the ALU word functions and the record-level splitter.~~ (solved)
-5. Normalisation in the comparison operators, or documentation of the difference.
+5. ~~Normalisation in the comparison operators, or documentation of the difference.~~ (solved)
 6. Regular expressions. This is the largest change and needs a decision on the engine, for example ICU or PCRE2 with UTF support, versus `std::regex` over code points.
