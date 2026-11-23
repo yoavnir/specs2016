@@ -619,25 +619,11 @@ static bool isStreamIdentifier(Token& tok)
 			(tok.Range()->getSingleNumber() > 0);
 }
 
-// Looking for one word (no character below '0') and starting with a letter or underscore
+// Looking for one word that is an identifier: starts with a letter or underscore, and continues with letters,
+// digits and underscores. In UTF8 mode, letters and digits are those of Unicode.
 static bool mayBeNamedString(std::string& s)
 {
-	// need to have characters
-	if (0 == s.length()) return false;
-
-	// first should be letter or underscore
-	if (s[0]!='_' && !isalpha((unsigned char)s[0])) {
-		return false;
-	}
-
-	// other chars should be underscore or alphanumeric
-	for (unsigned char c : s) {
-		if (c!='_' && !isalnum(c)) {
-			return false;
-		}
-	}
-
-	return true;
+	return !s.empty() && utf8::identifierLength(s.data(), s.length(), g_bSupportUTF8) == s.length();
 }
 
 std::string getLiteral(Token& tok, bool bThrowIfNoLiteral=false)

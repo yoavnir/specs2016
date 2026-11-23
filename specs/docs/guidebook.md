@@ -438,6 +438,9 @@ In UTF8 mode:
   they differ from the others only in never comparing numerically.
 - Python functions can receive and return non-ASCII strings (see
   **[Chapter 14](#chap14)**).
+- Names of configured literals may contain Unicode letters and digits, and are
+  compared in canonical form, so `@été` finds the literal whichever way the `é`
+  was encoded.
 - A byte that is not part of a well-formed UTF-8 sequence counts as one
   character and is passed through unchanged.
 
@@ -3072,6 +3075,12 @@ An abbreviated form: `#varname` is equivalent to `pget('varname')`:
 # Count how many times you've run a script
    PRINT "pset(runs, #runs+1)"  1
 ```
+
+The name of a persistent variable is limited to ASCII, even in UTF8 mode. In the
+`#varname` form it may consist only of ASCII letters, digits and underscores, and
+`pset()`, `pget()`, `pdefined()` and `pclear()` raise an error if passed a name that 
+contains any other character. The *values* of persistent variables are not limited, and
+may contain any text.
 
 ---
 

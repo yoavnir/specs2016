@@ -1965,6 +1965,16 @@ int runALUUnitTests17(unsigned int onlyTest)
 	VERIFY_EXPR_RES("'é'>>'z'", "1");
 	VERIFY_EXPR_RES("'aéb'<<'aéc'", "1");
 	VERIFY_EXPR_RES("'3'=='3.0'", "0");
+
+	// Configured literal names are canonicalized, and may be non-ASCII
+	g_bSupportUTF8 = true;
+	configSpecLiteralSet("été_key", "v1");
+	configSpecLiteralSet("été_key2", "v2");
+	VERIFY_EXPR_RES("@été_key", "v1");
+	VERIFY_EXPR_RES("@été_key", "v1");
+	VERIFY_EXPR_RES("@été_key2", "v2");
+	VERIFY_EXPR_RES("'x' || @été_key2 || 'y'", "xv2y");
+	VERIFY_EXPR_RES("length(@été_key)", "2");
 	g_bSupportUTF8 = false;
 	VERIFY_EXPR_RES("'é'='é'", "0");
 	VERIFY_EXPR_RES("'é'=='é'", "0");

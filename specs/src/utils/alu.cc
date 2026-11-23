@@ -1165,14 +1165,6 @@ static bool isLetter(char c) {
 	return ((c>='a' && c<='z') || (c>='A' && c<='Z'));
 }
 
-static bool isCharInIdentifier(char c) {
-	return isLetter(c) || isDigit(c) || c=='_';
-}
-
-static bool isFirstCharInIdentifier(char c) {
-	return isLetter(c) || c=='_';
-}
-
 #define X(nm,st) if (s==st) return std::make_shared<AluUnitUnaryOperator>(s);
 static PUnit getUnaryOperator(std::string& s)
 {
@@ -1398,11 +1390,9 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 
 		// Also a configured string
-		if (*c=='@' && isFirstCharInIdentifier(c[1])) {
+		if (*c=='@' && c+1<cEnd && utf8::identifierLength(c+1, cEnd-(c+1), g_bSupportUTF8)>0) {
 			char* tokEnd = ++c;
-			while (isCharInIdentifier(*tokEnd) && (tokEnd<cEnd)) {
-				tokEnd++;
-			}
+			tokEnd += utf8::identifierLength(c, cEnd-c, g_bSupportUTF8);
 			std::string key = std::string(c,tokEnd-c);
 			if (!configSpecLiteralExists(key)) {
 				std::string err = "Key '" + key + "' not found in expression.";

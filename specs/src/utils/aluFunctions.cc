@@ -3243,6 +3243,7 @@ PValue AluFunc_pget(PValue pName, PValue pDefault)
 {
 	ASSERT_NOT_ELIDED(pName,1,variableName);
 	auto name = pName->getStr();
+	MYASSERT_WITH_MSG(UTF8_STRING_IS_ASCII(name), "pget: The name of a persistent variable must be ASCII");
 	if (persistentVarDefined(name)) {
 		std::string res = persistentVarGet(name);
 		auto ret = mkValue(res);
@@ -3262,6 +3263,7 @@ PValue AluFunc_pdefined(PValue pName)
 {
 	ASSERT_NOT_ELIDED(pName,1,variableName);
 	auto name = pName->getStr();
+	MYASSERT_WITH_MSG(UTF8_STRING_IS_ASCII(name), "pdefined: The name of a persistent variable must be ASCII");
 	if (persistentVarDefined(name)) {
 		return mkValue(ALUInt(1));
 	} else {
@@ -3273,6 +3275,7 @@ PValue AluFunc_pclear(PValue pName)
 {
 	ASSERT_NOT_ELIDED(pName,1,variableName);
 	auto name = pName->getStr();
+	MYASSERT_WITH_MSG(UTF8_STRING_IS_ASCII(name), "pclear: The name of a persistent variable must be ASCII");
 	if (persistentVarDefined(name)) {
 		auto ret = mkValue(persistentVarGet(name));
 		ret->setExact(false);
@@ -3289,6 +3292,7 @@ PValue AluFunc_pset(PValue pName, PValue pValue)
 	ASSERT_NOT_ELIDED(pName,1,variableName);
 	ASSERT_NOT_ELIDED(pValue,2,value);
 	std::string varName = pName->getStr();
+	MYASSERT_WITH_MSG(UTF8_STRING_IS_ASCII(varName), "pset: The name of a persistent variable must be ASCII");
 	std::string varValue = pValue->getStr();
 	persistentVarSet(varName, varValue);
 	auto ret = mkValue(*pValue);
