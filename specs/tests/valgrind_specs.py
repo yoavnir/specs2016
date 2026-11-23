@@ -996,5 +996,13 @@ s = "print 'record()=\"\u00e9te\u00e9 日本語 ñandú\"' 1 print 'record()!=\"
 run_utf8_case(s,utf8_text+bad_text.decode("utf-8","replace"),"smart comparisons of decomposed and precomposed text")
 run_utf8_case(s,bad_text,"invalid input: smart comparisons")
 
+run_utf8_case("REQUIRES été 1-* 1 print '@e\u0301té || @été' nw","abc","configured literals with non-ASCII names",conf="été: hello\n")
+run_utf8_case("print '@e\u0301té' 1","abc","configured literal with a non-ASCII name, defined both ways",conf="été: one\ne\u0301té: two\n")
+run_utf8_case("print '@nosuch\u00e9' 1","abc","undefined configured literal with a non-ASCII name",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+
+run_utf8_case("print 'pset(\"\u00e9t\u00e9\",1)' 1","abc","pset with a non-ASCII name",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+run_utf8_case("print 'pget(\"\u00e9t\u00e9\",1)' 1","abc","pget with a non-ASCII name",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+run_utf8_case("print 'pclear(\"\u00e9t\u00e9\")' 1","abc","pclear with a non-ASCII name",expected_rc=memcheck.RetCode_COMMAND_FAILED)
+
 sys.stdout.write("\n*** All tests passed.\n\n")
 memcheck.cleanup()

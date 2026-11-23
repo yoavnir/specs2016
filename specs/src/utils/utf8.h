@@ -59,6 +59,11 @@ std::string substr(const std::string& s, size_t charStart, size_t count = std::s
 // The Unicode White_Space property.
 bool isSpace(char32_t cp);
 
+// The length in bytes of the longest prefix of p that is an identifier: a letter or underscore, followed by letters,
+// digits and underscores. If unicode is true, a letter is any Unicode letter, and a digit is any Unicode decimal digit
+// or number letter; a combining mark may also follow the first character.
+size_t identifierLength(const char* p, size_t len, bool unicode);
+
 // Decode a string into its code points.
 std::u32string toCodePoints(const std::string& s);
 

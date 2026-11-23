@@ -57,7 +57,10 @@ All widths are in graphemes in UTF-8 mode. This is now implemented: `--lrecl 80`
 
 | Severity | Gap |
 |----------|-----|
-| Missing | `mayBeNamedString` in `cli/tokens.cc` accepts only ASCII letters, digits and `_` for named strings, so a name containing a non-ASCII letter, such as `été`, cannot be a named string (from reading the code; not tested). |
+| ~~Wrong output~~ fixed | Configured literals (`ExternalLiterals` in `processing/Config.cc`) were stored and looked up by bytes. Names are now canonicalized (NFC) when stored and when looked up, in either mode, so the composed and decomposed spellings of a name are the same literal. A configuration file defining both gets the redefinition warning. |
+| ~~Error~~ fixed | A reference to a configured literal inside an ALU expression could not use a non-ASCII name. In UTF8 mode the name may now contain Unicode letters and digits (`utf8::identifierLength`). |
+| ~~Error~~ fixed | `REQUIRES` rejected a name with a non-ASCII letter. `mayBeNamedString` now uses `utf8::identifierLength` too. |
+| By design | The name of a persistent variable is limited to ASCII. `pset`, `pget` and `pclear` fail on a non-ASCII name, and `#name` accepts only ASCII letters, digits and `_`. This is documented in the guidebook, `manpage` and `alu_adv.md`. |
 
 ## Width
 

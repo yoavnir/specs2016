@@ -220,6 +220,44 @@ bool isSpace(char32_t cp)
 	}
 }
 
+size_t identifierLength(const char* p, size_t len, bool unicode)
+{
+	size_t i = 0;
+	while (i < len) {
+		unsigned char c = (unsigned char)p[i];
+		if (c < 0x80) {
+			if (!(c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (i > 0 && c >= '0' && c <= '9'))) break;
+			i++;
+			continue;
+		}
+		if (!unicode) break;
+		size_t l;
+		char32_t cp = decode(p + i, len - i, l);
+		bool ok;
+		switch (utf8proc_category(utf8proc_int32_t(cp))) {
+		case UTF8PROC_CATEGORY_LU:
+		case UTF8PROC_CATEGORY_LL:
+		case UTF8PROC_CATEGORY_LT:
+		case UTF8PROC_CATEGORY_LM:
+		case UTF8PROC_CATEGORY_LO:
+			ok = true;
+			break;
+		case UTF8PROC_CATEGORY_MN:
+		case UTF8PROC_CATEGORY_MC:
+		case UTF8PROC_CATEGORY_ME:
+		case UTF8PROC_CATEGORY_ND:
+		case UTF8PROC_CATEGORY_NL:
+			ok = (i > 0);
+			break;
+		default:
+			ok = false;
+		}
+		if (!ok) break;
+		i += l;
+	}
+	return i;
+}
+
 std::u32string toCodePoints(const std::string& s)
 {
 	std::u32string ret;

@@ -1460,6 +1460,13 @@ The value will be set in future invocations of
 .B specs.
 The function returns the value in 
 .I value. 
+The name of a persistent variable must consist of ASCII characters only, even in UTF8 mode. The functions
+.I pset,
+.I pget,
+.I pdefined
+and
+.I pclear
+fail if the name contains any other character.
 .IP "pget(var,default)" 3
 Returns the value of the
 .B persistent variable

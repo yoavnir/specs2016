@@ -1445,6 +1445,14 @@ int main(int argc, char** argv)
 	VERIFY("/éclair/ ucase 1", "éCLAIR");        // Test #367
 	VERIFY("/ÉCLAIR/ lcase 1", "Éclair");        // Test #368
 
+	// Configured literal names are canonicalized, and may be non-ASCII
+	g_bSupportUTF8 = true;
+	configSpecLiteralSet("\u00e9t\u00e9", "hello");  // pre-composed
+	VERIFY2("REQUIRES \u00e9t\u00e9 1-* 1", "abc", "abc");        // Test #369
+	VERIFY2("REQUIRES e" U_COMBINING_ACUTE "te" U_COMBINING_ACUTE " 1-* 1", "abc", "abc");  // Test #370
+	VERIFY2("print '@e" U_COMBINING_ACUTE "te" U_COMBINING_ACUTE " || @\u00e9t\u00e9' 1", "abc", "hellohello");  // Test #371
+	g_bSupportUTF8 = false;
+
 	if (errorCount) {
 		if (onlyTest == 0) {
 			std::cout << '\n' << errorCount << '/' << testCount << " tests failed.\n";
