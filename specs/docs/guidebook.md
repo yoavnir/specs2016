@@ -434,7 +434,8 @@ In UTF8 mode:
   grapheme by grapheme, in canonical form, so the two encodings of `é` (see below)
   are equal. Different graphemes are ordered by code point, not by a dictionary
   or locale collation: `é` sorts after `z`, as `Z` sorts before `a`. The strict
-  operators (`==`, `<<` and so on) compare the bytes exactly.
+  operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) compare strings the same way;
+  they differ from the others only in never comparing numerically.
 - Python functions can receive and return non-ASCII strings (see
   **[Chapter 14](#chap14)**).
 - A byte that is not part of a well-formed UTF-8 sequence counts as one

@@ -42,7 +42,7 @@ Severity:
 
 ## Comparison and equality - FIXED
 
-`=`, `!=`, `<`, `<=`, `>` and `>=` compare non-numeric strings grapheme by grapheme, each in its canonical (NFC) form, so `e` + U+0301 equals U+00E9. Different graphemes are ordered by their UTF-8 bytes, which is code point order for valid text. This is not a collation order (`é` sorts after `z`); that is documented in the guidebook. The strict operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) still compare raw bytes, by design.
+`=`, `!=`, `<`, `<=`, `>` and `>=` compare strings that are not both numbers grapheme by grapheme, each in its canonical (NFC) form, so `e` + U+0301 equals U+00E9. Different graphemes are ordered by their UTF-8 bytes, which is code point order for valid text. This is not a collation order (`é` sorts after `z`); that is documented in the guidebook. The strict operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) compare strings the same way. They differ from the smart operators only in never comparing numerically, so `3 == 3.0` is still false.
 
 ## Record I/O
 

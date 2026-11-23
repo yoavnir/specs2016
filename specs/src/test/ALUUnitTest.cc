@@ -1956,10 +1956,18 @@ int runALUUnitTests17(unsigned int onlyTest)
 	VERIFY_EXPR_RES("'aéb'>='aé'", "1");
 	VERIFY_EXPR_RES("'日本'='日本'", "1");
 	VERIFY_EXPR_RES("'日本'<'日本語'", "1");
-	VERIFY_EXPR_RES("'é'=='é'", "0");
-	VERIFY_EXPR_RES("'é'<<'é'", "1");
+	VERIFY_EXPR_RES("'é'=='é'", "1");
+	VERIFY_EXPR_RES("'é'!=='é'", "0");
+	VERIFY_EXPR_RES("'é'<<'é'", "0");
+	VERIFY_EXPR_RES("'é'<<='é'", "1");
+	VERIFY_EXPR_RES("'é'>>='é'", "1");
+	VERIFY_EXPR_RES("'é'>>'f'", "1");
+	VERIFY_EXPR_RES("'é'>>'z'", "1");
+	VERIFY_EXPR_RES("'aéb'<<'aéc'", "1");
+	VERIFY_EXPR_RES("'3'=='3.0'", "0");
 	g_bSupportUTF8 = false;
 	VERIFY_EXPR_RES("'é'='é'", "0");
+	VERIFY_EXPR_RES("'é'=='é'", "0");
 
 	if (countFailures) {
 		if (onlyTest == 0) {
