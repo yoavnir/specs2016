@@ -618,7 +618,7 @@ static bool compareAsNumbers(const PValue& op1, const PValue& op2)
 			(counterType__None==op2->getType() || op2->isNumeric());
 }
 
-// String comparison for the smart operators. In UTF8 mode, non-ASCII strings are compared grapheme by grapheme,
+// String comparison for the smart and the strict operators. In UTF8 mode, non-ASCII strings are compared grapheme by grapheme,
 // each in its canonical (NFC) form, so that composed and decomposed forms are equal. Different graphemes are
 // ordered by their UTF-8 bytes, which for valid text is code point order. A prefix sorts before its extensions.
 static int smartStrCompare(const std::string& s1, const std::string& s2)
@@ -698,37 +698,37 @@ PValue		AluBinaryOperator::computeLE(PValue op1, PValue op2)
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSEQ(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr() == op2->getStr());
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) == 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSNE(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr() != op2->getStr());
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) != 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSGT(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr().compare(op2->getStr()) > 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) > 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSLT(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr().compare(op2->getStr()) < 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) < 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSGTE(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr().compare(op2->getStr()) >= 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) >= 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSLTE(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr().compare(op2->getStr()) <= 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) <= 0);
 }
 
 
