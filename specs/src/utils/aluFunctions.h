@@ -107,6 +107,10 @@
 	H(String Functions,40) \
 	X(substr,         3, ALUFUNC_REGULAR,     false,  \
 			"([str],[start],[length]) - Returns the substring of 'str' with length 'length' and starting from position 'start'.","If elided, 'str' defaults to the current record.\nIf elided, 'start' defaults to position 1. A negative value counts from the end of 'str'\nIf elided, 'length' defaults to the length of the string. The length can overflow and the result would be truncated at the end of 'str'.") \
+	X(utf8width,      1, ALUFUNC_REGULAR,     false,  \
+			"(s) - Returns the width of the string s in terminal columns","Control characters and combining marks take no columns, wide (East Asian) characters and emoji take two, and everything else takes one.\nIn ASCII mode, each byte takes one column, except for control characters.") \
+	X(utf8substr,     3, ALUFUNC_REGULAR,     false,  \
+			"([str],[start],[length]) - Returns the substring of 'str' with width up to 'length' columns, starting from column 'start'.","If elided, 'str' defaults to the current record.\nIf elided, 'start' defaults to column 1. A negative value counts from the end of 'str'\nIf elided, 'length' defaults to the width of the string.\nA character that does not start exactly at 'start' is excluded. The result is never wider than 'length', and is as wide as possible.") \
 	X(pos,            2, ALUFUNC_REGULAR,     false,  \
 			"(needle,[haystack]) - Returns the position of the first occurrence of 'needle' within 'haystack'","If elided, 'haystack' defaults to the current record.") \
 	X(lastpos,        2, ALUFUNC_REGULAR,     false,  \
@@ -405,16 +409,22 @@ typedef std::unordered_map<std::string, ALUInt> freqMapImpl;
 
 typedef std::pair<const std::string, ALUInt> freqMapPair;
 
+// Compares strings as the smart comparison operators do: grapheme by grapheme in canonical form in UTF8 mode.
+// Returns a negative number, zero, or a positive number.
+int smartStrCompare(const std::string& s1, const std::string& s2);
+
 class frequencyMap {
 public:
 	void             note(std::string& s);
 	ALUInt           nelem()     { return map.size(); }
-	ALUInt           operator[](std::string& s) {return map[s];}
+	ALUInt           operator[](std::string& s) {return map[key(s)];}
 	ALUInt           count()     { return counter; }
 	std::string      mostCommon();
 	std::string      leastCommon();
 	std::string      dump(fmap_format f, fmap_sortOrder o, bool includePercentage);
 private:
+	// In UTF8 mode keys are in canonical form, so that the composed and decomposed spellings are one key
+	static std::string key(const std::string& s);
 	freqMapImpl      map;
 	ALUInt           counter = 0;
 };

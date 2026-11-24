@@ -621,7 +621,7 @@ static bool compareAsNumbers(const PValue& op1, const PValue& op2)
 // String comparison for the smart and the strict operators. In UTF8 mode, non-ASCII strings are compared grapheme by grapheme,
 // each in its canonical (NFC) form, so that composed and decomposed forms are equal. Different graphemes are
 // ordered by their UTF-8 bytes, which for valid text is code point order. A prefix sorts before its extensions.
-static int smartStrCompare(const std::string& s1, const std::string& s2)
+int smartStrCompare(const std::string& s1, const std::string& s2)
 {
 	if (!UTF8_STRINGS_NOT_ASCII2(s1, s2)) {
 		return s1.compare(s2);

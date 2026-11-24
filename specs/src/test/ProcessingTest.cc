@@ -525,7 +525,9 @@ int main(int argc, char** argv)
            "if '#1 > 900 & #1 < 1100' then       " \
            "   /OK/ 1                            " \
            "else                                 " \
-           "   /NOT OK/ 1                        " \
+           "   /NOT OK - / 1                     " \
+           "   PRINT '#1' NW                     " \
+           "   /is not between 900 and 1100/ NW  " \
            "endif                                ";
 	VERIFY(spec, "OK");  // TEST #104
 
@@ -1451,6 +1453,17 @@ int main(int argc, char** argv)
 	VERIFY2("REQUIRES \u00e9t\u00e9 1-* 1", "abc", "abc");        // Test #369
 	VERIFY2("REQUIRES e" U_COMBINING_ACUTE "te" U_COMBINING_ACUTE " 1-* 1", "abc", "abc");  // Test #370
 	VERIFY2("print '@e" U_COMBINING_ACUTE "te" U_COMBINING_ACUTE " || @\u00e9t\u00e9' 1", "abc", "hellohello");  // Test #371
+	// Frequency map dumps are aligned by terminal columns, not by bytes
+	VERIFY2("a: w1 . EOF print 'fmap_dump(a,\"lin\",\"s\",0)'",
+			"ab\n\u65e5\u672c\u8a9e\nab\n\u65e5\u672c\u8a9e\n\u65e5\u672c\u8a9e",
+			"+--------+---+\n| ab     | 2 |\n| \u65e5\u672c\u8a9e | 3 |\n+--------+---+\n");  // Test #372
+	// Frequency map keys are canonical, and sorted as the comparison operators do
+	VERIFY2("a: w1 . EOF print 'fmap_dump(a,\"lin\",\"s\",0)'",
+			"e" U_COMBINING_ACUTE "\n\u00e9\nf\nz",
+			"+---+---+\n| f | 1 |\n| z | 1 |\n| \u00e9 | 2 |\n+---+---+\n");  // Test #373
+	VERIFY2("a: w1 . EOF print 'fmap_dump(a,\"txt\",\"cd\",0)' 1 print 'fmap_count(a,\"e" U_COMBINING_ACUTE "\")' nw",
+			"e" U_COMBINING_ACUTE "\n\u00e9\nf\nz",
+			"\u00e9 2\nz 1\nf 1\n 2");  // Test #374
 	g_bSupportUTF8 = false;
 
 	if (errorCount) {

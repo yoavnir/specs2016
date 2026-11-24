@@ -1080,6 +1080,29 @@ result is the number of extended grapheme clusters; in ASCII mode it is the numb
 bytes. For example, length(37) is 2 and length('hello') is 5.
 .IP "bytelength(x)" 3
 Returns the length of the argument in bytes, in both ASCII mode and UTF8 mode.
+.IP "utf8width(s)" 3
+Returns the width of the string
+.I s
+in terminal columns. Control characters and combining marks take no columns, wide
+(East Asian) characters and emoji take two columns, and all else takes one. A grapheme
+cluster takes the width of its widest code point. In ASCII mode every byte takes one
+column, except for control characters.
+.IP "utf8substr(s,start,len)" 3
+Like substr(), but
+.I start
+and
+.I len
+are measured in terminal columns, not in characters. Column 1 is the first column. A character
+that does not start exactly at
+.I start
+is excluded, and the result is never wider than
+.I len,
+but as wide as that allows. If every character takes two columns, utf8substr(s,5) and
+utf8substr(s,4) both start at the third character. A negative
+.I start
+counts from the end of the string, and
+.I len
+defaults to the rest of the string.
 .IP "first()" 3
 Returns 1 during the 
 .B run-in
@@ -1968,7 +1991,10 @@ Returns a string containing a dump of the frequency map for
 .B Field Identifier
 a. If the frequency map is empty, returns the content of the configuration string
 .B EmptyFrequencyMapMessage,
-and if that is not defined, returns an empty string.
+and if that is not defined, returns an empty string. In UTF8 mode the textual formats measure
+the width of the key column in terminal columns, as utf8width() does, and not in bytes.
+In UTF8 mode the keys are kept in canonical form, so the composed and decomposed spellings of a
+character are one key, and the alphabetical sort orders compare keys as the comparison operators do.
 .IP "countocc(n,h)" 3
 Returns the number of matches for this particular 
 .B needle 

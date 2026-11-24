@@ -491,6 +491,8 @@ Widths count grapheme clusters, not screen columns. Wide characters such as the
 Han character 'sun' (U+65E5) take two columns on most terminals, so columns of CJK 
 text may not line up. This is not unique to CJK - Latin letters also have 
 fullwidth forms such as U+FF21 -- the fullwidth Latin capital letter A.
+The `utf8width()` and `utf8substr()` functions, described in
+[Chapter 8](#chap8), measure and cut strings by columns.
 
 UTF8 mode remains experimental because not every feature is UTF-8 aware. Specifically: 
 
@@ -1792,13 +1794,19 @@ Output: `hello` (5 characters starting at column 1)
 
 If the value is shorter than the range, it is padded (left-aligned by default). If longer, it is truncated.
 
-You can also use a **width suffix** (a dot followed by a number) to specify the width:
+You can also use a **width suffix** (a dot followed by a number) to specify the width of the output:
 
 `$ echo "hello world" | specs ` `WORD 1 2.5`{.specs}
 
 Output: "` hello`" (equivalent to `2-6`)
 
 The width suffix works with both absolute and relative placement.
+
+**NOTE:** Some Unicode characters are wide. This inclues sone Han characters,
+emojis and others. The width suffix counts bytes in ASCII mode and graphemes
+in UTF-8 mode - it does not consider character mode.  See the [Widths in Terminal Columns](#unicodewidth)
+topic in Chapter 9 for how to format columns where the text contains wide
+characters.
 
 ## Relative Placement
 
@@ -2713,6 +2721,8 @@ grapheme. See
 | `right(s, n)` | Rightmost *n* characters of string *s* (space-padded if shorter) |
 | `center(s, n)` / `centre(s, n)` | Middle *n* characters of string *s* (space-padded if shorter) |
 | `substr(s, start, len)` | Substring of *s* starting at position *start* for *len* characters |
+| `utf8width(s)` | Width of string *s* in terminal columns (see below) |
+| `utf8substr(s, start, len)` | Like `substr()`, but *start* and *len* are in terminal columns (see below) |
 | `pos(needle, haystack)` | 1-based position of the first occurrence of *needle* in *haystack*; *haystack* defaults to current record |
 | `lastpos(needle, haystack)` | 1-based position of the last occurrence of *needle*; *haystack* defaults to current record |
 | `includes(haystack, needle1, ...)` | 1 if any *needle* is a substring of *haystack*; *haystack* defaults to current record |
@@ -2753,6 +2763,49 @@ The optional `flags` argument is a comma-separated list:
 | `no_copy` | Do not copy non-matching sections (for `rreplace`) |
 
 The regular expression grammar itself (`ECMAScript`, `basic`, `extended`, `awk`, `grep`, or `egrep`) is set separately via [`--regexType`](#regextype) or the `regexType` configured literal, not through `matchFlags`. See **[Regular Expression Portability](#regex-portability)** in Chapter 8 before choosing a grammar other than the default — some grammars behave differently across platforms.
+
+### Widths in Terminal Columns {#unicodewidth}
+
+Lengths and positions count characters, but a character may take more or fewer
+columns on the screen. Han characters and most emoji take two columns, and a
+combining mark takes none. `utf8width(s)` returns the number of columns that *s*
+takes. A grapheme cluster takes the width of its widest code point, so `é`
+(whether precomposed or as `e` followed by a combining accent) takes one column,
+and a family emoji built with zero-width joiners takes two. In ASCII mode every
+byte takes one column, except for control characters, which take none.
+
+`utf8substr(s, start, len)` is like `substr()`, but *start* and *len* are
+measured in columns. Column 1 is the first column. A character is included only
+if it starts at *start* or later, and the result is never wider than *len*,
+and as wide as that allows. Suppose that every character of *s* is two columns
+wide, so that the characters take columns 1-2, 3-4, 5-6 and so on:
+
+| Call | Result |
+|------|--------|
+| `utf8substr(s, 5)` | from the third character, which starts at column 5 |
+| `utf8substr(s, 4)` | from the third character: column 4 is in the middle of the second, which is therefore excluded |
+| `utf8substr(s, 3, 4)` | the second and third characters |
+| `utf8substr(s, 3, 3)` | only the second character: the third would make the result 4 columns wide |
+
+As with `substr()`, *start* may be negative to count from the end, a *start*
+of zero returns NaN, and *len* defaults to the rest of the string. Neither
+function takes into account that terminals disagree about the width of some
+characters.
+
+These functions help in aligning text in columns. Suppose I have a dataset with
+a person's age in word 2, and their name, with as many words and characters as
+needed starting in word 3. I want to print the name in column 1 for up to 30
+characters, and then the age in column 32.  In ASCII mode, this is very simple:
+```specs
+   WORD 3-* 1.30
+   WORD 2   32
+```
+However, in UTF-8 mode that would place 30 *graphemes* of the name starting in
+column 1. They could take up to 60 columns. So instead, we can do this:
+```specs
+   PRINT "utf8substr(wordrange(3,-1),,30)" 1
+   WORD 2   32
+```
 
 ### String Manipulation Functions with Multiple Parameters
 
@@ -2942,9 +2995,11 @@ These pseudo-functions work with **field identifiers** to accumulate statistics 
 
 ### fmap_dump Parameters
 
-The below arguments apply to the `fmap_cump` and the `countocc_dump` functions:
+The below arguments apply to the `fmap_dump` and the `countocc_dump` functions:
 
 - **format**: `txt`/`0`/empty (default), `lin` (boxed), an integer (for fixed-width columns), `csv`, `json`
+  In UTF8 mode, the width of the key column, and the padding, are measured in terminal columns (see `utf8width()`) rather than bytes, so wide characters line up.
+  Also in UTF8 mode, the keys of a frequency map are kept in canonical form, so the composed and decomposed spellings of a character are counted as one key, and the alphabetical sort orders compare keys as the comparison operators do.
 - **sortOrder**: `s`/`sa` (alphabetical asc, default), `sd` (alphabetical desc), `c`/`ca` (count asc), `cd` (count desc)
 - **showPct**: boolean — if true, adds a percentage column
 \newpage

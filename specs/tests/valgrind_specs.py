@@ -1004,5 +1004,18 @@ run_utf8_case("print 'pset(\"\u00e9t\u00e9\",1)' 1","abc","pset with a non-ASCII
 run_utf8_case("print 'pget(\"\u00e9t\u00e9\",1)' 1","abc","pget with a non-ASCII name",expected_rc=memcheck.RetCode_COMMAND_FAILED)
 run_utf8_case("print 'pclear(\"\u00e9t\u00e9\")' 1","abc","pclear with a non-ASCII name",expected_rc=memcheck.RetCode_COMMAND_FAILED)
 
+w_text = "日本語日 ab日cd e\u0301日 \U0001F468\u200d\U0001F469\u200d\U0001F467x\n\u0301\ttab\nabc\n"
+s = "print 'utf8width(@@)' 1 print 'utf8substr(@@,2)' nw print 'utf8substr(@@,3,4)' nw print 'utf8substr(@@,-3)' nw print 'utf8substr(@@,1,-2)' nw print 'utf8substr(@@,9,1)' nw print 'utf8substr(@@,0)' nw"
+run_utf8_case(s,w_text,"utf8width and utf8substr")
+run_utf8_case(s,bad_text,"invalid input: utf8width and utf8substr")
+
+s = "a: w1-* . EOF print 'fmap_dump(a,\"lin\",\"s\",1)' 1 print 'fmap_dump(a,\"txt\",\"cd\",1)' nw print 'fmap_dump(a,\"csv\",\"c\",0)' nw print 'fmap_dump(a,\"json\",\"sd\",1)' nw"
+run_utf8_case(s,"日本語 ab e\u0301te\u0301 日本語 \U0001F468\u200d\U0001F469\u200d\U0001F467\nab é ab\n","frequency map dumps")
+run_utf8_case(s,bad_text,"invalid input: frequency map dumps")
+
+s = "a: w1-* . EOF print 'fmap_dump(a,\"lin\",\"sd\",1)' 1 print 'fmap_count(a,\"e\u0301\")' nw print 'fmap_pct(a,\"\u00e9\")' nw"
+run_utf8_case(s,"e\u0301 \u00e9 f z e\u0301\n\u00e9 \u0301 a\u0301\u0302\n","frequency map with decomposed and precomposed keys")
+run_utf8_case(s,bad_text,"invalid input: frequency map keys")
+
 sys.stdout.write("\n*** All tests passed.\n\n")
 memcheck.cleanup()
