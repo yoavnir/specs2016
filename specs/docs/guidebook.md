@@ -492,7 +492,7 @@ Han character 'sun' (U+65E5) take two columns on most terminals, so columns of C
 text may not line up. This is not unique to CJK - Latin letters also have 
 fullwidth forms such as U+FF21 -- the fullwidth Latin capital letter A.
 The `utf8width()` and `utf8substr()` functions, described in
-[Chapter 8](#chap8), measure and cut strings by columns.
+**[Chapter 9](#chap9)**, measure and cut strings by columns.
 
 UTF8 mode remains experimental because not every feature is UTF-8 aware. Specifically: 
 
