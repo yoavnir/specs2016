@@ -220,6 +220,24 @@ bool isSpace(char32_t cp)
 	}
 }
 
+int graphemeWidth(const std::string& g)
+{
+	if (g.size() == 1 && (unsigned char)g[0] < 0x80) {
+		unsigned char c = (unsigned char)g[0];
+		return (c < 0x20 || c == 0x7F) ? 0 : 1;
+	}
+	int ret = 0;
+	size_t i = 0;
+	while (i < g.size()) {
+		size_t l;
+		char32_t cp = decode(g.data() + i, g.size() - i, l);
+		i += l;
+		if (cp >= INVALID_BYTE_BASE + 0x80 && cp <= INVALID_BYTE_BASE + 0xFF) return 1;
+		ret = std::max(ret, utf8proc_charwidth(utf8proc_int32_t(cp)));
+	}
+	return ret;
+}
+
 size_t identifierLength(const char* p, size_t len, bool unicode)
 {
 	size_t i = 0;
@@ -326,6 +344,15 @@ std::string canonicalGrapheme(const std::string& g)
 	if (!p) return g;
 	std::string ret(reinterpret_cast<char*>(p));
 	free(p);
+	return ret;
+}
+
+std::string canonicalString(const std::string& s)
+{
+	if (isAscii(s)) return s;
+	std::string ret;
+	const GraphemeString graphemes = toGraphemes(s);
+	for (size_t i = 0; i < graphemes.length(); i++) ret += canonicalGrapheme(graphemes[i]);
 	return ret;
 }
 

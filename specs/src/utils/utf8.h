@@ -59,6 +59,11 @@ std::string substr(const std::string& s, size_t charStart, size_t count = std::s
 // The Unicode White_Space property.
 bool isSpace(char32_t cp);
 
+// The number of terminal columns taken by one grapheme cluster: 0 for control characters and combining marks, 2 for
+// wide (East Asian) characters and emoji, and 1 otherwise. A cluster takes the width of its widest code point.
+// An invalid byte takes one column.
+int graphemeWidth(const std::string& g);
+
 // The length in bytes of the longest prefix of p that is an identifier: a letter or underscore, followed by letters,
 // digits and underscores. If unicode is true, a letter is any Unicode letter, and a digit is any Unicode decimal digit
 // or number letter; a combining mark may also follow the first character.
@@ -113,6 +118,9 @@ private:
 
 // The NFC form of a single grapheme, so that equivalent encodings compare equal.
 std::string canonicalGrapheme(const std::string& g);
+
+// The string with every grapheme cluster in canonical (NFC) form. Invalid bytes are left as they are.
+std::string canonicalString(const std::string& s);
 
 GraphemeString toGraphemes(const std::string& s);
 std::string fromGraphemes(const GraphemeString& s);

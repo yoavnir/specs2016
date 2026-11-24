@@ -336,6 +336,8 @@
       <item>tobine</item>
       <item>translate</item>
       <item>ucase</item>
+      <item>utf8substr</item>
+      <item>utf8width</item>
       <item>variance</item>
       <item>verify</item>
       <item>word</item>

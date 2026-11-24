@@ -105,6 +105,8 @@ lengths and byte lengths are the same.
 | `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |
 | `substitute(haystack,needle,subst,max)` | Returns the string `haystack` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. The default for `max` is 1 |
 | `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |
+| `utf8width(s)` | Returns the width of `s` in terminal columns. Control characters and combining marks take no columns, wide (East Asian) characters and emoji take two, and everything else takes one. A grapheme cluster takes the width of its widest code point. In ASCII mode every byte takes one column, except control characters. |
+| `utf8substr(s,start,len)` | Like `substr`, but `start` and `len` are in terminal columns (see `utf8width`) and not in characters. A character that does not start exactly at column `start` is excluded, and the result is never wider than `len`, and as wide as possible. `start` is 1-based and may be negative, counting from the end; `len` defaults to the rest of the string. For example, if every character is two columns wide, `utf8substr(s,5)` starts at the third character, `utf8substr(s,4)` also does, and `utf8substr(s,3,4)` returns the second and third characters. |
 | `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack`. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `lastpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack`. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a tab character |
@@ -223,6 +225,8 @@ The parameters for the `fmap_dump` functions are as follows:
   * *txt* or *0* or empty string: textual representation of string and count, with the field width adjusted to fit the largest value of the field. This is the default.
   * *lin*: same as *txt*, but surrounded by lines.
   * Integer value: same as *txt*, but the width of the string field is fixed.
+  * In UTF8 mode, widths of the string field are measured in terminal columns (see `utf8width`) and not in bytes, so that wide characters line up.
+  * In UTF8 mode, the keys of a frequency map are kept in canonical (NFC) form, so that the composed and decomposed spellings of a character are the same key, and the alphabetical sort orders compare keys grapheme by grapheme, as the comparison operators do.
   * *csv*: a Comma Separated Value dataset.
   * *json*: a JavaScript Object Notation dataset.
 * *sortOrder*. Possible values:

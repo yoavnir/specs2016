@@ -802,6 +802,88 @@ PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 	return AluFunc_substring_do(pBigStr, start, length);
 }
 
+static inline int unitWidth(char c)
+{
+	unsigned char u = (unsigned char)c;
+	return (u < 0x20 || u == 0x7F) ? 0 : 1;
+}
+
+static inline int unitWidth(const std::string& g)
+{
+	return utf8::graphemeWidth(g);
+}
+
+// S is std::string for bytes, and utf8::GraphemeString for grapheme clusters
+template <class S>
+static ALUInt totalWidth(const S& str)
+{
+	ALUInt ret = 0;
+	for (size_t i = 0; i < str.length(); i++) ret += unitWidth(str[i]);
+	return ret;
+}
+
+static ALUInt stringColumns(const std::string& str)
+{
+	if (UTF8_STRING_IS_ASCII(str)) return totalWidth(str);
+	return totalWidth(utf8::toGraphemes(str));
+}
+
+// The longest run of whole characters of str that starts at column start or later (the first one that
+// starts at or after it) and takes at most length columns
+template <class S>
+static std::string substrWidth_do(const S& str, ALUInt start, ALUInt length)
+{
+	ALUInt strWidth = totalWidth(str);
+
+	if (start < 0) {
+		start += strWidth + 1;
+		if (start < 1) return "";
+	}
+	if (start > strWidth) return "";
+
+	if (length < 0) {
+		length += strWidth + 1;   // length=-1 means the width of the string
+		if (length < 0) return "";
+	}
+	if (0 == length) return "";
+
+	size_t i = 0;
+	ALUInt column = 0;   // the number of columns before character i
+	while (i < str.length() && column + 1 < start) column += unitWidth(str[i++]);
+
+	std::string ret;
+	for (ALUInt used = 0; i < str.length(); i++) {
+		int w = unitWidth(str[i]);
+		if (used + w > length) break;
+		ret += str[i];
+		used += w;
+	}
+	return ret;
+}
+
+PValue AluFunc_utf8width(PValue pStr)
+{
+	ASSERT_NOT_ELIDED(pStr,1,s);
+	return mkValue(stringColumns(pStr->getStr()));
+}
+
+PValue AluFunc_utf8substr(PValue pBigString, PValue pStart, PValue pLength)
+{
+	ASSERT_ARG_OR_RECORD(pBigString,1,str);
+	// If no argument provided and current record is OOB, preserve OOB status
+	if (!pBigString && Reader::isOOBRecord(g_pStateQueryAgent->currRecord())) {
+		return g_pOOBValue;
+	}
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
+	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
+	if (start==0) {    // invalid string index in specs
+		return mkValue0();  // NaN
+	}
+	if (UTF8_STRING_IS_ASCII(*pBigStr)) return mkValue(substrWidth_do(*pBigStr, start, length));
+	return mkValue(substrWidth_do(utf8::toGraphemes(*pBigStr), start, length));
+}
+
 PValue AluFunc_left(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
@@ -1533,9 +1615,14 @@ static std::string convertToCsv(const std::string& s)
 	return quotedString(s);
 }
 
+std::string frequencyMap::key(const std::string& s)
+{
+	return g_bSupportUTF8 ? utf8::canonicalString(s) : s;
+}
+
 void frequencyMap::note(std::string& s)
 {
-	map[s]++;
+	map[key(s)]++;
 	counter++;
 }
 
@@ -1576,25 +1663,25 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 	switch (o) {
 	case fmap_sortOrder__byStringAscending:
 		compFunctor = [](freqMapPair e1, freqMapPair e2) {
-			return e1.first < e2.first;
+			return smartStrCompare(e1.first, e2.first) < 0;
 		};
 		break;
 	case fmap_sortOrder__byStringDescending:
 		compFunctor = [](freqMapPair e1, freqMapPair e2) {
-			return e1.first > e2.first;
+			return smartStrCompare(e1.first, e2.first) > 0;
 		};
 		break;
 	case fmap_sortOrder__byCountAscending:
 		compFunctor = [](freqMapPair e1, freqMapPair e2) {
 			return (e1.second == e2.second)
-					? e1.first < e2.first
+					? smartStrCompare(e1.first, e2.first) < 0
 					: e1.second < e2.second;
 		};
 		break;
 	case fmap_sortOrder__byCountDescending:
 		compFunctor = [](freqMapPair e1, freqMapPair e2) {
 			return (e1.second == e2.second)
-					? e1.first > e2.first
+					? smartStrCompare(e1.first, e2.first) > 0
 					: e1.second > e2.second;
 		};
 		break;
@@ -1602,12 +1689,20 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 
 	std::set<freqMapPair, Comparator> setOfFreqs(map.begin(), map.end(), compFunctor);
 
+	// Keys are measured in terminal columns in UTF8 mode, and in bytes otherwise
+	auto keyWidth = [](const std::string& key) {
+		return g_bSupportUTF8 ? int(stringColumns(key)) : int(key.size());
+	};
+	auto padKey = [&](std::ostringstream& os, const std::string& key, int w) {
+		os << key << std::string(size_t(std::max(0, w - keyWidth(key))), ' ');
+	};
+
 	int width = 0;
 	ALUInt maxFreq = 0;
 	ALUInt sumFreq = 0;
 	for (auto& kv : setOfFreqs) {
-		if (int(kv.first.size()) > width) {
-			width = int(kv.first.size());
+		if (keyWidth(kv.first) > width) {
+			width = keyWidth(kv.first);
 		}
 		if (kv.second > maxFreq) {
 			maxFreq = kv.second;
@@ -1647,14 +1742,15 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 
 	for (auto& kv : setOfFreqs) {
 		if (fmap_format__textualJustifiedLines > f) {
-			oss << std::setw(width) << std::setfill(' ') << std::left << kv.first;
+			padKey(oss, kv.first, width);
 			oss << std::setw(freqWidth+1) << std::setfill(' ') << std::right << kv.second;
 			if (includePercentage) {
 				oss << std::fixed << std::setw(7) << std::setprecision(2) << ALUFloat(kv.second) * 100.0 / ALUFloat(sumFreq) << "%";
 			}
 		}
 		else if (fmap_format__textualJustifiedLines == f) {
-			oss << "| " << std::setw(width) << std::setfill(' ') << std::left << kv.first;
+			oss << "| ";
+			padKey(oss, kv.first, width);
 			oss << " | " << std::setw(freqWidth) << std::setfill(' ') << std::right << kv.second << " |";
 			if (includePercentage) {
 				oss << std::fixed <<std::setw(6) << std::setprecision(2) <<

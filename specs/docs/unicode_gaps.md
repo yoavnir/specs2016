@@ -44,6 +44,12 @@ Severity:
 
 `=`, `!=`, `<`, `<=`, `>` and `>=` compare strings that are not both numbers grapheme by grapheme, each in its canonical (NFC) form, so `e` + U+0301 equals U+00E9. Different graphemes are ordered by their UTF-8 bytes, which is code point order for valid text. This is not a collation order (`é` sorts after `z`); that is documented in the guidebook. The strict operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) compare strings the same way. They differ from the smart operators only in never comparing numerically, so `3 == 3.0` is still false.
 
+## Substring search
+
+| Severity | Gap |
+|----------|-----|
+| Inconsistent | `pos`, `includes` and `countocc` search by bytes, so a needle of `e` + U+0301 is not found in a haystack containing the precomposed U+00E9, and vice versa. `pos("e\u0301", "café")` is 0 although `"e\u0301" = "é"` is true. (Tested for these three; `lastpos` and `includesall` have not been checked.) |
+
 ## Record I/O
 
 | Severity | Gap |
@@ -62,9 +68,9 @@ All widths are in graphemes in UTF-8 mode. This is now implemented: `--lrecl 80`
 | ~~Error~~ fixed | `REQUIRES` rejected a name with a non-ASCII letter. `mayBeNamedString` now uses `utf8::identifierLength` too. |
 | By design | The name of a persistent variable is limited to ASCII. `pset`, `pget` and `pclear` fail on a non-ASCII name, and `#name` accepts only ASCII letters, digits and `_`. This is documented in the guidebook, `manpage` and `alu_adv.md`. |
 
-## Width
+## Width - FIXED
 
-Widths count grapheme clusters, not terminal columns. CJK and fullwidth characters take two columns, so tabular output does not line up. The guidebook already documents this. It is listed here because no feature offers a way to count columns.
+Lengths and positions count grapheme clusters, not terminal columns, and that is deliberate. CJK and fullwidth characters take two columns, so tabular output does not line up. `utf8width(s)` returns the width of a string in columns, and `utf8substr(s,start,len)` extracts a substring by columns. A cluster takes the width of its widest code point (from `utf8proc_charwidth`). The record-level width logic (`SpecString_ResizeChars`, the ellipsis code) still counts characters.
 
 ## Suggested priority
 
