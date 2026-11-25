@@ -142,6 +142,18 @@ private:
 
 typedef std::shared_ptr<IDPart> PIDPart;
 
+// The OUTREC spec unit: the output record built so far in this cycle.
+// It reads nothing from the input, hence readsLines() stays false.
+class OutRecPart : public InputPart {
+public:
+	OutRecPart() {}
+	~OutRecPart() override {}
+	std::string Debug() override;
+	PSpecString getStr(ProcessingState& pState) override;
+};
+
+typedef std::shared_ptr<OutRecPart> POutRecPart;
+
 class ExpressionPart : public InputPart {
 public:
 	explicit ExpressionPart(std::string& _expr);
@@ -171,6 +183,7 @@ enum ApplyRet {
 	ApplyRet__EOF,
 	ApplyRet__UNREAD,
 	ApplyRet__ReDo,
+	ApplyRet__Scratch,
 	ApplyRet__Break,
 	ApplyRet__SkipToNext,
 	ApplyRet__SplitStart,
@@ -232,6 +245,9 @@ private:
 	AluVec            m_outputStartExpression;
 	AluVec            m_outputWidthExpression;
 	AluVec            m_outputAlignmentExpression;
+	std::string       m_outputStartRaw;
+	std::string       m_outputWidthRaw;
+	std::string       m_outputAlignmentRaw;
 };
 
 typedef std::shared_ptr<DataField> PDataField;
@@ -381,6 +397,9 @@ private:
 	AluVec m_outputStartExpression;
 	AluVec m_outputWidthExpression;
 	AluVec m_outputAlignmentExpression;
+	std::string m_outputStartRaw;
+	std::string m_outputWidthRaw;
+	std::string m_outputAlignmentRaw;
 	
 	bool m_splitting;
 	std::vector<PSpecString> m_pieces;

@@ -42,6 +42,7 @@ The **InputSource** argument may be any of the following:
 * **NUMBER** or **RECNO** - A record counter as a 10-digit decimal number.  Read more about expressions on the [Arithmetic-Logical Unit](alu.md) page.
 * **TIMEDIFF** - a 12-char decimal number indicating the number of microseconds since the invocation of the program.
 * An **ID** keyword followed by a previously defined **FieldIdentifier**.
+* The **OUTREC** keyword, giving the output record built so far in the current cycle -- everything placed by the spec units to its left. It takes no argument, and reading it does not modify it. In expressions the same value is available as `@>` or `outrec()`. The **SCRATCH** spec unit discards the output record. See the [Streams and Records](streams.md) page.
 * The **PRINT** keyword followed by a calculated expression. The keyword **PRINT** can be replaced by a question mark, either as a standalone token as in `specs ? "2+2"` or as a prefix to the expression, as in `specs "?2+2"`. It should be noted that the former does not work in a shell environment such as *zsh* or *tcsh*, where a question mark is a wildcard for a single character, but it does work for *bash*.
 * A string literal, optionally enclosed by delimiters, such as `/TODclock/` or `'NUMBER'`. Note that to include the single quotes on the Unix command line requires you to enclose them in double quotes.
 * A **SUBSTring** of another InputSource.
@@ -171,7 +172,7 @@ This is used to set the word separator characters to something other than the de
 ```
 specs wordseparator / word 2 1
 ```
-will output `bye` from the folowing input record:
+will output `bye` from the following input record:
 ```
 /Good///bye/old///paint
 ```
@@ -197,7 +198,7 @@ These are optional spec units that appear at the beginning of the specification 
 
 Directives
 ==========
-**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MIUST** precede all spec units. Below are the supported directives:
+**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MUST** precede all spec units. Below are the supported directives:
 * `+SET` - This directive followed by a single word and then a command-line command, sets a *Configured String* to the output of the command. If the command issues multiple lines of output, only the first line is stored in the configured string. For example, the following directive may lead the configured string ex1 to contain a value such as  `total  120` on Unix-like systems:
 ```
               +SET ex1 ls -l

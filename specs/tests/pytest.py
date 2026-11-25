@@ -137,7 +137,7 @@ else:
 # string parameter - should abend
 sys.stdout.write("Test 08 (bad parameter; should abend) -- ")
 ret = run_cmd('print "plus1(\'hello\')" 1')
-if ret=="Runtime error. Error in external function":
+if ret=="Runtime error. Expression:plus1('hello') - Error in external function":
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
@@ -307,7 +307,7 @@ else:
 # Test bad_exact_use - function tries to use tuple arg as number
 sys.stdout.write("Test 22 (bad_exact_use - TypeError) -- ")
 ret = run_cmd('print "bad_exact_use(5)" 1')
-if "Runtime error. Error in external function" in ret:
+if "Runtime error. Expression:bad_exact_use(5) - Error in external function" in ret:
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")
@@ -316,7 +316,7 @@ else:
 # Test bad_plain_use - function tries to index plain value
 sys.stdout.write("Test 23 (bad_plain_use - TypeError) -- ")
 ret = run_cmd('print "bad_plain_use(5)" 1')
-if "Runtime error. Error in external function" in ret:
+if "Runtime error. Expression:bad_plain_use(5) - Error in external function" in ret:
 	sys.stdout.write("OK\n")
 else:
 	sys.stdout.write("Not OK: <"+ret+">\n")

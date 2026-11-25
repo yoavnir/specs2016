@@ -134,6 +134,23 @@ But this seems inelegant. **specs** includes the `REDO` spec unit just for this.
 grep shuttle test* | specs fs : f2-* 1 REDO /source:/ 1 w1 nw
 ```
 
+## The Output Record as a Scratch Pad
+`REDO` is destructive: because it turns the output line into the input line, the original input record is no longer reachable afterwards. When you only want to *look at* what you have built, without giving up the input record, read the output record directly. Three non-destructive forms are available:
+
+- the `OUTREC` spec unit, an input part usable anywhere one is accepted -- `OUTREC 1`, `OUTREC a:`, `SUBSTR W2 OF OUTREC`;
+- the `@>` pseudo-variable, inside expressions;
+- the `outrec()` function, also inside expressions.
+
+All three see only what the spec units to their left have placed. The matching write operation is the `SCRATCH` spec unit, which **discards** the output record built so far, leaving the input record, the context offset and the selected input station untouched:
+```
+echo "alpha beta" | specs w1 1 SCRATCH w1 1 w2 nw
+```
+gives `alpha beta` -- the input record survived. Replacing `SCRATCH` with `REDO` gives just `alpha`, because by then the input record *is* `alpha`.
+
+`SCRATCH` does not save the record anywhere, so capture it first if you need it -- either into a counter with `SET "#0:=@>"` or into a field identifier with `OUTREC a:`. A cycle whose output record is scratched and not rebuilt writes no line at all.
+
+Note that `OUTREC` takes no argument. All output streams share a single output record; `OUTSTREAM` only selects which stream receives it when it is written.
+
 ## Splitting Records by Word or Field
 The `SPLITW` and `SPLITF` spec units split the current input record into multiple output records, one for each word or field respectively. Any spec units that appear *before* the split unit form a prefix that is replicated in every output record. Any spec units that appear *after* the split unit (such as `REDO`) are applied to each output record individually.
 

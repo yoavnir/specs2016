@@ -626,6 +626,16 @@ s = "fs : f2-* 1 REDO /source:/ 1 w1 nw"
 i = input_samples.httplog
 run_case(s,i,"REDO")
 
+# OUTREC and SCRATCH - the output record under construction
+
+s = "w1 1 w2 nw SUBSTR w2 of OUTREC nw PRINT 'length(@>)' nw"
+i = input_samples.httplog
+run_case(s,i,"OUTREC")
+
+s = "'wc -w' 1 w1 nw SET '#0:=@>' SCRATCH PRINT '#0' 1 w2 nw"
+i = input_samples.httplog
+run_case(s,i,"SCRATCH")
+
 # Second Reading
 s = \
 '''

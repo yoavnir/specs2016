@@ -16,7 +16,7 @@ Switches
 ========
 * --toASCII -- causes output to be translated into ASCII if it's outside the range.
 * --force-read-input -- forces specs to read every input line even if none of the spec units use it.  By default they won't.
-* --specFile or -f -- reads the specification from a file rather than the command line. Cannot be combined with spec units on the command line.
+* --specFile or -f -- reads the specification from a file rather than the command line. Cannot be combined with spec units on the command line. A bare name is first searched for on SPECSPATH as NAME.spec, then as NAME.
 * --verbose or -v -- outputs more information when something goes wrong.
 * --stats -- output statistics on run time, and records read, and on records written. 
 * `--threaded` or `-t` -- run **specs** in separate threads for processing, for readers, and for writers. This was the default until version 0.9.5. Now the default is to run everything in a single thread.
@@ -25,8 +25,9 @@ Switches
 * --shell or -X -- executes the output records as shell commands rather than emitting them to standard output. 
 * --spaceWS -- Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
 * --inCmd or -C -- get the input records from the output of a command specified following this switch.
-* --debug-alu-comp -- Prints out detailed information about the parsing and compiling of expressions (_only in debug build_).
-* --debug-alu-run -- Prints out detailed step-by-step information about the evaluation of expressions (_only in debug build_).
+* --debug-alu-comp -- Prints out detailed information about the parsing and compiling of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag.
+* --debug-alu-run -- Prints out detailed step-by-step information about the evaluation of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag.
+* --debug-alu-file **filename** or -d **filename** -- redirect the output of --debug-alu-comp and --debug-alu-run to a file rather than standard error. The file is overwritten.
 * --no-while-guard -- Disables **while-guard**, allowing specifications to enter endless loops.
 * --progress -- While **specs**is running, will print once a second a message to stderr telling the user how many records have already been processed.
 * --help -- prints out some help information.
@@ -111,7 +112,7 @@ These are optional spec units that appear at the beginning of the specification 
 
 Directives
 ==========
-**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MIUST** precede all spec units. Below are the supported directives:
+**specs** specifications that are specified in a *specFile* rather than the command-line, can include some directives that influence the processing. Directives **MUST** begin with a plus (`+`)  sign  on  the  left-most column of the line in the specification file. All directives **MUST** precede all spec units. Below are the supported directives:
 * `+SET`
 * `+IN`
 
@@ -119,7 +120,7 @@ Conditions and Loops
 ====================
 **specs** also supports conditions and loops. 
 
-Conditions  begin  with  the  word  **if** followed by an **expression** that evaluates to true of false, followed by the token **then**, followed by some **Spec Units**.  Those will be executed only if the condition evaluates to true. They may be followed by an **else** token followed by more **Spec Units** that will be executed if the expression does not evaluate to true, or they may be followed by one or more **elseif** tokens, each with its own condition, **then** token, and set of **Spec Units**.  The chain of **elseif** tokens may be arbitrarily long, but there may only be at most one **else** token. The conditional block ends with an **endif** token.  For example:
+Conditions  begin  with  the  word  **if** followed by an **expression** that evaluates to true or false, followed by the token **then**, followed by some **Spec Units**.  Those will be executed only if the condition evaluates to true. They may be followed by an **else** token followed by more **Spec Units** that will be executed if the expression does not evaluate to true, or they may be followed by one or more **elseif** tokens, each with its own condition, **then** token, and set of **Spec Units**.  The chain of **elseif** tokens may be arbitrarily long, but there may only be at most one **else** token. The conditional block ends with an **endif** token.  For example:
 ```
             if #2 > 5 then
                 /big/ 1
@@ -129,7 +130,7 @@ Conditions  begin  with  the  word  **if** followed by an **expression** that ev
                 /small/ 1
             endif
 ```
-The loop available in specs is a **while** loop.  It begins with the **while** token, followed by an **expression** that evaluates to true of false, followed by the token **do**, and a series of **Spec Units** that will be executed as long as the expression evaluates to true. The series of Spec Units is terminated by the token **done**.  Example:
+The loop available in specs is a **while** loop.  It begins with the **while** token, followed by an **expression** that evaluates to true or false, followed by the token **do**, and a series of **Spec Units** that will be executed as long as the expression evaluates to true. The series of Spec Units is terminated by the token **done**.  Example:
 ```
             while #2 > 0 do
                 print /#2/ 1
@@ -148,7 +149,7 @@ The **while-guard** feature, available from version 0.9.5 makes an effort to pre
 ```
 Without **while-guard** this specification will loop forever. To solve this, **specs** keeps a counter for each while statement that it increments each time the loop is entered. This counter is reset to zero if a record is read from any input.  The **specs** program exits when the counter reaches 5000.
 
-**While-Guard** is not perfect. To disable it, you can use the command-line switch `--no-while-guard` or you can override the maximum iteration count at which the program exist by setting the `while-guard-limit` to some integer value.
+**While-Guard** is not perfect. To disable it, you can use the command-line switch `--no-while-guard` or you can override the maximum iteration count at which the program exits by setting the `while-guard-limit` to some integer value.
 
 Run-In and Run-Out Cycles
 =========================

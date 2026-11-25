@@ -6,7 +6,7 @@
 
 uint64_t g_readRecordCounter = 0;
 Reader* g_pReader = nullptr;
-PSpecString g_pOOBSpecString = std::make_shared<std::string>();
+PSpecString g_pOOBSpecString = mkSpecString();
 
 void ReadAllRecordsIntoReaderQueue(Reader* r)
 {
@@ -277,13 +277,13 @@ PSpecString StandardReader::getNextRecordInternal() {
 			if (m_File) {
 				ok = std::getline(*m_File, line, m_lineDelimiter) ? true : false;
 			} else if (m_pipe) {
-				int c = fgetc(m_pipe.get());
+				int c = getc_nolock(m_pipe.get());
 				ok = !feof(m_pipe.get());
 				if (ok) {
 					line = "";
 					while (c!=EOF && c!=m_lineDelimiter) {
 						line += c;
-						c = fgetc(m_pipe.get());
+						c = getc_nolock(m_pipe.get());
 					}
 				}
 			} else {
@@ -301,13 +301,13 @@ PSpecString StandardReader::getNextRecordInternal() {
 			if (m_File) {
 				ok = std::getline(*m_File, line) ? true : false;
 			} else if (m_pipe) {
-				int c = fgetc(m_pipe.get());
+				int c = getc_nolock(m_pipe.get());
 				ok = !feof(m_pipe.get());
 				if (ok) {
 					line = "";
 					while (c!=EOF && c!='\n') {
 						line += c;
-						c = fgetc(m_pipe.get());
+						c = getc_nolock(m_pipe.get());
 					}
 				}
 			} else {
@@ -335,7 +335,7 @@ PSpecString StandardReader::getNextRecordInternal() {
 			}
 		}
 		g_readRecordCounter++;
-		return std::make_shared<std::string>(line);
+		return mkSpecString(line);
 	}
 	case RECFM_FIXED: {
 		std::streamsize bytesRead;
@@ -356,7 +356,7 @@ PSpecString StandardReader::getNextRecordInternal() {
 			return nullptr;
 		} else {
 			g_readRecordCounter++;
-			return std::make_shared<std::string>(m_buffer, m_lrecl);
+			return mkSpecString(m_buffer, m_lrecl);
 		}
 	}
 	default:
@@ -389,7 +389,7 @@ void TestReader::InsertString(const char* s)
 	if (m_count >= m_MaxCount) {
 		MYTHROW("Attempting to insert too many lines into TestReader");
 	}
-	mp_arr[m_count++] = std::make_shared<std::string>(s);
+	mp_arr[m_count++] = mkSpecString(s);
 }
 
 void TestReader::InsertString(PSpecString ps)
@@ -501,7 +501,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 			_readerCounter--;
 			return nullptr;
 		}
-		ret = std::make_shared<std::string>();
+		ret = mkSpecString();
 	}
 
 	ITERATE_VALID_STREAMS(idx)
@@ -513,7 +513,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 					_readerCounter--;
 					return nullptr;
 				}
-				stringArray[idx] = std::make_shared<std::string>();
+				stringArray[idx] = mkSpecString();
 			}
 		} else {
 			MYASSERT(idx==readerIdx || bFirstGet);
@@ -525,7 +525,7 @@ PSpecString multiReader::get(classifyingTimer& tmr, unsigned int& _readerCounter
 						_readerCounter--;
 						return nullptr;
 					}
-					stringArray[idx] = std::make_shared<std::string>();
+					stringArray[idx] = mkSpecString();
 				}
 			}
 		}

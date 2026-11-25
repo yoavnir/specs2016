@@ -134,7 +134,7 @@ static void ValidateRedoAndEOFPlacement(const std::vector<PItem>& items)
 		if (pToken && TokenListType__REDO==pToken->getToken()->Type()) {
 			if (!stateStack[stateStackIdx].sawOutputBeforeRedo) {
 				std::string err = "REDO at index " + std::to_string(pToken->getToken()->argIndex())
-					+ " must be preceded by output-producing spec units";
+					+ " must follow spec units that produce output";
 				MYTHROW(err);
 			}
 			stateStack[stateStackIdx].waitingForOutput = true;
@@ -148,7 +148,7 @@ static void ValidateRedoAndEOFPlacement(const std::vector<PItem>& items)
 		if (pToken && TokenListType__EOF==pToken->getToken()->Type()) {
 			if (!stateStack[stateStackIdx].sawDataBeforeEOF) {
 				std::string err = "EOF at index " + std::to_string(pToken->getToken()->argIndex())
-					+ " must be preceded by data-providing spec units";
+					+ " must follow spec units that produce output or set variables";
 				MYTHROW(err);
 			}
 			stateStack[stateStackIdx].waitingForOutput = true;
@@ -235,6 +235,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__WRITE:
 		case TokenListType__UNREAD:
 		case TokenListType__REDO:
+		case TokenListType__SCRATCH:
 		case TokenListType__NOWRITE:
 		case TokenListType__ABEND:
 		case TokenListType__CONTINUE:
@@ -255,6 +256,7 @@ void itemGroup::Compile(std::vector<Token> &tokenVec, unsigned int& index)
 		case TokenListType__DTODCLOCK:
 		case TokenListType__TIMEDIFF:
 		case TokenListType__ID:
+		case TokenListType__OUTREC:
 		case TokenListType__PRINT:
 		{
 			auto pItem = std::make_shared<DataField>();
@@ -657,7 +659,7 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				if (bSomethingWasDone) {
 					pState.getCurrentWriter()->Write(sb.GetString(), tmr);
 				} else {
-					pState.getCurrentWriter()->Write(std::make_shared<std::string>(), tmr);
+					pState.getCurrentWriter()->Write(mkSpecString(), tmr);
 				}
 			}
 			bSomethingWasDone = false;
@@ -667,10 +669,16 @@ bool itemGroup::processDo(StringBuilder& sb, ProcessingState& pState, Reader* pR
 				ps = sb.GetString();
 				bSomethingWasDone = false;
 			} else {
-				ps = std::make_shared<std::string>();
+				ps = mkSpecString();
 			}
 			pState.setString(ps, false);
 			pState.setFirst();
+			break;
+		case ApplyRet__Scratch:
+			// Discard the output record built so far. Unlike REDO, nothing
+			// about the input state is touched.
+			sb.clear();
+			bSomethingWasDone = false;
 			break;
 		case ApplyRet__SkipToNext:
 			processingContinue = false;
@@ -932,6 +940,8 @@ ApplyRet TokenItem::apply(ProcessingState& pState, StringBuilder* pSB)
 		return ApplyRet__UNREAD;
 	case TokenListType__REDO:
 		return ApplyRet__ReDo;
+	case TokenListType__SCRATCH:
+		return ApplyRet__Scratch;
 	case TokenListType__CONTINUE:
 		return ApplyRet__SkipToNext;
 	default:
@@ -967,7 +977,7 @@ SetItem::~SetItem()
 ApplyRet SetItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	auto pAss = std::make_shared<AluAssnOperator>(m_oper);
-	ALUPerformAssignment(m_key, pAss, m_RPNExpression, &g_counters);
+	ALUPerformAssignment(m_key, pAss, m_RPNExpression, &g_counters, m_rawExpression);
 	return ApplyRet__Continue;
 }
 
@@ -994,7 +1004,7 @@ ApplyRet SkipItem::apply(ProcessingState& pState, StringBuilder* pSB)
 {
 	if (m_bSatisfied) return ApplyRet__Continue;
 
-	PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+	PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters, m_rawExpression);
 
 	// The condition below covers both cases:
 	//   - This is an UNTIL condition and the condition is TRUE
@@ -1107,10 +1117,10 @@ bool ConditionItem::evaluate()
 {
 	bool ret;
 	if (m_isAssignment) {
-		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpression, &g_counters);
+		ALUPerformAssignment(m_counter, m_assnOp, m_RPNExpression, &g_counters, m_rawExpression);
 		ret = g_counters.getPointer(m_counter)->getBool();
 	} else {
-		PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters);
+		PValue exprResult = evaluateExpression(m_RPNExpression, &g_counters, m_rawExpression);
 		ret = exprResult->getBool();
 	}
 

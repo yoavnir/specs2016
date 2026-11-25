@@ -1,0 +1,11 @@
+# Process `manpage.src`:
+#   Replace instances of XXDATE with today's date in manpage format
+#   Replace instances of XXVERSION with the current version
+
+IF "first()" THEN
+   SET "#0:=exc1('specs TODCLOCK mcs2tf \"%e %b %Y\"')"
+ENDIF
+
+PRINT "substitute(@@,XXDATE,#0,'U')"
+REDO
+PRINT "substitute(@@,XXVERSION,@version,'U')"

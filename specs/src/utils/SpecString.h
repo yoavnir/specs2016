@@ -26,6 +26,11 @@ enum ellipsisSpec {
 
 typedef std::shared_ptr<std::string> PSpecString;
 
+template<typename... Args>
+PSpecString mkSpecString(Args&&... args)
+{
+	return std::make_shared<std::string>(std::forward<Args>(args)...);
+}
 
 void SpecString_Resize(PSpecString ps, size_t newSize, void* pPadChar, outputAlignment oa, ellipsisSpec es);
 

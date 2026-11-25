@@ -24,6 +24,7 @@
 
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
+#define CONFIG_FILE_WARN "Invalid configuration file entry at line #" << lineNum << " -- "
 
 #define X(nm,typ,defval,ssw,cliswitch,oval) typ g_##nm = defval;
 CONFIG_PARAMS
@@ -33,9 +34,10 @@ extern unsigned int g_WhileGuardLimit;
 
 static std::map<std::string,std::string> ExternalLiterals;
 
-static void useKeyValue(std::string& key, std::string& value)
+static void useKeyValue(std::string& key, std::string& value, std::string& line, unsigned int lineNum)
 {
-	if (!key.empty() && ':'==key.at(key.length() - 1)) {
+	static std::map<std::string, unsigned int> ExternalLiteralLineMap;
+	if (!key.empty() && ':'==key.back()) {
 		key = key.substr(0,key.length() - 1);
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
@@ -51,11 +53,22 @@ static void useKeyValue(std::string& key, std::string& value)
 			try {
 				g_WhileGuardLimit = std::stoul(value);
 			} catch (...) {
+				std::cerr << CONFIG_FILE_WARN << "Bad while-guard-limit value <" << value << ">:\n\t" << line << "\n";
 			}
 		}
+#if CPP_STD_LEVEL >= 20
+		if (!ExternalLiterals.contains(key)) {
+			ExternalLiterals[key] = value;
+			ExternalLiteralLineMap[key] = lineNum;
+		} else {
+			std::cerr << CONFIG_FILE_WARN << "Key <" << key << "> redefined.\n\tPreviously defined in line #" 
+				<< ExternalLiteralLineMap[key] << " with value <" << ExternalLiterals[key] << ">:\n\tNow: " << line << "\n";
+		}
+#else
 		if (ExternalLiterals.find(key) == ExternalLiterals.end()) {
 			ExternalLiterals[key] = value;
 		}
+#endif
 	}
 }
 
@@ -101,8 +114,7 @@ static bool is_delimiter(char c)
 
 static void alertInvalidLine(std::string& ln, unsigned int lineNum, const char* err)
 {
-	std::cerr << "Invalid configuration file line at line #" << lineNum <<
-			" -- " << err << ":\n\t" << ln << "\n";
+	std::cerr << CONFIG_FILE_WARN << err << ":\n\t" << ln << "\n";
 }
 
 static std::string getTerminalRowsAndColumns(bool bGetRows)
@@ -114,13 +126,28 @@ static std::string getTerminalRowsAndColumns(bool bGetRows)
 	if (!alreadyRan) {
 #ifdef WIN64
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
-		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-
-		rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-		cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+			rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+			cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		} else {
+			rows = 24;
+			cols = 80;
+		}
 #else
-		struct winsize w;
-		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+		/*
+		 * Ask whichever standard stream is a terminal, so that the size is
+		 * still known when standard output is redirected. If none is, fall
+		 * back to $LINES / $COLUMNS, and then to 24x80.
+		 */
+		struct winsize w = {};
+		if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != 0 &&
+				ioctl(STDERR_FILENO, TIOCGWINSZ, &w) != 0 &&
+				ioctl(STDIN_FILENO, TIOCGWINSZ, &w) != 0) {
+			const char* envRows = std::getenv("LINES");
+			const char* envCols = std::getenv("COLUMNS");
+			w.ws_row = envRows ? (unsigned short)std::strtoul(envRows, nullptr, 10) : 24;
+			w.ws_col = envCols ? (unsigned short)std::strtoul(envCols, nullptr, 10) : 80;
+		}
 
 		/* sanity */
 
@@ -199,7 +226,7 @@ void readConfigurationFile(useKeyValueCB cb)
 			if (cb) {
 				(*cb)(key, value);
 			} else {
-				useKeyValue(key, value);
+				useKeyValue(key, value, line, lineCounter);
 			}
 		}
 	} else {
@@ -213,12 +240,22 @@ void readConfigurationFile(useKeyValueCB cb)
 	ExternalLiterals["platform"] = dequote(STRINGIFY(LITERAL_PLATFORM));
 #endif
 	ExternalLiterals["python"] = pythonInterfaceEnabled() ? "Enabled" : "Disabled";
+
+#if CPP_STD_LEVEL >= 20
+	if (!ExternalLiterals.contains("cols")) {
+		ExternalLiterals["cols"] = getTerminalRowsAndColumns(false);
+	}
+	if (!ExternalLiterals.contains("rows")) {
+		ExternalLiterals["rows"] = getTerminalRowsAndColumns(true);
+	}
+#else
 	if (0==ExternalLiterals.count("cols")) {
 		ExternalLiterals["cols"] = getTerminalRowsAndColumns(false);
 	}
 	if (0==ExternalLiterals.count("rows")) {
 		ExternalLiterals["rows"] = getTerminalRowsAndColumns(true);
 	}
+#endif
 
 	// Build information
 	ExternalLiterals["build-commit"] = dequote(STRINGIFY(SPECS_BUILD_COMMIT));
