@@ -44,11 +44,9 @@ Severity:
 
 `=`, `!=`, `<`, `<=`, `>` and `>=` compare strings that are not both numbers grapheme by grapheme, each in its canonical (NFC) form, so `e` + U+0301 equals U+00E9. Different graphemes are ordered by their UTF-8 bytes, which is code point order for valid text. This is not a collation order (`é` sorts after `z`); that is documented in the guidebook. The strict operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) compare strings the same way. They differ from the smart operators only in never comparing numerically, so `3 == 3.0` is still false.
 
-## Substring search
+## Substring search - FIXED
 
-| Severity | Gap |
-|----------|-----|
-| Inconsistent | `pos`, `includes` and `countocc` search by bytes, so a needle of `e` + U+0301 is not found in a haystack containing the precomposed U+00E9, and vice versa. `pos("e\u0301", "café")` is 0 although `"e\u0301" = "é"` is true. (Tested for these three; `lastpos` and `includesall` have not been checked.) |
+`pos`, `lastpos`, `includes` and `includesall` search through `strFind`, which canonicalizes both sides. `countocc` used `std::string::find` and now uses `strFind` too, so a needle matches whichever way its accented characters are encoded.
 
 ## Record I/O
 

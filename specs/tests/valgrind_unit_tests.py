@@ -1,7 +1,7 @@
 import sys, os, memcheck, argparse, platform, re
 
 count_ALU_tests = 1029
-count_processing_tests = 374
+count_processing_tests = 376
 count_token_tests = 20
 
 # Parse the one command line options
