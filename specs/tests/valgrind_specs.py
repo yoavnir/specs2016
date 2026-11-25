@@ -1017,5 +1017,9 @@ s = "a: w1-* . EOF print 'fmap_dump(a,\"lin\",\"sd\",1)' 1 print 'fmap_count(a,\
 run_utf8_case(s,"e\u0301 \u00e9 f z e\u0301\n\u00e9 \u0301 a\u0301\u0302\n","frequency map with decomposed and precomposed keys")
 run_utf8_case(s,bad_text,"invalid input: frequency map keys")
 
+s = "print 'countocc(\"e\u0301\")' 1 print 'countocc(\"\u00e9\")' nw print 'countocc(\"\")' nw print 'countocc_get(\"\u00e9\")' nw EOF print 'countocc_dump(lin)'"
+run_utf8_case(s,"caf\u00e9 cafe\u0301\n\u0301\n","countocc with decomposed and precomposed needles")
+run_utf8_case(s,bad_text,"invalid input: countocc")
+
 sys.stdout.write("\n*** All tests passed.\n\n")
 memcheck.cleanup()

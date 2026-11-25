@@ -3274,7 +3274,7 @@ PValue AluFunc_countocc(PValue _pNeedle, PValue _pHaystack)
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	std::string needle = _pNeedle->getStr();
 
-	if (std::string::npos != pHaystack->find(needle)) {
+	if (0 != strFind(*pHaystack, needle)) {
 		g_OccuranceMap.note(needle);
 	}
 

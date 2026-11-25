@@ -1464,6 +1464,11 @@ int main(int argc, char** argv)
 	VERIFY2("a: w1 . EOF print 'fmap_dump(a,\"txt\",\"cd\",0)' 1 print 'fmap_count(a,\"e" U_COMBINING_ACUTE "\")' nw",
 			"e" U_COMBINING_ACUTE "\n\u00e9\nf\nz",
 			"\u00e9 2\nz 1\nf 1\n 2");  // Test #374
+	// countocc finds a needle whichever way its accented characters are encoded
+	VERIFY2("print 'countocc(\"e" U_COMBINING_ACUTE "\")' 1 print 'countocc_get(\"\u00e9\")' nw",
+			"caf\u00e9", "1 1");  // Test #375
+	VERIFY2("print 'countocc(\"\u00f1\")' 1",
+			"ma" "n\xcc\x83" "ana", "1");  // Test #376
 	g_bSupportUTF8 = false;
 
 	if (errorCount) {
