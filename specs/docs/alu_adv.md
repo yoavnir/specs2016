@@ -22,9 +22,9 @@
 | `<<=` | Logical SLTE | Returns `1` if the left-hand operand is alphabetically smaller than or equal to the right-hand operand, or `0` otherwise |
 | `>>` | Logical SGT | Returns `1` if the left-hand operand is alphabetically greater than the right-hand operand, or `0` otherwise |
 | `>>=` | Logical SGTE | Returns `1` if the left-hand operand is alphabetically greater than or equal to the right-hand operand, or `0` otherwise |
-| `=` | Logical Equality | Returns `1` if its two operands are equal numerically or string-wise, or `0` otherwise |
+| `=` | Logical Equality | Returns `1` if its two operands are equal, or `0` otherwise. The comparison is numeric if both operands are numbers, and string-wise otherwise |
 | `==` | Strict Equality | Returns `1` if its two operands are equal string-wise, or `0` otherwise |
-| `!=` | Logical Inequality | Returns `1` if its two operands are not equal numerically or string-wise, or `0` otherwise |
+| `!=` | Logical Inequality | Returns `1` if its two operands are not equal, or `0` otherwise. The comparison is numeric if both operands are numbers, and string-wise otherwise |
 | `!==` | Strict Equality | Returns `1` if its two operands are not equal string-wise, or `0` otherwise |
 | `&` | Logical And | Returns `1` if both of its two operands are non-zero, non-NaN, or `0` otherwise |
 | `\|` | Logical Or | Returns `1` if either of its two operands are non-zero, non-NaN, or `0` otherwise |
@@ -81,9 +81,19 @@
 | `not(expr)` | Returns 1 if the `expr` is an integer zero, or 0 if it is anything else.  It serves as an alternative to the **unary logical not** operator (!). |
 
 ## Table of String Functions
+
+In UTF8 mode, character lengths and positions in the string functions below
+count extended grapheme clusters rather than bytes. This includes length arguments,
+start positions, returned positions, and the lengths returned by `length`,
+`wordlength`, `wordlen`, and `fieldlength`. Arguments that count words, such as
+the length arguments to `delword` and `subword`, still count words.
+`bytelength` always returns the number of bytes. In ASCII mode, character
+lengths and byte lengths are the same.
+
 | Function | Description |
 | -------- | ----------- |
 | `abbrev(h,n,l)` | Returns `1` when the first `l` characters of `n` are equal to the first characters of `h` or `0` otherwise. If `l` is omitted, all of 'n' is considered. |
+| `bytelength(s)` | Returns the length of `s` in bytes, in both ASCII mode and UTF8 mode. |
 | `center(s,n)` or `centre(s,n)` | Returns the `n` center-most characters of the string `s`. The result is padded with spaces on both sides if `n` is greater than the length of `s`. |
 | `includes(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **any** of `needle1`, `needle2`, `needle3`, or `needle4` is a substring of `haystack`, or `0` otherwise. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `includesall(haystack,needle1, [needle2, needle3, needle4])` | Boolean function. Returns `1` if **all** of `needle1`, `needle2`, `needle3`, or `needle4` are substrings of `haystack`, or `0` otherwise. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
@@ -91,10 +101,12 @@
 | `rsearch(string,exp, [matchFlags])` | Returns `1` if the regular expression `regEx` matches any substring of `string`, or `0` otherwise. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
 | `rreplace(string,exp,fmt [matchFlags])` | Returns the string `string`, with all matches of the regular expression `regEx` replaced by what's in `fmt`. See the special section below for more info on regular expressions. Note that if the `string` argument is omitted, it defaults to the entire input line. See note about `matchFlags` |
 | `left(s,n)` | Returns the `n` left-most characters of the string `s`. The result is padded with spaces on the right if `n` is greater than the length of `s` |
-| `length(s)` | Returns the length (in characters) of the string `s` |
+| `length(s)` | Returns the length of `s` in grapheme clusters in UTF8 mode, or bytes in ASCII mode. |
 | `right(s,n)` | Returns the `n` right-most characters of the string `s`. The result is padded with spaces on the left if `n` is greater than the length of `s`. |
 | `substitute(haystack,needle,subst,max)` | Returns the string `haystack` where occurrences of `needle` have been replaced with the content of the string `subst` for a maximum of `max` times.  The special value **"U"** for `max` indicates that all occurrences of `needle` are to be replaced. The default for `max` is 1 |
 | `substr(s,start,len)` | Returns a substring of `s` starting from offset `start` for `len` characters |
+| `utf8width(s)` | Returns the width of `s` in terminal columns. Control characters and combining marks take no columns, wide (East Asian) characters and emoji take two, and everything else takes one. A grapheme cluster takes the width of its widest code point. In ASCII mode every byte takes one column, except control characters. |
+| `utf8substr(s,start,len)` | Like `substr`, but `start` and `len` are in terminal columns (see `utf8width`) and not in characters. A character that does not start exactly at column `start` is excluded, and the result is never wider than `len`, and as wide as possible. `start` is 1-based and may be negative, counting from the end; `len` defaults to the rest of the string. For example, if every character is two columns wide, `utf8substr(s,5)` starts at the third character, `utf8substr(s,4)` also does, and `utf8substr(s,3,4)` returns the second and third characters. |
 | `pos(needle,haystack)` | Returns the 1-based position of the first occurrence of the substring `needle` in the string `haystack`. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `lastpos(needle,haystack)` | Returns the 1-based position of the *last* occurrence of the substring `needle` in the string `haystack`. Note that if the `haystack` argument is omitted, it defaults to the entire input line |
 | `sfield(str,n,sep)` | This is the equivalent of the `field` function from **CMS Pipelines**. It returns the n-th field, counting from the start of the string (positive *n*) or end of the string (negative *n*), where fields are separated by the first character of the string `sep`. If `sep` is missing or an empty string, the separator is the default one: a tab character |
@@ -213,6 +225,8 @@ The parameters for the `fmap_dump` functions are as follows:
   * *txt* or *0* or empty string: textual representation of string and count, with the field width adjusted to fit the largest value of the field. This is the default.
   * *lin*: same as *txt*, but surrounded by lines.
   * Integer value: same as *txt*, but the width of the string field is fixed.
+  * In UTF8 mode, widths of the string field are measured in terminal columns (see `utf8width`) and not in bytes, so that wide characters line up.
+  * In UTF8 mode, the keys of a frequency map are kept in canonical (NFC) form, so that the composed and decomposed spellings of a character are the same key, and the alphabetical sort orders compare keys grapheme by grapheme, as the comparison operators do.
   * *csv*: a Comma Separated Value dataset.
   * *json*: a JavaScript Object Notation dataset.
 * *sortOrder*. Possible values:
@@ -244,10 +258,10 @@ The `excrc()` and `excerr()` functions reflect **only the last run** of a shell 
 | `conf(key,default)` | Returns the configured string `key` if it exists, the value `default` if it doesn't, and **NaN** if `default` is omitted |
 | `defined(key)` | Returns `1` if the configured string `key` is defined, or `0` if it isn't |
 | `getenv(name)` | Returns the content of the environment variable `name` or **NaN** if the variable is not defined |
-| `pset(var,value)` | Sets the **persistent variable** with the name in *var* to the value *value*. The value will be set in future invocations of **specs**. The function returns the value in *value* | 
-| `pget(var,default)` | Returns the value of the **persistent variable** with the name in *var*. If the variable is not defined, it returns the *default* value. If that is unspecified, returns **NaN**.  It is possible to use `#var` as an abbreviated form of `pget(var)`|
+| `pset(var,value)` | Sets the **persistent variable** with the name in *var* to the value *value*. The value will be set in future invocations of **specs**. The function returns the value in *value*. The name must be ASCII, also in UTF8 mode; `specs` fails if `pset`, `pget`, `pdefined` or `pclear` receives a non-ASCII name | 
+| `pget(var,default)` | Returns the value of the **persistent variable** with the name in *var*. If the variable is not defined, it returns the *default* value. If that is unspecified, returns **NaN**.  It is possible to use `#var` as an abbreviated form of `pget(var)`. |
 | `pdefined(var)` | Returns **TRUE** (1) if the **persistent variable** *var* is defined, or **FALSE** (0) otherwise |
-| `pclear(var)` | Clears the **persistent variable** *var*. Returns the value before clearing it. If the variable was not defined, returns **NaN**.
+| `pclear(var)` | Clears the **persistent variable** *var*. Returns the value before clearing it. If the variable was not defined, returns **NaN**. |
 | `tf2mcs(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to the **specs** internal format, which is microseconds since the UNIX epoch. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
 | `mcs2tf(x,f)` | Returns the string representation of the number `x` treated as the internal time format and formatted according to the string in `f`. |
 | `tf2s(s,f)` | Returns the time represented by the string in `s` in the format in `f` converted to seconds since the UNIX epoch. The format in `f` is similar to the one for the function `strftime` in C and Python, with the addition of %*x*f to represent fractions of a second with *x* digits. |
@@ -274,7 +288,6 @@ The OOB flag is **not** preserved once the value is copied into a plain-text val
 - Other operations that materialize the working string as ordinary text may likewise drop the flag.
 
 In short: query OOB status as close as possible to where the OOB record is read, and do not expect it to survive a round trip through a counter or other plain-text storage.
-
 
 
 

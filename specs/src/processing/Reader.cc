@@ -1,6 +1,7 @@
 #include <cstring>
 #include <fstream>
 #include "utils/ErrorReporting.h"
+#include "utils/utf8.h"
 #include "Config.h"
 #include "Reader.h"
 
@@ -192,7 +193,7 @@ void StandardReader::setFormatFixed(unsigned int lrecl, bool delimited)
 	if (lrecl == 0) MYTHROW("lrecl must be greater than zero");
 	m_recfm = delimited ? RECFM_FIXED_DELIMITED : RECFM_FIXED;
 	m_lrecl = lrecl;
-	if (!delimited) {
+	if (!delimited && !g_bSupportUTF8) {
 		m_buffer = (char*)malloc(lrecl);
 		if (!m_buffer) {
 			MYTHROW("Failed to allocate read buffer");
@@ -326,11 +327,21 @@ PSpecString StandardReader::getNextRecordInternal() {
 		}
 		
 		if (RECFM_FIXED_DELIMITED == m_recfm) {
-			if (line.length() > m_lrecl) {
-				line = line.substr(0,m_lrecl);
+			if (g_bSupportUTF8) {
+				if (utf8::charCount(line) > m_lrecl) {
+					line = utf8::substr(line, 0, m_lrecl);
+				} else {
+					while (utf8::charCount(line) < m_lrecl) {
+						line += " ";
+					}
+				}
 			} else {
-				while (line.length() < m_lrecl) {
-					line += " ";
+				if (line.length() > m_lrecl) {
+					line = line.substr(0,m_lrecl);
+				} else {
+					while (line.length() < m_lrecl) {
+						line += " ";
+					}
 				}
 			}
 		}
@@ -338,6 +349,51 @@ PSpecString StandardReader::getNextRecordInternal() {
 		return mkSpecString(line);
 	}
 	case RECFM_FIXED: {
+		if (g_bSupportUTF8) {
+			// Accumulate bytes until the record boundary falls on a complete
+			// grapheme cluster, so a multi-byte character is never split.
+			constexpr size_t CHUNK = 4096;
+			char buf[CHUNK];
+			m_Timer.changeClass(timeClassIO);
+			for (;;) {
+				size_t bEnd = utf8::nthGraphemeEnd(m_fixedPending, m_lrecl, false);
+				if (bEnd != std::string::npos) break;   // boundary confirmed (a byte follows it)
+				std::streamsize got;
+				if (m_File) {
+					m_File->read(buf, CHUNK);
+					got = m_File->gcount();
+				} else if (m_pipe) {
+					got = (std::streamsize)fread(buf, 1, CHUNK, m_pipe.get());
+				} else {
+					std::cin.read(buf, CHUNK);
+					got = std::cin.gcount();
+				}
+				if (got == 0) {
+					// End of source: the n-th cluster (if present) is complete.
+					size_t bEndFinal = utf8::nthGraphemeEnd(m_fixedPending, m_lrecl, true);
+					if (bEndFinal != std::string::npos) {
+						std::string rec = m_fixedPending.substr(0, bEndFinal);
+						m_fixedPending = m_fixedPending.substr(bEndFinal);
+						if (m_fixedPending.empty()) m_EOF = true;   // final record
+						g_readRecordCounter++;
+						m_Timer.changeClass(timeClassProcessing);
+						return mkSpecString(rec);
+					}
+					// Fewer than n complete graphemes: drop the partial record.
+					if (!m_EOF) g_readRecordCounter++;
+					m_EOF = true;
+					m_Timer.changeClass(timeClassProcessing);
+					return nullptr;
+				}
+				m_fixedPending.append(buf, size_t(got));
+			}
+			m_Timer.changeClass(timeClassProcessing);
+			size_t bEnd = utf8::nthGraphemeEnd(m_fixedPending, m_lrecl, false);
+			std::string rec = m_fixedPending.substr(0, bEnd);
+			m_fixedPending = m_fixedPending.substr(bEnd);
+			g_readRecordCounter++;
+			return mkSpecString(rec);
+		}
 		std::streamsize bytesRead;
 		m_Timer.changeClass(timeClassIO);
 		if (m_File) {
@@ -545,4 +601,23 @@ PSpecString multiReader::getNextRecord()
 {
 	MYTHROW("multiReader::getNextRecord() should not have been called.");
 	return nullptr;
+}
+
+std::string& StopStreamToStr(unsigned int stream)
+{
+	static std::string sAll("ALL");
+	static std::string sAny("ANY");
+	static std::string sInvalid("invalid");
+	static std::string sRet;
+
+	switch(stream) {
+		case STOP_STREAM_ALL: return sAll;
+		case STOP_STREAM_ANY: return sAny;
+		case STOP_STREAM_INVALID: return sInvalid;
+		default:
+			if (!IS_SPECIFIC_STREAM(stream)) return sInvalid;
+			sRet.clear();
+			sRet = std::to_string(stream);
+			return sRet;
+	}
 }

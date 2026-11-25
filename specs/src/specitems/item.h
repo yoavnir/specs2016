@@ -202,6 +202,7 @@ public:
 	Item();
 	virtual ~Item() {}
 	virtual std::string Debug() = 0;
+	virtual const char* Type() = 0;
 	virtual ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) = 0;
 	virtual bool readsLines() {return false;}
 	virtual bool producesOutput() {return false;}
@@ -223,6 +224,7 @@ public:
 	~DataField() override;
 	void parse(std::vector<Token> &tokenVec, unsigned int& index);
  	std::string Debug() override;
+	const char* Type() override { return "Data Field"; }
  	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
  	bool readsLines() override;
 	bool producesOutput() override;
@@ -258,6 +260,7 @@ public:
 	~TokenItem() override;
 	std::shared_ptr<Token> getToken()   {return mp_Token;}
 	std::string Debug() override;
+	const char* Type() override { return "Generic Token"; }
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool readsLines() override;
 private:
@@ -271,6 +274,7 @@ public:
 	explicit SetItem(std::string& _statement);
 	~SetItem() override;
 	std::string Debug() override		{return m_rawExpression;}
+	const char* Type() override { return "SET"; }
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool readsLines() override;
 	bool countsBeforeEOF() override {return true;}
@@ -289,6 +293,7 @@ public:
 	SkipItem(std::string& _statement, bool bIsUntil);
 	~SkipItem() override;
 	std::string Debug() override		{return m_rawExpression;}
+	const char* Type() override { return "SKIP"; }
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool readsLines() override;
 	bool forcesRunoutCycle() override { return expressionForcesRunoutCycle(m_RPNExpression);}
@@ -318,6 +323,7 @@ public:
 	ConditionItem(ConditionItem::predicate _p);
 	~ConditionItem() override;
 	std::string Debug() override;
+	const char* Type() override { return "Condition"; }
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool ApplyUnconditionally() override {return true;}
 	void    setElseIf();
@@ -345,6 +351,7 @@ public:
 	explicit BreakItem(char identifier);
 	~BreakItem() override  {}
 	std::string Debug() override;
+	const char* Type() override { return "BREAK"; }
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool isBreak() override { return true;}
 private:
@@ -358,6 +365,7 @@ public:
 	SelectItem(std::string& st, bool bIsOutput);
 	~SelectItem() override {}
 	std::string Debug() override;
+	const char* Type() override { return "SELECT"; }
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool    isSelectSecond()  {return m_stream==STATION_SECOND;}
 private:
@@ -373,6 +381,7 @@ public:
  	~SplitItem() override;
  	void parse(std::vector<Token> &tokenVec, unsigned int& index);
  	std::string Debug() override;
+	const char* Type() override { return "SPLIT"; }
  	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
  	bool readsLines() override {return true;}
 	bool producesOutput() override {return true;}
@@ -415,6 +424,7 @@ public:
 	explicit ContextItem(int offset);
 	~ContextItem() override {}
 	std::string Debug() override;
+	const char* Type() override { return "CONTEXT"; }
 	ApplyRet apply(ProcessingState& pState, StringBuilder* pSB) override;
 	bool readsLines() override { return true; }
 private:

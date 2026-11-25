@@ -16,12 +16,7 @@ std::string LiteralPart::Debug()
 
 PSpecString LiteralPart::getStr(ProcessingState& pState)
 {
-	if (!g_bSupportUTF8) {
-		return mkSpecString(m_Str);
-	} else {
-		MYTHROW("UTF-8 is not supported yet");
-		return nullptr;
-	}
+	return mkSpecString(m_Str);
 }
 
 std::string RangePart::Debug()
@@ -149,7 +144,7 @@ std::string NumberPart::Debug()
 PSpecString NumberPart::getStr(ProcessingState& pState)
 {
 	std::string s = std::to_string(pState.getRecordCount());
-	s = std::string(NUMBER_PART_FIELD_LEN - s.length(), pState.getPadChar()) + s;
+	s = SpecString_Pad(pState.getPadChar(), NUMBER_PART_FIELD_LEN - s.length()) + s;
 	return mkSpecString(s);
 }
 

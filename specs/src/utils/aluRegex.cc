@@ -7,6 +7,7 @@
 #include "utils/platform.h"
 #include "utils/aluRegex.h"
 #include "utils/lruCache.h"
+#include "utils/utf8.h"
 
 uint64_t regexCacheSearches = 0;
 uint64_t regexCacheSets = 0;
@@ -80,8 +81,11 @@ static bool isKnownBuggyGrammar(const char* grammarName) {
 	return false;
 }
 
+static bool g_bWarnedAboutUnicode = false;
+
 void setRegexWarn(std::string& s) {
 	g_bWarnAboutGrammars = !(s=="0" || 0==strcasecmp(s.c_str(),"false") || 0==strcasecmp(s.c_str(),"no"));
+	g_bWarnedAboutUnicode = false;
 }
 
 void setRegexType(std::string& s) {
@@ -215,9 +219,35 @@ std::regex_constants::match_flag_type getMatchFlags(std::string* sFlags)
 	}
 }
 
+static void warnAboutUnicode(std::string& exp, std::string& str)
+{
+	std::string warning("WARNING: ");
+	if (UTF8_STRING_NOT_ASCII(exp)) {
+		warning += "Non-ASCII regular expression <";
+		warning += utf8::make_printable(exp);
+		warning += "> ";
+		if (UTF8_STRING_NOT_ASCII(str)) {
+			warning += " and non-ASCII string <";
+			warning += utf8::make_printable(str);
+			warning += "> ";
+		}
+	} else {
+		warning += "Non-ASCII string <";
+		warning += utf8::make_printable(str);
+		warning += "> ";
+	}
+	std::cerr << warning << "passed to regex function." << std::endl;
+	g_bWarnedAboutUnicode = true;
+}
+
 bool regexMatch(std::string* pStr, PValue pExp, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
+
+	if (g_bWarnAboutGrammars && !g_bWarnedAboutUnicode && UTF8_STRINGS_NOT_ASCII2(sExp, *pStr)) {
+		warnAboutUnicode(sExp, *pStr);
+	}
+
 	PRegEx pRE = regexCalculator(sExp);
 
 	try {
@@ -234,6 +264,11 @@ bool regexMatch(std::string* pStr, PValue pExp, std::string* pFlags)
 bool regexSearch(std::string* pStr, PValue pExp, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
+
+	if (g_bWarnAboutGrammars && !g_bWarnedAboutUnicode && UTF8_STRINGS_NOT_ASCII2(sExp, *pStr)) {
+		warnAboutUnicode(sExp, *pStr);
+	}
+
 	PRegEx pRE = regexCalculator(sExp);
 	try {
 		bool bRet = std::regex_search(*pStr, *pRE, getMatchFlags(pFlags));
@@ -250,6 +285,11 @@ bool regexSearch(std::string* pStr, PValue pExp, std::string* pFlags)
 std::string regexReplace(std::string* pStr, PValue pExp, std::string& fmt, std::string* pFlags)
 {
 	std::string sExp = pExp->getStr();
+
+	if (g_bWarnAboutGrammars && !g_bWarnedAboutUnicode && UTF8_STRINGS_NOT_ASCII2(sExp, *pStr)) {
+		warnAboutUnicode(sExp, *pStr);
+	}
+
 	PRegEx pRE = regexCalculator(sExp);
 	try {
 		std::string sRet = std::regex_replace(*pStr, *pRE, fmt, getMatchFlags(pFlags));

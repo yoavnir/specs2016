@@ -68,9 +68,12 @@ Main Thread:
 * `--outFile` **filename** or `-o` **filename** -- write the output records to a file rather than standard output.
 * `--shell` or `-X` -- executes the output records as shell commands rather than emitting them to standard output. 
 * `--spaceWS` -- Makes **specs** only treat spaces as the default word separator. By default all locale-defined whitespace is treated as the word separator.
-* `--debug-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag. On Windows builds created with **MSBuild** (such as official GitHub builds), ALU debug is available in DEBUG builds but not RELEASE builds.
-* `--debug-alu-run` -- Prints out detailed step-by-step information about the evaluation of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag. On Windows builds created with **MSBuild** (such as official GitHub builds), ALU debug is available in DEBUG builds but not RELEASE builds.
-* `--debug-alu-file` **filename** or `-d` **filename** -- redirect the output of `--debug-alu-comp` and `--debug-alu-run` to a file rather than standard error. The file is overwritten; if it cannot be opened for writing, **specs** reports an error and exits.
+* `--trace-comp` -- Prints out detailed information about the parsing and compiling of specifications. EXPAND!!!
+* `--trace-run` -- Prints out detailed step-by-step information about record processing.  EXPAND!!!
+* `--trace-alu-comp` -- Prints out detailed information about the parsing and compiling of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag. On Windows builds created with **MSBuild** (such as official GitHub builds), ALU debug is available in DEBUG builds but not RELEASE builds.
+* `--trace-alu-run` -- Prints out detailed step-by-step information about the evaluation of expressions. Available in standard builds; produces no output if **specs** was built with the `--no_alu_debug` configure flag. On Windows builds created with **MSBuild** (such as official GitHub builds), ALU debug is available in DEBUG builds but not RELEASE builds.
+* `--trace-all` -- Enables all of the above 4 tracing switches.
+* `--trace-file` **filename** or `-d` **filename** -- redirect the output of `--trace-alu-comp` and `--trace-alu-run` to a file rather than standard error. The file is overwritten; if it cannot be opened for writing, **specs** reports an error and exits.
 * `--no-while-guard` -- Disables **while-guard**, allowing specifications to enter endless loops.
 * `--progress` -- While **specs**is running, will print once a second a message to stderr telling the user how many records have already been processed.
 * `--timezone` **name** -- convert to and from time-formatted strings using the selected timezone. Valid values are from the TZ database and look like `Africa/Dakar`, `America/Chicago`, `Asia/Calcutta`, `Australia/Sydney`, or `Europe/Berlin`.  A full list of such timezones is available on [Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).  Note that the same timezones can also be configured in the config
@@ -105,7 +108,7 @@ With **specs**, each specification on the **SPECSPATH** is listed with the first
 |recfm|nickname|lrecl|linedel|comment|
 |-----|--------|-----|-------|-------|
 | `D` | delimited | *n/a* | *optional* | This is the default. Records are delimited by the OS line separator if *linedel* is not specified. |
-| `F` | fixed | *required* | *n/a* | **specs** will read exactly *lrecl* characters from the input stream regardless of what those characters may be. |
+| `F` | fixed | *required* | *n/a* | **specs** will read exactly *lrecl* characters from the input stream regardless of what those characters may be. In UTF8 mode *lrecl* counts grapheme clusters rather than bytes. |
 | `FD` | fixed-delimited | *required* | *optional* | **specs** will read one line at a time delimited by the OS line separator if *linedel* is not specified. Lines that are longer than *lrecl* will be truncated; lines that are shorter will be padded by spaces. |
 
 ## Table of syntax options

@@ -1,4 +1,6 @@
 #include <array>
+#include <cstring>
+#include "utils/platform.h"
 #include "utils/ErrorReporting.h"
 #include "processing/Config.h"
 #include "directives.h"
@@ -109,6 +111,14 @@ void processPlusDirective(std::string& dirline)
 			MYTHROW(err);
 		}
 		setPrimaryInputPipe(pipe);
+	} else if (directive=="+UTF8" || directive=="+UNICODE") {
+		std::string setting = (dirline.find_first_not_of(whitespace) == std::string::npos) ? "" : breakOffOneToken(dirline);
+		bool bOn = (0 == strcasecmp(setting.c_str(), "on"));
+		if ((!bOn && 0 != strcasecmp(setting.c_str(), "off")) || dirline.find_first_not_of(whitespace) != std::string::npos) {
+			std::string err = "The " + directive + " directive must be followed by either ON or OFF";
+			MYTHROW(err);
+		}
+		g_bSupportUTF8 = bOn;
 	} else {
 		std::string err = "Unknown directive: " + directive;
 		MYTHROW(err);

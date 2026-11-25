@@ -7,6 +7,7 @@
 #include "processing/persistent.h"
 #include "processing/ProcessingState.h"
 #include "processing/Reader.h"
+#include "utils/utf8.h"
 #include <cstring>
 #include <cmath>
 #include <functional>
@@ -24,6 +25,31 @@
 #endif
 
 #define PAD_CHAR ' '
+
+/*
+ * In UTF8 mode, the string functions count graphemes rather than bytes, in
+ * both lengths and positions. A string that is all ASCII gives the same count
+ * either way, so the grapheme versions are only used when one of the
+ * strings involved is not.
+ *
+ * Functions that need it are written as templates over the string type:
+ * std::string for bytes, and utf8::GraphemeString for grapheme clusters.
+ */
+
+static size_t strLength(const std::string& s)
+{
+	if (UTF8_STRING_IS_ASCII(s))
+		return s.length();
+	return utf8::charCount(s);
+}
+
+// Like std::string::substr, but pos and count are characters
+static std::string strSubstr(const std::string& s, size_t pos, size_t count = std::string::npos)
+{
+	if (UTF8_STRING_IS_ASCII(s))
+		return s.substr(pos, count);
+	return utf8::substr(s, pos, count);
+}
 
 #define PERCENTS (ALUFloat(100.0))
 
@@ -104,6 +130,16 @@ static void throw_argument_issue(const char* _funcName, unsigned int argIdx, con
 
 #define ARG_STR_WITH_DEFAULT(arg,def)       \
 		((nullptr == (arg)) ? def : (arg)->getStr())
+
+#define ARG_SINGLECHAR_WITH_DEFAULT(s,arg,def,fn)	\
+		std::string s;					\
+		if ((nullptr!=(arg))) {			\
+			s = (arg)->getStr();		\
+			if (1 != strLength(s)) {	\
+				std::string err = #fn ": Pad argument should be 1 char. Got <" + s + ">"; \
+				MYTHROW(err);			\
+			}							\
+		} else s = def;
 
 #define ARG_FLOAT_WITH_DEFAULT(arg,def)       \
 		((nullptr == (arg)) ? def : (arg)->getFloat())
@@ -407,6 +443,15 @@ PValue AluFunc_tobin(PValue op)
 PValue AluFunc_length(PValue op)
 {
 	ASSERT_NOT_ELIDED(op,1,op);
+	auto s = op->getStr();
+	if (UTF8_STRING_IS_ASCII(s))
+		return mkValue(ALUInt(s.length()));
+	return mkValue(ALUInt(utf8::charCount(s)));
+}
+
+PValue AluFunc_bytelength(PValue op)
+{
+	ASSERT_NOT_ELIDED(op,1,op);
 	return mkValue(ALUInt(op->getStr().length()));
 }
 
@@ -673,34 +718,75 @@ PValue AluFunc_s2tf(PValue pValue, PValue pFormat)
 
 // Substring functions
 
-static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt length)
+// start must not be zero
+template <class S>
+static S substring_do(const S& str, ALUInt start, ALUInt length)
 {
+	ALUInt strLen = ALUInt(str.length());
+
 	// handle start
-	if (start==0) {    // invalid string index in specs
-		return mkValue0();  // NaN
-	}
-	else if (start > ALUInt(pStr->length())) {
-		return mkValue2("",0);
+	if (start > strLen) {
+		return S();
 	} else if (start < 0) {
-		start += pStr->length() + 1;
+		start += strLen + 1;
 		if (start < 1) {
-			return mkValue2("",0);
+			return S();
 		}
 	}
 
 	// handle length
 	if (length < 0) {
-		length += pStr->length() + 1; // length=-1 means the length of the string
+		length += strLen + 1; // length=-1 means the length of the string
 		if (length < 0) {
-			return mkValue2("",0);
+			return S();
 		}
 	}
-	if (size_t(start + length - 1) > pStr->length()) {
-		length = pStr->length() - start + 1;
+	if (start + length - 1 > strLen) {
+		length = strLen - start + 1;
 	}
 
 	// Finally:
-	return mkValue(pStr->substr(start-1,length));
+	return str.substr(start-1,length);
+}
+
+static PValue AluFunc_substring_do(std::string* pStr, ALUInt start, ALUInt length)
+{
+	if (start==0) {    // invalid string index in specs
+		return mkValue0();  // NaN
+	}
+	if (UTF8_STRING_NOT_ASCII(*pStr)) {
+		return mkValue(utf8::fromGraphemes(substring_do(utf8::toGraphemes(*pStr), start, length)));
+	}
+	return mkValue(substring_do(*pStr, start, length));
+}
+
+// The substring of length len at the start, end or middle of str, padded with
+// blanks if str is shorter. A negative len counts from the length of str.
+enum class strAlign { left, right, center };
+
+template <class S>
+static S align_do(const S& str, ALUInt len, strAlign how)
+{
+	ALUInt bigLength = ALUInt(str.length());
+	if (len < 0) len = len + bigLength + 1;
+	if (len <= 0) return S();
+	if (len > bigLength) {
+		ALUInt padding = len - bigLength;
+		ALUInt before = (how==strAlign::right) ? padding : (how==strAlign::center) ? padding / 2 : 0;
+		return S(size_t(before), PAD_CHAR) + str + S(size_t(padding - before), PAD_CHAR);
+	}
+	ALUInt start = (how==strAlign::right) ? bigLength-len+1 : (how==strAlign::center) ? (bigLength - len) / 2 + 1 : 1;
+	return substring_do(str, start, len);
+}
+
+static PValue AluFunc_align(PValue pBigString, PValue pLength, strAlign how)
+{
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
+	ALUInt len = pLength->getInt();
+	if (UTF8_STRING_NOT_ASCII(*pBigStr)) {
+		return mkValue(utf8::fromGraphemes(align_do(utf8::toGraphemes(*pBigStr), len, how)));
+	}
+	return mkValue(align_do(*pBigStr, len, how));
 }
 
 PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
@@ -716,60 +802,129 @@ PValue AluFunc_substr(PValue pBigString, PValue pStart, PValue pLength)
 	return AluFunc_substring_do(pBigStr, start, length);
 }
 
+static inline int unitWidth(char c)
+{
+	unsigned char u = (unsigned char)c;
+	return (u < 0x20 || u == 0x7F) ? 0 : 1;
+}
+
+static inline int unitWidth(const std::string& g)
+{
+	return utf8::graphemeWidth(g);
+}
+
+// S is std::string for bytes, and utf8::GraphemeString for grapheme clusters
+template <class S>
+static ALUInt totalWidth(const S& str)
+{
+	ALUInt ret = 0;
+	for (size_t i = 0; i < str.length(); i++) ret += unitWidth(str[i]);
+	return ret;
+}
+
+static ALUInt stringColumns(const std::string& str)
+{
+	if (UTF8_STRING_IS_ASCII(str)) return totalWidth(str);
+	return totalWidth(utf8::toGraphemes(str));
+}
+
+// The longest run of whole characters of str that starts at column start or later (the first one that
+// starts at or after it) and takes at most length columns
+template <class S>
+static std::string substrWidth_do(const S& str, ALUInt start, ALUInt length)
+{
+	ALUInt strWidth = totalWidth(str);
+
+	if (start < 0) {
+		start += strWidth + 1;
+		if (start < 1) return "";
+	}
+	if (start > strWidth) return "";
+
+	if (length < 0) {
+		length += strWidth + 1;   // length=-1 means the width of the string
+		if (length < 0) return "";
+	}
+	if (0 == length) return "";
+
+	size_t i = 0;
+	ALUInt column = 0;   // the number of columns before character i
+	while (i < str.length() && column + 1 < start) column += unitWidth(str[i++]);
+
+	std::string ret;
+	for (ALUInt used = 0; i < str.length(); i++) {
+		int w = unitWidth(str[i]);
+		if (used + w > length) break;
+		ret += str[i];
+		used += w;
+	}
+	return ret;
+}
+
+PValue AluFunc_utf8width(PValue pStr)
+{
+	ASSERT_NOT_ELIDED(pStr,1,s);
+	return mkValue(stringColumns(pStr->getStr()));
+}
+
+PValue AluFunc_utf8substr(PValue pBigString, PValue pStart, PValue pLength)
+{
+	ASSERT_ARG_OR_RECORD(pBigString,1,str);
+	// If no argument provided and current record is OOB, preserve OOB status
+	if (!pBigString && Reader::isOOBRecord(g_pStateQueryAgent->currRecord())) {
+		return g_pOOBValue;
+	}
+	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart,1);
+	ALUInt length = ARG_INT_WITH_DEFAULT(pLength,-1);
+	if (start==0) {    // invalid string index in specs
+		return mkValue0();  // NaN
+	}
+	if (UTF8_STRING_IS_ASCII(*pBigStr)) return mkValue(substrWidth_do(*pBigStr, start, length));
+	return mkValue(substrWidth_do(utf8::toGraphemes(*pBigStr), start, length));
+}
+
 PValue AluFunc_left(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	auto bigLength = pBigStr->length();
-	ALUInt len = pLength->getInt();
-	if (len==0) return mkValue2("",0);
-	if (len < 0) len = len + bigLength + 1;
-	if (size_t(len) > bigLength) {
-		return mkValue(*pBigStr
-				+ std::string(len-bigLength, PAD_CHAR));
-	}
-	return AluFunc_substring_do(pBigStr, 1, len);
+	return AluFunc_align(pBigString, pLength, strAlign::left);
 }
 
 PValue AluFunc_right(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	auto bigLength = pBigStr->length();
-	ALUInt len = pLength->getInt();
-	if (len==0) return mkValue2("",0);
-	if (len < 0) len = len + bigLength + 1;
-	if (size_t(len) > bigLength) {
-		return mkValue(std::string(len-bigLength, PAD_CHAR)
-				+ *pBigString->getStrPtr());
-	}
-	return AluFunc_substring_do(pBigStr, bigLength-len+1, len);
+	return AluFunc_align(pBigString, pLength, strAlign::right);
 }
 
 PValue AluFunc_center(PValue pBigString, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pLength,2,length);
 	ASSERT_ARG_OR_RECORD(pBigString,1,str);
-	std::string* pBigStr = (pBigString) ? pBigString->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	auto bigLength = pBigStr->length();
-	ALUInt len = pLength->getInt();
-	if (len==0) return mkValue2("",0);
-	if (len < 0) len = len + bigLength + 1;
-	if (size_t(len) > bigLength) {
-		size_t smallHalf = (len-bigLength) / 2;
-		size_t bigHalf = (len-bigLength) - smallHalf;
-		return mkValue(std::string(smallHalf, PAD_CHAR)
-				+ *pBigStr
-				+ std::string(bigHalf, PAD_CHAR));
-	}
-	return AluFunc_substring_do(pBigStr, (bigLength - len) / 2 + 1, len);
+	return AluFunc_align(pBigString, pLength, strAlign::center);
 }
 
 PValue AluFunc_centre(PValue pBigString, PValue pLength)
 {
 	return AluFunc_center(pBigString, pLength);
+}
+
+// The 1-based position of needle in haystack, searching from the 0-based
+// offset from, or backwards from the end. Zero if not found.
+template <class S>
+static ALUInt find_do(const S& haystack, const S& needle, size_t from, bool bLast)
+{
+	size_t pos = bLast ? haystack.rfind(needle) : haystack.find(needle, from);
+	return (S::npos == pos) ? 0 : ALUInt(pos+1);
+}
+
+static ALUInt strFind(const std::string& haystack, const std::string& needle, size_t from = 0, bool bLast = false)
+{
+	if (UTF8_STRINGS_NOT_ASCII2(haystack,needle)) {
+		return find_do(utf8::toGraphemes(haystack), utf8::toGraphemes(needle), from, bLast);
+	}
+	return find_do(haystack, needle, from, bLast);
 }
 
 PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
@@ -778,12 +933,21 @@ PValue AluFunc_pos(PValue _pNeedle, PValue _pHaystack)
 	ASSERT_ARG_OR_RECORD(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	size_t pos = pHaystack->find(*pNeedle);
-	if (std::string::npos == pos) {
-		return mkValue(ALUInt(0));
-	} else {
-		return mkValue(ALUInt(pos+1));
+	return mkValue(strFind(*pHaystack, *pNeedle));
+}
+
+template <class S>
+static S splus_do(const S& haystack, const S& needle, ALUInt offset, size_t count)
+{
+	size_t pos = haystack.find(needle);
+	if (S::npos == pos) {
+		return S();   // TBD - fail instead?
 	}
+	ALUInt start = ALUInt(pos) + offset;
+	if (start < 0 || start >= ALUInt(haystack.length())) {
+		return S();
+	}
+	return haystack.substr(size_t(start), count);
 }
 
 PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
@@ -793,25 +957,13 @@ PValue AluFunc_splus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
 	size_t count = _pCount ? _pCount->getInt() : 1;
 	
 	std::string* pHaystack = g_pStateQueryAgent->currRecord().get();
-	
-	size_t pos = pHaystack->find(_pNeedle->getStr());
-	if (std::string::npos == pos) {
-		return mkValue("");   // TBD - fail instead?
-	}
-	if ((ALUInt(pos) + _pOffset->getInt()) < 0) {
-		return mkValue("");
-	}
-	if ((ALUInt(pos) + _pOffset->getInt()) >= ALUInt(pHaystack->length())) {
-		return mkValue("");
-	}
-	
+	std::string* pNeedle = _pNeedle->getStrPtr();
 	ALUInt offset = _pOffset->getInt();
-	char* resultStart = (char*)(pHaystack->c_str()) + size_t(ALUInt(pos) + offset);
-	if (size_t(ALUInt(pos) + offset + ALUInt(count)) > pHaystack->length()) {
-		count = size_t(pHaystack->length() - pos - offset); 
+
+	if (UTF8_STRINGS_NOT_ASCII2(*pHaystack, *pNeedle)) {
+		return mkValue(utf8::fromGraphemes(splus_do(utf8::toGraphemes(*pHaystack), utf8::toGraphemes(*pNeedle), offset, count)));
 	}
-		
-	return mkValue2(resultStart, int(count));
+	return mkValue(splus_do(*pHaystack, *pNeedle, offset, count));
 }
 
 PValue AluFunc_wplus(PValue _pNeedle, PValue _pOffset, PValue _pCount)
@@ -894,12 +1046,7 @@ PValue AluFunc_lastpos(PValue _pNeedle, PValue _pHaystack)
 	ASSERT_ARG_OR_RECORD(_pHaystack,2,haystack);
 	std::string* pNeedle = _pNeedle->getStrPtr();
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
-	size_t pos = pHaystack->rfind(*pNeedle);
-	if (std::string::npos == pos) {
-		return mkValue(ALUInt(0));
-	} else {
-		return mkValue(ALUInt(pos+1));
-	}
+	return mkValue(strFind(*pHaystack, *pNeedle, 0, true));
 }
 
 PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, PValue _pNeedle3, PValue _pNeedle4)
@@ -907,6 +1054,18 @@ PValue AluFunc_includes(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2, P
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
 	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
+
+	if (g_bSupportUTF8) {
+		if (0 != strFind(*pHaystack, _pNeedle1->getStr()))
+			return mkValue(ALUInt(1));
+		else if (_pNeedle2 && 0 != strFind(*pHaystack, _pNeedle2->getStr()))
+			return mkValue(ALUInt(1));
+		else if (_pNeedle3 && 0 != strFind(*pHaystack, _pNeedle3->getStr()))
+			return mkValue(ALUInt(1));
+		else if (_pNeedle4 && 0 != strFind(*pHaystack, _pNeedle4->getStr()))
+			return mkValue(ALUInt(1));
+		return mkValue(ALUInt(0));
+	}
 
 	if (std::string::npos != pHaystack->find(*_pNeedle1->getStrPtr())) {
 		return mkValue(ALUInt(1));
@@ -926,6 +1085,18 @@ PValue AluFunc_includesall(PValue _pHaystack, PValue _pNeedle1, PValue _pNeedle2
 	ASSERT_NOT_ELIDED(_pNeedle1,2,needle);
 	ASSERT_ARG_OR_RECORD(_pHaystack,1,haystack);
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
+
+	if (g_bSupportUTF8) {
+		if (0 == strFind(*pHaystack, _pNeedle1->getStr()))
+			return mkValue(ALUInt(0));
+		else if (_pNeedle2 && 0 == strFind(*pHaystack, _pNeedle2->getStr()))
+			return mkValue(ALUInt(0));
+		else if (_pNeedle3 && 0 == strFind(*pHaystack, _pNeedle3->getStr()))
+			return mkValue(ALUInt(0));
+		else if (_pNeedle4 && 0 == strFind(*pHaystack, _pNeedle4->getStr()))
+			return mkValue(ALUInt(0));
+		return mkValue(ALUInt(1));
+	}
 
 	if (std::string::npos == pHaystack->find(*_pNeedle1->getStrPtr())) {
 		return mkValue(ALUInt(0));
@@ -1015,7 +1186,8 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 	}
 
 	if (len > SZLL) len = SZLL;
-	while (size_t(len) > hex.length()) len--;
+	ALUInt hexLen = ALUInt(strLength(hex));
+	if (len > hexLen) len = hexLen;
 
 	if (hex.length()==0) return mkValue(ALUInt(0));
 
@@ -1023,9 +1195,9 @@ PValue AluFunc_x2d(PValue _pHexValue, PValue pLength)
 
 	auto firstDigit = hex[0];
 	if (firstDigit >= '0' && firstDigit <= '7') {
-		hex = zeropad.substr(0,(SZLL-len)) + hex.substr(0,len);
+		hex = zeropad.substr(0,(SZLL-len)) + strSubstr(hex,0,len);
 	} else {
-		hex = ffffpad.substr(0,(SZLL-len)) + hex.substr(0,len);
+		hex = ffffpad.substr(0,(SZLL-len)) + strSubstr(hex,0,len);
 	}
 
 	long long int value;
@@ -1443,9 +1615,14 @@ static std::string convertToCsv(const std::string& s)
 	return quotedString(s);
 }
 
+std::string frequencyMap::key(const std::string& s)
+{
+	return g_bSupportUTF8 ? utf8::canonicalString(s) : s;
+}
+
 void frequencyMap::note(std::string& s)
 {
-	map[s]++;
+	map[key(s)]++;
 	counter++;
 }
 
@@ -1486,25 +1663,25 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 	switch (o) {
 	case fmap_sortOrder__byStringAscending:
 		compFunctor = [](freqMapPair e1, freqMapPair e2) {
-			return e1.first < e2.first;
+			return smartStrCompare(e1.first, e2.first) < 0;
 		};
 		break;
 	case fmap_sortOrder__byStringDescending:
 		compFunctor = [](freqMapPair e1, freqMapPair e2) {
-			return e1.first > e2.first;
+			return smartStrCompare(e1.first, e2.first) > 0;
 		};
 		break;
 	case fmap_sortOrder__byCountAscending:
 		compFunctor = [](freqMapPair e1, freqMapPair e2) {
 			return (e1.second == e2.second)
-					? e1.first < e2.first
+					? smartStrCompare(e1.first, e2.first) < 0
 					: e1.second < e2.second;
 		};
 		break;
 	case fmap_sortOrder__byCountDescending:
 		compFunctor = [](freqMapPair e1, freqMapPair e2) {
 			return (e1.second == e2.second)
-					? e1.first > e2.first
+					? smartStrCompare(e1.first, e2.first) > 0
 					: e1.second > e2.second;
 		};
 		break;
@@ -1512,12 +1689,20 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 
 	std::set<freqMapPair, Comparator> setOfFreqs(map.begin(), map.end(), compFunctor);
 
+	// Keys are measured in terminal columns in UTF8 mode, and in bytes otherwise
+	auto keyWidth = [](const std::string& key) {
+		return g_bSupportUTF8 ? int(stringColumns(key)) : int(key.size());
+	};
+	auto padKey = [&](std::ostringstream& os, const std::string& key, int w) {
+		os << key << std::string(size_t(std::max(0, w - keyWidth(key))), ' ');
+	};
+
 	int width = 0;
 	ALUInt maxFreq = 0;
 	ALUInt sumFreq = 0;
 	for (auto& kv : setOfFreqs) {
-		if (int(kv.first.size()) > width) {
-			width = int(kv.first.size());
+		if (keyWidth(kv.first) > width) {
+			width = keyWidth(kv.first);
 		}
 		if (kv.second > maxFreq) {
 			maxFreq = kv.second;
@@ -1557,14 +1742,15 @@ std::string frequencyMap::dump(fmap_format f, fmap_sortOrder o, bool includePerc
 
 	for (auto& kv : setOfFreqs) {
 		if (fmap_format__textualJustifiedLines > f) {
-			oss << std::setw(width) << std::setfill(' ') << std::left << kv.first;
+			padKey(oss, kv.first, width);
 			oss << std::setw(freqWidth+1) << std::setfill(' ') << std::right << kv.second;
 			if (includePercentage) {
 				oss << std::fixed << std::setw(7) << std::setprecision(2) << ALUFloat(kv.second) * 100.0 / ALUFloat(sumFreq) << "%";
 			}
 		}
 		else if (fmap_format__textualJustifiedLines == f) {
-			oss << "| " << std::setw(width) << std::setfill(' ') << std::left << kv.first;
+			oss << "| ";
+			padKey(oss, kv.first, width);
 			oss << " | " << std::setw(freqWidth) << std::setfill(' ') << std::right << kv.second << " |";
 			if (includePercentage) {
 				oss << std::fixed <<std::setw(6) << std::setprecision(2) <<
@@ -1732,6 +1918,21 @@ PValue AluFunc_substitute(PValue pSrc, PValue pSearchString, PValue pSubstitute,
 		MYTHROW("substitute: Search string must not be empty");
 	}
 
+	if (UTF8_STRINGS_NOT_ASCII3(res, pSearchString->getStr(), pSubstitute->getStr())) {
+		utf8::GraphemeString gRes = utf8::toGraphemes(res);
+		const utf8::GraphemeString gSearch = utf8::toGraphemes(pSearchString->getStr());
+		const utf8::GraphemeString gSubst = utf8::toGraphemes(pSubstitute->getStr());
+		while (count > 0) {
+			findRet = gRes.find(gSearch, findRet);
+			if (findRet == utf8::GraphemeString::npos) break;
+
+			gRes = gRes.substr(0,findRet) + gSubst + gRes.substr(findRet + gSearch.length());
+
+			count--;
+		}
+		return mkValue(utf8::fromGraphemes(gRes));
+	}
+
 	while (count > 0) {
 		findRet = res.find(pSearchString->getStr(), findRet);
 		if (findRet == std::string::npos) break;
@@ -1761,6 +1962,24 @@ PValue AluFunc_sfield(PValue pStr, PValue pCount, PValue pSep)
 	if (0 == count) {
 		MYTHROW("sfield: Called with count equal to zero");
 	}
+
+	if (UTF8_STRING_NOT_ASCII(str)) {
+		std::string sepStr = (pSep && pSep->getStrPtr()->length() > 0) ? pSep->getStr() : std::string(1, DEFAULT_FIELDSEPARATOR_C);
+		utf8::GraphemeString gSep = utf8::toGraphemes(sepStr);
+		MYASSERT_WITH_MSG(1 == gSep.length(), "sfield: Separator must be a single character");
+		const std::string canonSep = utf8::canonicalGrapheme(gSep[0]);
+		std::vector<std::string> fields(1);
+		for (const std::string& g : utf8::toGraphemes(str)) {
+			if (utf8::canonicalGrapheme(g) == canonSep) fields.emplace_back();
+			else fields.back() += g;
+		}
+		size_t n = fields.size();
+		size_t want = (count > 0) ? size_t(count) : size_t(-count);
+		if (want > n) return mkValue("");
+		return mkValue(fields[(count > 0) ? want-1 : n-want]);
+	}
+	MYASSERT_WITH_MSG(!(g_bSupportUTF8 && pSep && !utf8::isAscii(pSep->getStr())),
+			"sfield: Separator must be ASCII when the string is ASCII");
 
 	// The following ensures that the string is not zero-length for the rest of the code
 	// which does make that assumption
@@ -1856,6 +2075,29 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 		MYTHROW("sword: Called with count equal to zero");
 	}
 
+	if (UTF8_STRING_NOT_ASCII(str)) {
+		std::string sepStr = (pSep && pSep->getStrPtr()->length() > 0) ? pSep->getStr() : std::string(1, DEFAULT_WORDSEPARATOR_C);
+		utf8::GraphemeString gSep = utf8::toGraphemes(sepStr);
+		MYASSERT_WITH_MSG(1 == gSep.length(), "sword: Separator must be a single character");
+		const std::string canonSep = utf8::canonicalGrapheme(gSep[0]);
+		std::vector<std::string> words;
+		bool inWord = false;
+		for (const std::string& g : utf8::toGraphemes(str)) {
+			if (utf8::canonicalGrapheme(g) == canonSep) inWord = false;
+			else {
+				if (!inWord) words.emplace_back();
+				words.back() += g;
+				inWord = true;
+			}
+		}
+		size_t n = words.size();
+		size_t want = (count > 0) ? size_t(count) : size_t(-count);
+		if (want > n) return mkValue("");
+		return mkValue(words[(count > 0) ? want-1 : n-want]);
+	}
+	MYASSERT_WITH_MSG(!(g_bSupportUTF8 && pSep && !utf8::isAscii(pSep->getStr())),
+			"sword: Separator must be ASCII when the string is ASCII");
+
 	// The following ensures that the string is not zero-length for the rest of the code
 	// which does make that assumption
 	if (0 == str.length()) {
@@ -1908,6 +2150,18 @@ PValue AluFunc_sword(PValue pStr, PValue pCount, PValue pSep)
 
 /* REXX Functions */
 
+// Grapheme-wise prefix test. Assumes the strings are non-ASCII (it also works on ASCII).
+static PValue AluFunc_abbrev_do(const std::string& sBig, const std::string& sLittle)
+{
+	const utf8::GraphemeString gBig = utf8::toGraphemes(sBig);
+	const utf8::GraphemeString gLittle = utf8::toGraphemes(sLittle);
+	if (gBig.length() < gLittle.length()) return mkValue(ALUInt(0));
+	for (size_t i = 0; i < gLittle.length(); i++) {
+		if (utf8::canonicalGrapheme(gBig[i]) != utf8::canonicalGrapheme(gLittle[i])) return mkValue(ALUInt(0));
+	}
+	return mkValue(ALUInt(1));
+}
+
 PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 {
 	ASSERT_NOT_ELIDED(pInformation,1,information);
@@ -1919,8 +2173,12 @@ PValue AluFunc_abbrev(PValue pInformation, PValue pInfo, PValue pLen)
 	}
 
 	std::string sBig = pInformation->getStr();
-	std::string sLittle = pLen ? pInfo->getStr().substr(0,len) : pInfo->getStr();
+	std::string sLittle = pLen ? strSubstr(pInfo->getStr(), 0, size_t(len)) : pInfo->getStr();
 
+	if (UTF8_STRINGS_NOT_ASCII2(sBig, sLittle)) {
+		return AluFunc_abbrev_do(sBig, sLittle);
+	}
+	
 #if CPP_STD_LEVEL >= 20
 	return mkValue(ALUInt(sBig.starts_with(sLittle)));
 #else
@@ -2003,47 +2261,69 @@ PValue AluFunc_bitxor(PValue pS1, PValue pS2)
 	return pRet;
 }
 
-PValue AluFunc_compare_do(PValue pS1, PValue pS2, char pad)
+static ALUInt compare_do_ascii(const std::string& s1, const std::string& s2, char pad)
 {
-	auto s1 = pS1->getStr();
-	auto s2 = pS2->getStr();
-	if (s1 == s2) {
-		return mkValue(ALUInt(0));
-	}
 	auto s1Len = s1.length();
 	auto s2Len = s2.length();
 
 	auto maxLen = std::max(s1Len, s2Len);
 
 	for (size_t l = 0 ; l < maxLen ; l++) {
-		char c1 = (l < s1Len) ? s1[l] : pad;
-		char c2 = (l < s2Len) ? s2[l] : pad;
+		auto c1 = (l < s1Len) ? s1[l] : pad;
+		auto c2 = (l < s2Len) ? s2[l] : pad;
 
 		if (c1 != c2) {
-			return mkValue(ALUInt(l)+1);
+			return ALUInt(l)+1;
 		}
 	}
 
-	if (s1Len==s2Len) {
-		std::string err = "compare/comparep: different character was not found; s1=<"
-				+ s1 + ">; s2=>" + s2 + ">";
-		MYTHROW(err);
+	MYASSERT_WITH_MSG(s1Len!=s2Len, "compare/comparep: different character was not found");
+
+	// The padding made them equal
+	return 0;
+}
+
+static ALUInt compare_do_unicode(const utf8::GraphemeString& s1, const utf8::GraphemeString& s2, typename utf8::GraphemeString::value_type pad)
+{
+	auto s1Len = s1.length();
+	auto s2Len = s2.length();
+
+	auto maxLen = std::max(s1Len, s2Len);
+
+	for (size_t l = 0 ; l < maxLen ; l++) {
+		auto c1 = (l < s1Len) ? s1[l] : pad;
+		auto c2 = (l < s2Len) ? s2[l] : pad;
+
+		if (utf8::canonicalGrapheme(c1) != utf8::canonicalGrapheme(c2)) {
+			return ALUInt(l)+1;
+		}
 	}
 
 	// The padding made them equal
-	return mkValue(ALUInt(0));
+	return 0;
+}
+
+static PValue AluFunc_compare_do(PValue pS1, PValue pS2, const std::string& pad)
+{
+	auto s1 = pS1->getStr();
+	auto s2 = pS2->getStr();
+	if (s1 == s2) {
+		return mkValue(ALUInt(0));
+	}
+	if (UTF8_STRINGS_NOT_ASCII3(s1,s2,pad)) {
+		return mkValue(compare_do_unicode(utf8::toGraphemes(s1), utf8::toGraphemes(s2), utf8::toGraphemes(pad)[0]));
+	}
+	return mkValue(compare_do_ascii(s1, s2, pad[0]));
 }
 
 PValue AluFunc_compare(PValue pS1, PValue pS2, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pS1,1,s1);
 	ASSERT_NOT_ELIDED(pS2,2,s2);
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (sPad.length() != 1) {
-		std::string err = "compare: Pad argument should be 1 char. Got <" + sPad + ">";
-		MYTHROW(err);
-	}
-	return AluFunc_compare_do(pS1, pS2, sPad[0]);
+
+	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", compare);
+
+	return AluFunc_compare_do(pS1, pS2, sPad);
 }
 
 PValue AluFunc_copies(PValue pString, PValue pTimes)
@@ -2067,27 +2347,75 @@ PValue AluFunc_copies(PValue pString, PValue pTimes)
 	return mkValue(res);
 }
 
+template <class S>
+static S delstr_do(const S& theString, ALUInt start, ALUInt length)
+{
+	if (start < 1) start = 1;
+
+	// If start is after end of the string, we return the whole string
+	if (size_t(start) > theString.length()) return theString;
+
+	S res = theString.substr(0,start-1);
+
+	// zero is a special value meaning delete to the end. If the length is greater
+	// than the remainder, also delete to the end.
+	if (0>=length || size_t(length+start) > theString.length()) return res;
+
+	res += theString.substr(start+length-1);
+	return res;
+}
+
 PValue AluFunc_delstr(PValue pString, PValue pStart, PValue pLength)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
 	ASSERT_NOT_ELIDED(pStart,2,start);
 	auto theString = pString->getStr();
 	auto start = pStart->getInt();
-
-	if (start < 1) start = 1;
-
-	// If start is after end of the string, we return the whole string
-	if (size_t(start) > theString.length()) return mkValue(theString);
-
-	std::string res = theString.substr(0,start-1);
-
 	auto length = ARG_INT_WITH_DEFAULT(pLength,0);
-	// zero is a special value meaning delete to the end. If the length is greater
-	// than the remainder, also delete to the end.
-	if (0>=length || size_t(length+start) > theString.length()) return mkValue(res);
 
-	res += theString.substr(start+length-1);
-	return mkValue(res);
+	if (UTF8_STRING_NOT_ASCII(theString)) {
+		return mkValue(utf8::fromGraphemes(delstr_do(utf8::toGraphemes(theString), start, length)));
+	}
+	return mkValue(delstr_do(theString, start, length));
+}
+
+static inline bool unitIsSpace(char c) { return isspace((unsigned char)c) != 0; }
+
+// A grapheme is whitespace if its first code point is, as in the record-level word splitter
+static inline bool unitIsSpace(const std::string& g)
+{
+	size_t len;
+	return utf8::isSpace(utf8::decode(g.data(), g.size(), len));
+}
+
+// S is std::string for bytes, and utf8::GraphemeString for grapheme clusters
+template <class S>
+static std::string delword_do(const S& theString, ALUInt start, ALUInt length)
+{
+	bool inWhitespace = unitIsSpace(theString[0]);
+	unsigned int  wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
+	std::string res = "";
+	for (size_t i=0; i<theString.length(); i++) {
+		// check if we've moved from non-ws to ws or vice versa
+		if (inWhitespace) {
+			if (!unitIsSpace(theString[i])) {
+				inWhitespace = false;
+				wordIndex++;
+			}
+		} else {
+			if (unitIsSpace(theString[i])) {
+				inWhitespace = true;
+			}
+		}
+
+		if ((wordIndex < (start-1)) ||
+			((wordIndex == (start-1)) && !inWhitespace) || // remove the whitespace before the first word to be deleted
+			(wordIndex > (start+length-1)) ||
+			((wordIndex == (start+length-1)) && inWhitespace && (start>1))) {
+			res += theString[i];
+		}
+	}
+	return res;
 }
 
 PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
@@ -2105,114 +2433,67 @@ PValue AluFunc_delword(PValue pString, PValue pStart, PValue pLength)
 
 	if (0 == theString.length()) return mkValue(theString);
 
-	bool inWhitespace = isspace(theString[0]);
-	unsigned int  wordIndex = (inWhitespace) ? 0 : 1; // using 1-based word index
-	std::string res = "";
-	for (size_t i=0; i<theString.length(); i++) {
-		// check if we've moved from non-ws to ws or vice versa
-		if (inWhitespace) {
-			if (!isspace(theString[i])) {
-				inWhitespace = false;
-				wordIndex++;
-			}
-		} else {
-			if (isspace(theString[i])) {
-				inWhitespace = true;
-			}
-		}
-
-		if ((wordIndex < (start-1)) ||
-			((wordIndex == (start-1)) && !inWhitespace) || // remove the whitespace before the first word to be deleted
-			(wordIndex > (start+length-1)) ||
-			((wordIndex == (start+length-1)) && inWhitespace && (start>1))) {
-			res += theString[i];
-		}
+	if (UTF8_STRING_NOT_ASCII(theString)) {
+		return mkValue(delword_do(utf8::toGraphemes(theString), start, length));
 	}
+	return mkValue(delword_do(theString, start, length));
+}
 
-	return mkValue(res);
+// Calls f(first, last) with the byte offsets of the start of each word of s, and of the byte after its end.
+// In UTF8 mode a word is delimited by Unicode whitespace, as in the record-level splitter.
+// forEachWord is a template so that callers can pass lambdas that capture local variables
+template <class F>
+static void forEachWord(const std::string& s, F&& f)
+{
+	if (UTF8_STRING_IS_ASCII(s)) {
+		size_t i = 0, n = s.length();
+		while (true) {
+			while (i < n && isspace((unsigned char)s[i])) i++;
+			if (i >= n) break;
+			size_t first = i;
+			while (i < n && !isspace((unsigned char)s[i])) i++;
+			f(first, i);
+		}
+	} else {
+		size_t offset = 0, first = 0;
+		bool inWord = false;
+		const utf8::GraphemeString graphemes = utf8::toGraphemes(s);
+		for (size_t gi = 0; gi < graphemes.length(); gi++) {
+			const std::string& g = graphemes[gi];
+			if (unitIsSpace(g)) {
+				if (inWord) f(first, offset);
+				inWord = false;
+			} else if (!inWord) {
+				inWord = true;
+				first = offset;
+			}
+			offset += g.length();
+		}
+		if (inWord) f(first, offset);
+	}
 }
 
 /*
  * Returns a vector of the words of s
  */
-static std::vector<std::string> breakIntoWords(std::string s)
+static std::vector<std::string> breakIntoWords(const std::string& s)
 {
 	std::vector<std::string> ret;
-
-	if (0 == s.length()) return ret;
-
-	bool inWhitespace = isspace(s[0]);
-	int wordStart = (inWhitespace) ? -1 : 0;
-	for (size_t i=0; i<s.length(); i++) {
-		// check if we've moved from non-ws to ws or vice versa
-		if (inWhitespace) {
-			if (!isspace(s[i])) {
-				inWhitespace = false;
-				wordStart = int(i);
-			}
-		} else {
-			if (isspace(s[i])) {
-				inWhitespace = true;
-				ret.push_back(s.substr(wordStart, i-wordStart));
-			} else if (i == s.length()-1) {
-				ret.push_back(s.substr(wordStart));
-			}
-		}
-
-	}
-
+	forEachWord(s, [&](size_t first, size_t end) { ret.push_back(s.substr(first, end-first)); });
 	return ret;
 }
 
-static std::vector<size_t> breakIntoWords_start(std::string s)
+static std::vector<size_t> breakIntoWords_start(const std::string& s)
 {
 	std::vector<size_t> ret;
-
-	if (0 == s.length()) return ret;
-
-	bool inWhitespace = isspace(s[0]);
-	if (!inWhitespace) ret.push_back(0);
-	for (size_t i=0; i<s.length(); i++) {
-		// check if we've moved from non-ws to ws or vice versa
-		if (inWhitespace) {
-			if (!isspace(s[i])) {
-				inWhitespace = false;
-				ret.push_back(i);
-			}
-		} else {
-			if (isspace(s[i])) {
-				inWhitespace = true;
-			}
-		}
-
-	}
-
+	forEachWord(s, [&](size_t first, size_t) { ret.push_back(first); });
 	return ret;
 }
 
-static std::vector<size_t> breakIntoWords_end(std::string s)
+static std::vector<size_t> breakIntoWords_end(const std::string& s)
 {
 	std::vector<size_t> ret;
-
-	if (0 == s.length()) return ret;
-
-	bool inWhitespace = isspace(s[0]);
-	for (size_t i=0; i<s.length(); i++) {
-		// check if we've moved from non-ws to ws or vice versa
-		if (inWhitespace) {
-			if (!isspace(s[i])) {
-				inWhitespace = false;
-			}
-		} else {
-			if (isspace(s[i])) {
-				inWhitespace = true;
-				ret.push_back(i-1);
-			} else if (i == s.length()-1) {
-				ret.push_back(i);
-			}
-		}
-
-	}
+	forEachWord(s, [&](size_t, size_t end) { ret.push_back(end-1); });
 	return ret;
 }
 
@@ -2223,6 +2504,8 @@ PValue AluFunc_find(PValue string, PValue phrase)
 	auto phraseWords = breakIntoWords(phrase->getStr());
 	auto stringWords = breakIntoWords(string->getStr());
 
+	bool bCompareGraphemes = UTF8_STRINGS_NOT_ASCII2(phrase->getStr(), string->getStr());
+
 	int phraseWordCount = int(phraseWords.size());
 	int stringWordCount = int(stringWords.size());
 
@@ -2231,7 +2514,12 @@ PValue AluFunc_find(PValue string, PValue phrase)
  		bool foundMismatch = false;
 		for (int j=0; !foundMismatch && j < phraseWordCount; j++)
 		{
-			if (phraseWords[j] != stringWords[i+j]) foundMismatch = true;
+			if (bCompareGraphemes) {
+				if (compare_do_unicode(utf8::toGraphemes(phraseWords[j]), utf8::toGraphemes(stringWords[i+j]), ""))
+					foundMismatch = true;
+			} else {
+				if (phraseWords[j] != stringWords[i+j]) foundMismatch = true;
+			}
 		}
 
 		if (!foundMismatch) return mkValue(ALUInt(i+1));
@@ -2250,17 +2538,13 @@ PValue AluFunc_index(PValue _pHaystack, PValue _pNeedle, PValue _pStart)
 
 	if (start < 1) start = 1;
 
-	size_t pos = pHaystack->find(*pNeedle, (start-1));
-	if (std::string::npos == pos) {
-		return mkValue(ALUInt(0));
-	} else {
-		return mkValue(ALUInt(pos+1));
-	}
+	return mkValue(strFind(*pHaystack, *pNeedle, size_t(start-1)));
 }
 
-static PValue insert_do(std::string& str, std::string& tgt, size_t pos, size_t len, char pad)
+template <class S>
+static S insert_do(const S& str, const S& tgt, size_t pos, size_t len, typename S::value_type pad)
 {
-	std::string paddedStr;
+	S paddedStr;
 
 	if (0==len) {
 		paddedStr = str;
@@ -2273,14 +2557,14 @@ static PValue insert_do(std::string& str, std::string& tgt, size_t pos, size_t l
 		}
 	}
 
-	std::string ret;
+	S ret;
 	if (pos > 0) ret = tgt.substr(0,pos);
 
 	ret += paddedStr;
 
 	if (pos < tgt.length()) ret += tgt.substr(pos);
 
-	return mkValue(ret);
+	return ret;
 }
 
 PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue pLength, PValue pPad)
@@ -2299,21 +2583,22 @@ PValue AluFunc_insert(PValue pString, PValue pTarget, PValue pPosition, PValue p
 		std::string err = "insert: Invalid negative length value: " + std::to_string(length);
 		MYTHROW(err);
 	}
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (1 != sPad.length()) {
-		std::string err = "insert: Invalid pad argument: <" + sPad + ">";
-		MYTHROW(err);
-	}
 
-	return insert_do(theString, theTarget, position, length, sPad[0]);
+	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", insert);
+
+	if (UTF8_STRINGS_NOT_ASCII3(theString, theTarget, sPad)) {
+		return mkValue(utf8::fromGraphemes(insert_do(utf8::toGraphemes(theString), utf8::toGraphemes(theTarget),
+				size_t(position), size_t(length), utf8::toGraphemes(sPad)[0])));
+	}
+	return mkValue(insert_do(theString, theTarget, size_t(position), size_t(length), sPad[0]));
 }
 
-static PValue justify_do(std::string& str, size_t len, char pad)
+static PValue justify_do(std::string& str, size_t len, const std::string& pad)
 {
 	auto wordVector = breakIntoWords(str);
 	int numOfSpaces = int(len);
 	for (const auto & word : wordVector) {
-		numOfSpaces -= int(word.length());
+		numOfSpaces -= int(strLength(word));
 	}
 
 	if (numOfSpaces < 0) numOfSpaces = 0;
@@ -2330,8 +2615,8 @@ static PValue justify_do(std::string& str, size_t len, char pad)
 		}
 	}
 
-	if (ret.size() > len) ret = ret.substr(0,len);
-	MYASSERT(ret.size() == len);
+	if (strLength(ret) > len) ret = strSubstr(ret,0,len);
+	MYASSERT(strLength(ret) == len);
 
 	return mkValue(ret);
 }
@@ -2346,42 +2631,15 @@ PValue AluFunc_justify(PValue pStr, PValue pLen, PValue pPad)
 		std::string err = "justify: len argument should be non-negative. Got " + std::to_string(len);
 		MYTHROW(err);
 	}
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (1 != sPad.length()) {
-		std::string err = "justify: Invalid pad argument: <" + sPad + ">";
-		MYTHROW(err);
-	}
 
-	return justify_do(str,size_t(len), sPad[0]);
+	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", justify);
+
+	return justify_do(str,size_t(len), sPad);
 }
 
-PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue pLength, PValue pPad)
+template <class S>
+static S overlay_do(S str1, S str2, ALUInt start, ALUInt length, typename S::value_type pad)
 {
-	ASSERT_NOT_ELIDED(pString1,1,string1);
-	ASSERT_NOT_ELIDED(pString2,2,string1);
-	auto str1 = pString1->getStr();
-	auto str2 = pString2->getStr();
-	ALUInt start = ARG_INT_WITH_DEFAULT(pStart, 1);
-	ALUInt length = ARG_INT_WITH_DEFAULT(pLength, 0);
-	std::string padStr = ARG_STR_WITH_DEFAULT(pPad, " ");
-
-	// sanity checks
-	if (0 == str1.length()) return mkValue(str2);
-	if (start < 1) {
-		std::string err = "overlay: start argument should be positive. Got: " + std::to_string(start);
-		MYTHROW(err);
-	}
-	if (length < 0) {
-		std::string err = "overlay: length argument should be positive. Got: " + std::to_string(length);
-		MYTHROW(err);
-	}
-	if (length>0 && padStr.length()!=1) {
-		std::string err = "overlay: Invalid pad argument: <" + padStr + ">";
-		MYTHROW(err);
-	}
-
-	char pad = padStr[0];
-
 	// str2 shall serve as return value
 	// first pad if needed to reach start
 	while (str2.length() < (size_t(start)-1)) {
@@ -2396,19 +2654,55 @@ PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue p
 		str1 += pad;
 	}
 
-	std::string ret = str2.substr(0,start-1);
+	S ret = str2.substr(0,start-1);
 	ret += str1;
 	if ((str1.length() + start - 1) < str2.length()) {
 		ret += str2.substr(str1.length() + start - 1);
 	}
 
-	return mkValue(ret);
+	return ret;
+}
+
+PValue AluFunc_overlay(PValue pString1, PValue pString2, PValue pStart, PValue pLength, PValue pPad)
+{
+	ASSERT_NOT_ELIDED(pString1,1,string1);
+	ASSERT_NOT_ELIDED(pString2,2,string1);
+	auto str1 = pString1->getStr();
+	auto str2 = pString2->getStr();
+	ALUInt start = ARG_INT_WITH_DEFAULT(pStart, 1);
+	ALUInt length = ARG_INT_WITH_DEFAULT(pLength, 0);
+
+	ARG_SINGLECHAR_WITH_DEFAULT(padStr, pPad, " ", overlay);
+
+	// sanity checks
+	if (0 == str1.length()) return mkValue(str2);
+	if (start < 1) {
+		std::string err = "overlay: start argument should be positive. Got: " + std::to_string(start);
+		MYTHROW(err);
+	}
+	if (length < 0) {
+		std::string err = "overlay: length argument should be positive. Got: " + std::to_string(length);
+		MYTHROW(err);
+	}
+
+	if (UTF8_STRINGS_NOT_ASCII3(str1, str2, padStr)) {
+		return mkValue(utf8::fromGraphemes(overlay_do(utf8::toGraphemes(str1), utf8::toGraphemes(str2),
+				start, length, utf8::toGraphemes(padStr)[0])));
+	}
+	return mkValue(overlay_do(str1, str2, start, length, padStr[0]));
 }
 
 PValue AluFunc_reverse(PValue pStr)
 {
 	ASSERT_NOT_ELIDED(pStr,1,str);
 	auto str = pStr->getStr();
+
+	if (UTF8_STRING_NOT_ASCII(str)) {
+		auto gStr = utf8::toGraphemes(str);
+		gStr.reverse();
+		return mkValue(utf8::fromGraphemes(gStr)); 
+	}
+
 	std::reverse(str.begin(), str.end());
 	return mkValue(str);
 }
@@ -2445,12 +2739,10 @@ PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pStr,1,string);
 	auto wordVector = breakIntoWords(pStr->getStr());
-	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-	if (sPad.length() != 1) {
-		std::string err = "space: Pad argument should be 1 char. Got <" + sPad + ">";
-		MYTHROW(err);
-	}
-	char pad = sPad[0];
+
+	ARG_SINGLECHAR_WITH_DEFAULT(sPad, pPad, " ", space);
+
+	const std::string& pad = sPad;
 	ALUInt len = ARG_INT_WITH_DEFAULT(pLength, 1);
 	if (len < 0 || len > 1000) {
 		std::string err = "space: Invalid length argument: <" + pLength->getStr() + ">";
@@ -2466,6 +2758,32 @@ PValue AluFunc_space(PValue pStr, PValue pLength, PValue pPad)
 	}
 
 	return mkValue(ret);
+}
+
+static bool inStripSet(const std::string& pad, char c)
+{
+	return std::string::npos != pad.find(c);
+}
+
+// A CR LF pair is a single grapheme cluster, but strip's default set lists CR and LF separately
+static bool inStripSet(const utf8::GraphemeString& pad, const std::string& g)
+{
+	return utf8::GraphemeString::npos != pad.find(g) ||
+			(g == "\r\n" && utf8::GraphemeString::npos != pad.find("\r") && utf8::GraphemeString::npos != pad.find("\n"));
+}
+
+// S is std::string for bytes, and utf8::GraphemeString for grapheme clusters
+template <class S>
+static S strip_do(const S& str, const S& pad, char option)
+{
+	size_t first = 0, end = str.length();
+	if (option != 'T') {
+		while (first < end && inStripSet(pad, str[first])) first++;
+	}
+	if (option != 'L') {
+		while (end > first && inStripSet(pad, str[end-1])) end--;
+	}
+	return str.substr(first, end - first);
 }
 
 PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
@@ -2486,27 +2804,17 @@ PValue AluFunc_strip(PValue pString, PValue pOption, PValue pPad)
 
 	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " \t\n\r");
 
+	// An invalid option strips both ends, and is reported only if something is left
 	std::string ret;
-	auto first = str.find_first_not_of(sPad);
-	auto last = str.find_last_not_of(sPad);
-	if (first == std::string::npos) {
-		return mkValue(std::string());
+	if (UTF8_STRINGS_NOT_ASCII2(str, sPad)) {
+		ret = utf8::fromGraphemes(strip_do(utf8::toGraphemes(str), utf8::toGraphemes(sPad), option));
+	} else {
+		ret = strip_do(str, sPad, option);
 	}
-	switch (option) {
-	case 'B':
-		ret = str.substr(first, last-first+1);
-		break;
-	case 'L':
-		ret = str.substr(first);
-		break;
-	case 'T':
-		ret = str.substr(0,last+1);
-		break;
-	default:
+	if (!ret.empty() && 'B' != option && 'L' != option && 'T' != option) {
 		std::string err = "strip: Invalid option argument: <"+pOption->getStr()+">";
 		MYTHROW(err);
 	}
-
 	return mkValue(ret);
 }
 
@@ -2554,6 +2862,21 @@ PValue AluFunc_subword(PValue pString, PValue pStart, PValue pLength)
 	}
 }
 
+// In-place sequential replacement of each tablein character, as the byte version does
+static utf8::GraphemeString translate_do(const utf8::GraphemeString& str, const utf8::GraphemeString& tableout,
+		const utf8::GraphemeString& tablein, const std::string& pad)
+{
+	std::vector<std::string> chars = str.data();
+	for (size_t i=0; i<tablein.length(); i++) {
+		const std::string oldValue = utf8::canonicalGrapheme(tablein[i]);
+		const std::string& newValue = (tableout.length() <= i) ? pad : tableout[i];
+		for (std::string& g : chars) {
+			if (utf8::canonicalGrapheme(g) == oldValue) g = newValue;
+		}
+	}
+	return utf8::GraphemeString(chars);
+}
+
 PValue AluFunc_translate(PValue pString, PValue pTableOut, PValue pTableIn, PValue pPad)
 {
 	ASSERT_NOT_ELIDED(pString,1,string);
@@ -2569,23 +2892,48 @@ PValue AluFunc_translate(PValue pString, PValue pTableOut, PValue pTableIn, PVal
 
 	if (0 == tableout.length() && 0 == tablein.length()) {
 		// just uppercase the whole thing
-		for (auto & c : str) c = toupper(c);
-	} else {
-		std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
-		if (sPad.length() != 1) {
+		return mkValue(conv_UCASE(str));
+	}
+
+	std::string sPad = ARG_STR_WITH_DEFAULT(pPad, " ");
+	if (UTF8_STRINGS_NOT_ASCII3(str, tableout, tablein) || UTF8_STRING_NOT_ASCII(sPad)) {
+		auto gPad = utf8::toGraphemes(sPad);
+		if (gPad.length() != 1) {
 			std::string err = "translate: Pad argument should be 1 char. Got <" + sPad + ">";
 			MYTHROW(err);
 		}
-		char pad = sPad[0];
+		return mkValue(utf8::fromGraphemes(translate_do(utf8::toGraphemes(str), utf8::toGraphemes(tableout),
+				utf8::toGraphemes(tablein), gPad[0])));
+	}
 
-		for (size_t i=0; i<tablein.length(); i++) {
-			char oldValue = tablein[i];
-			char newValue = (tableout.length() <= i) ? pad : tableout[i];
-			std::replace(str.begin(), str.end(), oldValue, newValue);
-		}
+	if (sPad.length() != 1) {
+		std::string err = "translate: Pad argument should be 1 char. Got <" + sPad + ">";
+		MYTHROW(err);
+	}
+	char pad = sPad[0];
+
+	for (size_t i=0; i<tablein.length(); i++) {
+		char oldValue = tablein[i];
+		char newValue = (tableout.length() <= i) ? pad : tableout[i];
+		std::replace(str.begin(), str.end(), oldValue, newValue);
 	}
 
 	return mkValue(str);
+}
+
+// The position of the first character at or after start that is (option 'M')
+// or is not (option 'N') in reference, or zero if there is none
+template <class S>
+static ALUInt verify_do(const S& str, const S& reference, char option, size_t start)
+{
+	for (size_t i=start-1 ; i < str.length() ; i++) {
+		bool bMatch = (S::npos != reference.find(str[i]));
+		if ((option=='M') == bMatch) {
+			return ALUInt(i + 1);
+		}
+	}
+
+	return 0;
 }
 
 PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue pStart)
@@ -2612,21 +2960,10 @@ PValue AluFunc_verify(PValue pString, PValue pReference, PValue pOption, PValue 
 		MYTHROW(err);
 	}
 
-	ALUInt ret = 0;
-	bool bFound = false;
-	for (size_t i=start-1 ; !bFound && i < str.length() ; i++) {
-		size_t cntMatch=0;
-		for (size_t j=0 ; !cntMatch && j < reference.length() ; j++) {
-			if (str[i] == reference[j]) ++cntMatch;
-		}
-
-		if ((option=='M' && cntMatch>0) || (option=='N' && cntMatch==0)) {
-			bFound = true;
-			ret = i + 1;
-		}
+	if (UTF8_STRINGS_NOT_ASCII2(str, reference)) {
+		return mkValue(verify_do(utf8::toGraphemes(str), utf8::toGraphemes(reference), option, start));
 	}
-
-	return mkValue(ret);
+	return mkValue(verify_do(str, reference, option, start));
 }
 
 PValue AluFunc_wordindex(PValue pString, PValue pIdx)
@@ -2645,7 +2982,10 @@ PValue AluFunc_wordindex(PValue pString, PValue pIdx)
 
 	ALUInt ret = 0;
 	if (size_t(idx-1) < wordvec.size()) {
-		ret = wordvec[idx-1] + 1;
+		size_t offset = wordvec[idx-1];
+		if (UTF8_STRING_NOT_ASCII(str))
+			ret = ALUInt(utf8::charCount(str.data(), offset) + 1);
+		else ret = ALUInt(offset + 1);
 	}
 
 	return mkValue(ret);
@@ -2667,7 +3007,7 @@ PValue AluFunc_wordlength(PValue pString, PValue pIdx)
 
 	ALUInt ret = 0;
 	if (size_t(idx-1) < wordvec.size()) {
-		ret = wordvec[idx-1].length();
+		ret = strLength(wordvec[idx-1]);
 	}
 
 	return mkValue(ret);
@@ -2934,7 +3274,7 @@ PValue AluFunc_countocc(PValue _pNeedle, PValue _pHaystack)
 	std::string* pHaystack = (_pHaystack) ? _pHaystack->getStrPtr() : g_pStateQueryAgent->currRecord().get();
 	std::string needle = _pNeedle->getStr();
 
-	if (std::string::npos != pHaystack->find(needle)) {
+	if (0 != strFind(*pHaystack, needle)) {
 		g_OccuranceMap.note(needle);
 	}
 
@@ -2999,6 +3339,7 @@ PValue AluFunc_pget(PValue pName, PValue pDefault)
 {
 	ASSERT_NOT_ELIDED(pName,1,variableName);
 	auto name = pName->getStr();
+	MYASSERT_WITH_MSG(UTF8_STRING_IS_ASCII(name), "pget: The name of a persistent variable must be ASCII");
 	if (persistentVarDefined(name)) {
 		std::string res = persistentVarGet(name);
 		auto ret = mkValue(res);
@@ -3018,6 +3359,7 @@ PValue AluFunc_pdefined(PValue pName)
 {
 	ASSERT_NOT_ELIDED(pName,1,variableName);
 	auto name = pName->getStr();
+	MYASSERT_WITH_MSG(UTF8_STRING_IS_ASCII(name), "pdefined: The name of a persistent variable must be ASCII");
 	if (persistentVarDefined(name)) {
 		return mkValue(ALUInt(1));
 	} else {
@@ -3029,6 +3371,7 @@ PValue AluFunc_pclear(PValue pName)
 {
 	ASSERT_NOT_ELIDED(pName,1,variableName);
 	auto name = pName->getStr();
+	MYASSERT_WITH_MSG(UTF8_STRING_IS_ASCII(name), "pclear: The name of a persistent variable must be ASCII");
 	if (persistentVarDefined(name)) {
 		auto ret = mkValue(persistentVarGet(name));
 		ret->setExact(false);
@@ -3045,6 +3388,7 @@ PValue AluFunc_pset(PValue pName, PValue pValue)
 	ASSERT_NOT_ELIDED(pName,1,variableName);
 	ASSERT_NOT_ELIDED(pValue,2,value);
 	std::string varName = pName->getStr();
+	MYASSERT_WITH_MSG(UTF8_STRING_IS_ASCII(varName), "pset: The name of a persistent variable must be ASCII");
 	std::string varValue = pValue->getStr();
 	persistentVarSet(varName, varValue);
 	auto ret = mkValue(*pValue);

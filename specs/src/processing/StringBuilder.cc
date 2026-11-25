@@ -1,94 +1,16 @@
 #include <cstring> // for memcpy
+#include <algorithm>
 #include "Config.h"
 #include "utils/ErrorReporting.h"
+#include "utils/utf8.h"
 #include "ProcessingState.h"
 #include "StringBuilder.h"
-
-// Some UTF-8 routines
-size_t utf8Len(PSpecString s)
-{
-	size_t physLen = s->length();
-	const char* pcs = s->data();
-
-	size_t ret = 0;
-	size_t i = 0;
-	while (i<physLen) {
-		if (0==(0x80 & pcs[i])) {    // msb of byte is zero - 1 byte character
-			i++;
-			ret++;
-		} else if (0xc0==(0xe0 & pcs[i])) {   // top three bits are 110 - 2 byte character
-			i += 2;
-			ret++;
-		} else if (0xe0==(0xf0 & pcs[i])) {   // top nibble is 1110 - 3 byte character
-			i += 3;
-			ret++;
-		} else {  // 4 byte character
-			i += 4;
-			ret++;
-		}
-	}
-	return ret;
-}
-
-size_t phys2charOffset(std::string* s, size_t physOffset)
-{
-	size_t physLen = s->length();
-	if (physOffset > physLen) return 0;
-
-	const char* pcs = s->c_str();
-	size_t ret = 0;
-	size_t i = 0;
-	while (i<physOffset) {
-		if (0==(0x80 & pcs[i])) {    // msb of byte is zero - 1 byte character
-			i++;
-			ret++;
-		} else if (0xc0==(0xe0 & pcs[i])) {   // top three bits are 110 - 2 byte character
-			i += 2;
-			ret++;
-		} else if (0xe0==(0xf0 & pcs[i])) {   // top nibble is 1110 - 3 byte character
-			i += 3;
-			ret++;
-		} else {  // 4 byte character
-			i += 4;
-			ret++;
-		}
-	}
-	return ret;
-}
-
-size_t char2physOffset(PSpecString s, size_t charOffset)
-{
-	size_t physLen = s->length();
-	const char* pcs = s->data();
-
-	size_t ret = 0;
-	size_t i = 0;
-	while (i<charOffset && ret<physLen) {
-		if (0==(0x80 & pcs[i])) {    // msb of byte is zero - 1 byte character
-			ret++;
-			i++;
-		} else if (0xc0==(0xe0 & pcs[i])) {   // top three bits are 110 - 2 byte character
-			ret += 2;
-			i++;
-		} else if (0xe0==(0xf0 & pcs[i])) {   // top nibble is 1110 - 3 byte character
-			ret += 3;
-			i++;
-		} else {  // 4 byte character
-			ret += 4;
-			i++;
-		}
-	}
-	if (i==charOffset) {
-		return ret;
-	}
-	return 0;
-}
 
 StringBuilder::StringBuilder()
 {
 	mp_str = nullptr;
 	m_pos = 1;
-	m_pad = 0;
+	m_strAscii = -1;
 }
 
 StringBuilder::~StringBuilder()
@@ -100,6 +22,7 @@ PSpecString StringBuilder::GetStringUnsafe()
 	PSpecString pRet = mp_str;
 	mp_str = nullptr;
 	m_pos = 1;
+	m_strAscii = -1;
 	return pRet;
 }
 
@@ -109,10 +32,19 @@ PSpecString StringBuilder::GetString()
 	PSpecString pRet = mp_str;
 	mp_str = nullptr;
 	m_pos = 1;
+	m_strAscii = -1;
 	return pRet;
 }
 
-void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
+bool StringBuilder::strIsAscii()
+{
+	if (m_strAscii < 0) {
+		m_strAscii = utf8::isAscii(*mp_str) ? 1 : 0;
+	}
+	return m_strAscii == 1;
+}
+
+void StringBuilder::insert(PSpecString s, size_t offset)
 {
 	MYASSERT(offset>0);
 	if (!mp_str) {
@@ -120,31 +52,38 @@ void StringBuilder::insert(PSpecString s, size_t offset, bool bOnlyPhysical)
 	}
 	offset--;  // translate it to C-style offsets
 
-	if (g_bSupportUTF8 && !bOnlyPhysical) {
-		size_t physOffset = char2physOffset(mp_str, offset);
-		if (!physOffset)  {  // offset is beyond where the string is
-			offset = (offset-utf8Len(mp_str)) + mp_str->length();
-		} else {
-			offset = physOffset;
+	// Character and byte offsets coincide unless something is non-ASCII
+	if (g_bSupportUTF8 &&
+			(m_pad.size()!=1 || (m_pad[0] & 0x80) || !utf8::isAscii(*s) || !strIsAscii())) {
+		size_t curLen = utf8::charCount(*mp_str);
+		size_t sLen = utf8::charCount(*s);
+		if (curLen < offset) {
+			MYASSERT(!m_pad.empty());
+			*mp_str += SpecString_Pad(m_pad, offset - curLen);
+			curLen = offset;
 		}
+		size_t bStart = utf8::charToByte(*mp_str, offset);
+		size_t bEnd = utf8::charToByte(*mp_str, std::min(offset + sLen, curLen));
+		mp_str->replace(bStart, bEnd - bStart, *s);
+		m_pos = offset + sLen + 1;
+		m_strAscii = -1;
+		return;
 	}
 
-	if (g_bSupportUTF8) {
-		MYTHROW("UTF-8 is not yet supported");
-	}
-
+	// Here the pad is a single byte, so padding is a plain resize
 	size_t endPos = offset + s->length();
 	if (mp_str->length() < endPos) {
-		MYASSERT(m_pad!=0);
-		SpecString_Resize(mp_str, endPos, m_pad, outputAlignmentLeft, ellipsisSpecNone);
+		MYASSERT(m_pad.size()==1);
+		mp_str->resize(endPos, m_pad[0]);
 	}
 	memcpy((void*)(mp_str->data()+offset), (void*)(s->data()), s->length());
 	m_pos = endPos + 1;
+	if (!g_bSupportUTF8) m_strAscii = -1;  // in UTF-8 mode we only get here with ASCII
 }
 
 void StringBuilder::insertNext(PSpecString s)
 {
-	insert(s, m_pos, true);
+	insert(s, m_pos);
 }
 
 void StringBuilder::insertNextWord(PSpecString s)
@@ -152,13 +91,13 @@ void StringBuilder::insertNextWord(PSpecString s)
 	static PSpecString pSpace = mkSpecString(" ");
 	if (s->length()==0) return;
 	if (Length() > 0)
-		insert(pSpace,m_pos,true);
-	insert(s, m_pos, true);
+		insert(pSpace,m_pos);
+	insert(s, m_pos);
 }
 
 void StringBuilder::insertNextField(PSpecString s)
 {
 	static PSpecString pTab = mkSpecString("\t");
-	insert(pTab,m_pos,true);
-	insert(s, m_pos, true);
+	insert(pTab,m_pos);
+	insert(s, m_pos);
 }

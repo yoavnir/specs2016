@@ -20,6 +20,8 @@
 #include "utils/aluRegex.h"
 #include "utils/aluFunctions.h"
 #include "utils/build_info.h"
+#include "utils/utf8proc/utf8proc.h"
+#include "utils/utf8.h"
 #include "Config.h"
 
 #define STRINGIFY2(x) #x
@@ -30,15 +32,24 @@
 CONFIG_PARAMS
 #undef X
 
+bool g_bSupportUTF8 = false;
+
 extern unsigned int g_WhileGuardLimit;
 
 static std::map<std::string,std::string> ExternalLiterals;
+
+// Keys are stored and looked up in canonical (NFC) form, so that the composed and decomposed spellings of a
+// name are the same key. This does not depend on the UTF8 mode, which is not known while configuration is read.
+static std::string literalKey(const std::string& key)
+{
+	return utf8::canonicalGrapheme(key);
+}
 
 static void useKeyValue(std::string& key, std::string& value, std::string& line, unsigned int lineNum)
 {
 	static std::map<std::string, unsigned int> ExternalLiteralLineMap;
 	if (!key.empty() && ':'==key.back()) {
-		key = key.substr(0,key.length() - 1);
+		key = literalKey(key.substr(0,key.length() - 1));
 		if (key == "timezone") {
 			specTimeSetTimeZone(value);
 		} else if (key == "locale") {
@@ -257,6 +268,9 @@ void readConfigurationFile(useKeyValueCB cb)
 	}
 #endif
 
+	// Unicode
+	ExternalLiterals["unicode"] = std::string("Unicode version ") + utf8proc_unicode_version() + " provided by utf8proc version " + utf8proc_version();
+
 	// Build information
 	ExternalLiterals["build-commit"] = dequote(STRINGIFY(SPECS_BUILD_COMMIT));
 	ExternalLiterals["build-branch"] = dequote(STRINGIFY(SPECS_BUILD_BRANCH));
@@ -293,29 +307,62 @@ void readConfigurationFile(useKeyValueCB cb)
 
 bool configSpecLiteralExists(std::string& key)
 {
-	auto it = ExternalLiterals.find(key);
+	auto it = ExternalLiterals.find(literalKey(key));
 	return it != ExternalLiterals.end() && !it->second.empty();
 }
 
 bool configSpecLiteralDefined(std::string& key)
 {
-	auto it = ExternalLiterals.find(key);
+	auto it = ExternalLiterals.find(literalKey(key));
 	return it != ExternalLiterals.end();
 }
 
 std::string& configSpecLiteralGet(std::string& key)
 {
-	return ExternalLiterals[key];
+	return ExternalLiterals[literalKey(key)];
 }
 
 std::string& configSpecLiteralGetWithDefault(std::string& key, std::string& _default)
 {
-	return ExternalLiterals[key].empty() ? _default : ExternalLiterals[key];
+	std::string& value = ExternalLiterals[literalKey(key)];
+	return value.empty() ? _default : value;
 }
 
 void configSpecLiteralSet(std::string& key, std::string& value)
 {
-	ExternalLiterals[key] = value;
+	ExternalLiterals[literalKey(key)] = value;
+}
+
+void configSpecLiteralSet(const char* key, const char* value)
+{
+	std::string k(key);
+	std::string v(value);
+	configSpecLiteralSet(k,v);
+}
+
+bool configureUTF8Mode()
+{
+	static std::string utf8Key("utf8");
+	g_bSupportUTF8 = false;
+
+	if (configSpecLiteralDefined(utf8Key)) {
+		std::string& value = ExternalLiterals[utf8Key];
+		if (value != "0" && value != "1") {
+			std::cerr << "Invalid value <" << value << "> for configured literal utf8. Valid values are 0 and 1.\n";
+			return false;
+		}
+		g_bSupportUTF8 = (value == "1");
+		return true;
+	}
+
+	if (const char* env = std::getenv("SPECS_UTF8")) {
+		if (0 == strcmp(env, "1")) {
+			g_bSupportUTF8 = true;
+		} else if (env[0] && 0 != strcmp(env, "0")) {
+			std::cerr << "Warning: Ignoring invalid value <" << env << "> for environment variable SPECS_UTF8. Valid values are 0 and 1.\n";
+		}
+	}
+	return true;
 }
 
 bool anyNonPrimaryInputStreamDefined()

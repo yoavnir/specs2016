@@ -10,6 +10,7 @@
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
 #include "processing/persistent.h"
+#include "processing/Config.h"
 
 ALUCounters counters;
 ProcessingState g_ps;
@@ -18,6 +19,7 @@ std::string counterTypeNames[]= {"None", "Str", "Int", "Float"};
 
 extern void setRegexType(std::string& s);
 extern bool g_bWarnAboutGrammars;
+extern bool g_bSupportUTF8;
 
 // REGEX_GRAMMARS arrives on the command line as a bare (unquoted) token; see
 // the comment in aluRegex.cc for why STRINGIFY()+dequote() is needed here.
@@ -281,6 +283,7 @@ extern bool g_bWarnAboutGrammars;
 		}													\
 	} while(0);
 
+static bool g_bUnicodeIndication = false;
 
 #define VERIFY_EXPR_RES(s,res) 								\
 		INC_TEST_INDEX2 {									\
@@ -315,11 +318,14 @@ extern bool g_bWarnAboutGrammars;
 			}                                               \
 		}                                                   \
 		PRINT_TEST_HEADER << s << " ==> " << res << ": ";			\
-		if (_res && _res2) std::cout << "OK\n";						\
+		if (_res && _res2) std::cout << "OK";						\
 		else {														\
-			std::cout << "*** NOT OK *** - " << *_result << "\n";	\
+			std::cout << "*** NOT OK *** - " << *_result;			\
 			countFailures++;  failedTests.push_back(testIndex);		\
 		}															\
+		if (g_bUnicodeIndication) 									\
+			std::cout << (g_bSupportUTF8 ? " (U)" : " (A)") << "\n"; \
+		else std::cout << "\n";										\
 	}
 
 #define VERIFY_ASSN_RES(s,exp) do {								\
@@ -1189,6 +1195,19 @@ int runALUUnitTests11(unsigned int onlyTest)
 	VERIFY_EXPR_RES("compare('Hello','Hello ')", "0");
 	VERIFY_EXPR_RES("compare('Hello', 'He', 'x')", "3");
 	VERIFY_EXPR_RES("compare('Hello', 'He', 'l')", "5");
+
+	// Smart comparisons are numeric only if both operands are numeric
+	VERIFY_EXPR_RES("0='hello'", "0");
+	VERIFY_EXPR_RES("'hello'=0", "0");
+	VERIFY_EXPR_RES("0!='hello'", "1");
+	VERIFY_EXPR_RES("''=0", "0");
+	VERIFY_EXPR_RES("5>'abc'", "0");
+	VERIFY_EXPR_RES("'abc'<1", "0");
+	VERIFY_EXPR_RES("'5 '=5", "0");
+	VERIFY_EXPR_RES("'9'<'10'", "1");
+	VERIFY_EXPR_RES("'9'<'1a'", "0");
+	VERIFY_EXPR_RES("'007'=7", "1");
+	VERIFY_EXPR_RES("'a'<'b'", "1");
 	return 0;
 }
 
@@ -1234,8 +1253,8 @@ int runALUUnitTests12(unsigned int onlyTest)
 	VERIFY_EXPR_RES("insert('xy','hello',0,-1)", "insert: Invalid negative length value: -1");
 	VERIFY_EXPR_RES("insert('xy','hello',0,1,'q')", "xhello");
 	VERIFY_EXPR_RES("insert('xy','hello',0,4,'q')", "xyqqhello");
-	VERIFY_EXPR_RES("insert('xy','hello',0,4,'')", "insert: Invalid pad argument: <>");
-	VERIFY_EXPR_RES("insert('xy','hello',0,4,'qq')", "insert: Invalid pad argument: <qq>");
+	VERIFY_EXPR_RES("insert('xy','hello',0,4,'')", "insert: Pad argument should be 1 char. Got <>");
+	VERIFY_EXPR_RES("insert('xy','hello',0,4,'qq')", "insert: Pad argument should be 1 char. Got <qq>");
 
 	VERIFY_EXPR_RES("justify('this is it',18)", "this     is     it");
 	VERIFY_EXPR_RES("justify('this is it',19)", "this     is      it");
@@ -1246,8 +1265,8 @@ int runALUUnitTests12(unsigned int onlyTest)
 	VERIFY_EXPR_RES("justify('this is it',-1)", "justify: len argument should be non-negative. Got -1");
 	VERIFY_EXPR_RES("justify('this is it',18,'x')", "thisxxxxxisxxxxxit");
 	VERIFY_EXPR_RES("justify('     this is it',18,'x')", "thisxxxxxisxxxxxit");
-	VERIFY_EXPR_RES("justify('this is it',18,'')", "justify: Invalid pad argument: <>");
-	VERIFY_EXPR_RES("justify('this is it',18,'qq')", "justify: Invalid pad argument: <qq>");
+	VERIFY_EXPR_RES("justify('this is it',18,'')", "justify: Pad argument should be 1 char. Got <>");
+	VERIFY_EXPR_RES("justify('this is it',18,'qq')", "justify: Pad argument should be 1 char. Got <qq>");
 
 	VERIFY_EXPR_RES("overlay('not','this is really right',9,6,'.')", "this is not... right");
 	VERIFY_EXPR_RES("overlay('eous','this is right',14,0,' ')", "this is righteous");
@@ -1260,6 +1279,9 @@ int runALUUnitTests12(unsigned int onlyTest)
 	VERIFY_EXPR_RES("reverse('12')", "21");
 	VERIFY_EXPR_RES("reverse('bird')", "drib");
 	VERIFY_EXPR_RES("reverse('chuck')", "kcuhc");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("reverse('שלום')", "םולש");
+	g_bSupportUTF8 = false;
 	return 0;
 }
 
@@ -1722,6 +1744,282 @@ int runALUUnitTests16(unsigned int onlyTest)
 	VERIFY_EXPR_RES("'['||@>||']'", "[hello world]");
 	setOutputAgent(nullptr);
 
+	return 0;
+}
+
+int runALUUnitTests17(unsigned int onlyTest)
+{
+	printHeader(onlyTest, "\nUnicode\n======================\n\n");
+
+	g_bUnicodeIndication = true;
+
+	configSpecLiteralSet("asc_eclair", "eclair");
+	configSpecLiteralSet("sml_eclair", "éclair");  // pre-composed é
+	configSpecLiteralSet("big_eclair", "éclair");  // not precomposed
+
+	counters.set(8,"Université Paris-Saclay");
+	counters.set(9, "The éclair tastes good");  // same as @sml_eclair
+
+	VERIFY_EXPR_RES("substr(#9,5,6)", "éclai");  // The accented e was counted as 2
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("substr(#9,5,6)", "éclair");
+	g_bSupportUTF8 = false;
+
+	VERIFY_EXPR_RES("pos('l',@asc_eclair)", "3");
+	VERIFY_EXPR_RES("pos('l',@sml_eclair)", "4");
+	VERIFY_EXPR_RES("pos('l',@big_eclair)", "5");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("pos('l',@asc_eclair)", "3");
+	VERIFY_EXPR_RES("pos('l',@sml_eclair)", "3");
+	VERIFY_EXPR_RES("pos('l',@big_eclair)", "3");
+	g_bSupportUTF8 = false;
+
+	// lastpos
+	VERIFY_EXPR_RES("lastpos(@sml_eclair, #9)", "5");
+	VERIFY_EXPR_RES("lastpos(@big_eclair, #9)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lastpos(@sml_eclair, #9)", "5");
+	VERIFY_EXPR_RES("lastpos(@big_eclair, #9)", "5");
+	g_bSupportUTF8 = false;
+
+	// includes
+	VERIFY_EXPR_RES("includes(#8,'Paris','Universite')", "1");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Universite')", "0");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "1");
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "0");  // The é is not encoded quite the same
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("includes(#8,'Lyons','Université')", "1");  // The é is encoded like the last time, but now it matches
+	g_bSupportUTF8 = false;
+
+	// includesall
+	VERIFY_EXPR_RES("includesall(#8, 'Paris', 'Université')", "1");  // composed e
+	VERIFY_EXPR_RES("includesall(#8, 'Paris', 'Université')", "0");  // non-composed e
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("includesall(#8, 'Paris', 'Université')", "1");  // composed e
+	VERIFY_EXPR_RES("includesall(#8, 'Paris', 'Université')", "1");  // non-composed e
+	g_bSupportUTF8 = false;
+
+	// left
+	VERIFY_EXPR_RES("left(@asc_eclair,3)", "ecl");
+	VERIFY_EXPR_RES("left(@sml_eclair,3)", "éc");
+	VERIFY_EXPR_RES("left(@big_eclair,3)", "é");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("left(@asc_eclair,3)", "ecl");
+	VERIFY_EXPR_RES("left(@sml_eclair,3)", "écl");
+	VERIFY_EXPR_RES("left(@big_eclair,3)", "écl");
+	g_bSupportUTF8 = false;
+
+	// center
+	VERIFY_EXPR_RES("center(#8, 10)", "ité Paris");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("center(#8, 10)", "sité Paris");
+	g_bSupportUTF8 = false;
+
+	// substitute
+	VERIFY_EXPR_RES("substitute(#9, @sml_eclair, 'X', 1)", "The X tastes good");
+	VERIFY_EXPR_RES("substitute(#9, @big_eclair, 'X', 1)", "The éclair tastes good");  // ASCII mode: different encoding, no match
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("substitute(#9, @sml_eclair, 'X', 1)", "The X tastes good");
+	VERIFY_EXPR_RES("substitute(#9, @big_eclair, 'X', 1)", "The X tastes good");
+	g_bSupportUTF8 = false;
+
+	VERIFY_EXPR_RES("ucase('éclair')", "éCLAIR");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("ucase('éclair')", "ÉCLAIR");
+	g_bSupportUTF8 = false;
+	VERIFY_EXPR_RES("lcase('ÉCLAIR')", "Éclair");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lcase('ÉCLAIR')", "éclair");
+	g_bSupportUTF8 = false;
+
+	// sfield
+	VERIFY_EXPR_RES("length(sfield('Hélvética', 2, 'é'))", "10");
+	VERIFY_EXPR_RES("length(sfield('Hélvética', 2, 'é'))", "6");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(sfield('Hélvética', 2, 'é'))", "2");
+	VERIFY_EXPR_RES("length(sfield('Hélvética', 2, 'é'))", "2");
+	g_bSupportUTF8 = false;
+
+	//lvalue, rvalue
+	VERIFY_EXPR_RES("lvalue('pié3.14','é')", "pié3.14");
+	VERIFY_EXPR_RES("rvalue('pié3.14','é')", "");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lvalue('pié3.14','é')", "pi");
+	VERIFY_EXPR_RES("rvalue('pié3.14','é')", "3.14");
+	g_bSupportUTF8 = false;
+
+	// sword
+	VERIFY_EXPR_RES("length(sword('Héélvética', 2, 'é'))", "13");
+	VERIFY_EXPR_RES("length(sword('Héélvética', 2, 'é'))", "4");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(sword('Héélvética', 2, 'é'))", "2");
+	VERIFY_EXPR_RES("length(sword('Héélvética', 2, 'é'))", "2");
+	g_bSupportUTF8 = false;
+
+	// abbrev
+	VERIFY_EXPR_RES("abbrev(@sml_eclair, @big_eclair)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("abbrev(@sml_eclair, @big_eclair)", "1");
+	g_bSupportUTF8 = false;
+	
+	// compare
+	VERIFY_EXPR_RES("compare(@sml_eclair, @big_eclair)", "1");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("compare(@sml_eclair, @big_eclair)", "0");
+	g_bSupportUTF8 = false;
+
+	// copies
+	VERIFY_EXPR_RES("length(copies(@big_eclair,3))", "24");
+	VERIFY_EXPR_RES("length(copies(@sml_eclair,3))", "21");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(copies(@big_eclair,3))", "18");
+	VERIFY_EXPR_RES("length(copies(@sml_eclair,3))", "18");
+	g_bSupportUTF8 = false;
+
+	// delstr, delword
+	VERIFY_EXPR_RES("length(delstr(#8, 5, 18))", "6");
+	VERIFY_EXPR_RES("length(delword(#9, 3, 2))", "11");
+	VERIFY_EXPR_RES("delword(#9, 2, 2)", "The good");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("length(delstr(#8, 5, 18))", "5");
+	VERIFY_EXPR_RES("length(delword(#9, 3, 2))", "10");
+	VERIFY_EXPR_RES("delword(#9, 2, 2)", "The good");
+	g_bSupportUTF8 = false;
+
+	// find
+	VERIFY_EXPR_RES("find(#9, @sml_eclair)", "2");
+	VERIFY_EXPR_RES("find(#9, @big_eclair)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("find(#9, @sml_eclair)", "2");
+	VERIFY_EXPR_RES("find(#9, @big_eclair)", "2");
+	g_bSupportUTF8 = false;
+
+	// index
+	VERIFY_EXPR_RES("index(#9, @sml_eclair)", "5");
+	VERIFY_EXPR_RES("index(#9, @big_eclair)", "0");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("index(#9, @sml_eclair)", "5");
+	VERIFY_EXPR_RES("index(#9, @big_eclair)", "5");
+	g_bSupportUTF8 = false;
+
+	// ucase/lcase where the mapped character has a different byte length
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("lcase('İstanbul')", "istanbul");
+	VERIFY_EXPR_RES("ucase('ſ')", "S");
+	VERIFY_EXPR_RES("length('straße')", "6");
+	VERIFY_EXPR_RES("length(ucase('straße'))", "6");
+	VERIFY_EXPR_RES("bytelength('ÉCLAIR')", "7");
+	VERIFY_EXPR_RES("bytelength(lcase('ÉCLAIR'))", "7");
+	g_bSupportUTF8 = false;
+
+	// translate and strip with non-ASCII characters
+	VERIFY_EXPR_RES("length(strip('éxé', 'B', 'è'))", "4");
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("strip('éxé', 'B', 'é')", "x");
+	VERIFY_EXPR_RES("strip('éxé', 'B', 'è')", "éxé");
+	VERIFY_EXPR_RES("strip('ééxéé', 'L', 'é')", "xéé");
+	VERIFY_EXPR_RES("strip('ééxéé', 'T', 'é')", "ééx");
+	VERIFY_EXPR_RES("strip('  éx  ', 'B')", "éx");
+	VERIFY_EXPR_RES("strip('xéx', 'B', 'x')", "é");
+	VERIFY_EXPR_RES("strip('éé', 'B', 'é')", "");
+	VERIFY_EXPR_RES("translate('abc','é','a')", "ébc");
+	VERIFY_EXPR_RES("translate('hello wörld','üa','öe')", "hallo würld");
+	VERIFY_EXPR_RES("translate('abc','xy','ab','é')", "xyc");
+	VERIFY_EXPR_RES("translate('abc','x','ab','é')", "xéc");
+	VERIFY_EXPR_RES("translate('éclair')", "ÉCLAIR");
+	VERIFY_EXPR_RES("translate('éclair', 'e', 'é')", "eclair");
+	g_bSupportUTF8 = false;
+
+	// Word functions use Unicode whitespace in UTF8 mode
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("words('a b é')", "3");
+	VERIFY_EXPR_RES("wordlength('éa　b', 1)", "2");
+	VERIFY_EXPR_RES("wordindex('é　bé', 2)", "3");
+	VERIFY_EXPR_RES("subword('é b　c d', 2, 2)", "b　c");
+	VERIFY_EXPR_RES("delword('é b　c d', 2, 2)", "é d");
+	VERIFY_EXPR_RES("space('é b', 1, '-')", "é-b");
+	g_bSupportUTF8 = false;
+
+	// Smart string comparisons in UTF8 mode are grapheme by grapheme, in canonical form
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("'é'='é'", "1");
+	VERIFY_EXPR_RES("'é'!='é'", "0");
+	VERIFY_EXPR_RES("'aéb'='aéb'", "1");
+	VERIFY_EXPR_RES("'aéb'<='aéb'", "1");
+	VERIFY_EXPR_RES("'aéb'>'aéb'", "0");
+	VERIFY_EXPR_RES("'é'>'z'", "1");
+	VERIFY_EXPR_RES("'é'>'f'", "1");
+	VERIFY_EXPR_RES("'é'<'ê'", "1");
+	VERIFY_EXPR_RES("'Z'<'a'", "1");
+	VERIFY_EXPR_RES("'ab'<'aéb'", "1");
+	VERIFY_EXPR_RES("'aé'<'aéb'", "1");
+	VERIFY_EXPR_RES("'aéb'>='aé'", "1");
+	VERIFY_EXPR_RES("'日本'='日本'", "1");
+	VERIFY_EXPR_RES("'日本'<'日本語'", "1");
+	VERIFY_EXPR_RES("'é'=='é'", "1");
+	VERIFY_EXPR_RES("'é'!=='é'", "0");
+	VERIFY_EXPR_RES("'é'<<'é'", "0");
+	VERIFY_EXPR_RES("'é'<<='é'", "1");
+	VERIFY_EXPR_RES("'é'>>='é'", "1");
+	VERIFY_EXPR_RES("'é'>>'f'", "1");
+	VERIFY_EXPR_RES("'é'>>'z'", "1");
+	VERIFY_EXPR_RES("'aéb'<<'aéc'", "1");
+	VERIFY_EXPR_RES("'3'=='3.0'", "0");
+
+	// Configured literal names are canonicalized, and may be non-ASCII
+	g_bSupportUTF8 = true;
+	configSpecLiteralSet("été_key", "v1");
+	configSpecLiteralSet("été_key2", "v2");
+	VERIFY_EXPR_RES("@été_key", "v1");
+	VERIFY_EXPR_RES("@été_key", "v1");
+	VERIFY_EXPR_RES("@été_key2", "v2");
+	VERIFY_EXPR_RES("'x' || @été_key2 || 'y'", "xv2y");
+	VERIFY_EXPR_RES("length(@été_key)", "2");
+
+	// utf8width and utf8substr
+	g_bSupportUTF8 = true;
+	VERIFY_EXPR_RES("utf8width('日本語')", "6");
+	VERIFY_EXPR_RES("utf8width('abc')", "3");
+	VERIFY_EXPR_RES("utf8width('')", "0");
+	VERIFY_EXPR_RES("utf8width('é')", "1");
+	VERIFY_EXPR_RES("utf8width('é')", "1");
+	VERIFY_EXPR_RES("utf8width('a日b')", "4");
+	VERIFY_EXPR_RES("utf8width('👨‍👩‍👧')", "2");
+	VERIFY_EXPR_RES("utf8width('́')", "0");
+	VERIFY_EXPR_RES("utf8width('a	b')", "2");
+	VERIFY_EXPR_RES("utf8substr('日本語日',1)", "日本語日");
+	VERIFY_EXPR_RES("utf8substr('日本語日',5)", "語日");
+	VERIFY_EXPR_RES("utf8substr('日本語日',4)", "語日");
+	VERIFY_EXPR_RES("utf8substr('日本語日',3)", "本語日");
+	VERIFY_EXPR_RES("utf8substr('日本語日',3,4)", "本語");
+	VERIFY_EXPR_RES("utf8substr('日本語日',4,4)", "語日");
+	VERIFY_EXPR_RES("utf8substr('日本語日',5,3)", "語");
+	VERIFY_EXPR_RES("utf8substr('日本語日',2,3)", "本");
+	VERIFY_EXPR_RES("utf8substr('日本語日',1,1)", "");
+	VERIFY_EXPR_RES("utf8substr('日本語日',1,2)", "日");
+	VERIFY_EXPR_RES("utf8substr('日本語日',-2)", "日");
+	VERIFY_EXPR_RES("utf8substr('日本語日',-1)", "");
+	VERIFY_EXPR_RES("utf8substr('日本語日',9)", "");
+	VERIFY_EXPR_RES("utf8substr('日本語日',0)", "NaN");
+	VERIFY_EXPR_RES("utf8substr('日本語日',1,0)", "");
+	VERIFY_EXPR_RES("utf8substr('ab日cd',3)", "日cd");
+	VERIFY_EXPR_RES("utf8substr('ab日cd',4)", "cd");
+	VERIFY_EXPR_RES("utf8substr('ab日cd',3,3)", "日c");
+	VERIFY_EXPR_RES("utf8substr('ab日cd',3,2)", "日");
+	VERIFY_EXPR_RES("utf8substr('ab日cd',1,3)", "ab");
+	VERIFY_EXPR_RES("utf8substr('ab日cd',1,-2)", "ab日c");
+	VERIFY_EXPR_RES("utf8substr('é日',1,1)", "é");
+	VERIFY_EXPR_RES("utf8substr('é日',2)", "日");
+	VERIFY_EXPR_RES("utf8substr('éa',2)", "a");
+	g_bSupportUTF8 = false;
+	VERIFY_EXPR_RES("utf8width('日')", "3");
+	VERIFY_EXPR_RES("utf8substr('abc',2,1)", "b");
+	VERIFY_EXPR_RES("utf8width('a\tb')", "2");
+	g_bSupportUTF8 = true;
+	g_bSupportUTF8 = false;
+	VERIFY_EXPR_RES("'é'='é'", "0");
+	VERIFY_EXPR_RES("'é'=='é'", "0");
+
 	if (countFailures) {
 		if (onlyTest == 0) {
 			std::cout << "\n*** " << countFailures << " of " << testIndex << " tests failed.\n";
@@ -1769,6 +2067,7 @@ int main (int argc, char** argv)
 	rc += runALUUnitTests14(onlyTest);
 	rc += runALUUnitTests15(onlyTest);
 	rc += runALUUnitTests16(onlyTest);
+	rc += runALUUnitTests17(onlyTest);
 
 	persistentVarSaveIfNeeded();
 

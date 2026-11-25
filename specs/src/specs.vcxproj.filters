@@ -69,6 +69,12 @@
     <ClCompile Include="utils\TimeUtils.cc">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\utf8.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\utf8proc.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="utils\alu.cc">
       <Filter>utils</Filter>
     </ClCompile>
@@ -85,6 +91,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="utils\platform.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\trace.cc">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="test\specs.cc">
@@ -137,6 +146,12 @@
     <ClInclude Include="utils\TimeUtils.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="utils\utf8.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\utf8proc\utf8proc.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="utils\alu.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -159,6 +174,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\platform.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\trace.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>

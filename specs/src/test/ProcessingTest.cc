@@ -9,6 +9,7 @@
 #include "processing/ProcessingState.h"
 #include "processing/StringBuilder.h"
 #include "processing/Reader.h"
+#include "utils/utf8.h"
 
 extern ALUCounters g_counters;
 extern char        g_printonly_rule;
@@ -41,27 +42,36 @@ std::string prettify(std::string label, std::string src)
 	std::string ret(label);
 	int max_chars = (label == "Res") ? 160 : 256;
 	ret += ": <";
-	for (char c : src) {
-		if (max_chars <= 0) {
-			if (max_chars == 0) {
-				ret += "...";
-				max_chars--;
+	if (UTF8_STRING_IS_ASCII(src)) {
+		for (char c : src) {
+			if (max_chars <= 0) {
+				if (max_chars == 0) {
+					ret += "...";
+					max_chars--;
+				}
+				continue;
 			}
-			continue;
+			switch (c) {
+				case '\n':
+					ret.append("\\n");
+					break;
+				case '\t':
+				    do {
+						ret+=' ';
+					} while (0 != ret.size() % 4);
+					break;
+				default:
+					ret+=c;
+			}
+			max_chars--;
 		}
-		switch (c) {
-			case '\n':
-				ret.append("\\n");
-				break;
-			case '\t':
-			    do {
-					ret+=' ';
-				} while (0 != ret.size() % 4);
-				break;
-			default:
-				ret+=c;
+	} else {
+		auto graphemes = utf8::toGraphemes(src);
+		for (auto& g : graphemes) {
+			if (1==g.size() && g[0]>=32 && g[0]<=127)
+				ret += g[0];
+			else ret += '.';
 		}
-		max_chars--;
 	}
 	ret += ">";
 	return ret;
@@ -399,7 +409,7 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "0", "");           // Test #71
 	VERIFY2(spec, "-5", "");          // Test #72
 	VERIFY2(spec, "3.14", "3.142.141.140.14");  // Test #73
-	VERIFY2(spec, "yes", "");         // Test #74
+	VERIFY2(spec, "yes", "yes");      // Test #74
 
 	spec =  "  a: w1 1 /:/ n   " \
 			"  set #0:=a       " \
@@ -421,8 +431,8 @@ int main(int argc, char** argv)
 	VERIFY2(spec, "67", "67: 67(1)");       // Test #77
 	VERIFY2(spec, "0", "0:");               // Test #78
 	VERIFY2(spec, "-3", "-3:");             // Test #79
-	VERIFY2(spec, "to keep the number", "to:");// VERIFY2(spec, "6.2", "6.2: 2(1) 3(1)"); -- this goes into an endless loop
-	VERIFY2(spec, "hello", "hello:");       // Test #81
+	VERIFY2(spec, "to keep the number", "to: 2(1)");// VERIFY2(spec, "6.2", "6.2: 2(1) 3(1)"); -- this goes into an endless loop
+	VERIFY2(spec, "hello", "hello: 2(1)");  // Test #81
 
 	// Test run-out cycle
 	VERIFY2("one 1 EOF two 2", " ", "one\n two");     // Test #82
@@ -515,7 +525,9 @@ int main(int argc, char** argv)
            "if '#1 > 900 & #1 < 1100' then       " \
            "   /OK/ 1                            " \
            "else                                 " \
-           "   /NOT OK/ 1                        " \
+           "   /NOT OK - / 1                     " \
+           "   PRINT '#1' NW                     " \
+           "   /is not between 900 and 1100/ NW  " \
            "endif                                ";
 	VERIFY(spec, "OK");  // TEST #104
 
@@ -1317,6 +1329,147 @@ int main(int argc, char** argv)
 	VERIFY2("print 'round(5.42, 1.2)' 1", "x", "5.4");  // TEST #312
 	VERIFY2("print 'round(5.42, x)' 1", "x", "Expression:round(5.42, x) - At run-out cycle, field identifier <x> used as argument to a non-statistical function");  // Test #313
 	VERIFY2("print 'round(5.42, hello)' 1", "x", "5");   // Test #314
+
+	// ---- UTF-8 support (utf8 configured literal / SPECS_UTF8) ----
+	// The non-ASCII characters are spelled out as escapes so that the source
+	// is read the same way by every compiler.
+#define U_E_ACUTE  "\xc3\xa9"          /* é  U+00E9 */
+#define U_O_UMLAUT "\xc3\xb6"          /* ö  U+00F6 */
+#define U_I_UMLAUT "\xc3\xaf"          /* ï  U+00EF */
+#define U_MIDDOT   "\xc2\xb7"          /* ·  U+00B7 */
+#define U_NBSP     "\xc2\xa0"          /*    U+00A0 */
+#define U_ALPHA    "\xce\xb1"          /* α  U+03B1 */
+#define U_BETA     "\xce\xb2"          /* β  U+03B2 */
+#define U_NICHI    "\xe6\x97\xa5"      /* 日 U+65E5 */
+#define U_HON      "\xe6\x9c\xac"      /* 本 U+672C */
+#define U_GO       "\xe8\xaa\x9e"      /* 語 U+8A9E */
+#define U_FW_SEMI  "\xef\xbc\x9b"      /* ； U+FF1B */
+#define U_GRIN     "\xf0\x9f\x98\x80"  /* 😀 U+1F600 */
+#define U_COMBINING_ACUTE "\xcc\x81"   /* U+0301 */
+#define U_THUMBS_SKIN "\xf0\x9f\x91\x8d\xf0\x9f\x8f\xbd" /* 👍🏽 */
+#define U_JAPAN_FLAG "\xf0\x9f\x87\xaf\xf0\x9f\x87\xb5"  /* 🇯🇵 */
+#define U_FAMILY "\xf0\x9f\x91\xa8\xe2\x80\x8d\xf0\x9f\x91\xa9\xe2\x80\x8d\xf0\x9f\x91\xa7" /* 👨‍👩‍👧 */
+#define U_SHIN     "\xd7\xa9"           /* ש U+05E9 */
+#define U_LAMED    "\xd7\x9c"           /* ל U+05DC */
+#define U_VAV      "\xd7\x95"           /* ו U+05D5 */
+#define U_FINALMEM "\xd7\x9d"           /* ם U+05DD */
+#define U_AYIN     "\xd7\xa2"           /* ע U+05E2 */
+#define U_SHALOM   U_SHIN U_LAMED U_VAV U_FINALMEM
+#define U_OLAM     U_AYIN U_VAV U_LAMED U_FINALMEM
+
+	// The utf8 helpers
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("h" U_E_ACUTE "llo"))==5), "");  // TEST #315
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string(U_GRIN U_NICHI "a"))==3), "");  // TEST #316
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("\xff" "a\x80"))==3), "");  // TEST #317
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("\xe6\x97"))==2 && !utf8::isValid(std::string("\xe6\x97"))), "");  // TEST #318
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("\xc0\xaf"))==2 && !utf8::isValid(std::string("\xc0\xaf"))), "");  // TEST #319
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("\xed\xa0\x80"))==3 && utf8::isValid(std::string(U_GRIN))), "");  // TEST #320
+	VERIFYCMD(MYASSERT(utf8::charToByte(std::string("a" U_E_ACUTE "b"),2)==3 && utf8::charToByte(std::string("a" U_E_ACUTE "b"),4)==std::string::npos), "");  // TEST #321
+	VERIFYCMD(MYASSERT(utf8::substr(std::string("a" U_NICHI U_HON "b"),1,2)==U_NICHI U_HON && utf8::substr(std::string("ab"),5,1)==""), "");  // TEST #322
+	VERIFYCMD(MYASSERT(utf8::isSpace(0xA0) && utf8::isSpace(0x3000) && utf8::isSpace('\t') && !utf8::isSpace('A') && !utf8::isSpace(0xB7)), "");  // TEST #323
+	VERIFYCMD({ std::string src("x" U_GRIN "\xff\xc3" U_E_ACUTE); std::string dst; for (char32_t cp : utf8::toCodePoints(src)) utf8::append(dst, cp); MYASSERT(dst==src); }, "");  // TEST #324
+
+	g_bSupportUTF8 = true;
+
+	// Character ranges, words, fields and output positions count characters
+	VERIFY2("1-3 1", "h" U_E_ACUTE "llo w" U_O_UMLAUT "rld", "h" U_E_ACUTE "l");  // TEST #325
+	VERIFY2("w2 1 '|' n", "h" U_E_ACUTE "llo w" U_O_UMLAUT "rld", "w" U_O_UMLAUT "rld|");  // TEST #326
+	VERIFY2("w1 1 3 10", U_E_ACUTE U_E_ACUTE "x", U_E_ACUTE U_E_ACUTE "x      x");  // TEST #327
+	VERIFY2("w2 1.4 right", "h" U_E_ACUTE "llo w" U_O_UMLAUT "rld", U_O_UMLAUT "rld");  // TEST #328
+	VERIFY2("pad " U_MIDDOT " w1 1.8 center '!' n", U_NICHI U_HON U_GO, U_MIDDOT U_MIDDOT U_NICHI U_HON U_GO U_MIDDOT U_MIDDOT U_MIDDOT "!");  // TEST #329
+	VERIFY2("1-* (1,10,\"L3\")", "W" U_O_UMLAUT "rterb" "\xc3\xbc" "cher-Eintr" "\xc3\xa4" "ge", "W" U_O_UMLAUT "r...r" "\xc3\xa4" "ge");  // TEST #330
+	VERIFY2("fs " U_FW_SEMI " f2 1 f3 nw", "a" U_FW_SEMI "b" U_FW_SEMI "c", "b c");  // TEST #331
+	VERIFY2("w2 1", U_ALPHA U_NBSP U_BETA, U_BETA);  // TEST #332
+	VERIFY2("print 'wordstart(2)' 1 print 'wordend(1)' nw", "na" U_I_UMLAUT "ve caf" U_E_ACUTE, "7 5");  // TEST #333
+	VERIFY2("-3;-1 1", "a" U_E_ACUTE U_NICHI "b", U_E_ACUTE U_NICHI "b");  // TEST #334
+	VERIFY2("pad " U_MIDDOT " number 1", "x", U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT "1");  // TEST #335
+	VERIFY2("pad ab 1 1", "x", "Bad pad character <ab>  with length 2 at index 2. Must be single character.");  // TEST #336
+	VERIFY2("1-* 1 3 nw", "ab\xff" "cd", "ab\xff" "cd \xff");  // TEST #337
+	VERIFY2("'" U_NICHI U_HON U_GO "' 1 'x' 2", "x", U_NICHI "x" U_GO);  // TEST #338
+	VERIFY2("'" U_NICHI "' 3 'x' 1", "x", "x " U_NICHI);  // TEST #339
+	VERIFY2("SUBSTR 2-3 OF w2 1", "h" U_E_ACUTE "llo w" U_O_UMLAUT "rld", U_O_UMLAUT "r");  // TEST #340
+	VERIFY2("ws " U_MIDDOT " w2 1", "a" U_MIDDOT "b" U_MIDDOT "c", "b");  // TEST #341
+	VERIFY2("w1 1 w2 nw", U_GRIN U_GRIN " " U_GRIN, U_GRIN U_GRIN " " U_GRIN);  // TEST #342
+
+	g_bSupportUTF8 = false;
+
+	// ... while without the flag, everything is still counted in bytes
+	VERIFY2("1-3 1", "h" U_E_ACUTE "llo", "h" U_E_ACUTE);  // TEST #343
+	VERIFY2("pad " U_MIDDOT " 1 1", "x", "Bad pad character <" U_MIDDOT ">  with length 2 at index 2. Must be single character.");  // TEST #344
+	VERIFY2("fs " U_FW_SEMI " f2 1", "a" U_FW_SEMI "b", "");  // TEST #345
+
+	// ALU string lengths and positions are code points in UTF8 mode
+	VERIFY2("print 'length(@@)' 1", U_SHALOM, "8");  // TEST #346
+
+	g_bSupportUTF8 = true;
+
+	VERIFY2("print 'length(@@)' 1", U_SHALOM, "4");  // TEST #347
+	VERIFY2("print 'bytelength(@@)' 1", U_SHALOM, "8");  // TEST #348
+	VERIFY2("print 'length(@@)' 1 print 'wordlen(1)' nw print 'fieldlength(1)' nw print 'wordlength(@@,2)' nw",
+			U_SHALOM " " U_OLAM, "9 4 9 4");  // TEST #349
+	VERIFY2("print 'substr(@@,2,2)' 1 print 'left(@@,2)' nw print 'right(@@,2)' nw print 'center(@@,2)' nw",
+			U_SHALOM, U_LAMED U_VAV " " U_SHIN U_LAMED " " U_VAV U_FINALMEM " " U_LAMED U_VAV);  // TEST #350
+	VERIFY2("print 'pos(\"" U_LAMED "\",@@)' 1 print 'lastpos(\"" U_LAMED "\",@@)' nw "
+			"print 'index(@@,\"" U_LAMED "\",3)' nw print 'wordindex(@@,2)' nw",
+			U_SHALOM " " U_OLAM, "2 8 8 6");  // TEST #351
+	VERIFY2("print 'abbrev(@@,\"" U_SHIN U_LAMED "x\",2)' 1 print 'delstr(@@,2,2)' nw",
+			U_SHALOM, "1 " U_SHIN U_FINALMEM);  // TEST #352
+	VERIFY2("print 'insert(word(1),word(2),1,2)' 1 print 'overlay(word(1),word(2),2,2)' nw",
+			U_SHALOM " " U_OLAM, U_AYIN U_SHIN U_LAMED U_VAV U_LAMED U_FINALMEM " "
+			U_AYIN U_SHIN U_LAMED U_FINALMEM);  // TEST #353
+	VERIFY2("print 'justify(@@,12,\"" U_MIDDOT "\")' 1 print 'space(@@,2,\"" U_MIDDOT "\")' nw",
+			U_SHALOM " " U_OLAM, U_SHALOM U_MIDDOT U_MIDDOT U_MIDDOT U_MIDDOT U_OLAM " "
+			U_SHALOM U_MIDDOT U_MIDDOT U_OLAM);  // TEST #354
+	VERIFY2("print 'compare(\"a" U_E_ACUTE "b\",\"a" U_E_ACUTE "c\")' 1 "
+			"print 'verify(\"a" U_E_ACUTE "b\",\"" U_E_ACUTE "\",\"M\")' nw",
+			"x", "3 2");  // TEST #355
+	VERIFY2("print 'delword(@@,1,1)' 1 print 'subword(@@,2,1)' nw",
+			U_SHALOM " " U_OLAM, U_OLAM " " U_OLAM);  // TEST #356
+	VERIFY2("print 'splus(\"" U_LAMED "\",1,2)' 1",
+			U_SHALOM, U_VAV U_FINALMEM);  // TEST #357
+	VERIFY2("print 'insert(\"" U_E_ACUTE "\",\"a\",3,3,\"" U_MIDDOT "\")' 1 "
+			"print 'overlay(\"" U_E_ACUTE "\",\"a\",3,3,\"" U_MIDDOT "\")' nw",
+			"x", "a" U_E_ACUTE U_MIDDOT U_MIDDOT " a" U_MIDDOT U_E_ACUTE U_MIDDOT U_MIDDOT);  // TEST #358
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string("e" U_COMBINING_ACUTE "clair"))==6), "");  // TEST #359
+	VERIFY2("print 'length(@@)' 1 1-3 nw", U_E_ACUTE "clair", "6 " U_E_ACUTE "cl");  // TEST #360
+	VERIFY2("print 'length(@@)' 1 1-3 nw", "e" U_COMBINING_ACUTE "clair", "6 e" U_COMBINING_ACUTE "cl");  // TEST #361
+	VERIFY2("print 'length(@@)' 1 print 'wordlen(1)' nw print 'fieldlength(1)' nw print 'wordlength(@@,1)' nw",
+			"e" U_COMBINING_ACUTE "clair", "6 6 6 6");  // TEST #362
+	VERIFYCMD(MYASSERT(utf8::charCount(std::string(U_THUMBS_SKIN U_JAPAN_FLAG U_FAMILY))==3), "");  // TEST #363
+	VERIFY2("print 'pos(\"c\",@@)' 1 print 'substr(@@,1,2)' nw print 'delstr(@@,2,1)' nw",
+			"e" U_COMBINING_ACUTE "clair", "2 e" U_COMBINING_ACUTE "c e" U_COMBINING_ACUTE "lair");  // TEST #364
+
+	VERIFY("/éclair/ ucase 1", "ÉCLAIR");        // Test #365
+	VERIFY("/ÉCLAIR/ lcase 1", "éclair");        // Test #366
+
+	g_bSupportUTF8 = false;
+
+	VERIFY("/éclair/ ucase 1", "éCLAIR");        // Test #367
+	VERIFY("/ÉCLAIR/ lcase 1", "Éclair");        // Test #368
+
+	// Configured literal names are canonicalized, and may be non-ASCII
+	g_bSupportUTF8 = true;
+	configSpecLiteralSet("\u00e9t\u00e9", "hello");  // pre-composed
+	VERIFY2("REQUIRES \u00e9t\u00e9 1-* 1", "abc", "abc");        // Test #369
+	VERIFY2("REQUIRES e" U_COMBINING_ACUTE "te" U_COMBINING_ACUTE " 1-* 1", "abc", "abc");  // Test #370
+	VERIFY2("print '@e" U_COMBINING_ACUTE "te" U_COMBINING_ACUTE " || @\u00e9t\u00e9' 1", "abc", "hellohello");  // Test #371
+	// Frequency map dumps are aligned by terminal columns, not by bytes
+	VERIFY2("a: w1 . EOF print 'fmap_dump(a,\"lin\",\"s\",0)'",
+			"ab\n\u65e5\u672c\u8a9e\nab\n\u65e5\u672c\u8a9e\n\u65e5\u672c\u8a9e",
+			"+--------+---+\n| ab     | 2 |\n| \u65e5\u672c\u8a9e | 3 |\n+--------+---+\n");  // Test #372
+	// Frequency map keys are canonical, and sorted as the comparison operators do
+	VERIFY2("a: w1 . EOF print 'fmap_dump(a,\"lin\",\"s\",0)'",
+			"e" U_COMBINING_ACUTE "\n\u00e9\nf\nz",
+			"+---+---+\n| f | 1 |\n| z | 1 |\n| \u00e9 | 2 |\n+---+---+\n");  // Test #373
+	VERIFY2("a: w1 . EOF print 'fmap_dump(a,\"txt\",\"cd\",0)' 1 print 'fmap_count(a,\"e" U_COMBINING_ACUTE "\")' nw",
+			"e" U_COMBINING_ACUTE "\n\u00e9\nf\nz",
+			"\u00e9 2\nz 1\nf 1\n 2");  // Test #374
+	// countocc finds a needle whichever way its accented characters are encoded
+	VERIFY2("print 'countocc(\"e" U_COMBINING_ACUTE "\")' 1 print 'countocc_get(\"\u00e9\")' nw",
+			"caf\u00e9", "1 1");  // Test #375
+	VERIFY2("print 'countocc(\"\u00f1\")' 1",
+			"ma" "n\xcc\x83" "ana", "1");  // Test #376
+	g_bSupportUTF8 = false;
 
 	if (errorCount) {
 		if (onlyTest == 0) {

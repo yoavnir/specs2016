@@ -6,7 +6,6 @@
 // For the ssw parameter, use zero (0) for the short switch if none is needed
 #define CONFIG_PARAMS  \
 	X(bDummy,                       bool,         false,  0,DummyOption,        true)       \
-	X(bSupportUTF8,                 bool,         false,  0,EXP-UTF8,           true)       \
 	X(bThreaded,                    bool,         false,  t,threaded,           true)       \
 	X(bOutputTranslatedAscii,       bool,         false,  0,toASCII,            true)       \
 	X(bForceFileRead,               bool,         false,  0,force-read-input,   true)       \
@@ -17,9 +16,12 @@
 	X(outputFile,                   std::string,  "",     o,outFile,            NEXTARG)    \
 	X(bShellCmd,                    bool,         false,  X,shell,              true)       \
 	X(bLocalWhiteSpace,             bool,         true,   w,spaceWS,            false)      \
-	X(bDebugAluCompile,             bool,         false,  0,debug-alu-comp,     true)       \
-	X(bDebugAluRun,                 bool,         false,  0,debug-alu-run,      true)       \
-	X(debugAluFile,                 std::string,  "",     d,debug-alu-file,     NEXTARG)    \
+	X(bDebugAll,                    bool,         false,  0,trace-all,          true)       \
+	X(bDebugSpecsCompile,           bool,         false,  0,trace-comp,         true)       \
+	X(bDebugSpecsRun,               bool,         false,  0,trace-run,          true)       \
+	X(bDebugAluCompile,             bool,         false,  0,trace-alu-comp,     true)       \
+	X(bDebugAluRun,                 bool,         false,  0,trace-alu-run,      true)       \
+	X(TraceFile,                    std::string,  "",     d,trace-file,         NEXTARG)    \
 	X(bNoWhileGuard,                bool,         false,  0,no-while-guard,     true)       \
 	X(bShowProgress,                bool,         false,  0,progress,           true)       \
 	X(configurationFile,            std::string,  "",     c,config,             NEXTARG)    \
@@ -53,6 +55,8 @@
 CONFIG_PARAMS
 #undef X
 
+extern bool g_bSupportUTF8;
+
 #define EXTERNAL_FUNC_AUTO  "auto"
 #define EXTERNAL_FUNC_ON    "on"
 #define EXTERNAL_FUNC_OFF   "off"
@@ -65,6 +69,10 @@ CONFIG_PARAMS
 typedef void (*useKeyValueCB)(std::string& key, std::string& value);
 void readConfigurationFile(useKeyValueCB cb = nullptr);
 
+// Sets g_bSupportUTF8 from the utf8 configured literal or the SPECS_UTF8
+// environment variable. Returns false if the configured literal is invalid.
+bool configureUTF8Mode();
+
 bool configSpecLiteralExists(std::string& key);
 
 bool configSpecLiteralDefined(std::string& key);
@@ -74,6 +82,7 @@ std::string& configSpecLiteralGet(std::string& key);
 std::string& configSpecLiteralGetWithDefault(std::string& key, std::string& _default);
 
 void configSpecLiteralSet(std::string& key, std::string& value);
+void configSpecLiteralSet(const char* key, const char* value);
 
 bool anyNonPrimaryInputStreamDefined();
 

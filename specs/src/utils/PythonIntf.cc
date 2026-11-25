@@ -150,7 +150,13 @@ public:
 			pValObj = PyFloat_FromDouble(pValue->getFloat());
 			break;
 		case counterType__Str:
-			pValObj = PyUnicode_FromString(pValue->getStr().c_str());
+			if (g_bSupportUTF8) {
+				// Invalid bytes become lone surrogates, and are restored on return
+				const std::string& s = pValue->getStr();
+				pValObj = PyUnicode_DecodeUTF8(s.data(), Py_ssize_t(s.size()), "surrogateescape");
+			} else {
+				pValObj = PyUnicode_FromString(pValue->getStr().c_str());
+			}
 			break;
 		default:
 			pValObj = Py_None;
@@ -234,6 +240,15 @@ public:
 				pRet = mkValue(ALUInt(PyInt_AsLong(pResult)));
 			} else if (PyFloat_Check(pResult)) {
 				pRet = mkValue(ALUFloat(PyFloat_AsDouble(pResult)));
+			} else if (PyUnicode_Check(pResult) && g_bSupportUTF8) {
+				PyObject* pBytes = PyUnicode_AsEncodedString(pResult, "utf-8", "surrogateescape");
+				if (pBytes) {
+					pRet = mkValue(std::string(PyBytes_AS_STRING(pBytes), size_t(PyBytes_GET_SIZE(pBytes))));
+					Py_DECREF(pBytes);
+				} else {
+					PyErr_Clear();
+					pRet = mkValue(std::string(""));
+				}
 			} else if (PyUnicode_Check(pResult)) {
 				PyObject* pDefBytes = PyUnicode_AsASCIIString(pResult);
 				if (pDefBytes) {

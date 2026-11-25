@@ -7,6 +7,8 @@
 #include "conversions.h"
 #include "utils/SpecString.h"
 #include "utils/TimeUtils.h"
+#include "utils/utf8.h"
+#include "utils/utf8proc/utf8proc.h"
 
 static std::string conv_identity(std::string& s) {
 	return s;
@@ -14,6 +16,10 @@ static std::string conv_identity(std::string& s) {
 
 static std::string conv_ROT13(std::string& s) {
 	std::string ret;
+	if (UTF8_STRING_NOT_ASCII(s)) {
+		std::string err = "ROT13 only applies to ASCII strings. Got: <" + s + ">";
+		MYTHROW(err); 
+	}
 	ret.resize(s.length());
 	for (size_t i=0; i<s.length(); i++) {
 		if ((s[i]>='A' && s[i]<='M') || (s[i]>='a' && s[i]<='m')) {
@@ -151,16 +157,34 @@ std::string conv_BSWAP(std::string& s) {
 	return ret;
 }
 
-std::string conv_LCASE(std::string& s) {
-	std::string ret(s);
-	for (auto & c : ret) c = tolower(c);
+// Simple case mapping, one code point at a time. The mapped character may
+// have a different UTF-8 length than the original. Invalid bytes round-trip
+// unchanged, as they decode to the surrogateescape range, which has no case.
+static std::string convertCase(const std::string& s, utf8proc_int32_t (*mapFunc)(utf8proc_int32_t)) {
+	std::string ret;
+	ret.reserve(s.length());
+	for (char32_t cp : utf8::toCodePoints(s)) {
+		utf8::append(ret, char32_t(mapFunc(utf8proc_int32_t(cp))));
+	}
 	return ret;
 }
 
+std::string conv_LCASE(std::string& s) {
+	if (UTF8_STRING_IS_ASCII(s)) {
+		std::string ret(s);
+		for (auto & c : ret) c = tolower(c);
+		return ret;
+	}
+	return convertCase(s, utf8proc_tolower);
+}
+
 std::string conv_UCASE(std::string& s) {
-	std::string ret(s);
-	for (auto & c : ret) c = toupper(c);
-	return ret;
+	if (UTF8_STRING_IS_ASCII(s)) {
+		std::string ret(s);
+		for (auto & c : ret) c = toupper(c);
+		return ret;
+	}
+	return convertCase(s, utf8proc_toupper);
 }
 
 static std::string conv_ti2f(std::string& s, std::string& parm)

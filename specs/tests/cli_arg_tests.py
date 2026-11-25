@@ -16,11 +16,12 @@ errfile = "cli_err"
 def read_file(path):
     if not os.path.exists(path):
         return None
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8", errors="surrogateescape") as f:
         return f.read()
 
 def run_test(description, cmdline, expected_rc=0, expected_out=None,
-             expected_err=None, spec="w1 1", inp="alpha beta\n"):
+             expected_err=None, spec="w1 1", inp="alpha beta\n",
+             unexpected_err=None):
     """Run a single test case.
        cmdline:      the arguments to specs, as a single string.  The tokens
                      @spec@, @in@ and @out@ are replaced by the names of the
@@ -28,6 +29,7 @@ def run_test(description, cmdline, expected_rc=0, expected_out=None,
        expected_rc:  the expected return code
        expected_out: if not None, the expected content of the output file
        expected_err: if not None, a substring expected in the standard error
+       unexpected_err: if not None, a substring that must not appear in the standard error
        spec:         the content written to the spec file
        inp:          the content written to the input file
     """
@@ -36,9 +38,9 @@ def run_test(description, cmdline, expected_rc=0, expected_out=None,
     if tests_to_run is not None and str(case_counter) not in tests_to_run:
         return
 
-    with open(specfile, "w") as f:
+    with open(specfile, "w", encoding="utf-8") as f:
         f.write(spec)
-    with open(inpfile, "w") as f:
+    with open(inpfile, "w", encoding="utf-8") as f:
         f.write(inp)
     if os.path.exists(outfile):
         os.remove(outfile)
@@ -67,6 +69,10 @@ def run_test(description, cmdline, expected_rc=0, expected_out=None,
         passed = False
         reason = "stderr mismatch.\n  Expected to contain: {}\n  Actual:   {}".format(
             repr(expected_err), repr(actual_err.strip()))
+    elif unexpected_err is not None and unexpected_err in actual_err:
+        passed = False
+        reason = "stderr mismatch.\n  Expected not to contain: {}\n  Actual:   {}".format(
+            repr(unexpected_err), repr(actual_err.strip()))
 
     if passed:
         sys.stdout.write("Test #{:03d}: OK    - {}\n".format(case_counter, description))
@@ -311,6 +317,85 @@ else:
     os.environ["SPECSPATH"] = saved_specpath
 for d in lookup_dirs:
     shutil.rmtree(d, ignore_errors=True)
+
+# =====================================================================
+# UTF8 mode. In order of precedence it is set by the +UTF8 / +UNICODE
+# directive, the utf8 configured literal, and the SPECS_UTF8 environment
+# variable. The input "h\u00e9llo" has a two-byte character, so the
+# range 1-3 yields "h\u00e9" in ASCII mode and "h\u00e9l" in UTF8 mode.
+# =====================================================================
+saved_utf8_env = os.environ.pop("SPECS_UTF8", None)
+utf8_inp = "h\u00e9llo\n"
+ascii_out = "h\u00e9\n"
+utf8_out = "h\u00e9l\n"
+
+def run_utf8_test(description, cmdline, env=None, **kwargs):
+    if env is None:
+        os.environ.pop("SPECS_UTF8", None)
+    else:
+        os.environ["SPECS_UTF8"] = env
+    kwargs.setdefault("inp", utf8_inp)
+    run_test(description, cmdline, **kwargs)
+    os.environ.pop("SPECS_UTF8", None)
+
+run_utf8_test("UTF8: ASCII mode by default",
+    "-i @in@ -o @out@ 1-3 1", expected_out=ascii_out)
+run_utf8_test("UTF8: utf8=1 selects UTF8 mode",
+    "-s utf8=1 -i @in@ -o @out@ 1-3 1", expected_out=utf8_out)
+run_utf8_test("UTF8: utf8=0 selects ASCII mode",
+    "-s utf8=0 -i @in@ -o @out@ 1-3 1", expected_out=ascii_out)
+run_utf8_test("UTF8: an invalid utf8 value is an error",
+    "-s utf8=2 -i @in@ -o @out@ 1-3 1", expected_rc=252,
+    expected_err="Invalid value <2> for configured literal utf8")
+run_utf8_test("UTF8: an empty utf8 value is an error",
+    "-s utf8= -i @in@ -o @out@ 1-3 1", expected_rc=252,
+    expected_err="Invalid value <> for configured literal utf8")
+run_utf8_test("UTF8: SPECS_UTF8=1 selects UTF8 mode",
+    "-i @in@ -o @out@ 1-3 1", env="1", expected_out=utf8_out)
+run_utf8_test("UTF8: SPECS_UTF8=0 selects ASCII mode",
+    "-i @in@ -o @out@ 1-3 1", env="0", expected_out=ascii_out)
+run_utf8_test("UTF8: an invalid SPECS_UTF8 warns and selects ASCII mode",
+    "-i @in@ -o @out@ 1-3 1", env="yes", expected_out=ascii_out,
+    expected_err="Ignoring invalid value <yes> for environment variable SPECS_UTF8")
+run_utf8_test("UTF8: an empty SPECS_UTF8 is ignored silently",
+    "-i @in@ -o @out@ 1-3 1", env="", expected_out=ascii_out,
+    unexpected_err="SPECS_UTF8")
+run_utf8_test("UTF8: utf8=0 overrides SPECS_UTF8=1",
+    "-s utf8=0 -i @in@ -o @out@ 1-3 1", env="1", expected_out=ascii_out)
+run_utf8_test("UTF8: utf8=1 overrides SPECS_UTF8=0",
+    "-s utf8=1 -i @in@ -o @out@ 1-3 1", env="0", expected_out=utf8_out)
+run_utf8_test("UTF8: utf8=1 overrides an invalid SPECS_UTF8 without a warning",
+    "-s utf8=1 -i @in@ -o @out@ 1-3 1", env="yes", expected_out=utf8_out,
+    unexpected_err="SPECS_UTF8")
+run_utf8_test("UTF8: the --EXP-UTF8 switch is no longer recognized",
+    "--EXP-UTF8 -i @in@ -o @out@ 1-3 1", expected_rc=252,
+    expected_err="Unrecognized switch <--EXP-UTF8>")
+run_utf8_test("UTF8: +UTF8 on selects UTF8 mode",
+    "-f @spec@ -i @in@ -o @out@", spec="+UTF8 on\n1-3 1\n", expected_out=utf8_out)
+run_utf8_test("UTF8: +UNICODE on selects UTF8 mode",
+    "-f @spec@ -i @in@ -o @out@", spec="+UNICODE on\n1-3 1\n", expected_out=utf8_out)
+run_utf8_test("UTF8: +UTF8 off selects ASCII mode",
+    "-f @spec@ -i @in@ -o @out@", spec="+UTF8 off\n1-3 1\n", expected_out=ascii_out)
+run_utf8_test("UTF8: the directive value is case-insensitive",
+    "-f @spec@ -i @in@ -o @out@", spec="+UNICODE ON\n1-3 1\n", expected_out=utf8_out)
+run_utf8_test("UTF8: +UTF8 off overrides utf8=1 and SPECS_UTF8=1",
+    "-s utf8=1 -f @spec@ -i @in@ -o @out@", env="1",
+    spec="+UTF8 off\n1-3 1\n", expected_out=ascii_out)
+run_utf8_test("UTF8: +UNICODE on overrides utf8=0 and SPECS_UTF8=0",
+    "-s utf8=0 -f @spec@ -i @in@ -o @out@", env="0",
+    spec="+UNICODE on\n1-3 1\n", expected_out=utf8_out)
+run_utf8_test("UTF8: +UTF8 without a value is an error",
+    "-f @spec@ -i @in@ -o @out@", spec="+UTF8\n1-3 1\n", expected_rc=252,
+    expected_err="The +UTF8 directive must be followed by either ON or OFF")
+run_utf8_test("UTF8: +UNICODE with an invalid value is an error",
+    "-f @spec@ -i @in@ -o @out@", spec="+UNICODE maybe\n1-3 1\n", expected_rc=252,
+    expected_err="The +UNICODE directive must be followed by either ON or OFF")
+run_utf8_test("UTF8: +UTF8 with extra words is an error",
+    "-f @spec@ -i @in@ -o @out@", spec="+UTF8 on please\n1-3 1\n", expected_rc=252,
+    expected_err="The +UTF8 directive must be followed by either ON or OFF")
+
+if saved_utf8_env is not None:
+    os.environ["SPECS_UTF8"] = saved_utf8_env
 
 
 # =====================================================================

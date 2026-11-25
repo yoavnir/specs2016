@@ -32,8 +32,11 @@ PSpecString mkSpecString(Args&&... args)
 	return std::make_shared<std::string>(std::forward<Args>(args)...);
 }
 
-void SpecString_Resize(PSpecString ps, size_t newSize, void* pPadChar, outputAlignment oa, ellipsisSpec es);
+// The pad is a single character, which in UTF-8 mode may be several bytes long.
+// In UTF-8 mode newSize is measured in characters rather than bytes.
+void SpecString_Resize(PSpecString ps, size_t newSize, const std::string& pad, outputAlignment oa, ellipsisSpec es);
 
-void SpecString_Resize(PSpecString ps, size_t newSize, char pPadChar, outputAlignment oa, ellipsisSpec es);
+// count copies of the pad character
+std::string SpecString_Pad(const std::string& pad, size_t count);
 
 #endif

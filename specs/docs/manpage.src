@@ -1075,7 +1075,34 @@ Returns a binary representation of the unsigned integer in x with field of lengt
 .IP "tobin(x)" 3
 Returns a binary representation of the unsigned integer in x. The field length is automatically determined by the value of x, but will be 1, 2, 4, or 8 characters in length.
 .IP "length(x)" 3
-Returns the length of the argument when viewed as a string. For example, len(37) is 2; len('hello') is 5.
+Returns the length of the argument when viewed as a string. In UTF8 mode the
+result is the number of extended grapheme clusters; in ASCII mode it is the number of
+bytes. For example, length(37) is 2 and length('hello') is 5.
+.IP "bytelength(x)" 3
+Returns the length of the argument in bytes, in both ASCII mode and UTF8 mode.
+.IP "utf8width(s)" 3
+Returns the width of the string
+.I s
+in terminal columns. Control characters and combining marks take no columns, wide
+(East Asian) characters and emoji take two columns, and all else takes one. A grapheme
+cluster takes the width of its widest code point. In ASCII mode every byte takes one
+column, except for control characters.
+.IP "utf8substr(s,start,len)" 3
+Like substr(), but
+.I start
+and
+.I len
+are measured in terminal columns, not in characters. Column 1 is the first column. A character
+that does not start exactly at
+.I start
+is excluded, and the result is never wider than
+.I len,
+but as wide as that allows. If every character takes two columns, utf8substr(s,5) and
+utf8substr(s,4) both start at the third character. A negative
+.I start
+counts from the end of the string, and
+.I len
+defaults to the rest of the string.
 .IP "first()" 3
 Returns 1 during the 
 .B run-in
@@ -1456,6 +1483,13 @@ The value will be set in future invocations of
 .B specs.
 The function returns the value in 
 .I value. 
+The name of a persistent variable must consist of ASCII characters only, even in UTF8 mode. The functions
+.I pset,
+.I pget,
+.I pdefined
+and
+.I pclear
+fail if the name contains any other character.
 .IP "pget(var,default)" 3
 Returns the value of the
 .B persistent variable
@@ -1957,7 +1991,10 @@ Returns a string containing a dump of the frequency map for
 .B Field Identifier
 a. If the frequency map is empty, returns the content of the configuration string
 .B EmptyFrequencyMapMessage,
-and if that is not defined, returns an empty string.
+and if that is not defined, returns an empty string. In UTF8 mode the textual formats measure
+the width of the key column in terminal columns, as utf8width() does, and not in bytes.
+In UTF8 mode the keys are kept in canonical form, so the composed and decomposed spellings of a
+character are one key, and the alphabetical sort orders compare keys as the comparison operators do.
 .IP "countocc(n,h)" 3
 Returns the number of matches for this particular 
 .B needle 
@@ -2027,6 +2064,9 @@ known to be affected on the platform it is running on. See the guidebook, Chapte
 grammar (the default) is not affected and is the recommended choice when portability across
 platforms matters.
 .P
+A warning is also emitted when you try to use the regex functions with non-ASCII strings. This 
+is not (yet?) supported.
+.P
 To silence the warning, set the
 .B regexWarn
 configuration label to
@@ -2089,6 +2129,22 @@ to contain a value such as "total 120" on Unix-like systems:
     +SET ex1 ls -l
 .IP "+IN" 3
 This directive followed by a command runs the command and uses its output as the input stream for the specification.
+.IP "+UTF8 or +UNICODE" 3
+This directive followed by
+.B on
+or
+.B off
+makes the specification run in UTF8 mode or in ASCII mode respectively (see
+.B utf8
+under
+.B CONFIGURATION FILE).
+The value is not case-sensitive, and any other value is an error. The directive overrides both the
+.B utf8
+configured literal and the
+.B SPECS_UTF8
+environment variable. For example:
+
+    +UTF8 on
 
 .SH ELISIONS
 .B specs
@@ -2279,7 +2335,13 @@ Makes the program write the output records to a file rather than to standard out
 Executes the output records as shell commands rather than emitting them to standard output.
 .IP "--spaceWS" 3
 Makes the program treat the only spaces as the default word separator. Otherwise all locale-defined whitespace is treated as the default word separator.
-.IP "--debug-alu-comp" 3
+.IP "--trace-comp" 3
+Prints out detailed information about the parsing and compiling of specifications.
+.B EXPAND!!!
+.IP "--trace-run" 3
+Prints out detailed step-by-step information about record processing.
+.B EXPAND!!!
+.IP "--trace-alu-comp" 3
 Prints out detailed information about the parsing and compiling of expressions. This is available in standard builds; it produces no output if
 .B specs
 was built with the
@@ -2290,7 +2352,7 @@ The output is formatted as markdown and can be viewed with any markdown viewer s
 .B Visual Studio Code
 or
 .B glow.
-.IP "--debug-alu-run" 3
+.IP "--trace-alu-run" 3
 Prints out detailed step-by-step information about the evaluation of expressions. This is available in standard builds; it produces no output if
 .B specs
 was built with the
@@ -2299,12 +2361,11 @@ configure flag. The output shows the RPN expression and the execution stack step
 .B Visual Studio Code
 or
 .B glow.
-.IP "--debug-alu-file or -d" 3
-Redirects the output of --debug-alu-comp and --debug-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits. As both
-.I --debug-alu-comp
-and
-.I --debug-alu-run
-produce markdown content, it is 
+.IP "--trace-all" 3
+Enables all four of the above tracing switches.
+.IP "--trace-file or -d" 3
+Redirects the output of --trace-comp, --trace-run, --trace-alu-comp and --trace-alu-run to the named file rather than to standard error. The file is overwritten. If it cannot be opened for writing, the program reports an error and exits. As all
+the trace switches produce markdown content, it is 
 .B recommended
 to name the file something with the suffix 
 .I .md
@@ -2344,7 +2405,7 @@ Sets the record length for
 .B fixed
 and
 .B fixed-delimited
-records.
+records. In UTF8 mode the length counts grapheme clusters rather than bytes, so a multi-byte character is never split across records.
 .IP "--linedel" 3
 For 
 .B delimited
@@ -2413,8 +2474,9 @@ This file contains some configuration options. For now, it only allows you to se
 .B while-guard-limit,
 .B SPECSPATH,
 .B regexType,
+.B regexWarn,
 and
-.B regexWarn.
+.B utf8.
 For example, an entry such as this:
 .P
     timezone: "Europe/Belfast"
@@ -2454,7 +2516,9 @@ Controls whether
 warns when a regular expression grammar known to behave differently across platforms is selected
 (see the
 .B Regular Expressions
-section above). Set to
+section above), and also when 
+.B UTF8
+(non-ASCII) strings are used with the regex functions. Set to
 .B 0, false,
 or
 .B no
@@ -2463,12 +2527,66 @@ to silence the warning:
     regexWarn: 0
 .P
 Any other value, or leaving it unset, keeps the warning enabled, which is the default.
+.IP "utf8" 3
+Experimental. Selects the mode in which
+.B specs
+runs. In
+.B UTF8 mode
+the input records, the output records and the specification are treated as UTF-8 text, and character ranges, word and field positions, output positions, widths, alignment and padding count extended grapheme clusters rather than bytes. In
+.B ASCII mode,
+which is the default, everything counts bytes. The mode is decided as follows, from the highest precedence to the lowest:
+.RS
+.IP 1. 3
+The
+.B +UTF8
+or
+.B +UNICODE
+directive in a specification file (see
+.B DIRECTIVES).
+.B on
+selects UTF8 mode and
+.B off
+selects ASCII mode.
+.IP 2. 3
+The
+.B utf8
+configured literal, set in the configuration file or with
+.B --set.
+.B 1
+selects UTF8 mode and
+.B 0
+selects ASCII mode. Any other value is an error, and
+.B specs
+exits without running.
+.IP 3. 3
+The
+.B SPECS_UTF8
+environment variable.
+.B 1
+selects UTF8 mode and
+.B 0
+selects ASCII mode. An empty value is treated as if the variable were not set. Any other value causes a warning on standard error, and
+.B specs
+runs in ASCII mode.
+.IP 4. 3
+Otherwise,
+.B specs
+runs in ASCII mode.
+.RE
+.IP "" 3
+So, unless a specification file says otherwise,
+.B specs --set utf8=1
+always runs in UTF8 mode,
+.B specs --set utf8=0
+always runs in ASCII mode, and
+.B specs --set utf8=2
+exits with an error.
 .SS "System-Defined Labels"
 The system also defines some labels:
 .IP "version" 3
 This returns the version of 
 .B specs, 
-for example "1.1.0"
+for example "1.2.0"
 .P
 To find out the version of specs that you are using, use the following command:
 .P 
@@ -2486,9 +2604,13 @@ or
 .B Disabled
 depending on whether support for python function is available.
 .IP "platform" 3
-contains a string describing this build. For example:
+contains a string describing the platform this build is running on. For example:
 .p
     POSIX (darwin) system using the g++ compiler and Python 3.9.6 - release variation
+.IP "unicode" 3
+contains a string describing the unicode support in this executable. For example:
+.p
+    Unicode version 18.0.0 provided by utf8proc version 2.12.0
 .IP "build-commit" 3
 contains the git commit hash (short form) of the build. For example:
 .p
@@ -2496,7 +2618,7 @@ contains the git commit hash (short form) of the build. For example:
 .IP "build-branch" 3
 contains the git branch name of the build. May be empty if not available. For example:
 .p
-    dev-1.1.0
+    dev-1.2.0
 .IP "build-time" 3
 contains the timestamp of when the build was created. Format is
 .B yyyy-MM-ddTHH:mm:ss.
@@ -2594,6 +2716,10 @@ Finally, let's make our own version of the multi-column display:
 .SH SEE ALSO
 sed(1), awk(1)
 .SH BUGS
-Likely some. Open a ticket in github if you find them.
+The UTF8 mode of
+.B specs
+is still experimental. Not all functionality is Unicode-aware.
+.PP
+Open a ticket on GitHub if you find other bugs.
 .SH AUTHOR
 Yoav Nir (yoav.nir@gmail.com)

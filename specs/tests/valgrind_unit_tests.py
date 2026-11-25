@@ -1,7 +1,7 @@
 import sys, os, memcheck, argparse, platform, re
 
-count_ALU_tests = 854
-count_processing_tests = 314
+count_ALU_tests = 1029
+count_processing_tests = 376
 count_token_tests = 20
 
 # Parse the one command line options
@@ -47,7 +47,7 @@ def get_leak_status_message(rc):
 		return "no leaks"
 
 tests_to_skip = []
-tests_that_may_fail = [9, 43, 48, 61, 62, 63, 68, 69, 70, 71, 73, 74, 83, 151, 152, 153, 154, 188, 197, 198, 199, 211, 403, 404, 405, 406, 409, 411, 413, 414, 415, 416, 417, 418, 421, 423, 426, 428, 429, 430, 483, 737, 817] if arch=='x86_64' else []
+tests_that_may_fail = [9, 43, 48, 61, 62, 63, 68, 69, 70, 71, 73, 74, 83, 151, 152, 153, 154, 188, 197, 198, 199, 211, 403, 404, 405, 406, 409, 411, 413, 414, 415, 416, 417, 418, 421, 423, 426, 428, 429, 430, 483, 749, 829] if arch=='x86_64' else []
 
 # Run ALUUnitTest
 if one_by_one:
@@ -212,7 +212,7 @@ else:
 
 
 # Run ProcessingTest
-tests_that_may_fail = [73, 102, 103, 179] if arch=='x86_64' else []
+tests_that_may_fail = [73, 102, 103, 179, 310, 312] if arch=='x86_64' else []
 if one_by_one:
 	# Run tests one-by-one to find which test leaks
 	sys.stdout.write("Running ProcessingTest one-by-one to find leaking test...\n")

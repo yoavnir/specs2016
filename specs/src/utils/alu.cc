@@ -20,6 +20,8 @@
 #include "processing/Config.h"  // for configured literals
 #include "processing/Reader.h"  // for g_pReader
 #include "specitems/specItems.h"  // for MAX_CONTEXT_SIZE
+#include "utils/trace.h"
+#include "utils/utf8.h"
 
 extern stateQueryAgent* g_pStateQueryAgent;
 extern outputAgent* g_pOutputAgent;
@@ -31,26 +33,6 @@ PValue g_pOOBValue = std::make_shared<ALUValue>(std::string(""));
 
 // Final errors to be printed by `specs`
 std::ostringstream g_FinalErrors;
-
-// Destination for ALU debug output (--debug-alu-comp / --debug-alu-run).
-// Defaults to std::cerr; redirected to a file by --debug-alu-file / -d.
-static std::ofstream g_aluDumpFile;
-std::ostream* g_pAluDumpStream = &std::cerr;
-
-std::ostream& aluDumpStream()
-{
-	return *g_pAluDumpStream;
-}
-
-bool openAluDumpStream(const std::string& filename)
-{
-	g_aluDumpFile.open(filename, std::ios::out | std::ios::trunc);
-	if (!g_aluDumpFile.is_open()) {
-		return false;
-	}
-	g_pAluDumpStream = &g_aluDumpFile;
-	return true;
-}
 
 bool isOOBValue(PValue pv)
 {
@@ -629,100 +611,124 @@ PValue		AluBinaryOperator::computeOR(PValue op1, PValue op2)
 	RETURN_COND(op1->getBool() || op2->getBool());
 }
 
+// Smart comparisons are numeric only if both operands are. An operand with no value (NaN) counts as numeric.
+static bool compareAsNumbers(const PValue& op1, const PValue& op2)
+{
+	return (counterType__None==op1->getType() || op1->isNumeric()) &&
+			(counterType__None==op2->getType() || op2->isNumeric());
+}
+
+// String comparison for the smart and the strict operators. In UTF8 mode, non-ASCII strings are compared grapheme by grapheme,
+// each in its canonical (NFC) form, so that composed and decomposed forms are equal. Different graphemes are
+// ordered by their UTF-8 bytes, which for valid text is code point order. A prefix sorts before its extensions.
+int smartStrCompare(const std::string& s1, const std::string& s2)
+{
+	if (!UTF8_STRINGS_NOT_ASCII2(s1, s2)) {
+		return s1.compare(s2);
+	}
+	auto g1 = utf8::toGraphemes(s1);
+	auto g2 = utf8::toGraphemes(s2);
+	for (size_t i = 0; i < g1.length() && i < g2.length(); i++) {
+		int c = utf8::canonicalGrapheme(g1[i]).compare(utf8::canonicalGrapheme(g2[i]));
+		if (c != 0) return c;
+	}
+	return (g1.length() == g2.length()) ? 0 : (g1.length() < g2.length() ? -1 : 1);
+}
+
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeEQ(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() == op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr() == op2->getStr());
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) == 0);
 }
 
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeNE(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() != op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr() != op2->getStr());
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) != 0);
 }
 
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeGT(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() > op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr().compare(op2->getStr()) > 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) > 0);
 }
 
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeGE(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() >= op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr().compare(op2->getStr()) >= 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) >= 0);
 }
 
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeLT(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() < op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr().compare(op2->getStr()) < 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) < 0);
 }
 
 // Simple floating point or string comparison
 PValue		AluBinaryOperator::computeLE(PValue op1, PValue op2)
 {
-	if (op1->isNumeric() || op2->isNumeric()) {
+	if (compareAsNumbers(op1, op2)) {
 		RETURN_COND(op1->getFloat() <= op2->getFloat());
 	}
 
-	RETURN_COND(op1->getStr().compare(op2->getStr()) <= 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) <= 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSEQ(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr() == op2->getStr());
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) == 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSNE(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr() != op2->getStr());
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) != 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSGT(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr().compare(op2->getStr()) > 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) > 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSLT(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr().compare(op2->getStr()) < 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) < 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSGTE(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr().compare(op2->getStr()) >= 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) >= 0);
 }
 
 // Strict floating point or string comparison
 PValue		AluBinaryOperator::computeSLTE(PValue op1, PValue op2)
 {
-	RETURN_COND(op1->getStr().compare(op2->getStr()) <= 0);
+	RETURN_COND(smartStrCompare(op1->getStr(), op2->getStr()) <= 0);
 }
 
 
@@ -1159,14 +1165,6 @@ static bool isLetter(char c) {
 	return ((c>='a' && c<='z') || (c>='A' && c<='Z'));
 }
 
-static bool isCharInIdentifier(char c) {
-	return isLetter(c) || isDigit(c) || c=='_';
-}
-
-static bool isFirstCharInIdentifier(char c) {
-	return isLetter(c) || c=='_';
-}
-
 #define X(nm,st) if (s==st) return std::make_shared<AluUnitUnaryOperator>(s);
 static PUnit getUnaryOperator(std::string& s)
 {
@@ -1193,7 +1191,7 @@ static PUnit getAssnOperator(std::string& s)
 
 void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 {
-	std::ostream& os = aluDumpStream();
+	std::ostream& os = traceStream();
 
 	if (0==vec.size()) {
 		os << "- **" << title << "**: ALU Vector empty";
@@ -1216,7 +1214,7 @@ void dumpAluVec(const char* title, AluVec& vec, int pointer = -1)
 		"```\n";
 }
 
-void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = aluDumpStream())
+void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stream = traceStream())
 {
 	if (stk.empty()) {
 		stream << "- **" << title << "**: Empty\n";
@@ -1247,7 +1245,7 @@ void dumpAluStack(const char* title, std::stack<PValue>& stk, std::ostream& stre
 
 void dumpAluStack(const char* title, std::stack<PUnit>& stk)
 {
-	std::ostream& os = aluDumpStream();
+	std::ostream& os = traceStream();
 	if (stk.empty()) {
 		os << "**" << title << "**: Empty\n";
 		return;
@@ -1294,13 +1292,9 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 	}
 
 #ifdef ALU_DUMP
-	static bool b_PrintedHeader = false;
 	if (g_bDebugAluCompile) {
-		if (!b_PrintedHeader) {
-			b_PrintedHeader = true;
-			aluDumpStream() << "\n# Compilation Phase - Parsing ALU Expressions";
-		}
-		aluDumpStream() << "\n## Parsing Expression: `" << s << "`\n";
+		pushTraceStream();
+		traceStream() << "\n## Parsing Expression: `" << s << "`\n";
 	}
 #endif
 
@@ -1396,11 +1390,9 @@ bool parseAluExpression(std::string& s, AluVec& vec)
 		}
 
 		// Also a configured string
-		if (*c=='@' && isFirstCharInIdentifier(c[1])) {
+		if (*c=='@' && c+1<cEnd && utf8::identifierLength(c+1, cEnd-(c+1), g_bSupportUTF8)>0) {
 			char* tokEnd = ++c;
-			while (isCharInIdentifier(*tokEnd) && (tokEnd<cEnd)) {
-				tokEnd++;
-			}
+			tokEnd += utf8::identifierLength(c, cEnd-c, g_bSupportUTF8);
 			std::string key = std::string(c,tokEnd-c);
 			if (!configSpecLiteralExists(key)) {
 				std::string err = "Key '" + key + "' not found in expression.";
@@ -1636,7 +1628,7 @@ bool parseAluStatement(std::string& s, ALUCounterKey& k, AluAssnOperator* pAss, 
 
 #ifdef ALU_DUMP
 	if (g_bDebugAluCompile) {
-		aluDumpStream() << "- **Assigning to counter `" << ctr->_identify(true) << "` with `" << pAssnOp->_identify(true) << "`**\n";
+		traceStream() << "- **Assigning to counter `" << ctr->_identify(true) << "` with `" << pAssnOp->_identify(true) << "`**\n";
 	}
 #endif
 
@@ -1836,7 +1828,7 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	for (auto pUnit : source) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluCompile && g_bVerbose) {
-			aluDumpStream() << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
+			traceStream() << "\n\n\nStep #" << stepNumber << " - available operands: " << availableOperands << std::endl;
 			dumpAluVec("Source", source, stepNumber);
 			dumpAluVec("Dest", dest);
 			dumpAluStack("operator stack",operatorStack);
@@ -1962,7 +1954,10 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	}
 
 #ifdef ALU_DUMP
-	if (g_bDebugAluCompile) dumpAluVec("RPN Expression", dest);
+	if (g_bDebugAluCompile) {
+		dumpAluVec("RPN Expression", dest);
+		traceAccumulateStrings(popTraceStream());
+	}
 #endif
 
 	return true;
@@ -1975,9 +1970,9 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 	if (g_bDebugAluRun) {                              \
 	  	PValue v = (item);                             \
 		if (npopped) {                                 \
- 			aluDumpStream() << "- **Popping " << npopped << " items off of the stack and pushing `" << *v << "`**" << txt << "\n"; \
+ 			traceStream() << "- **Popping " << npopped << " items off of the stack and pushing `" << *v << "`**" << txt << "\n"; \
 		} else {                                       \
- 			aluDumpStream() << "- **Pushing `" << *v << "` onto the stack**" << txt << "\n"; \
+ 			traceStream() << "- **Pushing `" << *v << "` onto the stack**" << txt << "\n"; \
 		}                                              \
 		computeStack.push(v);                                 \
 	}                                                  \
@@ -1990,14 +1985,14 @@ bool convertAluVecToPostfix(AluVec& source, AluVec& dest, bool clearSource)
 		auto pFI = std::dynamic_pointer_cast<AluUnitFieldIdentifier>(unit); \
 	  	PValue v = pFI->evaluate();                    \
 		if (npopped) {                                 \
- 			aluDumpStream() << "- **Popping " << npopped << " items off of the stack and pushing "; \
+ 			traceStream() << "- **Popping " << npopped << " items off of the stack and pushing "; \
 		} else {                                       \
- 			aluDumpStream() << "- **Pushing ";         \
+ 			traceStream() << "- **Pushing ";         \
 		}                                              \
 		if (pFI->asIdentifier()) {                     \
-			aluDumpStream() << "field identifier `" << char(v->getInt()) << "` onto the stack** - will appear as the number " << v->getInt() << "\n"; \
+			traceStream() << "field identifier `" << char(v->getInt()) << "` onto the stack** - will appear as the number " << v->getInt() << "\n"; \
 		} else {                                       \
-			aluDumpStream() << "'" << *v << "` onto the stack** - value from field identifier\n"; \
+			traceStream() << "'" << *v << "` onto the stack** - value from field identifier\n"; \
 		}                                              \
 		computeStack.push(v);                                 \
 	}                                                  \
@@ -2022,16 +2017,11 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 	PValue result;
 
 #ifdef ALU_DUMP
-	static bool bPrintedTitle = false;
 	if (g_bDebugAluRun) {
-		if (!bPrintedTitle) {
-			aluDumpStream() << "\n# Runtime - Evaluating Expressions\n";
-			bPrintedTitle = true;
-		}
 		if (rawExpression.empty()) {
-			aluDumpStream() << "\n## Evaluate RPN Expression `" << AluVec2String(expr, false) << "`\n"; 
+			traceStream() << "\n### Evaluate RPN Expression `" << AluVec2String(expr, false) << "`\n"; 
 		} else {
-			aluDumpStream() << "\n## Evaluate `" << rawExpression << "`\n";
+			traceStream() << "\n### Evaluate `" << rawExpression << "`\n";
 		}
 	}
 	int index = 0;
@@ -2040,7 +2030,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 	for (PUnit pUnit : expr) {
 #ifdef ALU_DUMP
 		if (g_bDebugAluRun) {
-			aluDumpStream() << "\n### Step " << index+1 << "\n";
+			traceStream() << "\n#### Step " << index+1 << "\n";
 			dumpAluStack("Stack", computeStack);
 			dumpAluVec("RPN expression with index", expr, index);
 		}
@@ -2175,7 +2165,7 @@ PValue evaluateExpression(AluVec& expr, ALUCounters* pctrs, std::string& rawExpr
 
 #ifdef ALU_DUMP
 	if (g_bDebugAluRun) {
-		aluDumpStream() << "### Result\n**Expression evaluated to** `" << ret->getStr() 
+		traceStream() << "\n#### Result\n**Expression evaluated to** `" << ret->getStr() 
 			<< "` (" << ((ret->isExact()) ? "exact " : "inexact ")
 			<< ALUCounterType2Str[ret->getType()] << ")\n";
 	}

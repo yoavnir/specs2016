@@ -399,6 +399,108 @@ Output:
 2024-01-15  ERROR       192.168.1.100
 ```
 
+## ASCII Mode and UTF8 Mode {#utf8-mode}
+
+**specs** runs in one of two modes: **ASCII mode**, which is the default, or
+**UTF8 mode**, which is experimental. The mode determines what **specs** means
+by a *character*.
+
+- In ASCII mode, every byte counts as one character. The name does not mean
+  that bytes above 127 are rejected; **specs** simply handles each byte
+  separately.
+- In UTF8 mode, input, output and specifications are all expected to use
+  UTF-8. A character is one user-perceived character (an extended grapheme
+  cluster), which may contain more than one Unicode code point.
+
+The modes cannot be mixed: input, output and specifications must all use the
+same mode. Plain ASCII text behaves identically in both modes. The difference
+appears with non-ASCII text. For example, the Hebrew word *shalom*, encoded as
+U+05E9 U+05DC U+05D5 U+05DD, contains four Unicode code points but occupies
+eight bytes, so it has length 4 in UTF8 mode and length 8 in ASCII mode.
+
+In UTF8 mode:
+
+- Character ranges (`1-5`, `-3;-1`), word and field positions, output
+  positions and widths, alignment, truncation and ellipsis count grapheme
+  clusters rather than bytes.
+- `WORDSEPARATOR` and `FIELDSEPARATOR` accept non-ASCII characters, and the
+  default word separator recognizes Unicode whitespace such as the no-break
+  space (U+00A0) and ideographic space (U+3000).
+- `PAD` accepts any single grapheme, such as `pad ·`.
+- String functions introduced in [Chapter 8](#chap8), such as `length()`,
+  `center()` and `insert()`, use grapheme lengths and positions.
+  `bytelength()` is available when the byte count is needed.
+- The comparison operators `=`, `!=`, `<`, `<=`, `>` and `>=` compare strings
+  grapheme by grapheme, in canonical form, so the two encodings of `é` (see below)
+  are equal. Different graphemes are ordered by code point, not by a dictionary
+  or locale collation: `é` sorts after `z`, as `Z` sorts before `a`. The strict
+  operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) compare strings the same way;
+  they differ from the others only in never comparing numerically.
+- Python functions can receive and return non-ASCII strings (see
+  **[Chapter 14](#chap14)**).
+- Names of configured literals may contain Unicode letters and digits, and are
+  compared in canonical form, so `@été` finds the literal whichever way the `é`
+  was encoded.
+- A byte that is not part of a well-formed UTF-8 sequence counts as one
+  character and is passed through unchanged.
+
+### Selecting the Mode
+
+The mode is selected in the following order, from highest precedence to
+lowest:
+
+1. A `+UTF8 on|off` or `+UNICODE on|off` directive in a spec file (see
+   **[Directives](#directives)** in Chapter 5).
+2. The `utf8` configured literal, set in the configuration file or with
+   `-s`/`--set` (see **[Chapter 4](#chap4)**). `1` selects UTF8 mode and `0`
+   selects ASCII mode; any other value is an error.
+3. The `SPECS_UTF8` environment variable. `1` selects UTF8 mode and `0`
+   selects ASCII mode. An empty value is ignored; any other value produces a
+   warning and selects ASCII mode.
+4. If none of these is set, **specs** uses ASCII mode.
+
+For a single invocation, use `-s utf8=1` or `-s utf8=0`. To make UTF8 mode
+your usual interactive default, put this in your shell profile, such as
+`~/.bashrc` or `~/.zshrc`:
+
+```
+export SPECS_UTF8=1
+```
+
+The `utf8` entry in the configuration file has the same effect and also
+applies to programs that do not read your shell profile, such as `cron` jobs.
+A command-line `-s utf8=0` can still switch one invocation back to ASCII mode,
+while a directive in a spec file overrides every other setting.
+
+### Graphemes and Code Points
+
+A character on the screen may contain more than one Unicode code point. For
+example, the grapheme `é` has two valid encodings:
+
+| Appearance | Encoding | Code points | `length()` | `bytelength()` |
+|------------|----------|-------------|------------|----------------|
+| `é` | U+00E9 (precomposed) | 1 | 1 | 2 |
+| `é` | U+0065 U+0301 (e + combining acute accent) | 2 | 1 | 3 |
+
+The two strings look identical and both have length 1 in UTF8 mode. The
+`length()` and `bytelength()` functions are introduced in Chapter 8; the table
+uses them only to illustrate the two ways of counting. Both encodings form one
+extended grapheme cluster.
+
+Widths count grapheme clusters, not screen columns. Wide characters such as the
+Han character 'sun' (U+65E5) take two columns on most terminals, so columns of CJK 
+text may not line up. This is not unique to CJK - Latin letters also have 
+fullwidth forms such as U+FF21 -- the fullwidth Latin capital letter A.
+The `utf8width()` and `utf8substr()` functions, described in
+**[Chapter 9](#chap9)**, measure and cut strings by columns.
+
+UTF8 mode remains experimental because not every feature is UTF-8 aware. Specifically: 
+
+- Regular expressions still treat strings as bytes. You will get a warning if you 
+  try to feed a regular expression a non-ASCII string, but that warning can be
+  disabled with the regexWarn configured literal - see the 
+  [Special configured literals](#configured-literal-settings) section in chapter 4.
+
 ---
 
 # Chapter 3: When to Use Command Line Switches
@@ -562,25 +664,37 @@ Treat only the space character as a word separator, rather than all locale-defin
 
 Disable the while-guard, which normally causes specs to abort after 5000 iterations of a `WHILE` loop (a safety net against infinite loops). Use this when you intentionally have a long-running loop. The default limit of 5000 can also be changed via the `while-guard-limit` key in the configuration file (**[Chapter 4](#chap4)**).
 
-### `--EXP-UTF8`
-
-**Experimental** — enable UTF-8 aware character counting. When this switch is set, multi-byte UTF-8 sequences are treated as a single logical character for the purposes of character-range selection, word start/end positions, and output column calculations. This flag is marked experimental because it mostly does not work yet.
-
-### `--debug-alu-comp`
+### `--trace-alu-comp`
 
 Print detailed information about the parsing and compilation of ALU expressions. Useful for diagnosing why an expression is being parsed differently than expected. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows how the expression is parsed into tokens both before and after its conversion to reverse polish notation (RPN). It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**. 
 
 **NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
-### `--debug-alu-run`
+### `--trace-alu-run`
 
 Print step-by-step evaluation information for ALU expressions at runtime. Very verbose; useful for tracing a complex expression's intermediate values. Available in standard builds; it produces no output if **specs** was built with the `--no_alu_debug` configure flag. The output shows the RPN expression and the execution stack step-by-step as the expression is evaluated. It is formatted as markdown and can be viewed in any markdown viewer, such as **Visual Studio Code** or **glow**.
 
 **NOTE:** On Windows **RELEASE** builds compiled with **MSBuild** (such as the GitHub official builds), no ALU debug output is produced.
 
-### `--debug-alu-file file` or `-d file`
+### `--trace-comp`
 
-Redirect the output of `--debug-alu-comp` and `--debug-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As both `--debug-alu-comp` and `--debug-alu-run` produce markdown output, it is recommended to name the file with the suffix `.md`.
+Print detailed information about the parsing and compilation of specifications.
+
+**NOTE**: EXPAND!!!!!!
+
+### `--trace-run`
+
+Print detailed information about record processing during a **specs** run. Specifying `--trace-run` implies `--trace_comp`. You do not need to specify both.
+
+**NOTE**: EXPAND!!!!!!
+
+### `--trace-all`
+
+Print detailed information about all four of the above categories.
+
+### `--trace-file file` or `-d file`
+
+Redirect the output of `--trace-comp`, `--trace_run`, `--trace-alu-comp` and `--trace-alu-run` to the named file instead of standard error. The file is overwritten. If it cannot be opened for writing, **specs** reports an error and exits. As these commands produce markdown output, it is recommended to name the file with the suffix `.md`.
 
 ### `--timezone name`
 
@@ -621,7 +735,7 @@ specs invoked as 'specs'
         Compiler version: 9.2.1 20191120 (Red Hat 9.2.1-2)
         High/low watermark for queues: 5000 / 4500
         Random Provider: rand48
-        Git tag: v1.1.0
+        Git tag: v1.2.0
         Python version: 3.12.1
         Floating point precision: 18 (16 bytes)
 ```
@@ -720,7 +834,9 @@ See **[Regular Expressions](#regex-portability)** in Chapter 8 for the list of v
 
 ### `regexWarn`
 
-Controls whether specs warns when a regular expression grammar known to behave differently across platforms is selected (see **[Regular Expressions](#regex-portability)** in Chapter 8). Set to `0`, `false`, or `no` to silence the warning:
+Controls whether specs warns when a regular expression grammar known to behave differently across platforms is selected (see **[Regular Expressions](#regex-portability)** in Chapter 8). 
+It also warns the first time one of the regex functions (`rmatch`, `rsearch`, or `rreplace`) is called with a non-ASCII regular expression or string.
+Set to `0`, `false`, or `no` to silence the warnings:
 ```
 regexWarn: 0
 ```
@@ -778,6 +894,17 @@ while-guard-limit: 100000
 
 This is equivalent to using `--no-while-guard` if you set it high enough, but safer because it still caps runaway loops. Use `--no-while-guard` only when you truly need unlimited iterations.
 
+### `utf8`
+
+Sets the processing mode described in
+**[ASCII Mode and UTF8 Mode](#utf8-mode)** in Chapter 2:
+
+```
+utf8: 1
+```
+
+Use `1` for UTF8 mode or `0` for ASCII mode. Any other value is an error.
+
 ## Useful Personal Constants
 
 The configuration file is a good place to put any value you use in multiple specifications:
@@ -801,6 +928,7 @@ These exist automatically without any `~/.specs` entry:
 |------|-------|
 | `@version` | The specs version string, e.g., `1.0.0` |
 | `@platform` | Platform description (OS, compiler, Python version) |
+| `@unicode` | Describes the Unicode version supported in UTF8 mode, and the library version |
 | `@cols` | Number of columns in the terminal (from `$COLUMNS`, or 80, when no terminal is attached) |
 | `@rows` | Number of rows in the terminal (from `$LINES`, or 24, when no terminal is attached) |
 | `@python` | Either `Enabled` or `Disabled` |
@@ -1007,6 +1135,17 @@ Combined with a spec, this makes a self-contained script:
    WORD 9  1
    WORD 5 NW
 ```
+
+### `+UTF8 on|off` / `+UNICODE on|off`
+
+Selects UTF8 mode (`on`) or ASCII mode (`off`) for this specification (see **[ASCII Mode and UTF8 Mode](#utf8-mode)** in Chapter 2). The two names are equivalent, and the value is not case-sensitive. The directive overrides the `utf8` configured literal and the `SPECS_UTF8` environment variable, so a spec file written for UTF-8 data behaves the same for every user:
+
+```specs
++UTF8 on
+   1-10  1
+```
+
+Any value other than `on` or `off`, or a missing value, is an error.
 
 ## The `REQUIRES` Keyword
 
@@ -1600,7 +1739,7 @@ In this example, the records are separated by a pipe character:
 specs ... --recfm F --lrecl N
 ```
 
-specs reads exactly **N** bytes from the input stream per record, regardless of what those bytes are. There are no separators; the record boundary is purely positional. This is the right choice for tightly packed binary data, certain instrument outputs, or mainframe flat files where each record occupies a known, constant number of bytes.
+specs reads exactly **N** bytes from the input stream per record, regardless of what those bytes are. There are no separators; the record boundary is purely positional. This is the right choice for tightly packed binary data, certain instrument outputs, or mainframe flat files where each record occupies a known, constant number of bytes. In UTF8 mode, **N** counts grapheme clusters rather than bytes, so a multi-byte character is never split across two records.
 
 `--lrecl` (logical record length) is **required** with `--recfm F`.
 
@@ -1608,7 +1747,7 @@ In this example, each record is exactly 80 bytes — no newlines:
 
 `$ specs --recfm F --lrecl 80 -i punched-card-image.bin ` `1-10 1 21-30 nw`{.specs}
 
-Note that character positions are still 1-based from the start of each record, so column 1 is the first byte of each 80-byte chunk, column 80 is the last, and so on.
+Note that character positions are still 1-based from the start of each record, so column 1 is the first byte of each 80-byte chunk, column 80 is the last, and so on. In UTF8 mode, column 1 is the first grapheme cluster and column 80 is the 80th.
 
 ### `--recfm FD` — Fixed Length with Delimiter
 
@@ -1616,7 +1755,7 @@ Note that character positions are still 1-based from the start of each record, s
 specs ... --recfm FD --lrecl N
 ```
 
-A hybrid: specs reads one delimited line at a time (using the OS line-ending or a custom `--linedel`), but then treats the result as a fixed-length field of exactly **N** characters. Lines longer than N are truncated; lines shorter than N are padded with spaces on the right. This is useful for data that has line endings for human readability but whose fields are always at fixed positions within those lines.
+A hybrid: specs reads one delimited line at a time (using the OS line-ending or a custom `--linedel`), but then treats the result as a fixed-length field of exactly **N** characters. Lines longer than N are truncated; lines shorter than N are padded with spaces on the right. This is useful for data that has line endings for human readability but whose fields are always at fixed positions within those lines. In UTF8 mode, **N** counts grapheme clusters rather than bytes, so truncation and padding never split a multi-byte character.
 
 In this example, lines may vary in actual length but are logically 132 characters wide:
 
@@ -1628,8 +1767,8 @@ In this example, lines may vary in actual length but are logically 132 character
 | `--recfm` | Nickname | `--lrecl` | `--linedel` | What a "record" is |
 |-----------|----------|-----------|-------------|---------------------|
 | `D` | delimited | not used | optional | One line (custom or OS delimiter) |
-| `F` | fixed | required | not used | Exactly `--lrecl` bytes, no delimiter |
-| `FD` | fixed-delimited | required | optional | One delimited line, normalized to `--lrecl` chars |
+| `F` | fixed | required | not used | Exactly `--lrecl` bytes (graphemes in UTF8 mode), no delimiter |
+| `FD` | fixed-delimited | required | optional | One delimited line, normalized to `--lrecl` chars (graphemes in UTF8 mode) |
 
 ---
 
@@ -1655,13 +1794,19 @@ Output: `hello` (5 characters starting at column 1)
 
 If the value is shorter than the range, it is padded (left-aligned by default). If longer, it is truncated.
 
-You can also use a **width suffix** (a dot followed by a number) to specify the width:
+You can also use a **width suffix** (a dot followed by a number) to specify the width of the output:
 
 `$ echo "hello world" | specs ` `WORD 1 2.5`{.specs}
 
 Output: "` hello`" (equivalent to `2-6`)
 
 The width suffix works with both absolute and relative placement.
+
+**NOTE:** Some Unicode characters are wide. This inclues sone Han characters,
+emojis and others. The width suffix counts bytes in ASCII mode and graphemes
+in UTF-8 mode - it does not consider character mode.  See the [Widths in Terminal Columns](#unicodewidth)
+topic in Chapter 9 for how to format columns where the text contains wide
+characters.
 
 ## Relative Placement
 
@@ -2093,20 +2238,20 @@ Note: specs uses `//` for integer division and `%` for remainder, matching C/Pyt
 
 | Operator | Name | Notes |
 |----------|------|-------|
-| `<` | Less than | Smart: float if either side is numeric, string otherwise |
-| `<=` | Less than or equal | Smart: float if either side is numeric, string otherwise |
-| `>` | Greater than | Smart: float if either side is numeric, string otherwise |
-| `>=` | Greater than or equal | Smart: float if either side is numeric, string otherwise |
-| `=` | Equal | Smart: float if either side is numeric, string otherwise |
+| `<` | Less than | Smart: float if both sides are numeric, string otherwise |
+| `<=` | Less than or equal | Smart: float if both sides are numeric, string otherwise |
+| `>` | Greater than | Smart: float if both sides are numeric, string otherwise |
+| `>=` | Greater than or equal | Smart: float if both sides are numeric, string otherwise |
+| `=` | Equal | Smart: float if both sides are numeric, string otherwise |
 | `==` | Strict equal | String comparison only (always) |
-| `!=` | Not equal | Smart: float if either side is numeric, string otherwise |
+| `!=` | Not equal | Smart: float if both sides are numeric, string otherwise |
 | `!==` | Strict not equal | String comparison only (always) |
 | `<<` | String less than | Alphabetical comparison (always) |
 | `<<=` | String less than or equal | Alphabetical comparison (always) |
 | `>>` | String greater than | Alphabetical comparison (always) |
 | `>>=` | String greater than or equal | Alphabetical comparison (always) |
 
-All of `<`, `<=`, `>`, `>=`, `=`, and `!=` use the same **smart** rule: if *either* operand looks like a number, both are compared as floating-point; otherwise they are compared as strings. This means `3 < 3.5` is true (numeric), but `apple < banana` is also true (string alphabetical order).
+All of `<`, `<=`, `>`, `>=`, `=`, and `!=` use the same **smart** rule: if *both* operands look like numbers, they are compared as floating-point; otherwise they are compared as strings. This means `3 < 3.5` is true (numeric), but `apple < banana` is also true (string alphabetical order), and `0 = hello` is false, because `hello` is not a number. A counter that has no value yet counts as a number, so `#1 = 0` is true for a counter that was never set.
 
 The **strict** operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) always compare as strings regardless of whether the operands look like numbers. So `3 == 3.0` is false (different string representations), but `3 = 3.0` is true (same numeric value).
 
@@ -2559,13 +2704,25 @@ Which arguments of a function may be omitted, and what their default values are,
 
 ## String Functions
 
+In UTF8 mode, character lengths and positions used by these functions count
+grapheme clusters rather than bytes; `length()`, `center()` and `insert()`
+are examples. Use `bytelength()` when the byte count is needed. Arguments that
+expressly count words, such as the length arguments to `delword()` and
+`subword()`, still count words, and the length argument to `space()` remains a
+count of inserted pad characters. A pad argument may be any single Unicode
+grapheme. See
+**[ASCII Mode and UTF8 Mode](#utf8-mode)** in Chapter 2.
+
 | Function | Description |
 |----------|-------------|
-| `length(s)` or `length(s)` | Length of string *s* |
+| `length(s)` | Length of string *s*: grapheme clusters in UTF8 mode, bytes in ASCII mode |
+| `bytelength(s)` | Length of string *s* in bytes in either mode |
 | `left(s, n)` | Leftmost *n* characters of string *s* (space-padded if shorter) |
 | `right(s, n)` | Rightmost *n* characters of string *s* (space-padded if shorter) |
 | `center(s, n)` / `centre(s, n)` | Middle *n* characters of string *s* (space-padded if shorter) |
 | `substr(s, start, len)` | Substring of *s* starting at position *start* for *len* characters |
+| `utf8width(s)` | Width of string *s* in terminal columns (see below) |
+| `utf8substr(s, start, len)` | Like `substr()`, but *start* and *len* are in terminal columns (see below) |
 | `pos(needle, haystack)` | 1-based position of the first occurrence of *needle* in *haystack*; *haystack* defaults to current record |
 | `lastpos(needle, haystack)` | 1-based position of the last occurrence of *needle*; *haystack* defaults to current record |
 | `includes(haystack, needle1, ...)` | 1 if any *needle* is a substring of *haystack*; *haystack* defaults to current record |
@@ -2606,6 +2763,49 @@ The optional `flags` argument is a comma-separated list:
 | `no_copy` | Do not copy non-matching sections (for `rreplace`) |
 
 The regular expression grammar itself (`ECMAScript`, `basic`, `extended`, `awk`, `grep`, or `egrep`) is set separately via [`--regexType`](#regextype) or the `regexType` configured literal, not through `matchFlags`. See **[Regular Expression Portability](#regex-portability)** in Chapter 8 before choosing a grammar other than the default — some grammars behave differently across platforms.
+
+### Widths in Terminal Columns {#unicodewidth}
+
+Lengths and positions count characters, but a character may take more or fewer
+columns on the screen. Han characters and most emoji take two columns, and a
+combining mark takes none. `utf8width(s)` returns the number of columns that *s*
+takes. A grapheme cluster takes the width of its widest code point, so `é`
+(whether precomposed or as `e` followed by a combining accent) takes one column,
+and a family emoji built with zero-width joiners takes two. In ASCII mode every
+byte takes one column, except for control characters, which take none.
+
+`utf8substr(s, start, len)` is like `substr()`, but *start* and *len* are
+measured in columns. Column 1 is the first column. A character is included only
+if it starts at *start* or later, and the result is never wider than *len*,
+and as wide as that allows. Suppose that every character of *s* is two columns
+wide, so that the characters take columns 1-2, 3-4, 5-6 and so on:
+
+| Call | Result |
+|------|--------|
+| `utf8substr(s, 5)` | from the third character, which starts at column 5 |
+| `utf8substr(s, 4)` | from the third character: column 4 is in the middle of the second, which is therefore excluded |
+| `utf8substr(s, 3, 4)` | the second and third characters |
+| `utf8substr(s, 3, 3)` | only the second character: the third would make the result 4 columns wide |
+
+As with `substr()`, *start* may be negative to count from the end, a *start*
+of zero returns NaN, and *len* defaults to the rest of the string. Neither
+function takes into account that terminals disagree about the width of some
+characters.
+
+These functions help in aligning text in columns. Suppose I have a dataset with
+a person's age in word 2, and their name, with as many words and characters as
+needed starting in word 3. I want to print the name in column 1 for up to 30
+characters, and then the age in column 32.  In ASCII mode, this is very simple:
+```specs
+   WORD 3-* 1.30
+   WORD 2   32
+```
+However, in UTF-8 mode that would place 30 *graphemes* of the name starting in
+column 1. They could take up to 60 columns. So instead, we can do this:
+```specs
+   PRINT "utf8substr(wordrange(3,-1),,30)" 1
+   WORD 2   32
+```
 
 ### String Manipulation Functions with Multiple Parameters
 
@@ -2795,9 +2995,11 @@ These pseudo-functions work with **field identifiers** to accumulate statistics 
 
 ### fmap_dump Parameters
 
-The below arguments apply to the `fmap_cump` and the `countocc_dump` functions:
+The below arguments apply to the `fmap_dump` and the `countocc_dump` functions:
 
 - **format**: `txt`/`0`/empty (default), `lin` (boxed), an integer (for fixed-width columns), `csv`, `json`
+  In UTF8 mode, the width of the key column, and the padding, are measured in terminal columns (see `utf8width()`) rather than bytes, so wide characters line up.
+  Also in UTF8 mode, the keys of a frequency map are kept in canonical form, so the composed and decomposed spellings of a character are counted as one key, and the alphabetical sort orders compare keys as the comparison operators do.
 - **sortOrder**: `s`/`sa` (alphabetical asc, default), `sd` (alphabetical desc), `c`/`ca` (count asc), `cd` (count desc)
 - **showPct**: boolean — if true, adds a percentage column
 \newpage
@@ -2928,6 +3130,12 @@ An abbreviated form: `#varname` is equivalent to `pget('varname')`:
 # Count how many times you've run a script
    PRINT "pset(runs, #runs+1)"  1
 ```
+
+The name of a persistent variable is limited to ASCII, even in UTF8 mode. In the
+`#varname` form it may consist only of ASCII letters, digits and underscores, and
+`pset()`, `pget()`, `pdefined()` and `pclear()` raise an error if passed a name that 
+contains any other character. The *values* of persistent variables are not limited, and
+may contain any text.
 
 ---
 
@@ -4333,6 +4541,12 @@ Controls what happens when a Python function raises an exception:
 
 Use `NaN` or `nullstr` when you want specs to tolerate Python errors gracefully.
 
+## Non-ASCII Strings in Python Functions
+
+In ASCII mode, a string returned from a Python function must be pure ASCII; a string containing any other character is returned as an empty string.
+
+In UTF8 mode (see **[ASCII Mode and UTF8 Mode](#utf8-mode)** in Chapter 2), a Python function can return any string, which is encoded as UTF-8. String arguments are decoded from UTF-8, so `len()` and slicing in the function count characters, as **specs** does in this mode. Bytes that are not valid UTF-8 reach the function as lone surrogates (Python's `surrogateescape` handler) and are restored if returned unchanged.
+
 ## Exactness in Python Functions
 
 specs tracks whether numerical values are **exact** (no rounding has occurred) or **inexact**. This is used by the `exact()` function to let you reason about precision.
@@ -4855,10 +5069,12 @@ Do NOT use `--threaded` with:
 | `--no-while-guard` | | Disable while-guard (default limit: 5000) |
 | `--toASCII` | | Convert non-ASCII to period |
 | `--force-read-input` | | Read input even if unused |
-| `--EXP-UTF8` | | Experimental UTF-8 character counting |
-| `--debug-alu-comp` | | Print ALU compile info (unless built `--no_alu_debug`) |
-| `--debug-alu-run` | | Print ALU eval info (unless built `--no_alu_debug`) |
-| `--debug-alu-file file` | `-d` | Redirect ALU debug output to a file |
+| `--trace-comp` | | Print specification compile info |
+| `--trace-run` | | Print record processing info. **NOTE**: implies `--trace-comp` |
+| `--trace-alu-comp` | | Print ALU compile info |
+| `--trace-alu-run` | | Print ALU eval info |
+| `--trace-all` | | Print the info for all of the above four categories |
+| `--trace-file file` | `-d` | Redirect trace debug output to a file |
 | `--help topic` | | Print help |
 | `--info` | | Print build information |
 
@@ -4877,6 +5093,7 @@ These are keys that, when set in `~/.specs` (or via `-s`), change **specs** beha
 | `NO_WARN_REDEFINED_FID` | unset | Set to suppress the "Field Identifier redefined" warning |
 | `EmptyFrequencyMapMessage` | `""` | String returned by `fmap_dump()` for an empty frequency map |
 | `while-guard-limit` | `5000` | Maximum `WHILE` loop iterations before specs aborts |
+| `utf8` | `$SPECS_UTF8`, else `0` | Experimental: `1` for UTF8 mode (count UTF-8 characters rather than bytes), `0` for ASCII mode. Overridden by the `+UTF8`/`+UNICODE` directive |
 
 ## Input Record Formats (--recfm)
 
@@ -5008,7 +5225,7 @@ The table below holds conversions used within **Data Fields**. Where you see `fm
 | `//` | Integer divide | |
 | `%` | Remainder | |
 | `||` | Concatenate | |
-| `<` `<=` `>` `>=` | Numeric compare | |
+| `<` `<=` `>` `>=` | Smart compare | Numeric if both numeric |
 | `=` `!=` | Smart equality | Numeric if both numeric |
 | `==` `!==` | Strict equality | Always string |
 | `<<` `<<=` `>>` `>>=` | String compare | Alphabetical |
@@ -5270,6 +5487,28 @@ New features are not listed here.
 
 Sections are newest-first. When skipping versions, read every section between
 the old and the new one.
+
+## Changes from Version 1.1.0 to 1.2.0
+
+### Comparisons are numeric only if both operands are numbers
+
+The comparison operators `=`, `!=`, `<`, `<=`, `>` and `>=` compared their
+operands as numbers if *either* of them looked like a number. A string that
+is not a number counted as zero. They now compare as numbers only if *both*
+operands look like numbers, and compare as strings otherwise. A counter that
+has no value counts as a number, as before. The strict operators (`==`, `!==`,
+`<<`, `<<=`, `>>`, `>>=`) are not affected.
+
+| Specification | 1.1.0 | 1.2.0 |
+|---------------|-------|-------|
+| `specs PRINT "0='hello'" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'hello'!=0" 1`{.specs} | `0` | `1` |
+| `specs PRINT "5>'abc'" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'abc'<1" 1`{.specs} | `1` | `0` |
+| `specs PRINT "''=0" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'5 '=5" 1`{.specs} | `1` | `0` |
+| `specs PRINT "'007'=7" 1`{.specs} | `1` | `1` |
+| `specs PRINT "#1=0" 1`{.specs} | `1` | `1` |
 
 ## Changes from Version 1.0.0 to 1.1.0
 

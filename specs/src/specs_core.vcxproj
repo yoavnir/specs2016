@@ -95,12 +95,15 @@
     <ClCompile Include="utils\PythonIntf.cc" />
     <ClCompile Include="utils\SpecString.cc" />
     <ClCompile Include="utils\TimeUtils.cc" />
+    <ClCompile Include="utils\utf8.cc" />
+    <ClCompile Include="utils\utf8proc.cc" />
     <ClCompile Include="utils\alu.cc" />
     <ClCompile Include="utils\aluFunctions.cc" />
     <ClCompile Include="utils\aluRand.cc" />
     <ClCompile Include="utils\aluRegex.cc" />
     <ClCompile Include="utils\directives.cc" />
     <ClCompile Include="utils\platform.cc" />
+    <ClCompile Include="utils\trace.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cli\tokens.h" />
@@ -118,6 +121,8 @@
     <ClInclude Include="utils\SpecString.h" />
     <ClInclude Include="utils\StringQueue.h" />
     <ClInclude Include="utils\TimeUtils.h" />
+    <ClInclude Include="utils\utf8.h" />
+    <ClInclude Include="utils\utf8proc\utf8proc.h" />
     <ClInclude Include="utils\alu.h" />
     <ClInclude Include="utils\aluFunctions.h" />
     <ClInclude Include="utils\aluRand.h" />
@@ -126,6 +131,7 @@
     <ClInclude Include="utils\directives.h" />
     <ClInclude Include="utils\lruCache.h" />
     <ClInclude Include="utils\platform.h" />
+    <ClInclude Include="utils\trace.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
