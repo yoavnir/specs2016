@@ -45,13 +45,15 @@ jobs:
         DEBIAN_FRONTEND=noninteractive apt-get update
         DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
         add-apt-repository -y ppa:deadsnakes/ppa
+        add-apt-repository -y ppa:ubuntu-toolchain-r/test
         DEBIAN_FRONTEND=noninteractive apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ make python3.12 python3.12-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc-13 g++-13 make python3.12 python3.12-dev rpm git libexpat1-dev zlib1g-dev dpkg-dev
+        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
 
     - name: Configure
       working-directory: specs/src
       run: |
-        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12
+        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12 --static
 
     - name: Build
       working-directory: specs/src
@@ -539,13 +541,15 @@ jobs:
         $APT update
         $APT install -y software-properties-common
         add-apt-repository -y ppa:deadsnakes/ppa
+        add-apt-repository -y ppa:ubuntu-toolchain-r/test
         $APT update
-        $APT install -y gcc g++ make python3.12 python3.12-dev dpkg-dev git libexpat1-dev zlib1g-dev
+        $APT install -y gcc-13 g++-13 make python3.12 python3.12-dev dpkg-dev git libexpat1-dev zlib1g-dev
+        ${APT%apt-get}update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
 
     - name: Configure
       working-directory: specs/src
       run: |
-        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12
+        python3.12 setup.py --branch ${SPECS_BRANCH} --python python3.12 --static
 
     - name: Build
       working-directory: specs/src
