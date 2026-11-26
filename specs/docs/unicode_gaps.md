@@ -1,6 +1,6 @@
 # Gaps in UTF8 Mode
 
-This lists the places where UTF8 mode (`-s utf8=1`, `SPECS_UTF8=1` or `+UTF8 on`) is incomplete. The entries come from reading the sources and from running the examples below against `exe/specs`. Every example assumes UTF8 mode is on.
+This lists the places where UTF8 mode (`-s utf8=1`, `SPECS_UTF8=1` or `+UTF8 on`) is incomplete **now**. Entries that were fixed are not kept. The entries come from reading the sources and from running the examples below against `exe/specs`. Every example assumes UTF8 mode is on.
 
 Severity:
 
@@ -9,72 +9,73 @@ Severity:
 - **Inconsistent**: two features that should agree give different answers.
 - **Missing**: specs does not support the feature, and says so.
 
-## Regular expressions
+## Regular expressions (known, left open)
 
-| Severity | Gap |
-|----------|-----|
-| Missing | `rmatch`, `rsearch` and `rreplace` work on bytes. `.` matches one byte, not one character, and a character class cannot contain a non-ASCII character. Specs prints a warning, which `regexWarn=0` suppresses. |
-| Wrong output | A match can start or end inside a multi-byte character. `rreplace(record(),"^.","X")` on `éa` returns `X` followed by the stray byte `\xa9`, followed by `a`. |
-| Missing | The regex engine is byte-based, so case-insensitive matching cannot be expected to fold non-ASCII letters (not tested). |
-
-## Case conversion (`lcase`, `ucase`, the `LCASE`/`UCASE` conversions) - FIXED (issue #574)
-
-`conv_LCASE` and `conv_UCASE` in `processing/conversions.cc` use simple one-to-one case mapping. They throw if the mapped character has a different UTF-8 length.
+`rmatch`, `rsearch` and `rreplace` use a byte-based engine (`std::regex` over `char`).
 
 | Severity | Gap | Example |
 |----------|-----|---------|
-| Error | `Unexpected length discrepancy` for any character whose case mapping changes its byte length. | `lcase` of `İ` (U+0130); `ucase` of `ß` and `ſ` (U+017F) |
-| Wrong output | The loop stops at the first invalid UTF-8 byte, so the rest of the string is left unconverted. | |
-| Missing | There is no full or special-casing mapping (`ß` to `SS`), no locale-specific mapping (Turkish dotted and dotless i), and no context-sensitive mapping (Greek final sigma). | |
+| Missing | `.` matches one byte, not one character, and a character class cannot contain a non-ASCII character. Specs prints a warning, which `regexWarn=0` suppresses. | `rmatch("éa","^.a")` gives `0`; `rmatch("éa","^[é]a")` gives `0` |
+| Wrong output | A match can start or end inside a multi-byte character, so the result can be invalid UTF-8. | `rreplace("éa","^.","X")` returns `X`, the stray byte `\xa9`, then `a` |
+| Missing | Case-insensitive matching does not fold non-ASCII letters. | |
+| Missing | Matching does not canonicalize, so a composed character does not match its decomposed spelling, unlike `pos` and the comparison operators. | |
 
-## ALU string functions that still work on bytes
+## Word and field separators in records
+
+`WORDSEPARATOR`, `FIELDSEPARATOR` (`FS`) and the word/field splitters (`identifyWordsUTF8`, `identifyFieldsUTF8` in `processing/ProcessingState.cc`) compare the *first code point* of each grapheme with the set of code points of the separator.
+
+| Severity | Gap | Example |
+|----------|-----|---------|
+| Wrong output | A grapheme whose base character is a separator is treated as that separator, so the grapheme is split. | `WORDSEPARATOR e` on `ae` + U+0301 + `b cd` splits after `a`, though `é` is not `e` |
+| Inconsistent | Separators are not compared in canonical form. A composed separator does not match the decomposed text, and the reverse. The ALU functions (`field`, `fieldcount`, `wordcount` and the like) do canonicalize. | `FS é` (U+00E9) on `ae` + U+0301 + `b` does not split; `FS` e + U+0301 on `aéb` (U+00E9) does not split |
+
+## ALU functions that work on bytes
 
 | Severity | Function | Gap |
 |----------|----------|-----|
-| ~~Wrong output~~ fixed | `translate` | Now works on graphemes in UTF8 mode. The sequential-replacement semantics of the byte version are kept (so `translate('ab','ba','ab')` gives `aa`, unlike REXX). |
-| ~~Wrong output~~ fixed | `strip` | Now works on graphemes in UTF8 mode. |
-| ~~Inconsistent~~ fixed | `delword`, `subword`, `wordindex`, `wordlength`, `words`, `find`, `space`, `justify`, `wordpos` (the `breakIntoWords*` helpers) | Now split words on Unicode whitespace (`utf8::isSpace`, applied to the first code point of each grapheme) in UTF8 mode, as the record-level splitter does. ASCII strings, and ASCII mode, still use the byte-wise `isspace`. |
-| Not a gap | `wordcount`, `fieldcount` with an explicit separator | A non-ASCII separator works in UTF8 mode. Without a separator, `wordcount(s)` splits on a blank, as documented in `alu_adv.md`; `wordcount()` uses the record's word separator. |
+| Wrong output | `xrange` | Works on bytes, and uses only the first byte of each argument. `xrange("a","é")` returns the bytes `a`..`\xc3`, which is invalid UTF-8, and `xrange("a")` (default end `0xff`) returns invalid UTF-8 above `~`. |
+| Not a gap | `c2d`, `c2u`, `c2f`, `frombin`, `bswap`, `c2x`, `x2ch`, `x2d`, `d2x` | Operate on the bytes of the UTF-8 encoding, which is what a binary conversion should do. Only `x2ch` and `bswap` can produce invalid UTF-8 from valid input. |
 
-## Whitespace and word splitting - FIXED
+## Conversions
 
-`a<U+00A0>b` is now two words for `words`, `subword`, `delword`, `wordlength` and the `w1` / `w2` word ranges alike. The ALU word functions use `utf8::isSpace`, as the record-level splitter (`identifyWordsUTF8`) does when the whitespace is local.
+| Severity | Gap | Example |
+|----------|-----|---------|
+| Error | `ROT13` aborts the run on any non-ASCII input, instead of passing non-letters through. | `specs '1-* ROT13 1'` on `éa` fails with `ROT13 only applies to ASCII strings` |
+| Not a gap | `C2B`, `C2X`, `B2C`, `X2CH`, `D2X`, `X2D` and `BSWAP` work on the bytes of the encoding, like the ALU byte functions above. | |
 
-## Comparison and equality - FIXED
+## Case conversion (`lcase`, `ucase`, the `LCASE`/`UCASE` conversions)
 
-`=`, `!=`, `<`, `<=`, `>` and `>=` compare strings that are not both numbers grapheme by grapheme, each in its canonical (NFC) form, so `e` + U+0301 equals U+00E9. Different graphemes are ordered by their UTF-8 bytes, which is code point order for valid text. This is not a collation order (`é` sorts after `z`); that is documented in the guidebook. The strict operators (`==`, `!==`, `<<`, `<<=`, `>>`, `>>=`) compare strings the same way. They differ from the smart operators only in never comparing numerically, so `3 == 3.0` is still false.
+Simple one-to-one case mapping, one code point at a time (`utf8proc_tolower`, `utf8proc_toupper`). Lengths that change are handled.
 
-## Substring search - FIXED
+| Severity | Gap | Example |
+|----------|-----|---------|
+| Missing | No full or special-casing mapping. | `ucase("ß")` gives `ẞ` (U+1E9E), not `SS`; `lcase("İ")` gives `i`, not `i` + U+0307 |
+| Missing | No locale-specific mapping (Turkish dotted and dotless i). | |
+| Missing | No context-sensitive mapping (Greek final sigma). | |
 
-`pos`, `lastpos`, `includes` and `includesall` search through `strFind`, which canonicalizes both sides. `countocc` used `std::string::find` and now uses `strFind` too, so a needle matches whichever way its accented characters are encoded.
-
-## Record I/O
-
-| Severity | Gap |
-|----------|-----|
-| ~~Wrong output~~ fixed | Fixed record formats (`--recfm F`, `--recfm FD`, `--lrecl n`) now cut records at *n graphemes* in UTF8 mode, not *n bytes*. A multi-byte character is never split across two records. `printf 'aébcd\n' \| specs -s utf8=1 --recfm F --lrecl 2 1-* 1` now yields `aé`, `bc` and `d\n` (the newline is data, as in fixed format). |
-
-All widths are in graphemes in UTF-8 mode. This is now implemented: `--lrecl 80` means that records are
-80 bytes in ASCII mode, and 80 graphemes in UTF-8 mode. 
-
-## Identifiers and tokenizer
+## Record input
 
 | Severity | Gap |
 |----------|-----|
-| ~~Wrong output~~ fixed | Configured literals (`ExternalLiterals` in `processing/Config.cc`) were stored and looked up by bytes. Names are now canonicalized (NFC) when stored and when looked up, in either mode, so the composed and decomposed spellings of a name are the same literal. A configuration file defining both gets the redefinition warning. |
-| ~~Error~~ fixed | A reference to a configured literal inside an ALU expression could not use a non-ASCII name. In UTF8 mode the name may now contain Unicode letters and digits (`utf8::identifierLength`). |
-| ~~Error~~ fixed | `REQUIRES` rejected a name with a non-ASCII letter. `mayBeNamedString` now uses `utf8::identifierLength` too. |
-| By design | The name of a persistent variable is limited to ASCII. `pset`, `pget` and `pclear` fail on a non-ASCII name, and `#name` accepts only ASCII letters, digits and `_`. This is documented in the guidebook, `manpage` and `alu_adv.md`. |
+| Missing | A UTF-8 byte order mark (U+FEFF) at the start of the input is not stripped. It is data, one character long, and `1-* 1` writes it back. |
+| Missing | UTF-16 and UTF-32 input, and other encodings, are not recognised or converted. Input is UTF-8, or invalid bytes that pass through unchanged. |
 
-## Width - FIXED
+## Platform
 
-Lengths and positions count grapheme clusters, not terminal columns, and that is deliberate. CJK and fullwidth characters take two columns, so tabular output does not line up. `utf8width(s)` returns the width of a string in columns, and `utf8substr(s,start,len)` extracts a substring by columns. A cluster takes the width of its widest code point (from `utf8proc_charwidth`). The record-level width logic (`SpecString_ResizeChars`, the ellipsis code) still counts characters.
+| Severity | Gap |
+|----------|-----|
+| Missing | The sources contain no Windows code-page or wide-character handling (`CP_UTF8`, `SetConsoleOutputCP`, `wmain`). Non-ASCII command-line arguments and console output on Windows are therefore not supported by specs itself and depend on the terminal and run-time settings. (Not tested on Windows.) |
+
+## Not gaps
+
+- Name of a persistent variable is ASCII by design (`pset`, `pget`, `pdefined`, `pclear`, `#name`).
+- Comparison operators order graphemes by code point, not by collation. This is documented; a collation algorithm would be new functionality (see `uca_collation_function.md`).
+- Lengths and positions count grapheme clusters, not terminal columns. `utf8width` and `utf8substr` give columns.
 
 ## Suggested priority
 
-1. Case conversion errors. They abort the run on valid input, and the fix is local. (solved)
-2. `translate` and `strip`, where the output can be invalid UTF-8. (solved)
-3. ~~Fixed-length records, where the output can be invalid UTF-8.~~ (solved)
-4. ~~A single definition of whitespace for the ALU word functions and the record-level splitter.~~ (solved)
-5. ~~Normalisation in the comparison operators, or documentation of the difference.~~ (solved)
-6. Regular expressions. This is the largest change and needs a decision on the engine, for example ICU or PCRE2 with UTF support, versus `std::regex` over code points.
+1. Regular expressions. This is the largest change and needs a decision on the engine, for example ICU or PCRE2 with UTF support, versus `std::regex` over code points.
+2. Word and field separators in records: compare whole graphemes in canonical form, as the ALU functions do.
+3. `ROT13` aborting on non-ASCII input.
+4. `xrange` in UTF8 mode: either a code-point range, or a documented restriction.
+5. BOM handling and platform notes.
