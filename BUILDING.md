@@ -46,7 +46,8 @@ Only Python 3 is supported. To enable Python support, you need the `python3-deve
 ### Notes
 * On some Mac machines, `sudo make install` will cause a warning about being the wrong user.
 * You can pass `-v DEBUG` to `setup.py` to build a debug version.
-* You can pass `--static` to `setup.py` to statically link libstdc++ (useful for portable binaries).
+* You can pass `--static` to `setup.py` to statically link libstdc++, and also libpython if Python support is enabled (useful for portable binaries).
+* You can pass `--static_libstdcxx` to `setup.py` to statically link only libstdc++.
 
 Building on Windows with MSBuild
 ---------------------------------

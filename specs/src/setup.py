@@ -458,7 +458,9 @@ parser.add_argument("--fast_random", dest="nocrypt", action="store_true", defaul
 parser.add_argument("--os_version", dest="osversion", action="store", default="",
 					help="OS version to link against. Available only in Mac OS")
 parser.add_argument("--static", dest="static_link", action="store_true", default=False,
-                    help="Statically link libstdc++")
+                    help="Statically link libstdc++ and, if Python is enabled, libpython")
+parser.add_argument("--static_libstdcxx", dest="static_libstdcxx", action="store_true", default=False,
+                    help="Statically link libstdc++ only")
 parser.add_argument("--no_book", dest="no_book", action="store_true", default=False,
                     help="Avoid building the specs guidebook PDF")
 parser.add_argument("--python", dest="pyprefix", action="store", default="",
@@ -546,7 +548,7 @@ elif compiler=="VS":
 		condlink = "/Zi /MAP /DEBUG"
 		condcomp = "/O2 /Zi /EHsc"	
 
-if args.static_link:
+if args.static_link or args.static_libstdcxx:
 	condlink = condlink + " -static-libstdc++"
 	
 if platform=="NT":
